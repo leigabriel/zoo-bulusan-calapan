@@ -13,25 +13,17 @@ exports.protect = async (req, res, next) => {
     }
 
     try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
         const user = await User.findById(decoded.id);
 
         if (!user) {
             return res.status(404).json({ success: false, message: 'User not found' });
         }
-        // Validate that token is bound to the same tab id (if token contains tabId)
-        const reqTabId = req.headers['x-tab-id'];
-        if (decoded.tabId) {
-            // If token was issued bound to a tabId, require the same header on requests
-            if (!reqTabId || decoded.tabId !== reqTabId) {
-                return res.status(401).json({ success: false, message: 'Token not valid for this tab' });
-            }
-        }
 
         req.user = { id: user.id, email: user.email, role: user.role };
         next();
     } catch (error) {
-        console.error('Auth middleware error:', error);
+        console.error('\x1b[31mAuth middleware error: ' + error + '\x1b[0m');
         return res.status(401).json({ success: false, message: 'Not authorized to access this route' });
     }
 };
@@ -57,21 +49,14 @@ exports.optionalAuth = async (req, res, next) => {
 
     if (token) {
         try {
-            const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+            const decoded = jwt.verify(token, process.env.JWT_SECRET);
             const user = await User.findById(decoded.id);
 
             if (user) {
-                // If token had tabId, ensure request has same X-Tab-ID
-                const reqTabId = req.headers['x-tab-id'];
-                if (decoded.tabId && decoded.tabId !== reqTabId) {
-                    // treat as invalid for this request
-                    console.log('Optional auth: token bound to different tab');
-                } else {
-                    req.user = { id: user.id, email: user.email, role: user.role };
-                }
+                req.user = { id: user.id, email: user.email, role: user.role };
             }
         } catch (error) {
-            console.log('Optional auth: Invalid token');
+            console.log('\x1b[33mOptional auth: Invalid token\x1b[0m');
         }
     }
 
