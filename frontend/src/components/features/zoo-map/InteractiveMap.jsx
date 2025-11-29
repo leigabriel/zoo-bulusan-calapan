@@ -49,7 +49,7 @@ const InteractiveMap = () => {
     return (
         <div className="w-full max-w-4xl mx-auto">
             <div className="bg-white rounded-3xl shadow-lg overflow-hidden">
-                <div className="bg-gradient-to-r from-green-600 to-teal-500 p-4 text-white flex items-center justify-between">
+                <div className="bg-gradient-to-r from-[#2D5A27] to-[#3A8C7D] p-4 text-white flex items-center justify-between">
                     <div>
                         <h2 className="text-xl font-bold">Zoo Interactive Map</h2>
                         <p className="text-sm opacity-90">Tap on zones to explore</p>
@@ -57,19 +57,22 @@ const InteractiveMap = () => {
                     <div className="flex gap-2">
                         <button 
                             onClick={handleZoomOut}
-                            className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center hover:bg-white/30 transition"
+                            aria-label="Zoom out"
+                            className="w-8 h-8 bg-white/10 rounded-lg flex items-center justify-center hover:bg-white/20 transition"
                         >
                             −
                         </button>
                         <button 
                             onClick={handleZoomIn}
-                            className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center hover:bg-white/30 transition"
+                            aria-label="Zoom in"
+                            className="w-8 h-8 bg-white/10 rounded-lg flex items-center justify-center hover:bg-white/20 transition"
                         >
                             +
                         </button>
                         <button 
                             onClick={handleReset}
-                            className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center hover:bg-white/30 transition"
+                            aria-label="Reset map"
+                            className="w-8 h-8 bg-white/10 rounded-lg flex items-center justify-center hover:bg-white/20 transition"
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                 <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
@@ -84,10 +87,12 @@ const InteractiveMap = () => {
                     className="relative aspect-[4/3] bg-gradient-to-br from-green-100 to-teal-50 overflow-hidden cursor-grab active:cursor-grabbing"
                     style={{ transform: `scale(${zoom}) translate(${position.x}px, ${position.y}px)` }}
                 >
-                    <svg className="absolute inset-0 w-full h-full opacity-20">
-                        <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-                            <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#059669" strokeWidth="0.5"/>
-                        </pattern>
+                    <svg className="absolute inset-0 w-full h-full opacity-20" role="img" aria-hidden="true">
+                        <defs>
+                            <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+                                <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#059669" strokeWidth="0.5"/>
+                            </pattern>
+                        </defs>
                         <rect width="100%" height="100%" fill="url(#grid)" />
                     </svg>
 
@@ -100,7 +105,7 @@ const InteractiveMap = () => {
                             }`}
                             style={{ left: `${zone.x}%`, top: `${zone.y}%` }}
                         >
-                            <div 
+                            <div
                                 className="w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg border-4 border-white"
                                 style={{ backgroundColor: zone.color }}
                             >

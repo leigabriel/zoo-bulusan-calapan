@@ -1,8 +1,10 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
-import AnimalClassifier from './AnimalClassifier';
+import AIChatAssistant from '../../components/features/ai-assistant/AIChatAssistant';
+import AnimalClassifier from '../../components/features/ai-scanner/AnimalClassifier';
+import '../../App.css'
 
 const Icons = {
     Robot: () => (
@@ -70,194 +72,105 @@ const Icons = {
 };
 
 const Home = () => {
-    const [isChatOpen, setIsChatOpen] = useState(false);
-    const [isExpanded, setIsExpanded] = useState(false);
-    const [chatMode, setChatMode] = useState('assistant');
-    const [chatInput, setChatInput] = useState('');
-    const [messages, setMessages] = useState([
-        { type: 'bot', text: "Hello! I'm your AI Zoo Assistant. I can help with real-time info about exhibits, tickets, and events." }
-    ]);
-    const messagesEndRef = useRef(null);
+    // Local state for selector bubble and active feature
+    const [showSelector, setShowSelector] = useState(false);
+    const [activeFeature, setActiveFeature] = useState(null); // 'assistant' | 'scanner' | null
+    const [assistantExpanded, setAssistantExpanded] = useState(false);
+    const [scannerExpanded, setScannerExpanded] = useState(false);
 
-    const scrollToBottom = () => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const openAssistant = () => {
+        setActiveFeature('assistant');
+        setAssistantExpanded(false);
+        setShowSelector(false);
     };
 
-    useEffect(() => {
-        scrollToBottom();
-    }, [messages, isChatOpen, isExpanded]);
-
-    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-    const [isLoading, setIsLoading] = useState(false);
-
-    const handleChatSubmit = async () => {
-        if (!chatInput.trim() || isLoading) return;
-        const userMsg = chatInput;
-        setMessages([...messages, { type: 'user', text: userMsg }]);
-        setChatInput('');
-        setIsLoading(true);
-
-        try {
-            const response = await fetch(`${API_URL}/ai/chat`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    message: userMsg,
-                    history: messages.slice(-10).map(m => ({
-                        role: m.type === 'user' ? 'user' : 'assistant',
-                        content: m.text
-                    }))
-                })
-            });
-
-            const data = await response.json();
-
-            if (data.success) {
-                setMessages(prev => [...prev, { type: 'bot', text: data.response }]);
-            } else {
-                setMessages(prev => [...prev, { 
-                    type: 'bot', 
-                    text: "I'm sorry, I'm having trouble connecting right now. Please try again later or contact our staff directly at info@zoobulusan.com" 
-                }]);
-            }
-        } catch (error) {
-            console.error('Chat error:', error);
-            // Fallback to basic responses if AI service is unavailable
-            let fallbackResponse = "I'm having trouble connecting to the AI service. ";
-            const lowerMsg = userMsg.toLowerCase();
-            if (lowerMsg.includes('ticket') || lowerMsg.includes('price')) {
-                fallbackResponse = "Ticket prices: Adult ₱40, Child ₱20, Senior ₱30, Student ₱25, Bulusan Residents FREE. Visit our Tickets page to book!";
-            } else if (lowerMsg.includes('animal') || lowerMsg.includes('see')) {
-                fallbackResponse = "We have a variety of animals including the Philippine Eagle, deer, macaques, pythons, and crocodiles. Visit our Animals page for more!";
-            } else if (lowerMsg.includes('time') || lowerMsg.includes('open') || lowerMsg.includes('hour')) {
-                fallbackResponse = "We're open Tuesday-Sunday, 8AM-5PM. Closed on Mondays for maintenance. Last entry at 4PM.";
-            } else {
-                fallbackResponse = "I can help with animal info, tickets, and events. What would you like to know?";
-            }
-            setMessages(prev => [...prev, { type: 'bot', text: fallbackResponse }]);
-        } finally {
-            setIsLoading(false);
-        }
+    const openScanner = () => {
+        setActiveFeature('scanner');
+        setAssistantExpanded(false);
+        setShowSelector(false);
     };
 
     return (
-        <div className="min-h-screen flex flex-col font-sans">
+        <div className="min-h-screen flex flex-col">
             <Header />
+            {/* Floating selector bubble */}
+            <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end">
+                {/* Selector menu */}
+                {showSelector && (
+                    <div className="mb-2 w-44 bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+                        <button
+                            onClick={openAssistant}
+                            className={`w-full text-left px-4 py-3 hover:bg-gray-50 flex items-center gap-3 ${activeFeature === 'assistant' ? 'bg-green-50' : ''}`}
+                        >
+                            <svg className="w-5 h-5 text-green-600" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="10" rx="2" /><circle cx="12" cy="5" r="2" /></svg>
+                            <span className="font-medium">AI Assistant</span>
+                        </button>
+                        <button
+                            onClick={openScanner}
+                            className={`w-full text-left px-4 py-3 hover:bg-gray-50 flex items-center gap-3 ${activeFeature === 'scanner' ? 'bg-green-50' : ''}`}
+                        >
+                            <svg className="w-5 h-5 text-emerald-600" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" /><circle cx="12" cy="13" r="4" /></svg>
+                            <span className="font-medium">AI Scanner</span>
+                        </button>
+                    </div>
+                )}
 
-            {isChatOpen && (
-                <div
-                    className={`fixed bottom-[100px] right-6 bg-white rounded-2xl shadow-2xl z-50 flex flex-col overflow-hidden transition-all duration-300 border border-gray-100 ${isExpanded ? 'w-[90vw] md:w-[600px] h-[80vh]' : 'w-[90vw] md:w-[380px] h-[520px]'
-                        }`}
-                >
-                    <div className="bg-gradient-to-r from-[#2D5A27] to-[#3A8C7D] p-4 flex justify-between items-center text-white shadow-md">
+                {/* Chat bubble - toggles selector */}
+                <div className="relative">
+                    <button
+                        onClick={() => setShowSelector(prev => !prev)}
+                        aria-label="Open AI selector"
+                        className="w-16 h-16 rounded-full bg-gradient-to-br from-[#2D5A27] to-[#3A8C7D] text-white flex items-center justify-center shadow-lg transform transition-transform duration-200 hover:scale-110 active:scale-95"
+                    >
+                        <div className="w-8 h-8">
+                            <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
+                        </div>
+                    </button>
+                    <button
+                        onClick={() => { setActiveFeature('assistant'); setAssistantExpanded(true); setShowSelector(false); }}
+                        title="Open larger chat"
+                        className="absolute -top-2 -left-2 w-8 h-8 rounded-full bg-white text-[#2D5A27] flex items-center justify-center shadow-sm hover:scale-105 transition"
+                    >
+                        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 12h18M12 3v18" /></svg>
+                    </button>
+                </div>
+            </div>
+
+            {/* Render chosen feature panels (assistant or scanner) via local state */}
+            <AIChatAssistant hideLauncher={true} open={activeFeature === 'assistant'} expanded={assistantExpanded} onExpandChange={(v) => setAssistantExpanded(v)} onClose={() => { setActiveFeature(null); setAssistantExpanded(false); }} />
+
+            {activeFeature === 'scanner' && (
+                <div className="fixed bottom-6 right-6 z-50 w-[360px] h-[520px] bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-200">
+                    <div className="bg-gradient-to-r from-[#2D5A27] to-[#3A8C7D] p-3 flex items-center justify-between text-white">
                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center border border-white/30">
-                                {chatMode === 'assistant' ? <Icons.Robot /> : <Icons.Camera />}
+                            <div className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center"> 
+                                <svg className="w-5 h-5 text-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" /><circle cx="12" cy="13" r="4" /></svg>
                             </div>
                             <div>
-                                <h3 className="font-bold text-lg leading-tight">{chatMode === 'assistant' ? 'AI Assistant' : 'Animal Classifier'}</h3>
-                                <div className="flex items-center gap-1.5 opacity-90">
-                                    <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
-                                    <p className="text-xs font-medium">{chatMode === 'assistant' ? 'Online' : 'Ready'}</p>
-                                </div>
+                                <h3 className="font-bold">AI Scanner</h3>
+                                <p className="text-xs opacity-90">Animal Classifier</p>
                             </div>
                         </div>
                         <div className="flex items-center gap-2">
                             <button
-                                onClick={() => setIsExpanded(!isExpanded)}
-                                className="p-2 hover:bg-white/10 rounded-full transition"
+                                onClick={() => setScannerExpanded(prev => !prev)}
+                                title={scannerExpanded ? 'Collapse' : 'Expand'}
+                                className="p-2 rounded-md bg-white/20 hover:bg-white/30 text-white"
                             >
-                                {isExpanded ? <Icons.Minimize /> : <Icons.Maximize />}
-                            </button>
-                            <button
-                                onClick={() => setIsChatOpen(false)}
-                                className="p-2 hover:bg-white/10 rounded-full transition"
-                            >
-                                <Icons.Close />
-                            </button>
-                        </div>
-                    </div>
-
-                    <div className="flex border-b border-gray-100 bg-white">
-                        <button
-                            onClick={() => setChatMode('assistant')}
-                            className={`flex-1 py-3 text-sm font-semibold transition flex items-center justify-center gap-2 ${chatMode === 'assistant' ? 'text-green-700 border-b-2 border-green-600 bg-green-50/50' : 'text-gray-500 hover:bg-gray-50'}`}
-                        >
-                            <span className="scale-90"><Icons.Robot /></span> AI Assistant
-                        </button>
-                        <button
-                            onClick={() => setChatMode('classifier')}
-                            className={`flex-1 py-3 text-sm font-semibold transition flex items-center justify-center gap-2 ${chatMode === 'classifier' ? 'text-green-700 border-b-2 border-green-600 bg-green-50/50' : 'text-gray-500 hover:bg-gray-50'}`}
-                        >
-                            <span className="scale-90"><Icons.Camera /></span> Classify Animal
-                        </button>
-                    </div>
-
-                    {chatMode === 'assistant' ? (
-                        <>
-                            <div className="flex-1 p-4 overflow-y-auto bg-gray-50 scroll-smooth">
-                                {messages.map((msg, idx) => (
-                                    <div key={idx} className={`mb-4 flex items-end gap-2 ${msg.type === 'bot' ? '' : 'flex-row-reverse'}`}>
-                                        {msg.type === 'bot' && (
-                                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-green-600 to-teal-600 flex items-center justify-center flex-shrink-0 text-white shadow-sm">
-                                                <div className="scale-75"><Icons.Robot /></div>
-                                            </div>
-                                        )}
-                                        <div className={`py-3 px-4 rounded-2xl max-w-[85%] shadow-sm text-sm leading-relaxed ${msg.type === 'bot' ? 'bg-white border border-gray-100 text-gray-700 rounded-bl-none' : 'bg-gradient-to-r from-green-600 to-teal-600 text-white rounded-br-none'}`}>
-                                            <p>{msg.text}</p>
-                                        </div>
-                                    </div>
-                                ))}
-                                {isLoading && (
-                                    <div className="mb-4 flex items-end gap-2">
-                                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-green-600 to-teal-600 flex items-center justify-center flex-shrink-0 text-white shadow-sm">
-                                            <div className="scale-75"><Icons.Robot /></div>
-                                        </div>
-                                        <div className="py-3 px-4 rounded-2xl bg-white border border-gray-100 rounded-bl-none shadow-sm">
-                                            <div className="flex gap-1">
-                                                <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></span>
-                                                <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></span>
-                                                <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></span>
-                                            </div>
-                                        </div>
-                                    </div>
+                                {scannerExpanded ? (
+                                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="4 14 10 14 10 20" /><polyline points="20 10 14 10 14 4" /></svg>
+                                ) : (
+                                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 3 21 3 21 9" /><polyline points="9 21 3 21 3 15" /></svg>
                                 )}
-                                <div ref={messagesEndRef} />
-                            </div>
-                            <div className="p-4 bg-white border-t border-gray-100 flex gap-2 items-center">
-                                <input
-                                    className="flex-1 p-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition text-sm disabled:bg-gray-100"
-                                    placeholder="Ask about tickets, animals, or events..."
-                                    value={chatInput}
-                                    onChange={(e) => setChatInput(e.target.value)}
-                                    onKeyPress={(e) => e.key === 'Enter' && handleChatSubmit()}
-                                    disabled={isLoading}
-                                />
-                                <button
-                                    onClick={handleChatSubmit}
-                                    disabled={!chatInput.trim() || isLoading}
-                                    className="w-11 h-11 rounded-xl bg-green-600 text-white flex items-center justify-center hover:bg-green-700 active:scale-95 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
-                                >
-                                    <Icons.Send />
-                                </button>
-                            </div>
-                        </>
-                    ) : (
-                        <div className="flex-1 overflow-y-auto bg-gray-50">
-                            <AnimalClassifier embedded={true} />
+                            </button>
+                            <button onClick={() => setActiveFeature(null)} className="p-2 rounded-md bg-white/20 hover:bg-white/30 text-white">Close</button>
                         </div>
-                    )}
+                    </div>
+                    <div className="h-[calc(100%-56px)] overflow-auto">
+                        <AnimalClassifier embedded={true} expanded={scannerExpanded} onExpandChange={(v) => setScannerExpanded(v)} />
+                    </div>
                 </div>
             )}
-
-            <button
-                onClick={() => setIsChatOpen(!isChatOpen)}
-                className="fixed bottom-6 right-6 w-16 h-16 rounded-full bg-gradient-to-br from-[#2D5A27] to-[#3A8C7D] text-white flex items-center justify-center shadow-lg hover:shadow-green-900/30 cursor-pointer hover:scale-105 active:scale-95 transition-all z-40 group"
-            >
-                <div className="group-hover:animate-bounce">
-                    <Icons.Message />
-                </div>
-            </button>
 
             <section className="relative h-[600px] text-white flex items-center justify-center text-center bg-cover bg-center" style={{ backgroundImage: `linear-gradient(rgba(45, 90, 39, 0.85), rgba(58, 140, 125, 0.85)), url('https://images.unsplash.com/photo-1548013146-72479768bada?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80')` }}>
                 <div className="relative z-10 px-4 max-w-5xl mx-auto">
@@ -265,7 +178,7 @@ const Home = () => {
                         <Icons.Brain />
                         <span>AI-Driven Smart Zoo</span>
                     </div>
-                    <h1 className="text-5xl md:text-7xl font-bold mb-6 tracking-tight leading-tight">Wildlife Wonder Awaits</h1>
+                    <h1 className="text-5xl md:text-7xl font-bold mb-6 tracking-tight leading-tight jet">Wildlife Wonder Awaits</h1>
                     <p className="text-xl md:text-2xl mb-10 max-w-2xl mx-auto text-gray-100 font-light">Immerse yourself in nature with our cloud-powered zoo experience.</p>
                     <div className="flex flex-col sm:flex-row gap-5 justify-center">
                         <Link to="/tickets" className="bg-white text-green-800 px-8 py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-3 hover:bg-gray-50 transition shadow-lg hover:shadow-xl transform hover:-translate-y-1">
@@ -298,7 +211,6 @@ const Home = () => {
                     </div>
                 </div>
             </section>
-
             <Footer />
         </div>
     );

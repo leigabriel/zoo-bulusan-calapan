@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import Header from '../../components/Header';
-import Footer from '../../components/Footer';
+import Header from '../../Header';
+import Footer from '../../Footer';
 import * as tf from '@tensorflow/tfjs';
 import '@tensorflow/tfjs-backend-webgl';
 
@@ -41,7 +41,7 @@ const ANIMAL_INFO = {
 };
 const ANIMAL_CLASSES = Object.keys(ANIMAL_INFO);
 
-const AnimalClassifier = ({ embedded = false }) => {
+const AnimalClassifier = ({ embedded = false, expanded: controlledExpanded = false, onExpandChange = () => {} }) => {
     // State
     const [messages, setMessages] = useState([
         { id: 1, role: 'bot', type: 'text', content: "Hello! Upload a photo, and I'll identify the animal for you." }
@@ -56,6 +56,9 @@ const AnimalClassifier = ({ embedded = false }) => {
     const fileInputRef = useRef(null);
     const currentFileName = useRef('');
     const [analysisImage, setAnalysisImage] = useState(null);
+    const videoRef = useRef(null);
+    const [cameraActive, setCameraActive] = useState(false);
+    const [expanded, setExpanded] = useState(controlledExpanded);
 
     const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
@@ -89,6 +92,25 @@ const AnimalClassifier = ({ embedded = false }) => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages, isProcessing]);
 
+    // cleanup camera on unmount
+    useEffect(() => {
+        return () => {
+            try { stopCamera(); } catch (e) {}
+        };
+    }, []);
+
+    // sync controlled expanded prop
+    useEffect(() => {
+        setExpanded(controlledExpanded);
+    }, [controlledExpanded]);
+
+    useEffect(() => {
+        onExpandChange(expanded);
+        // prevent body scroll when expanded
+        if (expanded) document.body.style.overflow = 'hidden';
+        else document.body.style.overflow = '';
+    }, [expanded]);
+
     // 2. Handle File
     const handleFileSelect = (e) => {
         const file = e.target.files[0];
@@ -104,6 +126,62 @@ const AnimalClassifier = ({ embedded = false }) => {
         setIsProcessing(true);
         setAnalysisImage(imageUrl);
         e.target.value = '';
+    };
+
+    const startCamera = async () => {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
+            if (videoRef.current) {
+                videoRef.current.srcObject = stream;
+                await videoRef.current.play();
+                setCameraActive(true);
+            }
+        } catch (err) {
+            console.error('Camera start failed', err);
+            addBotMessage('Unable to access camera. Please use Upload Image.');
+        }
+    };
+
+    const stopCamera = () => {
+        if (videoRef.current && videoRef.current.srcObject) {
+            const tracks = videoRef.current.srcObject.getTracks();
+            tracks.forEach(t => t.stop());
+            videoRef.current.srcObject = null;
+        }
+        setCameraActive(false);
+    };
+
+    const captureFromCamera = async () => {
+        if (!videoRef.current) return;
+        const video = videoRef.current;
+
+        // wait for video to have dimensions
+        let attempts = 0;
+        while ((video.videoWidth === 0 || video.videoHeight === 0) && attempts < 6) {
+            // eslint-disable-next-line no-await-in-loop
+            await new Promise(r => setTimeout(r, 100));
+            attempts += 1;
+        }
+
+        const w = video.videoWidth || 640;
+        const h = video.videoHeight || 480;
+
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        // convert to blob safely
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+
+        // Add user message (image) and run prediction
+        setMessages(prev => [...prev, { id: Date.now(), role: 'user', type: 'image', content: dataUrl }]);
+        currentFileName.current = `camera-${Date.now()}.jpg`;
+        setIsProcessing(true);
+        setAnalysisImage(dataUrl);
+        // stop camera after capture
+        stopCamera();
     };
 
     const addBotMessage = (text, meta = null) => {
@@ -170,8 +248,14 @@ const AnimalClassifier = ({ embedded = false }) => {
         } catch (err) { console.error("DB Save Failed", err); }
     };
 
+    const rootClass = embedded
+        ? "h-full flex flex-col bg-white"
+        : expanded
+            ? "fixed inset-0 z-[9999] bg-white flex flex-col"
+            : "flex flex-col h-screen bg-[#111827]";
+
     return (
-        <div className={embedded ? "h-full flex flex-col bg-gray-50" : "flex flex-col h-screen bg-[#111827]"}>
+        <div className={rootClass}>
             {!embedded && <Header />}
 
             {/* --- MESSAGES AREA --- */}
@@ -187,6 +271,13 @@ const AnimalClassifier = ({ embedded = false }) => {
                         crossOrigin="anonymous"
                         alt="analysis"
                     />
+                )}
+
+                {/* Camera preview when active */}
+                {cameraActive && (
+                    <div className="mb-4 flex justify-center">
+                        <video ref={videoRef} className="rounded-lg w-full max-w-md border border-gray-200" playsInline muted />
+                    </div>
                 )}
 
                 {messages.map((msg) => (
@@ -264,13 +355,13 @@ const AnimalClassifier = ({ embedded = false }) => {
                     />
 
                     {/* Chat Input Bar */}
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 items-center">
                         <button
                             onClick={() => fileInputRef.current?.click()}
                             disabled={isProcessing || isModelLoading}
-                            className={`flex-1 py-3 px-6 rounded-xl font-medium text-white flex items-center justify-center gap-2 transition-all shadow-lg ${isProcessing || isModelLoading
+                            className={`flex-1 py-3 px-4 rounded-xl font-medium text-white flex items-center justify-center gap-2 transition-all shadow-lg ${isProcessing || isModelLoading
                                     ? 'bg-gray-700 cursor-not-allowed opacity-75'
-                                    : 'bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 active:scale-[0.98]'
+                                    : 'bg-gradient-to-r from-[#2D5A27] to-[#3A8C7D] hover:opacity-95 active:scale-[0.98]'
                                 }`}
                         >
                             {isModelLoading ? (
@@ -282,6 +373,23 @@ const AnimalClassifier = ({ embedded = false }) => {
                                 </>
                             )}
                         </button>
+
+                        {/* Camera capture controls */}
+                        {!cameraActive ? (
+                            <button
+                                onClick={startCamera}
+                                disabled={isProcessing || isModelLoading}
+                                className="w-14 h-12 rounded-xl bg-white border border-gray-200 text-green-700 flex items-center justify-center shadow-sm hover:bg-gray-50 transition"
+                                title="Use Camera"
+                            >
+                                <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" xmlns="http://www.w3.org/2000/svg"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                            </button>
+                        ) : (
+                            <div className="flex items-center gap-2">
+                                <button onClick={captureFromCamera} className="w-14 h-12 rounded-xl bg-gradient-to-r from-[#2D5A27] to-[#3A8C7D] text-white flex items-center justify-center shadow-sm hover:opacity-95">Capture</button>
+                                <button onClick={stopCamera} className="w-10 h-10 rounded-md bg-white border border-gray-200 text-gray-700 flex items-center justify-center shadow-sm">✕</button>
+                            </div>
+                        )}
                     </div>
                     <p className="text-center text-xs text-gray-500 mt-2">
                         Upload a clear image of an animal to identify it.

@@ -1,7 +1,15 @@
 @import "tailwindcss";
 
 body {
-    font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+    font-family: 'Poppins', sans-serif;
+    font-size: larger;
+    /* font-family: 'JetBrains Mono', monospace;
+    font-size: 18px;
+    font-weight: bold; */
+}
+
+.jet {
+    font-family: 'JetBrains Mono', monospace;
 }
 
 @keyframes fade-in {

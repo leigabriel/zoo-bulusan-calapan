@@ -5,7 +5,6 @@ import Animals from './pages/user/Animals';
 import Events from './pages/user/Events';
 import Tickets from './pages/user/Tickets';
 import AboutUs from './pages/user/AboutUs';
-import AnimalClassifier from './pages/user/AnimalClassifier';
 import AnimalDex from './pages/user/AnimalDex';
 import TicketHistory from './pages/user/TicketHistory';
 import UserProfile from './pages/user/UserProfile';
@@ -21,7 +20,8 @@ import StaffDashboard from './pages/staff/StaffDashboard';
 import TicketScanner from './pages/staff/TicketScanner';
 import AdminLayout from './components/layout/AdminLayout';
 import StaffLayout from './components/layout/StaffLayout';
-import './index.css';
+import AnimalClassifier from './components/features/ai-scanner/AnimalClassifier';
+import MapPage from './pages/user/Map';
 import './App.css';
 
 const ProtectedRoute = ({ children, allowedRoles }) => {
@@ -67,6 +67,7 @@ function AppRoutes() {
             <Route path="/events" element={<Events />} />
             <Route path="/about" element={<AboutUs />} />
             <Route path="/animaldex" element={<AnimalDex />} />
+            <Route path="/map" element={<MapPage />} />
 
             {/* Auth Routes */}
             <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />

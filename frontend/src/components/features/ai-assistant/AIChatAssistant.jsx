@@ -39,9 +39,22 @@ const ChatIcon = () => (
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
-const AIChatAssistant = () => {
-    const [isOpen, setIsOpen] = useState(false);
+const MaximizeIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-5 h-5">
+        <polyline points="15 3 21 3 21 9" />
+        <polyline points="9 21 3 21 3 15" />
+        <line x1="21" y1="3" x2="14" y2="10" />
+        <line x1="3" y1="21" x2="10" y2="14" />
+    </svg>
+);
+
+const AIChatAssistant = ({ hideLauncher = false, open: controlledOpen, expanded: controlledExpanded, onOpen, onClose, onExpandChange }) => {
+    const [internalOpen, setInternalOpen] = useState(false);
+    const isControlled = controlledOpen !== undefined;
+    const isOpen = isControlled ? controlledOpen : internalOpen;
     const [isMinimized, setIsMinimized] = useState(false);
+    const [internalExpanded, setInternalExpanded] = useState(false);
+    const isExpanded = controlledExpanded !== undefined ? controlledExpanded : internalExpanded;
     const [messages, setMessages] = useState([
         {
             role: 'assistant',
@@ -115,10 +128,18 @@ const AIChatAssistant = () => {
     ];
 
     if (!isOpen) {
+        if (hideLauncher) return null;
         return (
             <button
-                onClick={() => setIsOpen(true)}
-                className="fixed bottom-6 right-6 z-50 w-14 h-14 bg-gradient-to-r from-green-600 to-teal-500 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center hover:scale-110"
+                onClick={() => {
+                    if (isControlled) {
+                        onOpen?.();
+                    } else {
+                        setInternalOpen(true);
+                        onOpen?.();
+                    }
+                }}
+                className="fixed bottom-6 right-6 z-50 w-14 h-14 bg-gradient-to-r from-[#2D5A27] to-[#3A8C7D] text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center hover:scale-110"
             >
                 <ChatIcon />
                 <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full animate-pulse"></span>
@@ -127,9 +148,9 @@ const AIChatAssistant = () => {
     }
 
     return (
-        <div className={`fixed bottom-6 right-6 z-50 transition-all duration-300 ${isMinimized ? 'w-72' : 'w-96'}`}>
+        <div className={isExpanded ? 'fixed bottom-6 right-6 z-50 w-[90vw] md:w-[720px] h-[80vh]' : `fixed bottom-6 right-6 z-50 transition-all duration-300 ${isMinimized ? 'w-72' : 'w-96'}`}>
             <div className="bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-200">
-                <div className="bg-gradient-to-r from-green-600 to-teal-500 p-4 flex items-center justify-between">
+                    <div className="bg-gradient-to-r from-[#2D5A27] to-[#3A8C7D] p-4 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
                             <BotIcon />
@@ -141,14 +162,34 @@ const AIChatAssistant = () => {
                     </div>
                     <div className="flex items-center gap-1">
                         <button 
-                            onClick={() => setIsMinimized(!isMinimized)}
+                            onClick={() => { setIsMinimized(!isMinimized); }}
                             className="p-2 hover:bg-white/20 rounded-lg transition text-white"
+                            title="Minimize"
                         >
                             <MinimizeIcon />
                         </button>
-                        <button 
-                            onClick={() => setIsOpen(false)}
+                        <button
+                            onClick={() => {
+                                const newVal = !isExpanded;
+                                if (controlledExpanded === undefined) setInternalExpanded(newVal);
+                                onExpandChange?.(newVal);
+                            }}
                             className="p-2 hover:bg-white/20 rounded-lg transition text-white"
+                            title={isExpanded ? 'Restore size' : 'Expand'}
+                        >
+                            <MaximizeIcon />
+                        </button>
+                        <button 
+                            onClick={() => {
+                                if (isControlled) {
+                                    onClose?.();
+                                } else {
+                                    setInternalOpen(false);
+                                    onClose?.();
+                                }
+                            }}
+                            className="p-2 hover:bg-white/20 rounded-lg transition text-white"
+                            title="Close"
                         >
                             <CloseIcon />
                         </button>
@@ -157,7 +198,7 @@ const AIChatAssistant = () => {
 
                 {!isMinimized && (
                     <>
-                        <div className="h-80 overflow-y-auto p-4 bg-gray-50">
+                        <div className={`overflow-y-auto p-4 bg-gray-50 ${isExpanded ? 'h-[60vh]' : 'h-80'}`}>
                             {messages.map((msg, idx) => (
                                 <div key={idx} className={`flex gap-2 mb-4 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
                                     <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${

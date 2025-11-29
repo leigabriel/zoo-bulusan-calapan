@@ -46,7 +46,7 @@ const Animals = () => {
     const filteredAnimals = filter === 'All' ? animals : animals.filter(a => a.category === filter);
 
     return (
-        <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
+        <div className="min-h-screen bg-gray-50 flex flex-col">
             <Header />
 
             <section className="relative text-white py-24 text-center bg-cover bg-center" style={{ backgroundImage: 'linear-gradient(rgba(45,90,39,0.85), rgba(58,140,125,0.85)), url(https://images.unsplash.com/photo-1548013146-72479768bada)' }}>
