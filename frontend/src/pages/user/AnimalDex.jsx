@@ -1,6 +1,17 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import Header from '../../components/Header';
+import Footer from '../../components/Footer';
 import { userAPI } from '../../services/api-client';
+
+const PawIcon = ({ className }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className={className}>
+        <circle cx="11" cy="4" r="2"/>
+        <circle cx="18" cy="8" r="2"/>
+        <circle cx="20" cy="16" r="2"/>
+        <path d="M9 10a5 5 0 0 1 5 5v3.5a3.5 3.5 0 0 1-6.84 1.045Q6.52 17.48 4.46 16.84A3.5 3.5 0 0 1 5.5 10Z"/>
+    </svg>
+);
 
 const AnimalDex = () => {
     const [animals, setAnimals] = useState([]);
@@ -55,6 +66,7 @@ const AnimalDex = () => {
 
     return (
         <div className="min-h-screen bg-gray-50">
+            <Header />
             <section className="bg-gradient-to-r from-green-600 to-teal-500 text-white py-16 px-4">
                 <div className="max-w-6xl mx-auto text-center">
                     <h1 className="text-4xl md:text-5xl font-bold mb-4">AnimalDex</h1>
@@ -170,6 +182,7 @@ const AnimalDex = () => {
                     </div>
                 </div>
             )}
+            <Footer />
         </div>
     );
 };

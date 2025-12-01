@@ -78,6 +78,18 @@ const Home = () => {
     const [assistantExpanded, setAssistantExpanded] = useState(false);
     const [scannerExpanded, setScannerExpanded] = useState(false);
 
+    // Prevent body scroll when scanner is expanded
+    React.useEffect(() => {
+        if (scannerExpanded) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = '';
+        }
+        return () => {
+            document.body.style.overflow = '';
+        };
+    }, [scannerExpanded]);
+
     const openAssistant = () => {
         setActiveFeature('assistant');
         setAssistantExpanded(false);
@@ -140,36 +152,71 @@ const Home = () => {
             <AIChatAssistant hideLauncher={true} open={activeFeature === 'assistant'} expanded={assistantExpanded} onExpandChange={(v) => setAssistantExpanded(v)} onClose={() => { setActiveFeature(null); setAssistantExpanded(false); }} />
 
             {activeFeature === 'scanner' && (
-                <div className="fixed bottom-6 right-6 z-50 w-[360px] h-[520px] bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-200">
-                    <div className="bg-gradient-to-r from-[#2D5A27] to-[#3A8C7D] p-3 flex items-center justify-between text-white">
-                        <div className="flex items-center gap-3">
-                            <div className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center"> 
-                                <svg className="w-5 h-5 text-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" /><circle cx="12" cy="13" r="4" /></svg>
+                <>
+                    {/* Expanded Scanner - Fullscreen Overlay */}
+                    {scannerExpanded && (
+                        <div className="fixed inset-0 z-[9999] bg-white flex flex-col">
+                            <div className="bg-gradient-to-r from-[#2D5A27] to-[#3A8C7D] p-3 flex items-center justify-between text-white">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center"> 
+                                        <svg className="w-5 h-5 text-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" /><circle cx="12" cy="13" r="4" /></svg>
+                                    </div>
+                                    <div>
+                                        <h3 className="font-bold">AI Scanner</h3>
+                                        <p className="text-xs opacity-90">Animal Classifier</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        onClick={() => setScannerExpanded(false)}
+                                        title="Minimize"
+                                        className="p-2 rounded-md bg-white/20 hover:bg-white/30 text-white"
+                                    >
+                                        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="4 14 10 14 10 20" /><polyline points="20 10 14 10 14 4" /></svg>
+                                    </button>
+                                    <button onClick={() => { setActiveFeature(null); setScannerExpanded(false); }} className="p-2 rounded-md bg-white/20 hover:bg-white/30 text-white">
+                                        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+                                    </button>
+                                </div>
                             </div>
-                            <div>
-                                <h3 className="font-bold">AI Scanner</h3>
-                                <p className="text-xs opacity-90">Animal Classifier</p>
+                            <div className="flex-1 overflow-hidden">
+                                <AnimalClassifier embedded={true} />
                             </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                            <button
-                                onClick={() => setScannerExpanded(prev => !prev)}
-                                title={scannerExpanded ? 'Collapse' : 'Expand'}
-                                className="p-2 rounded-md bg-white/20 hover:bg-white/30 text-white"
-                            >
-                                {scannerExpanded ? (
-                                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="4 14 10 14 10 20" /><polyline points="20 10 14 10 14 4" /></svg>
-                                ) : (
-                                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 3 21 3 21 9" /><polyline points="9 21 3 21 3 15" /></svg>
-                                )}
-                            </button>
-                            <button onClick={() => setActiveFeature(null)} className="p-2 rounded-md bg-white/20 hover:bg-white/30 text-white">Close</button>
+                    )}
+
+                    {/* Compact Scanner Panel */}
+                    {!scannerExpanded && (
+                        <div className="fixed bottom-6 right-6 z-50 w-[340px] sm:w-[360px] h-[480px] sm:h-[520px] bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-200 flex flex-col">
+                            <div className="bg-gradient-to-r from-[#2D5A27] to-[#3A8C7D] p-3 flex items-center justify-between text-white shrink-0">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center"> 
+                                        <svg className="w-5 h-5 text-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" /><circle cx="12" cy="13" r="4" /></svg>
+                                    </div>
+                                    <div>
+                                        <h3 className="font-bold text-sm">AI Scanner</h3>
+                                        <p className="text-xs opacity-90">Animal Classifier</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-1">
+                                    <button
+                                        onClick={() => setScannerExpanded(true)}
+                                        title="Expand"
+                                        className="p-2 rounded-md bg-white/20 hover:bg-white/30 text-white"
+                                    >
+                                        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 3 21 3 21 9" /><polyline points="9 21 3 21 3 15" /></svg>
+                                    </button>
+                                    <button onClick={() => setActiveFeature(null)} className="p-2 rounded-md bg-white/20 hover:bg-white/30 text-white text-xs font-medium">
+                                        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+                                    </button>
+                                </div>
+                            </div>
+                            <div className="flex-1 overflow-hidden">
+                                <AnimalClassifier embedded={true} />
+                            </div>
                         </div>
-                    </div>
-                    <div className="h-[calc(100%-56px)] overflow-auto">
-                        <AnimalClassifier embedded={true} expanded={scannerExpanded} onExpandChange={(v) => setScannerExpanded(v)} />
-                    </div>
-                </div>
+                    )}
+                </>
             )}
 
             <section className="relative h-[600px] text-white flex items-center justify-center text-center bg-cover bg-center" style={{ backgroundImage: `linear-gradient(rgba(45, 90, 39, 0.85), rgba(58, 140, 125, 0.85)), url('https://images.unsplash.com/photo-1548013146-72479768bada?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80')` }}>
@@ -178,7 +225,7 @@ const Home = () => {
                         <Icons.Brain />
                         <span>AI-Driven Smart Zoo</span>
                     </div>
-                    <h1 className="text-5xl md:text-7xl font-bold mb-6 tracking-tight leading-tight jet">Wildlife Wonder Awaits</h1>
+                    <h1 className="text-5xl md:text-7xl font-bold mb-6 tracking-tight leading-tight">Wildlife Wonder Awaits</h1>
                     <p className="text-xl md:text-2xl mb-10 max-w-2xl mx-auto text-gray-100 font-light">Immerse yourself in nature with our cloud-powered zoo experience.</p>
                     <div className="flex flex-col sm:flex-row gap-5 justify-center">
                         <Link to="/tickets" className="bg-white text-green-800 px-8 py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-3 hover:bg-gray-50 transition shadow-lg hover:shadow-xl transform hover:-translate-y-1">

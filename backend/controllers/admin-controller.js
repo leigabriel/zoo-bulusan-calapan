@@ -294,3 +294,90 @@ exports.getRevenueReport = async (req, res) => {
         res.status(500).json({ success: false, message: 'Error fetching revenue report' });
     }
 };
+
+// Model Management
+const fs = require('fs');
+const path = require('path');
+
+exports.uploadModel = async (req, res) => {
+    try {
+        const modelJson = req.files['modelJson'] ? req.files['modelJson'][0] : null;
+        const weights = req.files['weights'] || [];
+
+        if (!modelJson) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'model.json file is required' 
+            });
+        }
+
+        if (weights.length === 0) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'At least one weight file (.bin) is required' 
+            });
+        }
+
+        // Log upload details
+        console.log('Model upload successful:');
+        console.log('- Model JSON:', modelJson.filename);
+        console.log('- Weight files:', weights.map(w => w.filename).join(', '));
+
+        res.json({
+            success: true,
+            message: 'Model uploaded successfully',
+            files: {
+                modelJson: modelJson.filename,
+                weights: weights.map(w => w.filename)
+            }
+        });
+    } catch (error) {
+        console.error('Error uploading model:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: error.message || 'Error uploading model' 
+        });
+    }
+};
+
+exports.getModelInfo = async (req, res) => {
+    try {
+        const modelsPath = path.join(__dirname, '../../frontend/public/models');
+        const modelJsonPath = path.join(modelsPath, 'model.json');
+
+        // Check if model.json exists
+        if (!fs.existsSync(modelJsonPath)) {
+            return res.status(404).json({
+                success: false,
+                message: 'No model found'
+            });
+        }
+
+        // Read model.json to get info
+        const modelData = JSON.parse(fs.readFileSync(modelJsonPath, 'utf-8'));
+        
+        // Get list of weight files
+        const files = fs.readdirSync(modelsPath);
+        const weightFiles = files.filter(f => f.endsWith('.bin'));
+        
+        // Get model file stats
+        const stats = fs.statSync(modelJsonPath);
+
+        res.json({
+            success: true,
+            modelInfo: {
+                path: '/models/model.json',
+                weightFiles: weightFiles.length,
+                lastModified: stats.mtime,
+                format: modelData.format || 'unknown',
+                generatedBy: modelData.generatedBy || 'unknown'
+            }
+        });
+    } catch (error) {
+        console.error('Error getting model info:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Error fetching model info' 
+        });
+    }
+};

@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import Header from '../../components/Header';
+import Footer from '../../components/Footer';
 import { useAuth } from '../../context/AuthContext';
 import { userAPI } from '../../services/api-client';
 
@@ -63,6 +65,7 @@ const TicketHistory = () => {
 
     return (
         <div className="min-h-screen bg-gray-50">
+            <Header />
             <section className="bg-gradient-to-r from-green-600 to-teal-500 text-white py-12 px-4">
                 <div className="max-w-4xl mx-auto">
                     <h1 className="text-3xl font-bold mb-2">Ticket History</h1>
@@ -182,6 +185,7 @@ const TicketHistory = () => {
                     </div>
                 )}
             </div>
+            <Footer />
         </div>
     );
 };

@@ -31,7 +31,8 @@ const Header = () => {
     ];
 
     return (
-        <header className="bg-white shadow-lg sticky top-0 z-50">
+        <>
+        <header className="bg-white/70 backdrop-blur-sm shadow-lg sticky top-0 z-50">
             <div className="container mx-auto px-4 py-4">
                 <div className="flex justify-between items-center">
                     <Link to="/" className="flex items-center gap-3">
@@ -222,13 +223,15 @@ const Header = () => {
                     </div>
                 )}
             </div>
-            
-            <LogoutModal
-                isOpen={showLogoutModal}
-                onClose={() => setShowLogoutModal(false)}
-                onConfirm={handleLogout}
-            />
         </header>
+        
+        <LogoutModal
+            isOpen={showLogoutModal}
+            onClose={() => setShowLogoutModal(false)}
+            onConfirm={handleLogout}
+            userName={user?.firstName || user?.username || 'User'}
+        />
+    </>
     );
 };
 

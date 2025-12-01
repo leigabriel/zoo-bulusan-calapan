@@ -207,7 +207,6 @@ const LoginPage = ({ isAdmin = false }) => {
                         ) : (
                             <div className="text-center text-sm mt-2">
                                 <Link to="/admin/login" className="text-gray-500 hover:underline">
-                                    Staff/Admin Login
                                 </Link>
                             </div>
                         )}

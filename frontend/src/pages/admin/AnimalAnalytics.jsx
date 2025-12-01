@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { STORAGE_KEYS, predictionAPI } from '../../services/api-client';
+import Chart from 'react-apexcharts';
 
 const Icons = {
     Chart: () => (
@@ -38,6 +39,35 @@ const Icons = {
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
             <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
         </svg>
+    ),
+    Brain: () => (
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
+            <path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 1.98-3A2.5 2.5 0 0 1 9.5 2Z" />
+            <path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-1.98-3A2.5 2.5 0 0 0 14.5 2Z" />
+        </svg>
+    ),
+    Upload: () => (
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="17 8 12 3 7 8" />
+            <line x1="12" y1="3" x2="12" y2="15" />
+        </svg>
+    ),
+    Check: () => (
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+            <polyline points="20 6 9 17 4 12" />
+        </svg>
+    ),
+    Folder: () => (
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+        </svg>
+    ),
+    Settings: () => (
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+            <circle cx="12" cy="12" r="3" />
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+        </svg>
     )
 };
 
@@ -51,6 +81,16 @@ const AnimalAnalytics = () => {
     const [selectAll, setSelectAll] = useState(false);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+
+    // Model Management State
+    const [showModelManager, setShowModelManager] = useState(false);
+    const [modelFiles, setModelFiles] = useState([]);
+    const [uploadProgress, setUploadProgress] = useState(0);
+    const [isUploading, setIsUploading] = useState(false);
+    const [uploadError, setUploadError] = useState(null);
+    const [uploadSuccess, setUploadSuccess] = useState(false);
+    const modelInputRef = useRef(null);
+    const weightsInputRef = useRef(null);
 
     const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
     const maxStatValue = Math.max(...Object.values(stats), 1);
@@ -153,6 +193,116 @@ const AnimalAnalytics = () => {
         return 'text-amber-600 bg-amber-100';
     };
 
+    // Model Management Functions
+    const handleModelFileSelect = (e) => {
+        const files = Array.from(e.target.files);
+        if (files.length > 0) {
+            // Validate model.json file
+            const modelJson = files.find(f => f.name === 'model.json');
+            if (!modelJson) {
+                setUploadError('Please select a valid model.json file');
+                return;
+            }
+            setModelFiles(prevFiles => {
+                // Replace existing model.json if present
+                const filtered = prevFiles.filter(f => f.name !== 'model.json');
+                return [...filtered, modelJson];
+            });
+            setUploadError(null);
+        }
+    };
+
+    const handleWeightsFileSelect = (e) => {
+        const files = Array.from(e.target.files);
+        if (files.length > 0) {
+            // Validate weight/shard files (.bin files)
+            const validFiles = files.filter(f => f.name.endsWith('.bin'));
+            if (validFiles.length === 0) {
+                setUploadError('Please select valid weight files (.bin)');
+                return;
+            }
+            setModelFiles(prevFiles => {
+                // Remove existing .bin files and add new ones
+                const filtered = prevFiles.filter(f => !f.name.endsWith('.bin'));
+                return [...filtered, ...validFiles];
+            });
+            setUploadError(null);
+        }
+    };
+
+    const removeModelFile = (fileName) => {
+        setModelFiles(prevFiles => prevFiles.filter(f => f.name !== fileName));
+    };
+
+    const handleModelUpload = async () => {
+        // Validate files
+        const modelJson = modelFiles.find(f => f.name === 'model.json');
+        const weightFiles = modelFiles.filter(f => f.name.endsWith('.bin'));
+
+        if (!modelJson) {
+            setUploadError('model.json file is required');
+            return;
+        }
+
+        if (weightFiles.length === 0) {
+            setUploadError('At least one weight file (.bin) is required');
+            return;
+        }
+
+        setIsUploading(true);
+        setUploadError(null);
+        setUploadProgress(0);
+        setUploadSuccess(false);
+
+        try {
+            const formData = new FormData();
+            formData.append('modelJson', modelJson);
+            weightFiles.forEach(file => {
+                formData.append('weights', file);
+            });
+
+            const response = await fetch(`${API_URL}/admin/upload-model`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: formData
+            });
+
+            // Simulate progress for better UX
+            const progressInterval = setInterval(() => {
+                setUploadProgress(prev => Math.min(prev + 10, 90));
+            }, 200);
+
+            const result = await response.json();
+            clearInterval(progressInterval);
+
+            if (result.success) {
+                setUploadProgress(100);
+                setUploadSuccess(true);
+                setModelFiles([]);
+                setTimeout(() => {
+                    setUploadSuccess(false);
+                    setShowModelManager(false);
+                }, 2000);
+            } else {
+                throw new Error(result.message || 'Upload failed');
+            }
+        } catch (error) {
+            console.error('Model upload error:', error);
+            setUploadError(error.message || 'Failed to upload model');
+        } finally {
+            setIsUploading(false);
+        }
+    };
+
+    const resetModelUpload = () => {
+        setModelFiles([]);
+        setUploadError(null);
+        setUploadProgress(0);
+        setUploadSuccess(false);
+    };
+
     if (loading && records.length === 0) {
         return (
             <div className="flex items-center justify-center h-64">
@@ -186,41 +336,135 @@ const AnimalAnalytics = () => {
         <div className="space-y-8 p-2">
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div className="lg:col-span-2 bg-white border border-gray-100 rounded-3xl p-8 shadow-lg hover:shadow-xl transition duration-300">
-                    <h3 className="text-xl font-bold text-green-800 mb-8 flex items-center gap-2">
-                        <Icons.Chart />
-                        Classification Distribution
-                    </h3>
-                    <div className="h-64 flex items-end justify-between gap-1 pb-2 border-b border-gray-100 relative">
-                        {/* Background Grid Lines */}
-                        <div className="absolute inset-0 flex flex-col justify-between pointer-events-none opacity-50">
-                            {[...Array(5)].map((_, i) => (
-                                <div key={i} className="w-full h-px bg-gray-50"></div>
-                            ))}
+                {/* Line Chart with ApexCharts */}
+                <div className="lg:col-span-2 relative flex flex-col rounded-xl bg-white bg-clip-border text-gray-700 shadow-md">
+                    <div className="relative mx-4 mt-4 flex flex-col gap-4 overflow-hidden rounded-none bg-transparent bg-clip-border text-gray-700 shadow-none md:flex-row md:items-center">
+                        <div className="w-max rounded-lg bg-gradient-to-br from-green-600 to-teal-600 p-5 text-white">
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                strokeWidth="1.5"
+                                stroke="currentColor"
+                                className="h-6 w-6"
+                            >
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    d="M6.429 9.75L2.25 12l4.179 2.25m0-4.5l5.571 3 5.571-3m-11.142 0L2.25 7.5 12 2.25l9.75 5.25-4.179 2.25m0 0L21.75 12l-4.179 2.25m0 0l4.179 2.25L12 21.75 2.25 16.5l4.179-2.25m11.142 0l-5.571 3-5.571-3"
+                                />
+                            </svg>
                         </div>
-
-                        {Object.entries(stats).map(([animal, count]) => {
-                            const height = (count / maxStatValue) * 100;
-                            return (
-                                <div key={animal} className="flex-1 flex flex-col items-center gap-2 group z-10">
-                                    <div className="relative w-full flex justify-center h-full items-end">
-                                        <div
-                                            className="w-full max-w-[24px] bg-gradient-to-t from-green-600 to-teal-400 rounded-t-md transition-all duration-700 group-hover:from-green-500 group-hover:to-teal-300 relative"
-                                            style={{ height: `${height}%`, minHeight: count > 0 ? '6px' : '2px', opacity: count > 0 ? 1 : 0.3 }}
-                                        >
-                                            {count > 0 && (
-                                                <span className="absolute -top-6 left-1/2 transform -translate-x-1/2 text-xs font-bold text-green-700 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    {count}
-                                                </span>
-                                            )}
-                                        </div>
-                                    </div>
-                                    <span className="text-[10px] text-gray-500 font-medium truncate w-full text-center transform -rotate-45 origin-center mt-2 group-hover:text-green-700 transition-colors">
-                                        {animal}
-                                    </span>
-                                </div>
-                            );
-                        })}
+                        <div>
+                            <h6 className="block font-sans text-base font-semibold leading-relaxed tracking-normal text-gray-900 antialiased">
+                                Classification Distribution
+                            </h6>
+                            <p className="block max-w-sm font-sans text-sm font-normal leading-normal text-gray-700 antialiased">
+                                Animal detection statistics across all classifications
+                            </p>
+                        </div>
+                    </div>
+                    <div className="pt-6 px-2 pb-0">
+                        <Chart
+                            options={{
+                                chart: {
+                                    type: 'line',
+                                    height: 280,
+                                    toolbar: {
+                                        show: false,
+                                    },
+                                    zoom: {
+                                        enabled: false
+                                    }
+                                },
+                                dataLabels: {
+                                    enabled: false,
+                                },
+                                colors: ['#059669'],
+                                stroke: {
+                                    lineCap: 'round',
+                                    curve: 'smooth',
+                                    width: 3,
+                                },
+                                markers: {
+                                    size: 4,
+                                    colors: ['#059669'],
+                                    strokeColors: '#fff',
+                                    strokeWidth: 2,
+                                    hover: {
+                                        size: 6,
+                                    }
+                                },
+                                xaxis: {
+                                    axisTicks: {
+                                        show: false,
+                                    },
+                                    axisBorder: {
+                                        show: false,
+                                    },
+                                    labels: {
+                                        style: {
+                                            colors: '#616161',
+                                            fontSize: '11px',
+                                            fontFamily: 'inherit',
+                                            fontWeight: 500,
+                                        },
+                                        rotate: -45,
+                                        rotateAlways: true,
+                                    },
+                                    categories: Object.keys(stats),
+                                },
+                                yaxis: {
+                                    labels: {
+                                        style: {
+                                            colors: '#616161',
+                                            fontSize: '12px',
+                                            fontFamily: 'inherit',
+                                            fontWeight: 400,
+                                        },
+                                        formatter: (val) => Math.round(val)
+                                    },
+                                },
+                                grid: {
+                                    show: true,
+                                    borderColor: '#e5e7eb',
+                                    strokeDashArray: 5,
+                                    xaxis: {
+                                        lines: {
+                                            show: true,
+                                        },
+                                    },
+                                    padding: {
+                                        top: 5,
+                                        right: 20,
+                                    },
+                                },
+                                fill: {
+                                    type: 'gradient',
+                                    gradient: {
+                                        shade: 'light',
+                                        type: 'vertical',
+                                        shadeIntensity: 0.5,
+                                        opacityFrom: 0.7,
+                                        opacityTo: 0.2,
+                                    }
+                                },
+                                tooltip: {
+                                    theme: 'dark',
+                                    y: {
+                                        formatter: (val) => `${val} detections`
+                                    }
+                                },
+                            }}
+                            series={[
+                                {
+                                    name: 'Detections',
+                                    data: Object.values(stats),
+                                },
+                            ]}
+                            type="area"
+                            height={280}
+                        />
                     </div>
                 </div>
 
@@ -274,6 +518,13 @@ const AnimalAnalytics = () => {
                             className="flex-1 sm:flex-none px-4 py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 bg-gray-100 text-gray-600 hover:bg-red-600 hover:text-white transition shadow-sm group">
                             <Icons.Warning />
                             Clear Database
+                        </button>
+
+                        <button
+                            onClick={() => setShowModelManager(true)}
+                            className="flex-1 sm:flex-none px-4 py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 bg-gradient-to-r from-purple-500 to-indigo-600 text-white hover:from-purple-600 hover:to-indigo-700 transition shadow-sm">
+                            <Icons.Settings />
+                            AI Model
                         </button>
                     </div>
                 </div>
@@ -370,6 +621,201 @@ const AnimalAnalytics = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Model Manager Modal */}
+            {showModelManager && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+                    <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                        {/* Header */}
+                        <div className="bg-gradient-to-r from-purple-600 to-indigo-600 p-6 text-white">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    <div className="bg-white/20 p-2 rounded-xl">
+                                        <Icons.Settings />
+                                    </div>
+                                    <div>
+                                        <h2 className="text-xl font-bold">AI Model Manager</h2>
+                                        <p className="text-purple-100 text-sm">Upload and manage classification models</p>
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={() => {
+                                        setShowModelManager(false);
+                                        resetModelUpload();
+                                    }}
+                                    className="p-2 hover:bg-white/20 rounded-xl transition"
+                                >
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Content */}
+                        <div className="p-6 overflow-y-auto max-h-[60vh]">
+                            {/* Current Model Info */}
+                            <div className="bg-gray-50 rounded-2xl p-4 mb-6 border border-gray-100">
+                                <h3 className="font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                                    <Icons.Folder />
+                                    Current Model
+                                </h3>
+                                <div className="flex items-center gap-3">
+                                    <div className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-medium">
+                                        Active
+                                    </div>
+                                    <span className="text-gray-600 text-sm">/models/model.json</span>
+                                </div>
+                                <p className="text-xs text-gray-400 mt-2">15 animal classes • 19 weight shards</p>
+                            </div>
+
+                            {/* Upload Success State */}
+                            {uploadSuccess && (
+                                <div className="bg-green-50 border border-green-200 rounded-2xl p-6 text-center mb-6">
+                                    <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                        <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                        </svg>
+                                    </div>
+                                    <h3 className="text-lg font-bold text-green-700 mb-1">Model Uploaded Successfully!</h3>
+                                    <p className="text-green-600 text-sm">The new model is now active</p>
+                                </div>
+                            )}
+
+                            {/* Upload Area */}
+                            {!uploadSuccess && (
+                                <>
+                                    <h3 className="font-semibold text-gray-700 mb-4">Upload New Model</h3>
+
+                                    {/* Model.json Upload */}
+                                    <div className="mb-4">
+                                        <label className="block text-sm font-medium text-gray-600 mb-2">
+                                            Model Architecture (model.json)
+                                        </label>
+                                        <input
+                                            ref={modelInputRef}
+                                            type="file"
+                                            accept=".json"
+                                            onChange={handleModelFileSelect}
+                                            className="hidden"
+                                        />
+                                        <button
+                                            onClick={() => modelInputRef.current?.click()}
+                                            disabled={isUploading}
+                                            className="w-full border-2 border-dashed border-gray-200 rounded-xl p-4 hover:border-purple-400 hover:bg-purple-50/50 transition flex items-center justify-center gap-2 text-gray-500 hover:text-purple-600 disabled:opacity-50"
+                                        >
+                                            <Icons.Upload />
+                                            {modelFiles.find(f => f.name === 'model.json')
+                                                ? modelFiles.find(f => f.name === 'model.json').name
+                                                : 'Click to select model.json'}
+                                        </button>
+                                    </div>
+
+                                    {/* Weights Upload */}
+                                    <div className="mb-4">
+                                        <label className="block text-sm font-medium text-gray-600 mb-2">
+                                            Weight Files (.bin shards)
+                                        </label>
+                                        <input
+                                            ref={weightsInputRef}
+                                            type="file"
+                                            accept=".bin"
+                                            multiple
+                                            onChange={handleWeightsFileSelect}
+                                            className="hidden"
+                                        />
+                                        <button
+                                            onClick={() => weightsInputRef.current?.click()}
+                                            disabled={isUploading}
+                                            className="w-full border-2 border-dashed border-gray-200 rounded-xl p-4 hover:border-purple-400 hover:bg-purple-50/50 transition flex items-center justify-center gap-2 text-gray-500 hover:text-purple-600 disabled:opacity-50"
+                                        >
+                                            <Icons.Upload />
+                                            Click to select weight files
+                                        </button>
+                                    </div>
+
+                                    {/* Selected Files List */}
+                                    {modelFiles.length > 0 && (
+                                        <div className="bg-gray-50 rounded-xl p-4 mb-4">
+                                            <h4 className="text-sm font-medium text-gray-600 mb-2">Selected Files ({modelFiles.length})</h4>
+                                            <div className="max-h-32 overflow-y-auto space-y-1">
+                                                {modelFiles.map(file => (
+                                                    <div key={file.name} className="flex items-center justify-between bg-white px-3 py-2 rounded-lg text-sm">
+                                                        <span className="truncate text-gray-600">{file.name}</span>
+                                                        <button
+                                                            onClick={() => removeModelFile(file.name)}
+                                                            disabled={isUploading}
+                                                            className="text-red-400 hover:text-red-600 disabled:opacity-50"
+                                                        >
+                                                            <Icons.Trash />
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Progress Bar */}
+                                    {isUploading && (
+                                        <div className="mb-4">
+                                            <div className="flex justify-between text-sm text-gray-600 mb-1">
+                                                <span>Uploading...</span>
+                                                <span>{uploadProgress}%</span>
+                                            </div>
+                                            <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                                                <div
+                                                    className="h-full bg-gradient-to-r from-purple-500 to-indigo-600 transition-all duration-300"
+                                                    style={{ width: `${uploadProgress}%` }}
+                                                />
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Error Message */}
+                                    {uploadError && (
+                                        <div className="bg-red-50 border border-red-200 rounded-xl p-3 mb-4 flex items-center gap-2 text-red-600 text-sm">
+                                            <Icons.Warning />
+                                            {uploadError}
+                                        </div>
+                                    )}
+                                </>
+                            )}
+                        </div>
+
+                        {/* Footer */}
+                        <div className="border-t border-gray-100 p-4 bg-gray-50 flex justify-end gap-3">
+                            <button
+                                onClick={() => {
+                                    setShowModelManager(false);
+                                    resetModelUpload();
+                                }}
+                                className="px-5 py-2.5 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-200 transition"
+                            >
+                                Cancel
+                            </button>
+                            {!uploadSuccess && (
+                                <button
+                                    onClick={handleModelUpload}
+                                    disabled={modelFiles.length === 0 || isUploading}
+                                    className="px-5 py-2.5 rounded-xl text-sm font-bold bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:from-purple-700 hover:to-indigo-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                >
+                                    {isUploading ? (
+                                        <>
+                                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                            Uploading...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Icons.Upload />
+                                            Upload Model
+                                        </>
+                                    )}
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
