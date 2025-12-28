@@ -64,35 +64,37 @@ const TicketHistory = () => {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-gray-50 flex flex-col">
             <Header />
-            <section className="bg-gradient-to-r from-green-600 to-teal-500 text-white py-12 px-4">
-                <div className="max-w-4xl mx-auto">
-                    <h1 className="text-3xl font-bold mb-2">Ticket History</h1>
-                    <p className="opacity-90">View your past and upcoming zoo visits</p>
+            
+            {/* Hero Section - matching other pages */}
+            <section className="relative text-white py-16 text-center bg-cover bg-center" style={{ backgroundImage: 'linear-gradient(rgba(45,90,39,0.85), rgba(58,140,125,0.85)), url(https://images.unsplash.com/photo-1564349683136-77e08dba1ef7)' }}>
+                <div className="relative z-10">
+                    <h1 className="text-4xl md:text-5xl font-bold mb-4 tracking-tight">Ticket History</h1>
+                    <p className="text-lg max-w-xl mx-auto opacity-90 font-light">View your past and upcoming zoo visits</p>
                 </div>
             </section>
 
-            <div className="max-w-4xl mx-auto px-4 py-8">
-                <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+            <div className="max-w-4xl mx-auto px-4 py-12 flex-grow">
+                <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
                     <div className="flex gap-2">
                         {['all', 'active', 'used', 'expired'].map(f => (
                             <button
                                 key={f}
                                 onClick={() => setFilter(f)}
-                                className={`px-4 py-2 rounded-lg font-medium capitalize transition ${
+                                className={`px-6 py-2.5 rounded-full font-semibold capitalize transition-all transform hover:-translate-y-0.5 ${
                                     filter === f
-                                        ? 'bg-green-600 text-white'
-                                        : 'bg-white text-gray-600 hover:bg-gray-100'
+                                        ? 'bg-gradient-to-r from-green-600 to-teal-600 text-white shadow-lg'
+                                        : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
                                 }`}
                             >
-                                {f}
+                                {f === 'all' ? 'All' : f.charAt(0).toUpperCase() + f.slice(1)}
                             </button>
                         ))}
                     </div>
                     <Link
                         to="/tickets"
-                        className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
+                        className="px-6 py-2.5 bg-gradient-to-r from-green-600 to-teal-600 text-white font-semibold rounded-full hover:shadow-lg transition-all transform hover:-translate-y-0.5"
                     >
                         Buy New Ticket
                     </Link>
@@ -101,7 +103,7 @@ const TicketHistory = () => {
                 {filteredTickets.length > 0 ? (
                     <div className="space-y-4">
                         {filteredTickets.map(ticket => (
-                            <div key={ticket.id} className="bg-white rounded-2xl shadow-sm overflow-hidden">
+                            <div key={ticket.id} className="bg-white rounded-3xl shadow-sm overflow-hidden border border-gray-100 hover:shadow-lg transition-all duration-300">
                                 <div className="flex flex-col md:flex-row">
                                     <div className="p-6 flex-1">
                                         <div className="flex items-start justify-between mb-4">
@@ -163,7 +165,7 @@ const TicketHistory = () => {
                         ))}
                     </div>
                 ) : (
-                    <div className="bg-white rounded-2xl p-12 text-center">
+                    <div className="bg-white rounded-3xl p-12 text-center border border-gray-100 shadow-sm">
                         <div className="flex justify-center mb-4">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-16 h-16 text-gray-300">
                                 <path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/>

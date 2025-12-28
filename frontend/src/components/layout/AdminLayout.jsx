@@ -65,7 +65,7 @@ const AdminLayout = ({ children }) => {
     const { user, logout } = useAuth();
     const location = useLocation();
     const navigate = useNavigate();
-    const [sidebarOpen, setSidebarOpen] = useState(true);
+    const [sidebarOpen, setSidebarOpen] = useState(false);
     const [showLogoutModal, setShowLogoutModal] = useState(false);
 
     const handleLogout = () => {
@@ -80,9 +80,29 @@ const AdminLayout = ({ children }) => {
         { path: '/admin/users', label: 'Manage Users', Icon: UsersIcon }
     ];
 
+    // Close sidebar when route changes on mobile
+    const handleNavClick = () => {
+        if (window.innerWidth < 768) {
+            setSidebarOpen(false);
+        }
+    };
+
     return (
         <div className="flex h-screen bg-gray-100">
-            <div className={`${sidebarOpen ? 'w-64' : 'w-20'} bg-gradient-to-b from-green-800 to-teal-700 text-white transition-all duration-300 flex flex-col`}>
+            {/* Mobile overlay */}
+            {sidebarOpen && (
+                <div 
+                    className="fixed inset-0 bg-black/50 z-40 md:hidden"
+                    onClick={() => setSidebarOpen(false)}
+                    aria-hidden="true"
+                />
+            )}
+            
+            {/* Sidebar */}
+            <aside 
+                className={`${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'} fixed md:relative z-50 md:z-auto w-64 md:w-64 bg-gradient-to-b from-green-800 to-teal-700 text-white transition-transform duration-300 flex flex-col h-full`}
+                aria-label="Admin navigation"
+            >
                 <div className="p-4 flex items-center gap-3 border-b border-green-600">
                     <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-green-700">
                         <PawIcon />
@@ -95,19 +115,21 @@ const AdminLayout = ({ children }) => {
                     )}
                 </div>
 
-                <nav className="flex-1 py-4">
+                <nav className="flex-1 py-4" role="navigation">
                     {menuItems.map(item => (
                         <Link
                             key={item.path}
                             to={item.path}
-                            className={`flex items-center px-4 py-3 mx-2 rounded-lg transition ${
+                            onClick={handleNavClick}
+                            className={`flex items-center px-4 py-3 mx-2 rounded-lg transition touch-target ${
                                 location.pathname === item.path
                                     ? 'bg-white/20 border-l-4 border-yellow-400'
                                     : 'hover:bg-white/10'
                             }`}
+                            aria-current={location.pathname === item.path ? 'page' : undefined}
                         >
                             <span className="w-6"><item.Icon /></span>
-                            {sidebarOpen && <span className="ml-3">{item.label}</span>}
+                            <span className="ml-3">{item.label}</span>
                         </Link>
                     ))}
                 </nav>
@@ -117,34 +139,29 @@ const AdminLayout = ({ children }) => {
                         <div className="w-10 h-10 bg-yellow-500 rounded-full flex items-center justify-center font-bold text-green-900">
                             {user?.fullName?.charAt(0) || 'A'}
                         </div>
-                        {sidebarOpen && (
-                            <div>
-                                <p className="font-medium">{user?.fullName}</p>
-                                <p className="text-xs opacity-80 capitalize">{user?.role}</p>
-                            </div>
-                        )}
+                        <div>
+                            <p className="font-medium">{user?.fullName}</p>
+                            <p className="text-xs opacity-80 capitalize">{user?.role}</p>
+                        </div>
                     </div>
                     <button
                         onClick={() => setShowLogoutModal(true)}
-                        className="w-full py-2 bg-gradient-to-r from-orange-500 to-yellow-500 rounded-lg font-medium hover:opacity-90 transition flex items-center justify-center gap-2"
+                        className="w-full py-2 bg-gradient-to-r from-orange-500 to-yellow-500 rounded-lg font-medium hover:opacity-90 transition flex items-center justify-center gap-2 touch-target"
+                        aria-label="Logout from admin panel"
                     >
-                        {sidebarOpen ? (
-                            <>
-                                <LogoutIcon />
-                                Logout
-                            </>
-                        ) : (
-                            <LogoutIcon />
-                        )}
+                        <LogoutIcon />
+                        Logout
                     </button>
                 </div>
-            </div>
+            </aside>
 
             <div className="flex-1 flex flex-col overflow-hidden">
-                <header className="bg-white shadow-sm px-6 py-4 flex justify-between items-center">
+                <header className="bg-white shadow-sm px-4 md:px-6 py-4 flex justify-between items-center">
                     <button
                         onClick={() => setSidebarOpen(!sidebarOpen)}
-                        className="p-2 hover:bg-gray-100 rounded-lg"
+                        className="p-2 hover:bg-gray-100 rounded-lg touch-target"
+                        aria-label={sidebarOpen ? 'Close sidebar menu' : 'Open sidebar menu'}
+                        aria-expanded={sidebarOpen}
                     >
                         <MenuIcon />
                     </button>
@@ -164,7 +181,7 @@ const AdminLayout = ({ children }) => {
                     </div>
                 </header>
 
-                <main className="flex-1 overflow-auto p-6">
+                <main className="flex-1 overflow-auto p-4 md:p-6">
                     {children}
                 </main>
             </div>

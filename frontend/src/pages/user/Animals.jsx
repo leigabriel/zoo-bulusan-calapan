@@ -2,26 +2,62 @@ import React, { useState } from 'react';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 
+// Better recognizable animal icons
 const Icons = {
     Lion: () => (
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-24 h-24 text-white opacity-90">
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm0-14c-2.21 0-4 1.79-4 4h8c0-2.21-1.79-4-4-4zm-3.5 7h7c.28 0 .5.22.5.5s-.22.5-.5.5H12v1.5c0 .28-.22.5-.5.5s-.5-.22-.5-.5V14h-2c-.28 0-.5-.22-.5-.5s.22-.5.5-.5z" />
-            <circle cx="9" cy="10" r="1.5" /><circle cx="15" cy="10" r="1.5" />
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="currentColor" className="w-20 h-20 text-white opacity-95">
+            <circle cx="32" cy="32" r="28" fill="none" stroke="currentColor" strokeWidth="3"/>
+            <circle cx="32" cy="36" r="16" fill="none" stroke="currentColor" strokeWidth="2.5"/>
+            <ellipse cx="26" cy="30" rx="3" ry="4"/>
+            <ellipse cx="38" cy="30" rx="3" ry="4"/>
+            <ellipse cx="32" cy="38" rx="4" ry="3"/>
+            <path d="M28 44 Q32 48 36 44" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+            <path d="M8 20 Q16 12 24 16" fill="none" stroke="currentColor" strokeWidth="2.5"/>
+            <path d="M56 20 Q48 12 40 16" fill="none" stroke="currentColor" strokeWidth="2.5"/>
+            <path d="M12 32 Q8 24 14 18" fill="none" stroke="currentColor" strokeWidth="2.5"/>
+            <path d="M52 32 Q56 24 50 18" fill="none" stroke="currentColor" strokeWidth="2.5"/>
         </svg>
     ),
     Penguin: () => (
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-24 h-24 text-white opacity-90">
-            <path d="M12 2a5 5 0 0 0-5 5v7a5 5 0 0 0 10 0V7a5 5 0 0 0-5-5zm-3 5a3 3 0 0 1 6 0v7a3 3 0 0 1-6 0V7zm-2 6H5v5c0 1.1.9 2 2 2h2v-2H7v-5zm10 0h2v5h-2v2h2c1.1 0 2-.9 2-2v-5h-2z" />
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="currentColor" className="w-20 h-20 text-white opacity-95">
+            <ellipse cx="32" cy="38" rx="16" ry="22" fill="none" stroke="currentColor" strokeWidth="3"/>
+            <ellipse cx="32" cy="38" rx="10" ry="16" fill="currentColor" opacity="0.3"/>
+            <circle cx="32" cy="18" r="12" fill="none" stroke="currentColor" strokeWidth="3"/>
+            <circle cx="27" cy="16" r="2.5"/>
+            <circle cx="37" cy="16" r="2.5"/>
+            <path d="M29 22 L32 26 L35 22" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M14 42 Q8 38 10 32" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"/>
+            <path d="M50 42 Q56 38 54 32" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"/>
+            <ellipse cx="24" cy="58" rx="4" ry="2"/>
+            <ellipse cx="40" cy="58" rx="4" ry="2"/>
         </svg>
     ),
     Elephant: () => (
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-24 h-24 text-white opacity-90">
-            <path d="M20 12V7a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v9h2v4a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2v-4h4v4a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2v-6h-2zM8 7a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm4 4c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z" />
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="currentColor" className="w-20 h-20 text-white opacity-95">
+            <ellipse cx="34" cy="32" rx="22" ry="18" fill="none" stroke="currentColor" strokeWidth="3"/>
+            <circle cx="16" cy="24" r="10" fill="none" stroke="currentColor" strokeWidth="3"/>
+            <circle cx="13" cy="22" r="2.5"/>
+            <path d="M10 28 Q6 36 8 44 Q10 48 14 46" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"/>
+            <path d="M6 18 Q2 14 4 10" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/>
+            <path d="M26 18 Q30 12 36 14" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/>
+            <ellipse cx="22" cy="52" rx="3" ry="6"/>
+            <ellipse cx="32" cy="52" rx="3" ry="6"/>
+            <ellipse cx="42" cy="52" rx="3" ry="6"/>
+            <ellipse cx="52" cy="52" rx="3" ry="6"/>
         </svg>
     ),
     Bird: () => (
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-24 h-24 text-white opacity-90">
-            <path d="M21 3v2c0 9.627-5.373 14-12 14H7.098c.21.576.503 1.12.87 1.615.61.82 1.48 1.54 2.632 2.155A14.247 14.247 0 0 0 18 24c1.15 0 2.22-.265 3.19-.73.49-.235.93-.52 1.32-.84.28-.23.53-.49.75-.77.19-.24.35-.49.49-.75.25-.49.43-1.02.52-1.57.06-.34.09-.7.09-1.07V3h-3.36zM3 13c2.67 0 5.14-.94 7.12-2.52A12.08 12.08 0 0 0 14.62 3H3v10z" />
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="currentColor" className="w-20 h-20 text-white opacity-95">
+            <ellipse cx="32" cy="32" rx="18" ry="14" fill="none" stroke="currentColor" strokeWidth="3"/>
+            <circle cx="20" cy="24" r="8" fill="none" stroke="currentColor" strokeWidth="3"/>
+            <circle cx="18" cy="22" r="2"/>
+            <path d="M12 26 L4 24 L6 28 L12 26" fill="currentColor"/>
+            <path d="M50 32 Q58 28 62 32 Q58 36 50 32" fill="none" stroke="currentColor" strokeWidth="2.5"/>
+            <path d="M50 32 Q58 32 62 28" fill="none" stroke="currentColor" strokeWidth="2"/>
+            <path d="M50 32 Q58 36 62 36" fill="none" stroke="currentColor" strokeWidth="2"/>
+            <path d="M28 46 L24 56" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/>
+            <path d="M36 46 L40 56" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/>
+            <ellipse cx="32" cy="36" rx="6" ry="4" fill="currentColor" opacity="0.3"/>
         </svg>
     )
 };

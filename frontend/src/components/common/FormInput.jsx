@@ -11,6 +11,8 @@ const FormInput = ({
     className = '',
     ...props
 }) => {
+    const errorId = error ? `${name}-error` : undefined;
+    
     return (
         <div className={`mb-4 ${className}`}>
             {label && (
@@ -19,7 +21,7 @@ const FormInput = ({
                     className="block text-gray-700 font-medium mb-2"
                 >
                     {label}
-                    {required && <span className="text-red-500 ml-1">*</span>}
+                    {required && <span className="text-red-500 ml-1" aria-hidden="true">*</span>}
                 </label>
             )}
             <input
@@ -31,7 +33,9 @@ const FormInput = ({
                 placeholder={placeholder}
                 required={required}
                 disabled={disabled}
-                className={`w-full p-3 border rounded-xl outline-none transition
+                aria-invalid={error ? 'true' : 'false'}
+                aria-describedby={errorId}
+                className={`w-full p-3 border rounded-xl outline-none transition touch-target
                     ${error 
                         ? 'border-red-500 focus:ring-2 focus:ring-red-200' 
                         : 'border-gray-300 focus:border-green-500 focus:ring-2 focus:ring-green-200'
@@ -41,7 +45,7 @@ const FormInput = ({
                 {...props}
             />
             {error && (
-                <p className="text-red-500 text-sm mt-1">{error}</p>
+                <p id={errorId} className="text-red-500 text-sm mt-1" role="alert">{error}</p>
             )}
         </div>
     );

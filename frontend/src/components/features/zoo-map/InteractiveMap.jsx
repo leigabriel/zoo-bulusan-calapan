@@ -10,6 +10,7 @@ const InteractiveMap = () => {
     const [selectedZone, setSelectedZone] = useState(null);
     const [zoom, setZoom] = useState(1);
     const [position, setPosition] = useState({ x: 0, y: 0 });
+    const [focusedZoneIndex, setFocusedZoneIndex] = useState(-1);
     const mapRef = useRef(null);
 
     const zones = [
@@ -27,6 +28,25 @@ const InteractiveMap = () => {
         { id: 'gift', name: 'Gift Shop', x: 85, y: 50, icon: 'gift' },
         { id: 'info', name: 'Information', x: 15, y: 45, icon: 'info' }
     ];
+
+    // Keyboard navigation for zones
+    const handleKeyDown = (e) => {
+        if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+            e.preventDefault();
+            setFocusedZoneIndex(prev => (prev + 1) % zones.length);
+        } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+            e.preventDefault();
+            setFocusedZoneIndex(prev => (prev - 1 + zones.length) % zones.length);
+        } else if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            if (focusedZoneIndex >= 0) {
+                setSelectedZone(zones[focusedZoneIndex]);
+            }
+        } else if (e.key === 'Escape') {
+            setSelectedZone(null);
+            setFocusedZoneIndex(-1);
+        }
+    };
 
     const handleZoneClick = (zone) => {
         setSelectedZone(zone);
@@ -57,22 +77,22 @@ const InteractiveMap = () => {
                     <div className="flex gap-2">
                         <button 
                             onClick={handleZoomOut}
-                            aria-label="Zoom out"
-                            className="w-8 h-8 bg-white/10 rounded-lg flex items-center justify-center hover:bg-white/20 transition"
+                            aria-label="Zoom out map"
+                            className="w-10 h-10 md:w-8 md:h-8 bg-white/10 rounded-lg flex items-center justify-center hover:bg-white/20 transition touch-target text-lg"
                         >
                             −
                         </button>
                         <button 
                             onClick={handleZoomIn}
-                            aria-label="Zoom in"
-                            className="w-8 h-8 bg-white/10 rounded-lg flex items-center justify-center hover:bg-white/20 transition"
+                            aria-label="Zoom in map"
+                            className="w-10 h-10 md:w-8 md:h-8 bg-white/10 rounded-lg flex items-center justify-center hover:bg-white/20 transition touch-target text-lg"
                         >
                             +
                         </button>
                         <button 
                             onClick={handleReset}
-                            aria-label="Reset map"
-                            className="w-8 h-8 bg-white/10 rounded-lg flex items-center justify-center hover:bg-white/20 transition"
+                            aria-label="Reset map view"
+                            className="w-10 h-10 md:w-8 md:h-8 bg-white/10 rounded-lg flex items-center justify-center hover:bg-white/20 transition touch-target"
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                 <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
@@ -86,6 +106,10 @@ const InteractiveMap = () => {
                     ref={mapRef}
                     className="relative aspect-[4/3] bg-gradient-to-br from-green-100 to-teal-50 overflow-hidden cursor-grab active:cursor-grabbing"
                     style={{ transform: `scale(${zoom}) translate(${position.x}px, ${position.y}px)` }}
+                    role="application"
+                    aria-label="Interactive zoo map. Use arrow keys to navigate between zones, Enter to select."
+                    tabIndex={0}
+                    onKeyDown={handleKeyDown}
                 >
                     <svg className="absolute inset-0 w-full h-full opacity-20" role="img" aria-hidden="true">
                         <defs>
@@ -96,12 +120,15 @@ const InteractiveMap = () => {
                         <rect width="100%" height="100%" fill="url(#grid)" />
                     </svg>
 
-                    {zones.map(zone => (
+                    {zones.map((zone, index) => (
                         <button
                             key={zone.id}
                             onClick={() => handleZoneClick(zone)}
-                            className={`absolute transform -translate-x-1/2 -translate-y-1/2 transition-all duration-300 ${
-                                selectedZone?.id === zone.id ? 'scale-125 z-10' : 'hover:scale-110'
+                            onFocus={() => setFocusedZoneIndex(index)}
+                            aria-label={`${zone.name}. Animals: ${zone.animals.join(', ')}`}
+                            aria-pressed={selectedZone?.id === zone.id}
+                            className={`absolute transform -translate-x-1/2 -translate-y-1/2 transition-all duration-300 touch-target ${
+                                selectedZone?.id === zone.id || focusedZoneIndex === index ? 'scale-125 z-10 ring-4 ring-white ring-offset-2' : 'hover:scale-110'
                             }`}
                             style={{ left: `${zone.x}%`, top: `${zone.y}%` }}
                         >
@@ -162,7 +189,8 @@ const InteractiveMap = () => {
                             </div>
                             <button
                                 onClick={() => setSelectedZone(null)}
-                                className="text-gray-400 hover:text-gray-600"
+                                className="text-gray-400 hover:text-gray-600 touch-target p-2"
+                                aria-label="Close zone details"
                             >
                                 <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                     <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 import { userAPI } from '../../services/api-client';
+import { sanitizeInput } from '../../utils/sanitize';
 
 const PawIcon = ({ className }) => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className={className}>
@@ -65,34 +66,36 @@ const AnimalDex = () => {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-gray-50 flex flex-col">
             <Header />
-            <section className="bg-gradient-to-r from-green-600 to-teal-500 text-white py-16 px-4">
-                <div className="max-w-6xl mx-auto text-center">
-                    <h1 className="text-4xl md:text-5xl font-bold mb-4">AnimalDex</h1>
-                    <p className="text-xl opacity-90 mb-8">Discover our amazing collection of wildlife</p>
+            
+            {/* Hero Section - matching design system */}
+            <section className="relative text-white py-20 px-4 bg-cover bg-center" style={{ backgroundImage: 'linear-gradient(rgba(45,90,39,0.85), rgba(58,140,125,0.85)), url(https://images.unsplash.com/photo-1474511320723-9a56873571b7)' }}>
+                <div className="max-w-6xl mx-auto text-center relative z-10">
+                    <h1 className="text-5xl md:text-6xl font-bold mb-4 tracking-tight">AnimalDex</h1>
+                    <p className="text-xl opacity-90 mb-8 font-light">Discover our amazing collection of wildlife</p>
                     <div className="max-w-xl mx-auto">
                         <input
                             type="text"
                             placeholder="Search animals..."
                             value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full px-6 py-4 rounded-full text-gray-800 focus:outline-none focus:ring-4 focus:ring-white/30"
+                            onChange={(e) => setSearchTerm(sanitizeInput(e.target.value))}
+                            className="w-full px-6 py-4 rounded-full text-gray-800 focus:outline-none focus:ring-4 focus:ring-white/30 shadow-lg"
                         />
                     </div>
                 </div>
             </section>
 
-            <div className="max-w-6xl mx-auto px-4 py-8">
-                <div className="flex flex-wrap gap-2 mb-8 justify-center">
+            <div className="max-w-6xl mx-auto px-4 py-12 flex-grow">
+                <div className="flex flex-wrap gap-3 mb-10 justify-center">
                     {categories.map(cat => (
                         <button
                             key={cat}
                             onClick={() => setSelectedCategory(cat)}
-                            className={`px-4 py-2 rounded-full font-medium transition ${
+                            className={`px-6 py-2.5 rounded-full font-semibold transition-all transform hover:-translate-y-0.5 ${
                                 selectedCategory === cat
-                                    ? 'bg-green-600 text-white'
-                                    : 'bg-white text-gray-600 hover:bg-gray-100'
+                                    ? 'bg-gradient-to-r from-green-600 to-teal-600 text-white shadow-lg'
+                                    : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
                             }`}
                         >
                             {cat}
@@ -100,21 +103,21 @@ const AnimalDex = () => {
                     ))}
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
                     {filteredAnimals.map(animal => (
                         <div
                             key={animal.id}
                             onClick={() => setSelectedAnimal(animal)}
-                            className="bg-white rounded-2xl shadow-sm overflow-hidden cursor-pointer hover:shadow-lg transition transform hover:-translate-y-1"
+                            className="bg-white rounded-3xl shadow-sm overflow-hidden cursor-pointer hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 border border-gray-100"
                         >
-                            <div className="h-40 bg-gradient-to-br from-green-100 to-teal-100 flex items-center justify-center">
+                            <div className="h-44 bg-gradient-to-br from-green-100 to-teal-100 flex items-center justify-center">
                                 {animal.image ? (
                                     <img src={animal.image} alt={animal.name} className="w-full h-full object-cover" />
                                 ) : (
                                     <PawIcon className="w-16 h-16 text-green-400" />
                                 )}
                             </div>
-                            <div className="p-4">
+                            <div className="p-5">
                                 <h3 className="font-bold text-gray-800">{animal.name}</h3>
                                 <p className="text-sm text-gray-500 italic">{animal.species}</p>
                                 <div className="flex items-center gap-2 mt-2">

@@ -70,9 +70,9 @@ const Footer = () => {
     ];
 
     return (
-        <footer className="bg-gradient-to-br from-[#2D5A27] to-[#3A8C7D] text-white py-16">
-            <div className="container mx-auto px-4">
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
+        <footer className="bg-gradient-to-br from-[#2D5A27] to-[#3A8C7D] text-white py-12 md:py-16">
+            <div className="container mx-auto px-4 sm:px-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-10">
 
                     {/* Brand Section */}
                     <div>
@@ -130,12 +130,13 @@ const Footer = () => {
                     {/* Social Media */}
                     <div>
                         <h4 className="font-bold text-lg mb-6">Connect With Us</h4>
-                        <div className="flex gap-4 mt-6">
+                        <div className="flex gap-3 mt-6">
                             {socialLinks.map((social, index) => (
                                 <a
                                     key={index}
                                     href={social.href}
-                                    className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center hover:bg-white/30 transition group"
+                                    aria-label={`Follow us on ${['Facebook', 'Instagram', 'Twitter'][index]}`}
+                                    className="w-11 h-11 rounded-full bg-white/20 flex items-center justify-center hover:bg-white/30 transition group touch-target"
                                 >
                                     <div className="group-hover:scale-110 transition">
                                         <social.Icon />

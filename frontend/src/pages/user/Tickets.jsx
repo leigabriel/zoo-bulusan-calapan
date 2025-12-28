@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 import { useAuth } from '../../hooks/use-auth';
 import { userAPI } from '../../services/api-client';
+import { sanitizeInput, sanitizeEmail, sanitizePhone, sanitizeFormData } from '../../utils/sanitize';
 
 const Tickets = () => {
     const navigate = useNavigate();
@@ -28,7 +29,6 @@ const Tickets = () => {
     const [promoCode, setPromoCode] = useState('');
     const [discount, setDiscount] = useState(0);
 
-    // Ticket type details
     const ticketTypes = {
         adults: {
             name: 'Adult Pass',
@@ -56,7 +56,6 @@ const Tickets = () => {
         }
     };
 
-    // Available time slots
     const timeSlots = [
         { value: '08:00', label: '8:00 AM - Morning', available: true },
         { value: '10:00', label: '10:00 AM - Mid-Morning', available: true },
@@ -70,12 +69,9 @@ const Tickets = () => {
         for (const key in counts) {
             sum += counts[key] * prices[key];
         }
-        
-        // Apply discount
         const discountAmount = sum * (discount / 100);
         setTotal(sum - discountAmount);
 
-        // Update companions list
         const newCompanions = [];
         let counter = 1;
         Object.keys(counts).forEach(type => {
@@ -91,13 +87,11 @@ const Tickets = () => {
         setCompanions(newCompanions);
     }, [counts, discount]);
 
-    // Get min date (today)
     const getMinDate = () => {
         const today = new Date();
         return today.toISOString().split('T')[0];
     };
 
-    // Get max date (30 days from now)
     const getMaxDate = () => {
         const maxDate = new Date();
         maxDate.setDate(maxDate.getDate() + 30);
@@ -131,8 +125,9 @@ const Tickets = () => {
     };
 
     const handleCompanionNameChange = (id, name) => {
+        const sanitizedName = sanitizeInput(name, false);
         setCompanions(prev =>
-            prev.map(c => (c.id === id ? { ...c, name } : c))
+            prev.map(c => (c.id === id ? { ...c, name: sanitizedName } : c))
         );
     };
 
@@ -148,12 +143,13 @@ const Tickets = () => {
                 setMessage({ text: 'Please select a visit date.', type: 'error' });
                 return false;
             }
-            if (!bookingDetails.email) {
+            const trimmedEmail = sanitizeEmail(bookingDetails.email, true);
+            if (!trimmedEmail) {
                 setMessage({ text: 'Please enter your email address.', type: 'error' });
                 return false;
             }
         } else if (step === 3) {
-            const emptyNames = companions.filter(c => !c.name.trim());
+            const emptyNames = companions.filter(c => !sanitizeInput(c.name, true));
             if (emptyNames.length > 0) {
                 setMessage({ text: 'Please enter names for all ticket holders.', type: 'error' });
                 return false;
@@ -189,10 +185,8 @@ const Tickets = () => {
         setIsProcessing(true);
         
         try {
-            // Simulate payment delay
             await new Promise(resolve => setTimeout(resolve, 800));
 
-            // Build purchase calls per ticket type
             const purchases = Object.entries(counts).filter(([k, v]) => v > 0).map(([type, qty]) => {
                 const mapType = {
                     adults: 'adult',
@@ -206,7 +200,6 @@ const Tickets = () => {
 
             const results = await Promise.all(purchases);
 
-            // pick first ticket code for display
             const first = results && results.length > 0 ? results[0] : null;
             const code = first?.ticket?.ticketCode || generateBookingCode();
             setBookingCode(code);
@@ -231,8 +224,8 @@ const Tickets = () => {
         setDiscount(0);
     };
 
-    // Step indicator component
-    const StepIndicator = () => (
+    // Step Indicator - defined as JSX variable (no function re-creation)
+    const stepIndicatorContent = (
         <div className="flex justify-center mb-8">
             <div className="flex items-center space-x-2 md:space-x-4">
                 {[
@@ -271,8 +264,8 @@ const Tickets = () => {
         </div>
     );
 
-    // Step 1: Ticket Selection
-    const TicketSelection = () => (
+    // Ticket Selection - defined as JSX variable
+    const ticketSelectionContent = (
         <div className="space-y-4">
             <h2 className="text-2xl font-bold text-green-800 mb-6 flex items-center gap-2">
                 <i className="fas fa-ticket-alt"></i> Select Your Tickets
@@ -335,7 +328,7 @@ const Tickets = () => {
                     <input
                         type="text"
                         value={promoCode}
-                        onChange={(e) => setPromoCode(e.target.value)}
+                        onChange={(e) => setPromoCode(sanitizeInput(e.target.value))}
                         placeholder="Enter code"
                         className="flex-1 px-4 py-2 border border-yellow-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
                     />
@@ -355,8 +348,8 @@ const Tickets = () => {
         </div>
     );
 
-    // Step 2: Visit Details
-    const VisitDetails = () => (
+    // Visit Details - defined as JSX variable
+    const visitDetailsContent = (
         <div className="space-y-6">
             <h2 className="text-2xl font-bold text-green-800 mb-6 flex items-center gap-2">
                 <i className="fas fa-calendar-alt"></i> Choose Your Visit Date & Time
@@ -419,7 +412,7 @@ const Tickets = () => {
                     <input
                         type="email"
                         value={bookingDetails.email}
-                        onChange={(e) => setBookingDetails({ ...bookingDetails, email: e.target.value })}
+                        onChange={(e) => setBookingDetails({ ...bookingDetails, email: sanitizeEmail(e.target.value) })}
                         placeholder="your@email.com"
                         className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent"
                     />
@@ -431,7 +424,7 @@ const Tickets = () => {
                     <input
                         type="tel"
                         value={bookingDetails.phone}
-                        onChange={(e) => setBookingDetails({ ...bookingDetails, phone: e.target.value })}
+                        onChange={(e) => setBookingDetails({ ...bookingDetails, phone: sanitizePhone(e.target.value) })}
                         placeholder="09XX XXX XXXX"
                         className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent"
                     />
@@ -445,7 +438,7 @@ const Tickets = () => {
                 </label>
                 <textarea
                     value={bookingDetails.specialRequests}
-                    onChange={(e) => setBookingDetails({ ...bookingDetails, specialRequests: e.target.value })}
+                    onChange={(e) => setBookingDetails({ ...bookingDetails, specialRequests: sanitizeInput(e.target.value) })}
                     placeholder="Wheelchair accessibility, dietary requirements, etc."
                     rows={3}
                     className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none"
@@ -454,8 +447,8 @@ const Tickets = () => {
         </div>
     );
 
-    // Step 3: Guest Information
-    const GuestInformation = () => (
+    // Guest Information - defined as JSX variable
+    const guestInformationContent = (
         <div className="space-y-6">
             <h2 className="text-2xl font-bold text-green-800 mb-6 flex items-center gap-2">
                 <i className="fas fa-users"></i> Guest Information
@@ -490,8 +483,8 @@ const Tickets = () => {
         </div>
     );
 
-    // Step 4: Confirmation
-    const Confirmation = () => (
+    // Confirmation - defined as JSX variable
+    const confirmationContent = (
         <div className="text-center py-8">
             <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6 animate-bounce">
                 <i className="fas fa-check text-4xl text-green-600"></i>
@@ -591,7 +584,7 @@ const Tickets = () => {
 
             {/* Main Content */}
             <section className="py-8 md:py-12 container mx-auto px-4 max-w-6xl">
-                <StepIndicator />
+                {stepIndicatorContent}
 
                 {message.text && (
                     <div className={`mb-6 p-4 rounded-xl flex items-center gap-3 ${
@@ -608,10 +601,10 @@ const Tickets = () => {
                     {/* Main Form Area */}
                     <div className="lg:col-span-2">
                         <div className="bg-white rounded-2xl shadow-lg p-6 md:p-8">
-                            {currentStep === 1 && <TicketSelection />}
-                            {currentStep === 2 && <VisitDetails />}
-                            {currentStep === 3 && <GuestInformation />}
-                            {currentStep === 4 && <Confirmation />}
+                            {currentStep === 1 && ticketSelectionContent}
+                            {currentStep === 2 && visitDetailsContent}
+                            {currentStep === 3 && guestInformationContent}
+                            {currentStep === 4 && confirmationContent}
 
                             {/* Navigation Buttons */}
                             {currentStep < 4 && (

@@ -5,6 +5,32 @@ const User = require('../models/user-model');
 const VALID_ROLES = ['admin', 'staff', 'vet', 'user'];
 const VALID_GENDERS = ['male', 'female', 'other', 'prefer_not_to_say'];
 
+// Password validation helper
+const validatePassword = (password) => {
+    const errors = [];
+    
+    if (!password || password.length < 8) {
+        errors.push('Password must be at least 8 characters long');
+    }
+    if (!/[A-Z]/.test(password)) {
+        errors.push('Password must contain at least one uppercase letter');
+    }
+    if (!/[0-9]/.test(password)) {
+        errors.push('Password must contain at least one number');
+    }
+    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+        errors.push('Password must contain at least one special character');
+    }
+    
+    return errors;
+};
+
+// Input sanitization helper
+const sanitizeInput = (input) => {
+    if (typeof input !== 'string') return input;
+    return input.trim().replace(/[<>]/g, '');
+};
+
 const generateToken = (userId, role, tabId = null) => {
     const payload = { id: userId, role };
     if (tabId) payload.tabId = tabId;
@@ -19,20 +45,45 @@ exports.register = async (req, res) => {
     try {
         const { firstName, lastName, username, email, phoneNumber, gender, birthday, password, role } = req.body;
 
+        // Validate required fields
         if (!firstName || !lastName || !username || !email || !password) {
             return res.status(400).json({ success: false, message: 'Please provide all required fields' });
         }
 
-        if (username.length < 3) {
+        // Sanitize inputs
+        const sanitizedFirstName = sanitizeInput(firstName);
+        const sanitizedLastName = sanitizeInput(lastName);
+        const sanitizedUsername = sanitizeInput(username);
+        const sanitizedEmail = sanitizeInput(email).toLowerCase();
+
+        // Validate username length
+        if (sanitizedUsername.length < 3) {
             return res.status(400).json({ success: false, message: 'Username must be at least 3 characters' });
         }
 
-        const existingEmail = await User.findByEmail(email);
+        // Validate email format
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(sanitizedEmail)) {
+            return res.status(400).json({ success: false, message: 'Please provide a valid email address' });
+        }
+
+        // Validate password strength
+        const passwordErrors = validatePassword(password);
+        if (passwordErrors.length > 0) {
+            return res.status(400).json({ success: false, message: passwordErrors[0] });
+        }
+
+        // Validate phone number format (optional field)
+        if (phoneNumber && !/^[0-9+\-\s()]{7,20}$/.test(phoneNumber)) {
+            return res.status(400).json({ success: false, message: 'Please provide a valid phone number' });
+        }
+
+        const existingEmail = await User.findByEmail(sanitizedEmail);
         if (existingEmail) {
             return res.status(400).json({ success: false, message: 'Email already registered' });
         }
 
-        const existingUsername = await User.findByUsername(username);
+        const existingUsername = await User.findByUsername(sanitizedUsername);
         if (existingUsername) {
             return res.status(400).json({ success: false, message: 'Username already taken' });
         }
@@ -40,15 +91,16 @@ exports.register = async (req, res) => {
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
-        const userRole = role && VALID_ROLES.includes(role) ? role : 'user';
+        // Force user role for public registration (prevent role escalation)
+        const userRole = 'user';
         const userGender = gender && VALID_GENDERS.includes(gender) ? gender : 'prefer_not_to_say';
         
         const userId = await User.create({
-            firstName,
-            lastName,
-            username,
-            email,
-            phoneNumber: phoneNumber || null,
+            firstName: sanitizedFirstName,
+            lastName: sanitizedLastName,
+            username: sanitizedUsername,
+            email: sanitizedEmail,
+            phoneNumber: phoneNumber ? sanitizeInput(phoneNumber) : null,
             gender: userGender,
             birthday: birthday || null,
             password: hashedPassword,
@@ -208,8 +260,10 @@ exports.updatePassword = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Please provide both current and new password' });
         }
 
-        if (newPassword.length < 6) {
-            return res.status(400).json({ success: false, message: 'New password must be at least 6 characters' });
+        // Validate new password strength
+        const passwordErrors = validatePassword(newPassword);
+        if (passwordErrors.length > 0) {
+            return res.status(400).json({ success: false, message: passwordErrors[0] });
         }
 
         const user = await User.findByEmailOrUsername(req.user.email || req.user.username);

@@ -26,7 +26,7 @@ import './App.css';
 
 const ProtectedRoute = ({ children, allowedRoles }) => {
     const { isAuthenticated, user, loading } = useAuth();
-    
+
     if (loading) {
         return (
             <div className="min-h-screen flex items-center justify-center">
@@ -34,27 +34,27 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
             </div>
         );
     }
-    
+
     if (!isAuthenticated) {
         return <Navigate to="/login" state={{ message: 'Please login to access this feature' }} replace />;
     }
-    
+
     if (allowedRoles && !allowedRoles.includes(user?.role)) {
         return <Navigate to="/access-denied" replace />;
     }
-    
+
     return children;
 };
 
 const PublicRoute = ({ children }) => {
     const { isAuthenticated, user } = useAuth();
-    
+
     if (isAuthenticated && user) {
         if (user.role === 'admin') return <Navigate to="/admin/dashboard" replace />;
         if (['staff', 'vet'].includes(user.role)) return <Navigate to="/staff/dashboard" replace />;
         return <Navigate to="/" replace />;
     }
-    
+
     return children;
 };
 
@@ -72,7 +72,8 @@ function AppRoutes() {
             {/* Auth Routes */}
             <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
             <Route path="/signup" element={<PublicRoute><RegisterPage /></PublicRoute>} />
-            <Route path="/admin" element={<PublicRoute><LoginPage isAdmin /></PublicRoute>} />
+            <Route path="/admin" element={<Navigate to="/login" replace />} />
+            <Route path="/admin/login" element={<Navigate to="/login" replace />} />
             <Route path="/access-denied" element={<AccessDenied />} />
 
             {/* Protected User Routes - requires login */}
@@ -91,19 +92,9 @@ function AppRoutes() {
                     <TicketHistory />
                 </ProtectedRoute>
             } />
-            <Route path="/ticket-history" element={
-                <ProtectedRoute allowedRoles={['user']}>
-                    <TicketHistory />
-                </ProtectedRoute>
-            } />
             <Route path="/profile" element={
                 <ProtectedRoute allowedRoles={['user', 'staff', 'vet']}>
                     <UserProfile />
-                </ProtectedRoute>
-            } />
-            <Route path="/animal-classifier" element={
-                <ProtectedRoute allowedRoles={['user', 'staff', 'vet']}>
-                    <AnimalClassifier />
                 </ProtectedRoute>
             } />
 

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { adminAPI } from '../../services/api-client';
+import { sanitizeInput, sanitizeEmail } from '../../utils/sanitize';
 
 const AdminUsers = () => {
     const [users, setUsers] = useState([]);
@@ -60,9 +61,9 @@ const AdminUsers = () => {
         <div className="p-6 bg-white rounded-2xl shadow-sm">
             <h2 className="text-xl font-bold mb-4">Manage Users</h2>
             <div className="mb-4">
-                <input className="border p-2 mr-2" placeholder="First name" value={form.firstName} onChange={e => setForm({...form, firstName: e.target.value})} />
-                <input className="border p-2 mr-2" placeholder="Last name" value={form.lastName} onChange={e => setForm({...form, lastName: e.target.value})} />
-                <input className="border p-2 mr-2" placeholder="Email" value={form.email} onChange={e => setForm({...form, email: e.target.value})} />
+                <input className="border p-2 mr-2" placeholder="First name" value={form.firstName} onChange={e => setForm({...form, firstName: sanitizeInput(e.target.value)})} />
+                <input className="border p-2 mr-2" placeholder="Last name" value={form.lastName} onChange={e => setForm({...form, lastName: sanitizeInput(e.target.value)})} />
+                <input className="border p-2 mr-2" placeholder="Email" value={form.email} onChange={e => setForm({...form, email: sanitizeEmail(e.target.value)})} />
                 <select className="border p-2 mr-2" value={form.role} onChange={e => setForm({...form, role: e.target.value})}>
                     <option value="user">User</option>
                     <option value="staff">Staff</option>

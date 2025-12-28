@@ -504,7 +504,7 @@ const AnimalClassifier = ({ embedded = false, expanded: controlledExpanded = fal
 
     // Styles based on embedded mode
     const containerClass = embedded
-        ? "h-full flex flex-col bg-[#111827]"
+        ? "h-full flex flex-col bg-[#212631]"
         : "flex flex-col h-screen bg-[#111827]";
 
     return (

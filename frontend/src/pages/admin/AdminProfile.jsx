@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { authAPI } from '../../services/api-client';
 import { useAuth } from '../../context/AuthContext';
+import { sanitizeInput } from '../../utils/sanitize';
 
 const AdminProfile = () => {
     const { user, updateUser } = useAuth();
@@ -58,8 +59,8 @@ const AdminProfile = () => {
         <div className="p-6 bg-white rounded-2xl shadow-sm">
             <h2 className="text-xl font-bold mb-4">Admin Profile</h2>
             <div className="grid gap-4 max-w-xl">
-                <input className="border p-2" placeholder="First name" value={form.firstName} onChange={e => setForm({...form, firstName: e.target.value})} />
-                <input className="border p-2" placeholder="Last name" value={form.lastName} onChange={e => setForm({...form, lastName: e.target.value})} />
+                <input className="border p-2" placeholder="First name" value={form.firstName} onChange={e => setForm({...form, firstName: sanitizeInput(e.target.value)})} />
+                <input className="border p-2" placeholder="Last name" value={form.lastName} onChange={e => setForm({...form, lastName: sanitizeInput(e.target.value)})} />
                 <input className="border p-2 bg-gray-50" placeholder="Email" value={form.email} readOnly />
                 <div>
                     <button onClick={save} className="px-4 py-2 bg-green-600 text-white rounded" disabled={saving}>{saving ? 'Saving...' : 'Save'}</button>

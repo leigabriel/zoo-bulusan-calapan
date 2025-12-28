@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { sanitizeInput } from '../../../utils/sanitize';
 
 const SendIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
@@ -258,7 +259,7 @@ const AIChatAssistant = ({ hideLauncher = false, open: controlledOpen, expanded:
                                 <input
                                     type="text"
                                     value={input}
-                                    onChange={(e) => setInput(e.target.value)}
+                                    onChange={(e) => setInput(sanitizeInput(e.target.value))}
                                     onKeyPress={handleKeyPress}
                                     placeholder="Ask me anything about the zoo..."
                                     className="flex-1 px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm"

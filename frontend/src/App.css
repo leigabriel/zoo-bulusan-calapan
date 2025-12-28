@@ -2,8 +2,17 @@
 
 body {
     font-family: 'Montserrat', sans-serif;
-    font-size: larger;
+    font-size: 16px;
     font-weight: 400;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Responsive base font size */
+@media (max-width: 640px) {
+    body {
+        font-size: 14px;
+    }
 }
 
 @keyframes fade-in {
@@ -108,4 +117,87 @@ body {
 
 .animate-bounce {
     animation: bounce 1.4s infinite ease-in-out;
+}
+
+/* Floating animation for decorative icons */
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0px) rotate(0deg);
+    }
+    50% {
+        transform: translateY(-10px) rotate(2deg);
+    }
+}
+
+.animate-float {
+    animation: float 4s ease-in-out infinite;
+}
+
+/* Smooth image transition */
+@keyframes fadeInScale {
+    from {
+        opacity: 0;
+        transform: scale(1.05);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.animate-fade-in-scale {
+    animation: fadeInScale 0.6s ease-out;
+}
+
+/* Touch-friendly tap targets */
+@media (pointer: coarse) {
+    button, a, input, select, textarea {
+        min-height: 44px;
+    }
+    
+    .touch-target {
+        min-width: 44px;
+        min-height: 44px;
+    }
+}
+
+/* Improved focus states for accessibility */
+*:focus-visible {
+    outline: 2px solid #10b981;
+    outline-offset: 2px;
+}
+
+/* Skip to main content link for accessibility */
+.skip-link {
+    position: absolute;
+    top: -40px;
+    left: 0;
+    background: #10b981;
+    color: white;
+    padding: 8px 16px;
+    z-index: 100;
+    transition: top 0.3s;
+}
+
+.skip-link:focus {
+    top: 0;
+}
+
+/* Prevent horizontal overflow on mobile */
+html, body {
+    overflow-x: hidden;
+}
+
+/* Improved contrast for disabled elements */
+.disabled, [disabled] {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Safe area padding for mobile notches */
+@supports (padding: max(0px)) {
+    .safe-area-inset {
+        padding-left: max(16px, env(safe-area-inset-left));
+        padding-right: max(16px, env(safe-area-inset-right));
+    }
 }

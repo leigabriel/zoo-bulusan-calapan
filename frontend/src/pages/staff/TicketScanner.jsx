@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { staffAPI } from '../../services/api-client';
+import { sanitizeInput } from '../../utils/sanitize';
 
 const CameraIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8">
@@ -153,7 +154,7 @@ const TicketScanner = () => {
                                     ref={inputRef}
                                     type="text"
                                     value={ticketCode}
-                                    onChange={(e) => setTicketCode(e.target.value.toUpperCase())}
+                                    onChange={(e) => setTicketCode(sanitizeInput(e.target.value.toUpperCase()))}
                                     placeholder="Enter ticket code (e.g., ZB-2024-XXXXX)"
                                     className="w-full p-4 text-lg border border-gray-300 rounded-xl focus:border-green-500 focus:ring-2 focus:ring-green-200 outline-none font-mono"
                                     disabled={loading}
