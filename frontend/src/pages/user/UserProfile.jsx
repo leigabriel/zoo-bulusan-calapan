@@ -1,7 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import Header from '../../components/Header';
-import Footer from '../../components/Footer';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { authAPI } from '../../services/api-client';
 import { sanitizeInput, sanitizePhone } from '../../utils/sanitize';
@@ -176,10 +174,30 @@ const UserProfile = () => {
 
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col">
-            <Header />
+            {/* Floating Navigation */}
+            <div className="fixed top-4 left-4 right-4 z-50 flex justify-between items-center pointer-events-none">
+                <button
+                    onClick={() => navigate('/', { state: { openSidePanel: true } })}
+                    className="pointer-events-auto flex items-center gap-2 px-4 py-2.5 bg-white/90 backdrop-blur-sm text-gray-700 rounded-full shadow-lg hover:bg-white hover:shadow-xl transition-all duration-300 font-medium"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                    </svg>
+                    <span className="hidden sm:inline">Back</span>
+                </button>
+                <Link
+                    to="/"
+                    className="pointer-events-auto flex items-center gap-2 px-4 py-2.5 bg-white/90 backdrop-blur-sm text-gray-700 rounded-full shadow-lg hover:bg-white hover:shadow-xl transition-all duration-300 font-medium"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                    </svg>
+                    <span className="hidden sm:inline">Home</span>
+                </Link>
+            </div>
             
             {/* Hero Section - matching design system */}
-            <section className="relative text-white py-16 bg-cover bg-center" style={{ backgroundImage: 'linear-gradient(rgba(45,90,39,0.9), rgba(58,140,125,0.9)), url(https://images.unsplash.com/photo-1564349683136-77e08dba1ef7)' }}>
+            <section className="relative text-white py-20 pt-24 bg-cover bg-center" style={{ backgroundImage: 'linear-gradient(135deg, rgba(16,185,129,0.92), rgba(20,184,166,0.92)), url(https://images.unsplash.com/photo-1564349683136-77e08dba1ef7)' }}>
                 <div className="container mx-auto px-4 text-center relative z-10">
                     <div className="w-28 h-28 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4 backdrop-blur-sm">
                         <UserIcon />
@@ -211,7 +229,7 @@ const UserProfile = () => {
                         {!isEditing ? (
                             <button
                                 onClick={() => setIsEditing(true)}
-                                className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-green-600 to-teal-600 text-white rounded-full font-semibold hover:shadow-lg transition-all"
+                                className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-full font-semibold hover:shadow-lg transition-all"
                             >
                                 <EditIcon /> Edit Profile
                             </button>
@@ -226,7 +244,7 @@ const UserProfile = () => {
                                 <button
                                     onClick={handleSave}
                                     disabled={loading}
-                                    className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition disabled:opacity-50"
+                                    className="flex items-center gap-2 px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition disabled:opacity-50"
                                 >
                                     <SaveIcon /> {loading ? 'Saving...' : 'Save Changes'}
                                 </button>
@@ -244,7 +262,7 @@ const UserProfile = () => {
                                         name="firstName"
                                         value={formData.firstName}
                                         onChange={handleChange}
-                                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                                     />
                                 ) : (
                                     <p className="text-gray-800 font-medium">{user.firstName}</p>
@@ -258,7 +276,7 @@ const UserProfile = () => {
                                         name="lastName"
                                         value={formData.lastName}
                                         onChange={handleChange}
-                                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                                     />
                                 ) : (
                                     <p className="text-gray-800 font-medium">{user.lastName}</p>
@@ -286,7 +304,7 @@ const UserProfile = () => {
                                         name="phoneNumber"
                                         value={formData.phoneNumber}
                                         onChange={handleChange}
-                                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                                         placeholder="09123456789"
                                     />
                                 ) : (
@@ -300,7 +318,7 @@ const UserProfile = () => {
                                         name="gender"
                                         value={formData.gender}
                                         onChange={handleChange}
-                                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white"
+                                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white"
                                     >
                                         <option value="prefer_not_to_say">Prefer not to say</option>
                                         <option value="male">Male</option>
@@ -321,7 +339,7 @@ const UserProfile = () => {
                                     name="birthday"
                                     value={formData.birthday}
                                     onChange={handleChange}
-                                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                                 />
                             ) : (
                                 <p className="text-gray-800 font-medium">
@@ -380,7 +398,7 @@ const UserProfile = () => {
                         </div>
                         <div className="flex gap-3 mt-6">
                             <button onClick={() => setShowPasswordModal(false)} className="flex-1 px-4 py-2 border rounded-lg">Cancel</button>
-                            <button onClick={handlePasswordChange} disabled={loading} className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg disabled:opacity-50">
+                            <button onClick={handlePasswordChange} disabled={loading} className="flex-1 px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 disabled:opacity-50">
                                 {loading ? 'Changing...' : 'Change Password'}
                             </button>
                         </div>
@@ -409,8 +427,6 @@ const UserProfile = () => {
                     </div>
                 </div>
             )}
-
-            <Footer />
         </div>
     );
 };

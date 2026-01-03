@@ -85,20 +85,20 @@ const Animals = () => {
         <div className="min-h-screen bg-gray-50 flex flex-col">
             <Header />
 
-            <section className="relative text-white py-24 text-center bg-cover bg-center" style={{ backgroundImage: 'linear-gradient(rgba(45,90,39,0.85), rgba(58,140,125,0.85)), url(https://images.unsplash.com/photo-1548013146-72479768bada)' }}>
+            <section className="relative text-white py-12 sm:py-16 md:py-24 text-center bg-cover bg-center px-4" style={{ backgroundImage: 'linear-gradient(rgba(45,90,39,0.85), rgba(58,140,125,0.85)), url(https://images.unsplash.com/photo-1548013146-72479768bada)' }}>
                 <div className="relative z-10 animate-fade-in-up">
-                    <h1 className="text-5xl md:text-6xl font-bold mb-6 tracking-tight">Meet Our Animals</h1>
-                    <p className="text-xl max-w-2xl mx-auto opacity-90 font-light">Discover the incredible wildlife roaming freely at our AI-powered nature park.</p>
+                    <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 sm:mb-6 tracking-tight">Meet Our Animals</h1>
+                    <p className="text-base sm:text-lg md:text-xl max-w-2xl mx-auto opacity-90 font-light">Discover the incredible wildlife roaming freely at our AI-powered nature park.</p>
                 </div>
             </section>
 
-            <div className="container mx-auto px-4 py-16 flex-grow">
-                <div className="flex flex-wrap justify-center gap-3 mb-16">
+            <div className="container mx-auto px-4 py-8 sm:py-12 md:py-16 flex-grow">
+                <div className="flex flex-wrap justify-center gap-2 sm:gap-3 mb-8 sm:mb-12 md:mb-16">
                     {['All', 'Mammals', 'Birds'].map(cat => (
                         <button
                             key={cat}
                             onClick={() => setFilter(cat)}
-                            className={`px-8 py-3 rounded-full font-semibold transition-all transform hover:-translate-y-1 shadow-sm ${filter === cat
+                            className={`px-5 sm:px-8 py-2 sm:py-3 rounded-full font-semibold text-sm sm:text-base transition-all transform hover:-translate-y-1 shadow-sm ${filter === cat
                                     ? 'bg-gradient-to-r from-green-600 to-teal-600 text-white shadow-lg'
                                     : 'bg-white text-green-800 hover:bg-green-50 border border-green-100'
                                 }`}
@@ -108,33 +108,33 @@ const Animals = () => {
                     ))}
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 lg:gap-10">
                     {filteredAnimals.map((animal, idx) => (
-                        <div key={idx} className="group bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-300 border border-gray-100 hover:-translate-y-2">
-                            <div className={`h-64 bg-gradient-to-br ${colorVariants[animal.color]} flex items-center justify-center relative overflow-hidden`}>
+                        <div key={idx} className="group bg-white rounded-2xl sm:rounded-3xl overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-300 border border-gray-100 hover:-translate-y-2">
+                            <div className={`h-48 sm:h-56 md:h-64 bg-gradient-to-br ${colorVariants[animal.color]} flex items-center justify-center relative overflow-hidden`}>
                                 <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
                                 <div className="transform group-hover:scale-110 transition duration-500">
                                     <animal.Icon />
                                 </div>
                             </div>
 
-                            <div className="p-8">
-                                <div className="flex justify-between items-start mb-4">
+                            <div className="p-5 sm:p-6 md:p-8">
+                                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 sm:gap-0 mb-4">
                                     <div>
-                                        <h3 className="font-bold text-gray-800 text-2xl mb-1">{animal.name}</h3>
-                                        <div className="flex items-center gap-2 text-gray-500 text-sm font-medium">
+                                        <h3 className="font-bold text-gray-800 text-xl sm:text-2xl mb-1">{animal.name}</h3>
+                                        <div className="flex items-center gap-2 text-gray-500 text-xs sm:text-sm font-medium">
                                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4 text-green-600">
                                                 <path fillRule="evenodd" d="M11.54 22.351l.07.04.028.016a.76.76 0 00.723 0l.028-.015.071-.041a16.975 16.975 0 001.144-.742 19.58 19.58 0 002.683-2.282c1.944-1.99 3.963-4.98 3.963-8.827a8.25 8.25 0 00-16.5 0c0 3.846 2.02 6.837 3.963 8.827a19.58 19.58 0 002.682 2.282 16.975 16.975 0 001.145.742zM12 13.5a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
                                             </svg>
                                             {animal.loc}
                                         </div>
                                     </div>
-                                    <span className="bg-green-100 text-green-700 text-xs font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5">
+                                    <span className="bg-green-100 text-green-700 text-xs font-bold px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full flex items-center gap-1.5 w-fit">
                                         <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
                                         {animal.status}
                                     </span>
                                 </div>
-                                <button className="w-full mt-2 py-4 rounded-xl bg-gray-50 text-green-800 font-bold hover:bg-green-600 hover:text-white transition-colors duration-300 flex items-center justify-center gap-2 group-hover:shadow-md">
+                                <button className="w-full mt-2 py-3 sm:py-4 rounded-xl bg-gray-50 text-green-800 font-bold text-sm sm:text-base hover:bg-green-600 hover:text-white transition-colors duration-300 flex items-center justify-center gap-2 group-hover:shadow-md">
                                     View Details
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
                                         <line x1="5" y1="12" x2="19" y2="12" />

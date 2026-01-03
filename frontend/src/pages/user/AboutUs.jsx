@@ -40,48 +40,48 @@ const AboutUs = () => {
         <div className="min-h-screen bg-gray-50 flex flex-col">
             <Header />
 
-            <section className="relative text-white py-24 text-center bg-cover bg-center" style={{ backgroundImage: 'linear-gradient(rgba(45,90,39,0.85), rgba(58,140,125,0.85)), url(https://images.unsplash.com/photo-1550358864-518f202c02ba)' }}>
+            <section className="relative text-white py-12 sm:py-16 md:py-24 text-center bg-cover bg-center px-4" style={{ backgroundImage: 'linear-gradient(rgba(45,90,39,0.85), rgba(58,140,125,0.85)), url(https://images.unsplash.com/photo-1550358864-518f202c02ba)' }}>
                 <div className="relative z-10 animate-fade-in-up">
-                    <h1 className="text-5xl md:text-6xl font-bold mb-6 tracking-tight">About Bulusan Park Zoo</h1>
-                    <p className="text-xl max-w-2xl mx-auto opacity-90 font-light">Pioneering the future of wildlife conservation through AI-powered innovation.</p>
+                    <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 sm:mb-6 tracking-tight">About Bulusan Park Zoo</h1>
+                    <p className="text-base sm:text-lg md:text-xl max-w-2xl mx-auto opacity-90 font-light">Pioneering the future of wildlife conservation through AI-powered innovation.</p>
                 </div>
             </section>
 
-            <div className="container mx-auto px-4 py-16 flex-grow">
-                <div className="flex items-center justify-center gap-3 mb-12">
-                    <span className="h-px w-12 bg-green-200"></span>
-                    <h2 className="text-3xl font-bold text-green-800 tracking-wide uppercase">Our Story</h2>
-                    <span className="h-px w-12 bg-green-200"></span>
+            <div className="container mx-auto px-4 py-8 sm:py-12 md:py-16 flex-grow">
+                <div className="flex items-center justify-center gap-2 sm:gap-3 mb-8 sm:mb-12">
+                    <span className="h-px w-8 sm:w-12 bg-green-200"></span>
+                    <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-green-800 tracking-wide uppercase">Our Story</h2>
+                    <span className="h-px w-8 sm:w-12 bg-green-200"></span>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center mb-16">
-                    <div className="bg-white p-8 rounded-3xl shadow-lg border border-gray-100">
-                        <p className="text-gray-700 mb-6 text-lg leading-relaxed">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-12 items-center mb-8 sm:mb-12 md:mb-16">
+                    <div className="bg-white p-5 sm:p-6 md:p-8 rounded-2xl sm:rounded-3xl shadow-lg border border-gray-100">
+                        <p className="text-gray-700 mb-4 sm:mb-6 text-base sm:text-lg leading-relaxed">
                             Founded in 2015, Bulusan Wildlife & Nature Park began as a small conservation initiative in Calapan City. Today, we stand as a testament to modern conservation, housing over 250 animals across 45 species.
                         </p>
-                        <p className="text-gray-700 text-lg leading-relaxed">
+                        <p className="text-gray-700 text-base sm:text-lg leading-relaxed">
                             Through our innovative AI systems, we monitor animal health and provide real-time educational content to visitors, making every visit an immersive learning experience.
                         </p>
                     </div>
-                    <div className="grid grid-cols-2 gap-6">
+                    <div className="grid grid-cols-2 gap-3 sm:gap-4 md:gap-6">
                         {stats.map((stat, i) => (
-                            <div key={i} className="bg-white p-6 rounded-3xl shadow-lg border border-gray-100 text-center group hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-                                <div className="flex justify-center mb-3">
+                            <div key={i} className="bg-white p-4 sm:p-5 md:p-6 rounded-2xl sm:rounded-3xl shadow-lg border border-gray-100 text-center group hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                                <div className="flex justify-center mb-2 sm:mb-3">
                                     <stat.icon />
                                 </div>
-                                <div className="text-4xl font-bold text-green-700 mb-1">{stat.num}</div>
-                                <div className="text-teal-600 font-medium text-sm">{stat.label}</div>
+                                <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-green-700 mb-1">{stat.num}</div>
+                                <div className="text-teal-600 font-medium text-xs sm:text-sm">{stat.label}</div>
                             </div>
                         ))}
                     </div>
                 </div>
 
-                <div className="bg-gradient-to-r from-green-600 to-teal-600 rounded-3xl p-12 text-center text-white shadow-xl">
-                    <h3 className="text-3xl font-bold mb-4">Join Our Conservation Mission</h3>
-                    <p className="text-lg opacity-90 mb-8 max-w-2xl mx-auto">
+                <div className="bg-gradient-to-r from-green-600 to-teal-600 rounded-2xl sm:rounded-3xl p-6 sm:p-8 md:p-12 text-center text-white shadow-xl">
+                    <h3 className="text-xl sm:text-2xl md:text-3xl font-bold mb-3 sm:mb-4">Join Our Conservation Mission</h3>
+                    <p className="text-sm sm:text-base md:text-lg opacity-90 mb-6 sm:mb-8 max-w-2xl mx-auto">
                         Every visit supports our wildlife conservation efforts and helps protect endangered species for future generations.
                     </p>
-                    <button className="px-10 py-4 bg-white text-green-700 rounded-full font-bold hover:bg-gray-100 transition shadow-lg">
+                    <button className="px-6 sm:px-8 md:px-10 py-3 sm:py-4 bg-white text-green-700 rounded-full font-bold text-sm sm:text-base hover:bg-gray-100 transition shadow-lg">
                         Plan Your Visit
                     </button>
                 </div>

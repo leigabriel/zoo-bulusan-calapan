@@ -8,6 +8,8 @@ import AboutUs from './pages/user/AboutUs';
 import AnimalDex from './pages/user/AnimalDex';
 import TicketHistory from './pages/user/TicketHistory';
 import UserProfile from './pages/user/UserProfile';
+import Settings from './pages/user/Settings';
+import Help from './pages/user/Help';
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
 import AccessDenied from './pages/auth/AccessDenied';
@@ -97,6 +99,12 @@ function AppRoutes() {
                     <UserProfile />
                 </ProtectedRoute>
             } />
+            <Route path="/settings" element={
+                <ProtectedRoute allowedRoles={['user', 'staff', 'vet']}>
+                    <Settings />
+                </ProtectedRoute>
+            } />
+            <Route path="/help" element={<Help />} />
 
             {/* Admin Routes */}
             <Route path="/admin/dashboard" element={

@@ -8,21 +8,21 @@ const MapPage = () => {
         <div className="min-h-screen bg-gray-50 flex flex-col">
             <Header />
 
-            <section className="relative text-white py-24 text-center bg-cover bg-center" style={{ backgroundImage: 'linear-gradient(rgba(45,90,39,0.85), rgba(58,140,125,0.85)), url(https://images.unsplash.com/photo-1488972685288-c3fd157d7c7a)' }}>
+            <section className="relative text-white py-12 sm:py-16 md:py-24 text-center bg-cover bg-center px-4" style={{ backgroundImage: 'linear-gradient(rgba(45,90,39,0.85), rgba(58,140,125,0.85)), url(https://images.unsplash.com/photo-1488972685288-c3fd157d7c7a)' }}>
                 <div className="relative z-10 animate-fade-in-up">
-                    <h1 className="text-5xl md:text-6xl font-bold mb-6 tracking-tight">Interactive Zoo Map</h1>
-                    <p className="text-xl max-w-2xl mx-auto opacity-90 font-light">Navigate our park with ease and discover all the amazing exhibits.</p>
+                    <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 sm:mb-6 tracking-tight">Interactive Zoo Map</h1>
+                    <p className="text-base sm:text-lg md:text-xl max-w-2xl mx-auto opacity-90 font-light">Navigate our park with ease and discover all the amazing exhibits.</p>
                 </div>
             </section>
 
-            <main className="flex-1 py-16">
+            <main className="flex-1 py-8 sm:py-12 md:py-16">
                 <div className="container mx-auto px-4">
-                    <div className="flex items-center justify-center gap-3 mb-12">
-                        <span className="h-px w-12 bg-green-200"></span>
-                        <h2 className="text-3xl font-bold text-green-800 tracking-wide uppercase">Park Layout</h2>
-                        <span className="h-px w-12 bg-green-200"></span>
+                    <div className="flex items-center justify-center gap-2 sm:gap-3 mb-8 sm:mb-12">
+                        <span className="h-px w-8 sm:w-12 bg-green-200"></span>
+                        <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-green-800 tracking-wide uppercase">Park Layout</h2>
+                        <span className="h-px w-8 sm:w-12 bg-green-200"></span>
                     </div>
-                    <div className="bg-white rounded-3xl shadow-lg p-8 border border-gray-100">
+                    <div className="bg-white rounded-2xl sm:rounded-3xl shadow-lg p-4 sm:p-6 md:p-8 border border-gray-100">
                         <InteractiveMap />
                     </div>
                 </div>

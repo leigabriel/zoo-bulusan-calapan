@@ -226,8 +226,8 @@ const Tickets = () => {
 
     // Step Indicator - defined as JSX variable (no function re-creation)
     const stepIndicatorContent = (
-        <div className="flex justify-center mb-8">
-            <div className="flex items-center space-x-2 md:space-x-4">
+        <div className="flex justify-center mb-6 sm:mb-8 overflow-x-auto pb-2">
+            <div className="flex items-center space-x-1 sm:space-x-2 md:space-x-4">
                 {[
                     { num: 1, label: 'Select Tickets' },
                     { num: 2, label: 'Visit Details' },
@@ -236,25 +236,25 @@ const Tickets = () => {
                 ].map((step, index) => (
                     <React.Fragment key={step.num}>
                         <div className="flex flex-col items-center">
-                            <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold transition-all duration-300 ${
+                            <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-bold text-sm sm:text-base transition-all duration-300 ${
                                 currentStep >= step.num
                                     ? 'bg-green-600 text-white shadow-lg'
                                     : 'bg-gray-200 text-gray-500'
                             }`}>
                                 {currentStep > step.num ? (
-                                    <i className="fas fa-check"></i>
+                                    <i className="fas fa-check text-xs sm:text-sm"></i>
                                 ) : (
                                     step.num
                                 )}
                             </div>
-                            <span className={`text-xs mt-1 hidden md:block ${
+                            <span className={`text-xs mt-1 hidden sm:block text-center max-w-[80px] ${
                                 currentStep >= step.num ? 'text-green-600 font-medium' : 'text-gray-400'
                             }`}>
                                 {step.label}
                             </span>
                         </div>
                         {index < 3 && (
-                            <div className={`w-8 md:w-16 h-1 rounded transition-all duration-300 ${
+                            <div className={`w-6 sm:w-8 md:w-16 h-1 rounded transition-all duration-300 ${
                                 currentStep > step.num ? 'bg-green-600' : 'bg-gray-200'
                             }`}></div>
                         )}
@@ -266,51 +266,51 @@ const Tickets = () => {
 
     // Ticket Selection - defined as JSX variable
     const ticketSelectionContent = (
-        <div className="space-y-4">
-            <h2 className="text-2xl font-bold text-green-800 mb-6 flex items-center gap-2">
+        <div className="space-y-3 sm:space-y-4">
+            <h2 className="text-xl sm:text-2xl font-bold text-green-800 mb-4 sm:mb-6 flex items-center gap-2">
                 <i className="fas fa-ticket-alt"></i> Select Your Tickets
             </h2>
             
-            <div className="grid gap-4">
+            <div className="grid gap-3 sm:gap-4">
                 {Object.entries(ticketTypes).map(([type, info]) => (
                     <div 
                         key={type} 
-                        className={`p-4 rounded-xl border-2 transition-all duration-300 ${
+                        className={`p-3 sm:p-4 rounded-xl border-2 transition-all duration-300 ${
                             counts[type] > 0 
                                 ? 'border-green-500 bg-green-50 shadow-md' 
                                 : 'border-gray-200 bg-white hover:border-green-300'
                         }`}
                     >
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-4">
-                                <div className={`w-12 h-12 ${info.color} rounded-full flex items-center justify-center text-white`}>
-                                    <i className={`fas ${info.icon} text-xl`}></i>
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+                            <div className="flex items-center gap-3 sm:gap-4">
+                                <div className={`w-10 h-10 sm:w-12 sm:h-12 ${info.color} rounded-full flex items-center justify-center text-white flex-shrink-0`}>
+                                    <i className={`fas ${info.icon} text-lg sm:text-xl`}></i>
                                 </div>
-                                <div>
-                                    <h3 className="font-semibold text-lg text-gray-800">{info.name}</h3>
-                                    <p className="text-sm text-gray-500">{info.description}</p>
+                                <div className="min-w-0">
+                                    <h3 className="font-semibold text-base sm:text-lg text-gray-800">{info.name}</h3>
+                                    <p className="text-xs sm:text-sm text-gray-500">{info.description}</p>
                                 </div>
                             </div>
                             
-                            <div className="flex items-center gap-4">
-                                <span className="text-xl font-bold text-green-700">
+                            <div className="flex items-center justify-between sm:justify-end gap-3 sm:gap-4 mt-2 sm:mt-0">
+                                <span className="text-lg sm:text-xl font-bold text-green-700">
                                     {prices[type] === 0 ? 'FREE' : `P${prices[type]}`}
                                 </span>
                                 
-                                <div className="flex items-center bg-gray-100 rounded-lg">
+                                <div className="flex items-center bg-gray-100 rounded-lg flex-shrink-0">
                                     <button 
                                         onClick={() => updateCount(type, -1)}
                                         disabled={counts[type] === 0}
-                                        className="w-10 h-10 rounded-l-lg hover:bg-green-200 text-green-800 font-bold disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                        className="w-9 h-9 sm:w-10 sm:h-10 rounded-l-lg hover:bg-green-200 text-green-800 font-bold disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
                                     >
-                                        <i className="fas fa-minus"></i>
+                                        <i className="fas fa-minus text-sm"></i>
                                     </button>
-                                    <span className="w-12 text-center font-bold text-lg">{counts[type]}</span>
+                                    <span className="w-10 sm:w-12 text-center font-bold text-base sm:text-lg">{counts[type]}</span>
                                     <button 
                                         onClick={() => updateCount(type, 1)}
-                                        className="w-10 h-10 rounded-r-lg hover:bg-green-200 text-green-800 font-bold transition-colors"
+                                        className="w-9 h-9 sm:w-10 sm:h-10 rounded-r-lg hover:bg-green-200 text-green-800 font-bold transition-colors flex items-center justify-center"
                                     >
-                                        <i className="fas fa-plus"></i>
+                                        <i className="fas fa-plus text-sm"></i>
                                     </button>
                                 </div>
                             </div>
@@ -320,21 +320,21 @@ const Tickets = () => {
             </div>
 
             {/* Promo Code Section */}
-            <div className="mt-6 p-4 bg-yellow-50 rounded-xl border border-yellow-200">
-                <label className="block text-sm font-medium text-yellow-800 mb-2">
+            <div className="mt-6 p-3 sm:p-4 bg-yellow-50 rounded-xl border border-yellow-200">
+                <label className="block text-xs sm:text-sm font-medium text-yellow-800 mb-2">
                     <i className="fas fa-tag mr-2"></i>Have a promo code?
                 </label>
-                <div className="flex gap-2">
+                <div className="flex flex-col sm:flex-row gap-2">
                     <input
                         type="text"
                         value={promoCode}
                         onChange={(e) => setPromoCode(sanitizeInput(e.target.value))}
                         placeholder="Enter code"
-                        className="flex-1 px-4 py-2 border border-yellow-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                        className="flex-1 px-3 sm:px-4 py-2 border border-yellow-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent text-sm sm:text-base"
                     />
                     <button
                         onClick={applyPromoCode}
-                        className="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors font-medium"
+                        className="w-full sm:w-auto px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors font-medium text-sm sm:text-base"
                     >
                         Apply
                     </button>
@@ -350,8 +350,8 @@ const Tickets = () => {
 
     // Visit Details - defined as JSX variable
     const visitDetailsContent = (
-        <div className="space-y-6">
-            <h2 className="text-2xl font-bold text-green-800 mb-6 flex items-center gap-2">
+        <div className="space-y-4 sm:space-y-6">
+            <h2 className="text-xl sm:text-2xl font-bold text-green-800 mb-4 sm:mb-6 flex items-center gap-2">
                 <i className="fas fa-calendar-alt"></i> Choose Your Visit Date & Time
             </h2>
 
@@ -366,9 +366,9 @@ const Tickets = () => {
                     onChange={(e) => setBookingDetails({ ...bookingDetails, date: e.target.value })}
                     min={getMinDate()}
                     max={getMaxDate()}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent text-lg"
+                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent text-base sm:text-lg"
                 />
-                <p className="text-sm text-gray-500 mt-1">
+                <p className="text-xs sm:text-sm text-gray-500 mt-1">
                     <i className="fas fa-info-circle mr-1"></i>
                     Bookings available up to 30 days in advance
                 </p>
@@ -379,13 +379,13 @@ const Tickets = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                     Select Entry Time
                 </label>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3">
                     {timeSlots.map((slot) => (
                         <button
                             key={slot.value}
                             onClick={() => slot.available && setBookingDetails({ ...bookingDetails, time: slot.value })}
                             disabled={!slot.available}
-                            className={`p-3 rounded-xl border-2 transition-all ${
+                            className={`p-2.5 sm:p-3 rounded-xl border-2 transition-all text-sm sm:text-base ${
                                 bookingDetails.time === slot.value
                                     ? 'border-green-500 bg-green-50 text-green-700'
                                     : slot.available
@@ -404,7 +404,7 @@ const Tickets = () => {
             </div>
 
             {/* Contact Information */}
-            <div className="grid md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                         Email Address
@@ -412,9 +412,8 @@ const Tickets = () => {
                     <input
                         type="email"
                         value={bookingDetails.email}
-                        onChange={(e) => setBookingDetails({ ...bookingDetails, email: sanitizeEmail(e.target.value) })}
-                        placeholder="your@email.com"
-                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        onChange={(e) => setBookingDetails({ ...bookingDetails, email: sanitizeEmail(e.target.value) })}                        placeholder="your@email.com"
+                        className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm sm:text-base"
                     />
                 </div>
                 <div>
@@ -426,7 +425,7 @@ const Tickets = () => {
                         value={bookingDetails.phone}
                         onChange={(e) => setBookingDetails({ ...bookingDetails, phone: sanitizePhone(e.target.value) })}
                         placeholder="09XX XXX XXXX"
-                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm sm:text-base"
                     />
                 </div>
             </div>
@@ -449,33 +448,33 @@ const Tickets = () => {
 
     // Guest Information - defined as JSX variable
     const guestInformationContent = (
-        <div className="space-y-6">
-            <h2 className="text-2xl font-bold text-green-800 mb-6 flex items-center gap-2">
+        <div className="space-y-4 sm:space-y-6">
+            <h2 className="text-xl sm:text-2xl font-bold text-green-800 mb-4 sm:mb-6 flex items-center gap-2">
                 <i className="fas fa-users"></i> Guest Information
             </h2>
 
-            <p className="text-gray-600 mb-4">
+            <p className="text-sm sm:text-base text-gray-600 mb-4">
                 Please enter the name of each ticket holder. This information will be printed on the tickets.
             </p>
 
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
                 {companions.map((companion, index) => (
                     <div 
                         key={companion.id}
-                        className="p-4 bg-gray-50 rounded-xl border border-gray-200"
+                        className="p-3 sm:p-4 bg-gray-50 rounded-xl border border-gray-200"
                     >
-                        <div className="flex items-center gap-3 mb-2">
-                            <div className={`w-8 h-8 ${ticketTypes[companion.typeKey]?.color || 'bg-green-500'} rounded-full flex items-center justify-center text-white text-sm`}>
+                        <div className="flex items-center gap-2 sm:gap-3 mb-2">
+                            <div className={`w-7 h-7 sm:w-8 sm:h-8 ${ticketTypes[companion.typeKey]?.color || 'bg-green-500'} rounded-full flex items-center justify-center text-white text-xs sm:text-sm`}>
                                 {index + 1}
                             </div>
-                            <span className="font-medium text-gray-700">{companion.type}</span>
+                            <span className="font-medium text-gray-700 text-sm sm:text-base">{companion.type}</span>
                         </div>
                         <input
                             type="text"
                             value={companion.name}
                             onChange={(e) => handleCompanionNameChange(companion.id, e.target.value)}
                             placeholder="Enter full name"
-                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                            className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm sm:text-base"
                         />
                     </div>
                 ))}
@@ -485,31 +484,31 @@ const Tickets = () => {
 
     // Confirmation - defined as JSX variable
     const confirmationContent = (
-        <div className="text-center py-8">
-            <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6 animate-bounce">
-                <i className="fas fa-check text-4xl text-green-600"></i>
+        <div className="text-center py-4 sm:py-8 px-2 sm:px-0">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6 animate-bounce">
+                <i className="fas fa-check text-3xl sm:text-4xl text-green-600"></i>
             </div>
             
-            <h2 className="text-3xl font-bold text-green-800 mb-2">Booking Confirmed!</h2>
-            <p className="text-gray-600 mb-6">Your tickets have been successfully reserved.</p>
+            <h2 className="text-2xl sm:text-3xl font-bold text-green-800 mb-2">Booking Confirmed!</h2>
+            <p className="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6">Your tickets have been successfully reserved.</p>
 
             {/* Booking Code */}
-            <div className="bg-green-50 border-2 border-green-500 rounded-xl p-6 mb-6 inline-block">
-                <p className="text-sm text-gray-600 mb-1">Your Booking Code</p>
-                <p className="text-3xl font-mono font-bold text-green-700">{bookingCode}</p>
+            <div className="bg-green-50 border-2 border-green-500 rounded-xl p-4 sm:p-6 mb-4 sm:mb-6 inline-block w-full sm:w-auto max-w-xs sm:max-w-none">
+                <p className="text-xs sm:text-sm text-gray-600 mb-1">Your Booking Code</p>
+                <p className="text-2xl sm:text-3xl font-mono font-bold text-green-700 break-all">{bookingCode}</p>
             </div>
 
             {/* Booking Summary */}
-            <div className="bg-gray-50 rounded-xl p-6 max-w-md mx-auto text-left">
-                <h3 className="font-semibold text-gray-800 mb-4 flex items-center gap-2">
+            <div className="bg-gray-50 rounded-xl p-4 sm:p-6 max-w-md mx-auto text-left">
+                <h3 className="font-semibold text-gray-800 mb-3 sm:mb-4 flex items-center gap-2 text-sm sm:text-base">
                     <i className="fas fa-receipt"></i> Booking Details
                 </h3>
-                <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
+                <div className="space-y-2 text-xs sm:text-sm">
+                    <div className="flex flex-col sm:flex-row sm:justify-between gap-0.5 sm:gap-2">
                         <span className="text-gray-600">Date:</span>
                         <span className="font-medium">{new Date(bookingDetails.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
                     </div>
-                    <div className="flex justify-between">
+                    <div className="flex flex-col sm:flex-row sm:justify-between gap-0.5 sm:gap-2">
                         <span className="text-gray-600">Time:</span>
                         <span className="font-medium">{timeSlots.find(t => t.value === bookingDetails.time)?.label}</span>
                     </div>
@@ -524,21 +523,21 @@ const Tickets = () => {
                 </div>
             </div>
 
-            <p className="text-sm text-gray-500 mt-6 mb-6">
+            <p className="text-xs sm:text-sm text-gray-500 mt-4 sm:mt-6 mb-4 sm:mb-6 px-2">
                 <i className="fas fa-envelope mr-1"></i>
                 A confirmation email has been sent to {bookingDetails.email}
             </p>
 
-            <div className="flex justify-center gap-4">
+            <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4">
                 <button
                     onClick={() => navigate('/my-tickets')}
-                    className="px-6 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors font-medium"
+                    className="w-full sm:w-auto px-4 sm:px-6 py-2.5 sm:py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors font-medium text-sm sm:text-base"
                 >
                     <i className="fas fa-history mr-2"></i>View My Tickets
                 </button>
                 <button
                     onClick={resetBooking}
-                    className="px-6 py-3 border-2 border-green-600 text-green-600 rounded-xl hover:bg-green-50 transition-colors font-medium"
+                    className="w-full sm:w-auto px-4 sm:px-6 py-2.5 sm:py-3 border-2 border-green-600 text-green-600 rounded-xl hover:bg-green-50 transition-colors font-medium text-sm sm:text-base"
                 >
                     <i className="fas fa-plus mr-2"></i>Book Another
                 </button>
@@ -608,22 +607,22 @@ const Tickets = () => {
 
                             {/* Navigation Buttons */}
                             {currentStep < 4 && (
-                                <div className="flex justify-between mt-8 pt-6 border-t">
+                                <div className="flex flex-col-reverse sm:flex-row justify-between gap-3 mt-8 pt-6 border-t">
                                     {currentStep > 1 ? (
                                         <button
                                             onClick={prevStep}
-                                            className="px-6 py-3 border-2 border-gray-300 text-gray-600 rounded-xl hover:bg-gray-50 transition-colors font-medium flex items-center gap-2"
+                                            className="w-full sm:w-auto px-4 sm:px-6 py-3 border-2 border-gray-300 text-gray-600 rounded-xl hover:bg-gray-50 transition-colors font-medium flex items-center justify-center gap-2"
                                         >
                                             <i className="fas fa-arrow-left"></i> Back
                                         </button>
                                     ) : (
-                                        <div></div>
+                                        <div className="hidden sm:block"></div>
                                     )}
                                     
                                     {currentStep < 3 ? (
                                         <button
                                             onClick={nextStep}
-                                            className="px-6 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors font-medium flex items-center gap-2"
+                                            className="w-full sm:w-auto px-4 sm:px-6 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors font-medium flex items-center justify-center gap-2"
                                         >
                                             Continue <i className="fas fa-arrow-right"></i>
                                         </button>
@@ -631,7 +630,7 @@ const Tickets = () => {
                                         <button
                                             onClick={handlePayment}
                                             disabled={isProcessing}
-                                            className="px-8 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors font-medium flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                                            className="w-full sm:w-auto px-6 sm:px-8 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors font-medium flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                                         >
                                             {isProcessing ? (
                                                 <>
@@ -651,9 +650,9 @@ const Tickets = () => {
 
                     {/* Order Summary Sidebar */}
                     {currentStep < 4 && (
-                        <div className="lg:col-span-1">
-                            <div className="bg-white rounded-2xl shadow-lg p-6 sticky top-24">
-                                <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                        <div className="lg:col-span-1 order-first lg:order-last">
+                            <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-6 sticky top-20 lg:top-24">
+                                <h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
                                     <i className="fas fa-shopping-cart"></i> Order Summary
                                 </h3>
 

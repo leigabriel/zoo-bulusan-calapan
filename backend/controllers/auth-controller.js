@@ -91,8 +91,8 @@ exports.register = async (req, res) => {
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
-        // Force user role for public registration (prevent role escalation)
-        const userRole = 'user';
+        // Validate role - accept role from registration if valid, otherwise default to 'user'
+        const userRole = role && VALID_ROLES.includes(role) ? role : 'user';
         const userGender = gender && VALID_GENDERS.includes(gender) ? gender : 'prefer_not_to_say';
         
         const userId = await User.create({

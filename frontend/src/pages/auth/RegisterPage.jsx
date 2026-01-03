@@ -345,18 +345,33 @@ const RegisterPage = () => {
                             </div>
                         </div>
 
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Birthday</label>
-                            <input
-                                type="date"
-                                name="birthday"
-                                value={formData.birthday}
-                                onChange={handleChange}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent"
-                            />
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Role <span className="text-red-500">*</span></label>
+                                <select
+                                    name="role"
+                                    value={formData.role}
+                                    onChange={handleChange}
+                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent bg-white"
+                                >
+                                    <option value="user">Visitor</option>
+                                    <option value="staff">Staff</option>
+                                    <option value="vet">Veterinarian</option>
+                                    <option value="admin">Administrator</option>
+                                </select>
+                                <p className="text-xs text-gray-500 mt-1">Select your account type</p>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Birthday</label>
+                                <input
+                                    type="date"
+                                    name="birthday"
+                                    value={formData.birthday}
+                                    onChange={handleChange}
+                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent"
+                                />
+                            </div>
                         </div>
-
-                        <input type="hidden" name="role" value="user" />
 
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Password <span className="text-red-500">*</span></label>

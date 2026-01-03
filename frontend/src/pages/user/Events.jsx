@@ -30,21 +30,21 @@ const Events = () => {
         <div className="min-h-screen bg-gray-50 flex flex-col">
             <Header />
 
-            <section className="relative text-white py-24 text-center bg-cover bg-center" style={{ backgroundImage: 'linear-gradient(rgba(45,90,39,0.85), rgba(58,140,125,0.85)), url(https://images.unsplash.com/photo-1518837695005-2083093ee35b)' }}>
+            <section className="relative text-white py-12 sm:py-16 md:py-24 text-center bg-cover bg-center px-4" style={{ backgroundImage: 'linear-gradient(rgba(45,90,39,0.85), rgba(58,140,125,0.85)), url(https://images.unsplash.com/photo-1518837695005-2083093ee35b)' }}>
                 <div className="relative z-10 animate-fade-in-up">
-                    <h1 className="text-5xl md:text-6xl font-bold mb-6 tracking-tight">Wildlife Events</h1>
-                    <p className="text-xl max-w-2xl mx-auto opacity-90 font-light">Experience unforgettable moments with our animals through live feedings and shows.</p>
+                    <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 sm:mb-6 tracking-tight">Wildlife Events</h1>
+                    <p className="text-base sm:text-lg md:text-xl max-w-2xl mx-auto opacity-90 font-light">Experience unforgettable moments with our animals through live feedings and shows.</p>
                 </div>
             </section>
 
-            <div className="container mx-auto px-4 py-16 flex-grow">
-                <div className="flex items-center justify-center gap-3 mb-12">
-                    <span className="h-px w-12 bg-green-200"></span>
-                    <h2 className="text-3xl font-bold text-green-800 tracking-wide uppercase">Upcoming Activities</h2>
-                    <span className="h-px w-12 bg-green-200"></span>
+            <div className="container mx-auto px-4 py-8 sm:py-12 md:py-16 flex-grow">
+                <div className="flex items-center justify-center gap-2 sm:gap-3 mb-8 sm:mb-12">
+                    <span className="h-px w-8 sm:w-12 bg-green-200"></span>
+                    <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-green-800 tracking-wide uppercase text-center">Upcoming Activities</h2>
+                    <span className="h-px w-8 sm:w-12 bg-green-200"></span>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 max-w-5xl mx-auto">
 
                     <div className="bg-white rounded-3xl shadow-lg overflow-hidden border border-gray-100 group hover:shadow-2xl transition-all duration-300 hover:-translate-y-1">
                         <div className="h-48 bg-gradient-to-r from-amber-400 to-amber-600 flex items-center justify-center relative overflow-hidden">
@@ -56,15 +56,15 @@ const Events = () => {
                                 <span className="w-1.5 h-1.5 bg-white rounded-full"></span> LIVE NOW
                             </span>
                         </div>
-                        <div className="p-8">
-                            <div className="flex justify-between items-start mb-4">
-                                <h3 className="font-bold text-2xl text-gray-800">Penguin Feeding</h3>
-                                <div className="flex items-center gap-1.5 text-teal-600 bg-teal-50 px-3 py-1 rounded-lg font-bold text-sm">
+                        <div className="p-5 sm:p-8">
+                            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 sm:gap-0 mb-4">
+                                <h3 className="font-bold text-xl sm:text-2xl text-gray-800">Penguin Feeding</h3>
+                                <div className="flex items-center gap-1.5 text-teal-600 bg-teal-50 px-3 py-1 rounded-lg font-bold text-xs sm:text-sm w-fit">
                                     <Icons.Clock /> 2:30 PM
                                 </div>
                             </div>
-                            <p className="text-gray-500 mb-8 leading-relaxed">Watch our playful penguins dive and swim as they enjoy their afternoon meal.</p>
-                            <button className="w-full py-4 bg-gradient-to-r from-green-600 to-teal-600 text-white rounded-xl font-bold shadow-md hover:shadow-lg hover:opacity-95 transition flex items-center justify-center gap-2">
+                            <p className="text-gray-500 mb-6 sm:mb-8 leading-relaxed text-sm sm:text-base">Watch our playful penguins dive and swim as they enjoy their afternoon meal.</p>
+                            <button className="w-full py-3 sm:py-4 bg-gradient-to-r from-green-600 to-teal-600 text-white rounded-xl font-bold shadow-md hover:shadow-lg hover:opacity-95 transition flex items-center justify-center gap-2 text-sm sm:text-base">
                                 <Icons.Calendar /> Join Event
                             </button>
                         </div>
@@ -77,15 +77,15 @@ const Events = () => {
                                 <Icons.Bird />
                             </div>
                         </div>
-                        <div className="p-8">
-                            <div className="flex justify-between items-start mb-4">
-                                <h3 className="font-bold text-2xl text-gray-800">Tropical Bird Show</h3>
-                                <div className="flex items-center gap-1.5 text-teal-600 bg-teal-50 px-3 py-1 rounded-lg font-bold text-sm">
+                        <div className="p-5 sm:p-8">
+                            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 sm:gap-0 mb-4">
+                                <h3 className="font-bold text-xl sm:text-2xl text-gray-800">Tropical Bird Show</h3>
+                                <div className="flex items-center gap-1.5 text-teal-600 bg-teal-50 px-3 py-1 rounded-lg font-bold text-xs sm:text-sm w-fit">
                                     <Icons.Clock /> 1:00 PM
                                 </div>
                             </div>
-                            <p className="text-gray-500 mb-8 leading-relaxed">Spectacular flight demonstrations featuring macaws, eagles, and parrots.</p>
-                            <button className="w-full py-4 bg-gradient-to-r from-green-600 to-teal-600 text-white rounded-xl font-bold shadow-md hover:shadow-lg hover:opacity-95 transition flex items-center justify-center gap-2">
+                            <p className="text-gray-500 mb-6 sm:mb-8 leading-relaxed text-sm sm:text-base">Spectacular flight demonstrations featuring macaws, eagles, and parrots.</p>
+                            <button className="w-full py-3 sm:py-4 bg-gradient-to-r from-green-600 to-teal-600 text-white rounded-xl font-bold shadow-md hover:shadow-lg hover:opacity-95 transition flex items-center justify-center gap-2 text-sm sm:text-base">
                                 <Icons.Calendar /> Join Event
                             </button>
                         </div>
