@@ -158,6 +158,7 @@ router.post('/chat', async (req, res) => {
         // Updated model names for Google Generative AI SDK (as of late 2024/2025)
         const candidateModels = [
             'gemini-2.0-flash',
+            'gemini-2.5-flash',
             'gemini-1.5-flash-latest',
             'gemini-1.5-pro-latest',
             'gemini-pro',
