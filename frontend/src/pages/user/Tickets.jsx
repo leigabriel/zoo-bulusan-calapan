@@ -551,14 +551,14 @@ const Tickets = () => {
             
             {/* Hero Section */}
             <section 
-                className="bg-[#2D5A27] text-white py-16 text-center relative overflow-hidden"
+                className="bg-[#2D5A27] text-white py-28 sm:py-32 md:py-40 text-center relative overflow-hidden"
                 style={{ 
                     backgroundImage: 'linear-gradient(rgba(45, 90, 39, 0.9), rgba(58, 140, 125, 0.9)), url(https://images.unsplash.com/photo-1548013146-72479768bada?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80)', 
                     backgroundSize: 'cover',
                     backgroundPosition: 'center'
                 }}
             >
-                <div className="container mx-auto px-4">
+                <div className="container mx-auto px-4 mt-22">
                     <h1 className="text-4xl md:text-5xl font-bold mb-3">
                         <i className="fas fa-ticket-alt mr-3"></i>
                         Ticket Reservations

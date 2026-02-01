@@ -2,10 +2,13 @@ const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const morgan = require('morgan');
+const path = require('path');
 
-dotenv.config();
+// Load .env from the backend directory
+dotenv.config({ path: path.join(__dirname, '.env') });
 
 const authRoutes = require('./routes/auth-routes');
+const googleAuthRoutes = require('./routes/google-auth-routes');
 const predictionRoutes = require('./routes/prediction-routes');
 const adminRoutes = require('./routes/admin-routes');
 const staffRoutes = require('./routes/staff-routes');
@@ -27,6 +30,7 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 app.use('/api/auth', authRoutes);
+app.use('/auth', googleAuthRoutes);
 app.use('/api/predictions', predictionRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/staff', staffRoutes);

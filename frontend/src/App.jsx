@@ -12,6 +12,7 @@ import Settings from './pages/user/Settings';
 import Help from './pages/user/Help';
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
+import GoogleAuthSuccess from './pages/auth/GoogleAuthSuccess';
 import AccessDenied from './pages/auth/AccessDenied';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AnimalAnalytics from './pages/admin/AnimalAnalytics';
@@ -74,6 +75,7 @@ function AppRoutes() {
             {/* Auth Routes */}
             <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
             <Route path="/signup" element={<PublicRoute><RegisterPage /></PublicRoute>} />
+            <Route path="/auth/google/success" element={<GoogleAuthSuccess />} />
             <Route path="/admin" element={<Navigate to="/login" replace />} />
             <Route path="/admin/login" element={<Navigate to="/login" replace />} />
             <Route path="/access-denied" element={<AccessDenied />} />

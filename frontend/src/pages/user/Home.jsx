@@ -350,7 +350,7 @@ const Home = () => {
                         <h1 className="text-5xl md:text-7xl font-bold text-gray-900 mb-6 leading-tight tracking-tight">
                             Your Haven for
                             <br />
-                            <span className="bg-gradient-to-r from-emerald-600 via-teal-500 to-cyan-500 bg-clip-text text-transparent italic">Seamless</span> Wildlife
+                            <span className="bg-gradient-to-r from-emerald-600 via-teal-500 to-cyan-500 bg-clip-text text-transparent">Seamless</span> Wildlife
                         </h1>
                         <p className="text-lg md:text-xl text-gray-600 max-w-2xl mx-auto mb-10 leading-relaxed">
                             Empowering you with intelligent, effortless tools to explore wildlife, enhance your visit, and discover more—seamlessly.
@@ -579,7 +579,7 @@ const Home = () => {
                                 title: 'Penguin Feeding', 
                                 time: '2:30 PM', 
                                 desc: 'Watch our playful penguins dive and swim.',
-                                IconComponent: Icons.Penguin,
+                                // IconComponent: Icons.Penguin,
                                 color: 'from-blue-400 to-cyan-500',
                                 live: true
                             },
@@ -587,7 +587,7 @@ const Home = () => {
                                 title: 'Tropical Bird Show', 
                                 time: '1:00 PM', 
                                 desc: 'Spectacular flight demonstrations.',
-                                IconComponent: Icons.Parrot,
+                                // IconComponent: Icons.Parrot,
                                 color: 'from-amber-400 to-orange-500',
                                 live: false
                             },
@@ -595,7 +595,7 @@ const Home = () => {
                                 title: 'Lion Feeding', 
                                 time: '4:00 PM', 
                                 desc: 'Watch the kings of the jungle at mealtime.',
-                                IconComponent: Icons.Lion,
+                                // IconComponent: Icons.Lion,
                                 color: 'from-yellow-400 to-amber-500',
                                 live: false
                             }
@@ -647,8 +647,8 @@ const Home = () => {
                     <p className="text-gray-600 mb-16 text-lg max-w-2xl mx-auto">Secure cloud-based reservations with instant digital confirmation and QR code access.</p>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
                         {[
-                            { title: 'Child Admission', price: '₱20', desc: 'Ages 4-12', IconComponent: Icons.Child },
-                            { title: 'Adult Admission', price: '₱40', desc: 'Ages 13+', IconComponent: Icons.Adult, featured: true },
+                            { title: 'Child Admission', price: '₱50', desc: 'Ages 5-17', IconComponent: Icons.Child },
+                            { title: 'Adult Admission', price: '₱100', desc: 'Ages 18+', IconComponent: Icons.Adult, featured: true },
                             { title: 'Bulusan Residents', price: 'FREE', desc: 'With Valid ID', IconComponent: Icons.Home }
                         ].map((t, i) => (
                             <div 

@@ -162,3 +162,7 @@ CREATE TABLE zones (
 -- User Account
 -- username: vinafernandez
 -- password: vina2025
+
+-- Staff Account
+-- username: sofia
+-- password:

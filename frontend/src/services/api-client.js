@@ -37,6 +37,16 @@ const getAuthHeaders = (type = 'user') => {
     };
 };
 
+// Auth headers without Content-Type for FormData uploads
+const getAuthHeadersMultipart = (type = 'user') => {
+    const token = getToken(type);
+    const tabId = getTabId();
+    return {
+        ...(token && { Authorization: `Bearer ${token}` }),
+        ...(tabId && { 'X-Tab-ID': tabId })
+    };
+};
+
 const handleResponse = async (response) => {
     const data = await response.json();
     if (!response.ok) {
@@ -101,6 +111,26 @@ export const authAPI = {
     logout: async (type = 'user') => {
         const response = await fetch(`${API_BASE_URL}/auth/logout`, {
             method: 'POST',
+            headers: getAuthHeaders(type)
+        });
+        return handleResponse(response);
+    },
+
+    uploadProfileImage: async (file, type = 'user') => {
+        const formData = new FormData();
+        formData.append('profileImage', file);
+
+        const response = await fetch(`${API_BASE_URL}/auth/profile/image`, {
+            method: 'POST',
+            headers: getAuthHeadersMultipart(type),
+            body: formData
+        });
+        return handleResponse(response);
+    },
+
+    deleteProfileImage: async (type = 'user') => {
+        const response = await fetch(`${API_BASE_URL}/auth/profile/image`, {
+            method: 'DELETE',
             headers: getAuthHeaders(type)
         });
         return handleResponse(response);

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { authAPI } from '../../services/api-client';
@@ -42,6 +42,13 @@ const LockIcon = () => (
     </svg>
 );
 
+const CameraIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-5 h-5">
+        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+        <circle cx="12" cy="13" r="4"/>
+    </svg>
+);
+
 const UserProfile = () => {
     const { user, logout, updateUser } = useAuth();
     const navigate = useNavigate();
@@ -52,6 +59,12 @@ const UserProfile = () => {
     const [showPasswordModal, setShowPasswordModal] = useState(false);
     const [deletePassword, setDeletePassword] = useState('');
     const [passwordData, setPasswordData] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
+    
+    // Profile image upload states
+    const [imagePreview, setImagePreview] = useState(null);
+    const [selectedFile, setSelectedFile] = useState(null);
+    const [uploadingImage, setUploadingImage] = useState(false);
+    const fileInputRef = useRef(null);
     
     const [formData, setFormData] = useState({
         firstName: '',
@@ -84,6 +97,107 @@ const UserProfile = () => {
         }
         
         setFormData({ ...formData, [name]: sanitizedValue });
+    };
+
+    // Handle file selection for profile image
+    const handleFileSelect = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        // Validate file type
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+        if (!allowedTypes.includes(file.type)) {
+            setMessage({ text: 'Invalid file type. Only JPEG, PNG, and WebP images are allowed.', type: 'error' });
+            return;
+        }
+
+        // Validate file size (2MB max)
+        if (file.size > 2 * 1024 * 1024) {
+            setMessage({ text: 'File too large. Maximum size is 2MB.', type: 'error' });
+            return;
+        }
+
+        setSelectedFile(file);
+
+        // Create preview URL
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            setImagePreview(reader.result);
+        };
+        reader.readAsDataURL(file);
+    };
+
+    // Upload the selected profile image
+    const handleImageUpload = async () => {
+        if (!selectedFile) return;
+
+        setUploadingImage(true);
+        setMessage({ text: '', type: '' });
+
+        try {
+            const response = await authAPI.uploadProfileImage(selectedFile);
+            if (response.success) {
+                // Update user context with new profile image
+                if (response.user) {
+                    updateUser(response.user);
+                }
+                setMessage({ text: 'Profile image updated successfully!', type: 'success' });
+                setSelectedFile(null);
+                setImagePreview(null);
+            } else {
+                setMessage({ text: response.message || 'Failed to upload image', type: 'error' });
+            }
+        } catch (error) {
+            setMessage({ text: error.message || 'Error uploading image', type: 'error' });
+        } finally {
+            setUploadingImage(false);
+        }
+    };
+
+    // Cancel image selection
+    const handleCancelImageSelect = () => {
+        setSelectedFile(null);
+        setImagePreview(null);
+        if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+        }
+    };
+
+    // Remove profile image
+    const handleRemoveImage = async () => {
+        setUploadingImage(true);
+        setMessage({ text: '', type: '' });
+
+        try {
+            const response = await authAPI.deleteProfileImage();
+            if (response.success) {
+                // Update user context to remove profile image
+                updateUser({ ...user, profileImage: null, profile_image: null });
+                setMessage({ text: 'Profile image removed successfully!', type: 'success' });
+            } else {
+                setMessage({ text: response.message || 'Failed to remove image', type: 'error' });
+            }
+        } catch (error) {
+            setMessage({ text: error.message || 'Error removing image', type: 'error' });
+        } finally {
+            setUploadingImage(false);
+        }
+    };
+
+    // Get current profile image URL
+    const getProfileImageUrl = () => {
+        if (imagePreview) return imagePreview;
+        if (user?.profileImage) {
+            return user.profileImage.startsWith('http') 
+                ? user.profileImage 
+                : `/profile-img/${user.profileImage}`;
+        }
+        if (user?.profile_image) {
+            return user.profile_image.startsWith('http')
+                ? user.profile_image
+                : `/profile-img/${user.profile_image}`;
+        }
+        return null;
     };
 
     const handleSave = async () => {
@@ -199,9 +313,87 @@ const UserProfile = () => {
             {/* Hero Section - matching design system */}
             <section className="relative text-white py-20 pt-24 bg-cover bg-center" style={{ backgroundImage: 'linear-gradient(135deg, rgba(16,185,129,0.92), rgba(20,184,166,0.92)), url(https://images.unsplash.com/photo-1564349683136-77e08dba1ef7)' }}>
                 <div className="container mx-auto px-4 text-center relative z-10">
-                    <div className="w-28 h-28 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4 backdrop-blur-sm">
-                        <UserIcon />
+                    {/* Profile Image with Upload */}
+                    <div className="relative inline-block">
+                        <div className="w-28 h-28 rounded-full overflow-hidden mx-auto mb-4 ring-4 ring-white/30 shadow-xl">
+                            {getProfileImageUrl() ? (
+                                <img
+                                    src={getProfileImageUrl()}
+                                    alt="Profile"
+                                    className="w-full h-full object-cover"
+                                    onError={(e) => {
+                                        e.target.onerror = null;
+                                        e.target.src = '/profile-img/default-avatar.svg';
+                                    }}
+                                />
+                            ) : (
+                                <div className="w-full h-full bg-white/20 flex items-center justify-center backdrop-blur-sm">
+                                    <UserIcon />
+                                </div>
+                            )}
+                        </div>
+                        
+                        {/* Camera button to trigger file input */}
+                        <button
+                            onClick={() => fileInputRef.current?.click()}
+                            disabled={uploadingImage}
+                            className="absolute bottom-3 right-0 w-9 h-9 bg-white text-emerald-600 rounded-full flex items-center justify-center shadow-lg hover:bg-gray-100 transition-colors disabled:opacity-50"
+                            title="Change profile picture"
+                        >
+                            <CameraIcon />
+                        </button>
+                        
+                        {/* Hidden file input */}
+                        <input
+                            ref={fileInputRef}
+                            type="file"
+                            accept="image/jpeg,image/png,image/webp"
+                            onChange={handleFileSelect}
+                            className="hidden"
+                        />
                     </div>
+
+                    {/* Image upload actions (shown when file is selected) */}
+                    {selectedFile && (
+                        <div className="flex items-center justify-center gap-3 mb-4 animate-fade-in">
+                            <button
+                                onClick={handleImageUpload}
+                                disabled={uploadingImage}
+                                className="px-4 py-2 bg-white text-emerald-600 rounded-full font-medium text-sm hover:bg-gray-100 transition-colors disabled:opacity-50 flex items-center gap-2 shadow-lg"
+                            >
+                                {uploadingImage ? (
+                                    <>
+                                        <div className="w-4 h-4 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin"></div>
+                                        <span>Uploading...</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <SaveIcon />
+                                        <span>Save Image</span>
+                                    </>
+                                )}
+                            </button>
+                            <button
+                                onClick={handleCancelImageSelect}
+                                disabled={uploadingImage}
+                                className="px-4 py-2 bg-white/20 text-white rounded-full font-medium text-sm hover:bg-white/30 transition-colors disabled:opacity-50"
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    )}
+
+                    {/* Remove image button (shown when user has a profile image and no file is selected) */}
+                    {!selectedFile && (user?.profileImage || user?.profile_image) && (
+                        <button
+                            onClick={handleRemoveImage}
+                            disabled={uploadingImage}
+                            className="mb-4 px-3 py-1.5 bg-white/20 text-white/80 rounded-full text-xs font-medium hover:bg-white/30 hover:text-white transition-colors disabled:opacity-50"
+                        >
+                            {uploadingImage ? 'Removing...' : 'Remove photo'}
+                        </button>
+                    )}
+
                     <h1 className="text-4xl md:text-5xl font-bold mb-2 tracking-tight">
                         {user.firstName} {user.lastName}
                     </h1>

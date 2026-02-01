@@ -8,11 +8,11 @@
 -- =====================================================
 -- DATABASE CREATION
 -- =====================================================
-CREATE DATABASE IF NOT EXISTS zoo_bulusan
+CREATE DATABASE IF NOT EXISTS bulusanzoocalapan
     CHARACTER SET utf8mb4
     COLLATE utf8mb4_unicode_ci;
 
-USE zoo_bulusan;
+USE bulusanzoocalapan;
 
 -- =====================================================
 -- TABLE: users

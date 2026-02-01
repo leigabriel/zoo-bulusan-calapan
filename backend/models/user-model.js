@@ -119,6 +119,56 @@ class User {
         );
         return result.affectedRows > 0;
     }
+
+    // Google OAuth methods
+    static async findByGoogleId(googleId) {
+        const [rows] = await db.query('SELECT * FROM users WHERE google_id = ?', [googleId]);
+        return rows[0];
+    }
+
+    static async createGoogleUser(userData) {
+        const { firstName, lastName, username, email, googleId, profileImage, role } = userData;
+        
+        const [result] = await db.query(
+            `INSERT INTO users (first_name, last_name, username, email, google_id, 
+             profile_image, role, auth_provider, email_verified, password) 
+             VALUES (?, ?, ?, ?, ?, ?, ?, 'google', TRUE, NULL)`,
+            [firstName, lastName, username, email, googleId, profileImage, role || 'user']
+        );
+        return result.insertId;
+    }
+
+    static async linkGoogleAccount(userId, googleId, profileImage = null) {
+        const updateQuery = profileImage 
+            ? 'UPDATE users SET google_id = ?, profile_image = COALESCE(profile_image, ?), updated_at = NOW() WHERE id = ?'
+            : 'UPDATE users SET google_id = ?, updated_at = NOW() WHERE id = ?';
+        
+        const params = profileImage ? [googleId, profileImage, userId] : [googleId, userId];
+        const [result] = await db.query(updateQuery, params);
+        return result.affectedRows > 0;
+    }
+
+    static async updateGoogleProfile(userId, profileImage) {
+        const [result] = await db.query(
+            'UPDATE users SET profile_image = ?, updated_at = NOW() WHERE id = ?',
+            [profileImage, userId]
+        );
+        return result.affectedRows > 0;
+    }
+
+    static async unlinkGoogleAccount(userId) {
+        // Only allow unlinking if user has a password set (local auth)
+        const user = await this.findById(userId);
+        if (!user || !user.password) {
+            return false; // Cannot unlink if no password exists
+        }
+        
+        const [result] = await db.query(
+            'UPDATE users SET google_id = NULL, auth_provider = "local", updated_at = NOW() WHERE id = ?',
+            [userId]
+        );
+        return result.affectedRows > 0;
+    }
 }
 
 module.exports = User;

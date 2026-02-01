@@ -1,6 +1,7 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user-model');
+const { deleteOldProfileImage, getProfileImagePath } = require('../middleware/upload-profile-image');
 
 const VALID_ROLES = ['admin', 'staff', 'vet', 'user'];
 const VALID_GENDERS = ['male', 'female', 'other', 'prefer_not_to_say'];
@@ -144,6 +145,14 @@ exports.login = async (req, res) => {
 
         if (!user.is_active) {
             return res.status(403).json({ success: false, message: 'Account is deactivated. Please contact support.' });
+        }
+
+        // Check if user has a password (Google-only accounts don't have passwords)
+        if (!user.password) {
+            return res.status(401).json({ 
+                success: false, 
+                message: 'This account uses Google Sign-In. Please use the "Continue with Google" button.' 
+            });
         }
 
         if (loginType === 'admin' && !['admin', 'staff', 'vet'].includes(user.role)) {
@@ -325,5 +334,109 @@ exports.logout = async (req, res) => {
     } catch (error) {
         console.error('Logout error:', error);
         res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
+exports.uploadProfileImage = async (req, res) => {
+    try {
+        // File has been uploaded by multer middleware
+        if (!req.file) {
+            return res.status(400).json({
+                success: false,
+                message: 'No image file provided'
+            });
+        }
+
+        // Get user's current profile image to delete old one
+        const user = await User.findById(req.user.id);
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
+        }
+
+        // Delete old profile image if it exists and is not the default
+        if (user.profile_image) {
+            deleteOldProfileImage(user.profile_image);
+        }
+
+        // Get the filename for storing in database
+        const profileImagePath = getProfileImagePath(req.file.filename);
+
+        // Update user profile with new image path
+        await User.updateProfile(req.user.id, {
+            firstName: user.first_name,
+            lastName: user.last_name,
+            phoneNumber: user.phone_number,
+            gender: user.gender,
+            birthday: user.birthday,
+            profileImage: profileImagePath
+        });
+
+        // Get updated user data
+        const updatedUser = await User.findById(req.user.id);
+
+        res.json({
+            success: true,
+            message: 'Profile image uploaded successfully',
+            profileImage: profileImagePath,
+            user: {
+                id: updatedUser.id,
+                firstName: updatedUser.first_name,
+                lastName: updatedUser.last_name,
+                username: updatedUser.username,
+                email: updatedUser.email,
+                phoneNumber: updatedUser.phone_number,
+                gender: updatedUser.gender,
+                birthday: updatedUser.birthday,
+                role: updatedUser.role,
+                profileImage: updatedUser.profile_image
+            }
+        });
+    } catch (error) {
+        console.error('Upload profile image error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error uploading profile image'
+        });
+    }
+};
+
+exports.deleteProfileImage = async (req, res) => {
+    try {
+        const user = await User.findById(req.user.id);
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
+        }
+
+        // Delete the profile image file if it exists
+        if (user.profile_image) {
+            deleteOldProfileImage(user.profile_image);
+        }
+
+        // Update user profile to remove image reference
+        await User.updateProfile(req.user.id, {
+            firstName: user.first_name,
+            lastName: user.last_name,
+            phoneNumber: user.phone_number,
+            gender: user.gender,
+            birthday: user.birthday,
+            profileImage: null
+        });
+
+        res.json({
+            success: true,
+            message: 'Profile image removed successfully'
+        });
+    } catch (error) {
+        console.error('Delete profile image error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error removing profile image'
+        });
     }
 };

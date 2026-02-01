@@ -85,8 +85,8 @@ const Animals = () => {
         <div className="min-h-screen bg-gray-50 flex flex-col">
             <Header />
 
-            <section className="relative text-white py-12 sm:py-16 md:py-24 text-center bg-cover bg-center px-4" style={{ backgroundImage: 'linear-gradient(rgba(45,90,39,0.85), rgba(58,140,125,0.85)), url(https://images.unsplash.com/photo-1548013146-72479768bada)' }}>
-                <div className="relative z-10 animate-fade-in-up">
+            <section className="relative text-white py-28 sm:py-32 md:py-40 text-center bg-cover bg-center px-4" style={{ backgroundImage: 'linear-gradient(rgba(45,90,39,0.85), rgba(58,140,125,0.85)), url(https://images.unsplash.com/photo-1548013146-72479768bada)' }}>
+                <div className="relative z-10 animate-fade-in-up mt-22">
                     <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 sm:mb-6 tracking-tight">Meet Our Animals</h1>
                     <p className="text-base sm:text-lg md:text-xl max-w-2xl mx-auto opacity-90 font-light">Discover the incredible wildlife roaming freely at our AI-powered nature park.</p>
                 </div>
