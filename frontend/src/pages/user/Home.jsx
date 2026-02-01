@@ -687,7 +687,7 @@ const Home = () => {
                 </div>
             </section>
 
-            {/* Interactive Map Preview Section */}
+            {/* Interactive Map Preview Section
             <section className="py-24 bg-white">
                 <div className="container mx-auto px-6 lg:px-12">
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
@@ -771,7 +771,7 @@ const Home = () => {
                         </div>
                     </div>
                 </div>
-            </section>
+            </section> */}
 
             <Footer />
         </div>

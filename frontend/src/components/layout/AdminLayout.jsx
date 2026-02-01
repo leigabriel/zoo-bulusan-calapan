@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import LogoutModal from '../common/LogoutModal';
@@ -113,7 +113,7 @@ const AdminLayout = ({ children }) => {
     const location = useLocation();
     const navigate = useNavigate();
     const [sidebarOpen, setSidebarOpen] = useState(false);
-    const [rightSidebarOpen, setRightSidebarOpen] = useState(false);
+    const [notificationPanelOpen, setNotificationPanelOpen] = useState(false);
     const [showLogoutModal, setShowLogoutModal] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
 
@@ -124,6 +124,13 @@ const AdminLayout = ({ children }) => {
         { id: 3, type: 'alert', message: 'System maintenance scheduled.', time: '2 Hours ago', read: true },
         { id: 4, type: 'message', message: '5 Unread messages.', time: 'Today, 11:59 PM', read: true },
     ]);
+
+    // Recent activities
+    const recentActivities = [
+        { id: 1, icon: '📝', message: 'Changed the dashboard style.', time: '2 Minutes ago', color: 'blue' },
+        { id: 2, icon: '✓', message: '177 New animals added.', time: '57 Minutes ago', color: 'green' },
+        { id: 3, icon: '📦', message: '11 Products have been archived.', time: '1 Day ago', color: 'yellow' },
+    ];
 
     const handleLogout = () => {
         logout();
@@ -139,6 +146,15 @@ const AdminLayout = ({ children }) => {
         { path: '/admin/reports', label: 'Reports', Icon: ReportsIcon },
     ];
 
+    // Filter menu items based on search query
+    const filteredMenuItems = useMemo(() => {
+        if (!searchQuery.trim()) return menuItems;
+        const query = searchQuery.toLowerCase();
+        return menuItems.filter(item => 
+            item.label.toLowerCase().includes(query)
+        );
+    }, [searchQuery, menuItems]);
+
     const handleNavClick = () => {
         if (window.innerWidth < 1024) {
             setSidebarOpen(false);
@@ -148,8 +164,21 @@ const AdminLayout = ({ children }) => {
     // Close sidebars on route change for mobile
     useEffect(() => {
         setSidebarOpen(false);
-        setRightSidebarOpen(false);
+        setNotificationPanelOpen(false);
     }, [location.pathname]);
+
+    // Close notification panel when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (e) => {
+            if (notificationPanelOpen && !e.target.closest('.notification-panel') && !e.target.closest('.notification-bell')) {
+                setNotificationPanelOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [notificationPanelOpen]);
+
+    const unreadCount = notifications.filter(n => !n.read).length;
 
     return (
         <div className="flex h-screen bg-[#0a0a0a] overflow-hidden">
@@ -162,11 +191,11 @@ const AdminLayout = ({ children }) => {
                 />
             )}
 
-            {/* Mobile overlay for right sidebar */}
-            {rightSidebarOpen && (
+            {/* Notification Panel Overlay */}
+            {notificationPanelOpen && (
                 <div 
-                    className="fixed inset-0 bg-black/60 z-40 xl:hidden backdrop-blur-sm"
-                    onClick={() => setRightSidebarOpen(false)}
+                    className="fixed inset-0 bg-black/40 z-40 backdrop-blur-sm"
+                    onClick={() => setNotificationPanelOpen(false)}
                     aria-hidden="true"
                 />
             )}
@@ -198,10 +227,9 @@ const AdminLayout = ({ children }) => {
                 {/* Search Bar */}
                 <div className="p-4">
                     <div className="relative">
-                        <SearchIcon />
                         <input
                             type="text"
-                            placeholder="Search..."
+                            placeholder="Search menu..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl py-2.5 pl-10 pr-4 
@@ -211,10 +239,14 @@ const AdminLayout = ({ children }) => {
                         <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
                             <SearchIcon />
                         </div>
-                        <kbd className="absolute right-3 top-1/2 -translate-y-1/2 hidden sm:inline-flex items-center gap-1 
-                            px-2 py-0.5 text-xs text-gray-500 bg-[#2a2a2a] rounded border border-[#3a3a3a]">
-                            ⌘K
-                        </kbd>
+                        {searchQuery && (
+                            <button
+                                onClick={() => setSearchQuery('')}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white"
+                            >
+                                <CloseIcon />
+                            </button>
+                        )}
                     </div>
                 </div>
 
@@ -223,33 +255,43 @@ const AdminLayout = ({ children }) => {
                     <p className="px-3 mb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
                         Dashboards
                     </p>
-                    {menuItems.map(item => (
-                        <Link
-                            key={item.path}
-                            to={item.path}
-                            onClick={handleNavClick}
-                            className={`flex items-center gap-3 px-3 py-2.5 mb-1 rounded-xl transition-all duration-200 group ${
-                                location.pathname === item.path
-                                    ? 'bg-[#8cff65]/10 text-[#8cff65] border-l-2 border-[#8cff65]'
-                                    : 'text-gray-400 hover:bg-[#1e1e1e] hover:text-white'
-                            }`}
-                            aria-current={location.pathname === item.path ? 'page' : undefined}
-                        >
-                            <span className={`transition-colors ${
-                                location.pathname === item.path ? 'text-[#8cff65]' : 'text-gray-500 group-hover:text-white'
-                            }`}>
-                                <item.Icon />
-                            </span>
-                            <span className="font-medium">{item.label}</span>
-                        </Link>
-                    ))}
+                    {filteredMenuItems.length === 0 ? (
+                        <div className="px-3 py-4 text-center text-gray-500 text-sm">
+                            No results found
+                        </div>
+                    ) : (
+                        filteredMenuItems.map(item => (
+                            <Link
+                                key={item.path}
+                                to={item.path}
+                                onClick={handleNavClick}
+                                className={`flex items-center gap-3 px-3 py-2.5 mb-1 rounded-xl transition-all duration-200 group ${
+                                    location.pathname === item.path
+                                        ? 'bg-[#8cff65]/10 text-[#8cff65] border-l-2 border-[#8cff65]'
+                                        : 'text-gray-400 hover:bg-[#1e1e1e] hover:text-white'
+                                }`}
+                                aria-current={location.pathname === item.path ? 'page' : undefined}
+                            >
+                                <span className={`transition-colors ${
+                                    location.pathname === item.path ? 'text-[#8cff65]' : 'text-gray-500 group-hover:text-white'
+                                }`}>
+                                    <item.Icon />
+                                </span>
+                                <span className="font-medium">{item.label}</span>
+                            </Link>
+                        ))
+                    )}
                 </nav>
 
                 {/* Bottom Section - Help & Logout */}
                 <div className="p-4 border-t border-[#2a2a2a] space-y-2">
                     <Link
                         to="/admin/help"
-                        className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-400 hover:bg-[#1e1e1e] hover:text-white transition-all"
+                        className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all ${
+                            location.pathname === '/admin/help'
+                                ? 'bg-[#8cff65]/10 text-[#8cff65]'
+                                : 'text-gray-400 hover:bg-[#1e1e1e] hover:text-white'
+                        }`}
                     >
                         <HelpIcon />
                         <span className="font-medium">Help Center</span>
@@ -294,7 +336,9 @@ const AdminLayout = ({ children }) => {
                         </button>
                         <div>
                             <h2 className="text-xl font-bold text-white">
-                                {menuItems.find(item => item.path === location.pathname)?.label || 'Dashboard'}
+                                {menuItems.find(item => item.path === location.pathname)?.label || 
+                                 (location.pathname === '/admin/help' ? 'Help Center' : 
+                                  location.pathname === '/admin/profile' ? 'Profile' : 'Dashboard')}
                             </h2>
                             <p className="text-sm text-gray-500">
                                 {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
@@ -302,15 +346,17 @@ const AdminLayout = ({ children }) => {
                         </div>
                     </div>
                     <div className="flex items-center gap-3">
-                        {/* Notification Bell - Mobile toggle for right sidebar */}
+                        {/* Notification Bell */}
                         <button
-                            onClick={() => setRightSidebarOpen(!rightSidebarOpen)}
-                            className="relative p-2 hover:bg-[#1e1e1e] rounded-xl text-gray-400 hover:text-white transition xl:hidden"
+                            onClick={() => setNotificationPanelOpen(!notificationPanelOpen)}
+                            className="notification-bell relative p-2.5 hover:bg-[#1e1e1e] rounded-xl text-gray-400 hover:text-white transition"
                             aria-label="Toggle notifications"
                         >
                             <BellIcon />
-                            {notifications.some(n => !n.read) && (
-                                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#8cff65] rounded-full"></span>
+                            {unreadCount > 0 && (
+                                <span className="absolute top-1 right-1 w-5 h-5 bg-[#8cff65] rounded-full flex items-center justify-center text-[10px] font-bold text-black">
+                                    {unreadCount}
+                                </span>
                             )}
                         </button>
 
@@ -336,103 +382,97 @@ const AdminLayout = ({ children }) => {
                 </main>
             </div>
 
-            {/* Right Sidebar - Notifications */}
+            {/* Slide-in Notification Panel */}
             <aside
-                className={`${rightSidebarOpen ? 'translate-x-0' : 'translate-x-full xl:translate-x-0'} 
-                    fixed xl:relative right-0 z-50 xl:z-auto w-80 bg-[#141414] border-l border-[#2a2a2a] 
-                    transition-transform duration-300 flex flex-col h-full`}
+                className={`notification-panel fixed right-0 top-0 z-50 w-80 sm:w-96 h-full bg-[#141414] border-l border-[#2a2a2a] 
+                    transform transition-transform duration-300 ease-in-out ${
+                    notificationPanelOpen ? 'translate-x-0' : 'translate-x-full'
+                }`}
                 aria-label="Notifications panel"
             >
                 {/* Notifications Header */}
                 <div className="p-5 flex items-center justify-between border-b border-[#2a2a2a]">
-                    <h3 className="text-lg font-bold text-white">Notifications</h3>
+                    <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                        <BellIcon />
+                        Notifications
+                        {unreadCount > 0 && (
+                            <span className="px-2 py-0.5 bg-[#8cff65]/20 text-[#8cff65] text-xs font-medium rounded-full">
+                                {unreadCount} new
+                            </span>
+                        )}
+                    </h3>
                     <button 
-                        onClick={() => setRightSidebarOpen(false)}
-                        className="xl:hidden text-gray-400 hover:text-white"
+                        onClick={() => setNotificationPanelOpen(false)}
+                        className="p-2 hover:bg-[#1e1e1e] rounded-lg text-gray-400 hover:text-white transition"
                     >
                         <CloseIcon />
                     </button>
                 </div>
 
                 {/* Notifications List */}
-                <div className="flex-1 overflow-y-auto p-4 space-y-3">
-                    {notifications.map((notification) => (
-                        <div 
-                            key={notification.id}
-                            className={`p-4 rounded-xl border transition-all cursor-pointer hover:border-[#8cff65]/30 ${
-                                notification.read 
-                                    ? 'bg-[#1e1e1e] border-[#2a2a2a]' 
-                                    : 'bg-[#8cff65]/5 border-[#8cff65]/20'
-                            }`}
-                        >
-                            <div className="flex items-start gap-3">
-                                <div className={`w-2 h-2 mt-2 rounded-full flex-shrink-0 ${
-                                    notification.read ? 'bg-gray-500' : 'bg-[#8cff65]'
-                                }`}></div>
-                                <div className="flex-1 min-w-0">
-                                    <p className={`text-sm ${notification.read ? 'text-gray-400' : 'text-white'}`}>
-                                        {notification.message}
-                                    </p>
-                                    <p className="text-xs text-gray-500 mt-1">{notification.time}</p>
+                <div className="flex-1 overflow-y-auto p-4 space-y-3" style={{ maxHeight: 'calc(100vh - 280px)' }}>
+                    {notifications.length === 0 ? (
+                        <div className="text-center py-8 text-gray-500">
+                            <BellIcon />
+                            <p className="mt-2">No notifications</p>
+                        </div>
+                    ) : (
+                        notifications.map((notification) => (
+                            <div 
+                                key={notification.id}
+                                className={`p-4 rounded-xl border transition-all cursor-pointer hover:border-[#8cff65]/30 ${
+                                    notification.read 
+                                        ? 'bg-[#1e1e1e] border-[#2a2a2a]' 
+                                        : 'bg-[#8cff65]/5 border-[#8cff65]/20'
+                                }`}
+                            >
+                                <div className="flex items-start gap-3">
+                                    <div className={`w-2 h-2 mt-2 rounded-full flex-shrink-0 ${
+                                        notification.read ? 'bg-gray-500' : 'bg-[#8cff65]'
+                                    }`}></div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className={`text-sm ${notification.read ? 'text-gray-400' : 'text-white'}`}>
+                                            {notification.message}
+                                        </p>
+                                        <p className="text-xs text-gray-500 mt-1">{notification.time}</p>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    ))}
+                        ))
+                    )}
                 </div>
 
                 {/* Activities Section */}
                 <div className="border-t border-[#2a2a2a] p-4">
                     <h4 className="text-sm font-semibold text-white mb-3">Recent Activities</h4>
                     <div className="space-y-3">
-                        <div className="flex items-center gap-3 text-sm">
-                            <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center">
-                                <span className="text-blue-400 text-xs">📝</span>
-                            </div>
-                            <div className="flex-1 min-w-0">
-                                <p className="text-gray-300 truncate">Changed the dashboard style.</p>
-                                <p className="text-xs text-gray-500">2 Minutes ago</p>
-                            </div>
-                        </div>
-                        <div className="flex items-center gap-3 text-sm">
-                            <div className="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center">
-                                <span className="text-green-400 text-xs">✓</span>
-                            </div>
-                            <div className="flex-1 min-w-0">
-                                <p className="text-gray-300 truncate">177 New animals added.</p>
-                                <p className="text-xs text-gray-500">57 Minutes ago</p>
-                            </div>
-                        </div>
-                        <div className="flex items-center gap-3 text-sm">
-                            <div className="w-8 h-8 rounded-full bg-yellow-500/20 flex items-center justify-center">
-                                <span className="text-yellow-400 text-xs">📦</span>
-                            </div>
-                            <div className="flex-1 min-w-0">
-                                <p className="text-gray-300 truncate">11 Products have been archived.</p>
-                                <p className="text-xs text-gray-500">1 Day ago</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Quick Contacts */}
-                <div className="border-t border-[#2a2a2a] p-4">
-                    <h4 className="text-sm font-semibold text-white mb-3">Quick Contacts</h4>
-                    <div className="space-y-2">
-                        {['Daniel Craig', 'Kate Morrison', 'Elisabeth Wayne'].map((name, index) => (
-                            <div key={index} className="flex items-center gap-3 p-2 rounded-lg hover:bg-[#1e1e1e] cursor-pointer transition">
-                                <div className={`w-8 h-8 rounded-full flex items-center justify-center font-medium text-xs text-white
-                                    ${index === 0 ? 'bg-purple-500' : index === 1 ? 'bg-pink-500' : 'bg-blue-500'}`}>
-                                    {name.split(' ').map(n => n[0]).join('')}
+                        {recentActivities.map((activity) => (
+                            <div key={activity.id} className="flex items-center gap-3 text-sm">
+                                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                                    activity.color === 'blue' ? 'bg-blue-500/20' :
+                                    activity.color === 'green' ? 'bg-green-500/20' :
+                                    'bg-yellow-500/20'
+                                }`}>
+                                    <span className={`text-xs ${
+                                        activity.color === 'blue' ? 'text-blue-400' :
+                                        activity.color === 'green' ? 'text-green-400' :
+                                        'text-yellow-400'
+                                    }`}>{activity.icon}</span>
                                 </div>
-                                <span className="text-sm text-gray-300">{name}</span>
-                                <div className="ml-auto flex gap-1">
-                                    <span className="w-6 h-6 rounded bg-[#2a2a2a] flex items-center justify-center text-gray-400 text-xs hover:bg-[#8cff65] hover:text-black transition cursor-pointer">
-                                        💬
-                                    </span>
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-gray-300 truncate">{activity.message}</p>
+                                    <p className="text-xs text-gray-500">{activity.time}</p>
                                 </div>
                             </div>
                         ))}
                     </div>
+                </div>
+
+                {/* Mark All Read Button */}
+                <div className="border-t border-[#2a2a2a] p-4">
+                    <button className="w-full py-2.5 bg-[#1e1e1e] hover:bg-[#2a2a2a] text-gray-400 hover:text-white rounded-xl text-sm font-medium transition">
+                        Mark all as read
+                    </button>
                 </div>
             </aside>
             

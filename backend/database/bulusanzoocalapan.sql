@@ -125,6 +125,7 @@ CREATE TABLE events (
     capacity INT DEFAULT 100,
     registered_count INT DEFAULT 0,
     status ENUM('upcoming', 'ongoing', 'completed', 'cancelled') DEFAULT 'upcoming',
+    color VARCHAR(20) DEFAULT '#22c55e',
     is_active BOOLEAN DEFAULT TRUE,
     created_by INT DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

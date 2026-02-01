@@ -15,10 +15,14 @@ import RegisterPage from './pages/auth/RegisterPage';
 import GoogleAuthSuccess from './pages/auth/GoogleAuthSuccess';
 import AccessDenied from './pages/auth/AccessDenied';
 import AdminDashboard from './pages/admin/AdminDashboard';
+import AdminEvents from './pages/admin/AdminEvents';
 import AnimalAnalytics from './pages/admin/AnimalAnalytics';
+import Analytics from './pages/admin/Analytics';
 import Reports from './pages/admin/Reports';
 import AdminUsers from './pages/admin/AdminUsers';
 import AdminProfile from './pages/admin/AdminProfile';
+import AdminHelpCenter from './pages/admin/AdminHelpCenter';
+import AdminTickets from './pages/admin/AdminTickets';
 import StaffDashboard from './pages/staff/StaffDashboard';
 import TicketScanner from './pages/staff/TicketScanner';
 import AdminLayout from './components/layout/AdminLayout';
@@ -116,7 +120,21 @@ function AppRoutes() {
                     </AdminLayout>
                 </ProtectedRoute>
             } />
+            <Route path="/admin/events" element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                    <AdminLayout>
+                        <AdminEvents />
+                    </AdminLayout>
+                </ProtectedRoute>
+            } />
             <Route path="/admin/analytics" element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                    <AdminLayout>
+                        <Analytics />
+                    </AdminLayout>
+                </ProtectedRoute>
+            } />
+            <Route path="/admin/animal-analytics" element={
                 <ProtectedRoute allowedRoles={['admin']}>
                     <AdminLayout>
                         <AnimalAnalytics />
@@ -142,6 +160,20 @@ function AppRoutes() {
                 <ProtectedRoute allowedRoles={['admin']}>
                     <AdminLayout>
                         <AdminProfile />
+                    </AdminLayout>
+                </ProtectedRoute>
+            } />
+            <Route path="/admin/tickets" element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                    <AdminLayout>
+                        <AdminTickets />
+                    </AdminLayout>
+                </ProtectedRoute>
+            } />
+            <Route path="/admin/help" element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                    <AdminLayout>
+                        <AdminHelpCenter />
                     </AdminLayout>
                 </ProtectedRoute>
             } />

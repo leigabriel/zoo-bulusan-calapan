@@ -1,48 +1,70 @@
 const db = require('../config/database');
 
+// Helper function to format date to YYYY-MM-DD string
+const formatDate = (date) => {
+    if (!date) return null;
+    if (typeof date === 'string') return date.split('T')[0];
+    if (date instanceof Date) {
+        return date.toISOString().split('T')[0];
+    }
+    return date;
+};
+
+// Helper function to format events for consistent output
+const formatEventRow = (row) => {
+    if (!row) return null;
+    return {
+        ...row,
+        event_date: formatDate(row.event_date)
+    };
+};
+
 class Event {
     static async getAll() {
         const [rows] = await db.query(
             'SELECT * FROM events ORDER BY event_date ASC'
         );
-        return rows;
+        return rows.map(formatEventRow);
     }
 
     static async findById(id) {
         const [rows] = await db.query('SELECT * FROM events WHERE id = ?', [id]);
-        return rows[0];
+        return formatEventRow(rows[0]);
     }
 
     static async getUpcoming() {
         const [rows] = await db.query(
-            'SELECT * FROM events WHERE event_date >= CURDATE() ORDER BY event_date ASC'
+            `SELECT * FROM events 
+             WHERE event_date >= CURDATE() 
+             AND status IN ('upcoming', 'ongoing')
+             ORDER BY event_date ASC`
         );
-        return rows;
+        return rows.map(formatEventRow);
     }
 
     static async getPast() {
         const [rows] = await db.query(
             'SELECT * FROM events WHERE event_date < CURDATE() ORDER BY event_date DESC'
         );
-        return rows;
+        return rows.map(formatEventRow);
     }
 
     static async create(eventData) {
-        const { title, description, eventDate, startTime, endTime, location, imageUrl, status } = eventData;
+        const { title, description, eventDate, startTime, endTime, location, imageUrl, status, color } = eventData;
         const [result] = await db.query(
-            `INSERT INTO events (title, description, event_date, start_time, end_time, location, image_url, status) 
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-            [title, description, eventDate, startTime, endTime, location, imageUrl || null, status || 'upcoming']
+            `INSERT INTO events (title, description, event_date, start_time, end_time, location, image_url, status, color) 
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [title, description, eventDate, startTime, endTime, location, imageUrl || null, status || 'upcoming', color || '#22c55e']
         );
         return result.insertId;
     }
 
     static async update(id, eventData) {
-        const { title, description, eventDate, startTime, endTime, location, imageUrl, status } = eventData;
+        const { title, description, eventDate, startTime, endTime, location, imageUrl, status, color } = eventData;
         const [result] = await db.query(
             `UPDATE events SET title = ?, description = ?, event_date = ?, start_time = ?, 
-             end_time = ?, location = ?, image_url = ?, status = ? WHERE id = ?`,
-            [title, description, eventDate, startTime, endTime, location, imageUrl, status, id]
+             end_time = ?, location = ?, image_url = ?, status = ?, color = ? WHERE id = ?`,
+            [title, description, eventDate, startTime, endTime, location, imageUrl, status, color || '#22c55e', id]
         );
         return result.affectedRows > 0;
     }

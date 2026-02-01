@@ -227,6 +227,23 @@ export const adminAPI = {
         return handleResponse(response);
     },
 
+    updateEvent: async (id, eventData) => {
+        const response = await fetch(`${API_BASE_URL}/admin/events/${id}`, {
+            method: 'PUT',
+            headers: getAuthHeaders('admin'),
+            body: JSON.stringify(eventData)
+        });
+        return handleResponse(response);
+    },
+
+    deleteEvent: async (id) => {
+        const response = await fetch(`${API_BASE_URL}/admin/events/${id}`, {
+            method: 'DELETE',
+            headers: getAuthHeaders('admin')
+        });
+        return handleResponse(response);
+    },
+
     getTickets: async () => {
         const response = await fetch(`${API_BASE_URL}/admin/tickets`, {
             headers: getAuthHeaders('admin')
