@@ -55,7 +55,7 @@ const FilterIcon = () => (
     </svg>
 );
 
-const AdminUsers = () => {
+const AdminUsers = ({ globalSearch = '' }) => {
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -66,6 +66,9 @@ const AdminUsers = () => {
     const [form, setForm] = useState({ firstName: '', lastName: '', email: '', role: 'user', password: '' });
     const [saving, setSaving] = useState(false);
     const [deleteConfirm, setDeleteConfirm] = useState(null);
+
+    // Combine local and global search
+    const effectiveSearch = globalSearch || searchQuery;
 
     useEffect(() => { fetchUsers(); }, []);
 
@@ -152,17 +155,20 @@ const AdminUsers = () => {
     };
 
     const filteredUsers = users.filter(user => {
+        // Exclude admin users - only show staff and regular users
+        if (user.role === 'admin') return false;
+        
         const fullName = `${user.firstName || user.first_name || ''} ${user.lastName || user.last_name || ''}`.toLowerCase();
-        const matchesSearch = fullName.includes(searchQuery.toLowerCase()) || 
-                             user.email?.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesSearch = fullName.includes(effectiveSearch.toLowerCase()) || 
+                             user.email?.toLowerCase().includes(effectiveSearch.toLowerCase());
         const matchesRole = roleFilter === 'all' || user.role === roleFilter;
         return matchesSearch && matchesRole;
     });
 
     const userCounts = {
-        total: users.length,
-        admin: users.filter(u => u.role === 'admin').length,
+        total: users.filter(u => u.role !== 'admin').length,
         staff: users.filter(u => u.role === 'staff').length,
+        vet: users.filter(u => u.role === 'vet').length,
         user: users.filter(u => u.role === 'user').length,
     };
 
@@ -202,17 +208,6 @@ const AdminUsers = () => {
                 </div>
                 <div className="bg-[#141414] border border-[#2a2a2a] rounded-xl p-4">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-[#8cff65]/10 rounded-xl flex items-center justify-center text-[#8cff65]">
-                            <span className="text-lg font-bold">A</span>
-                        </div>
-                        <div>
-                            <p className="text-2xl font-bold text-white">{userCounts.admin}</p>
-                            <p className="text-xs text-gray-500">Admins</p>
-                        </div>
-                    </div>
-                </div>
-                <div className="bg-[#141414] border border-[#2a2a2a] rounded-xl p-4">
-                    <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-blue-500/10 rounded-xl flex items-center justify-center text-blue-400">
                             <span className="text-lg font-bold">S</span>
                         </div>
@@ -225,6 +220,17 @@ const AdminUsers = () => {
                 <div className="bg-[#141414] border border-[#2a2a2a] rounded-xl p-4">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-purple-500/10 rounded-xl flex items-center justify-center text-purple-400">
+                            <span className="text-lg font-bold">V</span>
+                        </div>
+                        <div>
+                            <p className="text-2xl font-bold text-white">{userCounts.vet}</p>
+                            <p className="text-xs text-gray-500">Vets</p>
+                        </div>
+                    </div>
+                </div>
+                <div className="bg-[#141414] border border-[#2a2a2a] rounded-xl p-4">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-gray-500/10 rounded-xl flex items-center justify-center text-gray-400">
                             <span className="text-lg font-bold">U</span>
                         </div>
                         <div>
@@ -262,7 +268,6 @@ const AdminUsers = () => {
                                 className="appearance-none bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl py-2.5 pl-10 pr-8 text-sm text-white focus:outline-none focus:border-[#8cff65] cursor-pointer"
                             >
                                 <option value="all">All Roles</option>
-                                <option value="admin">Admin</option>
                                 <option value="staff">Staff</option>
                                 <option value="vet">Vet</option>
                                 <option value="user">User</option>
@@ -310,12 +315,9 @@ const AdminUsers = () => {
                                                 <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#8cff65] to-[#4ade80] flex items-center justify-center text-[#0a0a0a] font-bold">
                                                     {(user.firstName || user.first_name || 'U').charAt(0).toUpperCase()}
                                                 </div>
-                                                <div>
-                                                    <p className="font-medium text-white">
-                                                        {user.firstName || user.first_name} {user.lastName || user.last_name}
-                                                    </p>
-                                                    <p className="text-xs text-gray-500">ID: {user.id}</p>
-                                                </div>
+                                                <p className="font-medium text-white">
+                                                    {user.firstName || user.first_name} {user.lastName || user.last_name}
+                                                </p>
                                             </div>
                                         </td>
                                         <td className="px-6 py-4 text-gray-300">{user.email}</td>

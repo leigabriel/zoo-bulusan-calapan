@@ -24,7 +24,7 @@ class Animal {
     static async create(animalData) {
         const { name, species, exhibit, description, imageUrl, status } = animalData;
         const [result] = await db.query(
-            'INSERT INTO animals (name, species, exhibit, description, image_url, status) VALUES (?, ?, ?, ?, ?, ?)',
+            'INSERT INTO animals (name, species, habitat, description, image_url, status) VALUES (?, ?, ?, ?, ?, ?)',
             [name, species, exhibit, description || null, imageUrl || null, status || 'healthy']
         );
         return result.insertId;
@@ -33,7 +33,7 @@ class Animal {
     static async update(id, animalData) {
         const { name, species, exhibit, description, imageUrl, status } = animalData;
         const [result] = await db.query(
-            'UPDATE animals SET name = ?, species = ?, exhibit = ?, description = ?, image_url = ?, status = ? WHERE id = ?',
+            'UPDATE animals SET name = ?, species = ?, habitat = ?, description = ?, image_url = ?, status = ? WHERE id = ?',
             [name, species, exhibit, description, imageUrl, status, id]
         );
         return result.affectedRows > 0;
@@ -59,7 +59,7 @@ class Animal {
 
     static async getByExhibit(exhibit) {
         const [rows] = await db.query(
-            'SELECT * FROM animals WHERE exhibit = ? ORDER BY name ASC',
+            'SELECT * FROM animals WHERE habitat = ? ORDER BY name ASC',
             [exhibit]
         );
         return rows;

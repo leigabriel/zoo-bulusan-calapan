@@ -79,7 +79,7 @@ const QRCodeIcon = () => (
     </svg>
 );
 
-const AdminTickets = () => {
+const AdminTickets = ({ globalSearch = '' }) => {
     const [tickets, setTickets] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -150,11 +150,14 @@ const AdminTickets = () => {
         }
     };
 
+    // Use globalSearch or local searchQuery
+    const effectiveSearch = globalSearch || searchQuery;
+
     const filteredTickets = tickets.filter(ticket => {
         const matchesSearch = 
-            ticket.code?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            ticket.purchasedBy?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            ticket.email?.toLowerCase().includes(searchQuery.toLowerCase());
+            ticket.code?.toLowerCase().includes(effectiveSearch.toLowerCase()) ||
+            ticket.purchasedBy?.toLowerCase().includes(effectiveSearch.toLowerCase()) ||
+            ticket.email?.toLowerCase().includes(effectiveSearch.toLowerCase());
         const matchesStatus = statusFilter === 'all' || ticket.status === statusFilter;
         const matchesDate = !dateFilter || ticket.visitDate === dateFilter;
         const matchesEvent = eventFilter === 'all' || ticket.event === eventFilter;

@@ -509,7 +509,7 @@ const AdminDashboard = () => {
                                             </div>
                                             <div>
                                                 <p className="font-medium text-white">{u.fullName}</p>
-                                                <p className="text-xs text-gray-500">ID: {u.id}</p>
+                                                {/* <p className="text-xs text-gray-500">ID: {u.id}</p> */}
                                             </div>
                                         </div>
                                     </td>

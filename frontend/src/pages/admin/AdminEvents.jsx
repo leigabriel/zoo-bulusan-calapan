@@ -91,7 +91,7 @@ const AdminEvents = () => {
         eventDate: '',
         startTime: '',
         endTime: '',
-        location: '',
+        imageUrl: '',
         color: '#22c55e',
         status: 'upcoming'
     });
@@ -128,7 +128,7 @@ const AdminEvents = () => {
                         borderColor: event.color || '#22c55e',
                         extendedProps: {
                             description: event.description,
-                            location: event.location,
+                            imageUrl: event.image_url,
                             status: event.status,
                             eventDate: eventDate,
                             startTime: event.start_time,
@@ -169,7 +169,7 @@ const AdminEvents = () => {
                 eventDate: event.extendedProps.eventDate,
                 startTime: event.extendedProps.startTime || '',
                 endTime: event.extendedProps.endTime || '',
-                location: event.extendedProps.location || '',
+                imageUrl: event.extendedProps.imageUrl || '',
                 color: event.extendedProps.color || '#22c55e',
                 status: event.extendedProps.status || 'upcoming'
             });
@@ -184,7 +184,7 @@ const AdminEvents = () => {
                 eventDate: clickedDate,
                 startTime: '09:00',
                 endTime: '10:00',
-                location: '',
+                imageUrl: '',
                 color: '#22c55e',
                 status: 'upcoming'
             });
@@ -203,7 +203,7 @@ const AdminEvents = () => {
             eventDate: event.extendedProps.eventDate,
             startTime: event.extendedProps.startTime || '',
             endTime: event.extendedProps.endTime || '',
-            location: event.extendedProps.location || '',
+            imageUrl: event.extendedProps.imageUrl || '',
             color: event.extendedProps.color || '#22c55e',
             status: event.extendedProps.status || 'upcoming'
         });
@@ -233,7 +233,7 @@ const AdminEvents = () => {
                 eventDate: formData.eventDate,
                 startTime: formData.startTime || null,
                 endTime: formData.endTime || null,
-                location: formData.location,
+                imageUrl: formData.imageUrl || null,
                 color: formData.color,
                 status: formData.status
             };
@@ -293,7 +293,7 @@ const AdminEvents = () => {
             eventDate: '',
             startTime: '',
             endTime: '',
-            location: '',
+            imageUrl: '',
             color: '#22c55e',
             status: 'upcoming'
         });
@@ -466,6 +466,16 @@ const AdminEvents = () => {
                             font-weight: 500;
                             border: none;
                             cursor: pointer;
+                            color: #ffffff !important;
+                        }
+                        .fc .fc-event .fc-event-title {
+                            color: #ffffff !important;
+                        }
+                        .fc .fc-event .fc-event-time {
+                            color: #ffffff !important;
+                        }
+                        .fc-daygrid-event-dot {
+                            border-color:  !important;
                         }
                         .fc .fc-event:hover {
                             opacity: 0.9;
@@ -580,7 +590,7 @@ const AdminEvents = () => {
                                                 eventDate: event.extendedProps.eventDate,
                                                 startTime: event.extendedProps.startTime || '',
                                                 endTime: event.extendedProps.endTime || '',
-                                                location: event.extendedProps.location || '',
+                                                imageUrl: event.extendedProps.imageUrl || '',
                                                 color: event.extendedProps.color || '#22c55e',
                                                 status: event.extendedProps.status || 'upcoming'
                                             });
@@ -695,10 +705,14 @@ const AdminEvents = () => {
                                     </div>
                                 )}
 
-                                {formData.location && (
-                                    <div className="flex items-center gap-3 text-gray-300">
-                                        <LocationIcon />
-                                        <span>{formData.location}</span>
+                                {formData.imageUrl && (
+                                    <div className="mt-4 rounded-xl overflow-hidden">
+                                        <img 
+                                            src={formData.imageUrl} 
+                                            alt="Event" 
+                                            className="w-full h-40 object-cover"
+                                            onError={(e) => { e.target.style.display = 'none'; }}
+                                        />
                                     </div>
                                 )}
 
@@ -822,21 +836,35 @@ const AdminEvents = () => {
                                     </div>
                                 </div>
 
-                                {/* Location */}
+                                {/* Event Image URL */}
                                 <div>
                                     <label className="block text-sm font-medium text-gray-300 mb-2">
                                         <span className="flex items-center gap-2">
-                                            <LocationIcon />
-                                            Location
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+                                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                                                <circle cx="8.5" cy="8.5" r="1.5"/>
+                                                <polyline points="21 15 16 10 5 21"/>
+                                            </svg>
+                                            Event Image URL
                                         </span>
                                     </label>
                                     <input
-                                        type="text"
-                                        value={formData.location}
-                                        onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                                        placeholder="Enter location"
+                                        type="url"
+                                        value={formData.imageUrl}
+                                        onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
+                                        placeholder="https://example.com/image.jpg"
                                         className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-[#8cff65] transition"
                                     />
+                                    {formData.imageUrl && (
+                                        <div className="mt-2 rounded-lg overflow-hidden h-24">
+                                            <img 
+                                                src={formData.imageUrl} 
+                                                alt="Preview" 
+                                                className="w-full h-full object-cover"
+                                                onError={(e) => { e.target.style.display = 'none'; }}
+                                            />
+                                        </div>
+                                    )}
                                 </div>
 
                                 {/* Tag Color */}

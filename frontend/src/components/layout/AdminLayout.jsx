@@ -1,6 +1,8 @@
-import { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { authAPI } from '../../services/api-client';
+import { sanitizeInput } from '../../utils/sanitize';
 import LogoutModal from '../common/LogoutModal';
 
 // Icons
@@ -44,6 +46,12 @@ const UsersIcon = () => (
         <circle cx="9" cy="7" r="4"/>
         <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
         <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+    </svg>
+);
+
+const AnimalsIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="currentColor" className="w-5 h-5">
+        <path d="M226.5 92.9c14.3 42.9-.3 86.2-32.6 96.8s-70.1-15.6-84.4-58.5s.3-86.2 32.6-96.8s70.1 15.6 84.4 58.5zM100.4 198.6c18.9 32.4 14.3 70.1-10.2 84.1s-59.7-.9-78.5-33.3S-2.7 179.3 21.8 165.3s59.7 .9 78.5 33.3zM69.2 401.2C121.6 259.9 214.7 224 256 224s134.4 35.9 186.8 177.2c3.6 9.7 5.2 20.1 5.2 30.5v1.6c0 25.8-20.9 46.7-46.7 46.7c-11.5 0-22.9-1.4-34-4.2l-88-22c-15.3-3.8-31.3-3.8-46.6 0l-88 22c-11.1 2.8-22.5 4.2-34 4.2C84.9 480 64 459.1 64 433.3v-1.6c0-10.4 1.6-20.8 5.2-30.5zM421.8 282.7c-24.5-14-29.1-51.7-10.2-84.1s54-47.3 78.5-33.3s29.1 51.7 10.2 84.1s-54 47.3-78.5 33.3zM310.1 189.7c-32.3-10.6-46.9-53.9-32.6-96.8s52.1-69.1 84.4-58.5s46.9 53.9 32.6 96.8s-52.1 69.1-84.4 58.5z"/>
     </svg>
 );
 
@@ -109,13 +117,20 @@ const PawIcon = () => (
 );
 
 const AdminLayout = ({ children }) => {
-    const { user, logout } = useAuth();
+    const { user, logout, updateUser } = useAuth();
     const location = useLocation();
     const navigate = useNavigate();
+    const fileInputRef = useRef(null);
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [notificationPanelOpen, setNotificationPanelOpen] = useState(false);
     const [showLogoutModal, setShowLogoutModal] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
+    const [showProfileModal, setShowProfileModal] = useState(false);
+    const [profileForm, setProfileForm] = useState({ firstName: '', lastName: '', email: '' });
+    const [profileLoading, setProfileLoading] = useState(false);
+    const [profileSaving, setProfileSaving] = useState(false);
+    const [profileMessage, setProfileMessage] = useState({ type: '', text: '' });
+    const [previewImage, setPreviewImage] = useState(null);
 
     // Mock notifications - replace with real data from your API
     const [notifications] = useState([
@@ -137,10 +152,68 @@ const AdminLayout = ({ children }) => {
         navigate('/admin');
     };
 
+    // Load profile data when modal opens
+    const loadProfile = async () => {
+        try {
+            setProfileLoading(true);
+            const res = await authAPI.getProfile('admin');
+            if (res && res.success && res.user) {
+                setProfileForm({
+                    firstName: res.user.firstName || res.user.first_name || '',
+                    lastName: res.user.lastName || res.user.last_name || '',
+                    email: res.user.email || ''
+                });
+                if (res.user.profileImage || res.user.profile_image) {
+                    setPreviewImage(res.user.profileImage || res.user.profile_image);
+                }
+            } else if (user) {
+                setProfileForm({
+                    firstName: user.firstName || user.first_name || '',
+                    lastName: user.lastName || user.last_name || '',
+                    email: user.email || ''
+                });
+            }
+        } catch (err) {
+            console.error('Error loading profile', err);
+            setProfileMessage({ type: 'error', text: 'Failed to load profile' });
+        } finally {
+            setProfileLoading(false);
+        }
+    };
+
+    // Save profile changes
+    const saveProfile = async () => {
+        setProfileSaving(true);
+        setProfileMessage({ type: '', text: '' });
+        try {
+            const payload = { firstName: profileForm.firstName, lastName: profileForm.lastName };
+            const res = await authAPI.updateProfile(payload, 'admin');
+            if (res && res.success) {
+                updateUser({ ...user, firstName: profileForm.firstName, lastName: profileForm.lastName });
+                setProfileMessage({ type: 'success', text: 'Profile updated successfully!' });
+                setTimeout(() => setProfileMessage({ type: '', text: '' }), 3000);
+            } else {
+                setProfileMessage({ type: 'error', text: res.message || 'Failed to update profile' });
+            }
+        } catch (err) {
+            console.error(err);
+            setProfileMessage({ type: 'error', text: 'Error updating profile' });
+        } finally {
+            setProfileSaving(false);
+        }
+    };
+
+    // Open profile modal
+    const openProfileModal = () => {
+        setShowProfileModal(true);
+        loadProfile();
+    };
+
     const menuItems = [
         { path: '/admin/dashboard', label: 'Overview', Icon: OverviewIcon },
         { path: '/admin/events', label: 'Events', Icon: EventsIcon },
         { path: '/admin/tickets', label: 'Tickets', Icon: TicketsIcon },
+        { path: '/admin/animals', label: 'Manage Animals', Icon: AnimalsIcon },
         { path: '/admin/users', label: 'Manage Users', Icon: UsersIcon },
         { path: '/admin/analytics', label: 'Analytics', Icon: AnalyticsIcon },
         { path: '/admin/reports', label: 'Reports', Icon: ReportsIcon },
@@ -224,43 +297,12 @@ const AdminLayout = ({ children }) => {
                     </button>
                 </div>
 
-                {/* Search Bar */}
-                <div className="p-4">
-                    <div className="relative">
-                        <input
-                            type="text"
-                            placeholder="Search menu..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl py-2.5 pl-10 pr-4 
-                                text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#8cff65] 
-                                focus:ring-1 focus:ring-[#8cff65]/20 transition-all"
-                        />
-                        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
-                            <SearchIcon />
-                        </div>
-                        {searchQuery && (
-                            <button
-                                onClick={() => setSearchQuery('')}
-                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white"
-                            >
-                                <CloseIcon />
-                            </button>
-                        )}
-                    </div>
-                </div>
-
                 {/* Navigation Menu */}
-                <nav className="flex-1 px-3 py-2 overflow-y-auto" role="navigation">
+                <nav className="flex-1 px-3 py-4 overflow-y-auto" role="navigation">
                     <p className="px-3 mb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
                         Dashboards
                     </p>
-                    {filteredMenuItems.length === 0 ? (
-                        <div className="px-3 py-4 text-center text-gray-500 text-sm">
-                            No results found
-                        </div>
-                    ) : (
-                        filteredMenuItems.map(item => (
+                    {menuItems.map(item => (
                             <Link
                                 key={item.path}
                                 to={item.path}
@@ -279,8 +321,7 @@ const AdminLayout = ({ children }) => {
                                 </span>
                                 <span className="font-medium">{item.label}</span>
                             </Link>
-                        ))
-                    )}
+                        ))}
                 </nav>
 
                 {/* Bottom Section - Help & Logout */}
@@ -345,6 +386,33 @@ const AdminLayout = ({ children }) => {
                             </p>
                         </div>
                     </div>
+                    
+                    {/* Global Search Bar */}
+                    <div className="flex-1 max-w-md mx-4 hidden md:block">
+                        <div className="relative">
+                            <input
+                                type="text"
+                                placeholder="Search anything..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl py-2.5 pl-10 pr-4 
+                                    text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#8cff65] 
+                                    focus:ring-1 focus:ring-[#8cff65]/20 transition-all"
+                            />
+                            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
+                                <SearchIcon />
+                            </div>
+                            {searchQuery && (
+                                <button
+                                    onClick={() => setSearchQuery('')}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white"
+                                >
+                                    <CloseIcon />
+                                </button>
+                            )}
+                        </div>
+                    </div>
+
                     <div className="flex items-center gap-3">
                         {/* Notification Bell */}
                         <button
@@ -362,7 +430,7 @@ const AdminLayout = ({ children }) => {
 
                         {/* Profile Button */}
                         <button
-                            onClick={() => navigate('/admin/profile')}
+                            onClick={openProfileModal}
                             className="flex items-center gap-3 hover:bg-[#1e1e1e] px-3 py-2 rounded-xl transition"
                         >
                             <div className="w-9 h-9 bg-gradient-to-br from-[#8cff65] to-[#4ade80] rounded-full flex items-center justify-center text-[#0a0a0a] font-bold">
@@ -378,7 +446,10 @@ const AdminLayout = ({ children }) => {
 
                 {/* Main Content */}
                 <main className="flex-1 overflow-auto p-4 lg:p-6 bg-[#0a0a0a]">
-                    {children}
+                    {typeof children === 'function' ? children({ globalSearch: searchQuery }) : 
+                     React.Children.map(children, child => 
+                        React.isValidElement(child) ? React.cloneElement(child, { globalSearch: searchQuery }) : child
+                     )}
                 </main>
             </div>
 
@@ -475,6 +546,135 @@ const AdminLayout = ({ children }) => {
                     </button>
                 </div>
             </aside>
+
+            {/* Profile Modal */}
+            {showProfileModal && (
+                <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+                        {/* Modal Header */}
+                        <div className="flex items-center justify-between p-5 border-b border-[#2a2a2a]">
+                            <h2 className="text-xl font-bold text-white">Admin Profile</h2>
+                            <button
+                                onClick={() => setShowProfileModal(false)}
+                                className="text-gray-400 hover:text-white transition"
+                            >
+                                <CloseIcon />
+                            </button>
+                        </div>
+
+                        {profileLoading ? (
+                            <div className="flex items-center justify-center p-12">
+                                <div className="w-10 h-10 border-4 border-[#8cff65] border-t-transparent rounded-full animate-spin"></div>
+                            </div>
+                        ) : (
+                            <div className="p-5 space-y-5">
+                                {/* Success/Error Message */}
+                                {profileMessage.text && (
+                                    <div className={`flex items-center gap-3 p-3 rounded-xl border text-sm ${
+                                        profileMessage.type === 'success' 
+                                            ? 'bg-[#8cff65]/10 border-[#8cff65]/30 text-[#8cff65]' 
+                                            : 'bg-red-500/10 border-red-500/30 text-red-400'
+                                    }`}>
+                                        <span>{profileMessage.text}</span>
+                                    </div>
+                                )}
+
+                                {/* Avatar */}
+                                <div className="flex justify-center">
+                                    <div className="w-24 h-24 bg-gradient-to-br from-[#8cff65] to-[#4ade80] rounded-full flex items-center justify-center overflow-hidden">
+                                        {previewImage ? (
+                                            <img src={previewImage} alt="Profile" className="w-full h-full object-cover" />
+                                        ) : (
+                                            <span className="text-4xl font-bold text-[#0a0a0a]">
+                                                {profileForm.firstName?.charAt(0) || 'A'}
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Role Badge */}
+                                <div className="flex justify-center">
+                                    <span className="px-4 py-1.5 bg-[#8cff65]/10 text-[#8cff65] text-sm font-medium rounded-full">
+                                        Administrator
+                                    </span>
+                                </div>
+
+                                {/* First Name */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-400 mb-2">First Name</label>
+                                    <input
+                                        type="text"
+                                        value={profileForm.firstName}
+                                        onChange={(e) => setProfileForm({ ...profileForm, firstName: sanitizeInput(e.target.value) })}
+                                        className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-[#8cff65] focus:ring-1 focus:ring-[#8cff65]/20 transition-all"
+                                        placeholder="Enter first name"
+                                    />
+                                </div>
+
+                                {/* Last Name */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-400 mb-2">Last Name</label>
+                                    <input
+                                        type="text"
+                                        value={profileForm.lastName}
+                                        onChange={(e) => setProfileForm({ ...profileForm, lastName: sanitizeInput(e.target.value) })}
+                                        className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-[#8cff65] focus:ring-1 focus:ring-[#8cff65]/20 transition-all"
+                                        placeholder="Enter last name"
+                                    />
+                                </div>
+
+                                {/* Email (Read-only) */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-400 mb-2">Email Address</label>
+                                    <input
+                                        type="email"
+                                        value={profileForm.email}
+                                        readOnly
+                                        className="w-full bg-[#1e1e1e]/50 border border-[#2a2a2a] rounded-xl px-4 py-3 text-gray-400 cursor-not-allowed"
+                                    />
+                                    <p className="text-xs text-gray-500 mt-1">Email cannot be changed</p>
+                                </div>
+
+                                {/* Account Status */}
+                                <div className="p-4 bg-[#1e1e1e] rounded-xl space-y-2">
+                                    <div className="flex items-center justify-between text-sm">
+                                        <span className="text-gray-400">Status</span>
+                                        <span className="flex items-center gap-1.5 text-[#8cff65]">
+                                            <div className="w-2 h-2 bg-[#8cff65] rounded-full animate-pulse"></div>
+                                            Active
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center justify-between text-sm">
+                                        <span className="text-gray-400">Role</span>
+                                        <span className="text-white capitalize">{user?.role || 'Admin'}</span>
+                                    </div>
+                                </div>
+
+                                {/* Actions */}
+                                <div className="flex gap-3 pt-2">
+                                    <button
+                                        onClick={() => setShowProfileModal(false)}
+                                        className="flex-1 px-4 py-3 bg-[#2a2a2a] hover:bg-[#3a3a3a] text-white rounded-xl font-medium transition"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        onClick={saveProfile}
+                                        disabled={profileSaving}
+                                        className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-[#8cff65] hover:bg-[#7ae857] text-black rounded-xl font-medium transition disabled:opacity-50"
+                                    >
+                                        {profileSaving ? (
+                                            <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin"></div>
+                                        ) : (
+                                            'Save Changes'
+                                        )}
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
             
             <LogoutModal
                 isOpen={showLogoutModal}

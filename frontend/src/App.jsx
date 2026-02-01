@@ -20,6 +20,7 @@ import AnimalAnalytics from './pages/admin/AnimalAnalytics';
 import Analytics from './pages/admin/Analytics';
 import Reports from './pages/admin/Reports';
 import AdminUsers from './pages/admin/AdminUsers';
+import AdminAnimals from './pages/admin/AdminAnimals';
 import AdminProfile from './pages/admin/AdminProfile';
 import AdminHelpCenter from './pages/admin/AdminHelpCenter';
 import AdminTickets from './pages/admin/AdminTickets';
@@ -152,6 +153,13 @@ function AppRoutes() {
                 <ProtectedRoute allowedRoles={['admin']}>
                     <AdminLayout>
                         <AdminUsers />
+                    </AdminLayout>
+                </ProtectedRoute>
+            } />
+            <Route path="/admin/animals" element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                    <AdminLayout>
+                        <AdminAnimals />
                     </AdminLayout>
                 </ProtectedRoute>
             } />
