@@ -29,6 +29,7 @@ import StaffEvents from './pages/staff/StaffEvents';
 import StaffTickets from './pages/staff/StaffTickets';
 import StaffAnimals from './pages/staff/StaffAnimals';
 import StaffUsers from './pages/staff/StaffUsers';
+import StaffHelpCenter from './pages/staff/StaffHelpCenter';
 import TicketScanner from './pages/staff/TicketScanner';
 import AdminLayout from './components/layout/AdminLayout';
 import StaffLayout from './components/layout/StaffLayout';
@@ -230,6 +231,13 @@ function AppRoutes() {
                 <ProtectedRoute allowedRoles={['admin', 'staff']}>
                     <StaffLayout>
                         <TicketScanner />
+                    </StaffLayout>
+                </ProtectedRoute>
+            } />
+            <Route path="/staff/help" element={
+                <ProtectedRoute allowedRoles={['admin', 'staff', 'vet']}>
+                    <StaffLayout>
+                        <StaffHelpCenter />
                     </StaffLayout>
                 </ProtectedRoute>
             } />

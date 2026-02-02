@@ -9,6 +9,12 @@ const PawIcon = () => (
     </svg>
 );
 
+const AnimalsHeaderIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="currentColor" className="w-6 h-6">
+        <path d="M226.5 92.9c14.3 42.9-.3 86.2-32.6 96.8s-70.1-15.6-84.4-58.5s.3-86.2 32.6-96.8s70.1 15.6 84.4 58.5zM100.4 198.6c18.9 32.4 14.3 70.1-10.2 84.1s-59.7-.9-78.5-33.3S-2.7 179.3 21.8 165.3s59.7 .9 78.5 33.3zM69.2 401.2C121.6 259.9 214.7 224 256 224s134.4 35.9 186.8 177.2c3.6 9.7 5.2 20.1 5.2 30.5v1.6c0 25.8-20.9 46.7-46.7 46.7c-11.5 0-22.9-1.4-34-4.2l-88-22c-15.3-3.8-31.3-3.8-46.6 0l-88 22c-11.1 2.8-22.5 4.2-34 4.2C84.9 480 64 459.1 64 433.3v-1.6c0-10.4 1.6-20.8 5.2-30.5zM421.8 282.7c-24.5-14-29.1-51.7-10.2-84.1s54-47.3 78.5-33.3s29.1 51.7 10.2 84.1s-54 47.3-78.5 33.3zM310.1 189.7c-32.3-10.6-46.9-53.9-32.6-96.8s52.1-69.1 84.4-58.5s46.9 53.9 32.6 96.8s-52.1 69.1-84.4 58.5z"/>
+    </svg>
+);
+
 const SearchIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
         <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
@@ -35,25 +41,39 @@ const TrashIcon = () => (
     </svg>
 );
 
-const XIcon = () => (
+const CloseIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
         <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
     </svg>
 );
 
-const StaffAnimals = () => {
+const SortIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+        <path d="M11 5h10"/>
+        <path d="M11 9h7"/>
+        <path d="M11 13h4"/>
+        <path d="m3 17 3 3 3-3"/>
+        <path d="M6 18V4"/>
+    </svg>
+);
+
+const StaffAnimals = ({ globalSearch = '' }) => {
     const [animals, setAnimals] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
     const [searchQuery, setSearchQuery] = useState('');
-    const [categoryFilter, setCategoryFilter] = useState('all');
-    const [statusFilter, setStatusFilter] = useState('all');
+    const [speciesFilter, setSpeciesFilter] = useState('all');
+    const [sortField, setSortField] = useState('name');
+    const [sortOrder, setSortOrder] = useState('asc');
     const [showModal, setShowModal] = useState(false);
     const [editingAnimal, setEditingAnimal] = useState(null);
     const [deleteConfirm, setDeleteConfirm] = useState(null);
     const [saving, setSaving] = useState(false);
+    const [imageInputMode, setImageInputMode] = useState('url');
+    const [imageFile, setImageFile] = useState(null);
+    const [imagePreview, setImagePreview] = useState(null);
     const [form, setForm] = useState({
-        name: '', species: '', scientific_name: '', category: '', age: '', gender: '',
-        status: 'healthy', enclosure: '', description: '', diet: '', habitat: '', imageUrl: ''
+        name: '', species: '', exhibit: '', description: '', imageUrl: '', status: 'healthy'
     });
 
     useEffect(() => { fetchAnimals(); }, []);
@@ -62,9 +82,11 @@ const StaffAnimals = () => {
         try {
             setLoading(true);
             const res = await staffAPI.getAnimals();
-            if (res.success && res.animals) setAnimals(res.animals);
+            if (res.success) setAnimals(res.animals || []);
+            else throw new Error(res.message || 'Failed to fetch animals');
         } catch (err) {
-            console.error('Error fetching animals:', err);
+            console.error(err);
+            setError(err.message || 'Error');
         } finally {
             setLoading(false);
         }
@@ -72,243 +94,546 @@ const StaffAnimals = () => {
 
     const openCreateModal = () => {
         setEditingAnimal(null);
-        setForm({ name: '', species: '', scientific_name: '', category: '', age: '', gender: '',
-            status: 'healthy', enclosure: '', description: '', diet: '', habitat: '', imageUrl: '' });
+        setForm({ name: '', species: '', exhibit: '', description: '', imageUrl: '', status: 'healthy' });
+        setImageInputMode('url');
+        setImageFile(null);
+        setImagePreview(null);
         setShowModal(true);
     };
 
     const openEditModal = (animal) => {
         setEditingAnimal(animal);
         setForm({
-            name: animal.name || '', species: animal.species || '', scientific_name: animal.scientific_name || '',
-            category: animal.category || '', age: animal.age || '', gender: animal.gender || '',
-            status: animal.status || 'healthy', enclosure: animal.enclosure || '', description: animal.description || '',
-            diet: animal.diet || '', habitat: animal.habitat || '', imageUrl: animal.image_url || ''
+            name: animal.name || '',
+            species: animal.species || '',
+            exhibit: animal.habitat || animal.exhibit || '',
+            description: animal.description || '',
+            imageUrl: animal.image_url || animal.imageUrl || '',
+            status: animal.status || 'healthy'
         });
+        setImageInputMode('url');
+        setImageFile(null);
+        setImagePreview(animal.image_url || null);
         setShowModal(true);
     };
 
     const closeModal = () => {
         setShowModal(false);
         setEditingAnimal(null);
-        setForm({ name: '', species: '', scientific_name: '', category: '', age: '', gender: '',
-            status: 'healthy', enclosure: '', description: '', diet: '', habitat: '', imageUrl: '' });
+        setForm({ name: '', species: '', exhibit: '', description: '', imageUrl: '', status: 'healthy' });
+        setImageInputMode('url');
+        setImageFile(null);
+        setImagePreview(null);
+    };
+
+    const handleImageFileChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setImageFile(file);
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setImagePreview(reader.result);
+            };
+            reader.readAsDataURL(file);
+        }
     };
 
     const saveAnimal = async (e) => {
         e.preventDefault();
         setSaving(true);
         try {
-            const payload = { ...form, image_url: form.imageUrl };
+            let imageUrl = form.imageUrl;
+            
+            if (imageInputMode === 'upload' && imageFile) {
+                const uploadRes = await staffAPI.uploadImage(imageFile);
+                if (uploadRes.success) {
+                    imageUrl = uploadRes.imageUrl;
+                } else {
+                    throw new Error(uploadRes.message || 'Failed to upload image');
+                }
+            }
+            
+            const animalData = { ...form, imageUrl, image_url: imageUrl };
             let res;
             if (editingAnimal) {
-                res = await staffAPI.updateAnimal(editingAnimal.id, payload);
+                res = await staffAPI.updateAnimal(editingAnimal.id, animalData);
             } else {
-                res = await staffAPI.createAnimal(payload);
+                res = await staffAPI.createAnimal(animalData);
             }
             if (res.success) {
                 await fetchAnimals();
                 closeModal();
-            } else {
-                alert(res.message || 'Failed to save animal');
-            }
+            } else throw new Error(res.message || 'Save failed');
         } catch (err) {
             console.error(err);
-            alert('Error saving animal');
+            alert(err.message || 'Failed to save animal');
         } finally {
             setSaving(false);
         }
     };
 
-    const deleteAnimal = async (id) => {
+    const removeAnimal = async (id) => {
         try {
             const res = await staffAPI.deleteAnimal(id);
             if (res.success) {
                 setAnimals(animals.filter(a => a.id !== id));
                 setDeleteConfirm(null);
-            } else {
-                alert(res.message || 'Failed to delete animal');
-            }
+            } else throw new Error(res.message || 'Delete failed');
         } catch (err) {
             console.error(err);
-            alert('Error deleting animal');
+            alert(err.message || 'Failed to delete animal');
         }
     };
 
-    const getStatusBadge = (status) => {
+    const getStatusBadgeColor = (status) => {
         switch (status?.toLowerCase()) {
             case 'healthy': return 'bg-[#8cff65]/20 text-[#8cff65] border-[#8cff65]/30';
             case 'sick': return 'bg-red-500/20 text-red-400 border-red-500/30';
             case 'recovering': return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
-            case 'quarantine': return 'bg-orange-500/20 text-orange-400 border-orange-500/30';
+            case 'quarantine': return 'bg-purple-500/20 text-purple-400 border-purple-500/30';
             default: return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
         }
     };
 
-    const categories = ['all', ...new Set(animals.map(a => a.category).filter(Boolean))];
+    const uniqueSpecies = [...new Set(animals.map(a => a.species).filter(Boolean))];
+    const effectiveSearch = globalSearch || searchQuery;
 
-    const filteredAnimals = animals.filter(animal => {
-        const matchesSearch = animal.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            animal.species?.toLowerCase().includes(searchQuery.toLowerCase());
-        const matchesCategory = categoryFilter === 'all' || animal.category === categoryFilter;
-        const matchesStatus = statusFilter === 'all' || animal.status === statusFilter;
-        return matchesSearch && matchesCategory && matchesStatus;
-    });
+    const filteredAnimals = animals
+        .filter(animal => {
+            const matchesSearch =
+                animal.name?.toLowerCase().includes(effectiveSearch.toLowerCase()) ||
+                animal.species?.toLowerCase().includes(effectiveSearch.toLowerCase()) ||
+                (animal.habitat || animal.exhibit || '').toLowerCase().includes(effectiveSearch.toLowerCase()) ||
+                animal.description?.toLowerCase().includes(effectiveSearch.toLowerCase());
+            const matchesSpecies = speciesFilter === 'all' || animal.species === speciesFilter;
+            return matchesSearch && matchesSpecies;
+        })
+        .sort((a, b) => {
+            let aVal, bVal;
+            if (sortField === 'exhibit') {
+                aVal = (a.habitat || a.exhibit || '').toString().toLowerCase();
+                bVal = (b.habitat || b.exhibit || '').toString().toLowerCase();
+            } else {
+                aVal = (a[sortField] || '').toString().toLowerCase();
+                bVal = (b[sortField] || '').toString().toLowerCase();
+            }
+            if (sortOrder === 'asc') return aVal.localeCompare(bVal);
+            return bVal.localeCompare(aVal);
+        });
+
+    const toggleSort = (field) => {
+        if (sortField === field) {
+            setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+        } else {
+            setSortField(field);
+            setSortOrder('asc');
+        }
+    };
+
+    const animalCounts = {
+        total: animals.length,
+        healthy: animals.filter(a => a.status === 'healthy').length,
+        sick: animals.filter(a => a.status === 'sick').length,
+        other: animals.filter(a => !['healthy', 'sick'].includes(a.status)).length,
+    };
 
     if (loading) {
         return (
             <div className="flex items-center justify-center h-64">
-                <div className="w-10 h-10 border-4 border-[#8cff65] border-t-transparent rounded-full animate-spin"></div>
+                <div className="flex flex-col items-center gap-3">
+                    <div className="w-10 h-10 border-4 border-[#8cff65] border-t-transparent rounded-full animate-spin"></div>
+                    <span className="text-gray-400">Loading animals...</span>
+                </div>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="p-6 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400">
+                {error}
             </div>
         );
     }
 
     return (
         <div className="space-y-6">
-            {/* Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div>
-                    <h1 className="text-2xl font-bold text-white">Manage Animals</h1>
-                    <p className="text-gray-400">Add, edit, and manage zoo animals</p>
+            {/* Header Stats */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="bg-[#141414] border border-[#2a2a2a] rounded-xl p-4">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-[#8cff65]/10 rounded-xl flex items-center justify-center text-[#8cff65]">
+                            <AnimalsHeaderIcon />
+                        </div>
+                        <div>
+                            <p className="text-2xl font-bold text-white">{animalCounts.total}</p>
+                            <p className="text-xs text-gray-500">Total Animals</p>
+                        </div>
+                    </div>
                 </div>
-                <button onClick={openCreateModal} className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-[#8cff65] to-[#4ade80] text-[#0a0a0a] font-semibold rounded-xl hover:from-[#9dff7a] hover:to-[#5ceb91] transition-all shadow-lg shadow-[#8cff65]/20">
-                    <PlusIcon /> Add Animal
-                </button>
+                <div className="bg-[#141414] border border-[#2a2a2a] rounded-xl p-4">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-[#8cff65]/10 rounded-xl flex items-center justify-center text-[#8cff65]">
+                            <span className="text-lg font-bold">H</span>
+                        </div>
+                        <div>
+                            <p className="text-2xl font-bold text-white">{animalCounts.healthy}</p>
+                            <p className="text-xs text-gray-500">Healthy</p>
+                        </div>
+                    </div>
+                </div>
+                <div className="bg-[#141414] border border-[#2a2a2a] rounded-xl p-4">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-red-500/10 rounded-xl flex items-center justify-center text-red-400">
+                            <span className="text-lg font-bold">S</span>
+                        </div>
+                        <div>
+                            <p className="text-2xl font-bold text-white">{animalCounts.sick}</p>
+                            <p className="text-xs text-gray-500">Sick</p>
+                        </div>
+                    </div>
+                </div>
+                <div className="bg-[#141414] border border-[#2a2a2a] rounded-xl p-4">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-yellow-500/10 rounded-xl flex items-center justify-center text-yellow-400">
+                            <span className="text-lg font-bold">O</span>
+                        </div>
+                        <div>
+                            <p className="text-2xl font-bold text-white">{animalCounts.other}</p>
+                            <p className="text-xs text-gray-500">Other Status</p>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            {/* Filters */}
-            <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl p-4 flex flex-wrap gap-4">
-                <div className="flex items-center bg-[#0a0a0a] border border-[#2a2a2a] rounded-xl px-4 py-2 flex-1 min-w-[200px]">
-                    <SearchIcon />
-                    <input type="text" placeholder="Search animals..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
-                        className="ml-2 bg-transparent border-none outline-none text-white placeholder-gray-500 w-full" />
-                </div>
-                <select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}
-                    className="bg-[#0a0a0a] border border-[#2a2a2a] rounded-xl px-4 py-2 text-white outline-none capitalize">
-                    {categories.map(cat => <option key={cat} value={cat}>{cat === 'all' ? 'All Categories' : cat}</option>)}
-                </select>
-                <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}
-                    className="bg-[#0a0a0a] border border-[#2a2a2a] rounded-xl px-4 py-2 text-white outline-none">
-                    <option value="all">All Status</option>
-                    <option value="healthy">Healthy</option>
-                    <option value="sick">Sick</option>
-                    <option value="recovering">Recovering</option>
-                    <option value="quarantine">Quarantine</option>
-                </select>
-            </div>
-
-            {/* Animals Table */}
+            {/* Main Content Card */}
             <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl overflow-hidden">
+                {/* Toolbar */}
+                <div className="p-4 border-b border-[#2a2a2a] flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+                    <div className="flex items-center gap-3 flex-1 flex-wrap">
+                        {/* Search */}
+                        <div className="relative flex-1 min-w-[200px] max-w-sm">
+                            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
+                                <SearchIcon />
+                            </div>
+                            <input
+                                type="text"
+                                placeholder="Search animals..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl py-2.5 pl-10 pr-4 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#8cff65] focus:ring-1 focus:ring-[#8cff65]/20 transition-all"
+                            />
+                        </div>
+
+                        {/* Species Filter */}
+                        <div className="relative">
+                            <select
+                                value={speciesFilter}
+                                onChange={(e) => setSpeciesFilter(e.target.value)}
+                                className="appearance-none bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl py-2.5 px-4 pr-8 text-sm text-white focus:outline-none focus:border-[#8cff65] cursor-pointer"
+                            >
+                                <option value="all">All Species</option>
+                                {uniqueSpecies.map(species => (
+                                    <option key={species} value={species}>{species}</option>
+                                ))}
+                            </select>
+                        </div>
+
+                        {/* Sort Dropdown */}
+                        <div className="relative">
+                            <select
+                                value={`${sortField}-${sortOrder}`}
+                                onChange={(e) => {
+                                    const [field, order] = e.target.value.split('-');
+                                    setSortField(field);
+                                    setSortOrder(order);
+                                }}
+                                className="appearance-none bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl py-2.5 pl-10 pr-8 text-sm text-white focus:outline-none focus:border-[#8cff65] cursor-pointer"
+                            >
+                                <option value="name-asc">Name (A-Z)</option>
+                                <option value="name-desc">Name (Z-A)</option>
+                                <option value="species-asc">Species (A-Z)</option>
+                                <option value="species-desc">Species (Z-A)</option>
+                                <option value="exhibit-asc">Exhibit (A-Z)</option>
+                                <option value="exhibit-desc">Exhibit (Z-A)</option>
+                            </select>
+                            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none">
+                                <SortIcon />
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Add Animal Button */}
+                    <button
+                        onClick={openCreateModal}
+                        className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-[#8cff65] to-[#4ade80] text-[#0a0a0a] font-semibold rounded-xl hover:from-[#9dff7a] hover:to-[#5ceb91] transition-all shadow-lg shadow-[#8cff65]/20"
+                    >
+                        <PlusIcon />
+                        Add Animal
+                    </button>
+                </div>
+
+                {/* Animals Table */}
                 <div className="overflow-x-auto">
                     <table className="w-full">
-                        <thead className="bg-[#0f0f0f] border-b border-[#2a2a2a]">
+                        <thead className="bg-[#1e1e1e]">
                             <tr>
-                                <th className="text-left px-6 py-4 text-gray-400 font-medium text-sm">Animal</th>
-                                <th className="text-left px-6 py-4 text-gray-400 font-medium text-sm">Species</th>
-                                <th className="text-left px-6 py-4 text-gray-400 font-medium text-sm">Category</th>
-                                <th className="text-left px-6 py-4 text-gray-400 font-medium text-sm">Status</th>
-                                <th className="text-left px-6 py-4 text-gray-400 font-medium text-sm">Actions</th>
+                                <th 
+                                    className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider cursor-pointer hover:text-white"
+                                    onClick={() => toggleSort('name')}
+                                >
+                                    <div className="flex items-center gap-2">
+                                        Name
+                                        {sortField === 'name' && (
+                                            <span className="text-[#8cff65]">{sortOrder === 'asc' ? '↑' : '↓'}</span>
+                                        )}
+                                    </div>
+                                </th>
+                                <th 
+                                    className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider cursor-pointer hover:text-white"
+                                    onClick={() => toggleSort('species')}
+                                >
+                                    <div className="flex items-center gap-2">
+                                        Species
+                                        {sortField === 'species' && (
+                                            <span className="text-[#8cff65]">{sortOrder === 'asc' ? '↑' : '↓'}</span>
+                                        )}
+                                    </div>
+                                </th>
+                                <th 
+                                    className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider cursor-pointer hover:text-white"
+                                    onClick={() => toggleSort('exhibit')}
+                                >
+                                    <div className="flex items-center gap-2">
+                                        Exhibit/Habitat
+                                        {sortField === 'exhibit' && (
+                                            <span className="text-[#8cff65]">{sortOrder === 'asc' ? '↑' : '↓'}</span>
+                                        )}
+                                    </div>
+                                </th>
+                                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Description</th>
+                                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Status</th>
+                                <th className="px-6 py-4 text-right text-xs font-semibold text-gray-400 uppercase tracking-wider">Actions</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            {filteredAnimals.length > 0 ? (
+                        <tbody className="divide-y divide-[#2a2a2a]">
+                            {filteredAnimals.length === 0 ? (
+                                <tr>
+                                    <td colSpan="6" className="px-6 py-12 text-center text-gray-500">
+                                        {effectiveSearch || speciesFilter !== 'all' ? 'No animals match your filters' : 'No animals found'}
+                                    </td>
+                                </tr>
+                            ) : (
                                 filteredAnimals.map(animal => (
-                                    <tr key={animal.id} className="border-b border-[#2a2a2a] hover:bg-[#1e1e1e]/50 transition">
+                                    <tr key={animal.id} className="hover:bg-[#1e1e1e]/50 transition-colors">
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 rounded-xl overflow-hidden bg-[#0a0a0a] flex items-center justify-center">
-                                                    {animal.image_url ? <img src={animal.image_url} alt={animal.name} className="w-full h-full object-cover" /> : <PawIcon />}
+                                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#8cff65] to-[#4ade80] flex items-center justify-center text-[#0a0a0a] font-bold overflow-hidden">
+                                                    {animal.image_url ? (
+                                                        <img src={animal.image_url} alt={animal.name} className="w-full h-full object-cover" />
+                                                    ) : (
+                                                        (animal.name || 'A').charAt(0).toUpperCase()
+                                                    )}
                                                 </div>
-                                                <span className="text-white font-medium">{animal.name}</span>
+                                                <p className="font-medium text-white">{animal.name}</p>
                                             </div>
                                         </td>
                                         <td className="px-6 py-4 text-gray-300">{animal.species}</td>
-                                        <td className="px-6 py-4 text-gray-400 capitalize">{animal.category || '-'}</td>
+                                        <td className="px-6 py-4 text-gray-300">{animal.habitat || animal.exhibit}</td>
+                                        <td className="px-6 py-4 text-gray-400 max-w-xs truncate">{animal.description}</td>
                                         <td className="px-6 py-4">
-                                            <span className={`px-3 py-1 rounded-lg text-xs font-medium border capitalize ${getStatusBadge(animal.status)}`}>
-                                                {animal.status || 'unknown'}
+                                            <span className={`inline-flex px-3 py-1 text-xs font-medium rounded-full border capitalize ${getStatusBadgeColor(animal.status)}`}>
+                                                {animal.status}
                                             </span>
                                         </td>
                                         <td className="px-6 py-4">
-                                            <div className="flex items-center gap-2">
-                                                <button onClick={() => openEditModal(animal)} className="p-2 bg-blue-500/10 border border-blue-500/30 rounded-lg text-blue-400 hover:bg-blue-500/20 transition"><EditIcon /></button>
-                                                <button onClick={() => setDeleteConfirm(animal.id)} className="p-2 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 hover:bg-red-500/20 transition"><TrashIcon /></button>
+                                            <div className="flex items-center justify-end gap-2">
+                                                <button
+                                                    onClick={() => openEditModal(animal)}
+                                                    className="p-2 bg-[#1e1e1e] hover:bg-[#2a2a2a] border border-[#2a2a2a] hover:border-[#8cff65]/50 text-gray-400 hover:text-[#8cff65] rounded-lg transition-all"
+                                                    title="Edit animal"
+                                                >
+                                                    <EditIcon />
+                                                </button>
+                                                <button
+                                                    onClick={() => setDeleteConfirm(animal)}
+                                                    className="p-2 bg-[#1e1e1e] hover:bg-red-500/10 border border-[#2a2a2a] hover:border-red-500/50 text-gray-400 hover:text-red-400 rounded-lg transition-all"
+                                                    title="Delete animal"
+                                                >
+                                                    <TrashIcon />
+                                                </button>
                                             </div>
                                         </td>
                                     </tr>
                                 ))
-                            ) : (
-                                <tr><td colSpan={5} className="text-center py-12 text-gray-500">No animals found</td></tr>
                             )}
                         </tbody>
                     </table>
                 </div>
+
+                {/* Table Footer */}
+                <div className="px-6 py-4 border-t border-[#2a2a2a] flex items-center justify-between">
+                    <p className="text-sm text-gray-500">
+                        Showing {filteredAnimals.length} of {animals.length} animals
+                    </p>
+                </div>
             </div>
 
-            {/* Add/Edit Modal */}
+            {/* Create/Edit Modal */}
             {showModal && (
-                <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-                    <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-                        <div className="p-6 border-b border-[#2a2a2a] flex items-center justify-between">
-                            <h3 className="text-xl font-bold text-white">{editingAnimal ? 'Edit Animal' : 'Add New Animal'}</h3>
-                            <button onClick={closeModal} className="text-gray-400 hover:text-white transition"><XIcon /></button>
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+                        {/* Modal Header */}
+                        <div className="p-6 border-b border-[#2a2a2a] flex items-center justify-between sticky top-0 bg-[#141414]">
+                            <h3 className="text-xl font-bold text-white">
+                                {editingAnimal ? 'Edit Animal' : 'Add New Animal'}
+                            </h3>
+                            <button
+                                onClick={closeModal}
+                                className="p-2 hover:bg-[#1e1e1e] rounded-lg text-gray-400 hover:text-white transition"
+                            >
+                                <CloseIcon />
+                            </button>
                         </div>
-                        <form onSubmit={saveAnimal} className="p-6 space-y-4">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                        {/* Modal Form */}
+                        <form onSubmit={saveAnimal} className="p-6 space-y-5">
+                            {/* Name */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-400 mb-2">Name *</label>
+                                <input
+                                    type="text"
+                                    value={form.name}
+                                    onChange={(e) => setForm({...form, name: sanitizeInput(e.target.value)})}
+                                    required
+                                    className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-[#8cff65] focus:ring-1 focus:ring-[#8cff65]/20 transition-all"
+                                    placeholder="Animal name"
+                                />
+                            </div>
+
+                            {/* Species & Exhibit */}
+                            <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm text-gray-400 mb-2">Name *</label>
-                                    <input type="text" value={form.name} onChange={(e) => setForm({...form, name: sanitizeInput(e.target.value)})} required
-                                        className="w-full bg-[#0a0a0a] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-[#8cff65]" />
-                                </div>
-                                <div>
-                                    <label className="block text-sm text-gray-400 mb-2">Species *</label>
-                                    <input type="text" value={form.species} onChange={(e) => setForm({...form, species: sanitizeInput(e.target.value)})} required
-                                        className="w-full bg-[#0a0a0a] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-[#8cff65]" />
-                                </div>
-                                <div>
-                                    <label className="block text-sm text-gray-400 mb-2">Category</label>
-                                    <input type="text" value={form.category} onChange={(e) => setForm({...form, category: sanitizeInput(e.target.value)})}
-                                        className="w-full bg-[#0a0a0a] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-[#8cff65]" placeholder="e.g. Mammal, Bird, Reptile" />
-                                </div>
-                                <div>
-                                    <label className="block text-sm text-gray-400 mb-2">Status</label>
-                                    <select value={form.status} onChange={(e) => setForm({...form, status: e.target.value})}
-                                        className="w-full bg-[#0a0a0a] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#8cff65]">
-                                        <option value="healthy">Healthy</option>
-                                        <option value="sick">Sick</option>
-                                        <option value="recovering">Recovering</option>
-                                        <option value="quarantine">Quarantine</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label className="block text-sm text-gray-400 mb-2">Age</label>
-                                    <input type="text" value={form.age} onChange={(e) => setForm({...form, age: sanitizeInput(e.target.value)})}
-                                        className="w-full bg-[#0a0a0a] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-[#8cff65]" placeholder="e.g. 5 years" />
+                                    <label className="block text-sm font-medium text-gray-400 mb-2">Species *</label>
+                                    <input
+                                        type="text"
+                                        value={form.species}
+                                        onChange={(e) => setForm({...form, species: sanitizeInput(e.target.value)})}
+                                        required
+                                        className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-[#8cff65] focus:ring-1 focus:ring-[#8cff65]/20 transition-all"
+                                        placeholder="e.g. Lion"
+                                    />
                                 </div>
                                 <div>
-                                    <label className="block text-sm text-gray-400 mb-2">Gender</label>
-                                    <select value={form.gender} onChange={(e) => setForm({...form, gender: e.target.value})}
-                                        className="w-full bg-[#0a0a0a] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#8cff65]">
-                                        <option value="">Select Gender</option>
-                                        <option value="male">Male</option>
-                                        <option value="female">Female</option>
-                                        <option value="unknown">Unknown</option>
-                                    </select>
-                                </div>
-                                <div className="md:col-span-2">
-                                    <label className="block text-sm text-gray-400 mb-2">Image URL</label>
-                                    <input type="url" value={form.imageUrl} onChange={(e) => setForm({...form, imageUrl: e.target.value})}
-                                        className="w-full bg-[#0a0a0a] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-[#8cff65]" placeholder="https://example.com/image.jpg" />
-                                </div>
-                                <div className="md:col-span-2">
-                                    <label className="block text-sm text-gray-400 mb-2">Description</label>
-                                    <textarea value={form.description} onChange={(e) => setForm({...form, description: sanitizeInput(e.target.value)})} rows="3"
-                                        className="w-full bg-[#0a0a0a] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-[#8cff65] resize-none" />
+                                    <label className="block text-sm font-medium text-gray-400 mb-2">Exhibit/Habitat</label>
+                                    <input
+                                        type="text"
+                                        value={form.exhibit}
+                                        onChange={(e) => setForm({...form, exhibit: sanitizeInput(e.target.value)})}
+                                        className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-[#8cff65] focus:ring-1 focus:ring-[#8cff65]/20 transition-all"
+                                        placeholder="e.g. Savanna"
+                                    />
                                 </div>
                             </div>
-                            <div className="flex justify-end gap-3 pt-4">
-                                <button type="button" onClick={closeModal} className="px-6 py-3 bg-[#2a2a2a] hover:bg-[#3a3a3a] text-white rounded-xl font-medium transition">Cancel</button>
-                                <button type="submit" disabled={saving} className="px-6 py-3 bg-[#8cff65] hover:bg-[#7ae857] text-black rounded-xl font-medium transition disabled:opacity-50">
+
+                            {/* Status */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-400 mb-2">Status</label>
+                                <select
+                                    value={form.status}
+                                    onChange={(e) => setForm({...form, status: e.target.value})}
+                                    className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#8cff65] cursor-pointer"
+                                >
+                                    <option value="healthy">Healthy</option>
+                                    <option value="sick">Sick</option>
+                                    <option value="recovering">Recovering</option>
+                                    <option value="quarantine">Quarantine</option>
+                                </select>
+                            </div>
+
+                            {/* Description */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-400 mb-2">Description</label>
+                                <textarea
+                                    value={form.description}
+                                    onChange={(e) => setForm({...form, description: sanitizeInput(e.target.value)})}
+                                    rows="3"
+                                    className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-[#8cff65] focus:ring-1 focus:ring-[#8cff65]/20 transition-all resize-none"
+                                    placeholder="Brief description of the animal..."
+                                />
+                            </div>
+
+                            {/* Image Input Mode Toggle */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-400 mb-2">Image</label>
+                                <div className="flex gap-2 mb-3">
+                                    <button
+                                        type="button"
+                                        onClick={() => setImageInputMode('url')}
+                                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                                            imageInputMode === 'url'
+                                                ? 'bg-[#8cff65]/20 text-[#8cff65] border border-[#8cff65]/30'
+                                                : 'bg-[#1e1e1e] text-gray-400 border border-[#2a2a2a] hover:text-white'
+                                        }`}
+                                    >
+                                        URL
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setImageInputMode('upload')}
+                                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                                            imageInputMode === 'upload'
+                                                ? 'bg-[#8cff65]/20 text-[#8cff65] border border-[#8cff65]/30'
+                                                : 'bg-[#1e1e1e] text-gray-400 border border-[#2a2a2a] hover:text-white'
+                                        }`}
+                                    >
+                                        Upload
+                                    </button>
+                                </div>
+
+                                {imageInputMode === 'url' ? (
+                                    <input
+                                        type="url"
+                                        value={form.imageUrl}
+                                        onChange={(e) => setForm({...form, imageUrl: e.target.value})}
+                                        className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-[#8cff65] focus:ring-1 focus:ring-[#8cff65]/20 transition-all"
+                                        placeholder="https://example.com/image.jpg"
+                                    />
+                                ) : (
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={handleImageFileChange}
+                                        className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-[#8cff65]/20 file:text-[#8cff65] hover:file:bg-[#8cff65]/30"
+                                    />
+                                )}
+
+                                {/* Image Preview */}
+                                {(imagePreview || form.imageUrl) && (
+                                    <div className="mt-3">
+                                        <img
+                                            src={imagePreview || form.imageUrl}
+                                            alt="Preview"
+                                            className="w-24 h-24 rounded-xl object-cover border border-[#2a2a2a]"
+                                        />
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Actions */}
+                            <div className="flex gap-3 pt-4">
+                                <button
+                                    type="button"
+                                    onClick={closeModal}
+                                    className="flex-1 px-4 py-3 bg-[#2a2a2a] hover:bg-[#3a3a3a] text-white rounded-xl font-medium transition"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={saving}
+                                    className="flex-1 px-4 py-3 bg-[#8cff65] hover:bg-[#7ae857] text-[#0a0a0a] rounded-xl font-medium transition disabled:opacity-50"
+                                >
                                     {saving ? 'Saving...' : (editingAnimal ? 'Update Animal' : 'Add Animal')}
                                 </button>
                             </div>
@@ -319,13 +644,25 @@ const StaffAnimals = () => {
 
             {/* Delete Confirmation Modal */}
             {deleteConfirm && (
-                <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-                    <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl p-6 w-full max-w-md">
-                        <h3 className="text-xl font-bold text-white mb-4">Confirm Delete</h3>
-                        <p className="text-gray-400 mb-6">Are you sure you want to delete this animal? This action cannot be undone.</p>
-                        <div className="flex justify-end gap-3">
-                            <button onClick={() => setDeleteConfirm(null)} className="px-4 py-2 bg-[#2a2a2a] hover:bg-[#3a3a3a] text-white rounded-xl transition">Cancel</button>
-                            <button onClick={() => deleteAnimal(deleteConfirm)} className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-xl transition">Delete</button>
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl w-full max-w-md p-6">
+                        <h3 className="text-xl font-bold text-white mb-2">Delete Animal</h3>
+                        <p className="text-gray-400 mb-6">
+                            Are you sure you want to delete <span className="text-white font-medium">{deleteConfirm.name}</span>? This action cannot be undone.
+                        </p>
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => setDeleteConfirm(null)}
+                                className="flex-1 px-4 py-3 bg-[#2a2a2a] hover:bg-[#3a3a3a] text-white rounded-xl font-medium transition"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={() => removeAnimal(deleteConfirm.id)}
+                                className="flex-1 px-4 py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl font-medium transition"
+                            >
+                                Delete
+                            </button>
                         </div>
                     </div>
                 </div>

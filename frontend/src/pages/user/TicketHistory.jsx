@@ -33,8 +33,9 @@ const TicketHistory = () => {
                     amount: t.totalAmount || t.total_amount || t.totalPrice || t.amount || 0,
                     purchasedAt: t.purchasedAt || t.created_at || t.createdAt || new Date().toISOString(),
                     status: t.status || 'active',
-                    paymentMethod: t.payment_method || t.paymentMethod || 'pay_at_park',
-                    paymentStatus: t.payment_status || t.paymentStatus || 'pending'
+                    paymentMethod: t.payment_method || t.paymentMethod || 'cash',
+                    paymentStatus: t.payment_status || t.paymentStatus || 'pending',
+                    cancellationReason: t.cancellation_reason || t.cancellationReason || t.notes || null
                 }));
                 setTickets(normalized);
             }
@@ -112,12 +113,15 @@ const TicketHistory = () => {
     };
 
     const getPaymentMethodLabel = (method) => {
-        switch (method) {
+        switch (method?.toLowerCase()) {
             case 'gcash': return 'GCash';
             case 'paypal': return 'PayPal';
-            case 'pay_at_park': return 'Pay at Park';
+            case 'cash': 
+            case 'pay_at_park': return 'Pay at Bulusan Park';
+            case 'card': return 'Credit/Debit Card';
+            case 'online': return 'Online Payment';
             case 'free': return 'Free Entry';
-            default: return method;
+            default: return method || 'Pay at Bulusan Park';
         }
     };
 
@@ -264,6 +268,20 @@ const TicketHistory = () => {
                                                 <p className="text-gray-500">Payment Method</p>
                                                 <p className="font-medium text-gray-800">{getPaymentMethodLabel(ticket.paymentMethod)}</p>
                                             </div>
+                                            <div className="col-span-2">
+                                                <p className="text-gray-500">Payment Status</p>
+                                                <p className={`font-medium capitalize ${ticket.paymentStatus === 'paid' ? 'text-green-600' : ticket.paymentStatus === 'pending' ? 'text-yellow-600' : 'text-gray-600'}`}>
+                                                    {ticket.paymentStatus === 'pending' && (ticket.paymentMethod === 'cash' || !ticket.paymentMethod) 
+                                                        ? 'Pending - Pay at the park entrance' 
+                                                        : ticket.paymentStatus}
+                                                </p>
+                                            </div>
+                                            {ticket.status === 'cancelled' && ticket.cancellationReason && (
+                                                <div className="col-span-2 bg-red-50 border border-red-200 rounded-lg p-3">
+                                                    <p className="text-red-700 text-sm font-medium">Cancellation Reason:</p>
+                                                    <p className="text-red-600 text-sm">{ticket.cancellationReason}</p>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                     <div className="bg-gray-50 p-6 flex flex-col items-center justify-center border-t md:border-t-0 md:border-l border-gray-100 min-w-[150px]">

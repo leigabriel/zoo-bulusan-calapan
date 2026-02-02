@@ -2,6 +2,7 @@ const Animal = require('../models/animal-model');
 const Ticket = require('../models/ticket-model');
 const Event = require('../models/event-model');
 const User = require('../models/user-model');
+const Notification = require('../models/notification-model');
 
 exports.getDashboardStats = async (req, res) => {
     try {
@@ -355,5 +356,45 @@ exports.getTodayTickets = async (req, res) => {
     } catch (error) {
         console.error('Error getting today tickets:', error);
         res.status(500).json({ success: false, message: 'Error fetching tickets' });
+    }
+};
+
+// Get dashboard notifications
+exports.getNotifications = async (req, res) => {
+    try {
+        const result = await Notification.generateDashboardNotifications();
+        res.json({
+            success: true,
+            notifications: result.notifications,
+            summary: result.summary
+        });
+    } catch (error) {
+        console.error('Error getting notifications:', error);
+        res.status(500).json({ success: false, message: 'Error fetching notifications' });
+    }
+};
+
+// Mark notification as read
+exports.markNotificationRead = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const userId = req.user.id;
+        await Notification.markAsRead(id, userId);
+        res.json({ success: true, message: 'Notification marked as read' });
+    } catch (error) {
+        console.error('Error marking notification read:', error);
+        res.status(500).json({ success: false, message: 'Error updating notification' });
+    }
+};
+
+// Mark all notifications as read
+exports.markAllNotificationsRead = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        await Notification.markAllAsRead(userId);
+        res.json({ success: true, message: 'All notifications marked as read' });
+    } catch (error) {
+        console.error('Error marking all notifications read:', error);
+        res.status(500).json({ success: false, message: 'Error updating notifications' });
     }
 };

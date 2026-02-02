@@ -291,6 +291,30 @@ export const adminAPI = {
             body: formData
         });
         return handleResponse(response);
+    },
+
+    // Notifications
+    getNotifications: async () => {
+        const response = await fetch(`${API_BASE_URL}/admin/notifications`, {
+            headers: getAuthHeaders('admin')
+        });
+        return handleResponse(response);
+    },
+
+    markNotificationRead: async (id) => {
+        const response = await fetch(`${API_BASE_URL}/admin/notifications/${id}/read`, {
+            method: 'PUT',
+            headers: getAuthHeaders('admin')
+        });
+        return handleResponse(response);
+    },
+
+    markAllNotificationsRead: async () => {
+        const response = await fetch(`${API_BASE_URL}/admin/notifications/read-all`, {
+            method: 'PUT',
+            headers: getAuthHeaders('admin')
+        });
+        return handleResponse(response);
     }
 };
 
@@ -493,6 +517,30 @@ export const staffAPI = {
 
     getRecentTickets: async () => {
         const response = await fetch(`${API_BASE_URL}/staff/recent-tickets`, {
+            headers: getAuthHeaders('staff')
+        });
+        return handleResponse(response);
+    },
+
+    // Notifications
+    getNotifications: async () => {
+        const response = await fetch(`${API_BASE_URL}/staff/notifications`, {
+            headers: getAuthHeaders('staff')
+        });
+        return handleResponse(response);
+    },
+
+    markNotificationRead: async (id) => {
+        const response = await fetch(`${API_BASE_URL}/staff/notifications/${id}/read`, {
+            method: 'PUT',
+            headers: getAuthHeaders('staff')
+        });
+        return handleResponse(response);
+    },
+
+    markAllNotificationsRead: async () => {
+        const response = await fetch(`${API_BASE_URL}/staff/notifications/read-all`, {
+            method: 'PUT',
             headers: getAuthHeaders('staff')
         });
         return handleResponse(response);

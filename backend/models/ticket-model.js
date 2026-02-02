@@ -224,10 +224,16 @@ class Ticket {
     }
 
     static async expireOldTickets() {
+        // Expire tickets where:
+        // 1. Visit date has passed, OR
+        // 2. 7 days have passed since purchase (for pending tickets)
         const [result] = await db.query(
             `UPDATE tickets SET status = 'expired' 
              WHERE status IN ('pending', 'confirmed') 
-             AND visit_date < CURDATE()`
+             AND (
+                visit_date < CURDATE()
+                OR (status = 'pending' AND created_at < DATE_SUB(NOW(), INTERVAL 7 DAY))
+             )`
         );
         return result.affectedRows;
     }

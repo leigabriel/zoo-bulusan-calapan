@@ -41,4 +41,9 @@ router.post('/users', adminController.createUser);
 router.put('/users/:id', adminController.updateUser);
 router.delete('/users/:id', adminController.deleteUser);
 
+// Notifications
+router.get('/notifications', staffController.getNotifications);
+router.put('/notifications/:id/read', staffController.markNotificationRead);
+router.put('/notifications/read-all', staffController.markAllNotificationsRead);
+
 module.exports = router;

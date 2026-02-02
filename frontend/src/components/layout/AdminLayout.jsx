@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { authAPI } from '../../services/api-client';
+import { authAPI, adminAPI } from '../../services/api-client';
 import { sanitizeInput } from '../../utils/sanitize';
 import LogoutModal from '../common/LogoutModal';
 
@@ -132,20 +132,82 @@ const AdminLayout = ({ children }) => {
     const [profileMessage, setProfileMessage] = useState({ type: '', text: '' });
     const [previewImage, setPreviewImage] = useState(null);
 
-    // Mock notifications - replace with real data from your API
-    const [notifications] = useState([
-        { id: 1, type: 'user', message: '56 New users registered.', time: 'Just now', read: false },
-        { id: 2, type: 'ticket', message: '132 Tickets purchased.', time: '59 Minutes ago', read: false },
-        { id: 3, type: 'alert', message: 'System maintenance scheduled.', time: '2 Hours ago', read: true },
-        { id: 4, type: 'message', message: '5 Unread messages.', time: 'Today, 11:59 PM', read: true },
-    ]);
+    // Real notifications state
+    const [notifications, setNotifications] = useState([]);
+    const [notificationsLoading, setNotificationsLoading] = useState(false);
+    const [activitySummary, setActivitySummary] = useState(null);
 
-    // Recent activities
-    const recentActivities = [
-        { id: 1, icon: '📝', message: 'Changed the dashboard style.', time: '2 Minutes ago', color: 'blue' },
-        { id: 2, icon: '✓', message: '177 New animals added.', time: '57 Minutes ago', color: 'green' },
-        { id: 3, icon: '📦', message: '11 Products have been archived.', time: '1 Day ago', color: 'yellow' },
-    ];
+    // Fetch real notifications from API
+    const fetchNotifications = async () => {
+        try {
+            setNotificationsLoading(true);
+            const res = await adminAPI.getNotifications();
+            if (res.success) {
+                setNotifications(res.notifications || []);
+                setActivitySummary(res.summary || null);
+            }
+        } catch (err) {
+            console.error('Error fetching notifications:', err);
+        } finally {
+            setNotificationsLoading(false);
+        }
+    };
+
+    // Fetch notifications on mount and periodically
+    useEffect(() => {
+        fetchNotifications();
+        // Refresh notifications every 2 minutes
+        const interval = setInterval(fetchNotifications, 120000);
+        return () => clearInterval(interval);
+    }, []);
+
+    // Generate recent activities from summary
+    const recentActivities = useMemo(() => {
+        if (!activitySummary) return [];
+        const activities = [];
+        
+        if (activitySummary.tickets?.today > 0) {
+            activities.push({
+                id: 'tickets',
+                icon: '🎟️',
+                message: `${activitySummary.tickets.today} ticket${activitySummary.tickets.today > 1 ? 's' : ''} sold today.`,
+                time: 'Today',
+                color: 'green'
+            });
+        }
+        
+        if (activitySummary.users?.today > 0) {
+            activities.push({
+                id: 'users',
+                icon: '👤',
+                message: `${activitySummary.users.today} new user${activitySummary.users.today > 1 ? 's' : ''} registered.`,
+                time: 'Today',
+                color: 'blue'
+            });
+        }
+        
+        if (activitySummary.pendingTickets > 0) {
+            activities.push({
+                id: 'pending',
+                icon: '⏳',
+                message: `${activitySummary.pendingTickets} ticket${activitySummary.pendingTickets > 1 ? 's' : ''} pending confirmation.`,
+                time: 'Action needed',
+                color: 'yellow'
+            });
+        }
+
+        if (activitySummary.events?.upcoming > 0) {
+            activities.push({
+                id: 'events',
+                icon: '📅',
+                message: `${activitySummary.events.upcoming} upcoming event${activitySummary.events.upcoming > 1 ? 's' : ''}.`,
+                time: 'Scheduled',
+                color: 'purple'
+            });
+        }
+
+        return activities;
+    }, [activitySummary]);
 
     const handleLogout = () => {
         logout();

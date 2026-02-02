@@ -1,7 +1,7 @@
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { authAPI } from '../../services/api-client';
+import { authAPI, staffAPI } from '../../services/api-client';
 import { sanitizeInput } from '../../utils/sanitize';
 import LogoutModal from '../common/LogoutModal';
 
@@ -55,6 +55,14 @@ const ScannerIcon = () => (
         <path d="M21 17v2a2 2 0 0 1-2 2h-2"/>
         <path d="M7 21H5a2 2 0 0 1-2-2v-2"/>
         <rect x="7" y="7" width="10" height="10" rx="1"/>
+    </svg>
+);
+
+const HelpIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+        <circle cx="12" cy="12" r="10"/>
+        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+        <line x1="12" y1="17" x2="12.01" y2="17"/>
     </svg>
 );
 
@@ -117,17 +125,82 @@ const StaffLayout = ({ children }) => {
     const [profileMessage, setProfileMessage] = useState({ type: '', text: '' });
     const [previewImage, setPreviewImage] = useState(null);
 
-    const [notifications] = useState([
-        { id: 1, type: 'ticket', message: 'New ticket requires validation', time: 'Just now', read: false },
-        { id: 2, type: 'user', message: 'User checked in at gate', time: '5 minutes ago', read: false },
-        { id: 3, type: 'alert', message: 'Feeding schedule reminder', time: '1 hour ago', read: true },
-    ]);
+    // Real notifications state
+    const [notifications, setNotifications] = useState([]);
+    const [notificationsLoading, setNotificationsLoading] = useState(false);
+    const [activitySummary, setActivitySummary] = useState(null);
 
-    const recentActivities = [
-        { id: 1, icon: '🎫', message: '12 Tickets validated today', time: '5 Minutes ago', color: 'green' },
-        { id: 2, icon: '📷', message: 'Scanner session started', time: '30 Minutes ago', color: 'blue' },
-        { id: 3, icon: '🦁', message: 'Animal feeding completed', time: '1 Hour ago', color: 'yellow' },
-    ];
+    // Fetch real notifications from API
+    const fetchNotifications = async () => {
+        try {
+            setNotificationsLoading(true);
+            const res = await staffAPI.getNotifications();
+            if (res.success) {
+                setNotifications(res.notifications || []);
+                setActivitySummary(res.summary || null);
+            }
+        } catch (err) {
+            console.error('Error fetching notifications:', err);
+        } finally {
+            setNotificationsLoading(false);
+        }
+    };
+
+    // Fetch notifications on mount and periodically
+    useEffect(() => {
+        fetchNotifications();
+        // Refresh notifications every 2 minutes
+        const interval = setInterval(fetchNotifications, 120000);
+        return () => clearInterval(interval);
+    }, []);
+
+    // Generate recent activities from summary
+    const recentActivities = useMemo(() => {
+        if (!activitySummary) return [];
+        const activities = [];
+        
+        if (activitySummary.tickets?.today > 0) {
+            activities.push({
+                id: 'tickets',
+                icon: '🎟️',
+                message: `${activitySummary.tickets.today} ticket${activitySummary.tickets.today > 1 ? 's' : ''} sold today.`,
+                time: 'Today',
+                color: 'green'
+            });
+        }
+        
+        if (activitySummary.pendingTickets > 0) {
+            activities.push({
+                id: 'pending',
+                icon: '⏳',
+                message: `${activitySummary.pendingTickets} ticket${activitySummary.pendingTickets > 1 ? 's' : ''} pending validation.`,
+                time: 'Action needed',
+                color: 'yellow'
+            });
+        }
+        
+        if (activitySummary.users?.today > 0) {
+            activities.push({
+                id: 'users',
+                icon: '👤',
+                message: `${activitySummary.users.today} new user${activitySummary.users.today > 1 ? 's' : ''} registered.`,
+                time: 'Today',
+                color: 'blue'
+            });
+        }
+
+        if (activitySummary.events?.upcoming > 0) {
+            activities.push({
+                id: 'events',
+                icon: '📅',
+                message: `${activitySummary.events.upcoming} upcoming event${activitySummary.events.upcoming > 1 ? 's' : ''}.`,
+                time: 'Scheduled',
+                color: 'purple'
+            });
+        }
+
+        return activities;
+    }, [activitySummary]);
 
     // Load profile data when modal opens
     const loadProfile = async () => {
@@ -224,165 +297,18 @@ const StaffLayout = ({ children }) => {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, [notificationPanelOpen]);
 
-    const getPageTitle = () => {
-        const currentItem = menuItems.find(item => location.pathname === item.path);
-        return currentItem?.label || 'Staff Portal';
-    };
-
     const unreadCount = notifications.filter(n => !n.read).length;
 
     return (
-        <div className="flex h-screen bg-[#0a0a0a]">
-            {/* Mobile overlay */}
+        <div className="flex h-screen bg-[#0a0a0a] overflow-hidden">
+            {/* Mobile overlay for left sidebar */}
             {sidebarOpen && (
                 <div 
-                    className="fixed inset-0 bg-black/70 z-40 lg:hidden backdrop-blur-sm"
+                    className="fixed inset-0 bg-black/60 z-40 lg:hidden backdrop-blur-sm"
                     onClick={() => setSidebarOpen(false)}
+                    aria-hidden="true"
                 />
             )}
-            
-            {/* Sidebar - matching Admin design system */}
-            <aside 
-                className={`${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'} 
-                    fixed lg:relative z-50 w-72 lg:w-72 
-                    bg-gradient-to-b from-[#0f1a0f] to-[#0a0a0a] 
-                    text-white transition-transform duration-300 flex flex-col h-full
-                    border-r border-[#1a2f1a]`}
-            >
-                {/* Logo Section */}
-                <div className="p-6 flex items-center gap-4 border-b border-[#1a2f1a]">
-                    <div className="w-12 h-12 bg-gradient-to-br from-[#8cff65] to-[#4ade80] rounded-xl flex items-center justify-center text-[#0a0a0a] shadow-lg shadow-[#8cff65]/20">
-                        <PawIcon />
-                    </div>
-                    <div>
-                        <h1 className="font-bold text-lg text-white">Staff Portal</h1>
-                        <p className="text-xs text-gray-400">Zoo Bulusan Calapan</p>
-                    </div>
-                    <button
-                        onClick={() => setSidebarOpen(false)}
-                        className="lg:hidden ml-auto p-2 hover:bg-white/10 rounded-lg"
-                    >
-                        <CloseIcon />
-                    </button>
-                </div>
-
-                {/* Navigation */}
-                <nav className="flex-1 py-6 px-4 overflow-y-auto">
-                    <div className="space-y-2">
-                        {menuItems.map(item => (
-                            <Link
-                                key={item.path}
-                                to={item.path}
-                                onClick={handleNavClick}
-                                className={`flex items-center px-4 py-3 rounded-xl transition-all duration-200 group ${
-                                    location.pathname === item.path
-                                        ? 'bg-[#8cff65]/10 text-[#8cff65] border border-[#8cff65]/30'
-                                        : 'text-gray-400 hover:bg-white/5 hover:text-white'
-                                }`}
-                            >
-                                <span className={`w-6 ${location.pathname === item.path ? 'text-[#8cff65]' : 'text-gray-500 group-hover:text-white'}`}>
-                                    <item.Icon />
-                                </span>
-                                <span className="ml-3 font-medium">{item.label}</span>
-                                {location.pathname === item.path && (
-                                    <span className="ml-auto w-1.5 h-1.5 bg-[#8cff65] rounded-full"></span>
-                                )}
-                            </Link>
-                        ))}
-                    </div>
-                </nav>
-
-                {/* User Profile Section */}
-                <div className="p-4 border-t border-[#1a2f1a]">
-                    <div className="flex items-center gap-3 mb-4 p-3 rounded-xl bg-white/5">
-                        <div className="w-10 h-10 bg-gradient-to-br from-[#8cff65] to-[#4ade80] rounded-full flex items-center justify-center font-bold text-[#0a0a0a]">
-                            {user?.fullName?.charAt(0) || user?.firstName?.charAt(0) || 'S'}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                            <p className="font-medium text-white truncate">{user?.fullName || `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || 'Staff'}</p>
-                            <p className="text-xs text-gray-400 capitalize">{user?.role || 'staff'}</p>
-                        </div>
-                    </div>
-                    <button
-                        onClick={() => setShowLogoutModal(true)}
-                        className="w-full py-3 bg-gradient-to-r from-red-500/20 to-orange-500/20 
-                            border border-red-500/30 rounded-xl font-medium 
-                            text-red-400 hover:bg-red-500/30 transition flex items-center justify-center gap-2"
-                    >
-                        <LogoutIcon />
-                        Logout
-                    </button>
-                </div>
-            </aside>
-
-            {/* Main Content Area */}
-            <div className="flex-1 flex flex-col overflow-hidden">
-                {/* Header */}
-                <header className="bg-[#0f0f0f] border-b border-[#1a1a1a] px-4 lg:px-6 py-4">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                            <button
-                                onClick={() => setSidebarOpen(!sidebarOpen)}
-                                className="p-2 hover:bg-white/10 rounded-xl lg:hidden text-white"
-                            >
-                                <MenuIcon />
-                            </button>
-                            <div className="hidden sm:block">
-                                <h2 className="text-xl font-bold text-white">{getPageTitle()}</h2>
-                                <p className="text-sm text-gray-400">
-                                    {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-                                </p>
-                            </div>
-                        </div>
-                        
-                        <div className="flex items-center gap-3">
-                            {/* Search */}
-                            <div className="hidden md:flex items-center bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl px-4 py-2">
-                                <SearchIcon />
-                                <input
-                                    type="text"
-                                    placeholder="Search..."
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                    className="ml-2 bg-transparent border-none outline-none text-white placeholder-gray-500 w-40 lg:w-60"
-                                />
-                            </div>
-
-                            {/* Notifications */}
-                            <button
-                                onClick={() => setNotificationPanelOpen(!notificationPanelOpen)}
-                                className="notification-bell relative p-2 hover:bg-white/10 rounded-xl text-gray-400 hover:text-white transition"
-                            >
-                                <BellIcon />
-                                {unreadCount > 0 && (
-                                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-[#8cff65] text-[#0a0a0a] text-xs font-bold rounded-full flex items-center justify-center">
-                                        {unreadCount}
-                                    </span>
-                                )}
-                            </button>
-
-                            {/* Profile */}
-                            <button
-                                onClick={openProfileModal}
-                                className="hidden sm:flex items-center gap-3 pl-3 border-l border-[#2a2a2a] hover:bg-white/5 px-3 py-2 rounded-xl transition"
-                            >
-                                <div className="w-9 h-9 bg-gradient-to-br from-[#8cff65] to-[#4ade80] rounded-full flex items-center justify-center font-bold text-[#0a0a0a] text-sm">
-                                    {user?.fullName?.charAt(0) || user?.firstName?.charAt(0) || 'S'}
-                                </div>
-                                <div className="hidden lg:block text-left">
-                                    <p className="text-sm font-medium text-white">{user?.fullName || `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || 'Staff'}</p>
-                                    <p className="text-xs text-gray-400">View profile</p>
-                                </div>
-                            </button>
-                        </div>
-                    </div>
-                </header>
-
-                {/* Main Content */}
-                <main className="flex-1 overflow-auto p-4 lg:p-6 bg-[#0a0a0a]">
-                    {children}
-                </main>
-            </div>
 
             {/* Notification Panel Overlay */}
             {notificationPanelOpen && (
@@ -392,6 +318,185 @@ const StaffLayout = ({ children }) => {
                     aria-hidden="true"
                 />
             )}
+            
+            {/* Sidebar - matching Admin design system */}
+            <aside 
+                className={`${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'} 
+                    fixed lg:relative z-50 lg:z-auto w-64 bg-[#141414] border-r border-[#2a2a2a] 
+                    transition-transform duration-300 flex flex-col h-full`}
+                aria-label="Staff navigation"
+            >
+                {/* Logo Section */}
+                <div className="p-5 flex items-center gap-3 border-b border-[#2a2a2a]">
+                    <div className="w-10 h-10 bg-gradient-to-br from-[#8cff65] to-[#4ade80] rounded-xl flex items-center justify-center text-[#0a0a0a]">
+                        <PawIcon />
+                    </div>
+                    <div>
+                        <h1 className="font-bold text-white text-lg">Zoo Bulusan</h1>
+                        <p className="text-xs text-gray-500">Staff Portal</p>
+                    </div>
+                    <button 
+                        onClick={() => setSidebarOpen(false)}
+                        className="ml-auto lg:hidden text-gray-400 hover:text-white"
+                    >
+                        <CloseIcon />
+                    </button>
+                </div>
+
+                {/* Navigation Menu */}
+                <nav className="flex-1 px-3 py-4 overflow-y-auto" role="navigation">
+                    <p className="px-3 mb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                        Dashboards
+                    </p>
+                    {menuItems.map(item => (
+                            <Link
+                                key={item.path}
+                                to={item.path}
+                                onClick={handleNavClick}
+                                className={`flex items-center gap-3 px-3 py-2.5 mb-1 rounded-xl transition-all duration-200 group ${
+                                    location.pathname === item.path
+                                        ? 'bg-[#8cff65]/10 text-[#8cff65] border-l-2 border-[#8cff65]'
+                                        : 'text-gray-400 hover:bg-[#1e1e1e] hover:text-white'
+                                }`}
+                                aria-current={location.pathname === item.path ? 'page' : undefined}
+                            >
+                                <span className={`transition-colors ${
+                                    location.pathname === item.path ? 'text-[#8cff65]' : 'text-gray-500 group-hover:text-white'
+                                }`}>
+                                    <item.Icon />
+                                </span>
+                                <span className="font-medium">{item.label}</span>
+                            </Link>
+                        ))}
+                </nav>
+
+                {/* Bottom Section - Help & Logout */}
+                <div className="p-4 border-t border-[#2a2a2a] space-y-2">
+                    <Link
+                        to="/staff/help"
+                        className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all ${
+                            location.pathname === '/staff/help'
+                                ? 'bg-[#8cff65]/10 text-[#8cff65]'
+                                : 'text-gray-400 hover:bg-[#1e1e1e] hover:text-white'
+                        }`}
+                    >
+                        <HelpIcon />
+                        <span className="font-medium">Help Center</span>
+                    </Link>
+                    
+                    {/* User Profile Card */}
+                    <div className="flex items-center gap-3 p-3 bg-[#1e1e1e] rounded-xl mt-4">
+                        <div className="w-10 h-10 bg-gradient-to-br from-[#8cff65] to-[#4ade80] rounded-full flex items-center justify-center font-bold text-[#0a0a0a]">
+                            {user?.fullName?.charAt(0) || user?.firstName?.charAt(0) || 'S'}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                            <p className="font-medium text-white truncate">{user?.fullName || `${user?.firstName || ''} ${user?.lastName || ''}`}</p>
+                            <p className="text-xs text-gray-500 capitalize">{user?.role}</p>
+                        </div>
+                    </div>
+
+                    <button
+                        onClick={() => setShowLogoutModal(true)}
+                        className="w-full flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-red-600 to-red-500 
+                            hover:from-red-500 hover:to-red-400 rounded-xl font-medium text-white transition-all duration-200 
+                            shadow-lg shadow-red-500/20"
+                        aria-label="Logout from staff portal"
+                    >
+                        <LogoutIcon />
+                        Logout
+                    </button>
+                </div>
+            </aside>
+
+            {/* Main Content Area */}
+            <div className="flex-1 flex flex-col overflow-hidden">
+                {/* Top Header */}
+                <header className="bg-[#141414] border-b border-[#2a2a2a] px-4 lg:px-6 py-4 flex justify-between items-center">
+                    <div className="flex items-center gap-4">
+                        <button
+                            onClick={() => setSidebarOpen(!sidebarOpen)}
+                            className="p-2 hover:bg-[#1e1e1e] rounded-xl text-gray-400 hover:text-white transition lg:hidden"
+                            aria-label={sidebarOpen ? 'Close sidebar menu' : 'Open sidebar menu'}
+                            aria-expanded={sidebarOpen}
+                        >
+                            <MenuIcon />
+                        </button>
+                        <div>
+                            <h2 className="text-xl font-bold text-white">
+                                {menuItems.find(item => item.path === location.pathname)?.label || 
+                                 (location.pathname === '/staff/help' ? 'Help Center' : 'Staff Portal')}
+                            </h2>
+                            <p className="text-sm text-gray-500">
+                                {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                            </p>
+                        </div>
+                    </div>
+                    
+                    {/* Global Search Bar */}
+                    <div className="flex-1 max-w-md mx-4 hidden md:block">
+                        <div className="relative">
+                            <input
+                                type="text"
+                                placeholder="Search anything..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl py-2.5 pl-10 pr-4 
+                                    text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#8cff65] 
+                                    focus:ring-1 focus:ring-[#8cff65]/20 transition-all"
+                            />
+                            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
+                                <SearchIcon />
+                            </div>
+                            {searchQuery && (
+                                <button
+                                    onClick={() => setSearchQuery('')}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white"
+                                >
+                                    <CloseIcon />
+                                </button>
+                            )}
+                        </div>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                        {/* Notification Bell */}
+                        <button
+                            onClick={() => setNotificationPanelOpen(!notificationPanelOpen)}
+                            className="notification-bell relative p-2.5 hover:bg-[#1e1e1e] rounded-xl text-gray-400 hover:text-white transition"
+                            aria-label="Toggle notifications"
+                        >
+                            <BellIcon />
+                            {unreadCount > 0 && (
+                                <span className="absolute top-1 right-1 w-5 h-5 bg-[#8cff65] rounded-full flex items-center justify-center text-[10px] font-bold text-black">
+                                    {unreadCount}
+                                </span>
+                            )}
+                        </button>
+
+                        {/* Profile Button */}
+                        <button
+                            onClick={openProfileModal}
+                            className="flex items-center gap-3 hover:bg-[#1e1e1e] px-3 py-2 rounded-xl transition"
+                        >
+                            <div className="w-9 h-9 bg-gradient-to-br from-[#8cff65] to-[#4ade80] rounded-full flex items-center justify-center text-[#0a0a0a] font-bold">
+                                {(user?.firstName || user?.lastName || user?.fullName)?.charAt(0) || 'S'}
+                            </div>
+                            <div className="text-left hidden md:block">
+                                <div className="text-sm text-white font-medium">{user?.fullName || `${user?.firstName || ''} ${user?.lastName || ''}`}</div>
+                                <div className="text-xs text-gray-500">View profile</div>
+                            </div>
+                        </button>
+                    </div>
+                </header>
+
+                {/* Main Content */}
+                <main className="flex-1 overflow-auto p-4 lg:p-6 bg-[#0a0a0a]">
+                    {typeof children === 'function' ? children({ globalSearch: searchQuery }) : 
+                     React.Children.map(children, child => 
+                        React.isValidElement(child) ? React.cloneElement(child, { globalSearch: searchQuery }) : child
+                     )}
+                </main>
+            </div>
 
             {/* Slide-in Notification Panel */}
             <aside

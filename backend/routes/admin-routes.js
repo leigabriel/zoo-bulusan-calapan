@@ -84,6 +84,11 @@ router.get('/tickets/:id', adminController.getTicketById);
 router.put('/tickets/:id/status', adminController.updateTicketStatus);
 router.get('/reports/revenue', adminController.getRevenueReport);
 
+// Notification routes
+router.get('/notifications', adminController.getNotifications);
+router.put('/notifications/:id/read', adminController.markNotificationRead);
+router.put('/notifications/read-all', adminController.markAllNotificationsRead);
+
 // Model management routes
 router.post('/upload-model', modelUpload.fields([
     { name: 'modelJson', maxCount: 1 },
