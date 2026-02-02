@@ -34,6 +34,34 @@ const modelUpload = multer({
     }
 });
 
+// Configure multer for general image uploads (animals, events)
+const imageStorage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        const uploadsPath = path.join(__dirname, '../uploads');
+        cb(null, uploadsPath);
+    },
+    filename: function (req, file, cb) {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        const ext = path.extname(file.originalname).toLowerCase();
+        cb(null, `image-${uniqueSuffix}${ext}`);
+    }
+});
+
+const imageUpload = multer({
+    storage: imageStorage,
+    fileFilter: function (req, file, cb) {
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+        if (allowedTypes.includes(file.mimetype)) {
+            cb(null, true);
+        } else {
+            cb(new Error('Only JPEG, PNG, GIF and WebP images are allowed'), false);
+        }
+    },
+    limits: {
+        fileSize: 5 * 1024 * 1024 // 5MB limit
+    }
+});
+
 router.use(protect);
 router.use(authorize('admin'));
 
@@ -52,6 +80,8 @@ router.post('/events', adminController.createEvent);
 router.put('/events/:id', adminController.updateEvent);
 router.delete('/events/:id', adminController.deleteEvent);
 router.get('/tickets', adminController.getAllTickets);
+router.get('/tickets/:id', adminController.getTicketById);
+router.put('/tickets/:id/status', adminController.updateTicketStatus);
 router.get('/reports/revenue', adminController.getRevenueReport);
 
 // Model management routes
@@ -61,5 +91,8 @@ router.post('/upload-model', modelUpload.fields([
 ]), adminController.uploadModel);
 
 router.get('/model-info', adminController.getModelInfo);
+
+// Image upload route for animals and events
+router.post('/upload-image', imageUpload.single('image'), adminController.uploadImage);
 
 module.exports = router;

@@ -76,6 +76,9 @@ const AdminAnimals = ({ globalSearch = '' }) => {
     });
     const [saving, setSaving] = useState(false);
     const [deleteConfirm, setDeleteConfirm] = useState(null);
+    const [imageInputMode, setImageInputMode] = useState('url'); // 'url' or 'upload'
+    const [imageFile, setImageFile] = useState(null);
+    const [imagePreview, setImagePreview] = useState(null);
 
     useEffect(() => { fetchAnimals(); }, []);
 
@@ -114,17 +117,47 @@ const AdminAnimals = ({ globalSearch = '' }) => {
         setShowModal(false);
         setEditingAnimal(null);
         setForm({ name: '', species: '', exhibit: '', description: '', imageUrl: '', status: 'healthy' });
+        setImageInputMode('url');
+        setImageFile(null);
+        setImagePreview(null);
+    };
+
+    const handleImageFileChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setImageFile(file);
+            // Create preview URL
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setImagePreview(reader.result);
+            };
+            reader.readAsDataURL(file);
+        }
     };
 
     const saveAnimal = async (e) => {
         e.preventDefault();
         setSaving(true);
         try {
+            let imageUrl = form.imageUrl;
+            
+            // If file was selected for upload, upload it first
+            if (imageInputMode === 'upload' && imageFile) {
+                const uploadRes = await adminAPI.uploadImage(imageFile);
+                if (uploadRes.success) {
+                    imageUrl = uploadRes.imageUrl;
+                } else {
+                    throw new Error(uploadRes.message || 'Failed to upload image');
+                }
+            }
+            
+            const animalData = { ...form, imageUrl };
+            
             let res;
             if (editingAnimal) {
-                res = await adminAPI.updateAnimal(editingAnimal.id, form);
+                res = await adminAPI.updateAnimal(editingAnimal.id, animalData);
             } else {
-                res = await adminAPI.createAnimal(form);
+                res = await adminAPI.createAnimal(animalData);
             }
             if (res.success) {
                 await fetchAnimals();
@@ -519,14 +552,87 @@ const AdminAnimals = ({ globalSearch = '' }) => {
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-400 mb-2">Image URL</label>
-                                <input
-                                    type="url"
-                                    value={form.imageUrl}
-                                    onChange={e => setForm({...form, imageUrl: e.target.value})}
-                                    className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-[#8cff65] transition-all"
-                                    placeholder="https://example.com/image.jpg"
-                                />
+                                <label className="block text-sm font-medium text-gray-400 mb-2">Image</label>
+                                
+                                {/* Toggle between URL and Upload */}
+                                <div className="flex gap-2 mb-3">
+                                    <button
+                                        type="button"
+                                        onClick={() => setImageInputMode('url')}
+                                        className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition ${
+                                            imageInputMode === 'url'
+                                                ? 'bg-[#8cff65] text-black'
+                                                : 'bg-[#1e1e1e] border border-[#2a2a2a] text-gray-400 hover:text-white'
+                                        }`}
+                                    >
+                                        URL
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setImageInputMode('upload')}
+                                        className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition ${
+                                            imageInputMode === 'upload'
+                                                ? 'bg-[#8cff65] text-black'
+                                                : 'bg-[#1e1e1e] border border-[#2a2a2a] text-gray-400 hover:text-white'
+                                        }`}
+                                    >
+                                        Upload
+                                    </button>
+                                </div>
+                                
+                                {imageInputMode === 'url' ? (
+                                    <input
+                                        type="url"
+                                        value={form.imageUrl}
+                                        onChange={e => setForm({...form, imageUrl: e.target.value})}
+                                        className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-[#8cff65] transition-all"
+                                        placeholder="https://example.com/image.jpg"
+                                    />
+                                ) : (
+                                    <div className="space-y-3">
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            onChange={handleImageFileChange}
+                                            className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-[#8cff65] file:text-black file:font-medium file:cursor-pointer hover:file:bg-[#7ae857]"
+                                        />
+                                        {imagePreview && (
+                                            <div className="relative">
+                                                <img 
+                                                    src={imagePreview} 
+                                                    alt="Preview" 
+                                                    className="w-full h-40 object-cover rounded-xl"
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setImageFile(null);
+                                                        setImagePreview(null);
+                                                    }}
+                                                    className="absolute top-2 right-2 p-1.5 bg-red-500 rounded-lg text-white hover:bg-red-600"
+                                                >
+                                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4">
+                                                        <line x1="18" y1="6" x2="6" y2="18"/>
+                                                        <line x1="6" y1="6" x2="18" y2="18"/>
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                                
+                                {/* URL Preview */}
+                                {imageInputMode === 'url' && form.imageUrl && (
+                                    <div className="mt-3">
+                                        <img 
+                                            src={form.imageUrl} 
+                                            alt="Preview" 
+                                            className="w-full h-40 object-cover rounded-xl"
+                                            onError={(e) => e.target.style.display = 'none'}
+                                            onLoad={(e) => e.target.style.display = 'block'}
+                                        />
+                                    </div>
+                                )}
                             </div>
 
                             <div>

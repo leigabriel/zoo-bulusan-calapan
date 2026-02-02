@@ -6,6 +6,7 @@ const { protect } = require('../middleware/auth');
 router.get('/animals', userController.getAnimals);
 router.get('/animals/:id', userController.getAnimalById);
 router.get('/events', userController.getEvents);
+router.get('/tickets/availability', userController.getSlotAvailability);
 
 router.use(protect);
 

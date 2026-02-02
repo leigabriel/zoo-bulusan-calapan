@@ -274,6 +274,63 @@ exports.getAllTickets = async (req, res) => {
     }
 };
 
+exports.getTicketById = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const ticket = await Ticket.findById(id);
+
+        if (!ticket) {
+            return res.status(404).json({ success: false, message: 'Ticket not found' });
+        }
+
+        res.json({ success: true, ticket });
+    } catch (error) {
+        console.error('Error getting ticket:', error);
+        res.status(500).json({ success: false, message: 'Error fetching ticket' });
+    }
+};
+
+exports.updateTicketStatus = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { status, paymentStatus, cancellationReason } = req.body;
+
+        const ticket = await Ticket.findById(id);
+        if (!ticket) {
+            return res.status(404).json({ success: false, message: 'Ticket not found' });
+        }
+
+        const validStatuses = ['pending', 'confirmed', 'used', 'cancelled', 'expired'];
+        if (status && !validStatuses.includes(status)) {
+            return res.status(400).json({ success: false, message: 'Invalid status' });
+        }
+
+        const validPaymentStatuses = ['pending', 'paid', 'refunded'];
+        if (paymentStatus && !validPaymentStatuses.includes(paymentStatus)) {
+            return res.status(400).json({ success: false, message: 'Invalid payment status' });
+        }
+
+        const updateData = {};
+        if (status) updateData.status = status;
+        if (paymentStatus) updateData.paymentStatus = paymentStatus;
+        if (status === 'cancelled' && cancellationReason) {
+            updateData.cancellationReason = cancellationReason;
+        }
+        updateData.checkedInBy = req.user.id;
+
+        const updated = await Ticket.updateTicketWithDetails(id, updateData);
+
+        if (!updated) {
+            return res.status(500).json({ success: false, message: 'Failed to update ticket' });
+        }
+
+        res.json({ success: true, message: 'Ticket updated successfully' });
+    } catch (error) {
+        console.error('Error updating ticket status:', error);
+        res.status(500).json({ success: false, message: 'Error updating ticket status' });
+    }
+};
+
 exports.getRevenueReport = async (req, res) => {
     try {
         const { startDate, endDate } = req.query;
@@ -378,6 +435,36 @@ exports.getModelInfo = async (req, res) => {
         res.status(500).json({ 
             success: false, 
             message: 'Error fetching model info' 
+        });
+    }
+};
+
+// Upload image for animals/events
+exports.uploadImage = async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({
+                success: false,
+                message: 'No image file provided'
+            });
+        }
+
+        // Get the backend port/host for the URL
+        const protocol = req.protocol;
+        const host = req.get('host');
+        const imageUrl = `${protocol}://${host}/uploads/${req.file.filename}`;
+
+        res.json({
+            success: true,
+            message: 'Image uploaded successfully',
+            imageUrl: imageUrl,
+            filename: req.file.filename
+        });
+    } catch (error) {
+        console.error('Error uploading image:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error uploading image'
         });
     }
 };

@@ -19,7 +19,8 @@ const Tickets = () => {
         time: '08:00',
         email: user?.email || '',
         phone: '',
-        specialRequests: ''
+        specialRequests: '',
+        paymentMethod: 'pay_at_park'
     });
     const [message, setMessage] = useState({ text: '', type: '' });
     const [isProcessing, setIsProcessing] = useState(false);
@@ -56,13 +57,16 @@ const Tickets = () => {
         }
     };
 
-    const timeSlots = [
-        { value: '08:00', label: '8:00 AM - Morning', available: true },
-        { value: '10:00', label: '10:00 AM - Mid-Morning', available: true },
-        { value: '12:00', label: '12:00 PM - Noon', available: true },
-        { value: '14:00', label: '2:00 PM - Afternoon', available: true },
-        { value: '16:00', label: '4:00 PM - Late Afternoon', available: false }
+    const defaultTimeSlots = [
+        { value: '08:00', label: '8:00 AM - Morning' },
+        { value: '10:00', label: '10:00 AM - Mid-Morning' },
+        { value: '12:00', label: '12:00 PM - Noon' },
+        { value: '14:00', label: '2:00 PM - Afternoon' },
+        { value: '16:00', label: '4:00 PM - Late Afternoon' }
     ];
+    
+    const [timeSlots, setTimeSlots] = useState(defaultTimeSlots.map(slot => ({ ...slot, available: true })));
+    const [slotsLoading, setSlotsLoading] = useState(false);
 
     useEffect(() => {
         let sum = 0;
@@ -86,6 +90,41 @@ const Tickets = () => {
         });
         setCompanions(newCompanions);
     }, [counts, discount]);
+
+    // Fetch slot availability when date changes
+    useEffect(() => {
+        const fetchSlotAvailability = async () => {
+            if (!bookingDetails.date) return;
+            
+            setSlotsLoading(true);
+            try {
+                const response = await userAPI.getSlotAvailability(bookingDetails.date);
+                if (response.success && response.slots) {
+                    // Merge availability data with default slots
+                    setTimeSlots(defaultTimeSlots.map(slot => {
+                        const serverSlot = response.slots.find(s => s.time === slot.value);
+                        return {
+                            ...slot,
+                            available: serverSlot ? serverSlot.available : true,
+                            bookedCount: serverSlot ? serverSlot.bookedCount : 0,
+                            capacity: serverSlot ? serverSlot.capacity : 100
+                        };
+                    }));
+                } else {
+                    // If API doesn't return slots, all are available
+                    setTimeSlots(defaultTimeSlots.map(slot => ({ ...slot, available: true })));
+                }
+            } catch (error) {
+                console.error('Error fetching slot availability:', error);
+                // On error, assume all slots are available
+                setTimeSlots(defaultTimeSlots.map(slot => ({ ...slot, available: true })));
+            } finally {
+                setSlotsLoading(false);
+            }
+        };
+
+        fetchSlotAvailability();
+    }, [bookingDetails.date]);
 
     const getMinDate = () => {
         const today = new Date();
@@ -195,7 +234,14 @@ const Tickets = () => {
                     residents: 'resident'
                 }[type] || type;
 
-                return userAPI.purchaseTicket({ ticketType: mapType, quantity: qty, visitDate: bookingDetails.date });
+                return userAPI.purchaseTicket({ 
+                    ticketType: mapType, 
+                    quantity: qty, 
+                    visitDate: bookingDetails.date,
+                    paymentMethod: total === 0 ? 'free' : bookingDetails.paymentMethod,
+                    visitorEmail: bookingDetails.email,
+                    visitorName: companions[0]?.name || user?.name || 'Guest'
+                });
             });
 
             const results = await Promise.all(purchases);
@@ -216,7 +262,7 @@ const Tickets = () => {
     const resetBooking = () => {
         setCounts({ adults: 0, children: 0, seniors: 0, residents: 0 });
         setCompanions([]);
-        setBookingDetails({ date: '', time: '08:00', email: user?.email || '', phone: '', specialRequests: '' });
+        setBookingDetails({ date: '', time: '08:00', email: user?.email || '', phone: '', specialRequests: '', paymentMethod: 'pay_at_park' });
         setCurrentStep(1);
         setShowConfirmation(false);
         setBookingCode('');
@@ -379,28 +425,37 @@ const Tickets = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                     Select Entry Time
                 </label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3">
-                    {timeSlots.map((slot) => (
-                        <button
-                            key={slot.value}
-                            onClick={() => slot.available && setBookingDetails({ ...bookingDetails, time: slot.value })}
-                            disabled={!slot.available}
-                            className={`p-2.5 sm:p-3 rounded-xl border-2 transition-all text-sm sm:text-base ${
-                                bookingDetails.time === slot.value
-                                    ? 'border-green-500 bg-green-50 text-green-700'
-                                    : slot.available
-                                        ? 'border-gray-200 hover:border-green-300'
-                                        : 'border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed'
-                            }`}
-                        >
-                            <i className={`fas fa-clock mr-2 ${!slot.available && 'opacity-50'}`}></i>
-                            {slot.label}
-                            {!slot.available && (
-                                <span className="block text-xs text-red-400 mt-1">Fully Booked</span>
-                            )}
-                        </button>
-                    ))}
-                </div>
+                {slotsLoading ? (
+                    <div className="flex items-center justify-center py-8">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500"></div>
+                        <span className="ml-3 text-gray-600">Checking availability...</span>
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3">
+                        {timeSlots.map((slot) => (
+                            <button
+                                key={slot.value}
+                                onClick={() => slot.available && setBookingDetails({ ...bookingDetails, time: slot.value })}
+                                disabled={!slot.available}
+                                className={`p-2.5 sm:p-3 rounded-xl border-2 transition-all text-sm sm:text-base ${
+                                    bookingDetails.time === slot.value
+                                        ? 'border-green-500 bg-green-50 text-green-700'
+                                        : slot.available
+                                            ? 'border-gray-200 hover:border-green-300'
+                                            : 'border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed'
+                                }`}
+                            >
+                                <i className={`fas fa-clock mr-2 ${!slot.available && 'opacity-50'}`}></i>
+                                {slot.label}
+                                {!slot.available ? (
+                                    <span className="block text-xs text-red-400 mt-1">Fully Booked</span>
+                                ) : slot.remainingSpots !== undefined && slot.remainingSpots < 20 ? (
+                                    <span className="block text-xs text-orange-500 mt-1">{slot.remainingSpots} spots left</span>
+                                ) : null}
+                            </button>
+                        ))}
+                    </div>
+                )}
             </div>
 
             {/* Contact Information */}
@@ -479,6 +534,109 @@ const Tickets = () => {
                     </div>
                 ))}
             </div>
+
+            {/* Payment Method Selection */}
+            {total > 0 && (
+                <div className="mt-6 pt-6 border-t border-gray-200">
+                    <h3 className="text-lg font-bold text-green-800 mb-4 flex items-center gap-2">
+                        <i className="fas fa-credit-card"></i> Payment Method
+                    </h3>
+                    <div className="grid gap-3">
+                        <label 
+                            className={`flex items-center gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                                bookingDetails.paymentMethod === 'pay_at_park' 
+                                    ? 'border-green-500 bg-green-50' 
+                                    : 'border-gray-200 hover:border-green-300'
+                            }`}
+                        >
+                            <input
+                                type="radio"
+                                name="paymentMethod"
+                                value="pay_at_park"
+                                checked={bookingDetails.paymentMethod === 'pay_at_park'}
+                                onChange={(e) => setBookingDetails(prev => ({ ...prev, paymentMethod: e.target.value }))}
+                                className="w-5 h-5 text-green-600"
+                            />
+                            <div className="flex items-center gap-3 flex-1">
+                                <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                                    <i className="fas fa-building text-xl text-green-600"></i>
+                                </div>
+                                <div>
+                                    <p className="font-semibold text-gray-800">Pay at Bulusan Park</p>
+                                    <p className="text-sm text-gray-500">Pay in cash upon arrival at the park</p>
+                                </div>
+                            </div>
+                        </label>
+
+                        <label 
+                            className={`flex items-center gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                                bookingDetails.paymentMethod === 'gcash' 
+                                    ? 'border-blue-500 bg-blue-50' 
+                                    : 'border-gray-200 hover:border-blue-300'
+                            }`}
+                        >
+                            <input
+                                type="radio"
+                                name="paymentMethod"
+                                value="gcash"
+                                checked={bookingDetails.paymentMethod === 'gcash'}
+                                onChange={(e) => setBookingDetails(prev => ({ ...prev, paymentMethod: e.target.value }))}
+                                className="w-5 h-5 text-blue-600"
+                            />
+                            <div className="flex items-center gap-3 flex-1">
+                                <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+                                    <span className="text-xl font-bold text-blue-600">G</span>
+                                </div>
+                                <div>
+                                    <p className="font-semibold text-gray-800">GCash</p>
+                                    <p className="text-sm text-gray-500">Pay using your GCash wallet</p>
+                                </div>
+                            </div>
+                        </label>
+
+                        <label 
+                            className={`flex items-center gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                                bookingDetails.paymentMethod === 'paypal' 
+                                    ? 'border-indigo-500 bg-indigo-50' 
+                                    : 'border-gray-200 hover:border-indigo-300'
+                            }`}
+                        >
+                            <input
+                                type="radio"
+                                name="paymentMethod"
+                                value="paypal"
+                                checked={bookingDetails.paymentMethod === 'paypal'}
+                                onChange={(e) => setBookingDetails(prev => ({ ...prev, paymentMethod: e.target.value }))}
+                                className="w-5 h-5 text-indigo-600"
+                            />
+                            <div className="flex items-center gap-3 flex-1">
+                                <div className="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center">
+                                    <i className="fab fa-paypal text-xl text-indigo-600"></i>
+                                </div>
+                                <div>
+                                    <p className="font-semibold text-gray-800">PayPal</p>
+                                    <p className="text-sm text-gray-500">Pay securely with PayPal</p>
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+            )}
+
+            {/* Free Ticket Notice */}
+            {total === 0 && companions.length > 0 && (
+                <div className="mt-6 p-4 bg-teal-50 border border-teal-200 rounded-xl">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-teal-100 rounded-full flex items-center justify-center">
+                            <i className="fas fa-gift text-teal-600"></i>
+                        </div>
+                        <div>
+                            <p className="font-semibold text-teal-800">Free Entry!</p>
+                            <p className="text-sm text-teal-600">Your tickets are free! No payment required.</p>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 

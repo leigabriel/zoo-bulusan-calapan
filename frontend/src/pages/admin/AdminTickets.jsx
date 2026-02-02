@@ -86,9 +86,12 @@ const AdminTickets = ({ globalSearch = '' }) => {
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState('all');
     const [dateFilter, setDateFilter] = useState('');
-    const [eventFilter, setEventFilter] = useState('all');
+    const [paymentFilter, setPaymentFilter] = useState('all');
     const [selectedTicket, setSelectedTicket] = useState(null);
     const [showModal, setShowModal] = useState(false);
+    const [showCancelModal, setShowCancelModal] = useState(false);
+    const [cancelReason, setCancelReason] = useState('');
+    const [actionLoading, setActionLoading] = useState(false);
 
     // Mock ticket data - replace with real API call
     const mockTickets = [
@@ -103,33 +106,46 @@ const AdminTickets = ({ globalSearch = '' }) => {
     const events = ['All Events', 'Night Safari Experience', 'Animal Feeding Tour', 'General Admission', 'Wildlife Photography Day', 'Conservation Workshop'];
 
     useEffect(() => {
-        const fetchTickets = async () => {
-            try {
-                setLoading(true);
-                // Try to fetch from API, fallback to mock data
-                try {
-                    const res = await adminAPI.getTickets();
-                    if (res.success && res.tickets) {
-                        setTickets(res.tickets);
-                    } else {
-                        setTickets(mockTickets);
-                    }
-                } catch {
-                    setTickets(mockTickets);
-                }
-            } catch (err) {
-                console.error(err);
-                setError('Failed to load tickets');
-            } finally {
-                setLoading(false);
-            }
-        };
         fetchTickets();
     }, []);
 
+    const fetchTickets = async () => {
+        try {
+            setLoading(true);
+            const res = await adminAPI.getTickets();
+            if (res.success && res.tickets) {
+                // Normalize ticket data
+                const normalizedTickets = res.tickets.map(t => ({
+                    id: t.id,
+                    code: t.booking_reference || t.code,
+                    qrCode: t.qr_code,
+                    type: t.ticket_type || t.type,
+                    purchasedBy: t.visitor_name || t.purchasedBy || `User #${t.user_id}`,
+                    email: t.visitor_email || t.email,
+                    price: t.total_amount || t.price,
+                    purchaseDate: t.created_at,
+                    visitDate: t.visit_date,
+                    status: t.status,
+                    paymentStatus: t.payment_status || 'pending',
+                    paymentMethod: t.payment_method || 'cash',
+                    quantity: t.quantity || 1,
+                    notes: t.notes
+                }));
+                setTickets(normalizedTickets);
+            }
+        } catch (err) {
+            console.error(err);
+            setError('Failed to load tickets');
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const getStatusBadge = (status) => {
         switch (status?.toLowerCase()) {
+            case 'confirmed':
             case 'active': return 'bg-[#8cff65]/20 text-[#8cff65] border-[#8cff65]/30';
+            case 'pending': return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
             case 'used': return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
             case 'expired': return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
             case 'cancelled': return 'bg-red-500/20 text-red-400 border-red-500/30';
@@ -137,16 +153,42 @@ const AdminTickets = ({ globalSearch = '' }) => {
         }
     };
 
-    const updateTicketStatus = async (ticketId, newStatus) => {
+    const getPaymentBadge = (status) => {
+        switch (status?.toLowerCase()) {
+            case 'paid': return 'bg-[#8cff65]/20 text-[#8cff65] border-[#8cff65]/30';
+            case 'pending': return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
+            case 'refunded': return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
+            default: return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
+        }
+    };
+
+    const updateTicketStatus = async (ticketId, newStatus, reason = null) => {
         try {
-            // Update locally for now
-            setTickets(tickets.map(t => t.id === ticketId ? { ...t, status: newStatus } : t));
-            if (selectedTicket?.id === ticketId) {
-                setSelectedTicket({ ...selectedTicket, status: newStatus });
+            setActionLoading(true);
+            const statusData = { status: newStatus };
+            if (reason) statusData.cancellationReason = reason;
+            
+            const res = await adminAPI.updateTicketStatus(ticketId, statusData);
+            if (res.success) {
+                // Update locally
+                setTickets(tickets.map(t => t.id === ticketId ? { ...t, status: newStatus } : t));
+                if (selectedTicket?.id === ticketId) {
+                    setSelectedTicket({ ...selectedTicket, status: newStatus });
+                }
+                setShowCancelModal(false);
+                setCancelReason('');
             }
         } catch (err) {
             console.error(err);
             alert('Failed to update ticket status');
+        } finally {
+            setActionLoading(false);
+        }
+    };
+
+    const handleCancelTicket = () => {
+        if (selectedTicket) {
+            updateTicketStatus(selectedTicket.id, 'cancelled', cancelReason);
         }
     };
 
@@ -159,14 +201,15 @@ const AdminTickets = ({ globalSearch = '' }) => {
             ticket.purchasedBy?.toLowerCase().includes(effectiveSearch.toLowerCase()) ||
             ticket.email?.toLowerCase().includes(effectiveSearch.toLowerCase());
         const matchesStatus = statusFilter === 'all' || ticket.status === statusFilter;
-        const matchesDate = !dateFilter || ticket.visitDate === dateFilter;
-        const matchesEvent = eventFilter === 'all' || ticket.event === eventFilter;
-        return matchesSearch && matchesStatus && matchesDate && matchesEvent;
+        const matchesDate = !dateFilter || ticket.visitDate?.split('T')[0] === dateFilter;
+        const matchesPayment = paymentFilter === 'all' || ticket.paymentStatus === paymentFilter;
+        return matchesSearch && matchesStatus && matchesDate && matchesPayment;
     });
 
     const ticketStats = {
         total: tickets.length,
-        active: tickets.filter(t => t.status === 'active').length,
+        pending: tickets.filter(t => t.status === 'pending').length,
+        confirmed: tickets.filter(t => t.status === 'confirmed' || t.status === 'active').length,
         used: tickets.filter(t => t.status === 'used').length,
         cancelled: tickets.filter(t => t.status === 'cancelled').length,
     };
@@ -198,7 +241,7 @@ const AdminTickets = ({ globalSearch = '' }) => {
     return (
         <div className="space-y-6">
             {/* Stats Cards */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                 <div className="bg-[#141414] border border-[#2a2a2a] rounded-xl p-4">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-[#8cff65]/10 rounded-xl flex items-center justify-center text-[#8cff65]">
@@ -212,12 +255,25 @@ const AdminTickets = ({ globalSearch = '' }) => {
                 </div>
                 <div className="bg-[#141414] border border-[#2a2a2a] rounded-xl p-4">
                     <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-yellow-500/10 rounded-xl flex items-center justify-center text-yellow-400">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4">
+                                <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <p className="text-2xl font-bold text-white">{ticketStats.pending}</p>
+                            <p className="text-xs text-gray-500">Pending</p>
+                        </div>
+                    </div>
+                </div>
+                <div className="bg-[#141414] border border-[#2a2a2a] rounded-xl p-4">
+                    <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-[#8cff65]/10 rounded-xl flex items-center justify-center text-[#8cff65]">
                             <CheckCircleIcon />
                         </div>
                         <div>
-                            <p className="text-2xl font-bold text-white">{ticketStats.active}</p>
-                            <p className="text-xs text-gray-500">Active</p>
+                            <p className="text-2xl font-bold text-white">{ticketStats.confirmed}</p>
+                            <p className="text-xs text-gray-500">Confirmed</p>
                         </div>
                     </div>
                 </div>
@@ -274,7 +330,8 @@ const AdminTickets = ({ globalSearch = '' }) => {
                                     className="appearance-none bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl py-2.5 pl-10 pr-8 text-sm text-white focus:outline-none focus:border-[#8cff65] cursor-pointer"
                                 >
                                     <option value="all">All Status</option>
-                                    <option value="active">Active</option>
+                                    <option value="pending">Pending</option>
+                                    <option value="confirmed">Confirmed</option>
                                     <option value="used">Used</option>
                                     <option value="expired">Expired</option>
                                     <option value="cancelled">Cancelled</option>
@@ -284,16 +341,17 @@ const AdminTickets = ({ globalSearch = '' }) => {
                                 </div>
                             </div>
 
-                            {/* Event Filter */}
+                            {/* Payment Filter */}
                             <div className="relative">
                                 <select
-                                    value={eventFilter}
-                                    onChange={(e) => setEventFilter(e.target.value)}
-                                    className="appearance-none bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl py-2.5 pl-10 pr-8 text-sm text-white focus:outline-none focus:border-[#8cff65] cursor-pointer max-w-[200px]"
+                                    value={paymentFilter}
+                                    onChange={(e) => setPaymentFilter(e.target.value)}
+                                    className="appearance-none bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl py-2.5 pl-10 pr-8 text-sm text-white focus:outline-none focus:border-[#8cff65] cursor-pointer"
                                 >
-                                    {events.map((event, i) => (
-                                        <option key={i} value={i === 0 ? 'all' : event}>{event}</option>
-                                    ))}
+                                    <option value="all">All Payments</option>
+                                    <option value="pending">Payment Pending</option>
+                                    <option value="paid">Paid</option>
+                                    <option value="refunded">Refunded</option>
                                 </select>
                                 <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none">
                                     <CalendarIcon />
@@ -310,7 +368,7 @@ const AdminTickets = ({ globalSearch = '' }) => {
 
                             {/* Refresh Button */}
                             <button
-                                onClick={() => window.location.reload()}
+                                onClick={fetchTickets}
                                 className="p-2.5 bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl text-gray-400 hover:text-white hover:border-[#8cff65]/50 transition-all"
                                 title="Refresh"
                             >
@@ -335,10 +393,10 @@ const AdminTickets = ({ globalSearch = '' }) => {
                             <tr>
                                 <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Ticket Code</th>
                                 <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Customer</th>
-                                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Event</th>
                                 <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Type</th>
                                 <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Visit Date</th>
                                 <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Price</th>
+                                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Payment</th>
                                 <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Status</th>
                                 <th className="px-6 py-4 text-right text-xs font-semibold text-gray-400 uppercase tracking-wider">Actions</th>
                             </tr>
@@ -365,14 +423,23 @@ const AdminTickets = ({ globalSearch = '' }) => {
                                                 <p className="text-gray-500 text-xs">{ticket.email}</p>
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4 text-gray-300 max-w-[180px] truncate">{ticket.event}</td>
                                         <td className="px-6 py-4">
-                                            <span className="px-2 py-1 bg-[#1e1e1e] border border-[#2a2a2a] text-gray-300 text-xs rounded-lg">
+                                            <span className="px-2 py-1 bg-[#1e1e1e] border border-[#2a2a2a] text-gray-300 text-xs rounded-lg capitalize">
                                                 {ticket.type} × {ticket.quantity}
                                             </span>
                                         </td>
-                                        <td className="px-6 py-4 text-gray-300">{ticket.visitDate}</td>
-                                        <td className="px-6 py-4 text-white font-medium">₱{(ticket.price * ticket.quantity).toLocaleString()}</td>
+                                        <td className="px-6 py-4 text-gray-300">{ticket.visitDate?.split('T')[0]}</td>
+                                        <td className="px-6 py-4 text-white font-medium">
+                                            {ticket.price === 0 ? 'FREE' : `₱${ticket.price?.toLocaleString()}`}
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <div className="flex flex-col gap-1">
+                                                <span className="text-white capitalize text-sm">{ticket.paymentMethod || 'cash'}</span>
+                                                <span className={`inline-flex w-fit px-2 py-0.5 text-xs font-medium rounded-full border capitalize ${getPaymentBadge(ticket.paymentStatus)}`}>
+                                                    {ticket.paymentStatus}
+                                                </span>
+                                            </div>
+                                        </td>
                                         <td className="px-6 py-4">
                                             <span className={`inline-flex px-3 py-1 text-xs font-medium rounded-full border capitalize ${getStatusBadge(ticket.status)}`}>
                                                 {ticket.status}
@@ -387,7 +454,16 @@ const AdminTickets = ({ globalSearch = '' }) => {
                                                 >
                                                     <EyeIcon />
                                                 </button>
-                                                {ticket.status === 'active' && (
+                                                {ticket.status === 'pending' && (
+                                                    <button
+                                                        onClick={() => updateTicketStatus(ticket.id, 'confirmed')}
+                                                        className="p-2 bg-[#1e1e1e] hover:bg-[#8cff65]/10 border border-[#2a2a2a] hover:border-[#8cff65]/50 text-gray-400 hover:text-[#8cff65] rounded-lg transition-all"
+                                                        title="Confirm ticket"
+                                                    >
+                                                        <CheckCircleIcon />
+                                                    </button>
+                                                )}
+                                                {(ticket.status === 'confirmed' || ticket.status === 'active') && (
                                                     <button
                                                         onClick={() => updateTicketStatus(ticket.id, 'used')}
                                                         className="p-2 bg-[#1e1e1e] hover:bg-blue-500/10 border border-[#2a2a2a] hover:border-blue-500/50 text-gray-400 hover:text-blue-400 rounded-lg transition-all"
@@ -416,7 +492,7 @@ const AdminTickets = ({ globalSearch = '' }) => {
             {/* Ticket Detail Modal */}
             {showModal && selectedTicket && (
                 <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl w-full max-w-lg">
+                    <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
                         {/* Modal Header */}
                         <div className="p-6 border-b border-[#2a2a2a] flex items-center justify-between">
                             <div className="flex items-center gap-3">
@@ -438,13 +514,32 @@ const AdminTickets = ({ globalSearch = '' }) => {
 
                         {/* Modal Content */}
                         <div className="p-6 space-y-4">
-                            {/* Status Badge */}
-                            <div className="flex items-center justify-between">
-                                <span className="text-gray-400">Status</span>
-                                <span className={`inline-flex px-3 py-1 text-sm font-medium rounded-full border capitalize ${getStatusBadge(selectedTicket.status)}`}>
-                                    {selectedTicket.status}
-                                </span>
+                            {/* Status Badges */}
+                            <div className="flex items-center justify-between gap-4">
+                                <div>
+                                    <span className="text-gray-400 text-sm">Status</span>
+                                    <span className={`ml-2 inline-flex px-3 py-1 text-sm font-medium rounded-full border capitalize ${getStatusBadge(selectedTicket.status)}`}>
+                                        {selectedTicket.status}
+                                    </span>
+                                </div>
+                                <div>
+                                    <span className="text-gray-400 text-sm">Payment</span>
+                                    <span className={`ml-2 inline-flex px-3 py-1 text-sm font-medium rounded-full border capitalize ${getPaymentBadge(selectedTicket.paymentStatus)}`}>
+                                        {selectedTicket.paymentStatus}
+                                    </span>
+                                </div>
                             </div>
+
+                            {/* QR Code */}
+                            {selectedTicket.qrCode && (
+                                <div className="flex justify-center p-4 bg-white rounded-xl">
+                                    <img 
+                                        src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${selectedTicket.qrCode}`}
+                                        alt="QR Code"
+                                        className="w-32 h-32"
+                                    />
+                                </div>
+                            )}
 
                             {/* Customer Info */}
                             <div className="p-4 bg-[#1e1e1e] rounded-xl space-y-3">
@@ -466,12 +561,8 @@ const AdminTickets = ({ globalSearch = '' }) => {
                                 <h4 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">Ticket Information</h4>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                        <p className="text-xs text-gray-500">Event</p>
-                                        <p className="text-white">{selectedTicket.event}</p>
-                                    </div>
-                                    <div>
                                         <p className="text-xs text-gray-500">Type</p>
-                                        <p className="text-white">{selectedTicket.type}</p>
+                                        <p className="text-white capitalize">{selectedTicket.type}</p>
                                     </div>
                                     <div>
                                         <p className="text-xs text-gray-500">Quantity</p>
@@ -479,49 +570,112 @@ const AdminTickets = ({ globalSearch = '' }) => {
                                     </div>
                                     <div>
                                         <p className="text-xs text-gray-500">Total Price</p>
-                                        <p className="text-[#8cff65] font-medium">₱{(selectedTicket.price * selectedTicket.quantity).toLocaleString()}</p>
+                                        <p className="text-[#8cff65] font-medium">
+                                            {selectedTicket.price === 0 ? 'FREE' : `₱${selectedTicket.price?.toLocaleString()}`}
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <p className="text-xs text-gray-500">Payment Method</p>
+                                        <p className="text-white capitalize">{selectedTicket.paymentMethod}</p>
                                     </div>
                                     <div>
                                         <p className="text-xs text-gray-500">Purchase Date</p>
-                                        <p className="text-white">{selectedTicket.purchaseDate}</p>
+                                        <p className="text-white">{selectedTicket.purchaseDate?.split('T')[0]}</p>
                                     </div>
                                     <div>
                                         <p className="text-xs text-gray-500">Visit Date</p>
-                                        <p className="text-white">{selectedTicket.visitDate}</p>
+                                        <p className="text-white">{selectedTicket.visitDate?.split('T')[0]}</p>
                                     </div>
                                 </div>
                             </div>
 
                             {/* Action Buttons */}
-                            <div className="flex gap-3 pt-2">
-                                {selectedTicket.status === 'active' && (
-                                    <>
-                                        <button
-                                            onClick={() => {
-                                                updateTicketStatus(selectedTicket.id, 'used');
-                                            }}
-                                            className="flex-1 py-3 bg-gradient-to-r from-[#8cff65] to-[#4ade80] text-[#0a0a0a] font-semibold rounded-xl hover:from-[#9dff7a] hover:to-[#5ceb91] transition-all"
-                                        >
-                                            Mark as Used
-                                        </button>
-                                        <button
-                                            onClick={() => {
-                                                updateTicketStatus(selectedTicket.id, 'cancelled');
-                                            }}
-                                            className="flex-1 py-3 bg-red-500/10 border border-red-500/30 text-red-400 font-semibold rounded-xl hover:bg-red-500/20 transition-all"
-                                        >
-                                            Cancel Ticket
-                                        </button>
-                                    </>
-                                )}
-                                {selectedTicket.status !== 'active' && (
+                            <div className="flex flex-wrap gap-3 pt-2">
+                                {selectedTicket.status === 'pending' && (
                                     <button
-                                        onClick={() => setShowModal(false)}
-                                        className="flex-1 py-3 bg-[#1e1e1e] hover:bg-[#2a2a2a] text-gray-300 font-medium rounded-xl transition-all"
+                                        onClick={() => updateTicketStatus(selectedTicket.id, 'confirmed')}
+                                        disabled={actionLoading}
+                                        className="flex-1 py-3 bg-gradient-to-r from-[#8cff65] to-[#4ade80] text-[#0a0a0a] font-semibold rounded-xl hover:from-[#9dff7a] hover:to-[#5ceb91] transition-all disabled:opacity-50"
                                     >
-                                        Close
+                                        Confirm Ticket
                                     </button>
                                 )}
+                                {(selectedTicket.status === 'confirmed' || selectedTicket.status === 'active') && (
+                                    <button
+                                        onClick={() => updateTicketStatus(selectedTicket.id, 'used')}
+                                        disabled={actionLoading}
+                                        className="flex-1 py-3 bg-blue-500/20 border border-blue-500/30 text-blue-400 font-semibold rounded-xl hover:bg-blue-500/30 transition-all disabled:opacity-50"
+                                    >
+                                        Mark as Used
+                                    </button>
+                                )}
+                                {selectedTicket.status !== 'cancelled' && selectedTicket.status !== 'used' && selectedTicket.status !== 'expired' && (
+                                    <button
+                                        onClick={() => setShowCancelModal(true)}
+                                        disabled={actionLoading}
+                                        className="flex-1 py-3 bg-red-500/10 border border-red-500/30 text-red-400 font-semibold rounded-xl hover:bg-red-500/20 transition-all disabled:opacity-50"
+                                    >
+                                        Cancel Ticket
+                                    </button>
+                                )}
+                                {selectedTicket.status !== 'expired' && selectedTicket.status !== 'cancelled' && selectedTicket.status !== 'used' && (
+                                    <button
+                                        onClick={() => updateTicketStatus(selectedTicket.id, 'expired')}
+                                        disabled={actionLoading}
+                                        className="flex-1 py-3 bg-gray-500/10 border border-gray-500/30 text-gray-400 font-semibold rounded-xl hover:bg-gray-500/20 transition-all disabled:opacity-50"
+                                    >
+                                        Mark Expired
+                                    </button>
+                                )}
+                            </div>
+                            <button
+                                onClick={() => setShowModal(false)}
+                                className="w-full py-3 bg-[#1e1e1e] hover:bg-[#2a2a2a] text-gray-300 font-medium rounded-xl transition-all"
+                            >
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Cancel Ticket Modal */}
+            {showCancelModal && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
+                    <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl w-full max-w-md">
+                        <div className="p-6 border-b border-[#2a2a2a]">
+                            <h3 className="text-xl font-bold text-white">Cancel Ticket</h3>
+                            <p className="text-gray-400 text-sm mt-1">Please provide a reason for cancellation</p>
+                        </div>
+                        <div className="p-6 space-y-4">
+                            <textarea
+                                value={cancelReason}
+                                onChange={(e) => setCancelReason(e.target.value)}
+                                placeholder="Enter cancellation reason..."
+                                rows={4}
+                                className="w-full px-4 py-3 bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl text-white placeholder:text-gray-500 focus:outline-none focus:border-[#8cff65]/50 resize-none"
+                            />
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={() => {
+                                        setShowCancelModal(false);
+                                        setCancelReason('');
+                                    }}
+                                    className="flex-1 py-3 bg-[#1e1e1e] hover:bg-[#2a2a2a] text-gray-300 font-medium rounded-xl transition-all"
+                                >
+                                    Go Back
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        updateTicketStatus(selectedTicket.id, 'cancelled', cancelReason);
+                                        setShowCancelModal(false);
+                                        setCancelReason('');
+                                    }}
+                                    disabled={actionLoading}
+                                    className="flex-1 py-3 bg-red-500/20 border border-red-500/30 text-red-400 font-semibold rounded-xl hover:bg-red-500/30 transition-all disabled:opacity-50"
+                                >
+                                    {actionLoading ? 'Cancelling...' : 'Confirm Cancel'}
+                                </button>
                             </div>
                         </div>
                     </div>

@@ -25,6 +25,10 @@ import AdminProfile from './pages/admin/AdminProfile';
 import AdminHelpCenter from './pages/admin/AdminHelpCenter';
 import AdminTickets from './pages/admin/AdminTickets';
 import StaffDashboard from './pages/staff/StaffDashboard';
+import StaffEvents from './pages/staff/StaffEvents';
+import StaffTickets from './pages/staff/StaffTickets';
+import StaffAnimals from './pages/staff/StaffAnimals';
+import StaffUsers from './pages/staff/StaffUsers';
 import TicketScanner from './pages/staff/TicketScanner';
 import AdminLayout from './components/layout/AdminLayout';
 import StaffLayout from './components/layout/StaffLayout';
@@ -191,6 +195,34 @@ function AppRoutes() {
                 <ProtectedRoute allowedRoles={['admin', 'staff', 'vet']}>
                     <StaffLayout>
                         <StaffDashboard />
+                    </StaffLayout>
+                </ProtectedRoute>
+            } />
+            <Route path="/staff/events" element={
+                <ProtectedRoute allowedRoles={['admin', 'staff', 'vet']}>
+                    <StaffLayout>
+                        <StaffEvents />
+                    </StaffLayout>
+                </ProtectedRoute>
+            } />
+            <Route path="/staff/tickets" element={
+                <ProtectedRoute allowedRoles={['admin', 'staff']}>
+                    <StaffLayout>
+                        <StaffTickets />
+                    </StaffLayout>
+                </ProtectedRoute>
+            } />
+            <Route path="/staff/animals" element={
+                <ProtectedRoute allowedRoles={['admin', 'staff', 'vet']}>
+                    <StaffLayout>
+                        <StaffAnimals />
+                    </StaffLayout>
+                </ProtectedRoute>
+            } />
+            <Route path="/staff/users" element={
+                <ProtectedRoute allowedRoles={['admin', 'staff']}>
+                    <StaffLayout>
+                        <StaffUsers />
                     </StaffLayout>
                 </ProtectedRoute>
             } />

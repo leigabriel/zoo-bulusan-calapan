@@ -63,7 +63,7 @@ const AdminUsers = ({ globalSearch = '' }) => {
     const [showModal, setShowModal] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [roleFilter, setRoleFilter] = useState('all');
-    const [form, setForm] = useState({ firstName: '', lastName: '', email: '', role: 'user', password: '' });
+    const [form, setForm] = useState({ firstName: '', lastName: '', username: '', email: '', role: 'user', password: '' });
     const [saving, setSaving] = useState(false);
     const [deleteConfirm, setDeleteConfirm] = useState(null);
 
@@ -86,7 +86,7 @@ const AdminUsers = ({ globalSearch = '' }) => {
 
     const openCreateModal = () => {
         setEditingUser(null);
-        setForm({ firstName: '', lastName: '', email: '', role: 'user', password: '' });
+        setForm({ firstName: '', lastName: '', username: '', email: '', role: 'user', password: '' });
         setShowModal(true);
     };
 
@@ -94,7 +94,8 @@ const AdminUsers = ({ globalSearch = '' }) => {
         setEditingUser(user);
         setForm({ 
             firstName: user.firstName || user.first_name || '', 
-            lastName: user.lastName || user.last_name || '', 
+            lastName: user.lastName || user.last_name || '',
+            username: user.username || '',
             email: user.email || '', 
             role: user.role || 'user',
             password: ''
@@ -105,7 +106,7 @@ const AdminUsers = ({ globalSearch = '' }) => {
     const closeModal = () => {
         setShowModal(false);
         setEditingUser(null);
-        setForm({ firstName: '', lastName: '', email: '', role: 'user', password: '' });
+        setForm({ firstName: '', lastName: '', username: '', email: '', role: 'user', password: '' });
     };
 
     const saveUser = async (e) => {
@@ -407,6 +408,19 @@ const AdminUsers = ({ globalSearch = '' }) => {
                                         required
                                     />
                                 </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-400 mb-2">Username</label>
+                                <input
+                                    type="text"
+                                    value={form.username}
+                                    onChange={e => setForm({...form, username: sanitizeInput(e.target.value)})}
+                                    className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-[#8cff65] transition-all"
+                                    placeholder="johndoe123"
+                                    required
+                                    disabled={!!editingUser}
+                                />
                             </div>
 
                             <div>

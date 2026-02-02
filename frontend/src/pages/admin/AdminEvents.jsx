@@ -97,6 +97,22 @@ const AdminEvents = () => {
     });
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState('');
+    const [sidebarView, setSidebarView] = useState('upcoming'); // 'upcoming' or 'past'
+    const [imageInputMode, setImageInputMode] = useState('url'); // 'url' or 'upload'
+    const [imageFile, setImageFile] = useState(null);
+    const [imagePreview, setImagePreview] = useState(null);
+
+    const handleImageFileChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setImageFile(file);
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setImagePreview(reader.result);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
 
     useEffect(() => {
         fetchEvents();
@@ -227,13 +243,25 @@ const AdminEvents = () => {
 
         setSaving(true);
         try {
+            let imageUrl = formData.imageUrl;
+            
+            // If file was selected for upload, upload it first
+            if (imageInputMode === 'upload' && imageFile) {
+                const uploadRes = await adminAPI.uploadImage(imageFile);
+                if (uploadRes.success) {
+                    imageUrl = uploadRes.imageUrl;
+                } else {
+                    throw new Error(uploadRes.message || 'Failed to upload image');
+                }
+            }
+            
             const eventData = {
                 title: formData.title,
                 description: formData.description,
                 eventDate: formData.eventDate,
                 startTime: formData.startTime || null,
                 endTime: formData.endTime || null,
-                imageUrl: formData.imageUrl || null,
+                imageUrl: imageUrl || null,
                 color: formData.color,
                 status: formData.status
             };
@@ -298,6 +326,9 @@ const AdminEvents = () => {
             status: 'upcoming'
         });
         setError('');
+        setImageInputMode('url');
+        setImageFile(null);
+        setImagePreview(null);
     };
 
     const handleViewChange = (view) => {
@@ -336,6 +367,16 @@ const AdminEvents = () => {
         .filter(e => new Date(e.extendedProps.eventDate + 'T00:00:00') >= new Date(new Date().toDateString()))
         .sort((a, b) => new Date(a.start) - new Date(b.start))
         .slice(0, 8);
+
+    // Get past events for sidebar
+    const pastEvents = events
+        .filter(e => {
+            const eventDate = new Date(e.extendedProps.eventDate + 'T00:00:00');
+            const today = new Date(new Date().toDateString());
+            return eventDate < today || e.extendedProps.status === 'completed' || e.extendedProps.status === 'cancelled';
+        })
+        .sort((a, b) => new Date(b.start) - new Date(a.start))
+        .slice(0, 10);
 
     // Get status badge style
     const getStatusStyle = (status) => {
@@ -561,68 +602,146 @@ const AdminEvents = () => {
                     />
                 </div>
 
-                {/* Sidebar - Upcoming & Ongoing Events */}
+                {/* Sidebar - Event History */}
                 <div className="xl:col-span-1 space-y-6">
-                    {/* Upcoming/Ongoing Events Panel */}
+                    {/* Events Panel with Tabs */}
                     <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl p-5">
-                        <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                            <CalendarIcon />
-                            Upcoming Events
-                        </h3>
+                        {/* Tab Switcher */}
+                        <div className="flex items-center gap-2 mb-4">
+                            <button
+                                onClick={() => setSidebarView('upcoming')}
+                                className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition ${
+                                    sidebarView === 'upcoming'
+                                        ? 'bg-[#8cff65] text-black'
+                                        : 'bg-[#1e1e1e] text-gray-400 hover:text-white'
+                                }`}
+                            >
+                                Upcoming ({upcomingOngoingEvents.length})
+                            </button>
+                            <button
+                                onClick={() => setSidebarView('past')}
+                                className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition ${
+                                    sidebarView === 'past'
+                                        ? 'bg-[#8cff65] text-black'
+                                        : 'bg-[#1e1e1e] text-gray-400 hover:text-white'
+                                }`}
+                            >
+                                Past ({pastEvents.length})
+                            </button>
+                        </div>
                         
-                        {upcomingOngoingEvents.length === 0 ? (
-                            <div className="text-center py-8">
-                                <div className="text-gray-500 mb-2">
-                                    <CalendarIcon />
-                                </div>
-                                <p className="text-gray-500 text-sm">No upcoming events</p>
-                            </div>
-                        ) : (
-                            <div className="space-y-3">
-                                {upcomingOngoingEvents.map((event) => (
-                                    <div
-                                        key={event.id}
-                                        onClick={() => {
-                                            setSelectedEvent(event);
-                                            setFormData({
-                                                title: event.title,
-                                                description: event.extendedProps.description || '',
-                                                eventDate: event.extendedProps.eventDate,
-                                                startTime: event.extendedProps.startTime || '',
-                                                endTime: event.extendedProps.endTime || '',
-                                                imageUrl: event.extendedProps.imageUrl || '',
-                                                color: event.extendedProps.color || '#22c55e',
-                                                status: event.extendedProps.status || 'upcoming'
-                                            });
-                                            setModalMode('view');
-                                            setShowModal(true);
-                                        }}
-                                        className="p-3 bg-[#1e1e1e] rounded-xl hover:bg-[#252525] transition cursor-pointer border-l-4 group"
-                                        style={{ borderColor: event.backgroundColor }}
-                                    >
-                                        <div className="flex items-start justify-between gap-2">
-                                            <p className="font-medium text-white text-sm group-hover:text-[#8cff65] transition line-clamp-1">
-                                                {event.title}
-                                            </p>
-                                            <span className={`px-2 py-0.5 text-[10px] font-medium rounded-full border capitalize whitespace-nowrap ${getStatusStyle(event.extendedProps.status)}`}>
-                                                {event.extendedProps.status}
-                                            </span>
-                                        </div>
-                                        <div className="flex items-center gap-3 text-xs text-gray-500 mt-2">
-                                            <span className="flex items-center gap-1">
-                                                <CalendarIcon />
-                                                {new Date(event.extendedProps.eventDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                                            </span>
-                                            {event.extendedProps.startTime && (
-                                                <span className="flex items-center gap-1">
-                                                    <ClockIcon />
-                                                    {formatTime(event.extendedProps.startTime)}
-                                                </span>
-                                            )}
-                                        </div>
+                        {sidebarView === 'upcoming' ? (
+                            // Upcoming Events
+                            upcomingOngoingEvents.length === 0 ? (
+                                <div className="text-center py-8">
+                                    <div className="text-gray-500 mb-2">
+                                        <CalendarIcon />
                                     </div>
-                                ))}
-                            </div>
+                                    <p className="text-gray-500 text-sm">No upcoming events</p>
+                                </div>
+                            ) : (
+                                <div className="space-y-3 max-h-[400px] overflow-y-auto">
+                                    {upcomingOngoingEvents.map((event) => (
+                                        <div
+                                            key={event.id}
+                                            onClick={() => {
+                                                setSelectedEvent(event);
+                                                setFormData({
+                                                    title: event.title,
+                                                    description: event.extendedProps.description || '',
+                                                    eventDate: event.extendedProps.eventDate,
+                                                    startTime: event.extendedProps.startTime || '',
+                                                    endTime: event.extendedProps.endTime || '',
+                                                    imageUrl: event.extendedProps.imageUrl || '',
+                                                    color: event.extendedProps.color || '#22c55e',
+                                                    status: event.extendedProps.status || 'upcoming'
+                                                });
+                                                setModalMode('view');
+                                                setShowModal(true);
+                                            }}
+                                            className="p-3 bg-[#1e1e1e] rounded-xl hover:bg-[#252525] transition cursor-pointer border-l-4 group"
+                                            style={{ borderColor: event.backgroundColor }}
+                                        >
+                                            <div className="flex items-start justify-between gap-2">
+                                                <p className="font-medium text-white text-sm group-hover:text-[#8cff65] transition line-clamp-1">
+                                                    {event.title}
+                                                </p>
+                                                <span className={`px-2 py-0.5 text-[10px] font-medium rounded-full border capitalize whitespace-nowrap ${getStatusStyle(event.extendedProps.status)}`}>
+                                                    {event.extendedProps.status}
+                                                </span>
+                                            </div>
+                                            <div className="flex items-center gap-3 text-xs text-gray-500 mt-2">
+                                                <span className="flex items-center gap-1">
+                                                    <CalendarIcon />
+                                                    {new Date(event.extendedProps.eventDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                                </span>
+                                                {event.extendedProps.startTime && (
+                                                    <span className="flex items-center gap-1">
+                                                        <ClockIcon />
+                                                        {formatTime(event.extendedProps.startTime)}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )
+                        ) : (
+                            // Past Events
+                            pastEvents.length === 0 ? (
+                                <div className="text-center py-8">
+                                    <div className="text-gray-500 mb-2">
+                                        <CalendarIcon />
+                                    </div>
+                                    <p className="text-gray-500 text-sm">No past events</p>
+                                </div>
+                            ) : (
+                                <div className="space-y-3 max-h-[400px] overflow-y-auto">
+                                    {pastEvents.map((event) => (
+                                        <div
+                                            key={event.id}
+                                            onClick={() => {
+                                                setSelectedEvent(event);
+                                                setFormData({
+                                                    title: event.title,
+                                                    description: event.extendedProps.description || '',
+                                                    eventDate: event.extendedProps.eventDate,
+                                                    startTime: event.extendedProps.startTime || '',
+                                                    endTime: event.extendedProps.endTime || '',
+                                                    imageUrl: event.extendedProps.imageUrl || '',
+                                                    color: event.extendedProps.color || '#22c55e',
+                                                    status: event.extendedProps.status || 'completed'
+                                                });
+                                                setModalMode('view');
+                                                setShowModal(true);
+                                            }}
+                                            className="p-3 bg-[#1e1e1e] rounded-xl hover:bg-[#252525] transition cursor-pointer border-l-4 group opacity-75"
+                                            style={{ borderColor: event.backgroundColor }}
+                                        >
+                                            <div className="flex items-start justify-between gap-2">
+                                                <p className="font-medium text-white text-sm group-hover:text-[#8cff65] transition line-clamp-1">
+                                                    {event.title}
+                                                </p>
+                                                <span className={`px-2 py-0.5 text-[10px] font-medium rounded-full border capitalize whitespace-nowrap ${getStatusStyle(event.extendedProps.status)}`}>
+                                                    {event.extendedProps.status || 'completed'}
+                                                </span>
+                                            </div>
+                                            <div className="flex items-center gap-3 text-xs text-gray-500 mt-2">
+                                                <span className="flex items-center gap-1">
+                                                    <CalendarIcon />
+                                                    {new Date(event.extendedProps.eventDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                                </span>
+                                                {event.extendedProps.startTime && (
+                                                    <span className="flex items-center gap-1">
+                                                        <ClockIcon />
+                                                        {formatTime(event.extendedProps.startTime)}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )
                         )}
                     </div>
 
@@ -836,7 +955,7 @@ const AdminEvents = () => {
                                     </div>
                                 </div>
 
-                                {/* Event Image URL */}
+                                {/* Event Image - URL or Upload */}
                                 <div>
                                     <label className="block text-sm font-medium text-gray-300 mb-2">
                                         <span className="flex items-center gap-2">
@@ -845,25 +964,86 @@ const AdminEvents = () => {
                                                 <circle cx="8.5" cy="8.5" r="1.5"/>
                                                 <polyline points="21 15 16 10 5 21"/>
                                             </svg>
-                                            Event Image URL
+                                            Event Image
                                         </span>
                                     </label>
-                                    <input
-                                        type="url"
-                                        value={formData.imageUrl}
-                                        onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
-                                        placeholder="https://example.com/image.jpg"
-                                        className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-[#8cff65] transition"
-                                    />
-                                    {formData.imageUrl && (
-                                        <div className="mt-2 rounded-lg overflow-hidden h-24">
-                                            <img 
-                                                src={formData.imageUrl} 
-                                                alt="Preview" 
-                                                className="w-full h-full object-cover"
-                                                onError={(e) => { e.target.style.display = 'none'; }}
+                                    
+                                    {/* Toggle between URL and Upload */}
+                                    <div className="flex gap-2 mb-3">
+                                        <button
+                                            type="button"
+                                            onClick={() => setImageInputMode('url')}
+                                            className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition ${
+                                                imageInputMode === 'url'
+                                                    ? 'bg-[#8cff65] text-black'
+                                                    : 'bg-[#1e1e1e] text-gray-400 hover:text-white border border-[#2a2a2a]'
+                                            }`}
+                                        >
+                                            Image URL
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setImageInputMode('upload')}
+                                            className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition ${
+                                                imageInputMode === 'upload'
+                                                    ? 'bg-[#8cff65] text-black'
+                                                    : 'bg-[#1e1e1e] text-gray-400 hover:text-white border border-[#2a2a2a]'
+                                            }`}
+                                        >
+                                            Upload Image
+                                        </button>
+                                    </div>
+                                    
+                                    {imageInputMode === 'url' ? (
+                                        <>
+                                            <input
+                                                type="url"
+                                                value={formData.imageUrl}
+                                                onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
+                                                placeholder="https://example.com/image.jpg"
+                                                className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-[#8cff65] transition"
                                             />
-                                        </div>
+                                            {formData.imageUrl && (
+                                                <div className="mt-2 rounded-lg overflow-hidden h-24">
+                                                    <img 
+                                                        src={formData.imageUrl} 
+                                                        alt="Preview" 
+                                                        className="w-full h-full object-cover"
+                                                        onError={(e) => { e.target.style.display = 'none'; }}
+                                                    />
+                                                </div>
+                                            )}
+                                        </>
+                                    ) : (
+                                        <>
+                                            <input
+                                                type="file"
+                                                accept="image/*"
+                                                onChange={handleImageFileChange}
+                                                className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-[#8cff65] file:text-black file:font-medium file:cursor-pointer hover:file:bg-[#7de857] transition"
+                                            />
+                                            {imagePreview && (
+                                                <div className="mt-2 rounded-lg overflow-hidden h-24 relative">
+                                                    <img 
+                                                        src={imagePreview} 
+                                                        alt="Preview" 
+                                                        className="w-full h-full object-cover"
+                                                    />
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            setImageFile(null);
+                                                            setImagePreview(null);
+                                                        }}
+                                                        className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition"
+                                                    >
+                                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                                        </svg>
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </>
                                     )}
                                 </div>
 
