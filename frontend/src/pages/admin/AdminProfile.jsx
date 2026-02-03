@@ -6,51 +6,51 @@ import { sanitizeInput } from '../../utils/sanitize';
 // Icons
 const CameraIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
-        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
-        <circle cx="12" cy="13" r="4"/>
+        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+        <circle cx="12" cy="13" r="4" />
     </svg>
 );
 
 const UserIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
-        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-        <circle cx="12" cy="7" r="4"/>
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+        <circle cx="12" cy="7" r="4" />
     </svg>
 );
 
 const MailIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
-        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-        <polyline points="22,6 12,13 2,6"/>
+        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+        <polyline points="22,6 12,13 2,6" />
     </svg>
 );
 
 const ShieldIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
-        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
     </svg>
 );
 
 const CalendarIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
-        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-        <line x1="16" y1="2" x2="16" y2="6"/>
-        <line x1="8" y1="2" x2="8" y2="6"/>
-        <line x1="3" y1="10" x2="21" y2="10"/>
+        <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+        <line x1="16" y1="2" x2="16" y2="6" />
+        <line x1="8" y1="2" x2="8" y2="6" />
+        <line x1="3" y1="10" x2="21" y2="10" />
     </svg>
 );
 
 const SaveIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
-        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
-        <polyline points="17 21 17 13 7 13 7 21"/>
-        <polyline points="7 3 7 8 15 8"/>
+        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+        <polyline points="17 21 17 13 7 13 7 21" />
+        <polyline points="7 3 7 8 15 8" />
     </svg>
 );
 
 const CheckIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
-        <polyline points="20 6 9 17 4 12"/>
+        <polyline points="20 6 9 17 4 12" />
     </svg>
 );
 
@@ -143,11 +143,10 @@ const AdminProfile = () => {
         <div className="max-w-4xl mx-auto space-y-6">
             {/* Success/Error Message */}
             {message.text && (
-                <div className={`flex items-center gap-3 p-4 rounded-xl border ${
-                    message.type === 'success' 
-                        ? 'bg-[#8cff65]/10 border-[#8cff65]/30 text-[#8cff65]' 
+                <div className={`flex items-center gap-3 p-4 rounded-xl border ${message.type === 'success'
+                        ? 'bg-[#8cff65]/10 border-[#8cff65]/30 text-[#8cff65]'
                         : 'bg-red-500/10 border-red-500/30 text-red-400'
-                }`}>
+                    }`}>
                     {message.type === 'success' ? <CheckIcon /> : null}
                     <span>{message.text}</span>
                 </div>
@@ -174,7 +173,7 @@ const AdminProfile = () => {
                                     </span>
                                 )}
                             </div>
-                            <button 
+                            <button
                                 onClick={() => fileInputRef.current?.click()}
                                 className="absolute bottom-0 right-0 w-9 h-9 bg-[#1e1e1e] border border-[#2a2a2a] rounded-full flex items-center justify-center text-gray-400 hover:text-[#8cff65] hover:border-[#8cff65] transition-all group-hover:scale-110"
                             >
@@ -225,7 +224,7 @@ const AdminProfile = () => {
                         <UserIcon />
                         Personal Information
                     </h3>
-                    
+
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         {/* First Name */}
                         <div>

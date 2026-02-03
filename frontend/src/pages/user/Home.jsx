@@ -27,7 +27,7 @@ const animalImages = [
 
 // Floating icon component for decorative elements
 const FloatingIcon = ({ icon, className, delay = 0 }) => (
-    <div 
+    <div
         className={`absolute bg-white rounded-2xl shadow-lg p-3 animate-float ${className}`}
         style={{ animationDelay: `${delay}s` }}
     >
@@ -38,52 +38,52 @@ const FloatingIcon = ({ icon, className, delay = 0 }) => (
 const Icons = {
     Lion: () => (
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/>
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z" />
         </svg>
     ),
     Penguin: () => (
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
-            <path d="M12 2a5 5 0 0 0-5 5v7a5 5 0 0 0 10 0V7a5 5 0 0 0-5-5zm-3 5a3 3 0 0 1 6 0v7a3 3 0 0 1-6 0V7z"/>
+            <path d="M12 2a5 5 0 0 0-5 5v7a5 5 0 0 0 10 0V7a5 5 0 0 0-5-5zm-3 5a3 3 0 0 1 6 0v7a3 3 0 0 1-6 0V7z" />
         </svg>
     ),
     Parrot: () => (
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
-            <path d="M21 3v2c0 9.627-5.373 14-12 14H7.098c.21.576.503 1.12.87 1.615.61.82 1.48 1.54 2.632 2.155A14.247 14.247 0 0 0 18 24c1.15 0 2.22-.265 3.19-.73.49-.235.93-.52 1.32-.84.28-.23.53-.49.75-.77.19-.24.35-.49.49-.75.25-.49.43-1.02.52-1.57.06-.34.09-.7.09-1.07V3h-3.36zM3 13c2.67 0 5.14-.94 7.12-2.52A12.08 12.08 0 0 0 14.62 3H3v10z"/>
+            <path d="M21 3v2c0 9.627-5.373 14-12 14H7.098c.21.576.503 1.12.87 1.615.61.82 1.48 1.54 2.632 2.155A14.247 14.247 0 0 0 18 24c1.15 0 2.22-.265 3.19-.73.49-.235.93-.52 1.32-.84.28-.23.53-.49.75-.77.19-.24.35-.49.49-.75.25-.49.43-1.02.52-1.57.06-.34.09-.7.09-1.07V3h-3.36zM3 13c2.67 0 5.14-.94 7.12-2.52A12.08 12.08 0 0 0 14.62 3H3v10z" />
         </svg>
     ),
     Child: () => (
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
-            <path d="M12 2C9.24 2 7 4.24 7 7s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zm0 8c-1.65 0-3-1.35-3-3s1.35-3 3-3 3 1.35 3 3-1.35 3-3 3zm0 4c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+            <path d="M12 2C9.24 2 7 4.24 7 7s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zm0 8c-1.65 0-3-1.35-3-3s1.35-3 3-3 3 1.35 3 3-1.35 3-3 3zm0 4c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
         </svg>
     ),
     Adult: () => (
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
-            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
         </svg>
     ),
     Home: () => (
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
-            <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+            <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
         </svg>
     ),
     Utensils: () => (
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
-            <path d="M11 9H9V2H7v7H5V2H3v7c0 2.12 1.66 3.84 3.75 3.97V22h2.5v-9.03C11.34 12.84 13 11.12 13 9V2h-2v7zm5-3v8h2.5v8H21V2c-2.76 0-5 2.24-5 4z"/>
+            <path d="M11 9H9V2H7v7H5V2H3v7c0 2.12 1.66 3.84 3.75 3.97V22h2.5v-9.03C11.34 12.84 13 11.12 13 9V2h-2v7zm5-3v8h2.5v8H21V2c-2.76 0-5 2.24-5 4z" />
         </svg>
     ),
     Restroom: () => (
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
-            <path d="M5.5 22v-7.5H4V9c0-1.1.9-2 2-2h3c1.1 0 2 .9 2 2v5.5H9.5V22h-4zM18 22v-6h3l-2.54-7.63C18.18 7.55 17.42 7 16.56 7h-.12c-.86 0-1.63.55-1.9 1.37L12 16h3v6h3zM7.5 6c1.11 0 2-.89 2-2s-.89-2-2-2-2 .89-2 2 .89 2 2 2zm9 0c1.11 0 2-.89 2-2s-.89-2-2-2-2 .89-2 2 .89 2 2 2z"/>
+            <path d="M5.5 22v-7.5H4V9c0-1.1.9-2 2-2h3c1.1 0 2 .9 2 2v5.5H9.5V22h-4zM18 22v-6h3l-2.54-7.63C18.18 7.55 17.42 7 16.56 7h-.12c-.86 0-1.63.55-1.9 1.37L12 16h3v6h3zM7.5 6c1.11 0 2-.89 2-2s-.89-2-2-2-2 .89-2 2 .89 2 2 2zm9 0c1.11 0 2-.89 2-2s-.89-2-2-2-2 .89-2 2 .89 2 2 2z" />
         </svg>
     ),
     Theater: () => (
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
-            <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM8.5 8c.83 0 1.5.67 1.5 1.5S9.33 11 8.5 11 7 10.33 7 9.5 7.67 8 8.5 8zM12 18c-2.28 0-4.22-1.66-5-4h10c-.78 2.34-2.72 4-5 4zm3.5-7c-.83 0-1.5-.67-1.5-1.5S14.67 8 15.5 8s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/>
+            <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM8.5 8c.83 0 1.5.67 1.5 1.5S9.33 11 8.5 11 7 10.33 7 9.5 7.67 8 8.5 8zM12 18c-2.28 0-4.22-1.66-5-4h10c-.78 2.34-2.72 4-5 4zm3.5-7c-.83 0-1.5-.67-1.5-1.5S14.67 8 15.5 8s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z" />
         </svg>
     ),
     Elephant: () => (
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
-            <path d="M20 12V7a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v9h2v4a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2v-4h4v4a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2v-6h-2zM8 7a2 2 0 1 1 0 4 2 2 0 0 1 0-4z"/>
+            <path d="M20 12V7a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v9h2v4a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2v-4h4v4a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2v-6h-2zM8 7a2 2 0 1 1 0 4 2 2 0 0 1 0-4z" />
         </svg>
     ),
     Robot: () => (
@@ -193,7 +193,7 @@ const Home = () => {
     return (
         <div className="min-h-screen flex flex-col bg-white">
             <Header />
-            
+
             {/* Floating selector bubble */}
             <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end">
                 {showSelector && (
@@ -239,7 +239,7 @@ const Home = () => {
                         <div className="fixed inset-0 z-[9999] bg-white flex flex-col">
                             <div className="bg-gray-900 p-4 flex items-center justify-between text-white">
                                 <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center"> 
+                                    <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center">
                                         <svg className="w-5 h-5 text-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" /><circle cx="12" cy="13" r="4" /></svg>
                                     </div>
                                     <div>
@@ -270,7 +270,7 @@ const Home = () => {
                         <div className="fixed bottom-6 right-6 z-50 w-[340px] sm:w-[380px] h-[500px] sm:h-[540px] bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-100 flex flex-col animate-scale-in">
                             <div className="bg-gray-900 p-4 flex items-center justify-between text-white shrink-0">
                                 <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center"> 
+                                    <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center">
                                         <svg className="w-5 h-5 text-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" /><circle cx="12" cy="13" r="4" /></svg>
                                     </div>
                                     <div>
@@ -302,36 +302,36 @@ const Home = () => {
             {/* Hero Section - Inspired by reference design */}
             <section className="relative min-h-screen overflow-hidden pt-24">
                 {/* Background image */}
-                <div 
+                <div
                     className="absolute inset-0 bg-cover bg-center bg-no-repeat"
                     style={{ backgroundImage: `url('https://i.pinimg.com/736x/cf/be/f7/cfbef7ee6088cac3e2e6c01cfe57bfed.jpg')` }}
                 />
                 {/* Overlay gradient for readability */}
                 <div className="absolute inset-0 bg-gradient-to-b from-white/90 via-white/70 to-transparent" />
-                
+
                 {/* Floating decorative icons */}
-                <FloatingIcon 
-                    icon={<svg className="w-6 h-6 text-emerald-600" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>}
+                <FloatingIcon
+                    icon={<svg className="w-6 h-6 text-emerald-600" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" /></svg>}
                     className="top-32 left-[15%] hidden lg:flex"
                     delay={0}
                 />
-                <FloatingIcon 
-                    icon={<svg className="w-6 h-6 text-teal-600" viewBox="0 0 24 24" fill="currentColor"><path d="M19.14 12.94c.04-.31.06-.63.06-.94 0-.31-.02-.63-.06-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>}
+                <FloatingIcon
+                    icon={<svg className="w-6 h-6 text-teal-600" viewBox="0 0 24 24" fill="currentColor"><path d="M19.14 12.94c.04-.31.06-.63.06-.94 0-.31-.02-.63-.06-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z" /></svg>}
                     className="top-44 right-[18%] hidden lg:flex"
                     delay={0.5}
                 />
-                <FloatingIcon 
-                    icon={<svg className="w-6 h-6 text-cyan-600" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3L1 9l4 2.18v6L12 21l7-3.82v-6l2-1.09V17h2V9L12 3zm6.82 6L12 12.72 5.18 9 12 5.28 18.82 9zM17 15.99l-5 2.73-5-2.73v-3.72L12 15l5-2.73v3.72z"/></svg>}
+                <FloatingIcon
+                    icon={<svg className="w-6 h-6 text-cyan-600" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3L1 9l4 2.18v6L12 21l7-3.82v-6l2-1.09V17h2V9L12 3zm6.82 6L12 12.72 5.18 9 12 5.28 18.82 9zM17 15.99l-5 2.73-5-2.73v-3.72L12 15l5-2.73v3.72z" /></svg>}
                     className="top-56 left-[22%] hidden lg:flex"
                     delay={1}
                 />
-                <FloatingIcon 
-                    icon={<svg className="w-6 h-6 text-green-600" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>}
+                <FloatingIcon
+                    icon={<svg className="w-6 h-6 text-green-600" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z" /></svg>}
                     className="top-36 right-[12%] hidden lg:flex"
                     delay={1.5}
                 />
-                <FloatingIcon 
-                    icon={<svg className="w-6 h-6 text-emerald-500" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>}
+                <FloatingIcon
+                    icon={<svg className="w-6 h-6 text-emerald-500" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" /></svg>}
                     className="top-64 left-[10%] hidden lg:flex"
                     delay={2}
                 />
@@ -364,7 +364,7 @@ const Home = () => {
                             </Link>
                             <button className="bg-white/90 backdrop-blur-sm hover:bg-white text-gray-700 px-6 py-4 rounded-full font-medium text-base flex items-center gap-3 transition-all duration-200 border border-gray-200 shadow-sm">
                                 <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
-                                    <svg className="w-5 h-5 text-gray-600" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+                                    <svg className="w-5 h-5 text-gray-600" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z" /></svg>
                                 </div>
                                 <span>Watch Video</span>
                             </button>
@@ -377,11 +377,10 @@ const Home = () => {
                             {animalImages.map((animal, index) => (
                                 <div
                                     key={animal.name}
-                                    className={`absolute inset-0 transition-all duration-1000 ease-in-out ${
-                                        index === currentAnimalIndex 
-                                            ? 'opacity-100 scale-100' 
+                                    className={`absolute inset-0 transition-all duration-1000 ease-in-out ${index === currentAnimalIndex
+                                            ? 'opacity-100 scale-100'
                                             : 'opacity-0 scale-105'
-                                    }`}
+                                        }`}
                                 >
                                     <img
                                         src={animal.src}
@@ -395,34 +394,33 @@ const Home = () => {
                                     </div>
                                 </div>
                             ))}
-                            
+
                             {/* Image indicator dots */}
                             <div className="absolute bottom-6 right-6 flex gap-1.5 flex-wrap max-w-[180px] justify-end">
                                 {animalImages.map((_, index) => (
                                     <button
                                         key={index}
                                         onClick={() => setCurrentAnimalIndex(index)}
-                                        className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
-                                            index === currentAnimalIndex 
-                                                ? 'w-8 bg-white' 
+                                        className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${index === currentAnimalIndex
+                                                ? 'w-8 bg-white'
                                                 : 'bg-white/40 hover:bg-white/70'
-                                        }`}
+                                            }`}
                                     />
                                 ))}
                             </div>
 
                             {/* Navigation arrows */}
-                            <button 
+                            <button
                                 onClick={() => setCurrentAnimalIndex((prev) => (prev - 1 + animalImages.length) % animalImages.length)}
                                 className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/40 flex items-center justify-center text-white transition-all duration-200"
                             >
-                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7"/></svg>
+                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" /></svg>
                             </button>
-                            <button 
+                            <button
                                 onClick={() => setCurrentAnimalIndex((prev) => (prev + 1) % animalImages.length)}
                                 className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/40 flex items-center justify-center text-white transition-all duration-200"
                             >
-                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"/></svg>
+                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
                             </button>
                         </div>
                     </div>
@@ -461,21 +459,21 @@ const Home = () => {
                             </div>
                             <Link to="/about" className="inline-flex items-center gap-3 bg-gray-900 hover:bg-gray-800 text-white px-8 py-4 rounded-full font-semibold transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-0.5">
                                 <span>Learn More About Us</span>
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
                             </Link>
                         </div>
                         <div className="order-1 lg:order-2">
                             <div className="relative">
                                 <div className="absolute -inset-4 bg-gradient-to-r from-emerald-400 to-teal-400 rounded-3xl blur-2xl opacity-20"></div>
-                                <img 
-                                    src="https://images.unsplash.com/photo-1534567153574-2b12153a87f0?w=800&q=80" 
-                                    alt="Wildlife Conservation" 
+                                <img
+                                    src="https://images.unsplash.com/photo-1534567153574-2b12153a87f0?w=800&q=80"
+                                    alt="Wildlife Conservation"
                                     className="relative rounded-3xl shadow-2xl w-full object-cover aspect-[4/3]"
                                 />
                                 <div className="absolute -bottom-6 -left-6 bg-white rounded-2xl p-4 shadow-xl border border-gray-100">
                                     <div className="flex items-center gap-3">
                                         <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
-                                            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                                            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
                                         </div>
                                         <div>
                                             <p className="font-bold text-gray-900">AI-Powered</p>
@@ -500,26 +498,26 @@ const Home = () => {
                         <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">Meet Our Animals</h2>
                         <p className="text-gray-600 text-lg max-w-2xl mx-auto">Discover the incredible wildlife roaming freely at our AI-powered nature park.</p>
                     </div>
-                    
+
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
                         {[
-                            { 
-                                name: 'African Lions', 
-                                category: 'Mammals', 
+                            {
+                                name: 'African Lions',
+                                category: 'Mammals',
                                 location: 'Savanna Zone',
                                 image: 'https://images.unsplash.com/photo-1546182990-dffeafbe841d?w=600&q=80',
                                 color: 'from-amber-400 to-orange-500'
                             },
-                            { 
-                                name: 'Asian Elephants', 
-                                category: 'Mammals', 
+                            {
+                                name: 'Asian Elephants',
+                                category: 'Mammals',
                                 location: 'Forest Habitat',
                                 image: 'https://images.unsplash.com/photo-1557050543-4d5f4e07ef46?w=600&q=80',
                                 color: 'from-emerald-400 to-teal-500'
                             },
-                            { 
-                                name: 'Tropical Birds', 
-                                category: 'Birds', 
+                            {
+                                name: 'Tropical Birds',
+                                category: 'Birds',
                                 location: 'Aviary',
                                 image: 'https://images.unsplash.com/photo-1552728089-57bdde30beb3?w=600&q=80',
                                 color: 'from-blue-400 to-indigo-500'
@@ -527,8 +525,8 @@ const Home = () => {
                         ].map((animal, i) => (
                             <div key={i} className="group bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-300 border border-gray-100 hover:-translate-y-2">
                                 <div className="relative h-64 overflow-hidden">
-                                    <img 
-                                        src={animal.image} 
+                                    <img
+                                        src={animal.image}
                                         alt={animal.name}
                                         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                                     />
@@ -540,7 +538,7 @@ const Home = () => {
                                 <div className="p-6">
                                     <h3 className="font-bold text-xl text-gray-900 mb-2">{animal.name}</h3>
                                     <div className="flex items-center gap-2 text-gray-500 text-sm mb-4">
-                                        <svg className="w-4 h-4 text-emerald-600" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+                                        <svg className="w-4 h-4 text-emerald-600" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" /></svg>
                                         <span>{animal.location}</span>
                                     </div>
                                     <div className="flex items-center gap-2">
@@ -551,11 +549,11 @@ const Home = () => {
                             </div>
                         ))}
                     </div>
-                    
+
                     <div className="text-center mt-12">
                         <Link to="/animals" className="inline-flex items-center gap-3 bg-gray-900 hover:bg-gray-800 text-white px-8 py-4 rounded-full font-semibold transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-0.5">
                             <span>View All Animals</span>
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
                         </Link>
                     </div>
                 </div>
@@ -572,28 +570,28 @@ const Home = () => {
                         <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">Wildlife Events</h2>
                         <p className="text-gray-600 text-lg max-w-2xl mx-auto">Experience unforgettable moments with our animals through live feedings and shows.</p>
                     </div>
-                    
+
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
                         {[
-                            { 
-                                title: 'Penguin Feeding', 
-                                time: '2:30 PM', 
+                            {
+                                title: 'Penguin Feeding',
+                                time: '2:30 PM',
                                 desc: 'Watch our playful penguins dive and swim.',
                                 // IconComponent: Icons.Penguin,
                                 color: 'from-blue-400 to-cyan-500',
                                 live: true
                             },
-                            { 
-                                title: 'Tropical Bird Show', 
-                                time: '1:00 PM', 
+                            {
+                                title: 'Tropical Bird Show',
+                                time: '1:00 PM',
                                 desc: 'Spectacular flight demonstrations.',
                                 // IconComponent: Icons.Parrot,
                                 color: 'from-amber-400 to-orange-500',
                                 live: false
                             },
-                            { 
-                                title: 'Lion Feeding', 
-                                time: '4:00 PM', 
+                            {
+                                title: 'Lion Feeding',
+                                time: '4:00 PM',
                                 desc: 'Watch the kings of the jungle at mealtime.',
                                 // IconComponent: Icons.Lion,
                                 color: 'from-yellow-400 to-amber-500',
@@ -619,18 +617,18 @@ const Home = () => {
                                     </div>
                                     <p className="text-gray-500 text-sm mb-4">{event.desc}</p>
                                     <button className="w-full py-3 bg-gray-100 hover:bg-gray-900 hover:text-white text-gray-800 rounded-xl font-semibold transition-all duration-200 flex items-center justify-center gap-2">
-                                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2z"/></svg>
+                                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2z" /></svg>
                                         Join Event
                                     </button>
                                 </div>
                             </div>
                         ))}
                     </div>
-                    
+
                     <div className="text-center mt-12">
                         <Link to="/events" className="inline-flex items-center gap-3 bg-gray-900 hover:bg-gray-800 text-white px-8 py-4 rounded-full font-semibold transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-0.5">
                             <span>View All Events</span>
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
                         </Link>
                     </div>
                 </div>
@@ -651,13 +649,12 @@ const Home = () => {
                             { title: 'Adult Admission', price: '₱100', desc: 'Ages 18+', IconComponent: Icons.Adult, featured: true },
                             { title: 'Bulusan Residents', price: 'FREE', desc: 'With Valid ID', IconComponent: Icons.Home }
                         ].map((t, i) => (
-                            <div 
-                                key={i} 
-                                className={`relative p-8 rounded-3xl transition-all duration-300 group hover:-translate-y-2 ${
-                                    t.featured 
-                                        ? 'bg-gray-900 text-white shadow-2xl shadow-gray-900/30 scale-105' 
+                            <div
+                                key={i}
+                                className={`relative p-8 rounded-3xl transition-all duration-300 group hover:-translate-y-2 ${t.featured
+                                        ? 'bg-gray-900 text-white shadow-2xl shadow-gray-900/30 scale-105'
                                         : 'bg-white border border-gray-200 hover:border-gray-300 hover:shadow-xl'
-                                }`}
+                                    }`}
                             >
                                 {t.featured && (
                                     <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-xs font-bold px-4 py-1 rounded-full">
@@ -668,18 +665,16 @@ const Home = () => {
                                     {t.IconComponent && <t.IconComponent />}
                                 </div>
                                 <h3 className={`text-xl font-bold mb-2 ${t.featured ? 'text-white' : 'text-gray-900'}`}>{t.title}</h3>
-                                <div className={`text-4xl font-bold mb-4 ${
-                                    t.featured 
-                                        ? 'text-white' 
+                                <div className={`text-4xl font-bold mb-4 ${t.featured
+                                        ? 'text-white'
                                         : 'bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent'
-                                }`}>{t.price}</div>
+                                    }`}>{t.price}</div>
                                 <p className={`mb-8 ${t.featured ? 'text-gray-400' : 'text-gray-500'}`}>{t.desc}</p>
                                 <Link to="/tickets">
-                                    <button className={`w-full py-3.5 rounded-xl font-semibold transition-all duration-200 ${
-                                        t.featured 
-                                            ? 'bg-white text-gray-900 hover:bg-gray-100' 
+                                    <button className={`w-full py-3.5 rounded-xl font-semibold transition-all duration-200 ${t.featured
+                                            ? 'bg-white text-gray-900 hover:bg-gray-100'
                                             : 'bg-gray-900 text-white hover:bg-gray-800'
-                                    }`}>Book Now</button>
+                                        }`}>Book Now</button>
                                 </Link>
                             </div>
                         ))}

@@ -5,55 +5,55 @@ import { sanitizeInput } from '../../utils/sanitize';
 // Icons
 const PawIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="currentColor" className="w-5 h-5">
-        <path d="M226.5 92.9c14.3 42.9-.3 86.2-32.6 96.8s-70.1-15.6-84.4-58.5s.3-86.2 32.6-96.8s70.1 15.6 84.4 58.5zM100.4 198.6c18.9 32.4 14.3 70.1-10.2 84.1s-59.7-.9-78.5-33.3S-2.7 179.3 21.8 165.3s59.7 .9 78.5 33.3zM69.2 401.2C121.6 259.9 214.7 224 256 224s134.4 35.9 186.8 177.2c3.6 9.7 5.2 20.1 5.2 30.5v1.6c0 25.8-20.9 46.7-46.7 46.7c-11.5 0-22.9-1.4-34-4.2l-88-22c-15.3-3.8-31.3-3.8-46.6 0l-88 22c-11.1 2.8-22.5 4.2-34 4.2C84.9 480 64 459.1 64 433.3v-1.6c0-10.4 1.6-20.8 5.2-30.5zM421.8 282.7c-24.5-14-29.1-51.7-10.2-84.1s54-47.3 78.5-33.3s29.1 51.7 10.2 84.1s-54 47.3-78.5 33.3zM310.1 189.7c-32.3-10.6-46.9-53.9-32.6-96.8s52.1-69.1 84.4-58.5s46.9 53.9 32.6 96.8s-52.1 69.1-84.4 58.5z"/>
+        <path d="M226.5 92.9c14.3 42.9-.3 86.2-32.6 96.8s-70.1-15.6-84.4-58.5s.3-86.2 32.6-96.8s70.1 15.6 84.4 58.5zM100.4 198.6c18.9 32.4 14.3 70.1-10.2 84.1s-59.7-.9-78.5-33.3S-2.7 179.3 21.8 165.3s59.7 .9 78.5 33.3zM69.2 401.2C121.6 259.9 214.7 224 256 224s134.4 35.9 186.8 177.2c3.6 9.7 5.2 20.1 5.2 30.5v1.6c0 25.8-20.9 46.7-46.7 46.7c-11.5 0-22.9-1.4-34-4.2l-88-22c-15.3-3.8-31.3-3.8-46.6 0l-88 22c-11.1 2.8-22.5 4.2-34 4.2C84.9 480 64 459.1 64 433.3v-1.6c0-10.4 1.6-20.8 5.2-30.5zM421.8 282.7c-24.5-14-29.1-51.7-10.2-84.1s54-47.3 78.5-33.3s29.1 51.7 10.2 84.1s-54 47.3-78.5 33.3zM310.1 189.7c-32.3-10.6-46.9-53.9-32.6-96.8s52.1-69.1 84.4-58.5s46.9 53.9 32.6 96.8s-52.1 69.1-84.4 58.5z" />
     </svg>
 );
 
 const AnimalsHeaderIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="currentColor" className="w-6 h-6">
-        <path d="M226.5 92.9c14.3 42.9-.3 86.2-32.6 96.8s-70.1-15.6-84.4-58.5s.3-86.2 32.6-96.8s70.1 15.6 84.4 58.5zM100.4 198.6c18.9 32.4 14.3 70.1-10.2 84.1s-59.7-.9-78.5-33.3S-2.7 179.3 21.8 165.3s59.7 .9 78.5 33.3zM69.2 401.2C121.6 259.9 214.7 224 256 224s134.4 35.9 186.8 177.2c3.6 9.7 5.2 20.1 5.2 30.5v1.6c0 25.8-20.9 46.7-46.7 46.7c-11.5 0-22.9-1.4-34-4.2l-88-22c-15.3-3.8-31.3-3.8-46.6 0l-88 22c-11.1 2.8-22.5 4.2-34 4.2C84.9 480 64 459.1 64 433.3v-1.6c0-10.4 1.6-20.8 5.2-30.5zM421.8 282.7c-24.5-14-29.1-51.7-10.2-84.1s54-47.3 78.5-33.3s29.1 51.7 10.2 84.1s-54 47.3-78.5 33.3zM310.1 189.7c-32.3-10.6-46.9-53.9-32.6-96.8s52.1-69.1 84.4-58.5s46.9 53.9 32.6 96.8s-52.1 69.1-84.4 58.5z"/>
+        <path d="M226.5 92.9c14.3 42.9-.3 86.2-32.6 96.8s-70.1-15.6-84.4-58.5s.3-86.2 32.6-96.8s70.1 15.6 84.4 58.5zM100.4 198.6c18.9 32.4 14.3 70.1-10.2 84.1s-59.7-.9-78.5-33.3S-2.7 179.3 21.8 165.3s59.7 .9 78.5 33.3zM69.2 401.2C121.6 259.9 214.7 224 256 224s134.4 35.9 186.8 177.2c3.6 9.7 5.2 20.1 5.2 30.5v1.6c0 25.8-20.9 46.7-46.7 46.7c-11.5 0-22.9-1.4-34-4.2l-88-22c-15.3-3.8-31.3-3.8-46.6 0l-88 22c-11.1 2.8-22.5 4.2-34 4.2C84.9 480 64 459.1 64 433.3v-1.6c0-10.4 1.6-20.8 5.2-30.5zM421.8 282.7c-24.5-14-29.1-51.7-10.2-84.1s54-47.3 78.5-33.3s29.1 51.7 10.2 84.1s-54 47.3-78.5 33.3zM310.1 189.7c-32.3-10.6-46.9-53.9-32.6-96.8s52.1-69.1 84.4-58.5s46.9 53.9 32.6 96.8s-52.1 69.1-84.4 58.5z" />
     </svg>
 );
 
 const SearchIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
-        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+        <circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" />
     </svg>
 );
 
 const PlusIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
-        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+        <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
     </svg>
 );
 
 const EditIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
-        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
     </svg>
 );
 
 const TrashIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
-        <polyline points="3 6 5 6 21 6"/>
-        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+        <polyline points="3 6 5 6 21 6" />
+        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
     </svg>
 );
 
 const CloseIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
-        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
     </svg>
 );
 
 const SortIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
-        <path d="M11 5h10"/>
-        <path d="M11 9h7"/>
-        <path d="M11 13h4"/>
-        <path d="m3 17 3 3 3-3"/>
-        <path d="M6 18V4"/>
+        <path d="M11 5h10" />
+        <path d="M11 9h7" />
+        <path d="M11 13h4" />
+        <path d="m3 17 3 3 3-3" />
+        <path d="M6 18V4" />
     </svg>
 );
 
@@ -143,7 +143,7 @@ const StaffAnimals = ({ globalSearch = '' }) => {
         setSaving(true);
         try {
             let imageUrl = form.imageUrl;
-            
+
             if (imageInputMode === 'upload' && imageFile) {
                 const uploadRes = await staffAPI.uploadImage(imageFile);
                 if (uploadRes.success) {
@@ -152,7 +152,7 @@ const StaffAnimals = ({ globalSearch = '' }) => {
                     throw new Error(uploadRes.message || 'Failed to upload image');
                 }
             }
-            
+
             const animalData = { ...form, imageUrl, image_url: imageUrl };
             let res;
             if (editingAnimal) {
@@ -378,7 +378,7 @@ const StaffAnimals = ({ globalSearch = '' }) => {
                     <table className="w-full">
                         <thead className="bg-[#1e1e1e]">
                             <tr>
-                                <th 
+                                <th
                                     className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider cursor-pointer hover:text-white"
                                     onClick={() => toggleSort('name')}
                                 >
@@ -389,7 +389,7 @@ const StaffAnimals = ({ globalSearch = '' }) => {
                                         )}
                                     </div>
                                 </th>
-                                <th 
+                                <th
                                     className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider cursor-pointer hover:text-white"
                                     onClick={() => toggleSort('species')}
                                 >
@@ -400,7 +400,7 @@ const StaffAnimals = ({ globalSearch = '' }) => {
                                         )}
                                     </div>
                                 </th>
-                                <th 
+                                <th
                                     className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider cursor-pointer hover:text-white"
                                     onClick={() => toggleSort('exhibit')}
                                 >
@@ -504,7 +504,7 @@ const StaffAnimals = ({ globalSearch = '' }) => {
                                 <input
                                     type="text"
                                     value={form.name}
-                                    onChange={(e) => setForm({...form, name: sanitizeInput(e.target.value)})}
+                                    onChange={(e) => setForm({ ...form, name: sanitizeInput(e.target.value) })}
                                     required
                                     className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-[#8cff65] focus:ring-1 focus:ring-[#8cff65]/20 transition-all"
                                     placeholder="Animal name"
@@ -518,7 +518,7 @@ const StaffAnimals = ({ globalSearch = '' }) => {
                                     <input
                                         type="text"
                                         value={form.species}
-                                        onChange={(e) => setForm({...form, species: sanitizeInput(e.target.value)})}
+                                        onChange={(e) => setForm({ ...form, species: sanitizeInput(e.target.value) })}
                                         required
                                         className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-[#8cff65] focus:ring-1 focus:ring-[#8cff65]/20 transition-all"
                                         placeholder="e.g. Lion"
@@ -529,7 +529,7 @@ const StaffAnimals = ({ globalSearch = '' }) => {
                                     <input
                                         type="text"
                                         value={form.exhibit}
-                                        onChange={(e) => setForm({...form, exhibit: sanitizeInput(e.target.value)})}
+                                        onChange={(e) => setForm({ ...form, exhibit: sanitizeInput(e.target.value) })}
                                         className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-[#8cff65] focus:ring-1 focus:ring-[#8cff65]/20 transition-all"
                                         placeholder="e.g. Savanna"
                                     />
@@ -541,7 +541,7 @@ const StaffAnimals = ({ globalSearch = '' }) => {
                                 <label className="block text-sm font-medium text-gray-400 mb-2">Status</label>
                                 <select
                                     value={form.status}
-                                    onChange={(e) => setForm({...form, status: e.target.value})}
+                                    onChange={(e) => setForm({ ...form, status: e.target.value })}
                                     className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#8cff65] cursor-pointer"
                                 >
                                     <option value="healthy">Healthy</option>
@@ -556,7 +556,7 @@ const StaffAnimals = ({ globalSearch = '' }) => {
                                 <label className="block text-sm font-medium text-gray-400 mb-2">Description</label>
                                 <textarea
                                     value={form.description}
-                                    onChange={(e) => setForm({...form, description: sanitizeInput(e.target.value)})}
+                                    onChange={(e) => setForm({ ...form, description: sanitizeInput(e.target.value) })}
                                     rows="3"
                                     className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-[#8cff65] focus:ring-1 focus:ring-[#8cff65]/20 transition-all resize-none"
                                     placeholder="Brief description of the animal..."
@@ -570,22 +570,20 @@ const StaffAnimals = ({ globalSearch = '' }) => {
                                     <button
                                         type="button"
                                         onClick={() => setImageInputMode('url')}
-                                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                                            imageInputMode === 'url'
+                                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${imageInputMode === 'url'
                                                 ? 'bg-[#8cff65]/20 text-[#8cff65] border border-[#8cff65]/30'
                                                 : 'bg-[#1e1e1e] text-gray-400 border border-[#2a2a2a] hover:text-white'
-                                        }`}
+                                            }`}
                                     >
                                         URL
                                     </button>
                                     <button
                                         type="button"
                                         onClick={() => setImageInputMode('upload')}
-                                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                                            imageInputMode === 'upload'
+                                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${imageInputMode === 'upload'
                                                 ? 'bg-[#8cff65]/20 text-[#8cff65] border border-[#8cff65]/30'
                                                 : 'bg-[#1e1e1e] text-gray-400 border border-[#2a2a2a] hover:text-white'
-                                        }`}
+                                            }`}
                                     >
                                         Upload
                                     </button>
@@ -595,7 +593,7 @@ const StaffAnimals = ({ globalSearch = '' }) => {
                                     <input
                                         type="url"
                                         value={form.imageUrl}
-                                        onChange={(e) => setForm({...form, imageUrl: e.target.value})}
+                                        onChange={(e) => setForm({ ...form, imageUrl: e.target.value })}
                                         className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-[#8cff65] focus:ring-1 focus:ring-[#8cff65]/20 transition-all"
                                         placeholder="https://example.com/image.jpg"
                                     />

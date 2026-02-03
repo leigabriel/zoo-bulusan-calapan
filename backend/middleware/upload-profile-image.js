@@ -122,7 +122,7 @@ const deleteOldProfileImage = (filename) => {
     }
 
     const filePath = path.join(PROFILE_IMAGE_DIR, filename);
-    
+
     // Check if the file exists before attempting to delete
     if (fs.existsSync(filePath)) {
         try {

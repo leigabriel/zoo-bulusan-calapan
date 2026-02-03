@@ -76,7 +76,7 @@ const Events = () => {
                     color: event.color || '#22c55e',
                     imageUrl: event.image_url || DEFAULT_EVENT_IMAGES[index % DEFAULT_EVENT_IMAGES.length]
                 }));
-                
+
                 // Sort by date ascending
                 transformedEvents.sort((a, b) => new Date(a.eventDate) - new Date(b.eventDate));
                 setEvents(transformedEvents);
@@ -173,8 +173,8 @@ const Events = () => {
             <Header />
 
             {/* Hero Section */}
-            <section 
-                className="relative text-white py-28 sm:py-32 md:py-40 text-center bg-cover bg-center px-4" 
+            <section
+                className="relative text-white py-28 sm:py-32 md:py-40 text-center bg-cover bg-center px-4"
                 style={{ backgroundImage: 'linear-gradient(rgba(45,90,39,0.85), rgba(58,140,125,0.85)), url(https://images.unsplash.com/photo-1518837695005-2083093ee35b)' }}
             >
                 <div className="relative z-10 animate-fade-in-up mt-22">
@@ -198,7 +198,7 @@ const Events = () => {
                         </h2>
                         <span className="h-px w-8 sm:w-12 bg-green-200"></span>
                     </div>
-                    
+
                     {/* Filter Buttons */}
                     <div className="flex justify-center sm:justify-end gap-2">
                         {[
@@ -209,11 +209,10 @@ const Events = () => {
                             <button
                                 key={f.value}
                                 onClick={() => setFilter(f.value)}
-                                className={`px-4 py-2 text-sm font-medium rounded-full transition-all ${
-                                    filter === f.value
+                                className={`px-4 py-2 text-sm font-medium rounded-full transition-all ${filter === f.value
                                         ? 'bg-green-600 text-white shadow-md'
                                         : 'bg-white text-gray-600 hover:bg-green-50 border border-gray-200'
-                                }`}
+                                    }`}
                             >
                                 {f.label}
                             </button>
@@ -236,7 +235,7 @@ const Events = () => {
                             </svg>
                         </div>
                         <p className="text-gray-600 mb-4">{error}</p>
-                        <button 
+                        <button
                             onClick={fetchEvents}
                             className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
                         >
@@ -251,7 +250,7 @@ const Events = () => {
                         </div>
                         <h3 className="text-xl font-semibold text-gray-700 mb-2">No Events Found</h3>
                         <p className="text-gray-500 max-w-md">
-                            {filter !== 'all' 
+                            {filter !== 'all'
                                 ? `There are no ${filter} events at the moment. Check back later!`
                                 : 'There are no upcoming events scheduled. Check back later for exciting activities!'
                             }
@@ -263,35 +262,35 @@ const Events = () => {
                         {filteredEvents.map((event) => {
                             const dateInfo = formatShortDate(event.eventDate);
                             const todayEvent = isToday(event.eventDate);
-                            
+
                             return (
-                                <div 
+                                <div
                                     key={event.id}
                                     onClick={() => setSelectedEvent(event)}
                                     className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100 group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer"
                                 >
                                     {/* Event Image */}
                                     <div className="relative h-48 overflow-hidden">
-                                        <img 
-                                            src={event.imageUrl} 
+                                        <img
+                                            src={event.imageUrl}
                                             alt={event.title}
                                             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                                             onError={(e) => {
                                                 e.target.src = DEFAULT_EVENT_IMAGES[0];
                                             }}
                                         />
-                                        <div 
+                                        <div
                                             className="absolute inset-0 opacity-40"
                                             style={{ background: `linear-gradient(to top, ${event.color}, transparent)` }}
                                         />
-                                        
+
                                         {/* Date Badge */}
                                         <div className="absolute top-4 left-4 bg-white rounded-xl shadow-lg p-2 text-center min-w-[60px]">
                                             <p className="text-xs font-medium text-gray-500 uppercase">{dateInfo.month}</p>
                                             <p className="text-2xl font-bold text-gray-800">{dateInfo.day}</p>
                                             <p className="text-xs text-gray-500">{dateInfo.weekday}</p>
                                         </div>
-                                        
+
                                         {/* Status/Live Badge */}
                                         {(event.status === 'ongoing' || todayEvent) && (
                                             <div className="absolute top-4 right-4">
@@ -302,7 +301,7 @@ const Events = () => {
                                             </div>
                                         )}
                                     </div>
-                                    
+
                                     {/* Event Content */}
                                     <div className="p-5 sm:p-6">
                                         {/* Status Tag */}
@@ -311,12 +310,12 @@ const Events = () => {
                                                 {event.status}
                                             </span>
                                         </div>
-                                        
+
                                         {/* Title */}
                                         <h3 className="font-bold text-lg sm:text-xl text-gray-800 mb-2 line-clamp-2 group-hover:text-green-700 transition-colors">
                                             {event.title}
                                         </h3>
-                                        
+
                                         {/* Time */}
                                         {event.startTime && (
                                             <div className="flex items-center gap-2 text-gray-500 text-sm mb-2">
@@ -327,22 +326,22 @@ const Events = () => {
                                                 </span>
                                             </div>
                                         )}
-                                        
+
                                         {/* Location */}
                                         <div className="flex items-center gap-2 text-gray-500 text-sm mb-4">
                                             <Icons.Location />
                                             <span>{event.location}</span>
                                         </div>
-                                        
+
                                         {/* Description Preview */}
                                         {event.description && (
                                             <p className="text-gray-500 text-sm mb-4 line-clamp-2">
                                                 {event.description}
                                             </p>
                                         )}
-                                        
+
                                         {/* View Details Button */}
-                                        <button 
+                                        <button
                                             className="w-full py-3 bg-gradient-to-r from-green-600 to-teal-600 text-white rounded-xl font-semibold shadow-md hover:shadow-lg hover:opacity-95 transition flex items-center justify-center gap-2 group/btn"
                                         >
                                             View Details
@@ -360,29 +359,29 @@ const Events = () => {
 
             {/* Event Details Modal */}
             {selectedEvent && (
-                <div 
+                <div
                     className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
                     onClick={() => setSelectedEvent(null)}
                 >
-                    <div 
+                    <div
                         className="bg-white rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl"
                         onClick={(e) => e.stopPropagation()}
                     >
                         {/* Modal Header Image */}
                         <div className="relative h-56 sm:h-72">
-                            <img 
-                                src={selectedEvent.imageUrl} 
+                            <img
+                                src={selectedEvent.imageUrl}
                                 alt={selectedEvent.title}
                                 className="w-full h-full object-cover"
                                 onError={(e) => {
                                     e.target.src = DEFAULT_EVENT_IMAGES[0];
                                 }}
                             />
-                            <div 
+                            <div
                                 className="absolute inset-0"
                                 style={{ background: `linear-gradient(to top, rgba(0,0,0,0.7), transparent)` }}
                             />
-                            
+
                             {/* Close Button */}
                             <button
                                 onClick={() => setSelectedEvent(null)}
@@ -390,7 +389,7 @@ const Events = () => {
                             >
                                 <Icons.Close />
                             </button>
-                            
+
                             {/* Title on Image */}
                             <div className="absolute bottom-4 left-6 right-6">
                                 <span className={`inline-block px-3 py-1 text-xs font-medium rounded-full border capitalize mb-3 ${getStatusStyle(selectedEvent.status)}`}>
@@ -401,7 +400,7 @@ const Events = () => {
                                 </h2>
                             </div>
                         </div>
-                        
+
                         {/* Modal Content */}
                         <div className="p-6 sm:p-8">
                             {/* Info Grid */}
@@ -418,7 +417,7 @@ const Events = () => {
                                         </p>
                                     </div>
                                 </div>
-                                
+
                                 {/* Time */}
                                 {selectedEvent.startTime && (
                                     <div className="flex items-start gap-3 p-4 bg-blue-50 rounded-xl">
@@ -434,7 +433,7 @@ const Events = () => {
                                         </div>
                                     </div>
                                 )}
-                                
+
                                 {/* Location */}
                                 <div className="flex items-start gap-3 p-4 bg-orange-50 rounded-xl sm:col-span-2">
                                     <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center text-orange-600">
@@ -446,7 +445,7 @@ const Events = () => {
                                     </div>
                                 </div>
                             </div>
-                            
+
                             {/* Description */}
                             {selectedEvent.description && (
                                 <div className="mb-6">
@@ -456,7 +455,7 @@ const Events = () => {
                                     </p>
                                 </div>
                             )}
-                            
+
                             {/* Action Buttons */}
                             <div className="flex gap-3">
                                 <button

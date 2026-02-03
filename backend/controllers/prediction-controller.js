@@ -13,7 +13,6 @@ exports.getPredictions = async (req, res) => {
             'SELECT id, user_id, animal_name, confidence, image_filename, created_at FROM predictions ORDER BY created_at DESC LIMIT ? OFFSET ?',
             [limit, offset]
         );
-
         const [statsResult] = await db.query(`
             SELECT animal_name, COUNT(*) as count 
             FROM predictions 

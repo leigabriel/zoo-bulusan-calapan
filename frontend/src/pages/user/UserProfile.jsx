@@ -6,46 +6,46 @@ import { sanitizeInput, sanitizePhone } from '../../utils/sanitize';
 
 const UserIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-20 h-20">
-        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-        <circle cx="12" cy="7" r="4"/>
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+        <circle cx="12" cy="7" r="4" />
     </svg>
 );
 
 const EditIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-5 h-5">
-        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
     </svg>
 );
 
 const SaveIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-5 h-5">
-        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
-        <polyline points="17 21 17 13 7 13 7 21"/>
-        <polyline points="7 3 7 8 15 8"/>
+        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+        <polyline points="17 21 17 13 7 13 7 21" />
+        <polyline points="7 3 7 8 15 8" />
     </svg>
 );
 
 const TrashIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-5 h-5">
-        <polyline points="3 6 5 6 21 6"/>
-        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-        <line x1="10" y1="11" x2="10" y2="17"/>
-        <line x1="14" y1="11" x2="14" y2="17"/>
+        <polyline points="3 6 5 6 21 6" />
+        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+        <line x1="10" y1="11" x2="10" y2="17" />
+        <line x1="14" y1="11" x2="14" y2="17" />
     </svg>
 );
 
 const LockIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-5 h-5">
-        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+        <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+        <path d="M7 11V7a5 5 0 0 1 10 0v4" />
     </svg>
 );
 
 const CameraIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-5 h-5">
-        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
-        <circle cx="12" cy="13" r="4"/>
+        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+        <circle cx="12" cy="13" r="4" />
     </svg>
 );
 
@@ -59,13 +59,13 @@ const UserProfile = () => {
     const [showPasswordModal, setShowPasswordModal] = useState(false);
     const [deletePassword, setDeletePassword] = useState('');
     const [passwordData, setPasswordData] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
-    
+
     // Profile image upload states
     const [imagePreview, setImagePreview] = useState(null);
     const [selectedFile, setSelectedFile] = useState(null);
     const [uploadingImage, setUploadingImage] = useState(false);
     const fileInputRef = useRef(null);
-    
+
     const [formData, setFormData] = useState({
         firstName: '',
         lastName: '',
@@ -89,13 +89,13 @@ const UserProfile = () => {
     const handleChange = (e) => {
         const { name, value } = e.target;
         let sanitizedValue = value;
-        
+
         if (name === 'phoneNumber') {
             sanitizedValue = sanitizePhone(value);
         } else if (name !== 'gender' && name !== 'birthday') {
             sanitizedValue = sanitizeInput(value);
         }
-        
+
         setFormData({ ...formData, [name]: sanitizedValue });
     };
 
@@ -188,8 +188,8 @@ const UserProfile = () => {
     const getProfileImageUrl = () => {
         if (imagePreview) return imagePreview;
         if (user?.profileImage) {
-            return user.profileImage.startsWith('http') 
-                ? user.profileImage 
+            return user.profileImage.startsWith('http')
+                ? user.profileImage
                 : `/profile-img/${user.profileImage}`;
         }
         if (user?.profile_image) {
@@ -309,7 +309,7 @@ const UserProfile = () => {
                     <span className="hidden sm:inline">Home</span>
                 </Link>
             </div>
-            
+
             {/* Hero Section - matching design system */}
             <section className="relative text-white py-20 pt-24 bg-cover bg-center" style={{ backgroundImage: 'linear-gradient(135deg, rgba(16,185,129,0.92), rgba(20,184,166,0.92)), url(https://images.unsplash.com/photo-1564349683136-77e08dba1ef7)' }}>
                 <div className="container mx-auto px-4 text-center relative z-10">
@@ -332,7 +332,7 @@ const UserProfile = () => {
                                 </div>
                             )}
                         </div>
-                        
+
                         {/* Camera button to trigger file input */}
                         <button
                             onClick={() => fileInputRef.current?.click()}
@@ -342,7 +342,7 @@ const UserProfile = () => {
                         >
                             <CameraIcon />
                         </button>
-                        
+
                         {/* Hidden file input */}
                         <input
                             ref={fileInputRef}
@@ -406,11 +406,10 @@ const UserProfile = () => {
 
             <section className="py-12 container mx-auto px-4 max-w-4xl flex-grow">
                 {message.text && (
-                    <div className={`mb-6 p-4 rounded-xl ${
-                        message.type === 'success' 
-                            ? 'bg-green-100 text-green-700 border border-green-300' 
+                    <div className={`mb-6 p-4 rounded-xl ${message.type === 'success'
+                            ? 'bg-green-100 text-green-700 border border-green-300'
                             : 'bg-red-100 text-red-700 border border-red-300'
-                    }`}>
+                        }`}>
                         {message.text}
                     </div>
                 )}

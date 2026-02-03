@@ -5,54 +5,54 @@ import { sanitizeInput } from '../../utils/sanitize';
 // Icons
 const CameraIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
-        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
-        <circle cx="12" cy="13" r="4"/>
+        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+        <circle cx="12" cy="13" r="4" />
     </svg>
 );
 
 const QRIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
-        <rect x="3" y="3" width="7" height="7"/>
-        <rect x="14" y="3" width="7" height="7"/>
-        <rect x="14" y="14" width="7" height="7"/>
-        <rect x="3" y="14" width="7" height="7"/>
+        <rect x="3" y="3" width="7" height="7" />
+        <rect x="14" y="3" width="7" height="7" />
+        <rect x="14" y="14" width="7" height="7" />
+        <rect x="3" y="14" width="7" height="7" />
     </svg>
 );
 
 const ClipboardIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
-        <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
-        <rect x="8" y="2" width="8" height="4" rx="1" ry="1"/>
+        <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+        <rect x="8" y="2" width="8" height="4" rx="1" ry="1" />
     </svg>
 );
 
 const InfoIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
-        <circle cx="12" cy="12" r="10"/>
-        <line x1="12" y1="16" x2="12" y2="12"/>
-        <line x1="12" y1="8" x2="12.01" y2="8"/>
+        <circle cx="12" cy="12" r="10" />
+        <line x1="12" y1="16" x2="12" y2="12" />
+        <line x1="12" y1="8" x2="12.01" y2="8" />
     </svg>
 );
 
 const CheckIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8">
-        <polyline points="20 6 9 17 4 12"/>
+        <polyline points="20 6 9 17 4 12" />
     </svg>
 );
 
 const XIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8">
-        <line x1="18" y1="6" x2="6" y2="18"/>
-        <line x1="6" y1="6" x2="18" y2="18"/>
+        <line x1="18" y1="6" x2="6" y2="18" />
+        <line x1="6" y1="6" x2="18" y2="18" />
     </svg>
 );
 
 const TicketIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
-        <path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/>
-        <path d="M13 5v2"/>
-        <path d="M13 17v2"/>
-        <path d="M13 11v2"/>
+        <path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z" />
+        <path d="M13 5v2" />
+        <path d="M13 17v2" />
+        <path d="M13 11v2" />
     </svg>
 );
 
@@ -65,7 +65,7 @@ const TicketScanner = () => {
     const [recentScans, setRecentScans] = useState([]);
     const [todayStats, setTodayStats] = useState({ scanned: 0, valid: 0, invalid: 0 });
     const [scanMode, setScanMode] = useState('manual'); // 'manual' or 'camera'
-    
+
     const videoRef = useRef(null);
     const canvasRef = useRef(null);
     const inputRef = useRef(null);
@@ -84,7 +84,7 @@ const TicketScanner = () => {
         };
         loadQRScanner();
         inputRef.current?.focus();
-        
+
         return () => {
             stopCamera();
         };
@@ -93,13 +93,13 @@ const TicketScanner = () => {
     const startCamera = async () => {
         try {
             setCameraError(null);
-            
+
             // Check if the qr-reader element exists
             const qrReaderElement = document.getElementById('qr-reader');
             if (!qrReaderElement) {
                 throw new Error('QR reader element not found');
             }
-            
+
             // Try using html5-qrcode library if available
             if (window.Html5Qrcode) {
                 // Stop any existing scanner first
@@ -111,16 +111,16 @@ const TicketScanner = () => {
                     }
                     scannerRef.current = null;
                 }
-                
+
                 const html5QrCode = new window.Html5Qrcode("qr-reader");
                 scannerRef.current = html5QrCode;
-                
+
                 // Get available cameras first
                 const devices = await window.Html5Qrcode.getCameras();
                 if (!devices || devices.length === 0) {
                     throw new Error('No cameras found on this device');
                 }
-                
+
                 await html5QrCode.start(
                     { facingMode: "environment" },
                     {
@@ -152,7 +152,7 @@ const TicketScanner = () => {
                         // Continuous scanning - errors are expected when no QR is in view
                     }
                 );
-                
+
                 setCameraActive(true);
             } else {
                 // Wait for library to load
@@ -161,16 +161,16 @@ const TicketScanner = () => {
                     await new Promise(resolve => setTimeout(resolve, 200));
                     attempts++;
                 }
-                
+
                 if (window.Html5Qrcode) {
                     // Retry with loaded library
                     startCamera();
                     return;
                 }
-                
+
                 // Fallback to basic camera access
-                const stream = await navigator.mediaDevices.getUserMedia({ 
-                    video: { facingMode: 'environment' } 
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: 'environment' }
                 });
                 if (videoRef.current) {
                     videoRef.current.srcObject = stream;
@@ -180,7 +180,7 @@ const TicketScanner = () => {
         } catch (error) {
             console.error('Error accessing camera:', error);
             let errorMessage = 'Unable to access camera. ';
-            
+
             if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
                 errorMessage += 'Camera permission was denied. Please allow camera access in your browser settings.';
             } else if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
@@ -192,7 +192,7 @@ const TicketScanner = () => {
             } else {
                 errorMessage += 'Please check permissions and try again.';
             }
-            
+
             setCameraError(errorMessage);
             setCameraActive(false);
         }
@@ -221,16 +221,16 @@ const TicketScanner = () => {
     const validateTicket = async (code) => {
         setLoading(true);
         setScanResult(null);
-        
+
         try {
             const response = await staffAPI.validateTicket(code);
-            
+
             const result = {
                 code,
                 ...response,
                 timestamp: new Date().toLocaleTimeString()
             };
-            
+
             setScanResult(result);
             setRecentScans(prev => [result, ...prev.slice(0, 9)]);
             setTodayStats(prev => ({
@@ -260,15 +260,13 @@ const TicketScanner = () => {
     };
 
     const ResultCard = ({ result }) => (
-        <div className={`p-6 rounded-2xl border ${
-            result.success 
-                ? 'bg-[#8cff65]/10 border-[#8cff65]/30' 
+        <div className={`p-6 rounded-2xl border ${result.success
+                ? 'bg-[#8cff65]/10 border-[#8cff65]/30'
                 : 'bg-red-500/10 border-red-500/30'
-        }`}>
+            }`}>
             <div className="flex items-center gap-4">
-                <div className={`w-16 h-16 rounded-full flex items-center justify-center ${
-                    result.success ? 'bg-[#8cff65]/20 text-[#8cff65]' : 'bg-red-500/20 text-red-400'
-                }`}>
+                <div className={`w-16 h-16 rounded-full flex items-center justify-center ${result.success ? 'bg-[#8cff65]/20 text-[#8cff65]' : 'bg-red-500/20 text-red-400'
+                    }`}>
                     {result.success ? <CheckIcon /> : <XIcon />}
                 </div>
                 <div className="flex-1">
@@ -335,22 +333,20 @@ const TicketScanner = () => {
                 <div className="flex gap-2">
                     <button
                         onClick={() => { setScanMode('manual'); stopCamera(); }}
-                        className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-medium transition ${
-                            scanMode === 'manual'
+                        className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-medium transition ${scanMode === 'manual'
                                 ? 'bg-[#8cff65] text-black'
                                 : 'text-gray-400 hover:text-white hover:bg-[#2a2a2a]'
-                        }`}
+                            }`}
                     >
                         <ClipboardIcon />
                         Manual Entry
                     </button>
                     <button
                         onClick={() => setScanMode('camera')}
-                        className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-medium transition ${
-                            scanMode === 'camera'
+                        className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-medium transition ${scanMode === 'camera'
                                 ? 'bg-[#8cff65] text-black'
                                 : 'text-gray-400 hover:text-white hover:bg-[#2a2a2a]'
-                        }`}
+                            }`}
                     >
                         <CameraIcon />
                         Camera Scan
@@ -407,30 +403,29 @@ const TicketScanner = () => {
                                 </h3>
                                 <button
                                     onClick={cameraActive ? stopCamera : startCamera}
-                                    className={`px-4 py-2 rounded-xl font-medium transition ${
-                                        cameraActive 
-                                            ? 'bg-red-500/10 border border-red-500/30 text-red-400 hover:bg-red-500/20' 
+                                    className={`px-4 py-2 rounded-xl font-medium transition ${cameraActive
+                                            ? 'bg-red-500/10 border border-red-500/30 text-red-400 hover:bg-red-500/20'
                                             : 'bg-[#8cff65]/10 border border-[#8cff65]/30 text-[#8cff65] hover:bg-[#8cff65]/20'
-                                    }`}
+                                        }`}
                                 >
                                     {cameraActive ? 'Stop Camera' : 'Start Camera'}
                                 </button>
                             </div>
-                            
+
                             {cameraError && (
                                 <div className="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 text-sm">
                                     {cameraError}
                                 </div>
                             )}
-                            
+
                             <div className="aspect-video bg-[#0a0a0a] rounded-xl overflow-hidden relative">
                                 {/* QR reader div - always present but hidden when camera is off */}
-                                <div 
-                                    id="qr-reader" 
+                                <div
+                                    id="qr-reader"
                                     className={`w-full h-full ${cameraActive ? 'block' : 'hidden'}`}
                                     style={{ minHeight: '200px' }}
                                 ></div>
-                                
+
                                 {!cameraActive && (
                                     <div className="w-full h-full flex items-center justify-center absolute inset-0">
                                         <div className="text-center text-gray-500">
@@ -453,7 +448,7 @@ const TicketScanner = () => {
                                     </div>
                                 )}
                             </div>
-                            
+
                             <canvas ref={canvasRef} className="hidden" />
                             <video ref={videoRef} autoPlay playsInline className="hidden" />
                         </div>
@@ -471,24 +466,23 @@ const TicketScanner = () => {
                         {recentScans.length > 0 ? (
                             <div className="space-y-2 max-h-80 overflow-y-auto">
                                 {recentScans.map((scan, index) => (
-                                    <div 
+                                    <div
                                         key={index}
-                                        className={`flex items-center justify-between p-3 rounded-xl border ${
-                                            scan.success 
-                                                ? 'bg-[#8cff65]/5 border-[#8cff65]/20' 
+                                        className={`flex items-center justify-between p-3 rounded-xl border ${scan.success
+                                                ? 'bg-[#8cff65]/5 border-[#8cff65]/20'
                                                 : 'bg-red-500/5 border-red-500/20'
-                                        }`}
+                                            }`}
                                     >
                                         <div className="flex items-center gap-3">
                                             <span className={scan.success ? 'text-[#8cff65]' : 'text-red-400'}>
                                                 {scan.success ? (
                                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-5 h-5">
-                                                        <polyline points="20 6 9 17 4 12"/>
+                                                        <polyline points="20 6 9 17 4 12" />
                                                     </svg>
                                                 ) : (
                                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-5 h-5">
-                                                        <line x1="18" y1="6" x2="6" y2="18"/>
-                                                        <line x1="6" y1="6" x2="18" y2="18"/>
+                                                        <line x1="18" y1="6" x2="6" y2="18" />
+                                                        <line x1="6" y1="6" x2="18" y2="18" />
                                                     </svg>
                                                 )}
                                             </span>

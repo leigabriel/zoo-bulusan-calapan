@@ -18,7 +18,7 @@ const GoogleAuthSuccess = () => {
                 // Extract token and user data from URL fragment
                 const hash = window.location.hash.substring(1);
                 const params = new URLSearchParams(hash);
-                
+
                 const token = params.get('token');
                 const userDataEncoded = params.get('user');
 
@@ -49,10 +49,10 @@ const GoogleAuthSuccess = () => {
             } catch (err) {
                 console.error('Google auth processing error:', err);
                 setError('Failed to complete authentication. Please try again.');
-                
+
                 // Redirect to login after a delay
                 setTimeout(() => {
-                    navigate('/login', { 
+                    navigate('/login', {
                         replace: true,
                         state: { message: 'Authentication failed. Please try again.' }
                     });
@@ -69,8 +69,8 @@ const GoogleAuthSuccess = () => {
                 <div className="bg-white p-8 rounded-xl shadow-lg max-w-md text-center">
                     <div className="text-red-500 mb-4">
                         <svg className="w-16 h-16 mx-auto\" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" 
-                                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
+                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                         </svg>
                     </div>
                     <h2 className="text-xl font-bold text-gray-900 mb-2">Authentication Error</h2>

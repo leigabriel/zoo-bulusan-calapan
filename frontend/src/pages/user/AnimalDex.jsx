@@ -7,10 +7,10 @@ import { sanitizeInput } from '../../utils/sanitize';
 
 const PawIcon = ({ className }) => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className={className}>
-        <circle cx="11" cy="4" r="2"/>
-        <circle cx="18" cy="8" r="2"/>
-        <circle cx="20" cy="16" r="2"/>
-        <path d="M9 10a5 5 0 0 1 5 5v3.5a3.5 3.5 0 0 1-6.84 1.045Q6.52 17.48 4.46 16.84A3.5 3.5 0 0 1 5.5 10Z"/>
+        <circle cx="11" cy="4" r="2" />
+        <circle cx="18" cy="8" r="2" />
+        <circle cx="20" cy="16" r="2" />
+        <path d="M9 10a5 5 0 0 1 5 5v3.5a3.5 3.5 0 0 1-6.84 1.045Q6.52 17.48 4.46 16.84A3.5 3.5 0 0 1 5.5 10Z" />
     </svg>
 );
 
@@ -52,7 +52,7 @@ const AnimalDex = () => {
 
     const filteredAnimals = animals.filter(animal => {
         const matchesSearch = animal.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                            animal.species.toLowerCase().includes(searchTerm.toLowerCase());
+            animal.species.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesCategory = selectedCategory === 'All' || animal.category === selectedCategory;
         return matchesSearch && matchesCategory;
     });
@@ -68,7 +68,7 @@ const AnimalDex = () => {
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col">
             <Header />
-            
+
             {/* Hero Section - matching design system */}
             <section className="relative text-white py-20 px-4 bg-cover bg-center" style={{ backgroundImage: 'linear-gradient(rgba(45,90,39,0.85), rgba(58,140,125,0.85)), url(https://images.unsplash.com/photo-1474511320723-9a56873571b7)' }}>
                 <div className="max-w-6xl mx-auto text-center relative z-10">
@@ -92,11 +92,10 @@ const AnimalDex = () => {
                         <button
                             key={cat}
                             onClick={() => setSelectedCategory(cat)}
-                            className={`px-6 py-2.5 rounded-full font-semibold transition-all transform hover:-translate-y-0.5 ${
-                                selectedCategory === cat
+                            className={`px-6 py-2.5 rounded-full font-semibold transition-all transform hover:-translate-y-0.5 ${selectedCategory === cat
                                     ? 'bg-gradient-to-r from-green-600 to-teal-600 text-white shadow-lg'
                                     : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
-                            }`}
+                                }`}
                         >
                             {cat}
                         </button>
@@ -124,9 +123,8 @@ const AnimalDex = () => {
                                     <span className="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs">
                                         {animal.category}
                                     </span>
-                                    <span className={`px-2 py-1 rounded-full text-xs ${
-                                        animal.status === 'healthy' ? 'bg-blue-100 text-blue-700' : 'bg-yellow-100 text-yellow-700'
-                                    }`}>
+                                    <span className={`px-2 py-1 rounded-full text-xs ${animal.status === 'healthy' ? 'bg-blue-100 text-blue-700' : 'bg-yellow-100 text-yellow-700'
+                                        }`}>
                                         {animal.status}
                                     </span>
                                 </div>
@@ -139,8 +137,8 @@ const AnimalDex = () => {
                     <div className="text-center py-12">
                         <div className="flex justify-center mb-4">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-16 h-16 text-gray-300">
-                                <circle cx="11" cy="11" r="8"/>
-                                <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                                <circle cx="11" cy="11" r="8" />
+                                <line x1="21" y1="21" x2="16.65" y2="16.65" />
                             </svg>
                         </div>
                         <p className="text-gray-500">No animals found matching your search</p>
@@ -156,10 +154,10 @@ const AnimalDex = () => {
                                 <img src={selectedAnimal.image} alt={selectedAnimal.name} className="w-full h-full object-cover" />
                             ) : (
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" className="w-24 h-24 opacity-70">
-                                    <circle cx="11" cy="4" r="2"/>
-                                    <circle cx="18" cy="8" r="2"/>
-                                    <circle cx="20" cy="16" r="2"/>
-                                    <path d="M9 10a5 5 0 0 1 5 5v3.5a3.5 3.5 0 0 1-6.84 1.045Q6.52 17.48 4.46 16.84A3.5 3.5 0 0 1 5.5 10Z"/>
+                                    <circle cx="11" cy="4" r="2" />
+                                    <circle cx="18" cy="8" r="2" />
+                                    <circle cx="20" cy="16" r="2" />
+                                    <path d="M9 10a5 5 0 0 1 5 5v3.5a3.5 3.5 0 0 1-6.84 1.045Q6.52 17.48 4.46 16.84A3.5 3.5 0 0 1 5.5 10Z" />
                                 </svg>
                             )}
                         </div>

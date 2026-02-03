@@ -344,13 +344,13 @@ const MapPage = () => {
         const scriptElement = document.createElement('script');
         scriptElement.src = '/dist/leaflet.js';
         scriptElement.async = true;
-        
+
         scriptElement.onload = () => {
             if (mapContainerRef.current && !mapRef.current && window.L) {
                 initializeMap();
             }
         };
-        
+
         document.body.appendChild(scriptElement);
 
         return () => {
@@ -422,7 +422,7 @@ const MapPage = () => {
 
         filteredAnimals.forEach(animal => {
             const regionColor = regionColors[animal.region] || '#10b981';
-            
+
             // Create custom icon with emoji and region color
             const customIcon = L.divIcon({
                 className: 'custom-animal-marker',
@@ -490,7 +490,7 @@ const MapPage = () => {
                 duration: 1.5
             });
             setSelectedAnimal(animal);
-            
+
             // Open the popup for this animal
             markersRef.current.forEach(marker => {
                 const latlng = marker.getLatLng();
@@ -503,7 +503,7 @@ const MapPage = () => {
 
     const flyToRegion = (region) => {
         if (!mapRef.current) return;
-        
+
         const regionCenters = {
             'Africa': [0, 20, 3],
             'Asia': [30, 100, 3],
@@ -511,7 +511,7 @@ const MapPage = () => {
             'The Americas': [10, -80, 3],
             'Polar Regions': [70, 0, 3]
         };
-        
+
         if (regionCenters[region]) {
             const [lat, lng, zoom] = regionCenters[region];
             mapRef.current.flyTo([lat, lng], zoom, { duration: 1.5 });
@@ -717,8 +717,8 @@ const MapPage = () => {
                 </div>
 
                 {/* Map Container */}
-                <div 
-                    ref={mapContainerRef} 
+                <div
+                    ref={mapContainerRef}
                     className="flex-1 w-full mt-[68px]"
                     style={{ minHeight: 'calc(100vh - 68px)' }}
                 />
@@ -737,7 +737,7 @@ const MapPage = () => {
                                 )}
                             </div>
                         </div>
-                        
+
                         {/* Animal List */}
                         <div className="overflow-y-auto flex-1 p-2">
                             {filteredAnimals.length === 0 ? (
@@ -749,18 +749,17 @@ const MapPage = () => {
                                     <button
                                         key={animal.id}
                                         onClick={() => flyToAnimal(animal)}
-                                        className={`w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition-all duration-200 ${
-                                            selectedAnimal?.id === animal.id 
-                                                ? 'bg-emerald-50 border border-emerald-200' 
+                                        className={`w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition-all duration-200 ${selectedAnimal?.id === animal.id
+                                                ? 'bg-emerald-50 border border-emerald-200'
                                                 : 'hover:bg-gray-50'
-                                        }`}
+                                            }`}
                                     >
                                         <span className="text-2xl flex-shrink-0">{animal.icon}</span>
                                         <div className="flex-1 min-w-0">
                                             <p className="font-medium text-gray-900 text-sm truncate">{animal.name}</p>
                                             <p className="text-xs text-gray-500 truncate">{animal.habitat}</p>
                                         </div>
-                                        <div 
+                                        <div
                                             className="w-2 h-2 rounded-full flex-shrink-0"
                                             style={{ backgroundColor: regionColors[animal.region] }}
                                             title={animal.region}
@@ -786,7 +785,7 @@ const MapPage = () => {
                                     }}
                                     className="flex items-center gap-2 w-full text-left hover:bg-gray-50 rounded-lg p-1 transition-colors"
                                 >
-                                    <div 
+                                    <div
                                         className="w-3 h-3 rounded-full"
                                         style={{ backgroundColor: color }}
                                     />

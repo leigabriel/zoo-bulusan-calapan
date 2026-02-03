@@ -64,7 +64,7 @@ const Tickets = () => {
         { value: '14:00', label: '2:00 PM - Afternoon' },
         { value: '16:00', label: '4:00 PM - Late Afternoon' }
     ];
-    
+
     const [timeSlots, setTimeSlots] = useState(defaultTimeSlots.map(slot => ({ ...slot, available: true })));
     const [slotsLoading, setSlotsLoading] = useState(false);
 
@@ -95,7 +95,7 @@ const Tickets = () => {
     useEffect(() => {
         const fetchSlotAvailability = async () => {
             if (!bookingDetails.date) return;
-            
+
             setSlotsLoading(true);
             try {
                 const response = await userAPI.getSlotAvailability(bookingDetails.date);
@@ -153,7 +153,7 @@ const Tickets = () => {
             'NATURE10': 10,
             'BULUSAN15': 15
         };
-        
+
         if (codes[promoCode.toUpperCase()]) {
             setDiscount(codes[promoCode.toUpperCase()]);
             setMessage({ text: `Promo code applied! ${codes[promoCode.toUpperCase()]}% discount`, type: 'success' });
@@ -220,9 +220,9 @@ const Tickets = () => {
 
     const handlePayment = async () => {
         if (!validateStep(3)) return;
-        
+
         setIsProcessing(true);
-        
+
         try {
             await new Promise(resolve => setTimeout(resolve, 800));
 
@@ -234,9 +234,9 @@ const Tickets = () => {
                     residents: 'resident'
                 }[type] || type;
 
-                return userAPI.purchaseTicket({ 
-                    ticketType: mapType, 
-                    quantity: qty, 
+                return userAPI.purchaseTicket({
+                    ticketType: mapType,
+                    quantity: qty,
                     visitDate: bookingDetails.date,
                     paymentMethod: total === 0 ? 'free' : bookingDetails.paymentMethod,
                     visitorEmail: bookingDetails.email,
@@ -282,27 +282,24 @@ const Tickets = () => {
                 ].map((step, index) => (
                     <React.Fragment key={step.num}>
                         <div className="flex flex-col items-center">
-                            <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-bold text-sm sm:text-base transition-all duration-300 ${
-                                currentStep >= step.num
+                            <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-bold text-sm sm:text-base transition-all duration-300 ${currentStep >= step.num
                                     ? 'bg-green-600 text-white shadow-lg'
                                     : 'bg-gray-200 text-gray-500'
-                            }`}>
+                                }`}>
                                 {currentStep > step.num ? (
                                     <i className="fas fa-check text-xs sm:text-sm"></i>
                                 ) : (
                                     step.num
                                 )}
                             </div>
-                            <span className={`text-xs mt-1 hidden sm:block text-center max-w-[80px] ${
-                                currentStep >= step.num ? 'text-green-600 font-medium' : 'text-gray-400'
-                            }`}>
+                            <span className={`text-xs mt-1 hidden sm:block text-center max-w-[80px] ${currentStep >= step.num ? 'text-green-600 font-medium' : 'text-gray-400'
+                                }`}>
                                 {step.label}
                             </span>
                         </div>
                         {index < 3 && (
-                            <div className={`w-6 sm:w-8 md:w-16 h-1 rounded transition-all duration-300 ${
-                                currentStep > step.num ? 'bg-green-600' : 'bg-gray-200'
-                            }`}></div>
+                            <div className={`w-6 sm:w-8 md:w-16 h-1 rounded transition-all duration-300 ${currentStep > step.num ? 'bg-green-600' : 'bg-gray-200'
+                                }`}></div>
                         )}
                     </React.Fragment>
                 ))}
@@ -316,16 +313,15 @@ const Tickets = () => {
             <h2 className="text-xl sm:text-2xl font-bold text-green-800 mb-4 sm:mb-6 flex items-center gap-2">
                 <i className="fas fa-ticket-alt"></i> Select Your Tickets
             </h2>
-            
+
             <div className="grid gap-3 sm:gap-4">
                 {Object.entries(ticketTypes).map(([type, info]) => (
-                    <div 
-                        key={type} 
-                        className={`p-3 sm:p-4 rounded-xl border-2 transition-all duration-300 ${
-                            counts[type] > 0 
-                                ? 'border-green-500 bg-green-50 shadow-md' 
+                    <div
+                        key={type}
+                        className={`p-3 sm:p-4 rounded-xl border-2 transition-all duration-300 ${counts[type] > 0
+                                ? 'border-green-500 bg-green-50 shadow-md'
                                 : 'border-gray-200 bg-white hover:border-green-300'
-                        }`}
+                            }`}
                     >
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
                             <div className="flex items-center gap-3 sm:gap-4">
@@ -337,14 +333,14 @@ const Tickets = () => {
                                     <p className="text-xs sm:text-sm text-gray-500">{info.description}</p>
                                 </div>
                             </div>
-                            
+
                             <div className="flex items-center justify-between sm:justify-end gap-3 sm:gap-4 mt-2 sm:mt-0">
                                 <span className="text-lg sm:text-xl font-bold text-green-700">
                                     {prices[type] === 0 ? 'FREE' : `P${prices[type]}`}
                                 </span>
-                                
+
                                 <div className="flex items-center bg-gray-100 rounded-lg flex-shrink-0">
-                                    <button 
+                                    <button
                                         onClick={() => updateCount(type, -1)}
                                         disabled={counts[type] === 0}
                                         className="w-9 h-9 sm:w-10 sm:h-10 rounded-l-lg hover:bg-green-200 text-green-800 font-bold disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
@@ -352,7 +348,7 @@ const Tickets = () => {
                                         <i className="fas fa-minus text-sm"></i>
                                     </button>
                                     <span className="w-10 sm:w-12 text-center font-bold text-base sm:text-lg">{counts[type]}</span>
-                                    <button 
+                                    <button
                                         onClick={() => updateCount(type, 1)}
                                         className="w-9 h-9 sm:w-10 sm:h-10 rounded-r-lg hover:bg-green-200 text-green-800 font-bold transition-colors flex items-center justify-center"
                                     >
@@ -437,13 +433,12 @@ const Tickets = () => {
                                 key={slot.value}
                                 onClick={() => slot.available && setBookingDetails({ ...bookingDetails, time: slot.value })}
                                 disabled={!slot.available}
-                                className={`p-2.5 sm:p-3 rounded-xl border-2 transition-all text-sm sm:text-base ${
-                                    bookingDetails.time === slot.value
+                                className={`p-2.5 sm:p-3 rounded-xl border-2 transition-all text-sm sm:text-base ${bookingDetails.time === slot.value
                                         ? 'border-green-500 bg-green-50 text-green-700'
                                         : slot.available
                                             ? 'border-gray-200 hover:border-green-300'
                                             : 'border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed'
-                                }`}
+                                    }`}
                             >
                                 <i className={`fas fa-clock mr-2 ${!slot.available && 'opacity-50'}`}></i>
                                 {slot.label}
@@ -467,7 +462,7 @@ const Tickets = () => {
                     <input
                         type="email"
                         value={bookingDetails.email}
-                        onChange={(e) => setBookingDetails({ ...bookingDetails, email: sanitizeEmail(e.target.value) })}                        placeholder="your@email.com"
+                        onChange={(e) => setBookingDetails({ ...bookingDetails, email: sanitizeEmail(e.target.value) })} placeholder="your@email.com"
                         className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm sm:text-base"
                     />
                 </div>
@@ -514,7 +509,7 @@ const Tickets = () => {
 
             <div className="space-y-3 sm:space-y-4">
                 {companions.map((companion, index) => (
-                    <div 
+                    <div
                         key={companion.id}
                         className="p-3 sm:p-4 bg-gray-50 rounded-xl border border-gray-200"
                     >
@@ -542,12 +537,11 @@ const Tickets = () => {
                         <i className="fas fa-credit-card"></i> Payment Method
                     </h3>
                     <div className="grid gap-3">
-                        <label 
-                            className={`flex items-center gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                                bookingDetails.paymentMethod === 'pay_at_park' 
-                                    ? 'border-green-500 bg-green-50' 
+                        <label
+                            className={`flex items-center gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all ${bookingDetails.paymentMethod === 'pay_at_park'
+                                    ? 'border-green-500 bg-green-50'
                                     : 'border-gray-200 hover:border-green-300'
-                            }`}
+                                }`}
                         >
                             <input
                                 type="radio"
@@ -568,12 +562,11 @@ const Tickets = () => {
                             </div>
                         </label>
 
-                        <label 
-                            className={`flex items-center gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                                bookingDetails.paymentMethod === 'gcash' 
-                                    ? 'border-blue-500 bg-blue-50' 
+                        <label
+                            className={`flex items-center gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all ${bookingDetails.paymentMethod === 'gcash'
+                                    ? 'border-blue-500 bg-blue-50'
                                     : 'border-gray-200 hover:border-blue-300'
-                            }`}
+                                }`}
                         >
                             <input
                                 type="radio"
@@ -594,7 +587,7 @@ const Tickets = () => {
                             </div>
                         </label>
 
-                        <label 
+                        {/* <label 
                             className={`flex items-center gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all ${
                                 bookingDetails.paymentMethod === 'paypal' 
                                     ? 'border-indigo-500 bg-indigo-50' 
@@ -618,7 +611,7 @@ const Tickets = () => {
                                     <p className="text-sm text-gray-500">Pay securely with PayPal</p>
                                 </div>
                             </div>
-                        </label>
+                        </label> */}
                     </div>
                 </div>
             )}
@@ -646,7 +639,7 @@ const Tickets = () => {
             <div className="w-16 h-16 sm:w-20 sm:h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6 animate-bounce">
                 <i className="fas fa-check text-3xl sm:text-4xl text-green-600"></i>
             </div>
-            
+
             <h2 className="text-2xl sm:text-3xl font-bold text-green-800 mb-2">Booking Confirmed!</h2>
             <p className="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6">Your tickets have been successfully reserved.</p>
 
@@ -706,12 +699,12 @@ const Tickets = () => {
     return (
         <div className="min-h-screen bg-gradient-to-b from-green-50 to-white">
             <Header />
-            
+
             {/* Hero Section */}
-            <section 
+            <section
                 className="bg-[#2D5A27] text-white py-28 sm:py-32 md:py-40 text-center relative overflow-hidden"
-                style={{ 
-                    backgroundImage: 'linear-gradient(rgba(45, 90, 39, 0.9), rgba(58, 140, 125, 0.9)), url(https://images.unsplash.com/photo-1548013146-72479768bada?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80)', 
+                style={{
+                    backgroundImage: 'linear-gradient(rgba(45, 90, 39, 0.9), rgba(58, 140, 125, 0.9)), url(https://images.unsplash.com/photo-1548013146-72479768bada?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80)',
                     backgroundSize: 'cover',
                     backgroundPosition: 'center'
                 }}
@@ -724,7 +717,7 @@ const Tickets = () => {
                     <p className="text-lg opacity-90 max-w-2xl mx-auto">
                         Secure your entry to Zoo of Bulusan. Experience wildlife like never before!
                     </p>
-                    
+
                     {/* Quick Info */}
                     <div className="flex justify-center gap-6 mt-6 flex-wrap">
                         <div className="flex items-center gap-2 bg-white/20 px-4 py-2 rounded-full">
@@ -733,7 +726,7 @@ const Tickets = () => {
                         </div>
                         <div className="flex items-center gap-2 bg-white/20 px-4 py-2 rounded-full">
                             <i className="fas fa-map-marker-alt"></i>
-                            <span>Bulusan, Sorsogon</span>
+                            <span>Bulusan, Calapan</span>
                         </div>
                     </div>
                 </div>
@@ -744,11 +737,10 @@ const Tickets = () => {
                 {stepIndicatorContent}
 
                 {message.text && (
-                    <div className={`mb-6 p-4 rounded-xl flex items-center gap-3 ${
-                        message.type === 'error' 
-                            ? 'bg-red-100 text-red-700 border border-red-200' 
+                    <div className={`mb-6 p-4 rounded-xl flex items-center gap-3 ${message.type === 'error'
+                            ? 'bg-red-100 text-red-700 border border-red-200'
                             : 'bg-green-100 text-green-700 border border-green-200'
-                    }`}>
+                        }`}>
                         <i className={`fas ${message.type === 'error' ? 'fa-exclamation-circle' : 'fa-check-circle'}`}></i>
                         {message.text}
                     </div>
@@ -776,7 +768,7 @@ const Tickets = () => {
                                     ) : (
                                         <div className="hidden sm:block"></div>
                                     )}
-                                    
+
                                     {currentStep < 3 ? (
                                         <button
                                             onClick={nextStep}

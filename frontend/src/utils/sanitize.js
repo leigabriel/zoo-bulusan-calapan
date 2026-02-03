@@ -14,13 +14,13 @@
  */
 export const sanitizeInput = (input, trimWhitespace = false) => {
     if (typeof input !== 'string') return input;
-    
+
     let sanitized = input
         .replace(/[<>]/g, '')
         .replace(/javascript:/gi, '')
         .replace(/on\w+\s*=/gi, '')
         .replace(/data:/gi, '');
-    
+
     return trimWhitespace ? sanitized.trim() : sanitized;
 };
 
@@ -31,7 +31,7 @@ export const sanitizeInput = (input, trimWhitespace = false) => {
  */
 export const escapeHtml = (html) => {
     if (typeof html !== 'string') return html;
-    
+
     const map = {
         '&': '&amp;',
         '<': '&lt;',
@@ -39,7 +39,7 @@ export const escapeHtml = (html) => {
         '"': '&quot;',
         "'": '&#039;'
     };
-    
+
     return html.replace(/[&<>"']/g, (m) => map[m]);
 };
 
@@ -94,7 +94,7 @@ export const sanitizeFormData = (formData) => {
 export const createSafeHandler = (setter, sanitizer = 'text') => {
     return (e) => {
         let value = e.target.value;
-        
+
         switch (sanitizer) {
             case 'email':
                 value = sanitizeEmail(value, false);
@@ -105,7 +105,7 @@ export const createSafeHandler = (setter, sanitizer = 'text') => {
             default:
                 value = sanitizeInput(value, false);
         }
-        
+
         setter(value);
     };
 };

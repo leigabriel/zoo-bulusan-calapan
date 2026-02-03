@@ -14,35 +14,35 @@ try {
 // Fallback response function when AI service is not available
 const getFallbackResponse = (message) => {
     const lowerMsg = message.toLowerCase();
-    
+
     if (lowerMsg.includes('ticket') || lowerMsg.includes('price') || lowerMsg.includes('cost') || lowerMsg.includes('fee')) {
         return "Mabuhay! Here are our ticket prices:\n\n- Adult (18+): P50\n- Child (4-17): P30\n- Senior Citizens: P40\n- Students (with ID): P35\n- PWD (with ID): P35\n- Calapan Residents: FREE (with valid ID)\n\nYou can book tickets online through our website!";
     }
-    
+
     if (lowerMsg.includes('hour') || lowerMsg.includes('open') || lowerMsg.includes('time') || lowerMsg.includes('schedule')) {
         return "Zoo Bulusan Operating Hours:\n\n- Tuesday to Sunday: 8:00 AM - 5:00 PM\n- Monday: CLOSED (maintenance day)\n- Last entry: 4:00 PM\n\nPlan your visit accordingly and arrive early to enjoy all our exhibits!";
     }
-    
+
     if (lowerMsg.includes('animal') || lowerMsg.includes('species') || lowerMsg.includes('wildlife')) {
         return "We have amazing animals at Zoo Bulusan! Visit our Animals page or use the AnimalDex feature to explore our complete collection. You can also use the AI Animal Scanner to identify animals during your visit. If you have questions about any specific animal, just ask me and I will provide information about it!";
     }
-    
+
     if (lowerMsg.includes('zone') || lowerMsg.includes('area') || lowerMsg.includes('exhibit') || lowerMsg.includes('section')) {
         return "Our Zoo Zones:\n\n- Mammal Kingdom: Home to deer, monkeys, wild boars\n- Bird Sanctuary: Native and migratory birds\n- Reptile House: Snakes, lizards, and crocodiles\n- Aquatic Zone: Freshwater fish native to Oriental Mindoro\n- Children's Zoo: Interactive area for kids\n- Conservation Center: Educational exhibits about wildlife preservation\n\nUse our interactive map to navigate!";
     }
-    
+
     if (lowerMsg.includes('location') || lowerMsg.includes('where') || lowerMsg.includes('address') || lowerMsg.includes('direction')) {
         return "Zoo Bulusan Location:\n\nBulusan Wildlife Park\nCalapan City, Oriental Mindoro\nMIMAROPA Region, Philippines\n\nEmail: info@zoobulusan.com\nPhone: (043) 123-4567";
     }
-    
+
     if (lowerMsg.includes('event') || lowerMsg.includes('activity') || lowerMsg.includes('program')) {
         return "Check out our Events page for:\n\n- Wildlife educational programs\n- Guided tours\n- Conservation workshops\n- School field trips\n- Special seasonal events\n\nBook in advance for group visits!";
     }
-    
+
     if (lowerMsg.includes('hello') || lowerMsg.includes('hi') || lowerMsg.includes('hey') || lowerMsg.includes('mabuhay')) {
         return "Mabuhay! Welcome to Zoo Bulusan! I'm Zooey, your zoo assistant.\n\nHow can I help you today? I can tell you about:\n- Ticket prices and booking\n- Operating hours\n- Any animal (just ask about any animal and I will tell you about it)\n- Zoo zones and facilities\n- Events and activities\n- Ticket availability\n\nJust ask away!";
     }
-    
+
     return "Salamat for your question!\n\nI can help you with:\n- Ticket prices and booking\n- Operating hours (Tue-Sun, 8AM-5PM)\n- Information about any animal you ask about\n- Zoo zones and map\n- Events and activities\n- Current ticket availability\n\nFeel free to ask about any of these topics, or contact us at info@zoobulusan.com for more specific inquiries!";
 };
 
@@ -121,16 +121,16 @@ RESPONSE FORMAT RULES - VERY IMPORTANT:
 router.post('/chat', async (req, res) => {
     try {
         const { message, history = [] } = req.body;
-        
+
         if (!message) {
-            return res.status(400).json({ 
-                success: false, 
-                message: 'Message is required' 
+            return res.status(400).json({
+                success: false,
+                message: 'Message is required'
             });
         }
 
         const apiKey = process.env.GEMINI_API_KEY;
-        
+
         // Check if API key is configured and not empty
         if (!apiKey || typeof apiKey !== 'string' || apiKey.trim().length === 0) {
             // Provide fallback responses when API key is not configured
@@ -250,7 +250,7 @@ router.get('/status', (req, res) => {
     const apiKey = process.env.GEMINI_API_KEY;
     const isConfigured = !!(apiKey && apiKey.trim().length > 0);
     const hasGoogleAI = !!GoogleGenerativeAI;
-    
+
     res.json({
         success: true,
         configured: isConfigured,
@@ -258,9 +258,9 @@ router.get('/status', (req, res) => {
         ready: isConfigured && hasGoogleAI,
         assistant: 'Zooey',
         version: '1.0.0',
-        message: !isConfigured 
-            ? 'GEMINI_API_KEY not configured in .env' 
-            : !hasGoogleAI 
+        message: !isConfigured
+            ? 'GEMINI_API_KEY not configured in .env'
+            : !hasGoogleAI
                 ? '@google/generative-ai package not installed'
                 : 'AI service is ready'
     });

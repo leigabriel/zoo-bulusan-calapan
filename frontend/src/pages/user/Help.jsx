@@ -161,7 +161,7 @@ const Help = () => {
 
     const filteredFaqs = faqs.filter(faq => {
         const matchesCategory = activeCategory === 'all' || faq.category === activeCategory;
-        const matchesSearch = searchQuery === '' || 
+        const matchesSearch = searchQuery === '' ||
             faq.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
             faq.answer.toLowerCase().includes(searchQuery.toLowerCase());
         return matchesCategory && matchesSearch;
@@ -199,7 +199,7 @@ const Help = () => {
                 <div className="relative z-10 container mx-auto px-4">
                     <h1 className="text-4xl md:text-5xl font-bold mb-4 tracking-tight">Help Center</h1>
                     <p className="text-lg max-w-xl mx-auto opacity-90 font-light mb-8">How can we help you today?</p>
-                    
+
                     {/* Search Bar */}
                     <div className="max-w-xl mx-auto">
                         <div className="relative">
@@ -244,36 +244,34 @@ const Help = () => {
                     <div className="lg:w-64 flex-shrink-0">
                         <div className="bg-white rounded-2xl shadow-lg p-4 border border-gray-100 sticky top-24">
                             <h3 className="font-semibold text-gray-800 mb-4 px-2">Categories</h3>
-                            
+
                             {/* Mobile: Horizontal scroll */}
                             <div className="lg:hidden flex overflow-x-auto gap-2 pb-2 scrollbar-hide">
                                 {helpCategories.map(cat => (
                                     <button
                                         key={cat.id}
                                         onClick={() => setActiveCategory(cat.id)}
-                                        className={`flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-xl transition-all ${
-                                            activeCategory === cat.id
+                                        className={`flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-xl transition-all ${activeCategory === cat.id
                                                 ? 'bg-emerald-500 text-white'
                                                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                                        }`}
+                                            }`}
                                     >
                                         <cat.icon />
                                         <span className="text-sm font-medium whitespace-nowrap">{cat.label}</span>
                                     </button>
                                 ))}
                             </div>
-                            
+
                             {/* Desktop: Vertical list */}
                             <div className="hidden lg:block space-y-1">
                                 {helpCategories.map(cat => (
                                     <button
                                         key={cat.id}
                                         onClick={() => setActiveCategory(cat.id)}
-                                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all ${
-                                            activeCategory === cat.id
+                                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all ${activeCategory === cat.id
                                                 ? 'bg-emerald-50 text-emerald-700'
                                                 : 'text-gray-600 hover:bg-gray-50'
-                                        }`}
+                                            }`}
                                     >
                                         <cat.icon />
                                         <span className="font-medium text-sm">{cat.label}</span>
@@ -292,7 +290,7 @@ const Help = () => {
                                     {filteredFaqs.length} {filteredFaqs.length === 1 ? 'result' : 'results'} found
                                 </p>
                             </div>
-                            
+
                             <div className="divide-y divide-gray-100">
                                 {filteredFaqs.length > 0 ? (
                                     filteredFaqs.map((faq, index) => (
@@ -302,15 +300,14 @@ const Help = () => {
                                                 className="w-full flex items-start justify-between gap-4 text-left"
                                             >
                                                 <div className="flex-grow">
-                                                    <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium mb-2 ${
-                                                        faq.category === 'tickets' ? 'bg-emerald-100 text-emerald-700' :
-                                                        faq.category === 'ai' ? 'bg-purple-100 text-purple-700' :
-                                                        faq.category === 'map' ? 'bg-blue-100 text-blue-700' :
-                                                        'bg-teal-100 text-teal-700'
-                                                    }`}>
+                                                    <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium mb-2 ${faq.category === 'tickets' ? 'bg-emerald-100 text-emerald-700' :
+                                                            faq.category === 'ai' ? 'bg-purple-100 text-purple-700' :
+                                                                faq.category === 'map' ? 'bg-blue-100 text-blue-700' :
+                                                                    'bg-teal-100 text-teal-700'
+                                                        }`}>
                                                         {faq.category === 'tickets' ? 'Tickets' :
-                                                         faq.category === 'ai' ? 'AI Features' :
-                                                         faq.category === 'map' ? 'Map' : 'Account'}
+                                                            faq.category === 'ai' ? 'AI Features' :
+                                                                faq.category === 'map' ? 'Map' : 'Account'}
                                                     </span>
                                                     <h3 className="font-semibold text-gray-800">{faq.question}</h3>
                                                 </div>
@@ -346,7 +343,7 @@ const Help = () => {
                             <h2 className="text-2xl md:text-3xl font-bold mb-2">Still need help?</h2>
                             <p className="opacity-90">Our team is ready to assist you</p>
                         </div>
-                        
+
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 max-w-4xl mx-auto">
                             <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-4 md:p-6 text-center">
                                 <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center mx-auto mb-3">
@@ -355,7 +352,7 @@ const Help = () => {
                                 <h3 className="font-semibold mb-1">Email Us</h3>
                                 <p className="text-sm opacity-90">info@bulusanwildlife.com</p>
                             </div>
-                            
+
                             <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-4 md:p-6 text-center">
                                 <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center mx-auto mb-3">
                                     <Icons.Phone />
@@ -363,7 +360,7 @@ const Help = () => {
                                 <h3 className="font-semibold mb-1">Call Us</h3>
                                 <p className="text-sm opacity-90">(043) 123-4567</p>
                             </div>
-                            
+
                             <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-4 md:p-6 text-center">
                                 <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center mx-auto mb-3">
                                     <Icons.Clock />

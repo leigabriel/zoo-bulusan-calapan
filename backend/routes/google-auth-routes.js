@@ -1,9 +1,9 @@
 const express = require('express');
 const router = express.Router();
-const { 
-    initiateGoogleAuth, 
+const {
+    initiateGoogleAuth,
     handleGoogleCallback,
-    googleLogout 
+    googleLogout
 } = require('../controllers/google-auth-controller');
 const { protect } = require('../middleware/auth');
 

@@ -57,7 +57,7 @@ const TicketHistory = () => {
         })
         .sort((a, b) => {
             let valueA, valueB;
-            
+
             switch (sortBy) {
                 case 'visitDate':
                     valueA = new Date(a.visitDate).getTime();
@@ -79,7 +79,7 @@ const TicketHistory = () => {
                     valueA = new Date(a.visitDate).getTime();
                     valueB = new Date(b.visitDate).getTime();
             }
-            
+
             if (sortOrder === 'asc') {
                 return valueA > valueB ? 1 : -1;
             } else {
@@ -116,7 +116,7 @@ const TicketHistory = () => {
         switch (method?.toLowerCase()) {
             case 'gcash': return 'GCash';
             case 'paypal': return 'PayPal';
-            case 'cash': 
+            case 'cash':
             case 'pay_at_park': return 'Pay at Bulusan Park';
             case 'card': return 'Credit/Debit Card';
             case 'online': return 'Online Payment';
@@ -156,7 +156,7 @@ const TicketHistory = () => {
                     <span className="hidden sm:inline">Home</span>
                 </Link>
             </div>
-            
+
             {/* Hero Section - matching other pages */}
             <section className="relative text-white py-20 pt-24 text-center bg-cover bg-center" style={{ backgroundImage: 'linear-gradient(135deg, rgba(16,185,129,0.92), rgba(20,184,166,0.92)), url(https://images.unsplash.com/photo-1564349683136-77e08dba1ef7)' }}>
                 <div className="relative z-10">
@@ -172,11 +172,10 @@ const TicketHistory = () => {
                             <button
                                 key={f}
                                 onClick={() => setFilter(f)}
-                                className={`px-4 sm:px-6 py-2 sm:py-2.5 rounded-full text-sm sm:text-base font-semibold capitalize transition-all transform hover:-translate-y-0.5 ${
-                                    filter === f
+                                className={`px-4 sm:px-6 py-2 sm:py-2.5 rounded-full text-sm sm:text-base font-semibold capitalize transition-all transform hover:-translate-y-0.5 ${filter === f
                                         ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg'
                                         : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
-                                }`}
+                                    }`}
                             >
                                 {f === 'all' ? 'All' : f.charAt(0).toUpperCase() + f.slice(1)}
                             </button>
@@ -271,8 +270,8 @@ const TicketHistory = () => {
                                             <div className="col-span-2">
                                                 <p className="text-gray-500">Payment Status</p>
                                                 <p className={`font-medium capitalize ${ticket.paymentStatus === 'paid' ? 'text-green-600' : ticket.paymentStatus === 'pending' ? 'text-yellow-600' : 'text-gray-600'}`}>
-                                                    {ticket.paymentStatus === 'pending' && (ticket.paymentMethod === 'cash' || !ticket.paymentMethod) 
-                                                        ? 'Pending - Pay at the park entrance' 
+                                                    {ticket.paymentStatus === 'pending' && (ticket.paymentMethod === 'cash' || !ticket.paymentMethod)
+                                                        ? 'Pending - Pay at the park entrance'
                                                         : ticket.paymentStatus}
                                                 </p>
                                             </div>
@@ -288,13 +287,13 @@ const TicketHistory = () => {
                                         {ticket.qrCode ? (
                                             <>
                                                 <div className="w-24 h-24 bg-white rounded-xl flex items-center justify-center mb-2 border border-gray-200 p-2">
-                                                    <img 
+                                                    <img
                                                         src={`https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${ticket.qrCode}`}
                                                         alt="QR Code"
                                                         className="w-full h-full"
                                                     />
                                                 </div>
-                                                <button 
+                                                <button
                                                     onClick={() => setSelectedTicket(ticket)}
                                                     className="text-emerald-600 text-sm font-medium hover:underline"
                                                 >
@@ -304,8 +303,8 @@ const TicketHistory = () => {
                                         ) : (
                                             <div className="w-24 h-24 bg-white rounded-xl flex items-center justify-center mb-2 border-2 border-dashed border-gray-200">
                                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-10 h-10 text-gray-400">
-                                                    <path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/>
-                                                    <path d="M13 5v2"/><path d="M13 17v2"/><path d="M13 11v2"/>
+                                                    <path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z" />
+                                                    <path d="M13 5v2" /><path d="M13 17v2" /><path d="M13 11v2" />
                                                 </svg>
                                             </div>
                                         )}
@@ -318,13 +317,13 @@ const TicketHistory = () => {
                     <div className="bg-white rounded-3xl p-12 text-center border border-gray-100 shadow-sm">
                         <div className="flex justify-center mb-4">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-16 h-16 text-gray-300">
-                                <path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/>
-                                <path d="M13 5v2"/><path d="M13 17v2"/><path d="M13 11v2"/>
+                                <path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z" />
+                                <path d="M13 5v2" /><path d="M13 17v2" /><path d="M13 11v2" />
                             </svg>
                         </div>
                         <h3 className="text-xl font-bold text-gray-800 mb-2">No tickets found</h3>
                         <p className="text-gray-500 mb-6">
-                            {filter === 'all' 
+                            {filter === 'all'
                                 ? "You haven't purchased any tickets yet"
                                 : `No ${filter} tickets found`}
                         </p>
@@ -350,15 +349,15 @@ const TicketHistory = () => {
                                     className="text-gray-400 hover:text-gray-600 transition"
                                 >
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-6 h-6">
-                                        <line x1="18" y1="6" x2="6" y2="18"/>
-                                        <line x1="6" y1="6" x2="18" y2="18"/>
+                                        <line x1="18" y1="6" x2="6" y2="18" />
+                                        <line x1="6" y1="6" x2="18" y2="18" />
                                     </svg>
                                 </button>
                             </div>
                         </div>
                         <div className="p-8 flex flex-col items-center">
                             <div className="w-48 h-48 bg-white rounded-2xl flex items-center justify-center mb-4 border-2 border-emerald-200 p-2">
-                                <img 
+                                <img
                                     src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${selectedTicket.qrCode}`}
                                     alt="QR Code"
                                     className="w-full h-full"

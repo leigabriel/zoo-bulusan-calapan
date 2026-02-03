@@ -6,55 +6,55 @@ import { adminAPI } from '../../services/api-client';
 // Icons
 const UsersIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
-        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-        <circle cx="9" cy="7" r="4"/>
-        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+        <circle cx="9" cy="7" r="4" />
+        <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
     </svg>
 );
 
 const AnimalIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="currentColor" className="w-6 h-6">
-        <path d="M226.5 92.9c14.3 42.9-.3 86.2-32.6 96.8s-70.1-15.6-84.4-58.5s.3-86.2 32.6-96.8s70.1 15.6 84.4 58.5zM100.4 198.6c18.9 32.4 14.3 70.1-10.2 84.1s-59.7-.9-78.5-33.3S-2.7 179.3 21.8 165.3s59.7 .9 78.5 33.3zM69.2 401.2C121.6 259.9 214.7 224 256 224s134.4 35.9 186.8 177.2c3.6 9.7 5.2 20.1 5.2 30.5v1.6c0 25.8-20.9 46.7-46.7 46.7c-11.5 0-22.9-1.4-34-4.2l-88-22c-15.3-3.8-31.3-3.8-46.6 0l-88 22c-11.1 2.8-22.5 4.2-34 4.2C84.9 480 64 459.1 64 433.3v-1.6c0-10.4 1.6-20.8 5.2-30.5zM421.8 282.7c-24.5-14-29.1-51.7-10.2-84.1s54-47.3 78.5-33.3s29.1 51.7 10.2 84.1s-54 47.3-78.5 33.3zM310.1 189.7c-32.3-10.6-46.9-53.9-32.6-96.8s52.1-69.1 84.4-58.5s46.9 53.9 32.6 96.8s-52.1 69.1-84.4 58.5z"/>
+        <path d="M226.5 92.9c14.3 42.9-.3 86.2-32.6 96.8s-70.1-15.6-84.4-58.5s.3-86.2 32.6-96.8s70.1 15.6 84.4 58.5zM100.4 198.6c18.9 32.4 14.3 70.1-10.2 84.1s-59.7-.9-78.5-33.3S-2.7 179.3 21.8 165.3s59.7 .9 78.5 33.3zM69.2 401.2C121.6 259.9 214.7 224 256 224s134.4 35.9 186.8 177.2c3.6 9.7 5.2 20.1 5.2 30.5v1.6c0 25.8-20.9 46.7-46.7 46.7c-11.5 0-22.9-1.4-34-4.2l-88-22c-15.3-3.8-31.3-3.8-46.6 0l-88 22c-11.1 2.8-22.5 4.2-34 4.2C84.9 480 64 459.1 64 433.3v-1.6c0-10.4 1.6-20.8 5.2-30.5zM421.8 282.7c-24.5-14-29.1-51.7-10.2-84.1s54-47.3 78.5-33.3s29.1 51.7 10.2 84.1s-54 47.3-78.5 33.3zM310.1 189.7c-32.3-10.6-46.9-53.9-32.6-96.8s52.1-69.1 84.4-58.5s46.9 53.9 32.6 96.8s-52.1 69.1-84.4 58.5z" />
     </svg>
 );
 
 const TicketIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
-        <path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/>
-        <path d="M13 5v2"/>
-        <path d="M13 17v2"/>
-        <path d="M13 11v2"/>
+        <path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z" />
+        <path d="M13 5v2" />
+        <path d="M13 17v2" />
+        <path d="M13 11v2" />
     </svg>
 );
 
 const RevenueIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
-        <circle cx="12" cy="12" r="10"/>
-        <path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/>
-        <path d="M12 18V6"/>
+        <circle cx="12" cy="12" r="10" />
+        <path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8" />
+        <path d="M12 18V6" />
     </svg>
 );
 
 const TrendUpIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
-        <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
-        <polyline points="17 6 23 6 23 12"/>
+        <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
+        <polyline points="17 6 23 6 23 12" />
     </svg>
 );
 
 const TrendDownIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
-        <polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/>
-        <polyline points="17 18 23 18 23 12"/>
+        <polyline points="23 18 13.5 8.5 8.5 13.5 1 6" />
+        <polyline points="17 18 23 18 23 12" />
     </svg>
 );
 
 const MoreIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
-        <circle cx="12" cy="12" r="1"/>
-        <circle cx="12" cy="5" r="1"/>
-        <circle cx="12" cy="19" r="1"/>
+        <circle cx="12" cy="12" r="1" />
+        <circle cx="12" cy="5" r="1" />
+        <circle cx="12" cy="19" r="1" />
     </svg>
 );
 
@@ -138,9 +138,8 @@ const AdminDashboard = () => {
             <p className="text-gray-400 text-sm mb-1">{title}</p>
             <p className="text-3xl font-bold text-white mb-2">{value}</p>
             <div className="flex items-center gap-2">
-                <span className={`flex items-center gap-1 text-sm font-medium ${
-                    trend === 'up' ? 'text-[#8cff65]' : 'text-red-400'
-                }`}>
+                <span className={`flex items-center gap-1 text-sm font-medium ${trend === 'up' ? 'text-[#8cff65]' : 'text-red-400'
+                    }`}>
                     {trend === 'up' ? <TrendUpIcon /> : <TrendDownIcon />}
                     {trendValue}
                 </span>
@@ -157,9 +156,9 @@ const AdminDashboard = () => {
             { color: '#4ade80', value: 20 },
             { color: '#86efac', value: 10 },
         ];
-        
+
         let cumulativePercent = 0;
-        
+
         return (
             <div className="relative w-40 h-40 mx-auto">
                 <svg viewBox="0 0 36 36" className="w-full h-full transform -rotate-90">
@@ -167,7 +166,7 @@ const AdminDashboard = () => {
                         const strokeDasharray = `${segment.value} ${100 - segment.value}`;
                         const strokeDashoffset = -cumulativePercent;
                         cumulativePercent += segment.value;
-                        
+
                         return (
                             <circle
                                 key={index}
@@ -212,25 +211,25 @@ const AdminDashboard = () => {
             x: (i / (weeklyData.length - 1)) * 100,
             y: 100 - (d.revenue / 8000) * 100
         }));
-        
-        const pathD = points.map((p, i) => 
+
+        const pathD = points.map((p, i) =>
             `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`
         ).join(' ');
-        
+
         const areaD = `${pathD} L 100 100 L 0 100 Z`;
 
         return (
             <svg viewBox="0 0 100 100" className="w-full h-24" preserveAspectRatio="none">
                 <defs>
                     <linearGradient id="areaGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                        <stop offset="0%" stopColor="#8cff65" stopOpacity="0.3"/>
-                        <stop offset="100%" stopColor="#8cff65" stopOpacity="0"/>
+                        <stop offset="0%" stopColor="#8cff65" stopOpacity="0.3" />
+                        <stop offset="100%" stopColor="#8cff65" stopOpacity="0" />
                     </linearGradient>
                 </defs>
-                <path d={areaD} fill="url(#areaGradient)"/>
-                <path d={pathD} fill="none" stroke="#8cff65" strokeWidth="2" vectorEffect="non-scaling-stroke"/>
+                <path d={areaD} fill="url(#areaGradient)" />
+                <path d={pathD} fill="none" stroke="#8cff65" strokeWidth="2" vectorEffect="non-scaling-stroke" />
                 {points.map((p, i) => (
-                    <circle key={i} cx={p.x} cy={p.y} r="2" fill="#8cff65" className="hover:r-3 transition-all"/>
+                    <circle key={i} cx={p.x} cy={p.y} r="2" fill="#8cff65" className="hover:r-3 transition-all" />
                 ))}
             </svg>
         );
@@ -267,34 +266,34 @@ const AdminDashboard = () => {
 
             {/* Stats Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <StatCard 
-                    title="Total Users" 
-                    value={stats.totalUsers.toLocaleString()} 
-                    icon={<UsersIcon />} 
+                <StatCard
+                    title="Total Users"
+                    value={stats.totalUsers.toLocaleString()}
+                    icon={<UsersIcon />}
                     trend="up"
                     trendValue="12.5%"
                     trendLabel="vs last month"
                 />
-                <StatCard 
-                    title="Total Animals" 
-                    value={stats.totalAnimals.toLocaleString()} 
-                    icon={<AnimalIcon />} 
+                <StatCard
+                    title="Total Animals"
+                    value={stats.totalAnimals.toLocaleString()}
+                    icon={<AnimalIcon />}
                     trend="up"
                     trendValue="3.2%"
                     trendLabel="vs last month"
                 />
-                <StatCard 
-                    title="Tickets Sold" 
-                    value={stats.totalTickets.toLocaleString()} 
-                    icon={<TicketIcon />} 
+                <StatCard
+                    title="Tickets Sold"
+                    value={stats.totalTickets.toLocaleString()}
+                    icon={<TicketIcon />}
                     trend="up"
                     trendValue="8.1%"
                     trendLabel="vs last month"
                 />
-                <StatCard 
-                    title="Revenue" 
-                    value={`₱${stats.totalRevenue.toLocaleString()}`} 
-                    icon={<RevenueIcon />} 
+                <StatCard
+                    title="Revenue"
+                    value={`₱${stats.totalRevenue.toLocaleString()}`}
+                    icon={<RevenueIcon />}
                     trend="up"
                     trendValue="15.3%"
                     trendLabel="vs last month"
@@ -321,13 +320,13 @@ const AdminDashboard = () => {
                             </div>
                         </div>
                     </div>
-                    
+
                     {/* Bar Chart */}
                     <div className="h-48 flex items-end gap-3 mb-4">
                         {weeklyData.map((item, index) => (
                             <div key={index} className="flex-1 flex flex-col items-center gap-2">
                                 <div className="w-full flex flex-col items-center gap-1" style={{ height: '160px' }}>
-                                    <div 
+                                    <div
                                         className="w-full max-w-[40px] bg-gradient-to-t from-[#8cff65] to-[#4ade80] rounded-t-lg transition-all duration-500 hover:opacity-80"
                                         style={{ height: `${(item.visitors / maxVisitors) * 100}%` }}
                                     />
@@ -362,9 +361,9 @@ const AdminDashboard = () => {
                             <MoreIcon />
                         </button>
                     </div>
-                    
+
                     <DonutChart data={[]} total={stats.totalTickets} label="Total Tickets" />
-                    
+
                     {/* Legend */}
                     <div className="mt-6 space-y-3">
                         <div className="flex items-center justify-between">
@@ -480,8 +479,8 @@ const AdminDashboard = () => {
                         <h3 className="text-lg font-bold text-white">Recently Registered Users</h3>
                         <p className="text-sm text-gray-400">New users who joined this week</p>
                     </div>
-                    <Link 
-                        to="/admin/users" 
+                    <Link
+                        to="/admin/users"
                         className="px-4 py-2 bg-[#8cff65] hover:bg-[#7ae857] text-black font-medium rounded-xl transition-colors"
                     >
                         View All
@@ -515,13 +514,12 @@ const AdminDashboard = () => {
                                     </td>
                                     <td className="py-4 text-gray-300">{u.email}</td>
                                     <td className="py-4">
-                                        <span className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${
-                                            u.role === 'admin' 
-                                                ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30' 
-                                                : u.role === 'staff' 
-                                                ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
-                                                : 'bg-gray-500/20 text-gray-400 border border-gray-500/30'
-                                        }`}>
+                                        <span className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${u.role === 'admin'
+                                                ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
+                                                : u.role === 'staff'
+                                                    ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                                                    : 'bg-gray-500/20 text-gray-400 border border-gray-500/30'
+                                            }`}>
                                             {u.role}
                                         </span>
                                     </td>

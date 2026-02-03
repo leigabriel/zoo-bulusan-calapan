@@ -77,7 +77,7 @@ const Settings = () => {
     const navigate = useNavigate();
     const [activeSection, setActiveSection] = useState('preferences');
     const [message, setMessage] = useState({ text: '', type: '' });
-    
+
     // Settings state
     const [settings, setSettings] = useState({
         notifications: {
@@ -155,7 +155,7 @@ const Settings = () => {
                                         <option value="es">Español</option>
                                     </select>
                                 </div>
-                                
+
                                 <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-gray-50 rounded-xl gap-3">
                                     <div>
                                         <p className="font-medium text-gray-800">Theme</p>
@@ -434,11 +434,10 @@ const Settings = () => {
             {/* Main Content */}
             <div className="flex-grow container mx-auto px-4 py-8 max-w-6xl">
                 {message.text && (
-                    <div className={`mb-6 p-4 rounded-xl ${
-                        message.type === 'success' 
-                            ? 'bg-green-100 text-green-700 border border-green-300' 
+                    <div className={`mb-6 p-4 rounded-xl ${message.type === 'success'
+                            ? 'bg-green-100 text-green-700 border border-green-300'
                             : 'bg-red-100 text-red-700 border border-red-300'
-                    }`}>
+                        }`}>
                         {message.text}
                     </div>
                 )}
@@ -453,35 +452,32 @@ const Settings = () => {
                                     <button
                                         key={item.id}
                                         onClick={() => setActiveSection(item.id)}
-                                        className={`flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-xl transition-all ${
-                                            activeSection === item.id
+                                        className={`flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-xl transition-all ${activeSection === item.id
                                                 ? 'bg-emerald-500 text-white'
                                                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                                        }`}
+                                            }`}
                                     >
                                         <item.icon />
                                         <span className="text-sm font-medium whitespace-nowrap">{item.label}</span>
                                     </button>
                                 ))}
                             </div>
-                            
+
                             {/* Desktop: Vertical list */}
                             <div className="hidden lg:block p-2">
                                 {menuItems.map(item => (
                                     <button
                                         key={item.id}
                                         onClick={() => setActiveSection(item.id)}
-                                        className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all mb-1 ${
-                                            activeSection === item.id
+                                        className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all mb-1 ${activeSection === item.id
                                                 ? 'bg-emerald-50 text-emerald-700'
                                                 : 'text-gray-600 hover:bg-gray-50'
-                                        }`}
+                                            }`}
                                     >
-                                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                                            activeSection === item.id
+                                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${activeSection === item.id
                                                 ? 'bg-emerald-500 text-white'
                                                 : 'bg-gray-100 text-gray-600'
-                                        }`}>
+                                            }`}>
                                             <item.icon />
                                         </div>
                                         <div className="text-left">

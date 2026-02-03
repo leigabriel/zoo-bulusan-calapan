@@ -30,11 +30,11 @@ class User {
     }
 
     static async create(userData) {
-        const { 
-            firstName, lastName, username, email, phoneNumber, 
-            gender, birthday, password, role 
+        const {
+            firstName, lastName, username, email, phoneNumber,
+            gender, birthday, password, role
         } = userData;
-        
+
         const [result] = await db.query(
             `INSERT INTO users (first_name, last_name, username, email, phone_number, gender, birthday, password, role) 
              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -128,7 +128,7 @@ class User {
 
     static async createGoogleUser(userData) {
         const { firstName, lastName, username, email, googleId, profileImage, role } = userData;
-        
+
         const [result] = await db.query(
             `INSERT INTO users (first_name, last_name, username, email, google_id, 
              profile_image, role, auth_provider, email_verified, password) 
@@ -139,10 +139,10 @@ class User {
     }
 
     static async linkGoogleAccount(userId, googleId, profileImage = null) {
-        const updateQuery = profileImage 
+        const updateQuery = profileImage
             ? 'UPDATE users SET google_id = ?, profile_image = COALESCE(profile_image, ?), updated_at = NOW() WHERE id = ?'
             : 'UPDATE users SET google_id = ?, updated_at = NOW() WHERE id = ?';
-        
+
         const params = profileImage ? [googleId, profileImage, userId] : [googleId, userId];
         const [result] = await db.query(updateQuery, params);
         return result.affectedRows > 0;
@@ -162,7 +162,7 @@ class User {
         if (!user || !user.password) {
             return false; // Cannot unlink if no password exists
         }
-        
+
         const [result] = await db.query(
             'UPDATE users SET google_id = NULL, auth_provider = "local", updated_at = NOW() WHERE id = ?',
             [userId]

@@ -64,7 +64,7 @@ class Ticket {
         if (!ticket) return { valid: false, message: 'Ticket not found' };
         if (ticket.status === 'used') return { valid: false, message: 'Ticket already used' };
         if (ticket.status === 'expired') return { valid: false, message: 'Ticket expired' };
-        
+
         await this.updateStatus(ticket.id, 'used');
         return { valid: true, message: 'Ticket validated successfully', ticket };
     }
@@ -248,7 +248,7 @@ class Ticket {
         } else {
             timeCategory = 'afternoon';
         }
-        
+
         // Count tickets for this date with matching or full_day visit time
         const [rows] = await db.query(
             `SELECT COALESCE(SUM(quantity), 0) as total 

@@ -6,6 +6,7 @@ const { deleteOldProfileImage, getProfileImagePath } = require('../middleware/up
 const VALID_ROLES = ['admin', 'staff', 'vet', 'user'];
 const VALID_GENDERS = ['male', 'female', 'other', 'prefer_not_to_say'];
 
+
 // Password validation helper
 const validatePassword = (password) => {
     const errors = [];

@@ -5,54 +5,54 @@ import { sanitizeInput } from '../../utils/sanitize';
 // Icons
 const SearchIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
-        <circle cx="11" cy="11" r="8"/>
-        <path d="m21 21-4.3-4.3"/>
+        <circle cx="11" cy="11" r="8" />
+        <path d="m21 21-4.3-4.3" />
     </svg>
 );
 
 const PlusIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
-        <line x1="12" y1="5" x2="12" y2="19"/>
-        <line x1="5" y1="12" x2="19" y2="12"/>
+        <line x1="12" y1="5" x2="12" y2="19" />
+        <line x1="5" y1="12" x2="19" y2="12" />
     </svg>
 );
 
 const EditIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
-        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
     </svg>
 );
 
 const TrashIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
-        <polyline points="3 6 5 6 21 6"/>
-        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-        <line x1="10" y1="11" x2="10" y2="17"/>
-        <line x1="14" y1="11" x2="14" y2="17"/>
+        <polyline points="3 6 5 6 21 6" />
+        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+        <line x1="10" y1="11" x2="10" y2="17" />
+        <line x1="14" y1="11" x2="14" y2="17" />
     </svg>
 );
 
 const CloseIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
-        <line x1="18" y1="6" x2="6" y2="18"/>
-        <line x1="6" y1="6" x2="18" y2="18"/>
+        <line x1="18" y1="6" x2="6" y2="18" />
+        <line x1="6" y1="6" x2="18" y2="18" />
     </svg>
 );
 
 const AnimalsHeaderIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="currentColor" className="w-6 h-6">
-        <path d="M226.5 92.9c14.3 42.9-.3 86.2-32.6 96.8s-70.1-15.6-84.4-58.5s.3-86.2 32.6-96.8s70.1 15.6 84.4 58.5zM100.4 198.6c18.9 32.4 14.3 70.1-10.2 84.1s-59.7-.9-78.5-33.3S-2.7 179.3 21.8 165.3s59.7 .9 78.5 33.3zM69.2 401.2C121.6 259.9 214.7 224 256 224s134.4 35.9 186.8 177.2c3.6 9.7 5.2 20.1 5.2 30.5v1.6c0 25.8-20.9 46.7-46.7 46.7c-11.5 0-22.9-1.4-34-4.2l-88-22c-15.3-3.8-31.3-3.8-46.6 0l-88 22c-11.1 2.8-22.5 4.2-34 4.2C84.9 480 64 459.1 64 433.3v-1.6c0-10.4 1.6-20.8 5.2-30.5zM421.8 282.7c-24.5-14-29.1-51.7-10.2-84.1s54-47.3 78.5-33.3s29.1 51.7 10.2 84.1s-54 47.3-78.5 33.3zM310.1 189.7c-32.3-10.6-46.9-53.9-32.6-96.8s52.1-69.1 84.4-58.5s46.9 53.9 32.6 96.8s-52.1 69.1-84.4 58.5z"/>
+        <path d="M226.5 92.9c14.3 42.9-.3 86.2-32.6 96.8s-70.1-15.6-84.4-58.5s.3-86.2 32.6-96.8s70.1 15.6 84.4 58.5zM100.4 198.6c18.9 32.4 14.3 70.1-10.2 84.1s-59.7-.9-78.5-33.3S-2.7 179.3 21.8 165.3s59.7 .9 78.5 33.3zM69.2 401.2C121.6 259.9 214.7 224 256 224s134.4 35.9 186.8 177.2c3.6 9.7 5.2 20.1 5.2 30.5v1.6c0 25.8-20.9 46.7-46.7 46.7c-11.5 0-22.9-1.4-34-4.2l-88-22c-15.3-3.8-31.3-3.8-46.6 0l-88 22c-11.1 2.8-22.5 4.2-34 4.2C84.9 480 64 459.1 64 433.3v-1.6c0-10.4 1.6-20.8 5.2-30.5zM421.8 282.7c-24.5-14-29.1-51.7-10.2-84.1s54-47.3 78.5-33.3s29.1 51.7 10.2 84.1s-54 47.3-78.5 33.3zM310.1 189.7c-32.3-10.6-46.9-53.9-32.6-96.8s52.1-69.1 84.4-58.5s46.9 53.9 32.6 96.8s-52.1 69.1-84.4 58.5z" />
     </svg>
 );
 
 const SortIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
-        <path d="M11 5h10"/>
-        <path d="M11 9h7"/>
-        <path d="M11 13h4"/>
-        <path d="m3 17 3 3 3-3"/>
-        <path d="M6 18V4"/>
+        <path d="M11 5h10" />
+        <path d="M11 9h7" />
+        <path d="M11 13h4" />
+        <path d="m3 17 3 3 3-3" />
+        <path d="M6 18V4" />
     </svg>
 );
 
@@ -66,13 +66,13 @@ const AdminAnimals = ({ globalSearch = '' }) => {
     const [sortField, setSortField] = useState('name');
     const [sortOrder, setSortOrder] = useState('asc');
     const [speciesFilter, setSpeciesFilter] = useState('all');
-    const [form, setForm] = useState({ 
-        name: '', 
-        species: '', 
-        exhibit: '', 
-        description: '', 
-        imageUrl: '', 
-        status: 'healthy' 
+    const [form, setForm] = useState({
+        name: '',
+        species: '',
+        exhibit: '',
+        description: '',
+        imageUrl: '',
+        status: 'healthy'
     });
     const [saving, setSaving] = useState(false);
     const [deleteConfirm, setDeleteConfirm] = useState(null);
@@ -102,12 +102,12 @@ const AdminAnimals = ({ globalSearch = '' }) => {
 
     const openEditModal = (animal) => {
         setEditingAnimal(animal);
-        setForm({ 
-            name: animal.name || '', 
-            species: animal.species || '', 
-            exhibit: animal.habitat || animal.exhibit || '', 
-            description: animal.description || '', 
-            imageUrl: animal.image_url || animal.imageUrl || '', 
+        setForm({
+            name: animal.name || '',
+            species: animal.species || '',
+            exhibit: animal.habitat || animal.exhibit || '',
+            description: animal.description || '',
+            imageUrl: animal.image_url || animal.imageUrl || '',
             status: animal.status || 'healthy'
         });
         setShowModal(true);
@@ -140,7 +140,7 @@ const AdminAnimals = ({ globalSearch = '' }) => {
         setSaving(true);
         try {
             let imageUrl = form.imageUrl;
-            
+
             // If file was selected for upload, upload it first
             if (imageInputMode === 'upload' && imageFile) {
                 const uploadRes = await adminAPI.uploadImage(imageFile);
@@ -150,9 +150,9 @@ const AdminAnimals = ({ globalSearch = '' }) => {
                     throw new Error(uploadRes.message || 'Failed to upload image');
                 }
             }
-            
+
             const animalData = { ...form, imageUrl };
-            
+
             let res;
             if (editingAnimal) {
                 res = await adminAPI.updateAnimal(editingAnimal.id, animalData);
@@ -163,9 +163,9 @@ const AdminAnimals = ({ globalSearch = '' }) => {
                 await fetchAnimals();
                 closeModal();
             } else throw new Error(res.message || 'Save failed');
-        } catch (err) { 
-            console.error(err); 
-            alert(err.message || 'Failed to save animal'); 
+        } catch (err) {
+            console.error(err);
+            alert(err.message || 'Failed to save animal');
         } finally {
             setSaving(false);
         }
@@ -178,9 +178,9 @@ const AdminAnimals = ({ globalSearch = '' }) => {
                 setAnimals(animals.filter(a => a.id !== id));
                 setDeleteConfirm(null);
             } else throw new Error(res.message || 'Delete failed');
-        } catch (err) { 
-            console.error(err); 
-            alert(err.message || 'Failed to delete animal'); 
+        } catch (err) {
+            console.error(err);
+            alert(err.message || 'Failed to delete animal');
         }
     };
 
@@ -203,7 +203,7 @@ const AdminAnimals = ({ globalSearch = '' }) => {
     // Filter and sort animals
     const filteredAnimals = animals
         .filter(animal => {
-            const matchesSearch = 
+            const matchesSearch =
                 animal.name?.toLowerCase().includes(effectiveSearch.toLowerCase()) ||
                 animal.species?.toLowerCase().includes(effectiveSearch.toLowerCase()) ||
                 (animal.habitat || animal.exhibit || '').toLowerCase().includes(effectiveSearch.toLowerCase()) ||
@@ -383,7 +383,7 @@ const AdminAnimals = ({ globalSearch = '' }) => {
                     <table className="w-full">
                         <thead className="bg-[#1e1e1e]">
                             <tr>
-                                <th 
+                                <th
                                     className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider cursor-pointer hover:text-white"
                                     onClick={() => toggleSort('name')}
                                 >
@@ -394,7 +394,7 @@ const AdminAnimals = ({ globalSearch = '' }) => {
                                         )}
                                     </div>
                                 </th>
-                                <th 
+                                <th
                                     className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider cursor-pointer hover:text-white"
                                     onClick={() => toggleSort('species')}
                                 >
@@ -405,7 +405,7 @@ const AdminAnimals = ({ globalSearch = '' }) => {
                                         )}
                                     </div>
                                 </th>
-                                <th 
+                                <th
                                     className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider cursor-pointer hover:text-white"
                                     onClick={() => toggleSort('exhibit')}
                                 >
@@ -508,7 +508,7 @@ const AdminAnimals = ({ globalSearch = '' }) => {
                                 <input
                                     type="text"
                                     value={form.name}
-                                    onChange={e => setForm({...form, name: sanitizeInput(e.target.value)})}
+                                    onChange={e => setForm({ ...form, name: sanitizeInput(e.target.value) })}
                                     className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-[#8cff65] transition-all"
                                     placeholder="e.g., African Lion"
                                     required
@@ -521,7 +521,7 @@ const AdminAnimals = ({ globalSearch = '' }) => {
                                     <input
                                         type="text"
                                         value={form.species}
-                                        onChange={e => setForm({...form, species: sanitizeInput(e.target.value)})}
+                                        onChange={e => setForm({ ...form, species: sanitizeInput(e.target.value) })}
                                         className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-[#8cff65] transition-all"
                                         placeholder="e.g., Panthera leo"
                                         required
@@ -532,7 +532,7 @@ const AdminAnimals = ({ globalSearch = '' }) => {
                                     <input
                                         type="text"
                                         value={form.exhibit}
-                                        onChange={e => setForm({...form, exhibit: sanitizeInput(e.target.value)})}
+                                        onChange={e => setForm({ ...form, exhibit: sanitizeInput(e.target.value) })}
                                         className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-[#8cff65] transition-all"
                                         placeholder="e.g., Savanna Zone"
                                         required
@@ -544,7 +544,7 @@ const AdminAnimals = ({ globalSearch = '' }) => {
                                 <label className="block text-sm font-medium text-gray-400 mb-2">Description</label>
                                 <textarea
                                     value={form.description}
-                                    onChange={e => setForm({...form, description: sanitizeInput(e.target.value)})}
+                                    onChange={e => setForm({ ...form, description: sanitizeInput(e.target.value) })}
                                     className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-[#8cff65] transition-all resize-none"
                                     placeholder="Enter animal description..."
                                     rows={3}
@@ -553,38 +553,36 @@ const AdminAnimals = ({ globalSearch = '' }) => {
 
                             <div>
                                 <label className="block text-sm font-medium text-gray-400 mb-2">Image</label>
-                                
+
                                 {/* Toggle between URL and Upload */}
                                 <div className="flex gap-2 mb-3">
                                     <button
                                         type="button"
                                         onClick={() => setImageInputMode('url')}
-                                        className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition ${
-                                            imageInputMode === 'url'
+                                        className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition ${imageInputMode === 'url'
                                                 ? 'bg-[#8cff65] text-black'
                                                 : 'bg-[#1e1e1e] border border-[#2a2a2a] text-gray-400 hover:text-white'
-                                        }`}
+                                            }`}
                                     >
                                         URL
                                     </button>
                                     <button
                                         type="button"
                                         onClick={() => setImageInputMode('upload')}
-                                        className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition ${
-                                            imageInputMode === 'upload'
+                                        className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition ${imageInputMode === 'upload'
                                                 ? 'bg-[#8cff65] text-black'
                                                 : 'bg-[#1e1e1e] border border-[#2a2a2a] text-gray-400 hover:text-white'
-                                        }`}
+                                            }`}
                                     >
                                         Upload
                                     </button>
                                 </div>
-                                
+
                                 {imageInputMode === 'url' ? (
                                     <input
                                         type="url"
                                         value={form.imageUrl}
-                                        onChange={e => setForm({...form, imageUrl: e.target.value})}
+                                        onChange={e => setForm({ ...form, imageUrl: e.target.value })}
                                         className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-[#8cff65] transition-all"
                                         placeholder="https://example.com/image.jpg"
                                     />
@@ -598,9 +596,9 @@ const AdminAnimals = ({ globalSearch = '' }) => {
                                         />
                                         {imagePreview && (
                                             <div className="relative">
-                                                <img 
-                                                    src={imagePreview} 
-                                                    alt="Preview" 
+                                                <img
+                                                    src={imagePreview}
+                                                    alt="Preview"
                                                     className="w-full h-40 object-cover rounded-xl"
                                                 />
                                                 <button
@@ -612,21 +610,21 @@ const AdminAnimals = ({ globalSearch = '' }) => {
                                                     className="absolute top-2 right-2 p-1.5 bg-red-500 rounded-lg text-white hover:bg-red-600"
                                                 >
                                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4">
-                                                        <line x1="18" y1="6" x2="6" y2="18"/>
-                                                        <line x1="6" y1="6" x2="18" y2="18"/>
+                                                        <line x1="18" y1="6" x2="6" y2="18" />
+                                                        <line x1="6" y1="6" x2="18" y2="18" />
                                                     </svg>
                                                 </button>
                                             </div>
                                         )}
                                     </div>
                                 )}
-                                
+
                                 {/* URL Preview */}
                                 {imageInputMode === 'url' && form.imageUrl && (
                                     <div className="mt-3">
-                                        <img 
-                                            src={form.imageUrl} 
-                                            alt="Preview" 
+                                        <img
+                                            src={form.imageUrl}
+                                            alt="Preview"
                                             className="w-full h-40 object-cover rounded-xl"
                                             onError={(e) => e.target.style.display = 'none'}
                                             onLoad={(e) => e.target.style.display = 'block'}
@@ -639,7 +637,7 @@ const AdminAnimals = ({ globalSearch = '' }) => {
                                 <label className="block text-sm font-medium text-gray-400 mb-2">Status</label>
                                 <select
                                     value={form.status}
-                                    onChange={e => setForm({...form, status: e.target.value})}
+                                    onChange={e => setForm({ ...form, status: e.target.value })}
                                     className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#8cff65] transition-all cursor-pointer"
                                 >
                                     <option value="healthy">Healthy</option>
