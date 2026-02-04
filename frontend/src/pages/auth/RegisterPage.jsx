@@ -98,7 +98,10 @@ const RegisterPage = () => {
         setErrors([]);
 
         // Redirect to backend Google OAuth endpoint
-        const backendUrl = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000';
+        // Use VITE_BACKEND_URL if available, otherwise derive from VITE_API_URL
+        const backendUrl = import.meta.env.VITE_BACKEND_URL || 
+            import.meta.env.VITE_API_URL?.replace('/api', '') || 
+            'http://localhost:5000';
         window.location.href = `${backendUrl}/auth/google`;
     };
 

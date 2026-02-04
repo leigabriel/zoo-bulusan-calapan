@@ -1,3 +1,30 @@
 node_modules
 dist
 .env
+
+# Build outputs
+build
+.cache
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Uploads (keep directory structure, ignore files)
+backend/uploads/*
+!backend/uploads/.gitkeep
+!backend/uploads/profile-images/
+backend/uploads/profile-images/*
+!backend/uploads/profile-images/.gitkeep
+
+# Frontend public uploads (legacy)
+frontend/public/profile-img/*
+!frontend/public/profile-img/.gitkeep

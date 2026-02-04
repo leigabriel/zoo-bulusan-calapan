@@ -1,0 +1,3 @@
+# This directory contains uploaded files
+# In production, consider using cloud storage (AWS S3, Cloudinary, Azure Blob)
+# as Render.com and similar platforms have ephemeral filesystems

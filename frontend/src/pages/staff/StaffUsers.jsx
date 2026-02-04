@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { staffAPI } from '../../services/api-client';
+import { staffAPI, getProfileImageUrl } from '../../services/api-client';
 import { sanitizeInput } from '../../utils/sanitize';
 
 // Icons
@@ -305,7 +305,7 @@ const StaffUsers = ({ globalSearch = '' }) => {
                                                 <div className="w-10 h-10 rounded-full overflow-hidden bg-[#0a0a0a] flex items-center justify-center border border-[#2a2a2a]">
                                                     {user.profile_image ? (
                                                         <img
-                                                            src={user.profile_image}
+                                                            src={getProfileImageUrl(user.profile_image)}
                                                             alt={user.first_name}
                                                             className="w-full h-full object-cover"
                                                         />
@@ -405,7 +405,7 @@ const StaffUsers = ({ globalSearch = '' }) => {
                                 <div className="w-16 h-16 rounded-full overflow-hidden bg-[#0a0a0a] flex items-center justify-center border border-[#2a2a2a]">
                                     {selectedUser.profile_image ? (
                                         <img
-                                            src={selectedUser.profile_image}
+                                            src={getProfileImageUrl(selectedUser.profile_image)}
                                             alt={selectedUser.first_name}
                                             className="w-full h-full object-cover"
                                         />

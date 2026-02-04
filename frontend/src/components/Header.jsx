@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { getProfileImageUrl } from '../services/api-client';
 import LogoutModal from './common/LogoutModal';
 
 const Header = () => {
@@ -205,12 +206,7 @@ const Header = () => {
                                 className="flex items-center gap-2 px-3 py-2 rounded-full bg-gray-50 border border-gray-200 hover:bg-gray-100 transition-all duration-200 touch-target"
                             >
                                 <img 
-                                    src={(user.profileImage || user.profile_image) 
-                                        ? ((user.profileImage || user.profile_image).startsWith('http') 
-                                            ? (user.profileImage || user.profile_image) 
-                                            : `/profile-img/${user.profileImage || user.profile_image}`)
-                                        : '/profile-img/default-avatar.svg'
-                                    } 
+                                    src={getProfileImageUrl(user.profileImage || user.profile_image) || '/profile-img/default-avatar.svg'} 
                                     alt="Profile" 
                                     className="w-8 h-8 rounded-full object-cover shadow-sm"
                                     onError={(e) => { e.target.onerror = null; e.target.src = '/profile-img/default-avatar.svg'; }}
@@ -276,12 +272,7 @@ const Header = () => {
                                     className="flex items-center gap-3 bg-gray-50 font-medium py-3 px-4 rounded-xl text-sm mt-2"
                                 >
                                     <img 
-                                        src={(user.profileImage || user.profile_image) 
-                                            ? ((user.profileImage || user.profile_image).startsWith('http') 
-                                                ? (user.profileImage || user.profile_image) 
-                                                : `/profile-img/${user.profileImage || user.profile_image}`)
-                                            : '/profile-img/default-avatar.svg'
-                                        } 
+                                        src={getProfileImageUrl(user.profileImage || user.profile_image) || '/profile-img/default-avatar.svg'} 
                                         alt="Profile" 
                                         className="w-10 h-10 rounded-full object-cover shadow-sm"
                                         onError={(e) => { e.target.onerror = null; e.target.src = '/profile-img/default-avatar.svg'; }}
@@ -341,12 +332,7 @@ const Header = () => {
                         {user && (
                             <div className="flex items-center gap-3">
                                 <img 
-                                    src={(user.profileImage || user.profile_image) 
-                                        ? ((user.profileImage || user.profile_image).startsWith('http') 
-                                            ? (user.profileImage || user.profile_image) 
-                                            : `/profile-img/${user.profileImage || user.profile_image}`)
-                                        : '/profile-img/default-avatar.svg'
-                                    } 
+                                    src={getProfileImageUrl(user.profileImage || user.profile_image) || '/profile-img/default-avatar.svg'} 
                                     alt="Profile" 
                                     className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl object-cover shadow-lg"
                                     onError={(e) => { e.target.onerror = null; e.target.src = '/profile-img/default-avatar.svg'; }}

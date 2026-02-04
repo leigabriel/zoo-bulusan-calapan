@@ -1,4 +1,5 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://api-bulusanzoo.onrender.com/api';
+// API Base URL - ensure no trailing slash
+const API_BASE_URL = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace(/\/$/, '');
 
 const STORAGE_KEYS = {
     admin: { token: 'admin_token', user: 'admin_user' },
@@ -113,11 +114,44 @@ export const saveAuth = (token, user, type = 'user') => {
     }
 };
 
+/**
+ * Get the full URL for a profile image
+ * Handles various formats: full URLs, relative paths, and filenames
+ */
+export const getProfileImageUrl = (profileImg) => {
+    if (!profileImg) return null;
+    
+    // If it's already a full URL (http/https), use it directly
+    if (profileImg.startsWith('http')) {
+        return profileImg;
+    }
+    
+    // If it's a relative path starting with /uploads, prepend the backend URL
+    if (profileImg.startsWith('/uploads')) {
+        const backendUrl = import.meta.env.VITE_BACKEND_URL || 
+            API_BASE_URL.replace('/api', '') || 
+            '';
+        return `${backendUrl}${profileImg}`;
+    }
+    
+    // Legacy: if it's in the frontend's profile-img folder
+    if (profileImg.startsWith('/profile-img/')) {
+        return profileImg;
+    }
+    
+    // Default: assume it's in the backend uploads
+    const backendUrl = import.meta.env.VITE_BACKEND_URL || 
+        API_BASE_URL.replace('/api', '') || 
+        '';
+    return `${backendUrl}/uploads/profile-images/${profileImg}`;
+};
+
 export default {
     authAPI,
     isAuthenticated,
     getCurrentUser,
     clearAuth,
     clearAllAuth,
-    saveAuth
+    saveAuth,
+    getProfileImageUrl
 };

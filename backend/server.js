@@ -18,15 +18,60 @@ const aiRoutes = require('./routes/ai-routes');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-app.use(cors({
-    origin: process.env.CORS_ORIGIN || 'https://bulusanzoo.vercel.app',
-    credentials: true
-}));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// Trust proxy for Render.com and other reverse proxies
+app.set('trust proxy', 1);
 
+// CORS configuration for production
+const allowedOrigins = [
+    process.env.CORS_ORIGIN,
+    process.env.FRONTEND_URL,
+    'https://bulusanzoo.vercel.app',
+    'http://localhost:5173',
+    'http://localhost:3000'
+].filter(Boolean);
+
+app.use(cors({
+    origin: function (origin, callback) {
+        // Allow requests with no origin (mobile apps, curl, etc.)
+        if (!origin) return callback(null, true);
+        
+        if (allowedOrigins.some(allowed => origin.startsWith(allowed.replace(/\/$/, '')))) {
+            return callback(null, true);
+        }
+        
+        console.warn(`CORS blocked origin: ${origin}`);
+        callback(new Error('Not allowed by CORS'));
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Tab-ID', 'X-Requested-With']
+}));
+
+// Handle preflight requests
+app.options('*', cors());
+
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Serve static files from uploads directory
+app.use('/uploads', express.static(path.join(__dirname, 'uploads'), {
+    maxAge: process.env.NODE_ENV === 'production' ? '1d' : 0,
+    setHeaders: (res, filePath) => {
+        // Set proper cache headers for images
+        if (filePath.endsWith('.jpg') || filePath.endsWith('.jpeg') || 
+            filePath.endsWith('.png') || filePath.endsWith('.webp') || 
+            filePath.endsWith('.gif')) {
+            res.setHeader('Cache-Control', 'public, max-age=86400'); // 1 day
+        }
+    }
+}));
+
+// Request logging
 if (process.env.NODE_ENV === 'development') {
     app.use(morgan('dev'));
+} else {
+    // Production logging - combined format
+    app.use(morgan('combined'));
 }
 
 app.use('/api/auth', authRoutes);
@@ -37,12 +82,29 @@ app.use('/api/staff', staffRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/ai', aiRoutes);
 
-app.get('/api/health', (req, res) => {
-    res.json({
+// Health check endpoint for monitoring and load balancers
+app.get('/api/health', async (req, res) => {
+    const health = {
         success: true,
         message: 'Zoo Bulusan API is running',
-        timestamp: new Date().toISOString()
-    });
+        timestamp: new Date().toISOString(),
+        environment: process.env.NODE_ENV || 'development',
+        uptime: process.uptime()
+    };
+
+    // Optionally check database connectivity
+    if (req.query.full === 'true') {
+        try {
+            const db = require('./config/database');
+            await db.query('SELECT 1');
+            health.database = 'connected';
+        } catch (error) {
+            health.database = 'disconnected';
+            health.success = false;
+        }
+    }
+
+    res.status(health.success ? 200 : 503).json(health);
 });
 
 app.get('/', (req, res) => {

@@ -441,6 +441,9 @@ exports.getModelInfo = async (req, res) => {
 };
 
 // Upload image for animals/events
+// NOTE: On platforms with ephemeral filesystems (Render.com, Heroku, etc.),
+// uploaded files will be lost on redeploy. For production, consider using
+// cloud storage (AWS S3, Cloudinary, Azure Blob Storage, etc.)
 exports.uploadImage = async (req, res) => {
     try {
         if (!req.file) {
@@ -450,10 +453,15 @@ exports.uploadImage = async (req, res) => {
             });
         }
 
-        // Get the backend port/host for the URL
-        const protocol = req.protocol;
-        const host = req.get('host');
-        const imageUrl = `${protocol}://${host}/uploads/${req.file.filename}`;
+        // Build the image URL - use BACKEND_URL env var if available for production
+        let imageUrl;
+        if (process.env.BACKEND_URL) {
+            imageUrl = `${process.env.BACKEND_URL}/uploads/${req.file.filename}`;
+        } else {
+            const protocol = process.env.NODE_ENV === 'production' ? 'https' : req.protocol;
+            const host = req.get('host');
+            imageUrl = `${protocol}://${host}/uploads/${req.file.filename}`;
+        }
 
         res.json({
             success: true,

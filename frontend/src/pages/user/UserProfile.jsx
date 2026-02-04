@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { authAPI } from '../../services/api-client';
+import { authAPI, getProfileImageUrl as resolveProfileImageUrl } from '../../services/api-client';
 import { sanitizeInput, sanitizePhone } from '../../utils/sanitize';
 
 const UserIcon = () => (
@@ -187,17 +187,9 @@ const UserProfile = () => {
     // Get current profile image URL
     const getProfileImageUrl = () => {
         if (imagePreview) return imagePreview;
-        if (user?.profileImage) {
-            return user.profileImage.startsWith('http')
-                ? user.profileImage
-                : `/profile-img/${user.profileImage}`;
-        }
-        if (user?.profile_image) {
-            return user.profile_image.startsWith('http')
-                ? user.profile_image
-                : `/profile-img/${user.profile_image}`;
-        }
-        return null;
+        
+        const profileImg = user?.profileImage || user?.profile_image;
+        return resolveProfileImageUrl(profileImg);
     };
 
     const handleSave = async () => {

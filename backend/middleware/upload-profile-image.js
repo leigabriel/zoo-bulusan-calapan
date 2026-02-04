@@ -3,9 +3,10 @@ const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
 
-// Profile images are stored in frontend/public/profile-img/ for direct serving
-// This can be migrated to cloud storage (S3, Azure Blob, etc.) by changing the storage configuration
-const PROFILE_IMAGE_DIR = path.join(__dirname, '../../frontend/public/profile-img');
+// Profile images are now stored in the backend's uploads directory
+// This allows the backend to serve them directly, which works better for split deployments
+// For cloud storage, replace storage configuration with multer-s3 or similar
+const PROFILE_IMAGE_DIR = path.join(__dirname, '../uploads/profile-images');
 
 // Ensure the upload directory exists
 if (!fs.existsSync(PROFILE_IMAGE_DIR)) {
@@ -135,12 +136,16 @@ const deleteOldProfileImage = (filename) => {
 };
 
 /**
- * Get the relative path for storing in database
- * This returns just the filename, as the frontend knows the base path
- * Can be modified to return full URLs for cloud storage
+ * Get the full URL path for storing in database
+ * Returns a URL that can be used directly by the frontend
  */
 const getProfileImagePath = (filename) => {
-    return filename;
+    // In production, use the BACKEND_URL environment variable
+    if (process.env.BACKEND_URL) {
+        return `${process.env.BACKEND_URL}/uploads/profile-images/${filename}`;
+    }
+    // For development, return a relative path that the frontend will resolve
+    return `/uploads/profile-images/${filename}`;
 };
 
 module.exports = {

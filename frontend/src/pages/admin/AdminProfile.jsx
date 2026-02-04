@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { authAPI } from '../../services/api-client';
+import { authAPI, getProfileImageUrl } from '../../services/api-client';
 import { useAuth } from '../../context/AuthContext';
 import { sanitizeInput } from '../../utils/sanitize';
 
@@ -76,7 +76,8 @@ const AdminProfile = () => {
                         email: res.user.email || ''
                     });
                     if (res.user.profileImage || res.user.profile_image) {
-                        setPreviewImage(res.user.profileImage || res.user.profile_image);
+                        const imgUrl = res.user.profileImage || res.user.profile_image;
+                        setPreviewImage(getProfileImageUrl(imgUrl));
                     }
                 } else if (user) {
                     setForm({
