@@ -386,3 +386,117 @@ CREATE TABLE notifications (
 -- 
 -- Or in MySQL client:
 -- source /path/to/zoo_bulusan_schema.sql
+
+-- =====================================================
+-- Migration: Add color column to events table
+-- Created: December 2025
+-- Description: Adds color field for calendar event display
+-- =====================================================
+
+-- Add color column to events table
+ALTER TABLE events 
+ADD COLUMN color VARCHAR(20) DEFAULT '#22c55e' AFTER status;
+
+-- Update existing events with default colors based on status
+UPDATE events SET color = CASE 
+    WHEN status = 'upcoming' THEN '#22c55e'
+    WHEN status = 'ongoing' THEN '#3b82f6'
+    WHEN status = 'completed' THEN '#6b7280'
+    WHEN status = 'cancelled' THEN '#ef4444'
+    ELSE '#22c55e'
+END;
+
+-- =====================================================
+-- Google OAuth Migration Script
+-- Description: Adds Google authentication fields to users table
+-- Run this migration to enable Google Sign-In
+-- =====================================================
+
+-- Add Google OAuth fields to users table
+ALTER TABLE users
+    ADD COLUMN google_id VARCHAR(255) DEFAULT NULL AFTER email_verified,
+    ADD COLUMN auth_provider ENUM('local', 'google') DEFAULT 'local' AFTER google_id,
+    ADD UNIQUE KEY uk_users_google_id (google_id),
+    ADD INDEX idx_users_auth_provider (auth_provider);
+
+-- Allow password to be NULL for Google-only accounts
+ALTER TABLE users
+    MODIFY COLUMN password VARCHAR(255) DEFAULT NULL;
+
+-- Update existing users to have 'local' auth provider
+UPDATE users SET auth_provider = 'local' WHERE auth_provider IS NULL;
+
+
+-- =====================================================
+-- Insert Admin and Staff Accounts
+-- Created: February 2026
+-- Description: Predefined admin and staff accounts with
+--              bcrypt hashed passwords for immediate login
+-- =====================================================
+
+-- Note: Passwords are hashed using bcrypt (salt rounds: 10)
+-- Admin credentials: admin / admin123
+-- Staff credentials: staff / staff123
+
+-- Insert admin account (admin / admin123)
+INSERT INTO users (
+    first_name,
+    last_name,
+    username,
+    email,
+    phone_number,
+    gender,
+    birthday,
+    password,
+    role,
+    profile_image,
+    is_active,
+    email_verified
+) VALUES (
+    'System',
+    'Administrator',
+    'admin',
+    'admin@bulusanzoo.com',
+    NULL,
+    'prefer_not_to_say',
+    NULL,
+    '$2a$10$NI7Pmj0ikfcWMcYin6s1bu7Ks6R0i1PBoZXtYPCulg4dcgShjAIjG',
+    'admin',
+    NULL,
+    TRUE,
+    TRUE
+) ON DUPLICATE KEY UPDATE password = VALUES(password);
+
+-- Insert staff account (staff / staff123)
+INSERT INTO users (
+    first_name,
+    last_name,
+    username,
+    email,
+    phone_number,
+    gender,
+    birthday,
+    password,
+    role,
+    profile_image,
+    is_active,
+    email_verified
+) VALUES (
+    'Zoo',
+    'Staff',
+    'staff',
+    'staff@bulusanzoo.com',
+    NULL,
+    'prefer_not_to_say',
+    NULL,
+    '$2a$10$NI7Pmj0ikfcWMcYin6s1burrUsZsV./KuMbhblkYuvrG7LQ2KT8d6',
+    'staff',
+    NULL,
+    TRUE,
+    TRUE
+) ON DUPLICATE KEY UPDATE password = VALUES(password);
+
+-- Verify inserted accounts
+SELECT id, username, email, role, is_active, email_verified, created_at 
+FROM users 
+WHERE username IN ('admin', 'staff');
