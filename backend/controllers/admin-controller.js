@@ -332,11 +332,19 @@ exports.updateTicketStatus = async (req, res) => {
     }
 };
 
+// Helper to format date in local timezone
+const formatLocalDate = (date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+};
+
 exports.getRevenueReport = async (req, res) => {
     try {
         const { startDate, endDate } = req.query;
-        const start = startDate || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-        const end = endDate || new Date().toISOString().split('T')[0];
+        const start = startDate || formatLocalDate(new Date(Date.now() - 30 * 24 * 60 * 60 * 1000));
+        const end = endDate || formatLocalDate(new Date());
 
         const revenueData = await Ticket.getRevenueByDateRange(start, end);
         const totalRevenue = await Ticket.getTotalRevenue();

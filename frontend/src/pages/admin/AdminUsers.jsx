@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { adminAPI } from '../../services/api-client';
+import { adminAPI, getProfileImageUrl } from '../../services/api-client';
 import { sanitizeInput, sanitizeEmail } from '../../utils/sanitize';
 
 // Icons
@@ -313,12 +313,28 @@ const AdminUsers = ({ globalSearch = '' }) => {
                                     <tr key={user.id} className="hover:bg-[#1e1e1e]/50 transition-colors">
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#8cff65] to-[#4ade80] flex items-center justify-center text-[#0a0a0a] font-bold">
-                                                    {(user.firstName || user.first_name || 'U').charAt(0).toUpperCase()}
+                                                <div className="w-10 h-10 rounded-full overflow-hidden bg-[#0a0a0a] flex items-center justify-center border border-[#2a2a2a]">
+                                                    {(user.profileImage || user.profile_image) ? (
+                                                        <img
+                                                            src={getProfileImageUrl(user.profileImage || user.profile_image)}
+                                                            alt={user.firstName || user.first_name}
+                                                            className="w-full h-full object-cover"
+                                                            onError={(e) => {
+                                                                e.target.style.display = 'none';
+                                                                e.target.nextSibling.style.display = 'flex';
+                                                            }}
+                                                        />
+                                                    ) : null}
+                                                    <span className={`text-[#8cff65] font-medium ${(user.profileImage || user.profile_image) ? 'hidden' : 'flex'}`}>
+                                                        {(user.firstName || user.first_name || 'U').charAt(0).toUpperCase()}{(user.lastName || user.last_name || '').charAt(0).toUpperCase()}
+                                                    </span>
                                                 </div>
-                                                <p className="font-medium text-white">
-                                                    {user.firstName || user.first_name} {user.lastName || user.last_name}
-                                                </p>
+                                                <div>
+                                                    <p className="font-medium text-white">
+                                                        {user.firstName || user.first_name} {user.lastName || user.last_name}
+                                                    </p>
+                                                    <p className="text-gray-500 text-sm">@{user.username}</p>
+                                                </div>
                                             </div>
                                         </td>
                                         <td className="px-6 py-4 text-gray-300">{user.email}</td>

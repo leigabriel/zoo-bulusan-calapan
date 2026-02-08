@@ -154,9 +154,11 @@ exports.validateTicket = async (req, res) => {
             });
         }
 
-        // Check if visit date matches today
-        const today = new Date().toISOString().split('T')[0];
-        const visitDate = new Date(ticket.visit_date).toISOString().split('T')[0];
+        // Check if visit date matches today using local timezone
+        const now = new Date();
+        const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+        const visitDateObj = new Date(ticket.visit_date);
+        const visitDate = `${visitDateObj.getFullYear()}-${String(visitDateObj.getMonth() + 1).padStart(2, '0')}-${String(visitDateObj.getDate()).padStart(2, '0')}`;
         
         if (visitDate !== today) {
             return res.status(400).json({ 

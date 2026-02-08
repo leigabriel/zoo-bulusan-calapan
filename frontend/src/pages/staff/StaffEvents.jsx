@@ -66,6 +66,18 @@ const CloseIcon = () => (
     </svg>
 );
 
+// Tag colors for events
+const TAG_COLORS = [
+    { name: 'Green', value: '#8cff65', bg: 'bg-[#8cff65]' },
+    { name: 'Blue', value: '#60a5fa', bg: 'bg-blue-400' },
+    { name: 'Purple', value: '#a78bfa', bg: 'bg-purple-400' },
+    { name: 'Pink', value: '#f472b6', bg: 'bg-pink-400' },
+    { name: 'Orange', value: '#fb923c', bg: 'bg-orange-400' },
+    { name: 'Yellow', value: '#facc15', bg: 'bg-yellow-400' },
+    { name: 'Red', value: '#f87171', bg: 'bg-red-400' },
+    { name: 'Cyan', value: '#22d3ee', bg: 'bg-cyan-400' },
+];
+
 const StaffEvents = ({ globalSearch = '' }) => {
     const [events, setEvents] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -75,9 +87,12 @@ const StaffEvents = ({ globalSearch = '' }) => {
     const [editingEvent, setEditingEvent] = useState(null);
     const [deleteConfirm, setDeleteConfirm] = useState(null);
     const [saving, setSaving] = useState(false);
+    const [imageInputMode, setImageInputMode] = useState('url');
+    const [imageFile, setImageFile] = useState(null);
+    const [imagePreview, setImagePreview] = useState(null);
     const [form, setForm] = useState({
         title: '', description: '', eventDate: '', startTime: '', endTime: '',
-        location: '', capacity: '', status: 'upcoming', imageUrl: ''
+        location: '', capacity: '', status: 'upcoming', imageUrl: '', color: '#8cff65'
     });
 
     useEffect(() => {
@@ -102,8 +117,11 @@ const StaffEvents = ({ globalSearch = '' }) => {
         setEditingEvent(null);
         setForm({
             title: '', description: '', eventDate: '', startTime: '', endTime: '',
-            location: '', capacity: '', status: 'upcoming', imageUrl: ''
+            location: '', capacity: '', status: 'upcoming', imageUrl: '', color: '#8cff65'
         });
+        setImageInputMode('url');
+        setImageFile(null);
+        setImagePreview(null);
         setShowModal(true);
     };
 
@@ -119,18 +137,36 @@ const StaffEvents = ({ globalSearch = '' }) => {
             location: event.location || '',
             capacity: event.capacity || '',
             status: event.status || 'upcoming',
-            imageUrl: event.image_url || ''
+            imageUrl: event.image_url || '',
+            color: event.color || '#8cff65'
         });
+        setImageInputMode('url');
+        setImageFile(null);
+        setImagePreview(null);
         setShowModal(true);
     };
 
     const closeModal = () => {
         setShowModal(false);
         setEditingEvent(null);
+        setImageFile(null);
+        setImagePreview(null);
         setForm({
             title: '', description: '', eventDate: '', startTime: '', endTime: '',
-            location: '', capacity: '', status: 'upcoming', imageUrl: ''
+            location: '', capacity: '', status: 'upcoming', imageUrl: '', color: '#8cff65'
         });
+    };
+
+    const handleImageFileChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setImageFile(file);
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setImagePreview(reader.result);
+            };
+            reader.readAsDataURL(file);
+        }
     };
 
     const saveEvent = async (e) => {
@@ -146,7 +182,8 @@ const StaffEvents = ({ globalSearch = '' }) => {
                 location: form.location,
                 capacity: form.capacity ? parseInt(form.capacity) : null,
                 status: form.status,
-                image_url: form.imageUrl
+                image_url: form.imageUrl,
+                color: form.color
             };
             let res;
             if (editingEvent) {
@@ -464,15 +501,101 @@ const StaffEvents = ({ globalSearch = '' }) => {
                                     />
                                 </div>
                             </div>
+                            {/* Event Image - URL or Upload */}
                             <div>
-                                <label className="block text-sm font-medium text-gray-400 mb-2">Image URL</label>
-                                <input
-                                    type="url"
-                                    value={form.imageUrl}
-                                    onChange={(e) => setForm({ ...form, imageUrl: e.target.value })}
-                                    className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-[#8cff65]"
-                                    placeholder="https://example.com/image.jpg"
-                                />
+                                <label className="block text-sm font-medium text-gray-400 mb-2">Event Image</label>
+                                {/* Toggle between URL and Upload */}
+                                <div className="flex gap-2 mb-3">
+                                    <button
+                                        type="button"
+                                        onClick={() => setImageInputMode('url')}
+                                        className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition ${imageInputMode === 'url'
+                                                ? 'bg-[#8cff65] text-black'
+                                                : 'bg-[#1e1e1e] text-gray-400 hover:text-white border border-[#2a2a2a]'
+                                            }`}
+                                    >
+                                        Image URL
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setImageInputMode('upload')}
+                                        className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition ${imageInputMode === 'upload'
+                                                ? 'bg-[#8cff65] text-black'
+                                                : 'bg-[#1e1e1e] text-gray-400 hover:text-white border border-[#2a2a2a]'
+                                            }`}
+                                    >
+                                        Upload Image
+                                    </button>
+                                </div>
+                                {imageInputMode === 'url' ? (
+                                    <>
+                                        <input
+                                            type="url"
+                                            value={form.imageUrl}
+                                            onChange={(e) => setForm({ ...form, imageUrl: e.target.value })}
+                                            placeholder="https://example.com/image.jpg"
+                                            className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-[#8cff65]"
+                                        />
+                                        {form.imageUrl && (
+                                            <div className="mt-2 rounded-lg overflow-hidden h-24">
+                                                <img
+                                                    src={form.imageUrl}
+                                                    alt="Preview"
+                                                    className="w-full h-full object-cover"
+                                                    onError={(e) => { e.target.style.display = 'none'; }}
+                                                />
+                                            </div>
+                                        )}
+                                    </>
+                                ) : (
+                                    <>
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            onChange={handleImageFileChange}
+                                            className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-[#8cff65] file:text-black file:font-medium file:cursor-pointer hover:file:bg-[#7de857] transition"
+                                        />
+                                        {imagePreview && (
+                                            <div className="mt-2 rounded-lg overflow-hidden h-24 relative">
+                                                <img
+                                                    src={imagePreview}
+                                                    alt="Preview"
+                                                    className="w-full h-full object-cover"
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setImageFile(null);
+                                                        setImagePreview(null);
+                                                    }}
+                                                    className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition"
+                                                >
+                                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                        )}
+                                    </>
+                                )}
+                            </div>
+                            {/* Tag Color */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-400 mb-2">Tag Color</label>
+                                <div className="flex gap-2 flex-wrap">
+                                    {TAG_COLORS.map((color) => (
+                                        <button
+                                            key={color.value}
+                                            type="button"
+                                            onClick={() => setForm({ ...form, color: color.value })}
+                                            className={`w-8 h-8 rounded-lg ${color.bg} transition-all ${form.color === color.value
+                                                    ? 'ring-2 ring-white ring-offset-2 ring-offset-[#141414]'
+                                                    : 'hover:scale-110'
+                                                }`}
+                                            title={color.name}
+                                        />
+                                    ))}
+                                </div>
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-400 mb-2">Description</label>

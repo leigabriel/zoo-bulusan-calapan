@@ -126,10 +126,18 @@ const AdminEvents = () => {
             if (response.success && response.events) {
                 // Transform events for FullCalendar with proper date formatting
                 const calendarEvents = response.events.map(event => {
-                    // Handle date - ensure it's in YYYY-MM-DD format
-                    const eventDate = typeof event.event_date === 'string'
-                        ? event.event_date.split('T')[0]
-                        : new Date(event.event_date).toISOString().split('T')[0];
+                    // Handle date - ensure it's in YYYY-MM-DD format using local timezone
+                    let eventDate;
+                    if (typeof event.event_date === 'string') {
+                        eventDate = event.event_date.split('T')[0];
+                    } else {
+                        // Use local timezone to prevent date shifting (UTC+8 Philippines)
+                        const d = new Date(event.event_date);
+                        const year = d.getFullYear();
+                        const month = String(d.getMonth() + 1).padStart(2, '0');
+                        const day = String(d.getDate()).padStart(2, '0');
+                        eventDate = `${year}-${month}-${day}`;
+                    }
 
                     return {
                         id: event.id.toString(),
@@ -439,9 +447,12 @@ const AdminEvents = () => {
                     <button
                         onClick={() => {
                             resetForm();
+                            // Use local timezone for default date
+                            const now = new Date();
+                            const todayLocal = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
                             setFormData(prev => ({
                                 ...prev,
-                                eventDate: new Date().toISOString().split('T')[0]
+                                eventDate: todayLocal
                             }));
                             setModalMode('create');
                             setShowModal(true);
@@ -582,8 +593,9 @@ const AdminEvents = () => {
                         dateClick={handleDateClick}
                         eventClick={handleEventClick}
                         eventDrop={async (info) => {
-                            // Handle drag and drop
-                            const newDate = info.event.start.toISOString().split('T')[0];
+                            // Handle drag and drop - use local timezone
+                            const d = info.event.start;
+                            const newDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
                             try {
                                 await adminAPI.updateEvent(info.event.id, {
                                     ...info.event.extendedProps,

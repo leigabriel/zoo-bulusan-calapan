@@ -2,27 +2,26 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
-import AIChatAssistant from '../../components/features/ai-assistant/AIChatAssistant';
-import AnimalClassifier from '../../components/features/ai-scanner/AnimalClassifier';
+import AIFloatingButton from '../../components/common/AIFloatingButton';
 import '../../App.css'
 
-// 15 HD animal images for rotating display
+// 15 HD animal images for rotating display - verified Unsplash images matching labels
 const animalImages = [
     { src: 'https://images.unsplash.com/photo-1546182990-dffeafbe841d?w=1200&q=80', name: 'Lion' },
     { src: 'https://images.unsplash.com/photo-1557050543-4d5f4e07ef46?w=1200&q=80', name: 'Elephant' },
     { src: 'https://images.unsplash.com/photo-1547721064-da6cfb341d50?w=1200&q=80', name: 'Giraffe' },
-    { src: 'https://images.unsplash.com/photo-1501706362039-c06b2d715385?w=1200&q=80', name: 'Zebra' },
+    { src: 'https://images.unsplash.com/photo-1526095179574-86e545346ae6?w=1200&q=80', name: 'Zebra' },
     { src: 'https://images.unsplash.com/photo-1561731216-c3a4d99437d5?w=1200&q=80', name: 'Tiger' },
     { src: 'https://images.unsplash.com/photo-1564349683136-77e08dba1ef7?w=1200&q=80', name: 'Panda' },
-    { src: 'https://images.unsplash.com/photo-1474511320723-9a56873571b7?w=1200&q=80', name: 'Gorilla' },
+    { src: 'https://images.unsplash.com/photo-1548247416-ec66f4900b2e?w=1200&q=80', name: 'Gorilla' },
     { src: 'https://images.unsplash.com/photo-1437622368342-7a3d73a34c8f?w=1200&q=80', name: 'Sea Turtle' },
-    { src: 'https://images.unsplash.com/photo-1551085254-e96b210db58a?w=1200&q=80', name: 'Flamingo' },
+    { src: 'https://images.unsplash.com/photo-1509114397022-ed747cca3f65?w=1200&q=80', name: 'Flamingo' },
     { src: 'https://images.unsplash.com/photo-1456926631375-92c8ce872def?w=1200&q=80', name: 'Peacock' },
-    { src: 'https://images.unsplash.com/photo-1535338454770-8be927b5a00b?w=1200&q=80', name: 'Cheetah' },
-    { src: 'https://images.unsplash.com/photo-1544985361-b420d7a77043?w=1200&q=80', name: 'Red Panda' },
-    { src: 'https://images.unsplash.com/photo-1462888210965-cdf193fb74de?w=1200&q=80', name: 'Koala' },
-    { src: 'https://images.unsplash.com/photo-1590692464430-5f397e182e7e?w=1200&q=80', name: 'Parrot' },
-    { src: 'https://images.unsplash.com/photo-1559253664-ca249d4608c6?w=1200&q=80', name: 'Penguin' }
+    { src: 'https://images.unsplash.com/photo-1475359524104-d101d02a042b?w=1200&q=80', name: 'Cheetah' },
+    { src: 'https://images.unsplash.com/photo-1590691566903-692bf5ca7493?w=1200&q=80', name: 'Red Panda' },
+    { src: 'https://images.unsplash.com/photo-1550517575-f85fed11bee1?w=1200&q=80', name: 'Koala' },
+    { src: 'https://images.unsplash.com/photo-1544923246-77307dd628b5?w=1200&q=80', name: 'Parrot' },
+    { src: 'https://images.unsplash.com/photo-1462888210965-cdf193fb74de?w=1200&q=80', name: 'Penguin' }
 ];
 
 // Floating icon component for decorative elements
@@ -152,10 +151,7 @@ const Icons = {
 
 const Home = () => {
     // Local state for selector bubble and active feature
-    const [showSelector, setShowSelector] = useState(false);
-    const [activeFeature, setActiveFeature] = useState(null);
-    const [assistantExpanded, setAssistantExpanded] = useState(false);
-    const [scannerExpanded, setScannerExpanded] = useState(false);
+    // State for AI panel (assistant or scanner mode)
     const [currentAnimalIndex, setCurrentAnimalIndex] = useState(0);
 
     // Rotate through animal images every 4 seconds
@@ -166,138 +162,19 @@ const Home = () => {
         return () => clearInterval(interval);
     }, []);
 
-    // Prevent body scroll when scanner is expanded
+    // Refresh AOS animations when component mounts
     useEffect(() => {
-        if (scannerExpanded) {
-            document.body.style.overflow = 'hidden';
-        } else {
-            document.body.style.overflow = '';
+        if (typeof window !== 'undefined' && window.AOS) {
+            window.AOS.refresh();
         }
-        return () => {
-            document.body.style.overflow = '';
-        };
-    }, [scannerExpanded]);
-
-    const openAssistant = () => {
-        setActiveFeature('assistant');
-        setAssistantExpanded(false);
-        setShowSelector(false);
-    };
-
-    const openScanner = () => {
-        setActiveFeature('scanner');
-        setAssistantExpanded(false);
-        setShowSelector(false);
-    };
+    }, []);
 
     return (
         <div className="min-h-screen flex flex-col bg-white">
             <Header />
 
-            {/* Floating selector bubble */}
-            <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end">
-                {showSelector && (
-                    <div className="mb-3 w-48 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden animate-scale-in">
-                        <button
-                            onClick={openAssistant}
-                            className={`w-full text-left px-4 py-3.5 hover:bg-gray-50 flex items-center gap-3 transition-colors ${activeFeature === 'assistant' ? 'bg-emerald-50' : ''}`}
-                        >
-                            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
-                                <svg className="w-4 h-4 text-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="10" rx="2" /><circle cx="12" cy="5" r="2" /></svg>
-                            </div>
-                            <span className="font-medium text-gray-700 text-sm">AI Assistant</span>
-                        </button>
-                        <button
-                            onClick={openScanner}
-                            className={`w-full text-left px-4 py-3.5 hover:bg-gray-50 flex items-center gap-3 transition-colors ${activeFeature === 'scanner' ? 'bg-emerald-50' : ''}`}
-                        >
-                            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-teal-500 to-cyan-600 flex items-center justify-center">
-                                <svg className="w-4 h-4 text-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" /><circle cx="12" cy="13" r="4" /></svg>
-                            </div>
-                            <span className="font-medium text-gray-700 text-sm">AI Scanner</span>
-                        </button>
-                    </div>
-                )}
-
-                <div className="relative">
-                    <button
-                        onClick={() => setShowSelector(prev => !prev)}
-                        aria-label="Open AI selector"
-                        className="w-14 h-14 rounded-2xl bg-gray-900 text-white flex items-center justify-center shadow-xl shadow-gray-900/30 transform transition-all duration-200 hover:scale-105 hover:shadow-2xl active:scale-95"
-                    >
-                        <svg className="w-6 h-6" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
-                    </button>
-                </div>
-            </div>
-
-            {/* Render chosen feature panels (assistant or scanner) via local state */}
-            <AIChatAssistant hideLauncher={true} open={activeFeature === 'assistant'} expanded={assistantExpanded} onExpandChange={(v) => setAssistantExpanded(v)} onClose={() => { setActiveFeature(null); setAssistantExpanded(false); }} />
-
-            {activeFeature === 'scanner' && (
-                <>
-                    {scannerExpanded && (
-                        <div className="fixed inset-0 z-[9999] bg-white flex flex-col">
-                            <div className="bg-gray-900 p-4 flex items-center justify-between text-white">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center">
-                                        <svg className="w-5 h-5 text-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" /><circle cx="12" cy="13" r="4" /></svg>
-                                    </div>
-                                    <div>
-                                        <h3 className="font-bold">AI Scanner</h3>
-                                        <p className="text-xs text-gray-400">Animal Classifier</p>
-                                    </div>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <button
-                                        onClick={() => setScannerExpanded(false)}
-                                        title="Minimize"
-                                        className="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-colors"
-                                    >
-                                        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="4 14 10 14 10 20" /><polyline points="20 10 14 10 14 4" /></svg>
-                                    </button>
-                                    <button onClick={() => { setActiveFeature(null); setScannerExpanded(false); }} className="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-colors">
-                                        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
-                                    </button>
-                                </div>
-                            </div>
-                            <div className="flex-1 overflow-hidden">
-                                <AnimalClassifier embedded={true} />
-                            </div>
-                        </div>
-                    )}
-
-                    {!scannerExpanded && (
-                        <div className="fixed bottom-6 right-6 z-50 w-[340px] sm:w-[380px] h-[500px] sm:h-[540px] bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-100 flex flex-col animate-scale-in">
-                            <div className="bg-gray-900 p-4 flex items-center justify-between text-white shrink-0">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center">
-                                        <svg className="w-5 h-5 text-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" /><circle cx="12" cy="13" r="4" /></svg>
-                                    </div>
-                                    <div>
-                                        <h3 className="font-bold text-sm">AI Scanner</h3>
-                                        <p className="text-xs text-gray-400">Animal Classifier</p>
-                                    </div>
-                                </div>
-                                <div className="flex items-center gap-1">
-                                    <button
-                                        onClick={() => setScannerExpanded(true)}
-                                        title="Expand"
-                                        className="p-2 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors"
-                                    >
-                                        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 3 21 3 21 9" /><polyline points="9 21 3 21 3 15" /></svg>
-                                    </button>
-                                    <button onClick={() => setActiveFeature(null)} className="p-2 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors">
-                                        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
-                                    </button>
-                                </div>
-                            </div>
-                            <div className="flex-1 overflow-hidden">
-                                <AnimalClassifier embedded={true} />
-                            </div>
-                        </div>
-                    )}
-                </>
-            )}
+            {/* AI Floating Button Component */}
+            <AIFloatingButton />
 
             {/* Hero Section - Inspired by reference design */}
             <section className="relative min-h-screen overflow-hidden pt-24">
@@ -428,10 +305,13 @@ const Home = () => {
             </section>
 
             {/* About Us Preview Section */}
-            <section className="py-24 bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50">
+            <section 
+                id="about-section"
+                className="py-24 bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50"
+            >
                 <div className="container mx-auto px-6 lg:px-12">
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
-                        <div className="order-2 lg:order-1">
+                        <div className="order-2 lg:order-1" data-aos="fade-right">
                             <div className="inline-flex items-center gap-2 bg-white px-4 py-2 rounded-full mb-6 shadow-sm">
                                 <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
                                 <span className="text-sm font-medium text-emerald-700">About Us</span>
@@ -462,7 +342,7 @@ const Home = () => {
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
                             </Link>
                         </div>
-                        <div className="order-1 lg:order-2">
+                        <div className="order-1 lg:order-2" data-aos="fade-left">
                             <div className="relative">
                                 <div className="absolute -inset-4 bg-gradient-to-r from-emerald-400 to-teal-400 rounded-3xl blur-2xl opacity-20"></div>
                                 <img
@@ -488,9 +368,12 @@ const Home = () => {
             </section>
 
             {/* Animals Preview Section */}
-            <section className="py-24 bg-white">
+            <section 
+                id="animals-section"
+                className="py-24 bg-white"
+            >
                 <div className="container mx-auto px-6 lg:px-12">
-                    <div className="text-center mb-16">
+                    <div className="text-center mb-16" data-aos="fade-up">
                         <div className="inline-flex items-center gap-2 bg-emerald-50 px-4 py-2 rounded-full mb-6">
                             <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
                             <span className="text-sm font-medium text-emerald-700">Our Wildlife</span>
@@ -560,9 +443,12 @@ const Home = () => {
             </section>
 
             {/* Events Preview Section */}
-            <section className="py-24 bg-gray-50">
+            <section 
+                id="events-section"
+                className="py-24 bg-gray-50"
+            >
                 <div className="container mx-auto px-6 lg:px-12">
-                    <div className="text-center mb-16">
+                    <div className="text-center mb-16" data-aos="fade-up">
                         <div className="inline-flex items-center gap-2 bg-white px-4 py-2 rounded-full mb-6 shadow-sm">
                             <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
                             <span className="text-sm font-medium text-gray-700">Live Events</span>
@@ -635,14 +521,19 @@ const Home = () => {
             </section>
 
             {/* Ticket Booking Section */}
-            <section className="py-24 bg-white">
+            <section 
+                id="tickets-section"
+                className="py-24 bg-white"
+            >
                 <div className="container mx-auto px-6 lg:px-12 text-center">
-                    <div className="inline-flex items-center gap-2 bg-emerald-50 px-4 py-2 rounded-full mb-6">
-                        <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                        <span className="text-sm font-medium text-emerald-700">Book Online</span>
+                    <div data-aos="fade-up">
+                        <div className="inline-flex items-center gap-2 bg-emerald-50 px-4 py-2 rounded-full mb-6">
+                            <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                            <span className="text-sm font-medium text-emerald-700">Book Online</span>
+                        </div>
+                        <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">Online Ticket Booking</h2>
+                        <p className="text-gray-600 mb-16 text-lg max-w-2xl mx-auto">Secure cloud-based reservations with instant digital confirmation and QR code access.</p>
                     </div>
-                    <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">Online Ticket Booking</h2>
-                    <p className="text-gray-600 mb-16 text-lg max-w-2xl mx-auto">Secure cloud-based reservations with instant digital confirmation and QR code access.</p>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
                         {[
                             { title: 'Child Admission', price: '₱50', desc: 'Ages 5-17', IconComponent: Icons.Child },
@@ -651,7 +542,9 @@ const Home = () => {
                         ].map((t, i) => (
                             <div
                                 key={i}
-                                className={`relative p-8 rounded-3xl transition-all duration-300 group hover:-translate-y-2 ${t.featured
+                                data-aos="fade-up"
+                                data-aos-delay={200 + i * 100}
+                                className={`relative p-8 rounded-3xl transition-all duration-500 group hover:-translate-y-2 ${t.featured
                                         ? 'bg-gray-900 text-white shadow-2xl shadow-gray-900/30 scale-105'
                                         : 'bg-white border border-gray-200 hover:border-gray-300 hover:shadow-xl'
                                     }`}
@@ -681,93 +574,6 @@ const Home = () => {
                     </div>
                 </div>
             </section>
-
-            {/* Interactive Map Preview Section
-            <section className="py-24 bg-white">
-                <div className="container mx-auto px-6 lg:px-12">
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
-                        <div>
-                            <div className="inline-flex items-center gap-2 bg-emerald-50 px-4 py-2 rounded-full mb-6">
-                                <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                                <span className="text-sm font-medium text-emerald-700">Explore</span>
-                            </div>
-                            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6 leading-tight">
-                                Interactive
-                                <br />
-                                <span className="bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">Park Map</span>
-                            </h2>
-                            <p className="text-gray-600 text-lg leading-relaxed mb-8">
-                                Navigate our expansive nature park with our interactive map. Find animal exhibits, dining areas, restrooms, and discover the best routes to maximize your visit.
-                            </p>
-                            <div className="grid grid-cols-2 gap-4 mb-10">
-                                {[
-                                    { IconComponent: Icons.Lion, label: 'Animal Exhibits', count: '12+' },
-                                    { IconComponent: Icons.Utensils, label: 'Dining Areas', count: '5' },
-                                    { IconComponent: Icons.Restroom, label: 'Restrooms', count: '8' },
-                                    { IconComponent: Icons.Theater, label: 'Show Venues', count: '3' }
-                                ].map((item, i) => (
-                                    <div key={i} className="flex items-center gap-3 bg-gray-50 rounded-2xl p-4">
-                                        <span className="text-2xl text-emerald-600 w-8 h-8">{item.IconComponent && <item.IconComponent />}</span>
-                                        <div>
-                                            <p className="text-sm text-gray-500">{item.label}</p>
-                                            <p className="font-bold text-gray-900">{item.count}</p>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                            <Link to="/map" className="inline-flex items-center gap-3 bg-gray-900 hover:bg-gray-800 text-white px-8 py-4 rounded-full font-semibold transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-0.5">
-                                <span>Open Full Map</span>
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
-                            </Link>
-                        </div>
-                        <div>
-                            <div className="relative">
-                                <div className="absolute -inset-4 bg-gradient-to-r from-emerald-400 to-teal-400 rounded-3xl blur-2xl opacity-20"></div>
-                                <div className="relative bg-gradient-to-br from-emerald-100 via-teal-50 to-cyan-100 rounded-3xl p-8 shadow-2xl border border-white">
-                                    <div className="aspect-square relative">
-                                        <svg viewBox="0 0 400 400" className="w-full h-full">
-                                            <defs>
-                                                <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-                                                    <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#d1fae5" strokeWidth="1"/>
-                                                </pattern>
-                                            </defs>
-                                            <rect width="400" height="400" fill="url(#grid)" rx="24"/>
-                                            
-                                            <path d="M50 200 Q100 150 150 180 T250 160 T350 200" fill="none" stroke="#10b981" strokeWidth="3" strokeDasharray="8,4" opacity="0.6"/>
-                                            <path d="M80 100 Q150 80 200 120 T320 100" fill="none" stroke="#14b8a6" strokeWidth="2" strokeDasharray="5,3" opacity="0.5"/>
-                                            
-                                            <circle cx="100" cy="120" r="35" fill="#fbbf24" opacity="0.8"/>
-                                            <text x="100" y="130" textAnchor="middle" fontSize="12" fill="#ffffff" fontWeight="bold">LIONS</text>
-                                            
-                                            <circle cx="280" cy="100" r="30" fill="#60a5fa" opacity="0.8"/>
-                                            <text x="280" y="105" textAnchor="middle" fontSize="10" fill="#ffffff" fontWeight="bold">PENGUINS</text>
-                                            
-                                            <circle cx="320" cy="250" r="35" fill="#34d399" opacity="0.8"/>
-                                            <text x="320" y="255" textAnchor="middle" fontSize="10" fill="#ffffff" fontWeight="bold">ELEPHANTS</text>
-                                            
-                                            <circle cx="150" cy="300" r="30" fill="#f472b6" opacity="0.8"/>
-                                            <text x="150" y="305" textAnchor="middle" fontSize="10" fill="#ffffff" fontWeight="bold">BIRDS</text>
-                                            
-                                            <circle cx="200" cy="200" r="25" fill="#a78bfa" opacity="0.8"/>
-                                            <text x="200" y="205" textAnchor="middle" fontSize="10" fill="#ffffff" fontWeight="bold">DINING</text>
-                                            
-                                            <rect x="60" cy="320" width="60" height="30" rx="8" fill="#ffffff" stroke="#e5e7eb" strokeWidth="2"/>
-                                            <text x="90" y="340" textAnchor="middle" fontSize="10" fill="#374151" fontWeight="bold">ENTRANCE</text>
-                                            
-                                            <circle cx="200" cy="50" r="8" fill="#ef4444">
-                                                <animate attributeName="r" values="8;12;8" dur="1.5s" repeatCount="indefinite"/>
-                                                <animate attributeName="opacity" values="1;0.6;1" dur="1.5s" repeatCount="indefinite"/>
-                                            </circle>
-                                            <text x="200" y="75" textAnchor="middle" fontSize="10" fill="#374151" fontWeight="bold">YOU ARE HERE</text>
-                                        </svg>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section> */}
-
             <Footer />
         </div>
     );

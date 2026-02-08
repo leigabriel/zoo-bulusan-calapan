@@ -1,10 +1,38 @@
+// Dynamically determine API URL based on current hostname
+// This allows both localhost and network IP access (e.g., 10.53.28.57)
+const getApiBaseUrl = () => {
+    // If env variable is explicitly set (and not the default localhost), use it
+    const envUrl = import.meta.env.VITE_API_URL;
+    if (envUrl && !envUrl.includes('localhost')) {
+        return envUrl.replace(/\/$/, '');
+    }
+    
+    // Dynamically use current hostname with backend port
+    const backendPort = import.meta.env.VITE_BACKEND_PORT || '5000';
+    const protocol = window.location.protocol;
+    const hostname = window.location.hostname;
+    
+    return `${protocol}//${hostname}:${backendPort}/api`;
+};
+
+const getBackendBaseUrl = () => {
+    const envUrl = import.meta.env.VITE_BACKEND_URL;
+    if (envUrl && !envUrl.includes('localhost') && !envUrl.includes('0.0.0.0')) {
+        return envUrl.replace(/\/$/, '');
+    }
+    
+    const backendPort = import.meta.env.VITE_BACKEND_PORT || '5000';
+    const protocol = window.location.protocol;
+    const hostname = window.location.hostname;
+    
+    return `${protocol}//${hostname}:${backendPort}`;
+};
+
 // API Base URL - ensure no trailing slash
-const API_BASE_URL = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace(/\/$/, '');
+const API_BASE_URL = getApiBaseUrl();
 
 // Backend Base URL (for OAuth and file uploads)
-const BACKEND_BASE_URL = import.meta.env.VITE_BACKEND_URL || 
-    API_BASE_URL.replace('/api', '') || 
-    'http://localhost:5000';
+const BACKEND_BASE_URL = getBackendBaseUrl();
 
 export const STORAGE_KEYS = {
     admin: { token: 'admin_token', user: 'admin_user' },
@@ -54,7 +82,28 @@ const getAuthHeadersMultipart = (type = 'user') => {
 };
 
 const handleResponse = async (response) => {
-    const data = await response.json();
+    // Handle empty responses
+    const text = await response.text();
+    
+    if (!text) {
+        if (!response.ok) {
+            throw new Error(`Request failed with status ${response.status}`);
+        }
+        return { success: true };
+    }
+    
+    // Try to parse as JSON
+    let data;
+    try {
+        data = JSON.parse(text);
+    } catch (e) {
+        // Response is not JSON
+        if (!response.ok) {
+            throw new Error(`Request failed with status ${response.status}`);
+        }
+        throw new Error('Invalid server response');
+    }
+    
     if (!response.ok) {
         throw new Error(data.message || 'Request failed');
     }

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
+import AIFloatingButton from '../../components/common/AIFloatingButton';
 import { userAPI } from '../../services/api-client';
 
 // Icons
@@ -201,6 +202,7 @@ const Animals = () => {
                 </div>
             )}
             <Footer />
+            <AIFloatingButton />
         </div>
     );
 };

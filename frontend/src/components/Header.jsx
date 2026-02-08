@@ -166,13 +166,11 @@ const Header = () => {
             <div className="container mx-auto px-6 lg:px-12">
                 <div className="flex justify-between items-center">
                     <Link to="/" className="flex items-center gap-3 group">
-                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 shadow-lg shadow-emerald-200/50 flex items-center justify-center transition-transform group-hover:scale-105">
-                            <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-                            </svg>
+                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-400 shadow-lg flex items-center justify-center transition-transform group-hover:scale-105">
+                                <img src="https://cdn-icons-png.flaticon.com/128/1864/1864472.png" alt="Bz Logo" className="w-6 h-6 object-contain" />
                         </div>
-                        <span className={`text-xl font-bold tracking-tight transition-colors ${scrolled ? 'text-gray-900' : 'text-gray-800'}`}>
-                            BULUSAN ZOO
+                        <span className={`text-4xl font-extrabold tracking-tight transition-colors ${scrolled ? 'text-teal-400' : 'text-teal-400'}`}>
+                            BULUSAN <span className='italic font-extrabold text-teal-400'>ZOO</span>
                         </span>
                     </Link>
 

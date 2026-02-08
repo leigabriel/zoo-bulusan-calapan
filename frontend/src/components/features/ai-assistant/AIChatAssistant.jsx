@@ -49,10 +49,10 @@ const MaximizeIcon = () => (
     </svg>
 );
 
-const AIChatAssistant = ({ hideLauncher = false, open: controlledOpen, expanded: controlledExpanded, onOpen, onClose, onExpandChange }) => {
+const AIChatAssistant = ({ hideLauncher = false, embedded = false, open: controlledOpen, expanded: controlledExpanded, onOpen, onClose, onExpandChange }) => {
     const [internalOpen, setInternalOpen] = useState(false);
     const isControlled = controlledOpen !== undefined;
-    const isOpen = isControlled ? controlledOpen : internalOpen;
+    const isOpen = embedded || (isControlled ? controlledOpen : internalOpen);
     const [isMinimized, setIsMinimized] = useState(false);
     const [internalExpanded, setInternalExpanded] = useState(false);
     const isExpanded = controlledExpanded !== undefined ? controlledExpanded : internalExpanded;
@@ -145,6 +145,92 @@ const AIChatAssistant = ({ hideLauncher = false, open: controlledOpen, expanded:
                 <ChatIcon />
                 <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full animate-pulse"></span>
             </button>
+        );
+    }
+
+    // Embedded mode: render just the chat content without positioning/header
+    if (embedded) {
+        return (
+            <div className="flex flex-col h-full bg-white">
+                {/* Messages area */}
+                <div className="flex-1 overflow-y-auto p-4 bg-gray-50">
+                    {messages.map((msg, idx) => (
+                        <div key={idx} className={`flex gap-2 mb-4 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
+                            <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                                msg.role === 'user' ? 'bg-green-600 text-white' : 'bg-gray-200 text-green-700'
+                            }`}>
+                                {msg.role === 'user' ? <UserIcon /> : <BotIcon />}
+                            </div>
+                            <div className={`max-w-[75%] p-3 rounded-2xl ${
+                                msg.role === 'user' 
+                                    ? 'bg-green-600 text-white rounded-br-md' 
+                                    : 'bg-white shadow-sm rounded-bl-md'
+                            }`}>
+                                <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                            </div>
+                        </div>
+                    ))}
+
+                    {loading && (
+                        <div className="flex gap-2 mb-4">
+                            <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
+                                <BotIcon />
+                            </div>
+                            <div className="bg-white p-3 rounded-2xl rounded-bl-md shadow-sm">
+                                <div className="flex gap-1">
+                                    <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></span>
+                                    <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></span>
+                                    <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></span>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                    <div ref={messagesEndRef} />
+                </div>
+
+                {/* Quick questions */}
+                {messages.length === 1 && (
+                    <div className="px-4 pb-2 bg-gray-50">
+                        <p className="text-xs text-gray-500 mb-2">Quick questions:</p>
+                        <div className="flex flex-wrap gap-1">
+                            {quickQuestions.map((q, idx) => (
+                                <button
+                                    key={idx}
+                                    onClick={() => {
+                                        setInput(q);
+                                        handleSend();
+                                    }}
+                                    className="text-xs px-2 py-1 bg-green-50 text-green-700 rounded-full hover:bg-green-100 transition"
+                                >
+                                    {q}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {/* Input area */}
+                <div className="p-4 border-t bg-white shrink-0">
+                    <div className="flex gap-2">
+                        <input
+                            type="text"
+                            value={input}
+                            onChange={(e) => setInput(sanitizeInput(e.target.value))}
+                            onKeyPress={handleKeyPress}
+                            placeholder="Ask me anything about the zoo..."
+                            className="flex-1 px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm"
+                            disabled={loading}
+                        />
+                        <button
+                            onClick={handleSend}
+                            disabled={!input.trim() || loading}
+                            className="w-10 h-10 bg-green-600 text-white rounded-full flex items-center justify-center hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            <SendIcon />
+                        </button>
+                    </div>
+                </div>
+            </div>
         );
     }
 

@@ -27,7 +27,7 @@ const dbConfig = {
     port: parseInt(process.env.DB_PORT) || 3306,
     user: process.env.DB_USER || 'root',
     password: process.env.DB_PASSWORD || '',
-    database: process.env.DB_NAME || 'zoobulusan',
+    database: process.env.DB_NAME || 'bulusanzoocalapan',
     waitForConnections: true,
     connectionLimit: isProduction ? 5 : 10,
     queueLimit: 0,

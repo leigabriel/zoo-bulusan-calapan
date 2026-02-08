@@ -65,14 +65,50 @@ const TicketScanner = () => {
     const [recentScans, setRecentScans] = useState([]);
     const [todayStats, setTodayStats] = useState({ scanned: 0, valid: 0, invalid: 0 });
     const [scanMode, setScanMode] = useState('manual'); // 'manual' or 'camera'
+    const [soundEnabled, setSoundEnabled] = useState(true);
 
     const videoRef = useRef(null);
     const canvasRef = useRef(null);
     const inputRef = useRef(null);
     const scannerRef = useRef(null);
     const animationRef = useRef(null);
+    const audioContextRef = useRef(null);
 
-    // Load html5-qrcode dynamically
+    // Play sound feedback using Web Audio API
+    const playSound = useCallback((isSuccess) => {
+        if (!soundEnabled) return;
+        try {
+            if (!audioContextRef.current) {
+                audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            const ctx = audioContextRef.current;
+            const oscillator = ctx.createOscillator();
+            const gainNode = ctx.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(ctx.destination);
+            
+            if (isSuccess) {
+                // Success: ascending two-tone beep
+                oscillator.frequency.setValueAtTime(800, ctx.currentTime);
+                oscillator.frequency.setValueAtTime(1200, ctx.currentTime + 0.1);
+            } else {
+                // Failure: descending buzz
+                oscillator.frequency.setValueAtTime(300, ctx.currentTime);
+                oscillator.frequency.setValueAtTime(200, ctx.currentTime + 0.15);
+            }
+            
+            gainNode.gain.setValueAtTime(0.3, ctx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.2);
+            
+            oscillator.start(ctx.currentTime);
+            oscillator.stop(ctx.currentTime + 0.2);
+        } catch (e) {
+            // Audio not supported, ignore
+        }
+    }, [soundEnabled]);
+
+    // Load html5-qrcode dynamically and handle keyboard shortcuts
     useEffect(() => {
         const loadQRScanner = async () => {
             if (!window.Html5Qrcode) {
@@ -85,10 +121,31 @@ const TicketScanner = () => {
         loadQRScanner();
         inputRef.current?.focus();
 
+        // Keyboard shortcut: Enter to validate (when input focused), Escape to clear
+        const handleKeyDown = (e) => {
+            if (e.key === 'Escape') {
+                setTicketCode('');
+                setScanResult(null);
+                inputRef.current?.focus();
+            }
+        };
+        
+        window.addEventListener('keydown', handleKeyDown);
+
         return () => {
             stopCamera();
+            window.removeEventListener('keydown', handleKeyDown);
         };
     }, []);
+
+    // Auto-start camera when switching to camera mode
+    useEffect(() => {
+        if (scanMode === 'camera' && !cameraActive) {
+            // Small delay to ensure DOM is ready
+            const timer = setTimeout(() => startCamera(), 100);
+            return () => clearTimeout(timer);
+        }
+    }, [scanMode]);
 
     const startCamera = async () => {
         try {
@@ -232,6 +289,7 @@ const TicketScanner = () => {
             };
 
             setScanResult(result);
+            playSound(result.success);
             setRecentScans(prev => [result, ...prev.slice(0, 9)]);
             setTodayStats(prev => ({
                 scanned: prev.scanned + 1,
@@ -248,6 +306,7 @@ const TicketScanner = () => {
                 timestamp: new Date().toLocaleTimeString()
             };
             setScanResult(result);
+            playSound(false);
             setRecentScans(prev => [result, ...prev.slice(0, 9)]);
             setTodayStats(prev => ({
                 ...prev,
@@ -306,7 +365,7 @@ const TicketScanner = () => {
     return (
         <div className="space-y-6">
             {/* Stats Cards */}
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-2xl p-4">
                     <div className="flex items-center justify-between">
                         <div>
@@ -325,6 +384,37 @@ const TicketScanner = () => {
                 <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-2xl p-4">
                     <p className="text-gray-400 text-sm">Invalid</p>
                     <p className="text-2xl font-bold text-red-400">{todayStats.invalid}</p>
+                </div>
+                {/* Sound Toggle */}
+                <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-2xl p-4">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <p className="text-gray-400 text-sm">Sound</p>
+                            <p className="text-lg font-bold text-white">{soundEnabled ? 'On' : 'Off'}</p>
+                        </div>
+                        <button
+                            onClick={() => setSoundEnabled(!soundEnabled)}
+                            className={`w-10 h-10 rounded-xl flex items-center justify-center transition ${
+                                soundEnabled 
+                                    ? 'bg-[#8cff65]/10 text-[#8cff65]' 
+                                    : 'bg-gray-700/50 text-gray-500'
+                            }`}
+                        >
+                            {soundEnabled ? (
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+                                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+                                    <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
+                                    <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+                                </svg>
+                            ) : (
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+                                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+                                    <line x1="23" y1="9" x2="17" y2="15" />
+                                    <line x1="17" y1="9" x2="23" y2="15" />
+                                </svg>
+                            )}
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -507,12 +597,12 @@ const TicketScanner = () => {
                     {/* Quick Tips */}
                     <div className="bg-blue-500/10 border border-blue-500/20 p-6 rounded-2xl">
                         <h4 className="font-bold text-blue-400 mb-3 flex items-center gap-2">
-                            <InfoIcon /> Quick Tips
+                            <InfoIcon /> Quick Tips & Shortcuts
                         </h4>
                         <ul className="text-sm text-blue-300 space-y-2">
                             <li className="flex items-start gap-2">
                                 <span className="text-blue-500">•</span>
-                                <span>Booking codes are in format: ZB-XXXXXXXX</span>
+                                <span>Booking codes format: <code className="bg-blue-500/20 px-1 rounded">ZB-XXXXXXXX</code></span>
                             </li>
                             <li className="flex items-start gap-2">
                                 <span className="text-blue-500">•</span>
@@ -520,7 +610,11 @@ const TicketScanner = () => {
                             </li>
                             <li className="flex items-start gap-2">
                                 <span className="text-blue-500">•</span>
-                                <span>Ensure good lighting when using camera scanner</span>
+                                <span>Press <kbd className="bg-blue-500/20 px-1.5 py-0.5 rounded text-xs font-mono">Enter</kbd> to validate ticket</span>
+                            </li>
+                            <li className="flex items-start gap-2">
+                                <span className="text-blue-500">•</span>
+                                <span>Press <kbd className="bg-blue-500/20 px-1.5 py-0.5 rounded text-xs font-mono">Esc</kbd> to clear input and results</span>
                             </li>
                             <li className="flex items-start gap-2">
                                 <span className="text-blue-500">•</span>
@@ -528,7 +622,7 @@ const TicketScanner = () => {
                             </li>
                             <li className="flex items-start gap-2">
                                 <span className="text-blue-500">•</span>
-                                <span>Contact admin for duplicate entry or refund issues</span>
+                                <span>Sound feedback indicates valid (high tone) or invalid (low tone)</span>
                             </li>
                         </ul>
                     </div>

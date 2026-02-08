@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { useEffect } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Home from './pages/user/Home';
 import Animals from './pages/user/Animals';
@@ -248,6 +249,37 @@ function AppRoutes() {
 }
 
 function App() {
+    // Initialize AOS (Animate On Scroll) after component mounts
+    useEffect(() => {
+        const initAOS = () => {
+            if (typeof window !== 'undefined' && window.AOS) {
+                window.AOS.init({
+                    duration: 800,
+                    easing: 'ease-out-cubic',
+                    once: false,
+                    offset: 50,
+                    delay: 0,
+                });
+            }
+        };
+
+        // Check if AOS is already loaded
+        if (window.AOS) {
+            initAOS();
+        } else {
+            // Wait for AOS script to load
+            const checkAOS = setInterval(() => {
+                if (window.AOS) {
+                    clearInterval(checkAOS);
+                    initAOS();
+                }
+            }, 100);
+
+            // Clean up interval on unmount
+            return () => clearInterval(checkAOS);
+        }
+    }, []);
+
     return (
         <AuthProvider>
             <Router>

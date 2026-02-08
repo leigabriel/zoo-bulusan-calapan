@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { authAPI, staffAPI } from '../../services/api-client';
+import { authAPI, staffAPI, getProfileImageUrl } from '../../services/api-client';
 import { sanitizeInput } from '../../utils/sanitize';
 import LogoutModal from '../common/LogoutModal';
 
@@ -214,7 +214,8 @@ const StaffLayout = ({ children }) => {
                     email: res.user.email || ''
                 });
                 if (res.user.profileImage || res.user.profile_image) {
-                    setPreviewImage(res.user.profileImage || res.user.profile_image);
+                    const imgUrl = res.user.profileImage || res.user.profile_image;
+                    setPreviewImage(getProfileImageUrl(imgUrl));
                 }
             } else if (user) {
                 setProfileForm({
@@ -329,10 +330,10 @@ const StaffLayout = ({ children }) => {
                 {/* Logo Section */}
                 <div className="p-5 flex items-center gap-3 border-b border-[#2a2a2a]">
                     <div className="w-10 h-10 bg-gradient-to-br from-[#8cff65] to-[#4ade80] rounded-xl flex items-center justify-center text-[#0a0a0a]">
-                        <PawIcon />
+                        <img src="https://cdn-icons-png.flaticon.com/128/1864/1864472.png" alt="Bz Logo" className="w-6 h-6 object-contain" />
                     </div>
                     <div>
-                        <h1 className="font-bold text-white text-lg">Zoo Bulusan</h1>
+                        <h1 className="font-bold text-white text-lg">BULUSAN ZOO</h1>
                         <p className="text-xs text-gray-500">Staff Portal</p>
                     </div>
                     <button 

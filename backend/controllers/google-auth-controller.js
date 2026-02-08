@@ -154,11 +154,29 @@ exports.initiateGoogleAuth = (req, res) => {
     try {
         const { clientId, callbackUrl } = getGoogleConfig();
 
-        // Generate CSRF state token
+        // Capture the origin for redirect back after OAuth
+        // This allows both localhost and network IP access
+        const referer = req.get('referer') || req.get('origin');
+        let frontendOrigin = process.env.FRONTEND_URL || 'http://localhost:5173';
+        
+        if (referer) {
+            try {
+                const refererUrl = new URL(referer);
+                // Only allow same port (5173) to prevent redirect attacks
+                if (refererUrl.port === '5173' || refererUrl.pathname.includes('/login')) {
+                    frontendOrigin = `${refererUrl.protocol}//${refererUrl.host}`;
+                }
+            } catch (e) {
+                console.log('Could not parse referer URL:', e.message);
+            }
+        }
+
+        // Generate CSRF state token with origin embedded
         const state = generateState();
         stateStore.set(state, {
             expiresAt: Date.now() + STATE_EXPIRY_MS,
-            createdAt: Date.now()
+            createdAt: Date.now(),
+            frontendOrigin: frontendOrigin  // Store origin for callback redirect
         });
 
         // Build authorization URL with required scopes
@@ -174,6 +192,7 @@ exports.initiateGoogleAuth = (req, res) => {
 
         const authUrl = `${GOOGLE_AUTH_URL}?${params.toString()}`;
         console.log('Redirecting to Google OAuth:', authUrl.substring(0, 100) + '...');
+        console.log('Frontend origin stored:', frontendOrigin);
         res.redirect(authUrl);
     } catch (error) {
         console.error('Google auth initiation error:', error);
@@ -187,8 +206,9 @@ exports.initiateGoogleAuth = (req, res) => {
  * Exchanges authorization code for tokens and authenticates user
  */
 exports.handleGoogleCallback = async (req, res) => {
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
-    const loginUrl = `${frontendUrl}/login`;
+    // Default frontend URL - will be overridden by stored origin if available
+    let frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    let loginUrl = `${frontendUrl}/login`;
 
     try {
         console.log('Google callback received:', { 
@@ -217,6 +237,13 @@ exports.handleGoogleCallback = async (req, res) => {
             console.log('Invalid or expired state:', { hasStoredState: !!storedState });
             stateStore.delete(state);
             return res.redirect(`${loginUrl}?error=invalid_state`);
+        }
+        
+        // Use stored frontend origin for redirect (supports both localhost and network IP)
+        if (storedState.frontendOrigin) {
+            frontendUrl = storedState.frontendOrigin;
+            loginUrl = `${frontendUrl}/login`;
+            console.log('Using stored frontend origin:', frontendUrl);
         }
         stateStore.delete(state);
 

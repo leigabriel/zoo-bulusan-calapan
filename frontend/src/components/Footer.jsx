@@ -70,22 +70,22 @@ const Footer = () => {
     ];
 
     return (
-        <footer className="bg-gradient-to-br from-[#2D5A27] to-[#3A8C7D] text-white py-12 md:py-16">
+        <footer className="bg-[#212631] text-white py-12 md:py-16">
             <div className="container mx-auto px-4 sm:px-6">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-10">
 
                     {/* Brand Section */}
                     <div>
                         <div className="flex items-center gap-4 mb-6">
-                            <div className="p-3 rounded-full bg-white/25 flex items-center justify-center">
+                            <div className="p-3 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-400 flex items-center justify-center">
                                 <img
-                                    src="https://cdn-icons-png.flaticon.com/128/5068/5068980.png"
+                                    src="https://cdn-icons-png.flaticon.com/128/1864/1864472.png"
                                     alt="Logo"
-                                    className="w-6 h-6 invert brightness-0 filter"
+                                    className="w-6 h-6"
                                 />
                             </div>
                             <div>
-                                <h3 className="text-2xl font-bold">Bulusan Wildlife</h3>
+                                <h3 className="text-2xl font-bold text-teal-400">Bulusan Zoo</h3>
                                 <p className="text-sm opacity-90">AI-Powered Nature Park</p>
                             </div>
                         </div>
@@ -148,8 +148,8 @@ const Footer = () => {
                 </div>
 
                 {/* Copyright */}
-                <div className="border-t border-green-600 mt-12 pt-8 text-center text-sm opacity-90">
-                    <p>© {currentYear} Bulusan Wildlife & Nature Park. AI-Driven Smart Zoo Management System</p>
+                <div className="mt-12 pt-8 text-right text-sm opacity-90">
+                    <p>© {currentYear} Bulusan Wildlife & Nature Park.</p>
                 </div>
             </div>
         </footer>

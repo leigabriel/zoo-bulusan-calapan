@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
+import AIFloatingButton from '../../components/common/AIFloatingButton';
 import { useAuth } from '../../hooks/use-auth';
 import { userAPI } from '../../services/api-client';
 import { sanitizeInput, sanitizeEmail, sanitizePhone, sanitizeFormData } from '../../utils/sanitize';
@@ -126,15 +127,22 @@ const Tickets = () => {
         fetchSlotAvailability();
     }, [bookingDetails.date]);
 
+    // Helper to format date in local timezone
+    const formatLocalDate = (date) => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    };
+
     const getMinDate = () => {
-        const today = new Date();
-        return today.toISOString().split('T')[0];
+        return formatLocalDate(new Date());
     };
 
     const getMaxDate = () => {
         const maxDate = new Date();
         maxDate.setDate(maxDate.getDate() + 30);
-        return maxDate.toISOString().split('T')[0];
+        return formatLocalDate(maxDate);
     };
 
     const updateCount = (type, delta) => {
@@ -878,6 +886,7 @@ const Tickets = () => {
             </section>
 
             <Footer />
+            <AIFloatingButton />
         </div>
     );
 };

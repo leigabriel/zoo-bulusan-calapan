@@ -1,6 +1,7 @@
 import React from 'react';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
+import AIFloatingButton from '../../components/common/AIFloatingButton';
 
 const Icons = {
     Calendar: () => (
@@ -87,6 +88,7 @@ const AboutUs = () => {
                 </div>
             </div>
             <Footer />
+            <AIFloatingButton />
         </div>
     );
 };

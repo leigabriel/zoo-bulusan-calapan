@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
+import AIFloatingButton from '../../components/common/AIFloatingButton';
 import { userAPI } from '../../services/api-client';
 
 // Icons
@@ -99,9 +100,12 @@ const Events = () => {
         if (typeof dateValue === 'string' && dateValue.includes('T')) {
             return dateValue.split('T')[0];
         }
-        // Handle Date object or other formats
+        // Handle Date object or other formats - use local timezone
         const date = new Date(dateValue);
-        return date.toISOString().split('T')[0];
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
     };
 
     // Format time for display (HH:mm to 12-hour format)
@@ -471,6 +475,7 @@ const Events = () => {
             )}
 
             <Footer />
+            <AIFloatingButton />
         </div>
     );
 };

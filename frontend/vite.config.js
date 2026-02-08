@@ -2,13 +2,19 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 
-// https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  server: {
+    host: '0.0.0.0',  // Listen on all network interfaces
+    port: 5173,
+  },
+  preview: {
+    host: '0.0.0.0',
+    port: 5173,
+  },
   build: {
     outDir: 'dist',
     sourcemap: false,
-    // Optimize chunk size for production
     rollupOptions: {
       output: {
         manualChunks: {
@@ -20,6 +26,5 @@ export default defineConfig({
       }
     }
   },
-  // Ensure environment variables are properly loaded
   envPrefix: 'VITE_'
 })

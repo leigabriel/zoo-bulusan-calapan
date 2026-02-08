@@ -93,16 +93,6 @@ const AdminTickets = ({ globalSearch = '' }) => {
     const [cancelReason, setCancelReason] = useState('');
     const [actionLoading, setActionLoading] = useState(false);
 
-    // Mock ticket data - replace with real API call
-    const mockTickets = [
-        { id: 'TKT-001', code: 'ZB2024001234', type: 'Adult', event: 'Night Safari Experience', purchasedBy: 'John Doe', email: 'john@example.com', price: 250, purchaseDate: '2024-01-15', visitDate: '2024-01-20', status: 'active', quantity: 2 },
-        { id: 'TKT-002', code: 'ZB2024001235', type: 'Child', event: 'Animal Feeding Tour', purchasedBy: 'Jane Smith', email: 'jane@example.com', price: 150, purchaseDate: '2024-01-14', visitDate: '2024-01-21', status: 'used', quantity: 3 },
-        { id: 'TKT-003', code: 'ZB2024001236', type: 'Senior', event: 'General Admission', purchasedBy: 'Bob Wilson', email: 'bob@example.com', price: 175, purchaseDate: '2024-01-13', visitDate: '2024-01-19', status: 'active', quantity: 1 },
-        { id: 'TKT-004', code: 'ZB2024001237', type: 'Adult', event: 'Wildlife Photography Day', purchasedBy: 'Alice Brown', email: 'alice@example.com', price: 500, purchaseDate: '2024-01-12', visitDate: '2024-01-18', status: 'cancelled', quantity: 2 },
-        { id: 'TKT-005', code: 'ZB2024001238', type: 'Student', event: 'Conservation Workshop', purchasedBy: 'Mike Johnson', email: 'mike@example.com', price: 200, purchaseDate: '2024-01-11', visitDate: '2024-01-17', status: 'expired', quantity: 1 },
-        { id: 'TKT-006', code: 'ZB2024001239', type: 'Adult', event: 'Night Safari Experience', purchasedBy: 'Sarah Davis', email: 'sarah@example.com', price: 250, purchaseDate: '2024-01-10', visitDate: '2024-01-16', status: 'used', quantity: 4 },
-    ];
-
     const events = ['All Events', 'Night Safari Experience', 'Animal Feeding Tour', 'General Admission', 'Wildlife Photography Day', 'Conservation Workshop'];
 
     useEffect(() => {
