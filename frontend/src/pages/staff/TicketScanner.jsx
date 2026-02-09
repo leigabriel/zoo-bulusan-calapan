@@ -59,7 +59,9 @@ const TicketIcon = () => (
 const TicketScanner = () => {
     const [ticketCode, setTicketCode] = useState('');
     const [scanResult, setScanResult] = useState(null);
+    const [pendingTicket, setPendingTicket] = useState(null); // Ticket awaiting confirmation
     const [loading, setLoading] = useState(false);
+    const [confirmLoading, setConfirmLoading] = useState(false);
     const [cameraActive, setCameraActive] = useState(false);
     const [cameraError, setCameraError] = useState(null);
     const [recentScans, setRecentScans] = useState([]);
@@ -272,15 +274,17 @@ const TicketScanner = () => {
     const handleManualValidation = async (e) => {
         e.preventDefault();
         if (!ticketCode.trim()) return;
-        await validateTicket(ticketCode.trim());
+        await checkTicket(ticketCode.trim());
     };
 
-    const validateTicket = async (code) => {
+    // Check ticket validity (does NOT mark as used)
+    const checkTicket = async (code) => {
         setLoading(true);
         setScanResult(null);
+        setPendingTicket(null);
 
         try {
-            const response = await staffAPI.validateTicket(code);
+            const response = await staffAPI.checkTicket(code);
 
             const result = {
                 code,
@@ -289,20 +293,27 @@ const TicketScanner = () => {
             };
 
             setScanResult(result);
-            playSound(result.success);
-            setRecentScans(prev => [result, ...prev.slice(0, 9)]);
-            setTodayStats(prev => ({
-                scanned: prev.scanned + 1,
-                valid: result.success ? prev.valid + 1 : prev.valid,
-                invalid: !result.success ? prev.invalid + 1 : prev.invalid
-            }));
+            
+            // If ticket is valid, store it for confirmation
+            if (result.success && result.ticket) {
+                setPendingTicket(result.ticket);
+                playSound(true); // Positive feedback - ticket is valid
+            } else {
+                playSound(false);
+                setTodayStats(prev => ({
+                    ...prev,
+                    scanned: prev.scanned + 1,
+                    invalid: prev.invalid + 1
+                }));
+            }
+            
             setTicketCode('');
             inputRef.current?.focus();
         } catch (error) {
             const result = {
                 code,
                 success: false,
-                message: error.message || 'Failed to validate ticket',
+                message: error.message || 'Failed to check ticket',
                 timestamp: new Date().toLocaleTimeString()
             };
             setScanResult(result);
@@ -318,49 +329,165 @@ const TicketScanner = () => {
         }
     };
 
-    const ResultCard = ({ result }) => (
-        <div className={`p-6 rounded-2xl border ${result.success
-                ? 'bg-[#8cff65]/10 border-[#8cff65]/30'
-                : 'bg-red-500/10 border-red-500/30'
-            }`}>
-            <div className="flex items-center gap-4">
-                <div className={`w-16 h-16 rounded-full flex items-center justify-center ${result.success ? 'bg-[#8cff65]/20 text-[#8cff65]' : 'bg-red-500/20 text-red-400'
-                    }`}>
-                    {result.success ? <CheckIcon /> : <XIcon />}
-                </div>
-                <div className="flex-1">
-                    <h3 className={`text-xl font-bold ${result.success ? 'text-[#8cff65]' : 'text-red-400'}`}>
-                        {result.success ? 'Valid Ticket ✓' : 'Invalid Ticket ✗'}
-                    </h3>
-                    <p className="text-gray-400">{result.message}</p>
-                    {result.ticket && (
-                        <div className="mt-3 p-3 bg-[#0a0a0a] rounded-xl space-y-1">
-                            <div className="flex justify-between text-sm">
-                                <span className="text-gray-500">Visitor:</span>
-                                <span className="text-white">{result.ticket.visitorName || result.ticket.visitor_name}</span>
+    // Confirm check-in (marks ticket as used)
+    const confirmCheckIn = async () => {
+        if (!pendingTicket) return;
+        
+        setConfirmLoading(true);
+        try {
+            const response = await staffAPI.markTicketUsed(pendingTicket.id);
+            
+            const result = {
+                code: pendingTicket.bookingReference,
+                success: true,
+                message: 'Ticket checked in successfully!',
+                ticket: response.ticket,
+                checkedIn: true,
+                timestamp: new Date().toLocaleTimeString()
+            };
+            
+            setScanResult(result);
+            setPendingTicket(null);
+            playSound(true);
+            setRecentScans(prev => [result, ...prev.slice(0, 9)]);
+            setTodayStats(prev => ({
+                scanned: prev.scanned + 1,
+                valid: prev.valid + 1,
+                invalid: prev.invalid
+            }));
+        } catch (error) {
+            const result = {
+                code: pendingTicket.bookingReference,
+                success: false,
+                message: error.message || 'Failed to check in ticket',
+                timestamp: new Date().toLocaleTimeString()
+            };
+            setScanResult(result);
+            playSound(false);
+        } finally {
+            setConfirmLoading(false);
+        }
+    };
+
+    // Cancel pending check-in
+    const cancelCheckIn = () => {
+        setPendingTicket(null);
+        setScanResult(null);
+        inputRef.current?.focus();
+    };
+
+    // Legacy validateTicket for camera mode - now uses checkTicket
+    const validateTicket = async (code) => {
+        await checkTicket(code);
+    };
+
+    const ResultCard = ({ result }) => {
+        const isValidPending = result.success && pendingTicket && !result.checkedIn;
+        const isCheckedIn = result.success && result.checkedIn;
+        
+        return (
+            <div className={`p-6 rounded-2xl border ${
+                isCheckedIn 
+                    ? 'bg-[#8cff65]/20 border-[#8cff65]/50'
+                    : isValidPending
+                        ? 'bg-amber-500/10 border-amber-500/30'
+                        : result.success 
+                            ? 'bg-[#8cff65]/10 border-[#8cff65]/30'
+                            : 'bg-red-500/10 border-red-500/30'
+                }`}>
+                <div className="flex items-center gap-4">
+                    <div className={`w-16 h-16 rounded-full flex items-center justify-center ${
+                        isCheckedIn
+                            ? 'bg-[#8cff65]/30 text-[#8cff65]'
+                            : isValidPending
+                                ? 'bg-amber-500/20 text-amber-400'
+                                : result.success 
+                                    ? 'bg-[#8cff65]/20 text-[#8cff65]' 
+                                    : 'bg-red-500/20 text-red-400'
+                        }`}>
+                        {isCheckedIn ? <CheckIcon /> : isValidPending ? <TicketIcon /> : result.success ? <CheckIcon /> : <XIcon />}
+                    </div>
+                    <div className="flex-1">
+                        <h3 className={`text-xl font-bold ${
+                            isCheckedIn
+                                ? 'text-[#8cff65]'
+                                : isValidPending
+                                    ? 'text-amber-400'
+                                    : result.success 
+                                        ? 'text-[#8cff65]' 
+                                        : 'text-red-400'
+                        }`}>
+                            {isCheckedIn 
+                                ? 'Checked In ✓' 
+                                : isValidPending 
+                                    ? 'Valid - Confirm Check-In' 
+                                    : result.success 
+                                        ? 'Valid Ticket ✓' 
+                                        : 'Invalid Ticket ✗'}
+                        </h3>
+                        <p className="text-gray-400">{result.message}</p>
+                        {result.ticket && (
+                            <div className="mt-3 p-3 bg-[#0a0a0a] rounded-xl space-y-1">
+                                <div className="flex justify-between text-sm">
+                                    <span className="text-gray-500">Visitor:</span>
+                                    <span className="text-white">{result.ticket.visitorName || result.ticket.visitor_name}</span>
+                                </div>
+                                <div className="flex justify-between text-sm">
+                                    <span className="text-gray-500">Type:</span>
+                                    <span className="text-white capitalize">{result.ticket.ticketType || result.ticket.ticket_type}</span>
+                                </div>
+                                <div className="flex justify-between text-sm">
+                                    <span className="text-gray-500">Quantity:</span>
+                                    <span className="text-white">{result.ticket.quantity || 1}</span>
+                                </div>
+                                <div className="flex justify-between text-sm">
+                                    <span className="text-gray-500">Visit Date:</span>
+                                    <span className="text-white">{result.ticket.visitDate || result.ticket.visit_date}</span>
+                                </div>
+                                <div className="flex justify-between text-sm">
+                                    <span className="text-gray-500">Booking Ref:</span>
+                                    <span className="text-[#8cff65] font-mono">{result.ticket.bookingReference || result.ticket.booking_reference}</span>
+                                </div>
                             </div>
-                            <div className="flex justify-between text-sm">
-                                <span className="text-gray-500">Type:</span>
-                                <span className="text-white capitalize">{result.ticket.ticketType || result.ticket.ticket_type}</span>
+                        )}
+                        
+                        {/* Confirmation buttons for valid pending tickets */}
+                        {isValidPending && (
+                            <div className="mt-4 flex gap-3">
+                                <button
+                                    onClick={confirmCheckIn}
+                                    disabled={confirmLoading}
+                                    className="flex-1 bg-[#8cff65] hover:bg-[#7ae055] text-black font-bold py-3 px-4 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                >
+                                    {confirmLoading ? (
+                                        <>
+                                            <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                                            </svg>
+                                            Checking In...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <CheckIcon />
+                                            Confirm Check-In
+                                        </>
+                                    )}
+                                </button>
+                                <button
+                                    onClick={cancelCheckIn}
+                                    disabled={confirmLoading}
+                                    className="px-4 py-3 bg-gray-700 hover:bg-gray-600 text-white font-medium rounded-xl transition-colors disabled:opacity-50"
+                                >
+                                    Cancel
+                                </button>
                             </div>
-                            <div className="flex justify-between text-sm">
-                                <span className="text-gray-500">Quantity:</span>
-                                <span className="text-white">{result.ticket.quantity || 1}</span>
-                            </div>
-                            <div className="flex justify-between text-sm">
-                                <span className="text-gray-500">Visit Date:</span>
-                                <span className="text-white">{result.ticket.visitDate || result.ticket.visit_date}</span>
-                            </div>
-                            <div className="flex justify-between text-sm">
-                                <span className="text-gray-500">Booking Ref:</span>
-                                <span className="text-[#8cff65] font-mono">{result.ticket.booking_reference}</span>
-                            </div>
-                        </div>
-                    )}
+                        )}
+                    </div>
                 </div>
             </div>
-        </div>
-    );
+        );
+    };
 
     return (
         <div className="space-y-6">

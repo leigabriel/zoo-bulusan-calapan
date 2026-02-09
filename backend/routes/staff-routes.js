@@ -26,6 +26,8 @@ router.get('/tickets/today', staffController.getTodayTickets);
 router.get('/tickets/:id', staffController.getTicketById);
 router.put('/tickets/:id/status', staffController.updateTicketStatus);
 router.post('/tickets/validate', staffController.validateTicket);
+router.post('/tickets/check', staffController.checkTicket);
+router.post('/tickets/mark-used', staffController.markTicketUsed);
 
 // Events - Full CRUD for staff
 router.get('/events', staffController.getAllEvents);

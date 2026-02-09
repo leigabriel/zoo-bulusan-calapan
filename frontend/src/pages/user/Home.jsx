@@ -1,8 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
+import { motion, useScroll, useTransform, useSpring, useInView } from 'framer-motion';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 import AIFloatingButton from '../../components/common/AIFloatingButton';
+import { fadeInUp, fadeInLeft, fadeInRight, staggerContainer, staggerItem, defaultViewport } from '../../utils/animations';
 import '../../App.css'
 
 // 15 HD animal images for rotating display - verified Unsplash images matching labels
@@ -153,6 +155,56 @@ const Home = () => {
     // Local state for selector bubble and active feature
     // State for AI panel (assistant or scanner mode)
     const [currentAnimalIndex, setCurrentAnimalIndex] = useState(0);
+    
+    // Refs for each section for scroll-triggered animations
+    const aboutRef = useRef(null);
+    const animalsRef = useRef(null);
+    const eventsRef = useRef(null);
+    const ticketsRef = useRef(null);
+
+    // InView hooks for triggering animations when sections enter viewport
+    const aboutInView = useInView(aboutRef, { once: false, amount: 0.3 });
+    const animalsInView = useInView(animalsRef, { once: false, amount: 0.3 });
+    const eventsInView = useInView(eventsRef, { once: false, amount: 0.3 });
+    const ticketsInView = useInView(ticketsRef, { once: false, amount: 0.3 });
+
+    // Smooth spring config for natural animations
+    const springConfig = { stiffness: 100, damping: 30, restDelta: 0.001 };
+
+    // Section animation variants
+    const sectionVariants = {
+        hidden: { 
+            opacity: 0, 
+            y: 60,
+            scale: 0.98
+        },
+        visible: { 
+            opacity: 1, 
+            y: 0,
+            scale: 1,
+            transition: {
+                type: "spring",
+                stiffness: 80,
+                damping: 20,
+                mass: 1,
+                staggerChildren: 0.1,
+                delayChildren: 0.1
+            }
+        }
+    };
+
+    const childVariants = {
+        hidden: { opacity: 0, y: 30 },
+        visible: { 
+            opacity: 1, 
+            y: 0,
+            transition: {
+                type: "spring",
+                stiffness: 100,
+                damping: 15
+            }
+        }
+    };
 
     // Rotate through animal images every 4 seconds
     useEffect(() => {
@@ -160,13 +212,6 @@ const Home = () => {
             setCurrentAnimalIndex((prev) => (prev + 1) % animalImages.length);
         }, 4000);
         return () => clearInterval(interval);
-    }, []);
-
-    // Refresh AOS animations when component mounts
-    useEffect(() => {
-        if (typeof window !== 'undefined' && window.AOS) {
-            window.AOS.refresh();
-        }
     }, []);
 
     return (
@@ -304,276 +349,353 @@ const Home = () => {
                 </div>
             </section>
 
+            {/* Scroll-Triggered Sections - About, Animals, Events, Tickets */}
+            
             {/* About Us Preview Section */}
-            <section 
+            <motion.section 
+                ref={aboutRef}
                 id="about-section"
-                className="py-24 bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50"
+                initial="hidden"
+                animate={aboutInView ? "visible" : "hidden"}
+                variants={sectionVariants}
+                className="py-24 bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 overflow-hidden"
             >
-                <div className="container mx-auto px-6 lg:px-12">
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
-                        <div className="order-2 lg:order-1" data-aos="fade-right">
-                            <div className="inline-flex items-center gap-2 bg-white px-4 py-2 rounded-full mb-6 shadow-sm">
-                                <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                                <span className="text-sm font-medium text-emerald-700">About Us</span>
-                            </div>
-                            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6 leading-tight">
-                                Pioneering Wildlife
-                                <br />
-                                <span className="bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">Conservation</span>
-                            </h2>
-                            <p className="text-gray-600 text-lg leading-relaxed mb-8">
-                                Founded in 2015, Bulusan Wildlife & Nature Park began as a small conservation initiative in Calapan City. Today, we stand as a testament to modern conservation, housing over 250 animals across 45 species through our innovative AI-powered systems.
-                            </p>
-                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-10">
-                                {[
-                                    { num: '8+', label: 'Years' },
-                                    { num: '250+', label: 'Animals' },
-                                    { num: '45', label: 'Species' },
-                                    { num: '15', label: 'Programs' }
-                                ].map((stat, i) => (
-                                    <div key={i} className="bg-white rounded-2xl p-4 text-center shadow-sm border border-gray-100">
-                                        <div className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">{stat.num}</div>
-                                        <div className="text-gray-500 text-sm font-medium">{stat.label}</div>
+                        <div className="container mx-auto px-6 lg:px-12">
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+                                <motion.div 
+                                    className="order-2 lg:order-1"
+                                    initial="hidden"
+                                    whileInView="visible"
+                                    viewport={defaultViewport}
+                                    variants={fadeInRight}
+                                >
+                                    <div className="inline-flex items-center gap-2 bg-white px-4 py-2 rounded-full mb-6 shadow-sm">
+                                        <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                                        <span className="text-sm font-medium text-emerald-700">About Us</span>
                                     </div>
-                                ))}
-                            </div>
-                            <Link to="/about" className="inline-flex items-center gap-3 bg-gray-900 hover:bg-gray-800 text-white px-8 py-4 rounded-full font-semibold transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-0.5">
-                                <span>Learn More About Us</span>
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
-                            </Link>
-                        </div>
-                        <div className="order-1 lg:order-2" data-aos="fade-left">
-                            <div className="relative">
-                                <div className="absolute -inset-4 bg-gradient-to-r from-emerald-400 to-teal-400 rounded-3xl blur-2xl opacity-20"></div>
-                                <img
-                                    src="https://images.unsplash.com/photo-1534567153574-2b12153a87f0?w=800&q=80"
-                                    alt="Wildlife Conservation"
-                                    className="relative rounded-3xl shadow-2xl w-full object-cover aspect-[4/3]"
-                                />
-                                <div className="absolute -bottom-6 -left-6 bg-white rounded-2xl p-4 shadow-xl border border-gray-100">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
-                                            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
-                                        </div>
-                                        <div>
-                                            <p className="font-bold text-gray-900">AI-Powered</p>
-                                            <p className="text-sm text-gray-500">Smart Monitoring</p>
+                                    <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6 leading-tight">
+                                        Pioneering Wildlife
+                                        <br />
+                                        <span className="bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">Conservation</span>
+                                    </h2>
+                                    <p className="text-gray-600 text-lg leading-relaxed mb-8">
+                                        Founded in 2015, Bulusan Wildlife & Nature Park began as a small conservation initiative in Calapan City. Today, we stand as a testament to modern conservation, housing over 250 animals across 45 species through our innovative AI-powered systems.
+                                    </p>
+                                    <motion.div 
+                                        className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-10"
+                                        variants={staggerContainer}
+                                        initial="hidden"
+                                        whileInView="visible"
+                                        viewport={defaultViewport}
+                                    >
+                                        {[
+                                            { num: '8+', label: 'Years' },
+                                            { num: '250+', label: 'Animals' },
+                                            { num: '45', label: 'Species' },
+                                            { num: '15', label: 'Programs' }
+                                        ].map((stat, i) => (
+                                            <motion.div 
+                                                key={i} 
+                                                className="bg-white rounded-2xl p-4 text-center shadow-sm border border-gray-100"
+                                                variants={staggerItem}
+                                            >
+                                                <div className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">{stat.num}</div>
+                                                <div className="text-gray-500 text-sm font-medium">{stat.label}</div>
+                                            </motion.div>
+                                        ))}
+                                    </motion.div>
+                                    <Link to="/about" className="inline-flex items-center gap-3 bg-gray-900 hover:bg-gray-800 text-white px-8 py-4 rounded-full font-semibold transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-0.5">
+                                        <span>Learn More About Us</span>
+                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+                                    </Link>
+                                </motion.div>
+                                <motion.div 
+                                    className="order-1 lg:order-2"
+                                    initial="hidden"
+                                    whileInView="visible"
+                                    viewport={defaultViewport}
+                                    variants={fadeInLeft}
+                                >
+                                    <div className="relative">
+                                        <div className="absolute -inset-4 bg-gradient-to-r from-emerald-400 to-teal-400 rounded-3xl blur-2xl opacity-20"></div>
+                                        <img
+                                            src="https://images.unsplash.com/photo-1534567153574-2b12153a87f0?w=800&q=80"
+                                            alt="Wildlife Conservation"
+                                            className="relative rounded-3xl shadow-2xl w-full object-cover aspect-[4/3]"
+                                        />
+                                        <div className="absolute -bottom-6 -left-6 bg-white rounded-2xl p-4 shadow-xl border border-gray-100">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
+                                                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
+                                                </div>
+                                                <div>
+                                                    <p className="font-bold text-gray-900">AI-Powered</p>
+                                                    <p className="text-sm text-gray-500">Smart Monitoring</p>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
+                                </motion.div>
                             </div>
                         </div>
-                    </div>
-                </div>
-            </section>
+            </motion.section>
 
             {/* Animals Preview Section */}
-            <section 
+            <motion.section 
+                ref={animalsRef}
                 id="animals-section"
-                className="py-24 bg-white"
+                initial="hidden"
+                animate={animalsInView ? "visible" : "hidden"}
+                variants={sectionVariants}
+                className="py-24 bg-white overflow-hidden"
             >
                 <div className="container mx-auto px-6 lg:px-12">
-                    <div className="text-center mb-16" data-aos="fade-up">
-                        <div className="inline-flex items-center gap-2 bg-emerald-50 px-4 py-2 rounded-full mb-6">
-                            <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                            <span className="text-sm font-medium text-emerald-700">Our Wildlife</span>
-                        </div>
-                        <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">Meet Our Animals</h2>
-                        <p className="text-gray-600 text-lg max-w-2xl mx-auto">Discover the incredible wildlife roaming freely at our AI-powered nature park.</p>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-                        {[
-                            {
-                                name: 'African Lions',
-                                category: 'Mammals',
-                                location: 'Savanna Zone',
-                                image: 'https://images.unsplash.com/photo-1546182990-dffeafbe841d?w=600&q=80',
-                                color: 'from-amber-400 to-orange-500'
-                            },
-                            {
-                                name: 'Asian Elephants',
-                                category: 'Mammals',
-                                location: 'Forest Habitat',
-                                image: 'https://images.unsplash.com/photo-1557050543-4d5f4e07ef46?w=600&q=80',
-                                color: 'from-emerald-400 to-teal-500'
-                            },
-                            {
-                                name: 'Tropical Birds',
-                                category: 'Birds',
-                                location: 'Aviary',
-                                image: 'https://images.unsplash.com/photo-1552728089-57bdde30beb3?w=600&q=80',
-                                color: 'from-blue-400 to-indigo-500'
-                            }
-                        ].map((animal, i) => (
-                            <div key={i} className="group bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-300 border border-gray-100 hover:-translate-y-2">
-                                <div className="relative h-64 overflow-hidden">
-                                    <img
-                                        src={animal.image}
-                                        alt={animal.name}
-                                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                                    />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-                                    <span className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm text-gray-800 text-xs font-bold px-3 py-1.5 rounded-full">
-                                        {animal.category}
-                                    </span>
-                                </div>
-                                <div className="p-6">
-                                    <h3 className="font-bold text-xl text-gray-900 mb-2">{animal.name}</h3>
-                                    <div className="flex items-center gap-2 text-gray-500 text-sm mb-4">
-                                        <svg className="w-4 h-4 text-emerald-600" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" /></svg>
-                                        <span>{animal.location}</span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                                        <span className="text-sm text-emerald-600 font-medium">Live Now</span>
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-
-                    <div className="text-center mt-12">
-                        <Link to="/animals" className="inline-flex items-center gap-3 bg-gray-900 hover:bg-gray-800 text-white px-8 py-4 rounded-full font-semibold transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-0.5">
-                            <span>View All Animals</span>
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
-                        </Link>
-                    </div>
-                </div>
-            </section>
-
-            {/* Events Preview Section */}
-            <section 
-                id="events-section"
-                className="py-24 bg-gray-50"
-            >
-                <div className="container mx-auto px-6 lg:px-12">
-                    <div className="text-center mb-16" data-aos="fade-up">
-                        <div className="inline-flex items-center gap-2 bg-white px-4 py-2 rounded-full mb-6 shadow-sm">
-                            <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
-                            <span className="text-sm font-medium text-gray-700">Live Events</span>
-                        </div>
-                        <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">Wildlife Events</h2>
-                        <p className="text-gray-600 text-lg max-w-2xl mx-auto">Experience unforgettable moments with our animals through live feedings and shows.</p>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
-                        {[
-                            {
-                                title: 'Penguin Feeding',
-                                time: '2:30 PM',
-                                desc: 'Watch our playful penguins dive and swim.',
-                                // IconComponent: Icons.Penguin,
-                                color: 'from-blue-400 to-cyan-500',
-                                live: true
-                            },
-                            {
-                                title: 'Tropical Bird Show',
-                                time: '1:00 PM',
-                                desc: 'Spectacular flight demonstrations.',
-                                // IconComponent: Icons.Parrot,
-                                color: 'from-amber-400 to-orange-500',
-                                live: false
-                            },
-                            {
-                                title: 'Lion Feeding',
-                                time: '4:00 PM',
-                                desc: 'Watch the kings of the jungle at mealtime.',
-                                // IconComponent: Icons.Lion,
-                                color: 'from-yellow-400 to-amber-500',
-                                live: false
-                            }
-                        ].map((event, i) => (
-                            <div key={i} className="bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 group hover:-translate-y-1">
-                                <div className={`h-32 bg-gradient-to-br ${event.color} flex items-center justify-center relative`}>
-                                    <span className="text-white w-12 h-12">
-                                        {event.IconComponent && <event.IconComponent />}
-                                    </span>
-                                    {event.live && (
-                                        <span className="absolute top-4 right-4 bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-full animate-pulse flex items-center gap-1.5">
-                                            <span className="w-1.5 h-1.5 bg-white rounded-full"></span>
-                                            LIVE
-                                        </span>
-                                    )}
-                                </div>
-                                <div className="p-6">
-                                    <div className="flex justify-between items-start mb-3">
-                                        <h3 className="font-bold text-lg text-gray-900">{event.title}</h3>
-                                        <span className="bg-emerald-50 text-emerald-700 text-sm font-bold px-3 py-1 rounded-lg">{event.time}</span>
-                                    </div>
-                                    <p className="text-gray-500 text-sm mb-4">{event.desc}</p>
-                                    <button className="w-full py-3 bg-gray-100 hover:bg-gray-900 hover:text-white text-gray-800 rounded-xl font-semibold transition-all duration-200 flex items-center justify-center gap-2">
-                                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2z" /></svg>
-                                        Join Event
-                                    </button>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-
-                    <div className="text-center mt-12">
-                        <Link to="/events" className="inline-flex items-center gap-3 bg-gray-900 hover:bg-gray-800 text-white px-8 py-4 rounded-full font-semibold transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-0.5">
-                            <span>View All Events</span>
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
-                        </Link>
-                    </div>
-                </div>
-            </section>
-
-            {/* Ticket Booking Section */}
-            <section 
-                id="tickets-section"
-                className="py-24 bg-white"
-            >
-                <div className="container mx-auto px-6 lg:px-12 text-center">
-                    <div data-aos="fade-up">
-                        <div className="inline-flex items-center gap-2 bg-emerald-50 px-4 py-2 rounded-full mb-6">
-                            <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                            <span className="text-sm font-medium text-emerald-700">Book Online</span>
-                        </div>
-                        <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">Online Ticket Booking</h2>
-                        <p className="text-gray-600 mb-16 text-lg max-w-2xl mx-auto">Secure cloud-based reservations with instant digital confirmation and QR code access.</p>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-                        {[
-                            { title: 'Child Admission', price: '₱50', desc: 'Ages 5-17', IconComponent: Icons.Child },
-                            { title: 'Adult Admission', price: '₱100', desc: 'Ages 18+', IconComponent: Icons.Adult, featured: true },
-                            { title: 'Bulusan Residents', price: 'FREE', desc: 'With Valid ID', IconComponent: Icons.Home }
-                        ].map((t, i) => (
-                            <div
-                                key={i}
-                                data-aos="fade-up"
-                                data-aos-delay={200 + i * 100}
-                                className={`relative p-8 rounded-3xl transition-all duration-500 group hover:-translate-y-2 ${t.featured
-                                        ? 'bg-gray-900 text-white shadow-2xl shadow-gray-900/30 scale-105'
-                                        : 'bg-white border border-gray-200 hover:border-gray-300 hover:shadow-xl'
-                                    }`}
+                            <motion.div 
+                                className="text-center mb-16"
+                                initial="hidden"
+                                whileInView="visible"
+                                viewport={defaultViewport}
+                                variants={fadeInUp}
                             >
-                                {t.featured && (
-                                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-xs font-bold px-4 py-1 rounded-full">
-                                        Popular
-                                    </div>
-                                )}
-                                <div className={`w-12 h-12 mx-auto mb-4 ${t.featured ? 'text-white' : 'text-emerald-600'}`}>
-                                    {t.IconComponent && <t.IconComponent />}
+                                <div className="inline-flex items-center gap-2 bg-emerald-50 px-4 py-2 rounded-full mb-6">
+                                    <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                                    <span className="text-sm font-medium text-emerald-700">Our Wildlife</span>
                                 </div>
-                                <h3 className={`text-xl font-bold mb-2 ${t.featured ? 'text-white' : 'text-gray-900'}`}>{t.title}</h3>
-                                <div className={`text-4xl font-bold mb-4 ${t.featured
-                                        ? 'text-white'
-                                        : 'bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent'
-                                    }`}>{t.price}</div>
-                                <p className={`mb-8 ${t.featured ? 'text-gray-400' : 'text-gray-500'}`}>{t.desc}</p>
-                                <Link to="/tickets">
-                                    <button className={`w-full py-3.5 rounded-xl font-semibold transition-all duration-200 ${t.featured
-                                            ? 'bg-white text-gray-900 hover:bg-gray-100'
-                                            : 'bg-gray-900 text-white hover:bg-gray-800'
-                                        }`}>Book Now</button>
+                                <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">Meet Our Animals</h2>
+                                <p className="text-gray-600 text-lg max-w-2xl mx-auto">Discover the incredible wildlife roaming freely at our AI-powered nature park.</p>
+                            </motion.div>
+
+                            <motion.div 
+                                className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto"
+                                variants={staggerContainer}
+                                initial="hidden"
+                                whileInView="visible"
+                                viewport={defaultViewport}
+                            >
+                                {[
+                                    {
+                                        name: 'African Lions',
+                                        category: 'Mammals',
+                                        location: 'Savanna Zone',
+                                        image: 'https://images.unsplash.com/photo-1546182990-dffeafbe841d?w=600&q=80',
+                                        color: 'from-amber-400 to-orange-500'
+                                    },
+                                    {
+                                        name: 'Asian Elephants',
+                                        category: 'Mammals',
+                                        location: 'Forest Habitat',
+                                        image: 'https://images.unsplash.com/photo-1557050543-4d5f4e07ef46?w=600&q=80',
+                                        color: 'from-emerald-400 to-teal-500'
+                                    },
+                                    {
+                                        name: 'Tropical Birds',
+                                        category: 'Birds',
+                                        location: 'Aviary',
+                                        image: 'https://images.unsplash.com/photo-1552728089-57bdde30beb3?w=600&q=80',
+                                        color: 'from-blue-400 to-indigo-500'
+                                    }
+                                ].map((animal, i) => (
+                                    <motion.div 
+                                        key={i} 
+                                        className="group bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-300 border border-gray-100 hover:-translate-y-2"
+                                        variants={staggerItem}
+                                    >
+                                        <div className="relative h-64 overflow-hidden">
+                                            <img
+                                                src={animal.image}
+                                                alt={animal.name}
+                                                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                            />
+                                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                                            <span className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm text-gray-800 text-xs font-bold px-3 py-1.5 rounded-full">
+                                                {animal.category}
+                                            </span>
+                                        </div>
+                                        <div className="p-6">
+                                            <h3 className="font-bold text-xl text-gray-900 mb-2">{animal.name}</h3>
+                                            <div className="flex items-center gap-2 text-gray-500 text-sm mb-4">
+                                                <svg className="w-4 h-4 text-emerald-600" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" /></svg>
+                                                <span>{animal.location}</span>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                                                <span className="text-sm text-emerald-600 font-medium">Live Now</span>
+                                            </div>
+                                        </div>
+                                    </motion.div>
+                                ))}
+                            </motion.div>
+
+                            <div className="text-center mt-12">
+                                <Link to="/animals" className="inline-flex items-center gap-3 bg-gray-900 hover:bg-gray-800 text-white px-8 py-4 rounded-full font-semibold transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-0.5">
+                                    <span>View All Animals</span>
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
                                 </Link>
                             </div>
-                        ))}
-                    </div>
-                </div>
-            </section>
+                        </div>
+            </motion.section>
+
+            {/* Events Preview Section */}
+            <motion.section 
+                ref={eventsRef}
+                id="events-section"
+                initial="hidden"
+                animate={eventsInView ? "visible" : "hidden"}
+                variants={sectionVariants}
+                className="py-24 bg-gray-50 overflow-hidden"
+            >
+                <div className="container mx-auto px-6 lg:px-12">
+                            <motion.div 
+                                className="text-center mb-16"
+                                initial="hidden"
+                                whileInView="visible"
+                                viewport={defaultViewport}
+                                variants={fadeInUp}
+                            >
+                                <div className="inline-flex items-center gap-2 bg-white px-4 py-2 rounded-full mb-6 shadow-sm">
+                                    <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+                                    <span className="text-sm font-medium text-gray-700">Live Events</span>
+                                </div>
+                                <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">Wildlife Events</h2>
+                                <p className="text-gray-600 text-lg max-w-2xl mx-auto">Experience unforgettable moments with our animals through live feedings and shows.</p>
+                            </motion.div>
+
+                            <motion.div 
+                                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto"
+                                variants={staggerContainer}
+                                initial="hidden"
+                                whileInView="visible"
+                                viewport={defaultViewport}
+                            >
+                                {[
+                                    {
+                                        title: 'Penguin Feeding',
+                                        time: '2:30 PM',
+                                        desc: 'Watch our playful penguins dive and swim.',
+                                        color: 'from-blue-400 to-cyan-500',
+                                        live: true
+                                    },
+                                    {
+                                        title: 'Tropical Bird Show',
+                                        time: '1:00 PM',
+                                        desc: 'Spectacular flight demonstrations.',
+                                        color: 'from-amber-400 to-orange-500',
+                                        live: false
+                                    },
+                                    {
+                                        title: 'Lion Feeding',
+                                        time: '4:00 PM',
+                                        desc: 'Watch the kings of the jungle at mealtime.',
+                                        color: 'from-yellow-400 to-amber-500',
+                                        live: false
+                                    }
+                                ].map((event, i) => (
+                                    <motion.div 
+                                        key={i} 
+                                        className="bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 group hover:-translate-y-1"
+                                        variants={staggerItem}
+                                    >
+                                        <div className={`h-32 bg-gradient-to-br ${event.color} flex items-center justify-center relative`}>
+                                            {event.live && (
+                                                <span className="absolute top-4 right-4 bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-full animate-pulse flex items-center gap-1.5">
+                                                    <span className="w-1.5 h-1.5 bg-white rounded-full"></span>
+                                                    LIVE
+                                                </span>
+                                            )}
+                                        </div>
+                                        <div className="p-6">
+                                            <div className="flex justify-between items-start mb-3">
+                                                <h3 className="font-bold text-lg text-gray-900">{event.title}</h3>
+                                                <span className="bg-emerald-50 text-emerald-700 text-sm font-bold px-3 py-1 rounded-lg">{event.time}</span>
+                                            </div>
+                                            <p className="text-gray-500 text-sm mb-4">{event.desc}</p>
+                                            <button className="w-full py-3 bg-gray-100 hover:bg-gray-900 hover:text-white text-gray-800 rounded-xl font-semibold transition-all duration-200 flex items-center justify-center gap-2">
+                                                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2z" /></svg>
+                                                Join Event
+                                            </button>
+                                        </div>
+                                    </motion.div>
+                                ))}
+                            </motion.div>
+
+                            <div className="text-center mt-12">
+                                <Link to="/events" className="inline-flex items-center gap-3 bg-gray-900 hover:bg-gray-800 text-white px-8 py-4 rounded-full font-semibold transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-0.5">
+                                    <span>View All Events</span>
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+                                </Link>
+                            </div>
+                        </div>
+            </motion.section>
+
+            {/* Ticket Booking Section */}
+            <motion.section 
+                ref={ticketsRef}
+                id="tickets-section"
+                initial="hidden"
+                animate={ticketsInView ? "visible" : "hidden"}
+                variants={sectionVariants}
+                className="py-24 bg-white overflow-hidden"
+            >
+                <div className="container mx-auto px-6 lg:px-12 text-center">
+                            <motion.div
+                                initial="hidden"
+                                whileInView="visible"
+                                viewport={defaultViewport}
+                                variants={fadeInUp}
+                            >
+                                <div className="inline-flex items-center gap-2 bg-emerald-50 px-4 py-2 rounded-full mb-6">
+                                    <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                                    <span className="text-sm font-medium text-emerald-700">Book Online</span>
+                                </div>
+                                <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">Online Ticket Booking</h2>
+                                <p className="text-gray-600 mb-16 text-lg max-w-2xl mx-auto">Secure cloud-based reservations with instant digital confirmation and QR code access.</p>
+                            </motion.div>
+                            <motion.div 
+                                className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto"
+                                variants={staggerContainer}
+                                initial="hidden"
+                                whileInView="visible"
+                                viewport={defaultViewport}
+                            >
+                                {[
+                                    { title: 'Child Admission', price: '₱50', desc: 'Ages 5-17', IconComponent: Icons.Child },
+                                    { title: 'Adult Admission', price: '₱100', desc: 'Ages 18+', IconComponent: Icons.Adult, featured: true },
+                                    { title: 'Bulusan Residents', price: 'FREE', desc: 'With Valid ID', IconComponent: Icons.Home }
+                                ].map((t, i) => (
+                                    <motion.div
+                                        key={i}
+                                        className={`relative p-8 rounded-3xl transition-all duration-500 group hover:-translate-y-2 ${t.featured
+                                                ? 'bg-gray-900 text-white shadow-2xl shadow-gray-900/30 scale-105'
+                                                : 'bg-white border border-gray-200 hover:border-gray-300 hover:shadow-xl'
+                                            }`}
+                                        variants={staggerItem}
+                                    >
+                                        {t.featured && (
+                                            <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-xs font-bold px-4 py-1 rounded-full">
+                                                Popular
+                                            </div>
+                                        )}
+                                        <div className={`w-12 h-12 mx-auto mb-4 ${t.featured ? 'text-white' : 'text-emerald-600'}`}>
+                                            {t.IconComponent && <t.IconComponent />}
+                                        </div>
+                                        <h3 className={`text-xl font-bold mb-2 ${t.featured ? 'text-white' : 'text-gray-900'}`}>{t.title}</h3>
+                                        <div className={`text-4xl font-bold mb-4 ${t.featured
+                                                ? 'text-white'
+                                                : 'bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent'
+                                            }`}>{t.price}</div>
+                                        <p className={`mb-8 ${t.featured ? 'text-gray-400' : 'text-gray-500'}`}>{t.desc}</p>
+                                        <Link to="/tickets">
+                                            <button className={`w-full py-3.5 rounded-xl font-semibold transition-all duration-200 ${t.featured
+                                                    ? 'bg-white text-gray-900 hover:bg-gray-100'
+                                                    : 'bg-gray-900 text-white hover:bg-gray-800'
+                                                }`}>Book Now</button>
+                                        </Link>
+                                    </motion.div>
+                                ))}
+                            </motion.div>
+                        </div>
+            </motion.section>
+
             <Footer />
         </div>
     );

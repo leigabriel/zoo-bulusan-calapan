@@ -260,6 +260,68 @@ class Ticket {
         );
         return rows[0].total;
     }
+
+    // Get weekly analytics data (last 7 days)
+    static async getWeeklyAnalytics() {
+        const [rows] = await db.query(
+            `SELECT 
+                DATE(visit_date) as date,
+                DAYNAME(visit_date) as day,
+                COUNT(*) as tickets,
+                COALESCE(SUM(quantity), 0) as visitors,
+                COALESCE(SUM(total_amount), 0) as revenue
+             FROM tickets 
+             WHERE visit_date >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
+             AND status IN ('confirmed', 'used')
+             GROUP BY DATE(visit_date), DAYNAME(visit_date)
+             ORDER BY date ASC`
+        );
+        return rows;
+    }
+
+    // Get monthly analytics data (last 12 months)
+    static async getMonthlyAnalytics() {
+        const [rows] = await db.query(
+            `SELECT 
+                DATE_FORMAT(visit_date, '%Y-%m') as month,
+                DATE_FORMAT(visit_date, '%b') as monthName,
+                COUNT(*) as tickets,
+                COALESCE(SUM(quantity), 0) as visitors,
+                COALESCE(SUM(total_amount), 0) as revenue
+             FROM tickets 
+             WHERE visit_date >= DATE_SUB(CURDATE(), INTERVAL 12 MONTH)
+             AND status IN ('confirmed', 'used')
+             GROUP BY DATE_FORMAT(visit_date, '%Y-%m'), DATE_FORMAT(visit_date, '%b')
+             ORDER BY month ASC`
+        );
+        return rows;
+    }
+
+    // Get ticket type distribution
+    static async getTicketTypeDistribution() {
+        const [rows] = await db.query(
+            `SELECT 
+                ticket_type as type,
+                COUNT(*) as count,
+                COALESCE(SUM(total_amount), 0) as revenue
+             FROM tickets 
+             WHERE status IN ('confirmed', 'used')
+             GROUP BY ticket_type`
+        );
+        return rows;
+    }
+
+    // Get daily stats for comparison
+    static async getDailyComparison() {
+        const [rows] = await db.query(
+            `SELECT 
+                (SELECT COUNT(*) FROM tickets WHERE DATE(created_at) = CURDATE()) as today_tickets,
+                (SELECT COUNT(*) FROM tickets WHERE DATE(created_at) = DATE_SUB(CURDATE(), INTERVAL 1 DAY)) as yesterday_tickets,
+                (SELECT COALESCE(SUM(total_amount), 0) FROM tickets WHERE DATE(created_at) = CURDATE() AND status != 'cancelled') as today_revenue,
+                (SELECT COALESCE(SUM(total_amount), 0) FROM tickets WHERE DATE(created_at) = DATE_SUB(CURDATE(), INTERVAL 1 DAY) AND status != 'cancelled') as yesterday_revenue`
+        );
+        return rows[0];
+    }
 }
 
 module.exports = Ticket;

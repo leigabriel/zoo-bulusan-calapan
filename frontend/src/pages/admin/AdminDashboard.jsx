@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { adminAPI } from '../../services/api-client';
+import { adminAPI, getProfileImageUrl } from '../../services/api-client';
 
 // Icons
 const UsersIcon = () => (
@@ -68,19 +68,17 @@ const AdminDashboard = () => {
     });
     const [recentUsers, setRecentUsers] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [weeklyData, setWeeklyData] = useState([
+        { day: 'Mon', visitors: 0, revenue: 0 },
+        { day: 'Tue', visitors: 0, revenue: 0 },
+        { day: 'Wed', visitors: 0, revenue: 0 },
+        { day: 'Thu', visitors: 0, revenue: 0 },
+        { day: 'Fri', visitors: 0, revenue: 0 },
+        { day: 'Sat', visitors: 0, revenue: 0 },
+        { day: 'Sun', visitors: 0, revenue: 0 },
+    ]);
 
-    // Mock weekly data for charts
-    const weeklyData = [
-        { day: 'Mon', visitors: 120, revenue: 2400 },
-        { day: 'Tue', visitors: 180, revenue: 3600 },
-        { day: 'Wed', visitors: 150, revenue: 3000 },
-        { day: 'Thu', visitors: 220, revenue: 4400 },
-        { day: 'Fri', visitors: 280, revenue: 5600 },
-        { day: 'Sat', visitors: 350, revenue: 7000 },
-        { day: 'Sun', visitors: 310, revenue: 6200 },
-    ];
-
-    const maxVisitors = Math.max(...weeklyData.map(d => d.visitors));
+    const maxVisitors = Math.max(...weeklyData.map(d => d.visitors), 1); // Avoid division by zero
 
     useEffect(() => {
         fetchDashboardData();
@@ -89,9 +87,10 @@ const AdminDashboard = () => {
     const fetchDashboardData = async () => {
         try {
             setLoading(true);
-            const [statsRes, usersRes] = await Promise.all([
+            const [statsRes, usersRes, analyticsRes] = await Promise.all([
                 adminAPI.getDashboard(),
                 adminAPI.getUsers(),
+                adminAPI.getAnalytics('week').catch(() => ({ success: false })),
             ]);
 
             if (statsRes && statsRes.success) {
@@ -116,6 +115,20 @@ const AdminDashboard = () => {
                     createdAt: u.createdAt || u.created_at
                 }));
                 setRecentUsers(normalized.slice(0, 6));
+            }
+
+            // Set weekly chart data from analytics
+            if (analyticsRes && analyticsRes.success && analyticsRes.data?.weeklyData) {
+                const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+                const filledData = days.map(day => {
+                    const found = analyticsRes.data.weeklyData.find(d => d.day === day);
+                    return {
+                        day,
+                        visitors: found?.visitors || 0,
+                        revenue: found?.revenue || 0
+                    };
+                });
+                setWeeklyData(filledData);
             }
         } catch (error) {
             console.error('Error fetching dashboard data:', error);
@@ -503,7 +516,21 @@ const AdminDashboard = () => {
                                 <tr key={u.id} className="hover:bg-[#1e1e1e] transition-colors">
                                     <td className="py-4">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-full bg-green-400 flex items-center justify-center text-gray-700 font-bold">
+                                            {getProfileImageUrl(u.profileImage || u.profile_image) ? (
+                                                <img
+                                                    src={getProfileImageUrl(u.profileImage || u.profile_image)}
+                                                    alt={u.fullName}
+                                                    className="w-10 h-10 rounded-full object-cover"
+                                                    onError={(e) => {
+                                                        e.target.style.display = 'none';
+                                                        e.target.nextSibling.style.display = 'flex';
+                                                    }}
+                                                />
+                                            ) : null}
+                                            <div 
+                                                className="w-10 h-10 rounded-full bg-green-400 flex items-center justify-center text-gray-700 font-bold"
+                                                style={{ display: getProfileImageUrl(u.profileImage || u.profile_image) ? 'none' : 'flex' }}
+                                            >
                                                 {u.fullName?.substring(0, 1).toUpperCase() || 'U'}
                                             </div>
                                             <div>

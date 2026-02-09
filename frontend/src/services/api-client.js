@@ -333,6 +333,13 @@ export const adminAPI = {
         return handleResponse(response);
     },
 
+    getAnalytics: async (timeRange = 'week') => {
+        const response = await fetch(`${API_BASE_URL}/admin/analytics?timeRange=${timeRange}`, {
+            headers: getAuthHeaders('admin')
+        });
+        return handleResponse(response);
+    },
+
     uploadImage: async (file) => {
         const formData = new FormData();
         formData.append('image', file);
@@ -402,6 +409,24 @@ export const staffAPI = {
             method: 'POST',
             headers: getAuthHeaders('staff'),
             body: JSON.stringify({ code })
+        });
+        return handleResponse(response);
+    },
+
+    checkTicket: async (code) => {
+        const response = await fetch(`${API_BASE_URL}/staff/tickets/check`, {
+            method: 'POST',
+            headers: getAuthHeaders('staff'),
+            body: JSON.stringify({ code })
+        });
+        return handleResponse(response);
+    },
+
+    markTicketUsed: async (ticketId) => {
+        const response = await fetch(`${API_BASE_URL}/staff/tickets/mark-used`, {
+            method: 'POST',
+            headers: getAuthHeaders('staff'),
+            body: JSON.stringify({ ticketId })
         });
         return handleResponse(response);
     },

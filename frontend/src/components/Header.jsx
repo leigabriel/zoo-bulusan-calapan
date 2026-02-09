@@ -3,16 +3,19 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { getProfileImageUrl } from '../services/api-client';
 import LogoutModal from './common/LogoutModal';
+import AnimalClassifier from './features/ai-scanner/AnimalClassifier';
 
 const Header = () => {
     const { user, logout } = useAuth();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [showLogoutModal, setShowLogoutModal] = useState(false);
     const [showSidePanel, setShowSidePanel] = useState(false);
+    const [showAIScanner, setShowAIScanner] = useState(false);
     const [scrolled, setScrolled] = useState(false);
     const navigate = useNavigate();
     const location = useLocation();
     const sidePanelRef = useRef(null);
+    const aiScannerRef = useRef(null);
 
     // Track scroll position for header styling
     useEffect(() => {
@@ -54,10 +57,32 @@ const Header = () => {
         };
     }, [showSidePanel]);
 
+    // Close AI Scanner panel when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (aiScannerRef.current && !aiScannerRef.current.contains(event.target)) {
+                setShowAIScanner(false);
+            }
+        };
+
+        if (showAIScanner) {
+            document.addEventListener('mousedown', handleClickOutside);
+            document.body.style.overflow = 'hidden';
+        }
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+            document.body.style.overflow = 'unset';
+        };
+    }, [showAIScanner]);
+
     // Handle escape key to close panel
     useEffect(() => {
         const handleEscape = (e) => {
-            if (e.key === 'Escape') setShowSidePanel(false);
+            if (e.key === 'Escape') {
+                setShowSidePanel(false);
+                setShowAIScanner(false);
+            }
         };
         document.addEventListener('keydown', handleEscape);
         return () => document.removeEventListener('keydown', handleEscape);
@@ -407,10 +432,12 @@ const Header = () => {
                         {/* AI Features */}
                         <div className="mb-4">
                             <p className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-2 px-2">AI Features</p>
-                            <Link
-                                to="/classifier"
-                                onClick={() => setShowSidePanel(false)}
-                                className="flex items-center gap-3 p-3 rounded-xl hover:bg-purple-50 transition-all duration-200 group"
+                            <button
+                                onClick={() => {
+                                    setShowSidePanel(false);
+                                    setShowAIScanner(true);
+                                }}
+                                className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-purple-50 transition-all duration-200 group text-left"
                             >
                                 <div className="w-10 h-10 bg-purple-100 text-purple-600 rounded-xl flex items-center justify-center group-hover:bg-purple-500 group-hover:text-white transition-colors">
                                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -423,7 +450,7 @@ const Header = () => {
                                     <p className="text-xs text-gray-500 truncate">Identify animals with AI</p>
                                 </div>
                                 <span className="px-2 py-0.5 bg-purple-100 text-purple-600 rounded-full text-xs font-medium">New</span>
-                            </Link>
+                            </button>
                         </div>
                     </div>
 
@@ -452,6 +479,58 @@ const Header = () => {
                             </svg>
                             <span>Sign Out</span>
                         </button>
+                    </div>
+                </div>
+            </div>
+        )}
+        
+        {/* AI Scanner Panel */}
+        {showAIScanner && (
+            <div className="fixed inset-0 z-[100] flex justify-end">
+                {/* Backdrop */}
+                <div 
+                    className="absolute inset-0 bg-black/40 backdrop-blur-sm animate-fade-in"
+                    onClick={() => setShowAIScanner(false)}
+                />
+                
+                {/* AI Scanner Side Panel */}
+                <div 
+                    ref={aiScannerRef}
+                    className="relative w-full max-w-lg bg-white h-full shadow-2xl animate-slide-in-right overflow-hidden flex flex-col"
+                    role="dialog"
+                    aria-modal="true"
+                    aria-labelledby="ai-scanner-title"
+                >
+                    {/* Panel Header */}
+                    <div className="p-4 border-b border-gray-100 bg-gradient-to-br from-purple-600 to-indigo-600 flex-shrink-0">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+                                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h2 id="ai-scanner-title" className="text-lg font-semibold text-white">AI Animal Scanner</h2>
+                                    <p className="text-purple-200 text-xs">Identify animals with AI</p>
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => setShowAIScanner(false)}
+                                className="p-2 hover:bg-white/20 rounded-xl transition-colors text-white"
+                                aria-label="Close panel"
+                            >
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    {/* AI Scanner Content */}
+                    <div className="flex-1 overflow-y-auto">
+                        <AnimalClassifier embedded={true} />
                     </div>
                 </div>
             </div>

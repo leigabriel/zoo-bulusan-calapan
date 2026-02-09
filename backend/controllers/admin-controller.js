@@ -361,6 +361,82 @@ exports.getRevenueReport = async (req, res) => {
     }
 };
 
+// Comprehensive analytics endpoint
+exports.getAnalytics = async (req, res) => {
+    try {
+        const { timeRange = 'week' } = req.query;
+
+        // Get all analytics data in parallel
+        const [
+            weeklyData,
+            monthlyData,
+            ticketDistribution,
+            dailyComparison,
+            totalUsers,
+            totalAnimals,
+            totalTickets,
+            totalRevenue,
+            upcomingEvents
+        ] = await Promise.all([
+            Ticket.getWeeklyAnalytics(),
+            Ticket.getMonthlyAnalytics(),
+            Ticket.getTicketTypeDistribution(),
+            Ticket.getDailyComparison(),
+            User.count(),
+            Animal.count(),
+            Ticket.count(),
+            Ticket.getTotalRevenue(),
+            Event.countUpcoming()
+        ]);
+
+        // Calculate growth rates
+        const ticketGrowth = dailyComparison.yesterday_tickets > 0 
+            ? ((dailyComparison.today_tickets - dailyComparison.yesterday_tickets) / dailyComparison.yesterday_tickets * 100).toFixed(1)
+            : 0;
+        const revenueGrowth = dailyComparison.yesterday_revenue > 0 
+            ? ((dailyComparison.today_revenue - dailyComparison.yesterday_revenue) / dailyComparison.yesterday_revenue * 100).toFixed(1)
+            : 0;
+
+        res.json({
+            success: true,
+            data: {
+                summary: {
+                    totalUsers,
+                    totalAnimals,
+                    totalTickets,
+                    totalRevenue,
+                    upcomingEvents,
+                    todayTickets: dailyComparison.today_tickets,
+                    todayRevenue: dailyComparison.today_revenue,
+                    ticketGrowth: parseFloat(ticketGrowth),
+                    revenueGrowth: parseFloat(revenueGrowth)
+                },
+                weeklyData: weeklyData.map(d => ({
+                    day: d.day?.substring(0, 3) || 'N/A',
+                    date: d.date,
+                    tickets: d.tickets,
+                    visitors: d.visitors,
+                    revenue: parseFloat(d.revenue) || 0
+                })),
+                monthlyData: monthlyData.map(d => ({
+                    month: d.monthName,
+                    tickets: d.tickets,
+                    visitors: d.visitors,
+                    revenue: parseFloat(d.revenue) || 0
+                })),
+                ticketDistribution: ticketDistribution.map(d => ({
+                    type: d.type,
+                    count: d.count,
+                    revenue: parseFloat(d.revenue) || 0
+                }))
+            }
+        });
+    } catch (error) {
+        console.error('Error getting analytics:', error);
+        res.status(500).json({ success: false, message: 'Error fetching analytics data' });
+    }
+};
+
 // Model Management
 const fs = require('fs');
 const path = require('path');

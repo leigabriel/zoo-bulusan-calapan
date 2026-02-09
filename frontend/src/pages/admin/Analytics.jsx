@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { adminAPI } from '../../services/api-client';
+import Chart from 'react-apexcharts';
 
 // Icons
 const TrendUpIcon = () => (
@@ -58,104 +59,288 @@ const ChartIcon = () => (
     </svg>
 );
 
-const CalendarIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
-        <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-        <line x1="16" y1="2" x2="16" y2="6" />
-        <line x1="8" y1="2" x2="8" y2="6" />
-        <line x1="3" y1="10" x2="21" y2="10" />
-    </svg>
-);
-
 const Analytics = () => {
-    const [timeRange, setTimeRange] = useState('month');
+    const [timeRange, setTimeRange] = useState('week');
     const [loading, setLoading] = useState(true);
     const [stats, setStats] = useState({
         totalUsers: 0,
-        newUsers: 0,
-        userGrowth: 0,
+        totalAnimals: 0,
         totalTickets: 0,
-        ticketsSold: 0,
-        ticketGrowth: 0,
         totalRevenue: 0,
+        todayTickets: 0,
+        todayRevenue: 0,
+        ticketGrowth: 0,
         revenueGrowth: 0,
-        totalEvents: 0,
-        activeEvents: 0,
-        eventGrowth: 0,
+        upcomingEvents: 0,
     });
-
-    // Mock data for charts - in production, fetch from API
-    const weeklyData = [
-        { day: 'Mon', users: 45, tickets: 120, revenue: 4500 },
-        { day: 'Tue', users: 52, tickets: 145, revenue: 5200 },
-        { day: 'Wed', users: 38, tickets: 98, revenue: 3900 },
-        { day: 'Thu', users: 65, tickets: 156, revenue: 6500 },
-        { day: 'Fri', users: 78, tickets: 189, revenue: 7800 },
-        { day: 'Sat', users: 92, tickets: 234, revenue: 9200 },
-        { day: 'Sun', users: 85, tickets: 210, revenue: 8500 },
-    ];
-
-    const monthlyRevenue = [
-        { month: 'Jan', amount: 45000 },
-        { month: 'Feb', amount: 52000 },
-        { month: 'Mar', amount: 48000 },
-        { month: 'Apr', amount: 61000 },
-        { month: 'May', amount: 55000 },
-        { month: 'Jun', amount: 67000 },
-    ];
-
-    const ticketTypes = [
-        { type: 'Adult', count: 1245, percentage: 45 },
-        { type: 'Child', count: 876, percentage: 32 },
-        { type: 'Senior', count: 456, percentage: 16 },
-        { type: 'Student', count: 189, percentage: 7 },
-    ];
-
-    const topEvents = [
-        { name: 'Night Safari Experience', tickets: 456, revenue: 45600 },
-        { name: 'Animal Feeding Tour', tickets: 389, revenue: 23340 },
-        { name: 'Wildlife Photography Day', tickets: 256, revenue: 25600 },
-        { name: 'Conservation Workshop', tickets: 189, revenue: 9450 },
-    ];
+    const [weeklyData, setWeeklyData] = useState([]);
+    const [monthlyData, setMonthlyData] = useState([]);
+    const [ticketDistribution, setTicketDistribution] = useState([]);
 
     useEffect(() => {
-        const loadStats = async () => {
+        const loadAnalytics = async () => {
             setLoading(true);
             try {
-                // Fetch real data from API
-                const [usersRes, ticketsRes, eventsRes] = await Promise.allSettled([
-                    adminAPI.getUsers(),
-                    adminAPI.getTickets ? adminAPI.getTickets() : Promise.resolve({ success: false }),
-                    adminAPI.getEvents ? adminAPI.getEvents() : Promise.resolve({ success: false }),
-                ]);
-
-                const users = usersRes.status === 'fulfilled' && usersRes.value?.users ? usersRes.value.users : [];
-                const tickets = ticketsRes.status === 'fulfilled' && ticketsRes.value?.tickets ? ticketsRes.value.tickets : [];
-                const events = eventsRes.status === 'fulfilled' && eventsRes.value?.events ? eventsRes.value.events : [];
-
-                setStats({
-                    totalUsers: users.length || 156,
-                    newUsers: 32,
-                    userGrowth: 12.5,
-                    totalTickets: tickets.length || 2766,
-                    ticketsSold: 1245,
-                    ticketGrowth: 8.3,
-                    totalRevenue: 328500,
-                    revenueGrowth: 15.2,
-                    totalEvents: events.length || 24,
-                    activeEvents: 8,
-                    eventGrowth: 5.1,
-                });
+                const response = await adminAPI.getAnalytics(timeRange);
+                
+                if (response.success && response.data) {
+                    const { summary, weeklyData: weekly, monthlyData: monthly, ticketDistribution: distribution } = response.data;
+                    
+                    setStats({
+                        totalUsers: summary.totalUsers || 0,
+                        totalAnimals: summary.totalAnimals || 0,
+                        totalTickets: summary.totalTickets || 0,
+                        totalRevenue: summary.totalRevenue || 0,
+                        todayTickets: summary.todayTickets || 0,
+                        todayRevenue: summary.todayRevenue || 0,
+                        ticketGrowth: summary.ticketGrowth || 0,
+                        revenueGrowth: summary.revenueGrowth || 0,
+                        upcomingEvents: summary.upcomingEvents || 0,
+                    });
+                    
+                    // Fill missing days with empty data for consistent display
+                    const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+                    const filledWeekly = days.map(day => {
+                        const found = weekly?.find(d => d.day === day);
+                        return found || { day, tickets: 0, visitors: 0, revenue: 0 };
+                    });
+                    setWeeklyData(filledWeekly);
+                    
+                    setMonthlyData(monthly || []);
+                    setTicketDistribution(distribution || []);
+                }
             } catch (error) {
                 console.error('Error loading analytics:', error);
+                // Set fallback empty data
+                setWeeklyData([
+                    { day: 'Mon', tickets: 0, visitors: 0, revenue: 0 },
+                    { day: 'Tue', tickets: 0, visitors: 0, revenue: 0 },
+                    { day: 'Wed', tickets: 0, visitors: 0, revenue: 0 },
+                    { day: 'Thu', tickets: 0, visitors: 0, revenue: 0 },
+                    { day: 'Fri', tickets: 0, visitors: 0, revenue: 0 },
+                    { day: 'Sat', tickets: 0, visitors: 0, revenue: 0 },
+                    { day: 'Sun', tickets: 0, visitors: 0, revenue: 0 },
+                ]);
             } finally {
                 setLoading(false);
             }
         };
-        loadStats();
+        loadAnalytics();
     }, [timeRange]);
 
-    const maxBarHeight = Math.max(...weeklyData.map(d => d.tickets));
+    // Weekly Ticket Sales Chart Configuration (Interactive Bar Chart)
+    const weeklyChartOptions = {
+        chart: {
+            type: 'bar',
+            toolbar: { show: false },
+            background: 'transparent',
+            animations: {
+                enabled: true,
+                easing: 'easeinout',
+                speed: 800,
+            },
+        },
+        plotOptions: {
+            bar: {
+                borderRadius: 8,
+                columnWidth: '60%',
+                distributed: false,
+            }
+        },
+        dataLabels: { enabled: false },
+        colors: ['#8cff65'],
+        xaxis: {
+            categories: weeklyData.map(d => d.day),
+            labels: { style: { colors: '#9ca3af', fontSize: '12px' } },
+            axisBorder: { show: false },
+            axisTicks: { show: false },
+        },
+        yaxis: {
+            labels: { style: { colors: '#9ca3af', fontSize: '12px' } },
+        },
+        grid: {
+            borderColor: '#2a2a2a',
+            strokeDashArray: 4,
+        },
+        tooltip: {
+            enabled: true,
+            theme: 'dark',
+            y: {
+                formatter: (val) => `${val} tickets`,
+            },
+            custom: function({ series, seriesIndex, dataPointIndex, w }) {
+                const data = weeklyData[dataPointIndex];
+                return `
+                    <div style="background: #1e1e1e; border: 1px solid #3a3a3a; border-radius: 8px; padding: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.3);">
+                        <div style="color: #8cff65; font-weight: bold; font-size: 14px;">${data?.day || 'N/A'}</div>
+                        <div style="color: white; margin-top: 4px;">Tickets: <span style="font-weight: 600;">${data?.tickets || 0}</span></div>
+                        <div style="color: #9ca3af;">Revenue: <span style="color: #8cff65;">₱${data?.revenue?.toLocaleString() || 0}</span></div>
+                    </div>
+                `;
+            }
+        },
+        states: {
+            hover: {
+                filter: {
+                    type: 'lighten',
+                    value: 0.15,
+                }
+            }
+        }
+    };
+
+    const weeklyChartSeries = [{
+        name: 'Tickets',
+        data: weeklyData.map(d => d.tickets)
+    }];
+
+    // Monthly Revenue Chart Configuration (Interactive Line/Area Chart)
+    const monthlyChartOptions = {
+        chart: {
+            type: 'area',
+            toolbar: { show: false },
+            background: 'transparent',
+            animations: {
+                enabled: true,
+                easing: 'easeinout',
+                speed: 800,
+            },
+            zoom: { enabled: false }
+        },
+        stroke: {
+            curve: 'smooth',
+            width: 3,
+        },
+        fill: {
+            type: 'gradient',
+            gradient: {
+                shadeIntensity: 1,
+                opacityFrom: 0.45,
+                opacityTo: 0.05,
+                stops: [0, 100]
+            }
+        },
+        colors: ['#a855f7'],
+        dataLabels: { enabled: false },
+        xaxis: {
+            categories: monthlyData.map(d => d.month?.substring(0, 3) || 'N/A'),
+            labels: { style: { colors: '#9ca3af', fontSize: '12px' } },
+            axisBorder: { show: false },
+            axisTicks: { show: false },
+        },
+        yaxis: {
+            labels: {
+                style: { colors: '#9ca3af', fontSize: '12px' },
+                formatter: (val) => `₱${(val / 1000).toFixed(0)}K`
+            },
+        },
+        grid: {
+            borderColor: '#2a2a2a',
+            strokeDashArray: 4,
+        },
+        tooltip: {
+            enabled: true,
+            theme: 'dark',
+            y: {
+                formatter: (val) => `₱${val?.toLocaleString() || 0}`,
+            },
+            custom: function({ series, seriesIndex, dataPointIndex, w }) {
+                const data = monthlyData[dataPointIndex];
+                return `
+                    <div style="background: #1e1e1e; border: 1px solid #3a3a3a; border-radius: 8px; padding: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.3);">
+                        <div style="color: #a855f7; font-weight: bold; font-size: 14px;">${data?.month || 'N/A'}</div>
+                        <div style="color: white; margin-top: 4px;">Revenue: <span style="color: #a855f7; font-weight: 600;">₱${data?.revenue?.toLocaleString() || 0}</span></div>
+                        <div style="color: #9ca3af;">Tickets: ${data?.tickets || 0}</div>
+                    </div>
+                `;
+            }
+        },
+        markers: {
+            size: 5,
+            colors: ['#a855f7'],
+            strokeColors: '#1e1e1e',
+            strokeWidth: 2,
+            hover: {
+                size: 8,
+            }
+        }
+    };
+
+    const monthlyChartSeries = [{
+        name: 'Revenue',
+        data: monthlyData.map(d => d.revenue || 0)
+    }];
+
+    // Ticket Distribution Donut Chart Configuration
+    const distributionChartOptions = {
+        chart: {
+            type: 'donut',
+            background: 'transparent',
+            animations: {
+                enabled: true,
+                easing: 'easeinout',
+                speed: 800,
+            },
+        },
+        labels: ticketDistribution.map(d => d.type || 'Unknown'),
+        colors: ['#8cff65', '#60a5fa', '#a855f7', '#fbbf24', '#f87171'],
+        legend: {
+            position: 'bottom',
+            labels: { colors: '#9ca3af' },
+            markers: { strokeWidth: 0 }
+        },
+        dataLabels: {
+            enabled: true,
+            style: {
+                fontSize: '14px',
+                fontWeight: 'bold',
+            },
+            dropShadow: { enabled: false }
+        },
+        plotOptions: {
+            pie: {
+                donut: {
+                    size: '65%',
+                    labels: {
+                        show: true,
+                        name: {
+                            show: true,
+                            color: '#9ca3af',
+                        },
+                        value: {
+                            show: true,
+                            color: '#ffffff',
+                            fontSize: '20px',
+                            fontWeight: 'bold',
+                        },
+                        total: {
+                            show: true,
+                            label: 'Total',
+                            color: '#9ca3af',
+                            formatter: function (w) {
+                                return w.globals.seriesTotals.reduce((a, b) => a + b, 0);
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        tooltip: {
+            enabled: true,
+            theme: 'dark',
+            y: {
+                formatter: (val) => `${val} tickets`,
+            }
+        },
+        stroke: {
+            show: false
+        }
+    };
+
+    const distributionChartSeries = ticketDistribution.map(d => d.count || 0);
+
+    // Calculate total for ticket distribution percentage
+    const totalDistribution = ticketDistribution.reduce((acc, d) => acc + (d.count || 0), 0);
 
     if (loading) {
         return (
@@ -198,25 +383,20 @@ const Analytics = () => {
             {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {/* Total Users */}
-                <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl p-5">
+                <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl p-5 hover:border-[#3a3a3a] transition-all cursor-pointer group">
                     <div className="flex items-center justify-between mb-4">
-                        <div className="w-12 h-12 bg-blue-500/10 rounded-xl flex items-center justify-center text-blue-400">
+                        <div className="w-12 h-12 bg-blue-500/10 rounded-xl flex items-center justify-center text-blue-400 group-hover:scale-110 transition-transform">
                             <UsersIcon />
                         </div>
-                        <span className={`flex items-center gap-1 text-sm font-medium ${stats.userGrowth >= 0 ? 'text-[#8cff65]' : 'text-red-400'}`}>
-                            {stats.userGrowth >= 0 ? <TrendUpIcon /> : <TrendDownIcon />}
-                            {Math.abs(stats.userGrowth)}%
-                        </span>
                     </div>
                     <h3 className="text-3xl font-bold text-white">{stats.totalUsers.toLocaleString()}</h3>
                     <p className="text-gray-500 text-sm mt-1">Total Users</p>
-                    <p className="text-gray-400 text-xs mt-2">+{stats.newUsers} new this {timeRange}</p>
                 </div>
 
                 {/* Tickets Sold */}
-                <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl p-5">
+                <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl p-5 hover:border-[#3a3a3a] transition-all cursor-pointer group">
                     <div className="flex items-center justify-between mb-4">
-                        <div className="w-12 h-12 bg-[#8cff65]/10 rounded-xl flex items-center justify-center text-[#8cff65]">
+                        <div className="w-12 h-12 bg-[#8cff65]/10 rounded-xl flex items-center justify-center text-[#8cff65] group-hover:scale-110 transition-transform">
                             <TicketIcon />
                         </div>
                         <span className={`flex items-center gap-1 text-sm font-medium ${stats.ticketGrowth >= 0 ? 'text-[#8cff65]' : 'text-red-400'}`}>
@@ -226,13 +406,13 @@ const Analytics = () => {
                     </div>
                     <h3 className="text-3xl font-bold text-white">{stats.totalTickets.toLocaleString()}</h3>
                     <p className="text-gray-500 text-sm mt-1">Tickets Sold</p>
-                    <p className="text-gray-400 text-xs mt-2">{stats.ticketsSold} this {timeRange}</p>
+                    <p className="text-gray-400 text-xs mt-2">{stats.todayTickets} today</p>
                 </div>
 
                 {/* Revenue */}
-                <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl p-5">
+                <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl p-5 hover:border-[#3a3a3a] transition-all cursor-pointer group">
                     <div className="flex items-center justify-between mb-4">
-                        <div className="w-12 h-12 bg-purple-500/10 rounded-xl flex items-center justify-center text-purple-400">
+                        <div className="w-12 h-12 bg-purple-500/10 rounded-xl flex items-center justify-center text-purple-400 group-hover:scale-110 transition-transform">
                             <RevenueIcon />
                         </div>
                         <span className={`flex items-center gap-1 text-sm font-medium ${stats.revenueGrowth >= 0 ? 'text-[#8cff65]' : 'text-red-400'}`}>
@@ -242,157 +422,152 @@ const Analytics = () => {
                     </div>
                     <h3 className="text-3xl font-bold text-white">₱{stats.totalRevenue.toLocaleString()}</h3>
                     <p className="text-gray-500 text-sm mt-1">Total Revenue</p>
-                    <p className="text-gray-400 text-xs mt-2">This {timeRange}</p>
+                    <p className="text-gray-400 text-xs mt-2">₱{stats.todayRevenue.toLocaleString()} today</p>
                 </div>
 
-                {/* Active Events */}
-                <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl p-5">
+                {/* Upcoming Events */}
+                <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl p-5 hover:border-[#3a3a3a] transition-all cursor-pointer group">
                     <div className="flex items-center justify-between mb-4">
-                        <div className="w-12 h-12 bg-yellow-500/10 rounded-xl flex items-center justify-center text-yellow-400">
+                        <div className="w-12 h-12 bg-yellow-500/10 rounded-xl flex items-center justify-center text-yellow-400 group-hover:scale-110 transition-transform">
                             <EventsIcon />
                         </div>
-                        <span className={`flex items-center gap-1 text-sm font-medium ${stats.eventGrowth >= 0 ? 'text-[#8cff65]' : 'text-red-400'}`}>
-                            {stats.eventGrowth >= 0 ? <TrendUpIcon /> : <TrendDownIcon />}
-                            {Math.abs(stats.eventGrowth)}%
-                        </span>
                     </div>
-                    <h3 className="text-3xl font-bold text-white">{stats.totalEvents}</h3>
-                    <p className="text-gray-500 text-sm mt-1">Total Events</p>
-                    <p className="text-gray-400 text-xs mt-2">{stats.activeEvents} active now</p>
+                    <h3 className="text-3xl font-bold text-white">{stats.upcomingEvents}</h3>
+                    <p className="text-gray-500 text-sm mt-1">Upcoming Events</p>
                 </div>
             </div>
 
             {/* Charts Row */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Weekly Ticket Sales Chart */}
-                <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl p-6">
-                    <div className="flex items-center justify-between mb-6">
+                <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl p-6 hover:border-[#3a3a3a] transition-all">
+                    <div className="flex items-center justify-between mb-4">
                         <div>
                             <h3 className="text-lg font-bold text-white">Weekly Ticket Sales</h3>
-                            <p className="text-sm text-gray-500">Tickets sold per day</p>
-                        </div>
-                        <div className="flex items-center gap-2 text-sm text-gray-400">
-                            <CalendarIcon />
-                            This Week
+                            <p className="text-sm text-gray-500">Tickets sold per day this week</p>
                         </div>
                     </div>
-
-                    {/* Bar Chart */}
-                    <div className="flex items-end justify-between gap-2 h-48">
-                        {weeklyData.map((day, index) => (
-                            <div key={index} className="flex-1 flex flex-col items-center gap-2">
-                                <div className="w-full flex flex-col items-center">
-                                    <span className="text-xs text-gray-400 mb-1">{day.tickets}</span>
-                                    <div
-                                        className="w-full bg-gradient-to-t from-[#8cff65] to-[#4ade80] rounded-t-lg transition-all hover:from-[#9dff7a] hover:to-[#5ceb91]"
-                                        style={{ height: `${(day.tickets / maxBarHeight) * 140}px` }}
-                                    ></div>
-                                </div>
-                                <span className="text-xs text-gray-500">{day.day}</span>
-                            </div>
-                        ))}
+                    <div className="h-64">
+                        <Chart
+                            options={weeklyChartOptions}
+                            series={weeklyChartSeries}
+                            type="bar"
+                            height="100%"
+                        />
                     </div>
                 </div>
 
-                {/* Revenue Trend */}
-                <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl p-6">
-                    <div className="flex items-center justify-between mb-6">
+                {/* Revenue Trend Chart */}
+                <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl p-6 hover:border-[#3a3a3a] transition-all">
+                    <div className="flex items-center justify-between mb-4">
                         <div>
                             <h3 className="text-lg font-bold text-white">Revenue Trend</h3>
                             <p className="text-sm text-gray-500">Monthly revenue overview</p>
                         </div>
                     </div>
-
-                    {/* Line Chart Representation */}
-                    <div className="space-y-4">
-                        {monthlyRevenue.map((month, index) => (
-                            <div key={index} className="flex items-center gap-4">
-                                <span className="w-10 text-sm text-gray-400">{month.month}</span>
-                                <div className="flex-1 bg-[#1e1e1e] rounded-full h-4 overflow-hidden">
-                                    <div
-                                        className="h-full bg-gradient-to-r from-purple-500 to-pink-500 rounded-full transition-all"
-                                        style={{ width: `${(month.amount / 70000) * 100}%` }}
-                                    ></div>
-                                </div>
-                                <span className="w-20 text-right text-sm text-white font-medium">₱{(month.amount / 1000).toFixed(0)}K</span>
+                    <div className="h-64">
+                        {monthlyData.length > 0 ? (
+                            <Chart
+                                options={monthlyChartOptions}
+                                series={monthlyChartSeries}
+                                type="area"
+                                height="100%"
+                            />
+                        ) : (
+                            <div className="flex items-center justify-center h-full text-gray-500">
+                                No monthly data available
                             </div>
-                        ))}
+                        )}
                     </div>
                 </div>
             </div>
 
             {/* Bottom Row */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Ticket Types Distribution */}
-                <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl p-6">
-                    <h3 className="text-lg font-bold text-white mb-6">Ticket Distribution</h3>
-                    <div className="space-y-4">
-                        {ticketTypes.map((ticket, index) => (
-                            <div key={index} className="space-y-2">
-                                <div className="flex items-center justify-between text-sm">
-                                    <span className="text-gray-300">{ticket.type}</span>
-                                    <span className="text-white font-medium">{ticket.count}</span>
-                                </div>
-                                <div className="w-full bg-[#1e1e1e] rounded-full h-2 overflow-hidden">
-                                    <div
-                                        className={`h-full rounded-full transition-all ${index === 0 ? 'bg-[#8cff65]' :
-                                                index === 1 ? 'bg-blue-400' :
-                                                    index === 2 ? 'bg-purple-400' :
-                                                        'bg-yellow-400'
-                                            }`}
-                                        style={{ width: `${ticket.percentage}%` }}
-                                    ></div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
+                {/* Ticket Types Distribution - Donut Chart */}
+                <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl p-6 hover:border-[#3a3a3a] transition-all">
+                    <h3 className="text-lg font-bold text-white mb-4">Ticket Distribution</h3>
+                    {ticketDistribution.length > 0 ? (
+                        <div className="h-64">
+                            <Chart
+                                options={distributionChartOptions}
+                                series={distributionChartSeries}
+                                type="donut"
+                                height="100%"
+                            />
+                        </div>
+                    ) : (
+                        <div className="h-64 flex flex-col items-center justify-center text-gray-500">
+                            <TicketIcon />
+                            <span className="mt-2">No ticket data available</span>
+                        </div>
+                    )}
                 </div>
 
-                {/* Top Performing Events */}
-                <div className="lg:col-span-2 bg-[#141414] border border-[#2a2a2a] rounded-2xl p-6">
-                    <h3 className="text-lg font-bold text-white mb-6">Top Performing Events</h3>
-                    <div className="overflow-x-auto">
-                        <table className="w-full">
-                            <thead>
-                                <tr className="text-left text-xs text-gray-500 uppercase tracking-wider border-b border-[#2a2a2a]">
-                                    <th className="pb-3">Event Name</th>
-                                    <th className="pb-3 text-right">Tickets</th>
-                                    <th className="pb-3 text-right">Revenue</th>
-                                    <th className="pb-3 text-right">Performance</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-[#2a2a2a]">
-                                {topEvents.map((event, index) => (
-                                    <tr key={index} className="hover:bg-[#1e1e1e]/50 transition-colors">
-                                        <td className="py-4">
-                                            <div className="flex items-center gap-3">
-                                                <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold ${index === 0 ? 'bg-[#8cff65]/20 text-[#8cff65]' :
-                                                        index === 1 ? 'bg-blue-500/20 text-blue-400' :
-                                                            index === 2 ? 'bg-purple-500/20 text-purple-400' :
-                                                                'bg-gray-500/20 text-gray-400'
-                                                    }`}>
-                                                    {index + 1}
-                                                </div>
-                                                <span className="text-white font-medium">{event.name}</span>
-                                            </div>
-                                        </td>
-                                        <td className="py-4 text-right text-gray-300">{event.tickets}</td>
-                                        <td className="py-4 text-right text-white font-medium">₱{event.revenue.toLocaleString()}</td>
-                                        <td className="py-4 text-right">
-                                            <div className="flex items-center justify-end gap-1">
-                                                <div className="w-16 bg-[#1e1e1e] rounded-full h-1.5">
-                                                    <div
-                                                        className="h-full bg-[#8cff65] rounded-full"
-                                                        style={{ width: `${(event.tickets / 500) * 100}%` }}
-                                                    ></div>
-                                                </div>
-                                            </div>
-                                        </td>
+                {/* Ticket Types List */}
+                <div className="lg:col-span-2 bg-[#141414] border border-[#2a2a2a] rounded-2xl p-6 hover:border-[#3a3a3a] transition-all">
+                    <h3 className="text-lg font-bold text-white mb-6">Ticket Types Breakdown</h3>
+                    {ticketDistribution.length > 0 ? (
+                        <div className="overflow-x-auto">
+                            <table className="w-full">
+                                <thead>
+                                    <tr className="text-left text-xs text-gray-500 uppercase tracking-wider border-b border-[#2a2a2a]">
+                                        <th className="pb-3">Type</th>
+                                        <th className="pb-3 text-right">Count</th>
+                                        <th className="pb-3 text-right">Revenue</th>
+                                        <th className="pb-3 text-right">Share</th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
+                                </thead>
+                                <tbody className="divide-y divide-[#2a2a2a]">
+                                    {ticketDistribution.map((ticket, index) => {
+                                        const colors = ['#8cff65', '#60a5fa', '#a855f7', '#fbbf24', '#f87171'];
+                                        const percentage = totalDistribution > 0 
+                                            ? ((ticket.count / totalDistribution) * 100).toFixed(1) 
+                                            : 0;
+                                        return (
+                                            <tr key={index} className="hover:bg-[#1e1e1e]/50 transition-colors">
+                                                <td className="py-4">
+                                                    <div className="flex items-center gap-3">
+                                                        <div 
+                                                            className="w-3 h-3 rounded-full"
+                                                            style={{ backgroundColor: colors[index % colors.length] }}
+                                                        />
+                                                        <span className="text-white font-medium capitalize">
+                                                            {ticket.type || 'Unknown'}
+                                                        </span>
+                                                    </div>
+                                                </td>
+                                                <td className="py-4 text-right text-gray-300">{ticket.count}</td>
+                                                <td className="py-4 text-right text-white font-medium">
+                                                    ₱{(ticket.revenue || 0).toLocaleString()}
+                                                </td>
+                                                <td className="py-4 text-right">
+                                                    <div className="flex items-center justify-end gap-2">
+                                                        <div className="w-16 bg-[#1e1e1e] rounded-full h-2">
+                                                            <div
+                                                                className="h-full rounded-full transition-all duration-500"
+                                                                style={{ 
+                                                                    width: `${percentage}%`,
+                                                                    backgroundColor: colors[index % colors.length]
+                                                                }}
+                                                            />
+                                                        </div>
+                                                        <span className="text-gray-400 text-sm w-12 text-right">
+                                                            {percentage}%
+                                                        </span>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+                        </div>
+                    ) : (
+                        <div className="flex items-center justify-center h-48 text-gray-500">
+                            No ticket distribution data available
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

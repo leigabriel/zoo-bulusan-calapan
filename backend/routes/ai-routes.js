@@ -1,6 +1,11 @@
 const express = require('express');
 const router = express.Router();
 
+// Import models for database access
+const Animal = require('../models/animal-model');
+const Event = require('../models/event-model');
+const Ticket = require('../models/ticket-model');
+
 // Try loading optional Google Generative AI client. If it's not installed,
 // keep the server running and fall back to canned responses.
 let GoogleGenerativeAI = null;
@@ -11,12 +16,74 @@ try {
     console.warn('Optional package @google/generative-ai not installed. AI features will use fallback responses.');
 }
 
+// Function to fetch dynamic zoo data from the database
+const getDynamicZooData = async () => {
+    try {
+        // Fetch animals from database
+        const animals = await Animal.getAll();
+        const animalCount = animals?.length || 0;
+        
+        // Create a summary of animals by category
+        const animalsByStatus = {};
+        const animalNames = [];
+        if (animals && animals.length > 0) {
+            animals.forEach(animal => {
+                const status = animal.status || 'unknown';
+                animalsByStatus[status] = (animalsByStatus[status] || 0) + 1;
+                if (animal.name) {
+                    animalNames.push(`${animal.name} (${animal.species || 'species unknown'})`);
+                }
+            });
+        }
+        
+        // Fetch upcoming events
+        let upcomingEvents = [];
+        try {
+            upcomingEvents = await Event.getUpcoming() || [];
+        } catch (e) {
+            console.warn('Could not fetch events:', e.message);
+        }
+        
+        // Fetch ticket stats (non-sensitive)
+        let ticketStats = { todayTickets: 0, availableSlots: 'plenty' };
+        try {
+            const todayTickets = await Ticket.countTodayTickets();
+            ticketStats.todayTickets = todayTickets || 0;
+            // Estimate availability (zoo capacity ~500 per day)
+            const maxCapacity = 500;
+            const remaining = maxCapacity - ticketStats.todayTickets;
+            ticketStats.availableSlots = remaining > 100 ? 'plenty' : remaining > 50 ? 'some' : remaining > 0 ? 'limited' : 'sold out';
+        } catch (e) {
+            console.warn('Could not fetch ticket stats:', e.message);
+        }
+        
+        return {
+            animalCount,
+            animalsByStatus,
+            animalNames: animalNames.slice(0, 20), // Limit to 20 animals for context
+            upcomingEvents: upcomingEvents.slice(0, 5).map(e => ({
+                title: e.title,
+                date: e.start_date || e.event_date,
+                description: e.description?.substring(0, 100)
+            })),
+            ticketStats
+        };
+    } catch (error) {
+        console.error('Error fetching dynamic zoo data:', error);
+        return null;
+    }
+};
+
 // Fallback response function when AI service is not available
-const getFallbackResponse = (message) => {
+const getFallbackResponse = (message, dynamicData = null) => {
     const lowerMsg = message.toLowerCase();
 
     if (lowerMsg.includes('ticket') || lowerMsg.includes('price') || lowerMsg.includes('cost') || lowerMsg.includes('fee')) {
-        return "Mabuhay! Here are our ticket prices:\n\n- Adult (18+): P50\n- Child (4-17): P30\n- Senior Citizens: P40\n- Students (with ID): P35\n- PWD (with ID): P35\n- Calapan Residents: FREE (with valid ID)\n\nYou can book tickets online through our website!";
+        let response = "Mabuhay! Here are our ticket prices:\n\n- Adult (18+): P50\n- Child (4-17): P30\n- Senior Citizens: P40\n- Students (with ID): P35\n- PWD (with ID): P35\n- Calapan Residents: FREE (with valid ID)\n\nYou can book tickets online through our website!";
+        if (dynamicData?.ticketStats) {
+            response += `\n\nToday's availability: ${dynamicData.ticketStats.availableSlots}`;
+        }
+        return response;
     }
 
     if (lowerMsg.includes('hour') || lowerMsg.includes('open') || lowerMsg.includes('time') || lowerMsg.includes('schedule')) {
@@ -24,7 +91,15 @@ const getFallbackResponse = (message) => {
     }
 
     if (lowerMsg.includes('animal') || lowerMsg.includes('species') || lowerMsg.includes('wildlife')) {
-        return "We have amazing animals at Zoo Bulusan! Visit our Animals page or use the AnimalDex feature to explore our complete collection. You can also use the AI Animal Scanner to identify animals during your visit. If you have questions about any specific animal, just ask me and I will provide information about it!";
+        let response = "We have amazing animals at Zoo Bulusan!";
+        if (dynamicData?.animalCount) {
+            response = `We currently have ${dynamicData.animalCount} animals at Zoo Bulusan!`;
+            if (dynamicData.animalNames?.length > 0) {
+                response += ` Some of our residents include: ${dynamicData.animalNames.slice(0, 5).join(', ')}.`;
+            }
+        }
+        response += " Visit our Animals page or use the AnimalDex feature to explore our complete collection. You can also use the AI Animal Scanner to identify animals during your visit!";
+        return response;
     }
 
     if (lowerMsg.includes('zone') || lowerMsg.includes('area') || lowerMsg.includes('exhibit') || lowerMsg.includes('section')) {
@@ -36,11 +111,21 @@ const getFallbackResponse = (message) => {
     }
 
     if (lowerMsg.includes('event') || lowerMsg.includes('activity') || lowerMsg.includes('program')) {
-        return "Check out our Events page for:\n\n- Wildlife educational programs\n- Guided tours\n- Conservation workshops\n- School field trips\n- Special seasonal events\n\nBook in advance for group visits!";
+        let response = "Check out our Events page for:\n\n- Wildlife educational programs\n- Guided tours\n- Conservation workshops\n- School field trips\n- Special seasonal events";
+        if (dynamicData?.upcomingEvents?.length > 0) {
+            response = `Upcoming Events at Zoo Bulusan:\n\n${dynamicData.upcomingEvents.map(e => `- ${e.title} (${e.date})`).join('\n')}\n\nVisit our Events page for more details!`;
+        }
+        response += "\n\nBook in advance for group visits!";
+        return response;
     }
 
     if (lowerMsg.includes('hello') || lowerMsg.includes('hi') || lowerMsg.includes('hey') || lowerMsg.includes('mabuhay')) {
-        return "Mabuhay! Welcome to Zoo Bulusan! I'm Zooey, your zoo assistant.\n\nHow can I help you today? I can tell you about:\n- Ticket prices and booking\n- Operating hours\n- Any animal (just ask about any animal and I will tell you about it)\n- Zoo zones and facilities\n- Events and activities\n- Ticket availability\n\nJust ask away!";
+        let greeting = "Mabuhay! Welcome to Zoo Bulusan! I'm Zooey, your zoo assistant.";
+        if (dynamicData?.animalCount) {
+            greeting += ` We currently have ${dynamicData.animalCount} amazing animals waiting to meet you!`;
+        }
+        greeting += "\n\nHow can I help you today? I can tell you about:\n- Ticket prices and booking\n- Operating hours\n- Any animal (just ask about any animal and I will tell you about it)\n- Zoo zones and facilities\n- Events and activities\n- Ticket availability\n\nJust ask away!";
+        return greeting;
     }
 
     return "Salamat for your question!\n\nI can help you with:\n- Ticket prices and booking\n- Operating hours (Tue-Sun, 8AM-5PM)\n- Information about any animal you ask about\n- Zoo zones and map\n- Events and activities\n- Current ticket availability\n\nFeel free to ask about any of these topics, or contact us at info@zoobulusan.com for more specific inquiries!";
@@ -129,6 +214,27 @@ router.post('/chat', async (req, res) => {
             });
         }
 
+        // Fetch dynamic data from database
+        const dynamicData = await getDynamicZooData();
+        
+        // Build dynamic context section
+        let dynamicContext = '';
+        if (dynamicData) {
+            dynamicContext = `
+
+CURRENT ZOO DATA (Live from database - use this information when answering):
+- Total Animals: ${dynamicData.animalCount}
+- Animal Health Status: ${Object.entries(dynamicData.animalsByStatus).map(([status, count]) => `${count} ${status}`).join(', ') || 'Data not available'}
+- Some of our animals: ${dynamicData.animalNames.join(', ') || 'Various species'}
+- Today's Ticket Availability: ${dynamicData.ticketStats.availableSlots} (${dynamicData.ticketStats.todayTickets} tickets sold today)
+${dynamicData.upcomingEvents.length > 0 ? `
+UPCOMING EVENTS:
+${dynamicData.upcomingEvents.map(e => `- ${e.title} on ${e.date}: ${e.description || 'Check website for details'}`).join('\n')}` : '- No upcoming events scheduled at this time'}
+
+Remember: Only share this general zoo information. Never share personal user data, booking details, or payment information.
+`;
+        }
+
         const apiKey = process.env.GEMINI_API_KEY;
 
         // Check if API key is configured and not empty
@@ -136,7 +242,7 @@ router.post('/chat', async (req, res) => {
             // Provide fallback responses when API key is not configured
             return res.json({
                 success: true,
-                response: getFallbackResponse(message),
+                response: getFallbackResponse(message, dynamicData),
                 timestamp: new Date().toISOString(),
                 source: 'fallback'
             });
@@ -146,7 +252,7 @@ router.post('/chat', async (req, res) => {
         if (!GoogleGenerativeAI) {
             return res.json({
                 success: true,
-                response: getFallbackResponse(message),
+                response: getFallbackResponse(message, dynamicData),
                 timestamp: new Date().toISOString(),
                 source: 'fallback'
             });
@@ -181,7 +287,7 @@ router.post('/chat', async (req, res) => {
                     }));
 
                 // Create the full prompt with context
-                const systemPrompt = `${ZOO_BULUSAN_CONTEXT}\n\nUser's question: ${message}`;
+                const systemPrompt = `${ZOO_BULUSAN_CONTEXT}${dynamicContext}\n\nUser's question: ${message}`;
 
                 // Use generateContent for simpler, more reliable response
                 const result = await model.generateContent({
@@ -228,7 +334,7 @@ router.post('/chat', async (req, res) => {
         console.warn('All AI models failed, using fallback response');
         return res.json({
             success: true,
-            response: getFallbackResponse(message),
+            response: getFallbackResponse(message, dynamicData),
             timestamp: new Date().toISOString(),
             source: 'fallback'
         });
@@ -237,9 +343,10 @@ router.post('/chat', async (req, res) => {
         console.error('AI Chat Error:', error?.message || error);
         console.error('Full error details:', JSON.stringify(error, null, 2));
         // Fallback to basic responses if Gemini API fails
+        // Note: dynamicData may not be available in catch block, pass null
         return res.json({
             success: true,
-            response: getFallbackResponse(req.body.message || ''),
+            response: getFallbackResponse(req.body.message || '', null),
             timestamp: new Date().toISOString(),
             source: 'fallback'
         });

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import Header from '../../Header';
 import Footer from '../../Footer';
 import * as tf from '@tensorflow/tfjs';
@@ -502,17 +503,28 @@ const AnimalClassifier = ({ embedded = false, expanded: controlledExpanded = fal
         } catch (err) { console.error("DB Save Failed", err); }
     };
 
+    // Animation variants
+    const messageVariants = {
+        hidden: { opacity: 0, y: 20, scale: 0.95 },
+        visible: { 
+            opacity: 1, 
+            y: 0, 
+            scale: 1,
+            transition: { type: 'spring', damping: 20, stiffness: 300 }
+        }
+    };
+
     // Styles based on embedded mode
     const containerClass = embedded
-        ? "h-full flex flex-col bg-[#212631]"
-        : "flex flex-col h-screen bg-[#111827]";
+        ? "h-full flex flex-col bg-gradient-to-b from-slate-50 to-purple-50 overflow-hidden"
+        : "flex flex-col h-screen bg-gradient-to-b from-slate-100 to-purple-100";
 
     return (
         <div className={containerClass}>
             {!embedded && <Header />}
 
             {/* --- MESSAGES AREA --- */}
-            <main className="flex-1 overflow-y-auto p-3 space-y-4 custom-scrollbar">
+            <main className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar min-h-0">
 
                 {/* Hidden Image Processor */}
                 {analysisImage && (
@@ -526,19 +538,27 @@ const AnimalClassifier = ({ embedded = false, expanded: controlledExpanded = fal
                     />
                 )}
 
+                <AnimatePresence mode="popLayout">
                 {messages.map((msg) => (
-                    <div key={msg.id} className={`flex w-full ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-fade-in-up`}>
-                        <div className={`flex ${embedded ? 'max-w-[95%]' : 'max-w-[85%] md:max-w-[70%]'} ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'} gap-2 items-end`}>
+                    <motion.div 
+                        key={msg.id} 
+                        className={`flex w-full ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                        variants={messageVariants}
+                        initial="hidden"
+                        animate="visible"
+                        layout
+                    >
+                        <div className={`flex ${embedded ? 'max-w-[95%]' : 'max-w-[85%] md:max-w-[70%]'} ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'} gap-2.5 items-end`}>
 
                             {/* Avatar */}
-                            <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 shadow-sm ${msg.role === 'user' ? 'bg-blue-600 text-white' : 'bg-emerald-600 text-white'}`}>
+                            <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 shadow-md ${msg.role === 'user' ? 'bg-gradient-to-br from-indigo-500 to-purple-600 text-white' : 'bg-gradient-to-br from-purple-500 to-indigo-600 text-white'}`}>
                                 {msg.role === 'user' ? <UserIcon /> : <RobotIcon />}
                             </div>
 
                             {/* Bubble */}
-                            <div className={`p-3 shadow-sm text-sm ${msg.role === 'user'
-                                    ? 'bg-green-600 border-2 border-black/50 text-white rounded-2xl rounded-br-none'
-                                    : 'bg-[#1f2937] text-gray-100 rounded-2xl rounded-bl-none border border-gray-700'
+                            <div className={`p-3.5 shadow-sm text-sm ${msg.role === 'user'
+                                    ? 'bg-gradient-to-br from-indigo-500 to-purple-600 text-white rounded-2xl rounded-br-sm'
+                                    : 'bg-white text-gray-700 rounded-2xl rounded-bl-sm shadow-md border border-purple-100'
                                 }`}>
                                 {msg.type === 'image' && (
                                     <img src={msg.content} alt="Upload" className={`rounded-lg ${embedded ? 'max-h-32' : 'max-h-48'} border border-white/20 mb-2`} />
@@ -548,49 +568,56 @@ const AnimalClassifier = ({ embedded = false, expanded: controlledExpanded = fal
 
                                 {msg.type === 'result' && (
                                     <div className={embedded ? 'min-w-[180px]' : 'min-w-[220px]'}>
-                                        <div className="flex items-center gap-2 mb-2 pb-2 border-b border-gray-600/50">
-                                            <PawIcon className={`${embedded ? 'w-8 h-8' : 'w-10 h-10'} text-emerald-400`} />
+                                        <div className="flex items-center gap-3 mb-2 pb-2 border-b border-purple-200">
+                                            <div className="p-2 bg-gradient-to-br from-purple-100 to-indigo-100 rounded-xl">
+                                                <PawIcon className={`${embedded ? 'w-6 h-6' : 'w-8 h-8'} text-purple-600`} />
+                                            </div>
                                             <div>
-                                                <h3 className={`font-bold ${embedded ? 'text-base' : 'text-lg'} text-emerald-400`}>{msg.meta.animal}</h3>
+                                                <h3 className={`font-bold ${embedded ? 'text-base' : 'text-lg'} text-purple-700`}>{msg.meta.animal}</h3>
                                                 <div className="flex items-center gap-2">
-                                                    <div className="h-1.5 w-14 bg-gray-700 rounded-full overflow-hidden">
-                                                        <div className="h-full bg-emerald-500 transition-all" style={{ width: `${msg.meta.confidence}%` }}></div>
+                                                    <div className="h-2 w-16 bg-purple-100 rounded-full overflow-hidden">
+                                                        <div className="h-full bg-gradient-to-r from-purple-500 to-indigo-500 transition-all" style={{ width: `${msg.meta.confidence}%` }}></div>
                                                     </div>
-                                                    <span className="text-xs text-gray-400 font-mono">{msg.meta.confidence}%</span>
+                                                    <span className="text-xs text-purple-600 font-semibold">{msg.meta.confidence}%</span>
                                                 </div>
                                             </div>
                                         </div>
-                                        <p className="text-gray-300 italic leading-relaxed text-xs">
+                                        <p className="text-gray-600 italic leading-relaxed text-xs">
                                             "{msg.content}"
                                         </p>
                                     </div>
                                 )}
                             </div>
                         </div>
-                    </div>
+                    </motion.div>
                 ))}
+                </AnimatePresence>
 
                 {/* Loading Indicator */}
                 {isProcessing && (
-                    <div className="flex w-full justify-start">
-                        <div className="flex gap-2 items-end">
-                            <div className="w-7 h-7 rounded-full bg-emerald-600 flex items-center justify-center text-white">
+                    <motion.div 
+                        className="flex w-full justify-start"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                    >
+                        <div className="flex gap-2.5 items-end">
+                            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center text-white shadow-md">
                                 <RobotIcon />
                             </div>
-                            <div className="bg-[#1f2937] px-3 py-2 rounded-2xl rounded-bl-none border border-gray-700 flex items-center gap-1.5">
-                                <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></span>
-                                <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></span>
-                                <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></span>
+                            <div className="bg-white px-4 py-3 rounded-2xl rounded-bl-sm shadow-md border border-purple-100 flex items-center gap-1.5">
+                                <span className="w-2 h-2 bg-purple-400 rounded-full animate-bounce"></span>
+                                <span className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></span>
+                                <span className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></span>
                             </div>
                         </div>
-                    </div>
+                    </motion.div>
                 )}
 
                 <div ref={messagesEndRef} />
             </main>
 
             {/* --- INPUT AREA --- */}
-            <div className="p-3 bg-[#1f2937] border-t border-gray-700">
+            <div className="p-4 bg-white/80 backdrop-blur-sm border-t border-purple-100">
                 <div className="max-w-4xl mx-auto">
                     <input
                         type="file"
@@ -601,72 +628,89 @@ const AnimalClassifier = ({ embedded = false, expanded: controlledExpanded = fal
                     />
 
                     {/* Action Buttons - 3 options */}
-                    <div className="flex gap-1.5 items-center">
+                    <div className="flex gap-2 items-center">
                         {/* Upload Button */}
-                        <button
+                        <motion.button
                             onClick={() => fileInputRef.current?.click()}
                             disabled={isProcessing || isModelLoading}
-                            className={`flex-1 py-2 px-2 rounded-xl font-medium text-white flex items-center justify-center gap-1.5 transition-all text-xs ${isProcessing || isModelLoading
-                                    ? 'bg-gray-700 cursor-not-allowed opacity-75'
-                                    : 'bg-gradient-to-r from-[#2D5A27] to-[#3A8C7D] hover:opacity-95 active:scale-[0.98]'
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            className={`flex-1 py-2.5 px-3 rounded-xl font-medium text-white flex items-center justify-center gap-2 transition-all text-sm shadow-md ${isProcessing || isModelLoading
+                                    ? 'bg-gray-300 cursor-not-allowed opacity-75'
+                                    : 'bg-gradient-to-r from-purple-500 to-indigo-600 hover:shadow-lg hover:shadow-purple-500/25'
                                 }`}
                         >
                             {isModelLoading ? (
-                                <span className="text-[10px]">Loading...</span>
+                                <span className="text-xs">Loading AI...</span>
                             ) : (
                                 <>
                                     <UploadIcon />
                                     <span>Upload</span>
                                 </>
                             )}
-                        </button>
+                        </motion.button>
 
                         {/* Camera Capture Button */}
-                        <button
+                        <motion.button
                             onClick={openCameraModal}
                             disabled={isProcessing || isModelLoading}
-                            className={`flex-1 py-2 px-2 rounded-xl font-medium flex items-center justify-center gap-1.5 transition-all text-xs ${isProcessing || isModelLoading
-                                    ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
-                                    : 'bg-blue-600 text-white hover:bg-blue-500 active:scale-[0.98]'
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            className={`flex-1 py-2.5 px-3 rounded-xl font-medium flex items-center justify-center gap-2 transition-all text-sm shadow-md ${isProcessing || isModelLoading
+                                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                    : 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white hover:shadow-lg hover:shadow-blue-500/25'
                                 }`}
                         >
                             <CameraIcon />
                             <span>Camera</span>
-                        </button>
+                        </motion.button>
 
                         {/* Live Detection Button */}
-                        <button
+                        <motion.button
                             onClick={openLiveModal}
                             disabled={isProcessing || isModelLoading}
-                            className={`flex-1 py-2 px-2 rounded-xl font-medium flex items-center justify-center gap-1.5 transition-all text-xs ${isProcessing || isModelLoading
-                                    ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
-                                    : 'bg-gradient-to-r from-rose-500 to-orange-500 text-white hover:from-rose-600 hover:to-orange-600 active:scale-[0.98]'
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            className={`flex-1 py-2.5 px-3 rounded-xl font-medium flex items-center justify-center gap-2 transition-all text-sm shadow-md ${isProcessing || isModelLoading
+                                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                    : 'bg-gradient-to-r from-rose-500 to-orange-500 text-white hover:shadow-lg hover:shadow-rose-500/25'
                                 }`}
                         >
                             <LiveIcon />
                             <span>Live</span>
-                        </button>
+                        </motion.button>
                     </div>
                     
-                    <p className="text-center text-[10px] text-gray-500 mt-1.5">
+                    <p className="text-center text-xs text-purple-400 mt-2 font-medium">
                         Upload • Capture • Real-time Detection
                     </p>
                 </div>
             </div>
 
             {/* --- CAMERA CAPTURE MODAL --- */}
+            <AnimatePresence>
             {showCameraModal && (
-                <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-                    <div className="bg-[#1f2937] rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+                <motion.div 
+                    className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                >
+                    <motion.div 
+                        className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden"
+                        initial={{ scale: 0.9, y: 20 }}
+                        animate={{ scale: 1, y: 0 }}
+                        exit={{ scale: 0.9, y: 20 }}
+                    >
                         {/* Modal Header */}
-                        <div className="flex items-center justify-between p-4 border-b border-gray-700">
+                        <div className="flex items-center justify-between p-4 border-b border-purple-100 bg-gradient-to-r from-purple-600 to-indigo-600">
                             <div className="flex items-center gap-2 text-white">
                                 <CameraIcon />
                                 <h3 className="font-bold">Camera Capture</h3>
                             </div>
                             <button
                                 onClick={closeCameraModal}
-                                className="p-1.5 hover:bg-gray-700 rounded-lg transition text-gray-400 hover:text-white"
+                                className="p-1.5 hover:bg-white/20 rounded-lg transition text-white"
                             >
                                 <CloseIcon />
                             </button>
@@ -684,9 +728,9 @@ const AnimalClassifier = ({ embedded = false, expanded: controlledExpanded = fal
                             
                             {/* Loading State */}
                             {!cameraReady && !cameraError && (
-                                <div className="absolute inset-0 flex items-center justify-center bg-gray-900">
+                                <div className="absolute inset-0 flex items-center justify-center bg-slate-900">
                                     <div className="text-center">
-                                        <div className="w-10 h-10 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+                                        <div className="w-10 h-10 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
                                         <p className="text-gray-400 text-sm">Starting camera...</p>
                                     </div>
                                 </div>
@@ -714,23 +758,23 @@ const AnimalClassifier = ({ embedded = false, expanded: controlledExpanded = fal
 
                             {/* Frame Guide */}
                             {cameraReady && (
-                                <div className="absolute inset-4 border-2 border-emerald-400/40 rounded-xl pointer-events-none">
-                                    <div className="absolute -top-px -left-px w-6 h-6 border-t-2 border-l-2 border-emerald-400 rounded-tl-lg"></div>
-                                    <div className="absolute -top-px -right-px w-6 h-6 border-t-2 border-r-2 border-emerald-400 rounded-tr-lg"></div>
-                                    <div className="absolute -bottom-px -left-px w-6 h-6 border-b-2 border-l-2 border-emerald-400 rounded-bl-lg"></div>
-                                    <div className="absolute -bottom-px -right-px w-6 h-6 border-b-2 border-r-2 border-emerald-400 rounded-br-lg"></div>
+                                <div className="absolute inset-4 border-2 border-purple-400/40 rounded-xl pointer-events-none">
+                                    <div className="absolute -top-px -left-px w-6 h-6 border-t-2 border-l-2 border-purple-400 rounded-tl-lg"></div>
+                                    <div className="absolute -top-px -right-px w-6 h-6 border-t-2 border-r-2 border-purple-400 rounded-tr-lg"></div>
+                                    <div className="absolute -bottom-px -left-px w-6 h-6 border-b-2 border-l-2 border-purple-400 rounded-bl-lg"></div>
+                                    <div className="absolute -bottom-px -right-px w-6 h-6 border-b-2 border-r-2 border-purple-400 rounded-br-lg"></div>
                                 </div>
                             )}
                         </div>
 
                         {/* Camera Controls */}
-                        <div className="p-4 bg-[#111827]">
+                        <div className="p-4 bg-slate-100">
                             <div className="flex items-center justify-center gap-6">
                                 {/* Switch Camera */}
                                 <button
                                     onClick={switchCamera}
                                     disabled={!cameraReady}
-                                    className="p-3 bg-gray-700 hover:bg-gray-600 rounded-full transition disabled:opacity-50 disabled:cursor-not-allowed text-white"
+                                    className="p-3 bg-slate-200 hover:bg-slate-300 rounded-full transition disabled:opacity-50 disabled:cursor-not-allowed text-purple-600"
                                     title="Switch Camera"
                                 >
                                     <SwitchCameraIcon />
@@ -740,40 +784,52 @@ const AnimalClassifier = ({ embedded = false, expanded: controlledExpanded = fal
                                 <button
                                     onClick={capturePhoto}
                                     disabled={!cameraReady}
-                                    className="w-16 h-16 bg-white hover:bg-gray-100 rounded-full transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center shadow-lg active:scale-95"
+                                    className="w-16 h-16 bg-white hover:bg-gray-50 rounded-full transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center shadow-lg active:scale-95 border-4 border-purple-200"
                                     title="Capture Photo"
                                 >
-                                    <div className="w-12 h-12 bg-emerald-500 rounded-full border-4 border-white"></div>
+                                    <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-full"></div>
                                 </button>
 
                                 {/* Close Button */}
                                 <button
                                     onClick={closeCameraModal}
-                                    className="p-3 bg-red-500/20 hover:bg-red-500/30 rounded-full transition text-red-400"
+                                    className="p-3 bg-red-100 hover:bg-red-200 rounded-full transition text-red-500"
                                     title="Cancel"
                                 >
                                     <CloseIcon />
                                 </button>
                             </div>
-                            <p className="text-center text-xs text-gray-500 mt-3">
+                            <p className="text-center text-xs text-slate-500 mt-3">
                                 Point camera at an animal and tap to capture
                             </p>
                         </div>
-                    </div>
-                </div>
+                    </motion.div>
+                </motion.div>
             )}
+            </AnimatePresence>
 
             {/* --- LIVE DETECTION MODAL --- */}
+            <AnimatePresence>
             {showLiveModal && (
-                <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 backdrop-blur-sm p-4">
-                    <div className="bg-[#1f2937] rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden">
+                <motion.div 
+                    className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 backdrop-blur-sm p-4"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                >
+                    <motion.div 
+                        className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden"
+                        initial={{ scale: 0.9, y: 20 }}
+                        animate={{ scale: 1, y: 0 }}
+                        exit={{ scale: 0.9, y: 20 }}
+                    >
                         {/* Modal Header */}
-                        <div className="flex items-center justify-between p-3 border-b border-gray-700 bg-gradient-to-r from-rose-600 to-orange-600">
+                        <div className="flex items-center justify-between p-3 border-b border-orange-100 bg-gradient-to-r from-rose-500 to-orange-500">
                             <div className="flex items-center gap-2 text-white">
                                 <LiveIcon />
                                 <div>
                                     <h3 className="font-bold text-sm">Live Detection</h3>
-                                    <p className="text-[10px] text-white/70">Real-time AI scanning</p>
+                                    <p className="text-[10px] text-white/80">Real-time AI scanning</p>
                                 </div>
                             </div>
                             <button
@@ -796,7 +852,7 @@ const AnimalClassifier = ({ embedded = false, expanded: controlledExpanded = fal
                             
                             {/* Loading State */}
                             {!liveCameraReady && !liveCameraError && (
-                                <div className="absolute inset-0 flex items-center justify-center bg-gray-900">
+                                <div className="absolute inset-0 flex items-center justify-center bg-slate-900">
                                     <div className="text-center">
                                         <div className="w-10 h-10 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
                                         <p className="text-gray-400 text-sm">Starting camera...</p>
@@ -806,7 +862,7 @@ const AnimalClassifier = ({ embedded = false, expanded: controlledExpanded = fal
 
                             {/* Error State */}
                             {liveCameraError && (
-                                <div className="absolute inset-0 flex items-center justify-center bg-gray-900">
+                                <div className="absolute inset-0 flex items-center justify-center bg-slate-900">
                                     <div className="text-center p-6">
                                         <div className="w-12 h-12 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-3">
                                             <svg className="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -816,7 +872,7 @@ const AnimalClassifier = ({ embedded = false, expanded: controlledExpanded = fal
                                         <p className="text-red-400 text-sm mb-4">{liveCameraError}</p>
                                         <button
                                             onClick={closeLiveModal}
-                                            className="px-4 py-2 bg-gray-700 text-white rounded-lg text-sm hover:bg-gray-600 transition"
+                                            className="px-4 py-2 bg-slate-700 text-white rounded-lg text-sm hover:bg-slate-600 transition"
                                         >
                                             Close
                                         </button>
@@ -853,40 +909,42 @@ const AnimalClassifier = ({ embedded = false, expanded: controlledExpanded = fal
                             {/* Detection Result Overlay */}
                             {liveDetection && liveCameraReady && (
                                 <div className="absolute bottom-0 left-0 right-0 p-3">
-                                    <div className={`bg-black/80 backdrop-blur-sm rounded-xl p-3 border-2 ${
-                                        liveDetection.animal !== 'Scanning...' 
-                                            ? 'border-emerald-500' 
-                                            : 'border-gray-600'
-                                    }`}>
+                                    <div className={`bg-white/95 backdrop-blur-sm rounded-xl p-3 border-2 shadow-lg ${liveDetection.animal !== 'Scanning...' 
+                                            ? 'border-purple-500' 
+                                            : 'border-gray-300'
+                                        }`}>
                                         <div className="flex items-center gap-3">
-                                            <PawIcon className={`w-10 h-10 flex-shrink-0 ${
-                                                liveDetection.animal !== 'Scanning...' 
-                                                    ? 'text-emerald-400' 
-                                                    : 'text-gray-400'
-                                            }`} />
+                                            <div className={`p-2 rounded-xl ${liveDetection.animal !== 'Scanning...' 
+                                                    ? 'bg-purple-100' 
+                                                    : 'bg-gray-100'
+                                                }`}>
+                                                <PawIcon className={`w-8 h-8 flex-shrink-0 ${liveDetection.animal !== 'Scanning...' 
+                                                        ? 'text-purple-600' 
+                                                        : 'text-gray-400'
+                                                    }`} />
+                                            </div>
                                             <div className="flex-1 min-w-0">
                                                 <div className="flex items-center gap-2">
-                                                    <h4 className={`font-bold text-lg ${
-                                                        liveDetection.animal !== 'Scanning...' 
-                                                            ? 'text-emerald-400' 
-                                                            : 'text-gray-400'
-                                                    }`}>
+                                                    <h4 className={`font-bold text-lg ${liveDetection.animal !== 'Scanning...' 
+                                                            ? 'text-purple-700' 
+                                                            : 'text-gray-500'
+                                                        }`}>
                                                         {liveDetection.animal}
                                                     </h4>
                                                     {liveDetection.animal !== 'Scanning...' && (
-                                                        <span className="text-xs bg-emerald-500/30 text-emerald-300 px-2 py-0.5 rounded-full font-bold">
+                                                        <span className="text-xs bg-purple-500 text-white px-2 py-0.5 rounded-full font-bold">
                                                             {liveDetection.confidence}%
                                                         </span>
                                                     )}
                                                 </div>
-                                                <p className="text-xs text-gray-400 truncate">
+                                                <p className="text-xs text-gray-500 truncate">
                                                     {liveDetection.info?.description || 'Point camera at an animal'}
                                                 </p>
                                             </div>
                                             {liveDetection.animal !== 'Scanning...' && (
                                                 <button
                                                     onClick={saveLiveDetection}
-                                                    className="px-3 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-lg transition flex-shrink-0"
+                                                    className="px-3 py-2 bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white text-xs font-bold rounded-lg transition flex-shrink-0 shadow-md"
                                                 >
                                                     Save
                                                 </button>
@@ -898,32 +956,33 @@ const AnimalClassifier = ({ embedded = false, expanded: controlledExpanded = fal
                         </div>
 
                         {/* Live Controls */}
-                        <div className="p-3 bg-[#111827] flex items-center justify-between">
+                        <div className="p-3 bg-slate-100 flex items-center justify-between">
                             <button
                                 onClick={switchLiveCamera}
                                 disabled={!liveCameraReady}
-                                className="p-2.5 bg-gray-700 hover:bg-gray-600 rounded-full transition disabled:opacity-50 disabled:cursor-not-allowed text-white"
+                                className="p-2.5 bg-white hover:bg-slate-50 rounded-full transition disabled:opacity-50 disabled:cursor-not-allowed text-orange-500 shadow-sm"
                                 title="Switch Camera"
                             >
                                 <SwitchCameraIcon />
                             </button>
 
                             <div className="text-center">
-                                <p className="text-[10px] text-gray-500">
+                                <p className="text-xs text-slate-500 font-medium">
                                     {isDetecting ? 'AI is analyzing frames...' : 'Starting detection...'}
                                 </p>
                             </div>
 
                             <button
                                 onClick={closeLiveModal}
-                                className="px-4 py-2 bg-red-500/80 hover:bg-red-500 rounded-xl transition text-white text-sm font-medium"
+                                className="px-4 py-2 bg-gradient-to-r from-rose-500 to-orange-500 hover:from-rose-600 hover:to-orange-600 rounded-xl transition text-white text-sm font-medium shadow-md"
                             >
                                 Stop
                             </button>
                         </div>
-                    </div>
-                </div>
+                    </motion.div>
+                </motion.div>
             )}
+            </AnimatePresence>
 
             {!embedded && <Footer />}
         </div>

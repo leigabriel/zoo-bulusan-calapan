@@ -83,6 +83,7 @@ router.get('/tickets', adminController.getAllTickets);
 router.get('/tickets/:id', adminController.getTicketById);
 router.put('/tickets/:id/status', adminController.updateTicketStatus);
 router.get('/reports/revenue', adminController.getRevenueReport);
+router.get('/analytics', adminController.getAnalytics);
 
 // Notification routes
 router.get('/notifications', adminController.getNotifications);

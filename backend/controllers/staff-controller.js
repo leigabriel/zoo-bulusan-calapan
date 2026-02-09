@@ -94,7 +94,8 @@ exports.updateAnimalStatus = async (req, res) => {
     }
 };
 
-exports.validateTicket = async (req, res) => {
+// Check ticket validity without marking as used (validation only)
+exports.checkTicket = async (req, res) => {
     try {
         const { code } = req.body;
 
@@ -175,15 +176,10 @@ exports.validateTicket = async (req, res) => {
             });
         }
 
-        // Mark ticket as used
-        await Ticket.updateTicketWithDetails(ticket.id, { 
-            status: 'used',
-            checkedInBy: req.user.id
-        });
-
+        // Return ticket info WITHOUT marking as used
         res.json({
             success: true,
-            message: 'Ticket validated successfully',
+            message: 'Ticket is valid - ready for check-in',
             ticket: {
                 id: ticket.id,
                 bookingReference: ticket.booking_reference,
@@ -194,13 +190,72 @@ exports.validateTicket = async (req, res) => {
                 visitDate: ticket.visit_date,
                 totalAmount: ticket.total_amount,
                 paymentStatus: ticket.payment_status,
+                status: ticket.status
+            }
+        });
+    } catch (error) {
+        console.error('Error checking ticket:', error);
+        res.status(500).json({ success: false, message: 'Error checking ticket' });
+    }
+};
+
+// Mark ticket as used (explicit confirmation step)
+exports.markTicketUsed = async (req, res) => {
+    try {
+        const { ticketId } = req.body;
+
+        if (!ticketId) {
+            return res.status(400).json({ success: false, message: 'Ticket ID is required' });
+        }
+
+        const ticket = await Ticket.findById(ticketId);
+
+        if (!ticket) {
+            return res.status(404).json({ success: false, message: 'Ticket not found' });
+        }
+
+        if (ticket.status === 'used') {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Ticket has already been used'
+            });
+        }
+
+        if (ticket.status !== 'active') {
+            return res.status(400).json({ 
+                success: false, 
+                message: `Cannot check in ticket with status: ${ticket.status}`
+            });
+        }
+
+        // Mark ticket as used
+        await Ticket.updateTicketWithDetails(ticket.id, { 
+            status: 'used',
+            checkedInBy: req.user.id
+        });
+
+        res.json({
+            success: true,
+            message: 'Ticket checked in successfully',
+            ticket: {
+                id: ticket.id,
+                bookingReference: ticket.booking_reference,
+                visitorName: ticket.user_name || ticket.visitor_name,
+                ticketType: ticket.ticket_type,
+                quantity: ticket.quantity,
+                visitDate: ticket.visit_date,
                 status: 'used'
             }
         });
     } catch (error) {
-        console.error('Error validating ticket:', error);
-        res.status(500).json({ success: false, message: 'Error validating ticket' });
+        console.error('Error marking ticket as used:', error);
+        res.status(500).json({ success: false, message: 'Error checking in ticket' });
     }
+};
+
+// Legacy validateTicket - now calls checkTicket for backwards compatibility
+exports.validateTicket = async (req, res) => {
+    return exports.checkTicket(req, res);
 };
 
 exports.getActiveTickets = async (req, res) => {
@@ -304,15 +359,17 @@ exports.getUpcomingEvents = async (req, res) => {
 exports.getAllUsers = async (req, res) => {
     try {
         const users = await User.getAll();
-        // Return limited info for staff
+        // Return limited info for staff (including profile_image for display)
         const sanitizedUsers = users.map(u => ({
             id: u.id,
-            firstName: u.first_name,
-            lastName: u.last_name,
+            first_name: u.first_name,
+            last_name: u.last_name,
+            username: u.username,
             email: u.email,
             role: u.role,
-            isActive: u.is_active,
-            createdAt: u.created_at
+            is_active: u.is_active,
+            created_at: u.created_at,
+            profile_image: u.profile_image
         }));
         res.json({ success: true, users: sanitizedUsers });
     } catch (error) {
