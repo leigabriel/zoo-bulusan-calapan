@@ -74,6 +74,12 @@ const StaffTickets = () => {
     const [showCancelModal, setShowCancelModal] = useState(false);
     const [cancellationReason, setCancellationReason] = useState('');
     const [updating, setUpdating] = useState(false);
+    
+    // Confirmation modal states
+    const [showConfirmModal, setShowConfirmModal] = useState(false);
+    const [confirmAction, setConfirmAction] = useState(null);
+    const [confirmMessage, setConfirmMessage] = useState('');
+    const [confirmTitle, setConfirmTitle] = useState('');
 
     useEffect(() => {
         fetchTickets();
@@ -84,7 +90,27 @@ const StaffTickets = () => {
             setLoading(true);
             const res = await staffAPI.getTickets();
             if (res.success && res.tickets) {
-                setTickets(res.tickets);
+                // Normalize ticket data from backend
+                const normalizedTickets = res.tickets.map(t => ({
+                    ...t,
+                    id: t.id,
+                    code: t.booking_reference || t.code,
+                    qrCode: t.qr_code,
+                    type: t.ticket_type || t.type,
+                    purchasedBy: t.user_name || t.visitor_name || t.purchasedBy || `User #${t.user_id}`,
+                    email: t.user_email || t.visitor_email || t.email,
+                    price: t.total_amount || t.price,
+                    purchaseDate: t.created_at,
+                    visitDate: t.visit_date,
+                    status: t.status,
+                    paymentStatus: t.payment_status || 'pending',
+                    paymentMethod: t.payment_method || 'cash',
+                    quantity: t.quantity || 1,
+                    notes: t.notes,
+                    residentIdImage: t.resident_id_image,
+                    verificationStatus: t.verification_status || 'pending'
+                }));
+                setTickets(normalizedTickets);
             }
         } catch (err) {
             console.error('Error fetching tickets:', err);
@@ -109,6 +135,8 @@ const StaffTickets = () => {
         switch (paymentStatus?.toLowerCase()) {
             case 'paid': return 'bg-[#8cff65]/20 text-[#8cff65] border-[#8cff65]/30';
             case 'pending': return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
+            case 'not paid': return 'bg-orange-500/20 text-orange-400 border-orange-500/30';
+            case 'free': return 'bg-teal-500/20 text-teal-400 border-teal-500/30';
             case 'refunded': return 'bg-purple-500/20 text-purple-400 border-purple-500/30';
             default: return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
         }
@@ -135,6 +163,88 @@ const StaffTickets = () => {
         } finally {
             setUpdating(false);
         }
+    };
+
+    // Confirmation dialog helper
+    const showConfirmation = (title, message, action) => {
+        setConfirmTitle(title);
+        setConfirmMessage(message);
+        setConfirmAction(() => action);
+        setShowConfirmModal(true);
+    };
+
+    const handleConfirmAction = async () => {
+        if (confirmAction) {
+            await confirmAction();
+        }
+        setShowConfirmModal(false);
+        setConfirmAction(null);
+    };
+
+    // Mark ticket as paid
+    const handleMarkAsPaid = async (ticketId) => {
+        showConfirmation(
+            'Mark as Paid',
+            'Are you sure you want to mark this ticket as paid?',
+            async () => {
+                try {
+                    setUpdating(true);
+                    const res = await staffAPI.markTicketAsPaid(ticketId);
+                    if (res.success) {
+                        setTickets(tickets.map(t => t.id === ticketId ? { ...t, payment_status: 'paid', paymentStatus: 'paid' } : t));
+                        if (selectedTicket?.id === ticketId) {
+                            setSelectedTicket({ ...selectedTicket, payment_status: 'paid', paymentStatus: 'paid' });
+                        }
+                    }
+                } catch (err) {
+                    console.error(err);
+                    alert('Failed to mark ticket as paid');
+                } finally {
+                    setUpdating(false);
+                }
+            }
+        );
+    };
+
+    // Update verification status
+    const handleUpdateVerificationStatus = async (ticketId, status) => {
+        const actionText = status === 'approved' ? 'approve' : 'reject';
+        showConfirmation(
+            `${status === 'approved' ? 'Approve' : 'Reject'} Verification`,
+            `Are you sure you want to ${actionText} this resident ID verification?`,
+            async () => {
+                try {
+                    setUpdating(true);
+                    const res = await staffAPI.updateVerificationStatus(ticketId, status);
+                    if (res.success) {
+                        setTickets(tickets.map(t => t.id === ticketId ? { ...t, verification_status: status, verificationStatus: status } : t));
+                        if (selectedTicket?.id === ticketId) {
+                            setSelectedTicket({ ...selectedTicket, verification_status: status, verificationStatus: status });
+                        }
+                    }
+                } catch (err) {
+                    console.error(err);
+                    alert('Failed to update verification status');
+                } finally {
+                    setUpdating(false);
+                }
+            }
+        );
+    };
+
+    // Status change with confirmation
+    const handleStatusChange = (ticketId, newStatus) => {
+        const statusMessages = {
+            'confirmed': 'confirm this ticket',
+            'used': 'mark this ticket as used',
+            'expired': 'mark this ticket as expired'
+        };
+        
+        showConfirmation(
+            `${newStatus.charAt(0).toUpperCase() + newStatus.slice(1)} Ticket`,
+            `Are you sure you want to ${statusMessages[newStatus] || `change status to ${newStatus}`}?`,
+            () => updateTicketStatus(ticketId, newStatus)
+        );
     };
 
     const filteredTickets = tickets.filter(ticket => {
@@ -334,9 +444,21 @@ const StaffTickets = () => {
                                                 >
                                                     <EyeIcon />
                                                 </button>
+                                                {(ticket.payment_status === 'pending' || ticket.payment_status === 'not_paid' || ticket.payment_status === 'not paid') && (
+                                                    <button
+                                                        onClick={() => handleMarkAsPaid(ticket.id)}
+                                                        className="p-2 hover:bg-teal-500/10 rounded-lg text-teal-400 transition"
+                                                        title="Mark as Paid"
+                                                    >
+                                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+                                                            <line x1="12" y1="1" x2="12" y2="23" />
+                                                            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                                                        </svg>
+                                                    </button>
+                                                )}
                                                 {ticket.status === 'pending' && (
                                                     <button
-                                                        onClick={() => updateTicketStatus(ticket.id, 'confirmed')}
+                                                        onClick={() => handleStatusChange(ticket.id, 'confirmed')}
                                                         className="p-2 hover:bg-[#8cff65]/10 rounded-lg text-[#8cff65] transition"
                                                         title="Confirm Ticket"
                                                     >
@@ -430,13 +552,99 @@ const StaffTickets = () => {
                                 </div>
                             </div>
 
+                            {/* Resident ID Verification Section */}
+                            {selectedTicket.type?.toLowerCase() === 'resident' && (
+                                <div className="p-4 bg-teal-500/10 border border-teal-500/30 rounded-xl space-y-3">
+                                    <h4 className="text-sm font-semibold text-teal-400 uppercase tracking-wider flex items-center gap-2">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4">
+                                            <rect x="3" y="4" width="18" height="16" rx="2" />
+                                            <circle cx="9" cy="10" r="2" />
+                                            <path d="M15 8h2" />
+                                            <path d="M15 12h2" />
+                                            <path d="M7 16h10" />
+                                        </svg>
+                                        Resident ID Verification Required
+                                    </h4>
+                                    {selectedTicket.residentIdImage ? (
+                                        <div className="space-y-3">
+                                            <div className="bg-white rounded-xl p-2 max-h-48 overflow-hidden">
+                                                <img 
+                                                    src={selectedTicket.residentIdImage} 
+                                                    alt="Resident ID" 
+                                                    className="w-full h-full object-contain rounded-lg cursor-pointer hover:opacity-80"
+                                                    onClick={() => window.open(selectedTicket.residentIdImage, '_blank')}
+                                                />
+                                            </div>
+                                            <p className="text-xs text-teal-400">Click image to view in full size</p>
+                                            <div className="flex items-center gap-2 text-sm">
+                                                <span className="text-gray-400">Verification Status:</span>
+                                                <span className={`px-2 py-1 rounded-full text-xs font-medium border ${
+                                                    selectedTicket.verificationStatus === 'approved' 
+                                                        ? 'bg-[#8cff65]/20 text-[#8cff65] border-[#8cff65]/30' 
+                                                        : selectedTicket.verificationStatus === 'rejected'
+                                                            ? 'bg-red-500/20 text-red-400 border-red-500/30'
+                                                            : 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30'
+                                                }`}>
+                                                    {selectedTicket.verificationStatus || 'Pending'}
+                                                </span>
+                                            </div>
+                                            {/* Verification Actions */}
+                                            {selectedTicket.verificationStatus !== 'approved' && selectedTicket.verificationStatus !== 'rejected' && (
+                                                <div className="flex gap-2 pt-2">
+                                                    <button
+                                                        onClick={() => handleUpdateVerificationStatus(selectedTicket.id, 'approved')}
+                                                        disabled={updating}
+                                                        className="flex-1 py-2 bg-[#8cff65]/20 border border-[#8cff65]/30 text-[#8cff65] text-sm font-medium rounded-lg hover:bg-[#8cff65]/30 transition disabled:opacity-50"
+                                                    >
+                                                        Approve ID
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleUpdateVerificationStatus(selectedTicket.id, 'rejected')}
+                                                        disabled={updating}
+                                                        className="flex-1 py-2 bg-red-500/20 border border-red-500/30 text-red-400 text-sm font-medium rounded-lg hover:bg-red-500/30 transition disabled:opacity-50"
+                                                    >
+                                                        Reject ID
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
+                                    ) : (
+                                        <div className="p-4 bg-[#1e1e1e] rounded-xl text-center">
+                                            <p className="text-yellow-400 text-sm">
+                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-5 h-5 inline mr-2">
+                                                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                                                    <line x1="12" y1="9" x2="12" y2="13" />
+                                                    <line x1="12" y1="17" x2="12.01" y2="17" />
+                                                </svg>
+                                                No ID image uploaded. Please contact the visitor to submit their ID.
+                                            </p>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {/* Mark as Paid Button */}
+                            {(selectedTicket.payment_status === 'pending' || selectedTicket.payment_status === 'not_paid' || selectedTicket.payment_status === 'not paid') && (
+                                <button
+                                    onClick={() => handleMarkAsPaid(selectedTicket.id)}
+                                    disabled={updating}
+                                    className="w-full py-3 bg-teal-500/20 border border-teal-500/30 text-teal-400 font-semibold rounded-xl hover:bg-teal-500/30 transition disabled:opacity-50 flex items-center justify-center gap-2"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+                                        <line x1="12" y1="1" x2="12" y2="23" />
+                                        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                                    </svg>
+                                    Mark as Paid
+                                </button>
+                            )}
+
                             {/* Status Update Actions */}
                             <div className="pt-4 border-t border-[#2a2a2a] space-y-3">
                                 <p className="text-gray-400 text-sm font-medium">Update Status</p>
                                 <div className="flex flex-wrap gap-2">
                                     {selectedTicket.status !== 'confirmed' && selectedTicket.status !== 'used' && selectedTicket.status !== 'cancelled' && (
                                         <button
-                                            onClick={() => updateTicketStatus(selectedTicket.id, 'confirmed')}
+                                            onClick={() => handleStatusChange(selectedTicket.id, 'confirmed')}
                                             disabled={updating}
                                             className="px-4 py-2 bg-[#8cff65]/20 border border-[#8cff65]/30 rounded-xl text-[#8cff65] hover:bg-[#8cff65]/30 transition disabled:opacity-50"
                                         >
@@ -454,7 +662,7 @@ const StaffTickets = () => {
                                     )}
                                     {selectedTicket.status !== 'expired' && selectedTicket.status !== 'cancelled' && selectedTicket.status !== 'used' && (
                                         <button
-                                            onClick={() => updateTicketStatus(selectedTicket.id, 'expired')}
+                                            onClick={() => handleStatusChange(selectedTicket.id, 'expired')}
                                             disabled={updating}
                                             className="px-4 py-2 bg-gray-500/20 border border-gray-500/30 rounded-xl text-gray-400 hover:bg-gray-500/30 transition disabled:opacity-50"
                                         >
@@ -500,6 +708,38 @@ const StaffTickets = () => {
                                     className="px-4 py-2 bg-red-500/20 border border-red-500/30 rounded-xl text-red-400 hover:bg-red-500/30 transition disabled:opacity-50"
                                 >
                                     {updating ? 'Cancelling...' : 'Confirm Cancellation'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Confirmation Modal */}
+            {showConfirmModal && (
+                <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[60] p-4">
+                    <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-2xl w-full max-w-md">
+                        <div className="p-6 border-b border-[#2a2a2a]">
+                            <h3 className="text-xl font-bold text-white">{confirmTitle}</h3>
+                        </div>
+                        <div className="p-6 space-y-4">
+                            <p className="text-gray-300">{confirmMessage}</p>
+                            <div className="flex gap-3 justify-end">
+                                <button
+                                    onClick={() => {
+                                        setShowConfirmModal(false);
+                                        setConfirmAction(null);
+                                    }}
+                                    className="px-4 py-2 border border-[#2a2a2a] rounded-xl text-gray-400 hover:bg-white/5 transition"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleConfirmAction}
+                                    disabled={updating}
+                                    className="px-4 py-2 bg-[#8cff65]/20 border border-[#8cff65]/30 rounded-xl text-[#8cff65] hover:bg-[#8cff65]/30 transition disabled:opacity-50"
+                                >
+                                    {updating ? 'Processing...' : 'Confirm'}
                                 </button>
                             </div>
                         </div>

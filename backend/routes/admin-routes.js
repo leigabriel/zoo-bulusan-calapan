@@ -80,10 +80,23 @@ router.post('/events', adminController.createEvent);
 router.put('/events/:id', adminController.updateEvent);
 router.delete('/events/:id', adminController.deleteEvent);
 router.get('/tickets', adminController.getAllTickets);
+router.get('/tickets/export', adminController.exportTickets);
 router.get('/tickets/:id', adminController.getTicketById);
 router.put('/tickets/:id/status', adminController.updateTicketStatus);
+router.put('/tickets/:id/mark-paid', adminController.markTicketAsPaid);
+router.put('/tickets/:id/verification', adminController.updateVerificationStatus);
 router.get('/reports/revenue', adminController.getRevenueReport);
 router.get('/analytics', adminController.getAnalytics);
+
+// User management routes
+router.get('/users/:id', adminController.getUserById);
+router.put('/users/:id/suspend', adminController.suspendUser);
+router.put('/users/:id/unsuspend', adminController.unsuspendUser);
+router.get('/users-suspended', adminController.getSuspendedUsers);
+
+// Appeal management routes
+router.get('/appeals', adminController.getPendingAppeals);
+router.put('/appeals/:id/review', adminController.reviewAppeal);
 
 // Notification routes
 router.get('/notifications', adminController.getNotifications);

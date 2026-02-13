@@ -92,6 +92,13 @@ const AdminTickets = ({ globalSearch = '' }) => {
     const [showCancelModal, setShowCancelModal] = useState(false);
     const [cancelReason, setCancelReason] = useState('');
     const [actionLoading, setActionLoading] = useState(false);
+    
+    // New states for confirmation dialogs
+    const [showConfirmModal, setShowConfirmModal] = useState(false);
+    const [confirmAction, setConfirmAction] = useState(null);
+    const [confirmMessage, setConfirmMessage] = useState('');
+    const [confirmTitle, setConfirmTitle] = useState('');
+    const [exportLoading, setExportLoading] = useState(false);
 
     const events = ['All Events', 'Night Safari Experience', 'Animal Feeding Tour', 'General Admission', 'Wildlife Photography Day', 'Conservation Workshop'];
 
@@ -119,7 +126,9 @@ const AdminTickets = ({ globalSearch = '' }) => {
                     paymentStatus: t.payment_status || 'pending',
                     paymentMethod: t.payment_method || 'cash',
                     quantity: t.quantity || 1,
-                    notes: t.notes
+                    notes: t.notes,
+                    residentIdImage: t.resident_id_image,
+                    verificationStatus: t.verification_status || 'pending'
                 }));
                 setTickets(normalizedTickets);
             }
@@ -147,6 +156,8 @@ const AdminTickets = ({ globalSearch = '' }) => {
         switch (status?.toLowerCase()) {
             case 'paid': return 'bg-[#8cff65]/20 text-[#8cff65] border-[#8cff65]/30';
             case 'pending': return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
+            case 'not paid': return 'bg-orange-500/20 text-orange-400 border-orange-500/30';
+            case 'free': return 'bg-teal-500/20 text-teal-400 border-teal-500/30';
             case 'refunded': return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
             default: return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
         }
@@ -180,6 +191,137 @@ const AdminTickets = ({ globalSearch = '' }) => {
         if (selectedTicket) {
             updateTicketStatus(selectedTicket.id, 'cancelled', cancelReason);
         }
+    };
+
+    // Confirmation dialog helper
+    const showConfirmation = (title, message, action) => {
+        setConfirmTitle(title);
+        setConfirmMessage(message);
+        setConfirmAction(() => action);
+        setShowConfirmModal(true);
+    };
+
+    const handleConfirmAction = async () => {
+        if (confirmAction) {
+            await confirmAction();
+        }
+        setShowConfirmModal(false);
+        setConfirmAction(null);
+    };
+
+    // Mark ticket as paid
+    const handleMarkAsPaid = async (ticketId) => {
+        showConfirmation(
+            'Mark as Paid',
+            'Are you sure you want to mark this ticket as paid? This action will update the payment status.',
+            async () => {
+                try {
+                    setActionLoading(true);
+                    const res = await adminAPI.markTicketAsPaid(ticketId);
+                    if (res.success) {
+                        setTickets(tickets.map(t => t.id === ticketId ? { ...t, paymentStatus: 'paid' } : t));
+                        if (selectedTicket?.id === ticketId) {
+                            setSelectedTicket({ ...selectedTicket, paymentStatus: 'paid' });
+                        }
+                    }
+                } catch (err) {
+                    console.error(err);
+                    alert('Failed to mark ticket as paid');
+                } finally {
+                    setActionLoading(false);
+                }
+            }
+        );
+    };
+
+    // Update verification status
+    const handleUpdateVerificationStatus = async (ticketId, status) => {
+        const actionText = status === 'approved' ? 'approve' : 'reject';
+        showConfirmation(
+            `${status === 'approved' ? 'Approve' : 'Reject'} Verification`,
+            `Are you sure you want to ${actionText} this resident ID verification?`,
+            async () => {
+                try {
+                    setActionLoading(true);
+                    const res = await adminAPI.updateVerificationStatus(ticketId, status);
+                    if (res.success) {
+                        setTickets(tickets.map(t => t.id === ticketId ? { ...t, verificationStatus: status } : t));
+                        if (selectedTicket?.id === ticketId) {
+                            setSelectedTicket({ ...selectedTicket, verificationStatus: status });
+                        }
+                    }
+                } catch (err) {
+                    console.error(err);
+                    alert('Failed to update verification status');
+                } finally {
+                    setActionLoading(false);
+                }
+            }
+        );
+    };
+
+    // Export tickets
+    const handleExport = async () => {
+        try {
+            setExportLoading(true);
+            const filters = {};
+            if (dateFilter) {
+                filters.startDate = dateFilter;
+                filters.endDate = dateFilter;
+            }
+            if (statusFilter !== 'all') filters.status = statusFilter;
+            if (paymentFilter !== 'all') filters.paymentStatus = paymentFilter;
+
+            const res = await adminAPI.exportTickets(filters);
+            if (res.success && res.tickets) {
+                // Generate CSV
+                const headers = ['Code', 'Customer', 'Email', 'Type', 'Quantity', 'Price', 'Visit Date', 'Status', 'Payment Status', 'Payment Method'];
+                const rows = res.tickets.map(t => [
+                    t.booking_reference || t.code,
+                    t.visitor_name || t.purchasedBy,
+                    t.visitor_email || t.email,
+                    t.ticket_type || t.type,
+                    t.quantity || 1,
+                    t.total_amount || t.price,
+                    t.visit_date?.split('T')[0],
+                    t.status,
+                    t.payment_status,
+                    t.payment_method
+                ]);
+                
+                const csvContent = [
+                    headers.join(','),
+                    ...rows.map(row => row.map(cell => `"${cell || ''}"`).join(','))
+                ].join('\n');
+                
+                // Download CSV
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = `tickets_export_${new Date().toISOString().split('T')[0]}.csv`;
+                link.click();
+            }
+        } catch (err) {
+            console.error(err);
+            alert('Failed to export tickets');
+        } finally {
+            setExportLoading(false);
+        }
+    };
+
+    // Update status with confirmation
+    const handleStatusChange = (ticketId, newStatus) => {
+        const statusMessages = {
+            'confirmed': 'confirm this ticket',
+            'used': 'mark this ticket as used',
+            'expired': 'mark this ticket as expired'
+        };
+        
+        showConfirmation(
+            `${newStatus.charAt(0).toUpperCase() + newStatus.slice(1)} Ticket`,
+            `Are you sure you want to ${statusMessages[newStatus] || `change status to ${newStatus}`}?`,
+            () => updateTicketStatus(ticketId, newStatus)
+        );
     };
 
     // Use globalSearch or local searchQuery
@@ -367,10 +509,12 @@ const AdminTickets = ({ globalSearch = '' }) => {
 
                             {/* Export Button */}
                             <button
-                                className="flex items-center gap-2 px-4 py-2.5 bg-[#8cff65]/10 border border-[#8cff65]/30 text-[#8cff65] rounded-xl hover:bg-[#8cff65]/20 transition-all"
+                                onClick={handleExport}
+                                disabled={exportLoading}
+                                className="flex items-center gap-2 px-4 py-2.5 bg-[#8cff65]/10 border border-[#8cff65]/30 text-[#8cff65] rounded-xl hover:bg-[#8cff65]/20 transition-all disabled:opacity-50"
                             >
                                 <DownloadIcon />
-                                Export
+                                {exportLoading ? 'Exporting...' : 'Export'}
                             </button>
                         </div>
                     </div>
@@ -444,9 +588,21 @@ const AdminTickets = ({ globalSearch = '' }) => {
                                                 >
                                                     <EyeIcon />
                                                 </button>
+                                                {(ticket.paymentStatus === 'pending' || ticket.paymentStatus === 'not_paid' || ticket.paymentStatus === 'not paid') && (
+                                                    <button
+                                                        onClick={() => handleMarkAsPaid(ticket.id)}
+                                                        className="p-2 bg-[#1e1e1e] hover:bg-teal-500/10 border border-[#2a2a2a] hover:border-teal-500/50 text-gray-400 hover:text-teal-400 rounded-lg transition-all"
+                                                        title="Mark as paid"
+                                                    >
+                                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+                                                            <line x1="12" y1="1" x2="12" y2="23" />
+                                                            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                                                        </svg>
+                                                    </button>
+                                                )}
                                                 {ticket.status === 'pending' && (
                                                     <button
-                                                        onClick={() => updateTicketStatus(ticket.id, 'confirmed')}
+                                                        onClick={() => handleStatusChange(ticket.id, 'confirmed')}
                                                         className="p-2 bg-[#1e1e1e] hover:bg-[#8cff65]/10 border border-[#2a2a2a] hover:border-[#8cff65]/50 text-gray-400 hover:text-[#8cff65] rounded-lg transition-all"
                                                         title="Confirm ticket"
                                                     >
@@ -455,7 +611,7 @@ const AdminTickets = ({ globalSearch = '' }) => {
                                                 )}
                                                 {(ticket.status === 'confirmed' || ticket.status === 'active') && (
                                                     <button
-                                                        onClick={() => updateTicketStatus(ticket.id, 'used')}
+                                                        onClick={() => handleStatusChange(ticket.id, 'used')}
                                                         className="p-2 bg-[#1e1e1e] hover:bg-blue-500/10 border border-[#2a2a2a] hover:border-blue-500/50 text-gray-400 hover:text-blue-400 rounded-lg transition-all"
                                                         title="Mark as used"
                                                     >
@@ -579,11 +735,97 @@ const AdminTickets = ({ globalSearch = '' }) => {
                                 </div>
                             </div>
 
+                            {/* Resident ID Verification Section */}
+                            {selectedTicket.type?.toLowerCase() === 'resident' && (
+                                <div className="p-4 bg-teal-500/10 border border-teal-500/30 rounded-xl space-y-3">
+                                    <h4 className="text-sm font-semibold text-teal-400 uppercase tracking-wider flex items-center gap-2">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4">
+                                            <rect x="3" y="4" width="18" height="16" rx="2" />
+                                            <circle cx="9" cy="10" r="2" />
+                                            <path d="M15 8h2" />
+                                            <path d="M15 12h2" />
+                                            <path d="M7 16h10" />
+                                        </svg>
+                                        Resident ID Verification Required
+                                    </h4>
+                                    {selectedTicket.residentIdImage ? (
+                                        <div className="space-y-3">
+                                            <div className="bg-white rounded-xl p-2 max-h-48 overflow-hidden">
+                                                <img 
+                                                    src={selectedTicket.residentIdImage} 
+                                                    alt="Resident ID" 
+                                                    className="w-full h-full object-contain rounded-lg cursor-pointer hover:opacity-80"
+                                                    onClick={() => window.open(selectedTicket.residentIdImage, '_blank')}
+                                                />
+                                            </div>
+                                            <p className="text-xs text-teal-400">Click image to view in full size</p>
+                                            <div className="flex items-center gap-2 text-sm">
+                                                <span className="text-gray-400">Verification Status:</span>
+                                                <span className={`px-2 py-1 rounded-full text-xs font-medium border ${
+                                                    selectedTicket.verificationStatus === 'approved' 
+                                                        ? 'bg-[#8cff65]/20 text-[#8cff65] border-[#8cff65]/30' 
+                                                        : selectedTicket.verificationStatus === 'rejected'
+                                                            ? 'bg-red-500/20 text-red-400 border-red-500/30'
+                                                            : 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30'
+                                                }`}>
+                                                    {selectedTicket.verificationStatus || 'Pending'}
+                                                </span>
+                                            </div>
+                                            {/* Verification Actions */}
+                                            {selectedTicket.verificationStatus !== 'approved' && selectedTicket.verificationStatus !== 'rejected' && (
+                                                <div className="flex gap-2 pt-2">
+                                                    <button
+                                                        onClick={() => handleUpdateVerificationStatus(selectedTicket.id, 'approved')}
+                                                        disabled={actionLoading}
+                                                        className="flex-1 py-2 bg-[#8cff65]/20 border border-[#8cff65]/30 text-[#8cff65] text-sm font-medium rounded-lg hover:bg-[#8cff65]/30 transition-all disabled:opacity-50"
+                                                    >
+                                                        Approve ID
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleUpdateVerificationStatus(selectedTicket.id, 'rejected')}
+                                                        disabled={actionLoading}
+                                                        className="flex-1 py-2 bg-red-500/20 border border-red-500/30 text-red-400 text-sm font-medium rounded-lg hover:bg-red-500/30 transition-all disabled:opacity-50"
+                                                    >
+                                                        Reject ID
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
+                                    ) : (
+                                        <div className="p-4 bg-[#1e1e1e] rounded-xl text-center">
+                                            <p className="text-yellow-400 text-sm">
+                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-5 h-5 inline mr-2">
+                                                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                                                    <line x1="12" y1="9" x2="12" y2="13" />
+                                                    <line x1="12" y1="17" x2="12.01" y2="17" />
+                                                </svg>
+                                                No ID image uploaded. Please contact the visitor to submit their ID.
+                                            </p>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {/* Mark as Paid Button */}
+                            {(selectedTicket.paymentStatus === 'pending' || selectedTicket.paymentStatus === 'not_paid' || selectedTicket.paymentStatus === 'not paid') && (
+                                <button
+                                    onClick={() => handleMarkAsPaid(selectedTicket.id)}
+                                    disabled={actionLoading}
+                                    className="w-full py-3 bg-teal-500/20 border border-teal-500/30 text-teal-400 font-semibold rounded-xl hover:bg-teal-500/30 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+                                        <line x1="12" y1="1" x2="12" y2="23" />
+                                        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                                    </svg>
+                                    Mark as Paid
+                                </button>
+                            )}
+
                             {/* Action Buttons */}
                             <div className="flex flex-wrap gap-3 pt-2">
                                 {selectedTicket.status === 'pending' && (
                                     <button
-                                        onClick={() => updateTicketStatus(selectedTicket.id, 'confirmed')}
+                                        onClick={() => handleStatusChange(selectedTicket.id, 'confirmed')}
                                         disabled={actionLoading}
                                         className="flex-1 py-3 bg-gradient-to-r from-[#8cff65] to-[#4ade80] text-[#0a0a0a] font-semibold rounded-xl hover:from-[#9dff7a] hover:to-[#5ceb91] transition-all disabled:opacity-50"
                                     >
@@ -592,7 +834,7 @@ const AdminTickets = ({ globalSearch = '' }) => {
                                 )}
                                 {(selectedTicket.status === 'confirmed' || selectedTicket.status === 'active') && (
                                     <button
-                                        onClick={() => updateTicketStatus(selectedTicket.id, 'used')}
+                                        onClick={() => handleStatusChange(selectedTicket.id, 'used')}
                                         disabled={actionLoading}
                                         className="flex-1 py-3 bg-blue-500/20 border border-blue-500/30 text-blue-400 font-semibold rounded-xl hover:bg-blue-500/30 transition-all disabled:opacity-50"
                                     >
@@ -610,7 +852,7 @@ const AdminTickets = ({ globalSearch = '' }) => {
                                 )}
                                 {selectedTicket.status !== 'expired' && selectedTicket.status !== 'cancelled' && selectedTicket.status !== 'used' && (
                                     <button
-                                        onClick={() => updateTicketStatus(selectedTicket.id, 'expired')}
+                                        onClick={() => handleStatusChange(selectedTicket.id, 'expired')}
                                         disabled={actionLoading}
                                         className="flex-1 py-3 bg-gray-500/10 border border-gray-500/30 text-gray-400 font-semibold rounded-xl hover:bg-gray-500/20 transition-all disabled:opacity-50"
                                     >
@@ -665,6 +907,38 @@ const AdminTickets = ({ globalSearch = '' }) => {
                                     className="flex-1 py-3 bg-red-500/20 border border-red-500/30 text-red-400 font-semibold rounded-xl hover:bg-red-500/30 transition-all disabled:opacity-50"
                                 >
                                     {actionLoading ? 'Cancelling...' : 'Confirm Cancel'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Confirmation Modal */}
+            {showConfirmModal && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
+                    <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl w-full max-w-md">
+                        <div className="p-6 border-b border-[#2a2a2a]">
+                            <h3 className="text-xl font-bold text-white">{confirmTitle}</h3>
+                        </div>
+                        <div className="p-6 space-y-4">
+                            <p className="text-gray-300">{confirmMessage}</p>
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={() => {
+                                        setShowConfirmModal(false);
+                                        setConfirmAction(null);
+                                    }}
+                                    className="flex-1 py-3 bg-[#1e1e1e] hover:bg-[#2a2a2a] text-gray-300 font-medium rounded-xl transition-all"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleConfirmAction}
+                                    disabled={actionLoading}
+                                    className="flex-1 py-3 bg-gradient-to-r from-[#8cff65] to-[#4ade80] text-[#0a0a0a] font-semibold rounded-xl hover:from-[#9dff7a] hover:to-[#5ceb91] transition-all disabled:opacity-50"
+                                >
+                                    {actionLoading ? 'Processing...' : 'Confirm'}
                                 </button>
                             </div>
                         </div>

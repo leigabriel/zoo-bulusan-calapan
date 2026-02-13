@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { userAPI } from '../../services/api-client';
@@ -12,6 +12,9 @@ const TicketHistory = () => {
     const [sortBy, setSortBy] = useState('visitDate');
     const [sortOrder, setSortOrder] = useState('desc');
     const [selectedTicket, setSelectedTicket] = useState(null);
+    const [downloading, setDownloading] = useState(false);
+    const [archiving, setArchiving] = useState(false);
+    const ticketRef = useRef(null);
 
     useEffect(() => {
         fetchTicketHistory();
@@ -125,6 +128,177 @@ const TicketHistory = () => {
         }
     };
 
+    const downloadTicket = async () => {
+        if (!selectedTicket) return;
+        setDownloading(true);
+        
+        try {
+            // Create a canvas element for the ticket
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Set canvas size for a nice ticket layout
+            canvas.width = 600;
+            canvas.height = 800;
+            
+            // Background gradient
+            const gradient = ctx.createLinearGradient(0, 0, 600, 0);
+            gradient.addColorStop(0, '#10b981');
+            gradient.addColorStop(1, '#14b8a6');
+            
+            // Draw ticket background
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Header with gradient
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, 600, 120);
+            
+            // Zoo logo/title
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 32px Arial, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('🦁 Zoo Bulusan Calapan', 300, 55);
+            ctx.font = '16px Arial, sans-serif';
+            ctx.fillText('Entry Ticket', 300, 85);
+            
+            // Ticket type badge
+            ctx.fillStyle = '#ffffff20';
+            ctx.beginPath();
+            ctx.roundRect(200, 100, 200, 30, 5);
+            ctx.fill();
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 14px Arial, sans-serif';
+            ctx.fillText(selectedTicket.ticketType?.toUpperCase() || 'REGULAR', 300, 120);
+            
+            // Main content area
+            ctx.fillStyle = '#f9fafb';
+            ctx.fillRect(30, 140, 540, 420);
+            
+            // QR Code placeholder area
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(200, 160, 200, 200);
+            ctx.strokeStyle = '#e5e7eb';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(200, 160, 200, 200);
+            
+            // Load QR code image
+            const qrImage = new Image();
+            qrImage.crossOrigin = 'anonymous';
+            await new Promise((resolve, reject) => {
+                qrImage.onload = resolve;
+                qrImage.onerror = reject;
+                qrImage.src = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${selectedTicket.qrCode}`;
+            });
+            ctx.drawImage(qrImage, 210, 170, 180, 180);
+            
+            // Dashed line separator
+            ctx.setLineDash([8, 4]);
+            ctx.strokeStyle = '#d1d5db';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(50, 380);
+            ctx.lineTo(550, 380);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            
+            // Ticket details
+            ctx.textAlign = 'left';
+            ctx.fillStyle = '#6b7280';
+            ctx.font = '14px Arial, sans-serif';
+            
+            const details = [
+                { label: 'Booking Reference', value: selectedTicket.ticketCode || 'N/A' },
+                { label: 'Visit Date', value: new Date(selectedTicket.visitDate).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) },
+                { label: 'Quantity', value: `${selectedTicket.quantity || 1} person(s)` },
+                { label: 'Amount', value: selectedTicket.amount === 0 ? 'FREE ENTRY' : `₱${selectedTicket.amount}` },
+                { label: 'Payment', value: getPaymentMethodLabel(selectedTicket.paymentMethod) }
+            ];
+            
+            let yPos = 410;
+            details.forEach(item => {
+                ctx.fillStyle = '#6b7280';
+                ctx.font = '13px Arial, sans-serif';
+                ctx.fillText(item.label, 60, yPos);
+                ctx.fillStyle = '#111827';
+                ctx.font = 'bold 15px Arial, sans-serif';
+                ctx.fillText(item.value, 60, yPos + 20);
+                yPos += 50;
+            });
+            
+            // Status badge
+            const statusColor = selectedTicket.status === 'active' || selectedTicket.status === 'confirmed' ? '#10b981' : '#6b7280';
+            ctx.fillStyle = statusColor + '20';
+            ctx.beginPath();
+            ctx.roundRect(400, 410, 120, 30, 8);
+            ctx.fill();
+            ctx.fillStyle = statusColor;
+            ctx.font = 'bold 14px Arial, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText((selectedTicket.status || 'Active').toUpperCase(), 460, 430);
+            
+            // Footer
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 580, 600, 220);
+            
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 16px Arial, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('Show this ticket at the entrance', 300, 620);
+            
+            ctx.font = '13px Arial, sans-serif';
+            ctx.fillStyle = '#ffffffcc';
+            ctx.fillText('Valid for the specified date only', 300, 650);
+            ctx.fillText('Non-transferable • Non-refundable', 300, 675);
+            
+            // Contact info
+            ctx.font = '12px Arial, sans-serif';
+            ctx.fillStyle = '#ffffff99';
+            ctx.fillText('Zoo Bulusan Calapan, Oriental Mindoro', 300, 720);
+            ctx.fillText('Contact: info@zoobulusancalapan.ph', 300, 740);
+            
+            // Download timestamp
+            ctx.font = '10px Arial, sans-serif';
+            ctx.fillStyle = '#ffffff66';
+            ctx.fillText(`Downloaded: ${new Date().toLocaleString()}`, 300, 780);
+            
+            // Convert to blob and download
+            canvas.toBlob((blob) => {
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `zoo-ticket-${selectedTicket.ticketCode || 'ticket'}.png`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+                setDownloading(false);
+            }, 'image/png');
+        } catch (error) {
+            console.error('Error downloading ticket:', error);
+            setDownloading(false);
+            alert('Failed to download ticket. Please try again.');
+        }
+    };
+
+    const handleArchiveTicket = async (ticketId) => {
+        if (!confirm('Are you sure you want to archive this ticket?')) return;
+        setArchiving(true);
+        try {
+            const response = await userAPI.archiveTicket(ticketId);
+            if (response.success) {
+                // Remove from current list
+                setTickets(prev => prev.filter(t => t.id !== ticketId));
+                setSelectedTicket(null);
+            }
+        } catch (error) {
+            console.error('Error archiving ticket:', error);
+            alert('Failed to archive ticket. Please try again.');
+        } finally {
+            setArchiving(false);
+        }
+    };
+
     if (loading) {
         return (
             <div className="flex items-center justify-center h-64">
@@ -214,6 +388,17 @@ const TicketHistory = () => {
                         >
                             Buy New Ticket
                         </Link>
+                        <Link
+                            to="/archived-tickets"
+                            className="px-4 py-2.5 bg-white text-gray-600 border border-gray-200 font-medium rounded-full hover:bg-gray-50 transition-all flex items-center gap-2"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+                                <polyline points="21 8 21 21 3 21 3 8" />
+                                <rect x="1" y="3" width="22" height="5" />
+                                <line x1="10" y1="12" x2="14" y2="12" />
+                            </svg>
+                            <span className="hidden sm:inline">Archived</span>
+                        </Link>
                     </div>
                 </div>
 
@@ -299,6 +484,20 @@ const TicketHistory = () => {
                                                 >
                                                     View Full QR
                                                 </button>
+                                                {/* Archive button for used/expired tickets */}
+                                                {(ticket.status === 'used' || ticket.status === 'expired') && (
+                                                    <button
+                                                        onClick={() => handleArchiveTicket(ticket.id)}
+                                                        disabled={archiving}
+                                                        className="mt-2 text-gray-500 text-xs font-medium hover:text-gray-700 flex items-center gap-1"
+                                                    >
+                                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3">
+                                                            <polyline points="21 8 21 21 3 21 3 8" />
+                                                            <rect x="1" y="3" width="22" height="5" />
+                                                        </svg>
+                                                        Archive
+                                                    </button>
+                                                )}
                                             </>
                                         ) : (
                                             <div className="w-24 h-24 bg-white rounded-xl flex items-center justify-center mb-2 border-2 border-dashed border-gray-200">
@@ -387,10 +586,34 @@ const TicketHistory = () => {
                                 </div>
                             </div>
                         </div>
-                        <div className="p-6 border-t border-gray-100">
+                        <div className="p-6 border-t border-gray-100 space-y-3">
+                            <button
+                                onClick={downloadTicket}
+                                disabled={downloading}
+                                className="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-semibold rounded-xl hover:shadow-lg transition flex items-center justify-center gap-2 disabled:opacity-70"
+                            >
+                                {downloading ? (
+                                    <>
+                                        <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                        <span>Generating Ticket...</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+                                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                                            <polyline points="7 10 12 15 17 10" />
+                                            <line x1="12" y1="15" x2="12" y2="3" />
+                                        </svg>
+                                        <span>Download Ticket</span>
+                                    </>
+                                )}
+                            </button>
                             <button
                                 onClick={() => setSelectedTicket(null)}
-                                className="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-semibold rounded-xl hover:shadow-lg transition"
+                                className="w-full py-3 bg-gray-100 text-gray-700 font-semibold rounded-xl hover:bg-gray-200 transition"
                             >
                                 Close
                             </button>

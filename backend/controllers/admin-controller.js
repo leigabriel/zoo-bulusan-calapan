@@ -601,3 +601,261 @@ exports.markAllNotificationsRead = async (req, res) => {
         res.status(500).json({ success: false, message: 'Error updating notifications' });
     }
 };
+
+// ==========================================
+// USER SUSPENSION / BAN ENDPOINTS
+// ==========================================
+
+// Suspend user
+exports.suspendUser = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { reason } = req.body;
+
+        if (!reason || reason.trim() === '') {
+            return res.status(400).json({ success: false, message: 'Suspension reason is required' });
+        }
+
+        const user = await User.findById(id);
+        if (!user) {
+            return res.status(404).json({ success: false, message: 'User not found' });
+        }
+
+        // Prevent suspending admins
+        if (user.role === 'admin') {
+            return res.status(403).json({ success: false, message: 'Cannot suspend admin users' });
+        }
+
+        const suspended = await User.suspendUser(id, req.user.id, reason.trim());
+        
+        if (!suspended) {
+            return res.status(500).json({ success: false, message: 'Failed to suspend user' });
+        }
+
+        res.json({ success: true, message: 'User suspended successfully' });
+    } catch (error) {
+        console.error('Error suspending user:', error);
+        res.status(500).json({ success: false, message: 'Error suspending user' });
+    }
+};
+
+// Unsuspend user
+exports.unsuspendUser = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const user = await User.findById(id);
+        if (!user) {
+            return res.status(404).json({ success: false, message: 'User not found' });
+        }
+
+        const unsuspended = await User.unsuspendUser(id);
+        
+        if (!unsuspended) {
+            return res.status(500).json({ success: false, message: 'Failed to unsuspend user' });
+        }
+
+        res.json({ success: true, message: 'User unsuspended successfully' });
+    } catch (error) {
+        console.error('Error unsuspending user:', error);
+        res.status(500).json({ success: false, message: 'Error unsuspending user' });
+    }
+};
+
+// Get all suspended users
+exports.getSuspendedUsers = async (req, res) => {
+    try {
+        const users = await User.getSuspendedUsers();
+        res.json({ success: true, users });
+    } catch (error) {
+        console.error('Error getting suspended users:', error);
+        res.status(500).json({ success: false, message: 'Error fetching suspended users' });
+    }
+};
+
+// Get pending appeals
+exports.getPendingAppeals = async (req, res) => {
+    try {
+        const appeals = await User.getPendingAppeals();
+        res.json({ success: true, appeals });
+    } catch (error) {
+        console.error('Error getting pending appeals:', error);
+        res.status(500).json({ success: false, message: 'Error fetching appeals' });
+    }
+};
+
+// Review appeal
+exports.reviewAppeal = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { status, adminResponse } = req.body;
+
+        if (!['approved', 'rejected'].includes(status)) {
+            return res.status(400).json({ success: false, message: 'Invalid status' });
+        }
+
+        const appeal = await User.getAppealById(id);
+        if (!appeal) {
+            return res.status(404).json({ success: false, message: 'Appeal not found' });
+        }
+
+        const reviewed = await User.reviewAppeal(id, req.user.id, status, adminResponse);
+        
+        if (!reviewed) {
+            return res.status(500).json({ success: false, message: 'Failed to review appeal' });
+        }
+
+        // If approved, automatically unsuspend the user
+        if (status === 'approved') {
+            await User.unsuspendUser(appeal.user_id);
+        }
+
+        res.json({ success: true, message: `Appeal ${status} successfully` });
+    } catch (error) {
+        console.error('Error reviewing appeal:', error);
+        res.status(500).json({ success: false, message: 'Error reviewing appeal' });
+    }
+};
+
+// ==========================================
+// TICKET MANAGEMENT ENDPOINTS
+// ==========================================
+
+// Mark ticket as paid
+exports.markTicketAsPaid = async (req, res) => {
+    try {
+        const { id } = req.params;
+        
+        const ticket = await Ticket.findById(id);
+        if (!ticket) {
+            return res.status(404).json({ success: false, message: 'Ticket not found' });
+        }
+
+        const marked = await Ticket.markAsPaid(id, req.user.id);
+        
+        if (!marked) {
+            return res.status(500).json({ success: false, message: 'Failed to mark ticket as paid' });
+        }
+
+        res.json({ success: true, message: 'Ticket marked as paid successfully' });
+    } catch (error) {
+        console.error('Error marking ticket as paid:', error);
+        res.status(500).json({ success: false, message: 'Error updating ticket payment status' });
+    }
+};
+
+// Update resident verification status
+exports.updateVerificationStatus = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { status } = req.body;
+        
+        const ticket = await Ticket.findById(id);
+        if (!ticket) {
+            return res.status(404).json({ success: false, message: 'Ticket not found' });
+        }
+
+        const updated = await Ticket.updateVerificationStatus(id, status);
+        
+        if (!updated) {
+            return res.status(500).json({ success: false, message: 'Failed to update verification status' });
+        }
+
+        // If approved and ticket is pending, confirm it
+        if (status === 'approved' && ticket.status === 'pending') {
+            await Ticket.updateStatus(id, 'confirmed');
+        }
+
+        res.json({ success: true, message: 'Verification status updated successfully' });
+    } catch (error) {
+        console.error('Error updating verification status:', error);
+        res.status(500).json({ success: false, message: 'Error updating verification status' });
+    }
+};
+
+// Export tickets data
+exports.exportTickets = async (req, res) => {
+    try {
+        const { startDate, endDate, format = 'json' } = req.query;
+        
+        let tickets;
+        if (startDate && endDate) {
+            tickets = await Ticket.getByDateRange(startDate, endDate);
+        } else {
+            tickets = await Ticket.getAll();
+        }
+
+        if (format === 'csv') {
+            // Generate CSV
+            const headers = ['ID', 'Booking Reference', 'Visitor Name', 'Email', 'Type', 'Quantity', 'Amount', 'Visit Date', 'Status', 'Payment Status', 'Payment Method', 'Created At'];
+            const csvRows = [headers.join(',')];
+            
+            tickets.forEach(t => {
+                const row = [
+                    t.id,
+                    t.booking_reference,
+                    `"${(t.user_name || t.visitor_name || '').replace(/"/g, '""')}"`,
+                    t.user_email || t.visitor_email || '',
+                    t.ticket_type,
+                    t.quantity,
+                    t.total_amount,
+                    t.visit_date ? t.visit_date.toISOString().split('T')[0] : '',
+                    t.status,
+                    t.payment_status,
+                    t.payment_method,
+                    t.created_at ? t.created_at.toISOString() : ''
+                ];
+                csvRows.push(row.join(','));
+            });
+
+            res.setHeader('Content-Type', 'text/csv');
+            res.setHeader('Content-Disposition', `attachment; filename=tickets_export_${Date.now()}.csv`);
+            return res.send(csvRows.join('\n'));
+        }
+
+        res.json({ success: true, tickets, count: tickets.length });
+    } catch (error) {
+        console.error('Error exporting tickets:', error);
+        res.status(500).json({ success: false, message: 'Error exporting tickets' });
+    }
+};
+
+// Get user details by ID (for view user modal)
+exports.getUserById = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const user = await User.findById(id);
+
+        if (!user) {
+            return res.status(404).json({ success: false, message: 'User not found' });
+        }
+
+        // Get user's ticket count
+        const userTickets = await Ticket.findByUserId(id);
+
+        res.json({ 
+            success: true, 
+            user: {
+                id: user.id,
+                firstName: user.first_name,
+                lastName: user.last_name,
+                username: user.username,
+                email: user.email,
+                phoneNumber: user.phone_number,
+                gender: user.gender,
+                birthday: user.birthday,
+                role: user.role,
+                profileImage: user.profile_image,
+                isActive: user.is_active,
+                isSuspended: user.is_suspended,
+                suspensionReason: user.suspension_reason,
+                suspendedAt: user.suspended_at,
+                createdAt: user.created_at,
+                ticketCount: userTickets ? userTickets.length : 0
+            }
+        });
+    } catch (error) {
+        console.error('Error getting user:', error);
+        res.status(500).json({ success: false, message: 'Error fetching user' });
+    }
+};

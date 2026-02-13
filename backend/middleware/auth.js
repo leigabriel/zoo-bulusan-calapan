@@ -20,7 +20,25 @@ exports.protect = async (req, res, next) => {
             return res.status(404).json({ success: false, message: 'User not found' });
         }
 
-        req.user = { id: user.id, email: user.email, role: user.role };
+        // Check if user is suspended (but allow access to appeal routes)
+        const isAppealRoute = req.path.includes('/appeals');
+        const isProfileRoute = req.path === '/profile' && req.method === 'GET';
+        
+        if (user.is_suspended && !isAppealRoute && !isProfileRoute) {
+            return res.status(403).json({ 
+                success: false, 
+                message: 'Your account has been suspended. Please submit an appeal to regain access.',
+                suspended: true,
+                suspensionReason: user.suspension_reason
+            });
+        }
+
+        req.user = { 
+            id: user.id, 
+            email: user.email, 
+            role: user.role,
+            is_suspended: user.is_suspended 
+        };
         next();
     } catch (error) {
         console.error('\x1b[31mAuth middleware error: ' + error + '\x1b[0m');

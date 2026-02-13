@@ -42,11 +42,11 @@ class Ticket {
     }
 
     static async create(ticketData) {
-        const { userId, bookingReference, visitorEmail, ticketType, quantity, pricePerTicket, totalAmount, visitDate, status } = ticketData;
+        const { userId, bookingReference, visitorEmail, ticketType, quantity, pricePerTicket, totalAmount, visitDate, status, residentIdImage } = ticketData;
         const [result] = await db.query(
-            `INSERT INTO tickets (booking_reference, user_id, visitor_email, visit_date, ticket_type, quantity, price_per_ticket, total_amount, status) 
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            [bookingReference, userId || null, visitorEmail || null, visitDate, ticketType, quantity, pricePerTicket || 0, totalAmount || 0, status || 'pending']
+            `INSERT INTO tickets (booking_reference, user_id, visitor_email, visit_date, ticket_type, quantity, price_per_ticket, total_amount, status, resident_id_image) 
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [bookingReference, userId || null, visitorEmail || null, visitDate, ticketType, quantity, pricePerTicket || 0, totalAmount || 0, status || 'pending', residentIdImage || null]
         );
         return result.insertId;
     }
@@ -321,6 +321,73 @@ class Ticket {
                 (SELECT COALESCE(SUM(total_amount), 0) FROM tickets WHERE DATE(created_at) = DATE_SUB(CURDATE(), INTERVAL 1 DAY) AND status != 'cancelled') as yesterday_revenue`
         );
         return rows[0];
+    }
+
+    // Archive ticket
+    static async archiveTicket(ticketId) {
+        const [result] = await db.query(
+            'UPDATE tickets SET is_archived = TRUE, updated_at = NOW() WHERE id = ?',
+            [ticketId]
+        );
+        return result.affectedRows > 0;
+    }
+
+    // Unarchive ticket
+    static async unarchiveTicket(ticketId) {
+        const [result] = await db.query(
+            'UPDATE tickets SET is_archived = FALSE, updated_at = NOW() WHERE id = ?',
+            [ticketId]
+        );
+        return result.affectedRows > 0;
+    }
+
+    // Archive multiple tickets
+    static async archiveMultiple(ticketIds) {
+        if (!ticketIds || ticketIds.length === 0) return 0;
+        const [result] = await db.query(
+            'UPDATE tickets SET is_archived = TRUE, updated_at = NOW() WHERE id IN (?)',
+            [ticketIds]
+        );
+        return result.affectedRows;
+    }
+
+    // Get archived tickets by user
+    static async getArchivedByUserId(userId) {
+        const [rows] = await db.query(
+            'SELECT * FROM tickets WHERE user_id = ? AND is_archived = TRUE ORDER BY created_at DESC',
+            [userId]
+        );
+        return rows;
+    }
+
+    // Get active (non-archived) tickets by user
+    static async getActiveByUserId(userId) {
+        const [rows] = await db.query(
+            'SELECT * FROM tickets WHERE user_id = ? AND (is_archived = FALSE OR is_archived IS NULL) ORDER BY created_at DESC',
+            [userId]
+        );
+        return rows;
+    }
+
+    // Mark ticket as paid
+    static async markAsPaid(ticketId, paidBy = null) {
+        const [result] = await db.query(
+            `UPDATE tickets SET payment_status = 'paid', checked_in_by = ?, updated_at = NOW() WHERE id = ?`,
+            [paidBy, ticketId]
+        );
+        return result.affectedRows > 0;
+    }
+
+    // Update verification status (for resident tickets)
+    static async updateVerificationStatus(ticketId, status) {
+        const validStatuses = ['pending', 'approved', 'rejected'];
+        if (!validStatuses.includes(status)) return false;
+        
+        const [result] = await db.query(
+            'UPDATE tickets SET verification_status = ?, updated_at = NOW() WHERE id = ?',
+            [status, ticketId]
+        );
+        return result.affectedRows > 0;
     }
 }
 

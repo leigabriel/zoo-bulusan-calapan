@@ -1,7 +1,8 @@
 @import "tailwindcss";
 
 body {
-    font-family: 'JetBrainMono Nerd Font', monospace;
+    font-family: 'JetBrainsMono Nerd Font', monospace;
+    /* font-family: 'Brass Mono Code', monospace; */
     /* font-family: 'Space Grotesk', sans-serif; */
     /* font-family: 'Poppins', sans-serif; */
     font-size: 16px;

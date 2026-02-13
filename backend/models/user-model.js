@@ -157,7 +157,7 @@ class User {
     }
 
     static async unlinkGoogleAccount(userId) {
-        // Only allow unlinking if user has a password set (local auth)
+            // Only allow unlinking if user has a password set (local auth)
         const user = await this.findById(userId);
         if (!user || !user.password) {
             return false; // Cannot unlink if no password exists
@@ -168,6 +168,108 @@ class User {
             [userId]
         );
         return result.affectedRows > 0;
+    }
+
+    // Suspend/Ban user
+    static async suspendUser(userId, suspendedBy, reason) {
+        const [result] = await db.query(
+            `UPDATE users SET is_suspended = TRUE, suspension_reason = ?, 
+             suspended_at = NOW(), suspended_by = ?, is_active = FALSE, updated_at = NOW() 
+             WHERE id = ?`,
+            [reason, suspendedBy, userId]
+        );
+        return result.affectedRows > 0;
+    }
+
+    // Unsuspend/Unban user
+    static async unsuspendUser(userId) {
+        const [result] = await db.query(
+            `UPDATE users SET is_suspended = FALSE, suspension_reason = NULL, 
+             suspended_at = NULL, suspended_by = NULL, is_active = TRUE, updated_at = NOW() 
+             WHERE id = ?`,
+            [userId]
+        );
+        return result.affectedRows > 0;
+    }
+
+    // Check if user is suspended
+    static async isSuspended(userId) {
+        const [rows] = await db.query(
+            'SELECT is_suspended, suspension_reason, suspended_at FROM users WHERE id = ?',
+            [userId]
+        );
+        if (rows[0] && rows[0].is_suspended) {
+            return {
+                suspended: true,
+                reason: rows[0].suspension_reason,
+                suspendedAt: rows[0].suspended_at
+            };
+        }
+        return { suspended: false };
+    }
+
+    // Get all suspended users
+    static async getSuspendedUsers() {
+        const [rows] = await db.query(
+            `SELECT id, first_name, last_name, username, email, role, 
+             is_suspended, suspension_reason, suspended_at, created_at 
+             FROM users WHERE is_suspended = TRUE ORDER BY suspended_at DESC`
+        );
+        return rows;
+    }
+
+    // Create appeal
+    static async createAppeal(userId, appealMessage) {
+        const [result] = await db.query(
+            'INSERT INTO user_appeals (user_id, appeal_message) VALUES (?, ?)',
+            [userId, appealMessage]
+        );
+        return result.insertId;
+    }
+
+    // Get user's appeals
+    static async getUserAppeals(userId) {
+        const [rows] = await db.query(
+            `SELECT * FROM user_appeals WHERE user_id = ? ORDER BY created_at DESC`,
+            [userId]
+        );
+        return rows;
+    }
+
+    // Get all pending appeals (for admin/staff)
+    static async getPendingAppeals() {
+        const [rows] = await db.query(
+            `SELECT a.*, CONCAT(u.first_name, ' ', u.last_name) as user_name, u.email as user_email,
+             u.suspension_reason
+             FROM user_appeals a
+             JOIN users u ON a.user_id = u.id
+             WHERE a.status = 'pending'
+             ORDER BY a.created_at ASC`
+        );
+        return rows;
+    }
+
+    // Review appeal
+    static async reviewAppeal(appealId, reviewedBy, status, adminResponse = null) {
+        const [result] = await db.query(
+            `UPDATE user_appeals SET status = ?, admin_response = ?, 
+             reviewed_by = ?, reviewed_at = NOW(), updated_at = NOW() 
+             WHERE id = ?`,
+            [status, adminResponse, reviewedBy, appealId]
+        );
+        return result.affectedRows > 0;
+    }
+
+    // Get appeal by ID
+    static async getAppealById(appealId) {
+        const [rows] = await db.query(
+            `SELECT a.*, CONCAT(u.first_name, ' ', u.last_name) as user_name, u.email as user_email
+             FROM user_appeals a
+             JOIN users u ON a.user_id = u.id
+             WHERE a.id = ?`,
+            [appealId]
+        );
+        return rows[0];
     }
 }
 

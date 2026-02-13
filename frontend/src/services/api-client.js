@@ -377,6 +377,86 @@ export const adminAPI = {
             headers: getAuthHeaders('admin')
         });
         return handleResponse(response);
+    },
+
+    // User management - suspend/unsuspend
+    getUserById: async (id) => {
+        const response = await fetch(`${API_BASE_URL}/admin/users/${id}`, {
+            headers: getAuthHeaders('admin')
+        });
+        return handleResponse(response);
+    },
+
+    suspendUser: async (id, reason) => {
+        const response = await fetch(`${API_BASE_URL}/admin/users/${id}/suspend`, {
+            method: 'POST',
+            headers: getAuthHeaders('admin'),
+            body: JSON.stringify({ reason })
+        });
+        return handleResponse(response);
+    },
+
+    unsuspendUser: async (id) => {
+        const response = await fetch(`${API_BASE_URL}/admin/users/${id}/unsuspend`, {
+            method: 'POST',
+            headers: getAuthHeaders('admin')
+        });
+        return handleResponse(response);
+    },
+
+    getSuspendedUsers: async () => {
+        const response = await fetch(`${API_BASE_URL}/admin/users-suspended`, {
+            headers: getAuthHeaders('admin')
+        });
+        return handleResponse(response);
+    },
+
+    // Appeals management
+    getPendingAppeals: async () => {
+        const response = await fetch(`${API_BASE_URL}/admin/appeals`, {
+            headers: getAuthHeaders('admin')
+        });
+        return handleResponse(response);
+    },
+
+    reviewAppeal: async (appealId, status, responseMessage) => {
+        const response = await fetch(`${API_BASE_URL}/admin/appeals/${appealId}/review`, {
+            method: 'POST',
+            headers: getAuthHeaders('admin'),
+            body: JSON.stringify({ status, response: responseMessage })
+        });
+        return handleResponse(response);
+    },
+
+    // Ticket management - mark as paid, verification, export
+    markTicketAsPaid: async (id) => {
+        const response = await fetch(`${API_BASE_URL}/admin/tickets/${id}/mark-paid`, {
+            method: 'POST',
+            headers: getAuthHeaders('admin')
+        });
+        return handleResponse(response);
+    },
+
+    updateVerificationStatus: async (id, status) => {
+        const response = await fetch(`${API_BASE_URL}/admin/tickets/${id}/verification`, {
+            method: 'PUT',
+            headers: getAuthHeaders('admin'),
+            body: JSON.stringify({ status })
+        });
+        return handleResponse(response);
+    },
+
+    exportTickets: async (filters = {}) => {
+        const params = new URLSearchParams();
+        if (filters.startDate) params.append('startDate', filters.startDate);
+        if (filters.endDate) params.append('endDate', filters.endDate);
+        if (filters.status) params.append('status', filters.status);
+        if (filters.paymentStatus) params.append('paymentStatus', filters.paymentStatus);
+        
+        const response = await fetch(`${API_BASE_URL}/admin/tickets/export?${params}`, {
+            headers: getAuthHeaders('admin')
+        });
+        return handleResponse(response);
     }
 };
 
@@ -624,6 +704,59 @@ export const staffAPI = {
             headers: getAuthHeaders('staff')
         });
         return handleResponse(response);
+    },
+
+    // User management - suspend/unsuspend
+    suspendUser: async (id, reason) => {
+        const response = await fetch(`${API_BASE_URL}/staff/users/${id}/suspend`, {
+            method: 'POST',
+            headers: getAuthHeaders('staff'),
+            body: JSON.stringify({ reason })
+        });
+        return handleResponse(response);
+    },
+
+    unsuspendUser: async (id) => {
+        const response = await fetch(`${API_BASE_URL}/staff/users/${id}/unsuspend`, {
+            method: 'POST',
+            headers: getAuthHeaders('staff')
+        });
+        return handleResponse(response);
+    },
+
+    // Appeals management
+    getPendingAppeals: async () => {
+        const response = await fetch(`${API_BASE_URL}/staff/appeals`, {
+            headers: getAuthHeaders('staff')
+        });
+        return handleResponse(response);
+    },
+
+    reviewAppeal: async (appealId, status, responseMessage) => {
+        const response = await fetch(`${API_BASE_URL}/staff/appeals/${appealId}/review`, {
+            method: 'POST',
+            headers: getAuthHeaders('staff'),
+            body: JSON.stringify({ status, response: responseMessage })
+        });
+        return handleResponse(response);
+    },
+
+    // Ticket management - mark as paid, verification
+    markTicketAsPaid: async (id) => {
+        const response = await fetch(`${API_BASE_URL}/staff/tickets/${id}/mark-paid`, {
+            method: 'POST',
+            headers: getAuthHeaders('staff')
+        });
+        return handleResponse(response);
+    },
+
+    updateVerificationStatus: async (id, status) => {
+        const response = await fetch(`${API_BASE_URL}/staff/tickets/${id}/verification`, {
+            method: 'PUT',
+            headers: getAuthHeaders('staff'),
+            body: JSON.stringify({ status })
+        });
+        return handleResponse(response);
     }
 };
 
@@ -677,6 +810,63 @@ export const userAPI = {
 
     getSlotAvailability: async (date) => {
         const response = await fetch(`${API_BASE_URL}/users/tickets/availability?date=${encodeURIComponent(date)}`);
+        return handleResponse(response);
+    },
+
+    // Active/Archived tickets
+    getActiveTickets: async () => {
+        const response = await fetch(`${API_BASE_URL}/users/tickets/active`, {
+            headers: getAuthHeaders('user')
+        });
+        return handleResponse(response);
+    },
+
+    getArchivedTickets: async () => {
+        const response = await fetch(`${API_BASE_URL}/users/tickets/archived`, {
+            headers: getAuthHeaders('user')
+        });
+        return handleResponse(response);
+    },
+
+    archiveTicket: async (id) => {
+        const response = await fetch(`${API_BASE_URL}/users/tickets/${id}/archive`, {
+            method: 'POST',
+            headers: getAuthHeaders('user')
+        });
+        return handleResponse(response);
+    },
+
+    unarchiveTicket: async (id) => {
+        const response = await fetch(`${API_BASE_URL}/users/tickets/${id}/unarchive`, {
+            method: 'POST',
+            headers: getAuthHeaders('user')
+        });
+        return handleResponse(response);
+    },
+
+    archiveMultipleTickets: async (ticketIds) => {
+        const response = await fetch(`${API_BASE_URL}/users/tickets/archive-multiple`, {
+            method: 'POST',
+            headers: getAuthHeaders('user'),
+            body: JSON.stringify({ ticketIds })
+        });
+        return handleResponse(response);
+    },
+
+    // Appeals (for suspended users)
+    submitAppeal: async (appealMessage) => {
+        const response = await fetch(`${API_BASE_URL}/users/appeals`, {
+            method: 'POST',
+            headers: getAuthHeaders('user'),
+            body: JSON.stringify({ appealMessage })
+        });
+        return handleResponse(response);
+    },
+
+    getMyAppeals: async () => {
+        const response = await fetch(`${API_BASE_URL}/users/appeals`, {
+            headers: getAuthHeaders('user')
+        });
         return handleResponse(response);
     }
 };

@@ -3,6 +3,7 @@ const Ticket = require('../models/ticket-model');
 const Event = require('../models/event-model');
 const User = require('../models/user-model');
 const crypto = require('crypto');
+const { saveBase64Image } = require('../middleware/upload-resident-id');
 
 exports.getProfile = async (req, res) => {
     try {
@@ -139,10 +140,15 @@ exports.getSlotAvailability = async (req, res) => {
 
 exports.purchaseTicket = async (req, res) => {
     try {
-        const { ticketType, quantity, visitDate, paymentMethod, visitorEmail, visitorName, companions } = req.body;
+        const { ticketType, quantity, visitDate, paymentMethod, visitorEmail, visitorName, companions, residentIdImage } = req.body;
 
         if (!ticketType || !quantity || !visitDate) {
             return res.status(400).json({ success: false, message: 'Please provide all required fields' });
+        }
+
+        // For resident tickets, require ID image
+        if (ticketType === 'resident' && !residentIdImage) {
+            return res.status(400).json({ success: false, message: 'Bulusan resident tickets require a valid ID image for verification' });
         }
 
         // Ticket pricing
@@ -163,54 +169,80 @@ exports.purchaseTicket = async (req, res) => {
         // Generate unique QR code data
         const qrCodeData = crypto.randomBytes(16).toString('hex').toUpperCase();
 
-        // Determine payment status for free tickets
-        let paymentStatus = 'pending';
-        if (price === 0) {
-            paymentStatus = 'paid'; // Free tickets are automatically "paid"
-        }
-
         // Map payment method from frontend
         const paymentMethodMap = {
             'pay_at_park': 'cash',
             'gcash': 'gcash',
-            'paypal': 'paypal',
-            'free': 'free'
+            'paypal': 'online',
+            'free': 'cash'
         };
         const mappedPaymentMethod = paymentMethodMap[paymentMethod] || paymentMethod || 'cash';
 
-        // Determine ticket status
-        let ticketStatus = 'pending';
-        if (price === 0 || mappedPaymentMethod === 'cash') {
-            ticketStatus = 'confirmed'; // Free tickets and pay-at-park are confirmed
+        // Determine payment status based on payment method
+        // Use values that match the database ENUM: 'pending', 'paid', 'refunded', 'free', 'not_paid'
+        // - For 'pay_at_park' (Bulusan Zoo cash): payment_status = 'not_paid'
+        // - For 'gcash': payment_status = 'paid'
+        // - For resident (free): payment_status = 'free' (still requires verification)
+        let paymentStatus = 'pending';
+        if (ticketType === 'resident' || price === 0) {
+            paymentStatus = 'free';
+        } else if (mappedPaymentMethod === 'gcash' || mappedPaymentMethod === 'online') {
+            paymentStatus = 'paid';
+        } else if (mappedPaymentMethod === 'cash') {
+            paymentStatus = 'not_paid';
         }
 
-        // Create the ticket
-        const ticketId = await Ticket.create({
-            userId: req.user.id,
-            bookingReference: bookingReference,
-            visitorEmail: visitorEmail || req.user.email || null,
-            visitorName: visitorName || null,
-            ticketType,
-            quantity,
-            pricePerTicket: price,
-            totalAmount: totalPrice,
-            visitDate,
-            status: ticketStatus
-        });
+        // ALL tickets start as 'pending' - requires admin/staff approval
+        const ticketStatus = 'pending';
 
-        // Update with QR code and payment info
-        await Ticket.updateQRCode(ticketId, qrCodeData);
-        
-        // Update payment status and method
+        // Save resident ID image to file if provided
+        let savedResidentIdImage = null;
+        if (ticketType === 'resident' && residentIdImage) {
+            savedResidentIdImage = await saveBase64Image(residentIdImage, req.user.id);
+        }
+
+        // Create the ticket with all data in one query
         const db = require('../config/database');
-        await db.query(
-            'UPDATE tickets SET payment_status = ?, payment_method = ? WHERE id = ?',
-            [paymentStatus, mappedPaymentMethod, ticketId]
+        const [result] = await db.query(
+            `INSERT INTO tickets (
+                booking_reference, user_id, visitor_email, visitor_name, visit_date, 
+                ticket_type, quantity, price_per_ticket, total_amount, status, 
+                qr_code, payment_status, payment_method, resident_id_image, verification_status
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [
+                bookingReference,
+                req.user.id,
+                visitorEmail || req.user.email || null,
+                visitorName || null,
+                visitDate,
+                ticketType,
+                quantity,
+                price,
+                totalPrice,
+                ticketStatus,
+                qrCodeData,
+                paymentStatus,
+                mappedPaymentMethod,
+                savedResidentIdImage,
+                ticketType === 'resident' ? 'pending' : null
+            ]
         );
+
+        const ticketId = result.insertId;
+
+        // Generate appropriate confirmation message
+        let confirmationMessage = 'Ticket booked successfully! Your ticket is pending approval.';
+        if (ticketType === 'resident') {
+            confirmationMessage = 'Free resident ticket booked! Your ID will be verified by our staff before confirmation.';
+        } else if (mappedPaymentMethod === 'cash') {
+            confirmationMessage = 'Ticket booked successfully! Please pay at Bulusan Zoo when you arrive. Your ticket is pending confirmation.';
+        } else if (mappedPaymentMethod === 'gcash' || mappedPaymentMethod === 'online') {
+            confirmationMessage = 'Payment received! Your ticket is pending admin confirmation.';
+        }
 
         res.status(201).json({
             success: true,
-            message: price === 0 ? 'Free ticket booked successfully' : 'Ticket purchased successfully',
+            message: confirmationMessage,
             ticket: {
                 id: ticketId,
                 bookingReference: bookingReference,
@@ -223,7 +255,8 @@ exports.purchaseTicket = async (req, res) => {
                 status: ticketStatus,
                 paymentStatus: paymentStatus,
                 paymentMethod: paymentMethod || 'cash',
-                isFree: price === 0
+                isFree: price === 0,
+                requiresVerification: ticketType === 'resident'
             }
         });
     } catch (error) {
@@ -259,5 +292,168 @@ exports.getTicketById = async (req, res) => {
     } catch (error) {
         console.error('Error getting ticket:', error);
         res.status(500).json({ success: false, message: 'Error fetching ticket' });
+    }
+};
+
+// ==========================================
+// TICKET ARCHIVE ENDPOINTS
+// ==========================================
+
+// Get active (non-archived) tickets
+exports.getActiveTickets = async (req, res) => {
+    try {
+        const tickets = await Ticket.getActiveByUserId(req.user.id);
+        res.json({ success: true, tickets });
+    } catch (error) {
+        console.error('Error getting active tickets:', error);
+        res.status(500).json({ success: false, message: 'Error fetching tickets' });
+    }
+};
+
+// Get archived tickets
+exports.getArchivedTickets = async (req, res) => {
+    try {
+        const tickets = await Ticket.getArchivedByUserId(req.user.id);
+        res.json({ success: true, tickets });
+    } catch (error) {
+        console.error('Error getting archived tickets:', error);
+        res.status(500).json({ success: false, message: 'Error fetching archived tickets' });
+    }
+};
+
+// Archive a single ticket
+exports.archiveTicket = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const ticket = await Ticket.findById(id);
+
+        if (!ticket) {
+            return res.status(404).json({ success: false, message: 'Ticket not found' });
+        }
+
+        if (ticket.user_id !== req.user.id) {
+            return res.status(403).json({ success: false, message: 'Not authorized to archive this ticket' });
+        }
+
+        const archived = await Ticket.archiveTicket(id);
+        
+        if (!archived) {
+            return res.status(500).json({ success: false, message: 'Failed to archive ticket' });
+        }
+
+        res.json({ success: true, message: 'Ticket archived successfully' });
+    } catch (error) {
+        console.error('Error archiving ticket:', error);
+        res.status(500).json({ success: false, message: 'Error archiving ticket' });
+    }
+};
+
+// Archive multiple tickets
+exports.archiveMultipleTickets = async (req, res) => {
+    try {
+        const { ticketIds } = req.body;
+
+        if (!ticketIds || !Array.isArray(ticketIds) || ticketIds.length === 0) {
+            return res.status(400).json({ success: false, message: 'Please provide ticket IDs to archive' });
+        }
+
+        // Verify ownership of all tickets
+        for (const ticketId of ticketIds) {
+            const ticket = await Ticket.findById(ticketId);
+            if (!ticket || ticket.user_id !== req.user.id) {
+                return res.status(403).json({ 
+                    success: false, 
+                    message: `Not authorized to archive ticket ${ticketId}` 
+                });
+            }
+        }
+
+        const archivedCount = await Ticket.archiveMultiple(ticketIds);
+        
+        res.json({ 
+            success: true, 
+            message: `${archivedCount} ticket(s) archived successfully`,
+            archivedCount 
+        });
+    } catch (error) {
+        console.error('Error archiving tickets:', error);
+        res.status(500).json({ success: false, message: 'Error archiving tickets' });
+    }
+};
+
+// Unarchive a ticket
+exports.unarchiveTicket = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const ticket = await Ticket.findById(id);
+
+        if (!ticket) {
+            return res.status(404).json({ success: false, message: 'Ticket not found' });
+        }
+
+        if (ticket.user_id !== req.user.id) {
+            return res.status(403).json({ success: false, message: 'Not authorized to unarchive this ticket' });
+        }
+
+        const unarchived = await Ticket.unarchiveTicket(id);
+        
+        if (!unarchived) {
+            return res.status(500).json({ success: false, message: 'Failed to unarchive ticket' });
+        }
+
+        res.json({ success: true, message: 'Ticket restored successfully' });
+    } catch (error) {
+        console.error('Error unarchiving ticket:', error);
+        res.status(500).json({ success: false, message: 'Error restoring ticket' });
+    }
+};
+
+// ==========================================
+// APPEAL ENDPOINTS (for suspended users)
+// ==========================================
+
+// Submit an appeal
+exports.submitAppeal = async (req, res) => {
+    try {
+        const { appealMessage } = req.body;
+
+        if (!appealMessage || appealMessage.trim() === '') {
+            return res.status(400).json({ success: false, message: 'Appeal message is required' });
+        }
+
+        const user = await User.findById(req.user.id);
+        if (!user || !user.is_suspended) {
+            return res.status(400).json({ success: false, message: 'Only suspended users can submit appeals' });
+        }
+
+        // Check if user already has a pending appeal
+        const existingAppeals = await User.getUserAppeals(req.user.id);
+        const hasPendingAppeal = existingAppeals.some(a => a.status === 'pending');
+        
+        if (hasPendingAppeal) {
+            return res.status(400).json({ success: false, message: 'You already have a pending appeal' });
+        }
+
+        const appealId = await User.createAppeal(req.user.id, appealMessage.trim());
+        
+        res.status(201).json({ 
+            success: true, 
+            message: 'Appeal submitted successfully. You will be notified of the decision.',
+            appealId 
+        });
+    } catch (error) {
+        console.error('Error submitting appeal:', error);
+        res.status(500).json({ success: false, message: 'Error submitting appeal' });
+    }
+};
+
+// Get user's appeals
+exports.getMyAppeals = async (req, res) => {
+    try {
+        const appeals = await User.getUserAppeals(req.user.id);
+        res.json({ success: true, appeals });
+    } catch (error) {
+        console.error('Error getting appeals:', error);
+        res.status(500).json({ success: false, message: 'Error fetching appeals' });
     }
 };

@@ -30,6 +30,11 @@ const Tickets = () => {
     const [selectedDate, setSelectedDate] = useState(null);
     const [promoCode, setPromoCode] = useState('');
     const [discount, setDiscount] = useState(0);
+    
+    // State for resident ID upload
+    const [residentIdImage, setResidentIdImage] = useState(null);
+    const [residentIdPreview, setResidentIdPreview] = useState(null);
+    const [idUploadError, setIdUploadError] = useState('');
 
     const ticketTypes = {
         adults: {
@@ -178,6 +183,36 @@ const Tickets = () => {
         );
     };
 
+    // Handle resident ID image upload
+    const handleResidentIdUpload = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            // Validate file type
+            const validTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+            if (!validTypes.includes(file.type)) {
+                setIdUploadError('Please upload a valid image file (JPG, JPEG, or PNG)');
+                return;
+            }
+            // Validate file size (max 5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                setIdUploadError('Image file size must be less than 5MB');
+                return;
+            }
+            setIdUploadError('');
+            setResidentIdImage(file);
+            
+            // Create preview
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setResidentIdPreview(reader.result);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    // Check if resident tickets are selected
+    const hasResidentTickets = counts.residents > 0;
+
     const validateStep = (step) => {
         if (step === 1) {
             const totalTickets = Object.values(counts).reduce((a, b) => a + b, 0);
@@ -199,6 +234,11 @@ const Tickets = () => {
             const emptyNames = companions.filter(c => !sanitizeInput(c.name, true));
             if (emptyNames.length > 0) {
                 setMessage({ text: 'Please enter names for all ticket holders.', type: 'error' });
+                return false;
+            }
+            // Validate resident ID image upload if resident tickets are selected
+            if (hasResidentTickets && !residentIdImage) {
+                setMessage({ text: 'Please upload a valid ID image for Bulusan resident ticket verification.', type: 'error' });
                 return false;
             }
         }
@@ -234,6 +274,12 @@ const Tickets = () => {
         try {
             await new Promise(resolve => setTimeout(resolve, 800));
 
+            // Convert image to base64 if resident ticket
+            let residentIdBase64 = null;
+            if (hasResidentTickets && residentIdImage) {
+                residentIdBase64 = residentIdPreview; // Already base64 from FileReader
+            }
+
             const purchases = Object.entries(counts).filter(([k, v]) => v > 0).map(([type, qty]) => {
                 const mapType = {
                     adults: 'adult',
@@ -248,20 +294,21 @@ const Tickets = () => {
                     visitDate: bookingDetails.date,
                     paymentMethod: total === 0 ? 'free' : bookingDetails.paymentMethod,
                     visitorEmail: bookingDetails.email,
-                    visitorName: companions[0]?.name || user?.name || 'Guest'
+                    visitorName: companions[0]?.name || user?.name || 'Guest',
+                    residentIdImage: mapType === 'resident' ? residentIdBase64 : null
                 });
             });
 
             const results = await Promise.all(purchases);
 
             const first = results && results.length > 0 ? results[0] : null;
-            const code = first?.ticket?.ticketCode || generateBookingCode();
+            const code = first?.ticket?.bookingReference || first?.ticket?.ticketCode || generateBookingCode();
             setBookingCode(code);
             setShowConfirmation(true);
             setCurrentStep(4);
         } catch (err) {
             console.error('Payment / purchase error', err);
-            setMessage({ text: 'Failed to complete purchase. Please try again.', type: 'error' });
+            setMessage({ text: err.message || 'Failed to complete purchase. Please try again.', type: 'error' });
         } finally {
             setIsProcessing(false);
         }
@@ -273,6 +320,9 @@ const Tickets = () => {
         setBookingDetails({ date: '', time: '08:00', email: user?.email || '', phone: '', specialRequests: '', paymentMethod: 'pay_at_park' });
         setCurrentStep(1);
         setShowConfirmation(false);
+        setResidentIdImage(null);
+        setResidentIdPreview(null);
+        setIdUploadError('');
         setBookingCode('');
         setPromoCode('');
         setDiscount(0);
@@ -537,6 +587,70 @@ const Tickets = () => {
                     </div>
                 ))}
             </div>
+
+            {/* Bulusan Resident ID Upload Section */}
+            {hasResidentTickets && (
+                <div className="mt-6 pt-6 border-t border-gray-200">
+                    <h3 className="text-lg font-bold text-teal-800 mb-4 flex items-center gap-2">
+                        <i className="fas fa-id-card"></i> Bulusan Resident ID Verification
+                    </h3>
+                    <div className="p-4 bg-teal-50 border border-teal-200 rounded-xl mb-4">
+                        <p className="text-sm text-teal-700 mb-3">
+                            <i className="fas fa-info-circle mr-2"></i>
+                            Please upload a clear photo of your valid Bulusan resident ID for verification. 
+                            Your ticket will be reviewed by our staff before confirmation.
+                        </p>
+                        <div className="flex flex-col gap-3">
+                            <label className="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-teal-300 rounded-xl cursor-pointer bg-white hover:bg-teal-50 transition-colors">
+                                {residentIdPreview ? (
+                                    <div className="relative w-full h-full">
+                                        <img 
+                                            src={residentIdPreview} 
+                                            alt="ID Preview" 
+                                            className="w-full h-full object-contain rounded-xl p-2"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                setResidentIdImage(null);
+                                                setResidentIdPreview(null);
+                                            }}
+                                            className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600"
+                                        >
+                                            <i className="fas fa-times text-xs"></i>
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                                        <i className="fas fa-cloud-upload-alt text-3xl text-teal-400 mb-2"></i>
+                                        <p className="text-sm text-gray-600 font-medium">Click to upload ID image</p>
+                                        <p className="text-xs text-gray-400">JPG, JPEG, or PNG (max 5MB)</p>
+                                    </div>
+                                )}
+                                <input 
+                                    type="file" 
+                                    accept="image/jpeg,image/png,image/jpg"
+                                    onChange={handleResidentIdUpload}
+                                    className="hidden"
+                                />
+                            </label>
+                            {idUploadError && (
+                                <p className="text-sm text-red-500 flex items-center gap-1">
+                                    <i className="fas fa-exclamation-circle"></i>
+                                    {idUploadError}
+                                </p>
+                            )}
+                            {residentIdImage && !idUploadError && (
+                                <p className="text-sm text-green-600 flex items-center gap-1">
+                                    <i className="fas fa-check-circle"></i>
+                                    ID image uploaded successfully
+                                </p>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Payment Method Selection */}
             {total > 0 && (

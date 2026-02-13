@@ -33,6 +33,27 @@ const TrashIcon = () => (
     </svg>
 );
 
+const BanIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+        <circle cx="12" cy="12" r="10" />
+        <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
+    </svg>
+);
+
+const UnbanIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+        <polyline points="22 4 12 14.01 9 11.01" />
+    </svg>
+);
+
+const EyeIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+        <circle cx="12" cy="12" r="3" />
+    </svg>
+);
+
 const CloseIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
         <line x1="18" y1="6" x2="6" y2="18" />
@@ -65,7 +86,14 @@ const AdminUsers = ({ globalSearch = '' }) => {
     const [roleFilter, setRoleFilter] = useState('all');
     const [form, setForm] = useState({ firstName: '', lastName: '', username: '', email: '', role: 'user', password: '' });
     const [saving, setSaving] = useState(false);
-    const [deleteConfirm, setDeleteConfirm] = useState(null);
+    
+    // Suspend modal states
+    const [suspendUser, setSuspendUser] = useState(null);
+    const [suspendReason, setSuspendReason] = useState('');
+    const [suspending, setSuspending] = useState(false);
+    
+    // View user modal
+    const [viewUser, setViewUser] = useState(null);
 
     // Combine local and global search
     const effectiveSearch = globalSearch || searchQuery;
@@ -133,16 +161,37 @@ const AdminUsers = ({ globalSearch = '' }) => {
         }
     };
 
-    const removeUser = async (id) => {
+    const handleSuspendUser = async () => {
+        if (!suspendUser || !suspendReason.trim()) return;
+        
+        setSuspending(true);
         try {
-            const res = await adminAPI.deleteUser(id);
+            const res = await adminAPI.suspendUser(suspendUser.id, suspendReason);
             if (res.success) {
-                setUsers(users.filter(u => u.id !== id));
-                setDeleteConfirm(null);
-            } else throw new Error(res.message || 'Delete failed');
+                setUsers(users.map(u => u.id === suspendUser.id ? { ...u, is_suspended: true, suspension_reason: suspendReason } : u));
+                setSuspendUser(null);
+                setSuspendReason('');
+            } else throw new Error(res.message || 'Suspend failed');
         } catch (err) {
             console.error(err);
-            alert(err.message || 'Failed to delete user');
+            alert(err.message || 'Failed to suspend user');
+        } finally {
+            setSuspending(false);
+        }
+    };
+
+    const handleUnsuspendUser = async (userId) => {
+        setSuspending(true);
+        try {
+            const res = await adminAPI.unsuspendUser(userId);
+            if (res.success) {
+                setUsers(users.map(u => u.id === userId ? { ...u, is_suspended: false, suspension_reason: null } : u));
+            } else throw new Error(res.message || 'Unsuspend failed');
+        } catch (err) {
+            console.error(err);
+            alert(err.message || 'Failed to unsuspend user');
+        } finally {
+            setSuspending(false);
         }
     };
 
@@ -344,13 +393,27 @@ const AdminUsers = ({ globalSearch = '' }) => {
                                             </span>
                                         </td>
                                         <td className="px-6 py-4">
-                                            <span className="inline-flex items-center gap-1.5 text-[#8cff65] text-sm">
-                                                <div className="w-2 h-2 bg-[#8cff65] rounded-full"></div>
-                                                Active
-                                            </span>
+                                            {user.is_suspended ? (
+                                                <span className="inline-flex items-center gap-1.5 text-red-400 text-sm">
+                                                    <div className="w-2 h-2 bg-red-400 rounded-full"></div>
+                                                    Suspended
+                                                </span>
+                                            ) : (
+                                                <span className="inline-flex items-center gap-1.5 text-[#8cff65] text-sm">
+                                                    <div className="w-2 h-2 bg-[#8cff65] rounded-full"></div>
+                                                    Active
+                                                </span>
+                                            )}
                                         </td>
                                         <td className="px-6 py-4">
                                             <div className="flex items-center justify-end gap-2">
+                                                <button
+                                                    onClick={() => setViewUser(user)}
+                                                    className="p-2 bg-[#1e1e1e] hover:bg-[#2a2a2a] border border-[#2a2a2a] hover:border-blue-500/50 text-gray-400 hover:text-blue-400 rounded-lg transition-all"
+                                                    title="View user"
+                                                >
+                                                    <EyeIcon />
+                                                </button>
                                                 <button
                                                     onClick={() => openEditModal(user)}
                                                     className="p-2 bg-[#1e1e1e] hover:bg-[#2a2a2a] border border-[#2a2a2a] hover:border-[#8cff65]/50 text-gray-400 hover:text-[#8cff65] rounded-lg transition-all"
@@ -358,13 +421,24 @@ const AdminUsers = ({ globalSearch = '' }) => {
                                                 >
                                                     <EditIcon />
                                                 </button>
-                                                <button
-                                                    onClick={() => setDeleteConfirm(user)}
-                                                    className="p-2 bg-[#1e1e1e] hover:bg-red-500/10 border border-[#2a2a2a] hover:border-red-500/50 text-gray-400 hover:text-red-400 rounded-lg transition-all"
-                                                    title="Delete user"
-                                                >
-                                                    <TrashIcon />
-                                                </button>
+                                                {user.is_suspended ? (
+                                                    <button
+                                                        onClick={() => handleUnsuspendUser(user.id)}
+                                                        disabled={suspending}
+                                                        className="p-2 bg-[#1e1e1e] hover:bg-[#8cff65]/10 border border-[#2a2a2a] hover:border-[#8cff65]/50 text-gray-400 hover:text-[#8cff65] rounded-lg transition-all disabled:opacity-50"
+                                                        title="Unsuspend user"
+                                                    >
+                                                        <UnbanIcon />
+                                                    </button>
+                                                ) : (
+                                                    <button
+                                                        onClick={() => setSuspendUser(user)}
+                                                        className="p-2 bg-[#1e1e1e] hover:bg-red-500/10 border border-[#2a2a2a] hover:border-red-500/50 text-gray-400 hover:text-red-400 rounded-lg transition-all"
+                                                        title="Suspend user"
+                                                    >
+                                                        <BanIcon />
+                                                    </button>
+                                                )}
                                             </div>
                                         </td>
                                     </tr>
@@ -501,30 +575,164 @@ const AdminUsers = ({ globalSearch = '' }) => {
                 </div>
             )}
 
-            {/* Delete Confirmation Modal */}
-            {deleteConfirm && (
+            {/* Suspend User Modal */}
+            {suspendUser && (
                 <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl w-full max-w-sm p-6 text-center">
-                        <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <TrashIcon />
+                    <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl w-full max-w-md">
+                        <div className="p-6 border-b border-[#2a2a2a]">
+                            <h3 className="text-xl font-bold text-white">Suspend User</h3>
+                            <p className="text-gray-400 text-sm mt-1">
+                                Suspend <span className="text-white font-medium">{suspendUser.firstName || suspendUser.first_name} {suspendUser.lastName || suspendUser.last_name}</span>
+                            </p>
                         </div>
-                        <h3 className="text-xl font-bold text-white mb-2">Delete User?</h3>
-                        <p className="text-gray-400 mb-6">
-                            Are you sure you want to delete <span className="text-white font-medium">{deleteConfirm.firstName || deleteConfirm.first_name} {deleteConfirm.lastName || deleteConfirm.last_name}</span>? This action cannot be undone.
-                        </p>
-                        <div className="flex gap-3">
+                        <div className="p-6 space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-400 mb-2">Reason for Suspension *</label>
+                                <textarea
+                                    value={suspendReason}
+                                    onChange={(e) => setSuspendReason(e.target.value)}
+                                    placeholder="Enter the reason for suspending this user..."
+                                    rows={4}
+                                    className="w-full px-4 py-3 bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl text-white placeholder:text-gray-500 focus:outline-none focus:border-red-500/50 resize-none"
+                                />
+                            </div>
+                            <div className="p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-xl">
+                                <p className="text-yellow-400 text-sm">
+                                    <strong>Note:</strong> Suspended users will be unable to access their account until unsuspended. They can submit an appeal to request reinstatement.
+                                </p>
+                            </div>
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={() => {
+                                        setSuspendUser(null);
+                                        setSuspendReason('');
+                                    }}
+                                    className="flex-1 py-3 bg-[#1e1e1e] hover:bg-[#2a2a2a] text-gray-300 font-medium rounded-xl transition-all"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleSuspendUser}
+                                    disabled={!suspendReason.trim() || suspending}
+                                    className="flex-1 py-3 bg-red-500/20 border border-red-500/30 text-red-400 font-semibold rounded-xl hover:bg-red-500/30 transition-all disabled:opacity-50"
+                                >
+                                    {suspending ? 'Suspending...' : 'Suspend User'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* View User Modal */}
+            {viewUser && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+                        <div className="p-6 border-b border-[#2a2a2a] flex items-center justify-between">
+                            <h3 className="text-xl font-bold text-white">User Details</h3>
                             <button
-                                onClick={() => setDeleteConfirm(null)}
-                                className="flex-1 py-3 bg-[#1e1e1e] hover:bg-[#2a2a2a] text-gray-300 font-medium rounded-xl transition-all"
+                                onClick={() => setViewUser(null)}
+                                className="p-2 hover:bg-[#1e1e1e] rounded-lg text-gray-400 hover:text-white transition"
                             >
-                                Cancel
+                                <CloseIcon />
                             </button>
-                            <button
-                                onClick={() => removeUser(deleteConfirm.id)}
-                                className="flex-1 py-3 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white font-semibold rounded-xl transition-all"
-                            >
-                                Delete
-                            </button>
+                        </div>
+                        <div className="p-6 space-y-4">
+                            {/* Profile Header */}
+                            <div className="flex items-center gap-4">
+                                <div className="w-16 h-16 rounded-full overflow-hidden bg-[#0a0a0a] flex items-center justify-center border border-[#2a2a2a]">
+                                    {(viewUser.profileImage || viewUser.profile_image) ? (
+                                        <img
+                                            src={getProfileImageUrl(viewUser.profileImage || viewUser.profile_image)}
+                                            alt={viewUser.firstName || viewUser.first_name}
+                                            className="w-full h-full object-cover"
+                                        />
+                                    ) : (
+                                        <span className="text-[#8cff65] font-medium text-xl">
+                                            {(viewUser.firstName || viewUser.first_name || 'U').charAt(0).toUpperCase()}{(viewUser.lastName || viewUser.last_name || '').charAt(0).toUpperCase()}
+                                        </span>
+                                    )}
+                                </div>
+                                <div>
+                                    <h4 className="text-lg font-semibold text-white">
+                                        {viewUser.firstName || viewUser.first_name} {viewUser.lastName || viewUser.last_name}
+                                    </h4>
+                                    <p className="text-gray-400">@{viewUser.username}</p>
+                                </div>
+                            </div>
+
+                            {/* User Info */}
+                            <div className="p-4 bg-[#1e1e1e] rounded-xl space-y-3">
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <p className="text-xs text-gray-500">Email</p>
+                                        <p className="text-white">{viewUser.email}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-xs text-gray-500">Role</p>
+                                        <span className={`inline-flex px-2 py-0.5 text-xs font-medium rounded-full border capitalize ${getRoleBadgeColor(viewUser.role)}`}>
+                                            {viewUser.role}
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <p className="text-xs text-gray-500">Status</p>
+                                        {viewUser.is_suspended ? (
+                                            <span className="text-red-400">Suspended</span>
+                                        ) : (
+                                            <span className="text-[#8cff65]">Active</span>
+                                        )}
+                                    </div>
+                                    <div>
+                                        <p className="text-xs text-gray-500">Created</p>
+                                        <p className="text-white">{viewUser.created_at?.split('T')[0] || '-'}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Suspension Info */}
+                            {viewUser.is_suspended && (
+                                <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-xl space-y-2">
+                                    <h5 className="text-sm font-semibold text-red-400 uppercase tracking-wider">Suspension Details</h5>
+                                    <p className="text-gray-300">{viewUser.suspension_reason || 'No reason provided'}</p>
+                                    {viewUser.suspended_at && (
+                                        <p className="text-xs text-gray-500">Suspended on: {viewUser.suspended_at.split('T')[0]}</p>
+                                    )}
+                                </div>
+                            )}
+
+                            {/* Actions */}
+                            <div className="flex gap-3 pt-2">
+                                <button
+                                    onClick={() => {
+                                        setViewUser(null);
+                                        openEditModal(viewUser);
+                                    }}
+                                    className="flex-1 py-3 bg-[#8cff65]/10 border border-[#8cff65]/30 text-[#8cff65] font-medium rounded-xl hover:bg-[#8cff65]/20 transition-all"
+                                >
+                                    Edit User
+                                </button>
+                                {viewUser.is_suspended ? (
+                                    <button
+                                        onClick={() => {
+                                            handleUnsuspendUser(viewUser.id);
+                                            setViewUser(null);
+                                        }}
+                                        className="flex-1 py-3 bg-green-500/10 border border-green-500/30 text-green-400 font-medium rounded-xl hover:bg-green-500/20 transition-all"
+                                    >
+                                        Unsuspend
+                                    </button>
+                                ) : (
+                                    <button
+                                        onClick={() => {
+                                            setViewUser(null);
+                                            setSuspendUser(viewUser);
+                                        }}
+                                        className="flex-1 py-3 bg-red-500/10 border border-red-500/30 text-red-400 font-medium rounded-xl hover:bg-red-500/20 transition-all"
+                                    >
+                                        Suspend
+                                    </button>
+                                )}
+                            </div>
                         </div>
                     </div>
                 </div>

@@ -1,29 +1,22 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { motion, useScroll, useTransform, useSpring, useInView } from 'framer-motion';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 import AIFloatingButton from '../../components/common/AIFloatingButton';
-import { fadeInUp, fadeInLeft, fadeInRight, staggerContainer, staggerItem, defaultViewport } from '../../utils/animations';
 import '../../App.css'
 
-// 15 HD animal images for rotating display - verified Unsplash images matching labels
+// 10 HD animal images for rotating display - verified Unsplash images matching labels
 const animalImages = [
-    { src: 'https://images.unsplash.com/photo-1546182990-dffeafbe841d?w=1200&q=80', name: 'Lion' },
-    { src: 'https://images.unsplash.com/photo-1557050543-4d5f4e07ef46?w=1200&q=80', name: 'Elephant' },
-    { src: 'https://images.unsplash.com/photo-1547721064-da6cfb341d50?w=1200&q=80', name: 'Giraffe' },
-    { src: 'https://images.unsplash.com/photo-1526095179574-86e545346ae6?w=1200&q=80', name: 'Zebra' },
-    { src: 'https://images.unsplash.com/photo-1561731216-c3a4d99437d5?w=1200&q=80', name: 'Tiger' },
-    { src: 'https://images.unsplash.com/photo-1564349683136-77e08dba1ef7?w=1200&q=80', name: 'Panda' },
-    { src: 'https://images.unsplash.com/photo-1548247416-ec66f4900b2e?w=1200&q=80', name: 'Gorilla' },
-    { src: 'https://images.unsplash.com/photo-1437622368342-7a3d73a34c8f?w=1200&q=80', name: 'Sea Turtle' },
-    { src: 'https://images.unsplash.com/photo-1509114397022-ed747cca3f65?w=1200&q=80', name: 'Flamingo' },
-    { src: 'https://images.unsplash.com/photo-1456926631375-92c8ce872def?w=1200&q=80', name: 'Peacock' },
-    { src: 'https://images.unsplash.com/photo-1475359524104-d101d02a042b?w=1200&q=80', name: 'Cheetah' },
-    { src: 'https://images.unsplash.com/photo-1590691566903-692bf5ca7493?w=1200&q=80', name: 'Red Panda' },
-    { src: 'https://images.unsplash.com/photo-1550517575-f85fed11bee1?w=1200&q=80', name: 'Koala' },
+    { src: 'https://images.unsplash.com/photo-1540573133985-87b6da6d54a9?w=1200&q=80', name: 'Monkey' },
+    { src: 'https://images.unsplash.com/photo-1580980407668-6bb45a674180?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', name: 'Dove' },
     { src: 'https://images.unsplash.com/photo-1544923246-77307dd628b5?w=1200&q=80', name: 'Parrot' },
-    { src: 'https://images.unsplash.com/photo-1462888210965-cdf193fb74de?w=1200&q=80', name: 'Penguin' }
+    { src: 'https://images.unsplash.com/photo-1611689342806-0863700ce1e4?w=1200&q=80', name: 'Eagle' },
+    { src: 'https://images.unsplash.com/photo-1598894000329-34e3f5cadd3b?w=1200&q=80', name: 'Ostrich' },
+    { src: 'https://images.unsplash.com/photo-1484406566174-9da000fda645?w=1200&q=80', name: 'Deer' },
+    { src: 'https://images.unsplash.com/photo-1585110396000-c9ffd4e4b308?w=1200&q=80', name: 'Rabbit' },
+    { src: 'https://images.unsplash.com/photo-1561731216-c3a4d99437d5?w=1200&q=80', name: 'Tiger' },
+    { src: 'https://images.unsplash.com/photo-1553284965-83fd3e82fa5a?w=1200&q=80', name: 'Horse' },
+    { src: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1200&q=80', name: 'Donkey' }
 ];
 
 // Floating icon component for decorative elements
@@ -152,59 +145,8 @@ const Icons = {
 };
 
 const Home = () => {
-    // Local state for selector bubble and active feature
-    // State for AI panel (assistant or scanner mode)
+    // State for AI panel (assistant or scanner mode) and sliding animal images
     const [currentAnimalIndex, setCurrentAnimalIndex] = useState(0);
-    
-    // Refs for each section for scroll-triggered animations
-    const aboutRef = useRef(null);
-    const animalsRef = useRef(null);
-    const eventsRef = useRef(null);
-    const ticketsRef = useRef(null);
-
-    // InView hooks for triggering animations when sections enter viewport
-    const aboutInView = useInView(aboutRef, { once: false, amount: 0.3 });
-    const animalsInView = useInView(animalsRef, { once: false, amount: 0.3 });
-    const eventsInView = useInView(eventsRef, { once: false, amount: 0.3 });
-    const ticketsInView = useInView(ticketsRef, { once: false, amount: 0.3 });
-
-    // Smooth spring config for natural animations
-    const springConfig = { stiffness: 100, damping: 30, restDelta: 0.001 };
-
-    // Section animation variants
-    const sectionVariants = {
-        hidden: { 
-            opacity: 0, 
-            y: 60,
-            scale: 0.98
-        },
-        visible: { 
-            opacity: 1, 
-            y: 0,
-            scale: 1,
-            transition: {
-                type: "spring",
-                stiffness: 80,
-                damping: 20,
-                mass: 1,
-                staggerChildren: 0.1,
-                delayChildren: 0.1
-            }
-        }
-    };
-
-    const childVariants = {
-        hidden: { opacity: 0, y: 30 },
-        visible: { 
-            opacity: 1, 
-            y: 0,
-            transition: {
-                type: "spring",
-                stiffness: 100,
-                damping: 15
-            }
-        }
-    };
 
     // Rotate through animal images every 4 seconds
     useEffect(() => {
@@ -270,12 +212,12 @@ const Home = () => {
                     {/* Main headline */}
                     <div className="text-center max-w-4xl mx-auto">
                         <h1 className="text-5xl md:text-7xl font-bold text-gray-900 mb-6 leading-tight tracking-tight">
-                            Your Haven for
+                            Welcome to
                             <br />
-                            <span className="bg-gradient-to-r from-emerald-600 via-teal-500 to-cyan-500 bg-clip-text text-transparent">Seamless</span> Wildlife
+                            <span className="bg-gradient-to-r from-emerald-600 via-teal-500 to-cyan-500 bg-clip-text text-transparent">Calapan Bulusan</span> Zoo
                         </h1>
                         <p className="text-lg md:text-xl text-gray-600 max-w-2xl mx-auto mb-10 leading-relaxed">
-                            Empowering you with intelligent, effortless tools to explore wildlife, enhance your visit, and discover more—seamlessly.
+                            Experience wildlife like never before with AI-powered tools that make exploring, planning your visit, and discovering amazing animals effortless and unforgettable.
                         </p>
 
                         {/* CTA buttons */}
@@ -352,23 +294,13 @@ const Home = () => {
             {/* Scroll-Triggered Sections - About, Animals, Events, Tickets */}
             
             {/* About Us Preview Section */}
-            <motion.section 
-                ref={aboutRef}
+            <section 
                 id="about-section"
-                initial="hidden"
-                animate={aboutInView ? "visible" : "hidden"}
-                variants={sectionVariants}
                 className="py-24 bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 overflow-hidden"
             >
                         <div className="container mx-auto px-6 lg:px-12">
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
-                                <motion.div 
-                                    className="order-2 lg:order-1"
-                                    initial="hidden"
-                                    whileInView="visible"
-                                    viewport={defaultViewport}
-                                    variants={fadeInRight}
-                                >
+                                <div className="order-2 lg:order-1">
                                     <div className="inline-flex items-center gap-2 bg-white px-4 py-2 rounded-full mb-6 shadow-sm">
                                         <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
                                         <span className="text-sm font-medium text-emerald-700">About Us</span>
@@ -381,41 +313,28 @@ const Home = () => {
                                     <p className="text-gray-600 text-lg leading-relaxed mb-8">
                                         Founded in 2015, Bulusan Wildlife & Nature Park began as a small conservation initiative in Calapan City. Today, we stand as a testament to modern conservation, housing over 250 animals across 45 species through our innovative AI-powered systems.
                                     </p>
-                                    <motion.div 
-                                        className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-10"
-                                        variants={staggerContainer}
-                                        initial="hidden"
-                                        whileInView="visible"
-                                        viewport={defaultViewport}
-                                    >
+                                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-10">
                                         {[
                                             { num: '8+', label: 'Years' },
                                             { num: '250+', label: 'Animals' },
                                             { num: '45', label: 'Species' },
                                             { num: '15', label: 'Programs' }
                                         ].map((stat, i) => (
-                                            <motion.div 
+                                            <div 
                                                 key={i} 
                                                 className="bg-white rounded-2xl p-4 text-center shadow-sm border border-gray-100"
-                                                variants={staggerItem}
                                             >
                                                 <div className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">{stat.num}</div>
                                                 <div className="text-gray-500 text-sm font-medium">{stat.label}</div>
-                                            </motion.div>
+                                            </div>
                                         ))}
-                                    </motion.div>
+                                    </div>
                                     <Link to="/about" className="inline-flex items-center gap-3 bg-gray-900 hover:bg-gray-800 text-white px-8 py-4 rounded-full font-semibold transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-0.5">
                                         <span>Learn More About Us</span>
                                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
                                     </Link>
-                                </motion.div>
-                                <motion.div 
-                                    className="order-1 lg:order-2"
-                                    initial="hidden"
-                                    whileInView="visible"
-                                    viewport={defaultViewport}
-                                    variants={fadeInLeft}
-                                >
+                                </div>
+                                <div className="order-1 lg:order-2">
                                     <div className="relative">
                                         <div className="absolute -inset-4 bg-gradient-to-r from-emerald-400 to-teal-400 rounded-3xl blur-2xl opacity-20"></div>
                                         <img
@@ -435,43 +354,27 @@ const Home = () => {
                                             </div>
                                         </div>
                                     </div>
-                                </motion.div>
+                                </div>
                             </div>
                         </div>
-            </motion.section>
+            </section>
 
             {/* Animals Preview Section */}
-            <motion.section 
-                ref={animalsRef}
+            <section 
                 id="animals-section"
-                initial="hidden"
-                animate={animalsInView ? "visible" : "hidden"}
-                variants={sectionVariants}
                 className="py-24 bg-white overflow-hidden"
             >
                 <div className="container mx-auto px-6 lg:px-12">
-                            <motion.div 
-                                className="text-center mb-16"
-                                initial="hidden"
-                                whileInView="visible"
-                                viewport={defaultViewport}
-                                variants={fadeInUp}
-                            >
+                            <div className="text-center mb-16">
                                 <div className="inline-flex items-center gap-2 bg-emerald-50 px-4 py-2 rounded-full mb-6">
                                     <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
                                     <span className="text-sm font-medium text-emerald-700">Our Wildlife</span>
                                 </div>
                                 <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">Meet Our Animals</h2>
                                 <p className="text-gray-600 text-lg max-w-2xl mx-auto">Discover the incredible wildlife roaming freely at our AI-powered nature park.</p>
-                            </motion.div>
+                            </div>
 
-                            <motion.div 
-                                className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto"
-                                variants={staggerContainer}
-                                initial="hidden"
-                                whileInView="visible"
-                                viewport={defaultViewport}
-                            >
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
                                 {[
                                     {
                                         name: 'African Lions',
@@ -495,10 +398,9 @@ const Home = () => {
                                         color: 'from-blue-400 to-indigo-500'
                                     }
                                 ].map((animal, i) => (
-                                    <motion.div 
+                                    <div 
                                         key={i} 
                                         className="group bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-300 border border-gray-100 hover:-translate-y-2"
-                                        variants={staggerItem}
                                     >
                                         <div className="relative h-64 overflow-hidden">
                                             <img
@@ -522,9 +424,9 @@ const Home = () => {
                                                 <span className="text-sm text-emerald-600 font-medium">Live Now</span>
                                             </div>
                                         </div>
-                                    </motion.div>
+                                    </div>
                                 ))}
-                            </motion.div>
+                            </div>
 
                             <div className="text-center mt-12">
                                 <Link to="/animals" className="inline-flex items-center gap-3 bg-gray-900 hover:bg-gray-800 text-white px-8 py-4 rounded-full font-semibold transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-0.5">
@@ -533,40 +435,24 @@ const Home = () => {
                                 </Link>
                             </div>
                         </div>
-            </motion.section>
+            </section>
 
             {/* Events Preview Section */}
-            <motion.section 
-                ref={eventsRef}
+            <section 
                 id="events-section"
-                initial="hidden"
-                animate={eventsInView ? "visible" : "hidden"}
-                variants={sectionVariants}
                 className="py-24 bg-gray-50 overflow-hidden"
             >
                 <div className="container mx-auto px-6 lg:px-12">
-                            <motion.div 
-                                className="text-center mb-16"
-                                initial="hidden"
-                                whileInView="visible"
-                                viewport={defaultViewport}
-                                variants={fadeInUp}
-                            >
+                            <div className="text-center mb-16">
                                 <div className="inline-flex items-center gap-2 bg-white px-4 py-2 rounded-full mb-6 shadow-sm">
                                     <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
                                     <span className="text-sm font-medium text-gray-700">Live Events</span>
                                 </div>
                                 <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">Wildlife Events</h2>
                                 <p className="text-gray-600 text-lg max-w-2xl mx-auto">Experience unforgettable moments with our animals through live feedings and shows.</p>
-                            </motion.div>
+                            </div>
 
-                            <motion.div 
-                                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto"
-                                variants={staggerContainer}
-                                initial="hidden"
-                                whileInView="visible"
-                                viewport={defaultViewport}
-                            >
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
                                 {[
                                     {
                                         title: 'Penguin Feeding',
@@ -590,10 +476,9 @@ const Home = () => {
                                         live: false
                                     }
                                 ].map((event, i) => (
-                                    <motion.div 
+                                    <div 
                                         key={i} 
                                         className="bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 group hover:-translate-y-1"
-                                        variants={staggerItem}
                                     >
                                         <div className={`h-32 bg-gradient-to-br ${event.color} flex items-center justify-center relative`}>
                                             {event.live && (
@@ -614,9 +499,9 @@ const Home = () => {
                                                 Join Event
                                             </button>
                                         </div>
-                                    </motion.div>
+                                    </div>
                                 ))}
-                            </motion.div>
+                            </div>
 
                             <div className="text-center mt-12">
                                 <Link to="/events" className="inline-flex items-center gap-3 bg-gray-900 hover:bg-gray-800 text-white px-8 py-4 rounded-full font-semibold transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-0.5">
@@ -625,50 +510,34 @@ const Home = () => {
                                 </Link>
                             </div>
                         </div>
-            </motion.section>
+            </section>
 
             {/* Ticket Booking Section */}
-            <motion.section 
-                ref={ticketsRef}
+            <section 
                 id="tickets-section"
-                initial="hidden"
-                animate={ticketsInView ? "visible" : "hidden"}
-                variants={sectionVariants}
                 className="py-24 bg-white overflow-hidden"
             >
                 <div className="container mx-auto px-6 lg:px-12 text-center">
-                            <motion.div
-                                initial="hidden"
-                                whileInView="visible"
-                                viewport={defaultViewport}
-                                variants={fadeInUp}
-                            >
+                            <div>
                                 <div className="inline-flex items-center gap-2 bg-emerald-50 px-4 py-2 rounded-full mb-6">
                                     <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
                                     <span className="text-sm font-medium text-emerald-700">Book Online</span>
                                 </div>
                                 <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">Online Ticket Booking</h2>
                                 <p className="text-gray-600 mb-16 text-lg max-w-2xl mx-auto">Secure cloud-based reservations with instant digital confirmation and QR code access.</p>
-                            </motion.div>
-                            <motion.div 
-                                className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto"
-                                variants={staggerContainer}
-                                initial="hidden"
-                                whileInView="visible"
-                                viewport={defaultViewport}
-                            >
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
                                 {[
                                     { title: 'Child Admission', price: '₱50', desc: 'Ages 5-17', IconComponent: Icons.Child },
                                     { title: 'Adult Admission', price: '₱100', desc: 'Ages 18+', IconComponent: Icons.Adult, featured: true },
                                     { title: 'Bulusan Residents', price: 'FREE', desc: 'With Valid ID', IconComponent: Icons.Home }
                                 ].map((t, i) => (
-                                    <motion.div
+                                    <div
                                         key={i}
                                         className={`relative p-8 rounded-3xl transition-all duration-500 group hover:-translate-y-2 ${t.featured
                                                 ? 'bg-gray-900 text-white shadow-2xl shadow-gray-900/30 scale-105'
                                                 : 'bg-white border border-gray-200 hover:border-gray-300 hover:shadow-xl'
                                             }`}
-                                        variants={staggerItem}
                                     >
                                         {t.featured && (
                                             <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-xs font-bold px-4 py-1 rounded-full">
@@ -690,11 +559,11 @@ const Home = () => {
                                                     : 'bg-gray-900 text-white hover:bg-gray-800'
                                                 }`}>Book Now</button>
                                         </Link>
-                                    </motion.div>
+                                    </div>
                                 ))}
-                            </motion.div>
+                            </div>
                         </div>
-            </motion.section>
+            </section>
 
             <Footer />
         </div>

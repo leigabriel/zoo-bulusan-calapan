@@ -25,6 +25,8 @@ router.get('/tickets/active', staffController.getActiveTickets);
 router.get('/tickets/today', staffController.getTodayTickets);
 router.get('/tickets/:id', staffController.getTicketById);
 router.put('/tickets/:id/status', staffController.updateTicketStatus);
+router.put('/tickets/:id/mark-paid', staffController.markTicketAsPaid);
+router.put('/tickets/:id/verification', staffController.updateVerificationStatus);
 router.post('/tickets/validate', staffController.validateTicket);
 router.post('/tickets/check', staffController.checkTicket);
 router.post('/tickets/mark-used', staffController.markTicketUsed);
@@ -36,12 +38,17 @@ router.post('/events', adminController.createEvent);
 router.put('/events/:id', adminController.updateEvent);
 router.delete('/events/:id', adminController.deleteEvent);
 
-// Users - Full CRUD for staff (limited to user role management)
+// Users - Management for staff (limited to user role management)
 router.get('/users', staffController.getAllUsers);
 router.get('/users/:id', staffController.getUserById);
 router.post('/users', adminController.createUser);
 router.put('/users/:id', adminController.updateUser);
-router.delete('/users/:id', adminController.deleteUser);
+router.put('/users/:id/suspend', staffController.suspendUser);
+router.put('/users/:id/unsuspend', staffController.unsuspendUser);
+
+// Appeals management
+router.get('/appeals', staffController.getPendingAppeals);
+router.put('/appeals/:id/review', staffController.reviewAppeal);
 
 // Notifications
 router.get('/notifications', staffController.getNotifications);

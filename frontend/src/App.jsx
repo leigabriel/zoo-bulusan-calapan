@@ -7,6 +7,7 @@ import Tickets from './pages/user/Tickets';
 import AboutUs from './pages/user/AboutUs';
 import AnimalDex from './pages/user/AnimalDex';
 import TicketHistory from './pages/user/TicketHistory';
+import ArchivedTickets from './pages/user/ArchivedTickets';
 import UserProfile from './pages/user/UserProfile';
 import Settings from './pages/user/Settings';
 import Help from './pages/user/Help';
@@ -104,6 +105,11 @@ function AppRoutes() {
             <Route path="/my-tickets" element={
                 <ProtectedRoute allowedRoles={['user']}>
                     <TicketHistory />
+                </ProtectedRoute>
+            } />
+            <Route path="/archived-tickets" element={
+                <ProtectedRoute allowedRoles={['user']}>
+                    <ArchivedTickets />
                 </ProtectedRoute>
             } />
             <Route path="/profile" element={

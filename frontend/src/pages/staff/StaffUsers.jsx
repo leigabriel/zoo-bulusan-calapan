@@ -42,6 +42,20 @@ const TrashIcon = () => (
     </svg>
 );
 
+const BanIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+        <circle cx="12" cy="12" r="10" />
+        <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
+    </svg>
+);
+
+const UnbanIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+        <polyline points="22 4 12 14.01 9 11.01" />
+    </svg>
+);
+
 const UserIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
         <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
@@ -89,7 +103,9 @@ const StaffUsers = ({ globalSearch = '' }) => {
     const [selectedUser, setSelectedUser] = useState(null);
     const [showModal, setShowModal] = useState(false);
     const [editingUser, setEditingUser] = useState(null);
-    const [deleteConfirm, setDeleteConfirm] = useState(null);
+    const [suspendUser, setSuspendUser] = useState(null);
+    const [suspendReason, setSuspendReason] = useState('');
+    const [suspending, setSuspending] = useState(false);
     const [saving, setSaving] = useState(false);
     const [form, setForm] = useState({
         firstName: '', lastName: '', email: '', username: '', password: '', phone: '', address: ''
@@ -176,14 +192,33 @@ const StaffUsers = ({ globalSearch = '' }) => {
         }
     };
 
-    const removeUser = async (userId) => {
+    const handleSuspendUser = async () => {
+        if (!suspendUser || !suspendReason.trim()) {
+            alert('Please provide a reason for suspension');
+            return;
+        }
+        setSuspending(true);
         try {
-            await staffAPI.deleteUser(userId);
-            setDeleteConfirm(null);
+            await staffAPI.suspendUser(suspendUser.id, suspendReason);
+            setSuspendUser(null);
+            setSuspendReason('');
             fetchUsers();
         } catch (err) {
-            console.error('Error deleting user:', err);
-            alert(err.message || 'Failed to delete user');
+            console.error('Error suspending user:', err);
+            alert(err.message || 'Failed to suspend user');
+        } finally {
+            setSuspending(false);
+        }
+    };
+
+    const handleUnsuspendUser = async (userId) => {
+        if (!confirm('Are you sure you want to unsuspend this user?')) return;
+        try {
+            await staffAPI.unsuspendUser(userId);
+            fetchUsers();
+        } catch (err) {
+            console.error('Error unsuspending user:', err);
+            alert(err.message || 'Failed to unsuspend user');
         }
     };
 
@@ -291,6 +326,7 @@ const StaffUsers = ({ globalSearch = '' }) => {
                                 <th className="text-left px-6 py-4 text-gray-400 font-medium text-sm">User</th>
                                 <th className="text-left px-6 py-4 text-gray-400 font-medium text-sm">Email</th>
                                 <th className="text-left px-6 py-4 text-gray-400 font-medium text-sm">Role</th>
+                                <th className="text-left px-6 py-4 text-gray-400 font-medium text-sm">Status</th>
                                 <th className="text-left px-6 py-4 text-gray-400 font-medium text-sm">Joined</th>
                                 <th className="text-left px-6 py-4 text-gray-400 font-medium text-sm">Tickets</th>
                                 <th className="text-left px-6 py-4 text-gray-400 font-medium text-sm">Actions</th>
@@ -333,6 +369,11 @@ const StaffUsers = ({ globalSearch = '' }) => {
                                             </span>
                                         </td>
                                         <td className="px-6 py-4">
+                                            <span className={`px-3 py-1 rounded-lg text-xs font-medium border ${user.is_suspended ? 'bg-red-500/20 text-red-400 border-red-500/30' : 'bg-[#8cff65]/20 text-[#8cff65] border-[#8cff65]/30'}`}>
+                                                {user.is_suspended ? 'Suspended' : 'Active'}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-4">
                                             <div className="flex items-center gap-2 text-gray-400">
                                                 <CalendarIcon />
                                                 <span>{formatDate(user.created_at)}</span>
@@ -360,20 +401,30 @@ const StaffUsers = ({ globalSearch = '' }) => {
                                                 >
                                                     <EditIcon />
                                                 </button>
-                                                <button
-                                                    onClick={() => setDeleteConfirm(user)}
-                                                    className="p-2 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 hover:bg-red-500/20 transition"
-                                                    title="Delete User"
-                                                >
-                                                    <TrashIcon />
-                                                </button>
+                                                {user.is_suspended ? (
+                                                    <button
+                                                        onClick={() => handleUnsuspendUser(user.id)}
+                                                        className="p-2 bg-green-500/10 border border-green-500/30 rounded-lg text-green-400 hover:bg-green-500/20 transition"
+                                                        title="Unsuspend User"
+                                                    >
+                                                        <UnbanIcon />
+                                                    </button>
+                                                ) : (
+                                                    <button
+                                                        onClick={() => setSuspendUser(user)}
+                                                        className="p-2 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 hover:bg-red-500/20 transition"
+                                                        title="Suspend User"
+                                                    >
+                                                        <BanIcon />
+                                                    </button>
+                                                )}
                                             </div>
                                         </td>
                                     </tr>
                                 ))
                             ) : (
                                 <tr>
-                                    <td colSpan={6} className="text-center py-12 text-gray-500">
+                                    <td colSpan={7} className="text-center py-12 text-gray-500">
                                         No users found
                                     </td>
                                 </tr>
@@ -567,20 +618,37 @@ const StaffUsers = ({ globalSearch = '' }) => {
                 </div>
             )}
 
-            {/* Delete Confirmation Modal */}
-            {deleteConfirm && (
+            {/* Suspend Confirmation Modal */}
+            {suspendUser && (
                 <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
                     <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl w-full max-w-md p-6">
-                        <h3 className="text-xl font-bold text-white mb-2">Delete User</h3>
-                        <p className="text-gray-400 mb-6">
-                            Are you sure you want to delete <span className="text-white font-medium">{deleteConfirm.first_name} {deleteConfirm.last_name}</span>? This action cannot be undone.
+                        <h3 className="text-xl font-bold text-white mb-2">Suspend User</h3>
+                        <p className="text-gray-400 mb-4">
+                            Are you sure you want to suspend <span className="text-white font-medium">{suspendUser.first_name} {suspendUser.last_name}</span>?
                         </p>
+                        <div className="mb-4">
+                            <label className="block text-sm text-gray-400 mb-2">Reason for suspension *</label>
+                            <textarea
+                                value={suspendReason}
+                                onChange={(e) => setSuspendReason(e.target.value)}
+                                placeholder="Enter the reason for suspending this user..."
+                                className="w-full px-4 py-3 bg-[#0a0a0a] border border-[#2a2a2a] rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-[#8cff65]/50 resize-none"
+                                rows={3}
+                            />
+                        </div>
                         <div className="flex gap-3">
-                            <button onClick={() => setDeleteConfirm(null)} className="flex-1 px-4 py-3 bg-[#2a2a2a] hover:bg-[#3a3a3a] text-white rounded-xl font-medium transition">
+                            <button 
+                                onClick={() => { setSuspendUser(null); setSuspendReason(''); }} 
+                                className="flex-1 px-4 py-3 bg-[#2a2a2a] hover:bg-[#3a3a3a] text-white rounded-xl font-medium transition"
+                            >
                                 Cancel
                             </button>
-                            <button onClick={() => removeUser(deleteConfirm.id)} className="flex-1 px-4 py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl font-medium transition">
-                                Delete
+                            <button 
+                                onClick={handleSuspendUser} 
+                                disabled={suspending || !suspendReason.trim()}
+                                className="flex-1 px-4 py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl font-medium transition disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {suspending ? 'Suspending...' : 'Suspend'}
                             </button>
                         </div>
                     </div>
