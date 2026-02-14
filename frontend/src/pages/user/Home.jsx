@@ -9,14 +9,14 @@ import '../../App.css'
 const animalImages = [
     { src: 'https://images.unsplash.com/photo-1540573133985-87b6da6d54a9?w=1200&q=80', name: 'Monkey' },
     { src: 'https://images.unsplash.com/photo-1580980407668-6bb45a674180?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', name: 'Dove' },
-    { src: 'https://images.unsplash.com/photo-1544923246-77307dd628b5?w=1200&q=80', name: 'Parrot' },
+    { src: 'https://plus.unsplash.com/premium_photo-1673454201378-3867e051dca7?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8cGFycm90fGVufDB8fDB8fHww', name: 'Parrot' },
     { src: 'https://images.unsplash.com/photo-1611689342806-0863700ce1e4?w=1200&q=80', name: 'Eagle' },
-    { src: 'https://images.unsplash.com/photo-1598894000329-34e3f5cadd3b?w=1200&q=80', name: 'Ostrich' },
+    { src: 'https://images.unsplash.com/photo-1709025220742-6cbe1645abe5?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTh8fG9zdHJpY2h8ZW58MHx8MHx8fDA%3D', name: 'Ostrich' },
     { src: 'https://images.unsplash.com/photo-1484406566174-9da000fda645?w=1200&q=80', name: 'Deer' },
     { src: 'https://images.unsplash.com/photo-1585110396000-c9ffd4e4b308?w=1200&q=80', name: 'Rabbit' },
     { src: 'https://images.unsplash.com/photo-1561731216-c3a4d99437d5?w=1200&q=80', name: 'Tiger' },
     { src: 'https://images.unsplash.com/photo-1553284965-83fd3e82fa5a?w=1200&q=80', name: 'Horse' },
-    { src: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1200&q=80', name: 'Donkey' }
+    { src: 'https://images.unsplash.com/photo-1522231796108-23cbe9982a9c?q=80&w=735&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', name: 'Donkey' }
 ];
 
 // Floating icon component for decorative elements
@@ -214,9 +214,9 @@ const Home = () => {
                         <h1 className="text-5xl md:text-7xl font-bold text-gray-900 mb-6 leading-tight tracking-tight">
                             Welcome to
                             <br />
-                            <span className="bg-gradient-to-r from-emerald-600 via-teal-500 to-cyan-500 bg-clip-text text-transparent">Calapan Bulusan</span> Zoo
+                            <span className="bg-gradient-to-r from-emerald-600 via-teal-500 to-cyan-500 bg-clip-text italic text-transparent">Bulusan Zoo</span>
                         </h1>
-                        <p className="text-lg md:text-xl text-gray-600 max-w-2xl mx-auto mb-10 leading-relaxed">
+                        <p className="text-lg md:text-2xl text-gray-600 max-w-5xl mx-auto mb-10 leading-snug">
                             Experience wildlife like never before with AI-powered tools that make exploring, planning your visit, and discovering amazing animals effortless and unforgettable.
                         </p>
 
@@ -242,8 +242,8 @@ const Home = () => {
                                 <div
                                     key={animal.name}
                                     className={`absolute inset-0 transition-all duration-1000 ease-in-out ${index === currentAnimalIndex
-                                            ? 'opacity-100 scale-100'
-                                            : 'opacity-0 scale-105'
+                                        ? 'opacity-100 scale-100'
+                                        : 'opacity-0 scale-105'
                                         }`}
                                 >
                                     <img
@@ -253,7 +253,6 @@ const Home = () => {
                                     />
                                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
                                     <div className="absolute bottom-6 left-6 text-white">
-                                        <p className="text-sm font-medium text-white/80 uppercase tracking-wider">Featured Animal</p>
                                         <h3 className="text-3xl font-bold">{animal.name}</h3>
                                     </div>
                                 </div>
@@ -266,8 +265,8 @@ const Home = () => {
                                         key={index}
                                         onClick={() => setCurrentAnimalIndex(index)}
                                         className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${index === currentAnimalIndex
-                                                ? 'w-8 bg-white'
-                                                : 'bg-white/40 hover:bg-white/70'
+                                            ? 'w-8 bg-white'
+                                            : 'bg-white/40 hover:bg-white/70'
                                             }`}
                                     />
                                 ))}
@@ -292,277 +291,351 @@ const Home = () => {
             </section>
 
             {/* Scroll-Triggered Sections - About, Animals, Events, Tickets */}
-            
-            {/* About Us Preview Section */}
-            <section 
+
+            <section
                 id="about-section"
-                className="py-24 bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 overflow-hidden"
+                className="py-24 bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 overflow-hidden relative"
             >
-                        <div className="container mx-auto px-6 lg:px-12">
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
-                                <div className="order-2 lg:order-1">
-                                    <div className="inline-flex items-center gap-2 bg-white px-4 py-2 rounded-full mb-6 shadow-sm">
-                                        <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                                        <span className="text-sm font-medium text-emerald-700">About Us</span>
+                <div className="container mx-auto px-6 lg:px-12 relative z-10">
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 mb-24">
+
+                        <div className="lg:col-span-5">
+                            <div className="flex flex-col gap-8">
+                                <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-emerald-800/60">
+                                    The Evolution of Bulusan
+                                </span>
+                                <p className="text-2xl md:text-3xl font-light leading-snug text-slate-800 max-w-xl">
+                                    Founded in 2015, Bulusan Wildlife & Nature Park began as a small conservation initiative in Calapan City. Today, we stand as a testament to modern conservation.
+                                </p>
+
+                                <div className="flex gap-4 mt-2">
+                                    <div className="w-12 h-12 bg-white rounded-sm flex items-center justify-center rotate-[-3deg] shadow-md border border-emerald-100">
+                                        <svg className="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
                                     </div>
-                                    <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6 leading-tight">
-                                        Pioneering Wildlife
-                                        <br />
-                                        <span className="bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">Conservation</span>
-                                    </h2>
-                                    <p className="text-gray-600 text-lg leading-relaxed mb-8">
-                                        Founded in 2015, Bulusan Wildlife & Nature Park began as a small conservation initiative in Calapan City. Today, we stand as a testament to modern conservation, housing over 250 animals across 45 species through our innovative AI-powered systems.
-                                    </p>
-                                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-10">
-                                        {[
-                                            { num: '8+', label: 'Years' },
-                                            { num: '250+', label: 'Animals' },
-                                            { num: '45', label: 'Species' },
-                                            { num: '15', label: 'Programs' }
-                                        ].map((stat, i) => (
-                                            <div 
-                                                key={i} 
-                                                className="bg-white rounded-2xl p-4 text-center shadow-sm border border-gray-100"
-                                            >
-                                                <div className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">{stat.num}</div>
-                                                <div className="text-gray-500 text-sm font-medium">{stat.label}</div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                    <Link to="/about" className="inline-flex items-center gap-3 bg-gray-900 hover:bg-gray-800 text-white px-8 py-4 rounded-full font-semibold transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-0.5">
-                                        <span>Learn More About Us</span>
-                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
-                                    </Link>
-                                </div>
-                                <div className="order-1 lg:order-2">
-                                    <div className="relative">
-                                        <div className="absolute -inset-4 bg-gradient-to-r from-emerald-400 to-teal-400 rounded-3xl blur-2xl opacity-20"></div>
-                                        <img
-                                            src="https://images.unsplash.com/photo-1534567153574-2b12153a87f0?w=800&q=80"
-                                            alt="Wildlife Conservation"
-                                            className="relative rounded-3xl shadow-2xl w-full object-cover aspect-[4/3]"
-                                        />
-                                        <div className="absolute -bottom-6 -left-6 bg-white rounded-2xl p-4 shadow-xl border border-gray-100">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
-                                                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
-                                                </div>
-                                                <div>
-                                                    <p className="font-bold text-gray-900">AI-Powered</p>
-                                                    <p className="text-sm text-gray-500">Smart Monitoring</p>
-                                                </div>
-                                            </div>
-                                        </div>
+                                    <div className="w-12 h-12 bg-emerald-600 rounded-sm flex items-center justify-center rotate-[5deg] shadow-md text-white font-bold text-xs">
+                                        AI
                                     </div>
                                 </div>
                             </div>
                         </div>
-            </section>
 
-            {/* Animals Preview Section */}
-            <section 
-                id="animals-section"
-                className="py-24 bg-white overflow-hidden"
-            >
-                <div className="container mx-auto px-6 lg:px-12">
-                            <div className="text-center mb-16">
-                                <div className="inline-flex items-center gap-2 bg-emerald-50 px-4 py-2 rounded-full mb-6">
-                                    <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                                    <span className="text-sm font-medium text-emerald-700">Our Wildlife</span>
-                                </div>
-                                <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">Meet Our Animals</h2>
-                                <p className="text-gray-600 text-lg max-w-2xl mx-auto">Discover the incredible wildlife roaming freely at our AI-powered nature park.</p>
+                        <div className="lg:col-span-3 lg:border-l lg:border-emerald-200 lg:pl-12">
+                            <h4 className="text-[10px] font-bold tracking-[0.3em] uppercase text-emerald-800/60 mb-10">Metrics</h4>
+                            <ul className="space-y-6">
+                                {[
+                                    { num: '8+', label: 'Years' },
+                                    { num: '10+', label: 'Animals' }
+                                ].map((stat, i) => (
+                                    <li key={i} className="group flex items-center justify-between border-b border-emerald-900/10 pb-3 cursor-default">
+                                        <span className="text-xs font-semibold text-emerald-900 uppercase tracking-widest">{stat.label}</span>
+                                        <span className="text-lg font-light text-slate-700 flex items-center gap-2">
+                                            {stat.num} <span className="text-xs text-emerald-500 opacity-0 group-hover:opacity-100 transition-opacity">→</span>
+                                        </span>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+
+                        <div className="lg:col-span-4 flex flex-col justify-between">
+                            <div>
+                                <h4 className="text-[10px] font-bold tracking-[0.3em] uppercase text-emerald-800/60 mb-10">Information</h4>
+                                <Link to="/about" className="group block">
+                                    <span className="text-xs font-bold tracking-[0.15em] uppercase text-emerald-900 block mb-2">Learn More About Us —</span>
+                                    <div className="h-px w-full bg-emerald-900/20 group-hover:bg-emerald-600 transition-all duration-300"></div>
+                                </Link>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-                                {[
-                                    {
-                                        name: 'African Lions',
-                                        category: 'Mammals',
-                                        location: 'Savanna Zone',
-                                        image: 'https://images.unsplash.com/photo-1546182990-dffeafbe841d?w=600&q=80',
-                                        color: 'from-amber-400 to-orange-500'
-                                    },
-                                    {
-                                        name: 'Asian Elephants',
-                                        category: 'Mammals',
-                                        location: 'Forest Habitat',
-                                        image: 'https://images.unsplash.com/photo-1557050543-4d5f4e07ef46?w=600&q=80',
-                                        color: 'from-emerald-400 to-teal-500'
-                                    },
-                                    {
-                                        name: 'Tropical Birds',
-                                        category: 'Birds',
-                                        location: 'Aviary',
-                                        image: 'https://images.unsplash.com/photo-1552728089-57bdde30beb3?w=600&q=80',
-                                        color: 'from-blue-400 to-indigo-500'
-                                    }
-                                ].map((animal, i) => (
-                                    <div 
-                                        key={i} 
-                                        className="group bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-300 border border-gray-100 hover:-translate-y-2"
-                                    >
-                                        <div className="relative h-64 overflow-hidden">
-                                            <img
-                                                src={animal.image}
-                                                alt={animal.name}
-                                                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                                            />
-                                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-                                            <span className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm text-gray-800 text-xs font-bold px-3 py-1.5 rounded-full">
-                                                {animal.category}
+                            <div className="mt-16 relative group">
+                                <img
+                                    src="https://images.unsplash.com/photo-1534567153574-2b12153a87f0?w=800&q=80"
+                                    alt="Wildlife Conservation"
+                                    className="rounded-sm shadow-xl transition-all duration-700 h-48 w-full object-cover"
+                                />
+                                <div className="absolute inset-0 bg-emerald-900/10 mix-blend-multiply rounded-sm"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="mt-20 pt-16 border-t border-emerald-900/10">
+                        <h2 className="text-[10vw] leading-[0.8] font-serif uppercase tracking-tighter text-emerald-950 select-none">
+                            Pioneering <span className="inline-block italic font-light text-emerald-800/80">Wildlife</span>
+                            <br />
+                            Conservation
+                        </h2>
+                    </div>
+                </div>
+
+                <div className="absolute bottom-0 right-0 w-[600px] h-[600px] bg-white/40 blur-[120px] rounded-full translate-y-1/2 translate-x-1/4 -z-0"></div>
+            </section>
+
+            <section id="animals-section" className="py-24 bg-white overflow-hidden">
+                <div className="container mx-auto px-6 lg:px-12">
+                    <div className="text-left mb-24">
+                        <div className="flex flex-col items-start mb-8">
+                            <span className="text-[10px] uppercase tracking-[0.5em] font-bold text-gray-400 mb-5">
+                                Wildlife Exhibition
+                            </span>
+                            <div className="inline-flex items-center gap-2 px-4 py-1.5 border border-emerald-100 bg-emerald-50/50 rounded-full">
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                <span className="text-[10px] font-bold text-emerald-700 uppercase tracking-[0.2em]">
+                                    Our Wildlife
+                                </span>
+                            </div>
+                        </div>
+
+                        <h2 className="text-5xl md:text-7xl font-light text-gray-900 mb-8 tracking-tighter">
+                            Meet Our Animals
+                        </h2>
+
+                        <p className="text-gray-500 text-lg max-w-xl font-light leading-relaxed italic">
+                            Discover the incredible wildlife roaming freely at our AI-powered nature park.
+                        </p>
+                    </div>
+
+                    {/* MOBILE: Horizontal Scroll | DESKTOP: Grid */}
+                    <div className="flex overflow-x-auto md:grid md:grid-cols-3 gap-8 md:gap-12 pb-8 md:pb-0 snap-x snap-mandatory scrollbar-hide">
+                        {[
+                            {
+                                name: 'African Lions',
+                                category: 'Mammals',
+                                location: 'Savanna Zone',
+                                image: 'https://images.unsplash.com/photo-1546182990-dffeafbe841d?w=600&q=80',
+                            },
+                            {
+                                name: 'Asian Elephants',
+                                category: 'Mammals',
+                                location: 'Forest Habitat',
+                                image: 'https://images.unsplash.com/photo-1557050543-4d5f4e07ef46?w=600&q=80',
+                            },
+                            {
+                                name: 'Tropical Birds',
+                                category: 'Birds',
+                                location: 'Aviary',
+                                image: 'https://images.unsplash.com/photo-1552728089-57bdde30beb3?w=600&q=80',
+                            }
+                        ].map((animal, i) => (
+                            <div key={i} className="group cursor-pointer min-w-[85vw] md:min-w-0 snap-center">
+                                <div className="relative aspect-[2/3] overflow-hidden mb-8 bg-gray-50">
+                                    <img
+                                        src={animal.image}
+                                        alt={animal.name}
+                                        className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
+                                    />
+                                    <div className="absolute top-6 right-6">
+                                        <span className="bg-white/95 backdrop-blur-sm text-gray-900 text-[9px] font-bold px-3 py-1 uppercase tracking-widest shadow-sm">
+                                            {animal.category}
+                                        </span>
+                                    </div>
+                                    <div className="absolute inset-0 ring-1 ring-inset ring-black/5 pointer-events-none" />
+                                </div>
+
+                                <div className="space-y-4">
+                                    <h3 className="text-3xl font-light text-gray-900 leading-none transition-colors group-hover:text-emerald-800">
+                                        {animal.name}
+                                    </h3>
+
+                                    <div className="flex items-center gap-2 text-gray-400">
+                                        <svg className="w-3.5 h-3.5 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        </svg>
+                                        <span className="text-[11px] uppercase tracking-widest font-medium italic">{animal.location}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    <div className="text-center mt-28">
+                        <Link
+                            to="/animals"
+                            className="inline-flex flex-col items-center gap-5 group transition-all"
+                        >
+                            <span className="text-gray-900 font-bold uppercase tracking-[0.5em] text-[10px]">
+                                View All Animals
+                            </span>
+                            <span className="h-[1px] w-20 bg-gray-200 group-hover:w-40 group-hover:bg-emerald-500 transition-all duration-700"></span>
+                        </Link>
+                    </div>
+                </div>
+            </section>
+
+            <section id="events-section" className="py-24 bg-white overflow-hidden border-t border-gray-100">
+                <div className="container mx-auto px-6 lg:px-12">
+                    <div className="text-left mb-24">
+                        <div className="flex flex-col items-start mb-8">
+                            <span className="text-[10px] uppercase tracking-[0.5em] font-bold text-gray-400 mb-5">
+                                Experiences
+                            </span>
+                            <div className="inline-flex items-center gap-2 px-4 py-1.5 border border-red-100 bg-red-50/50 rounded-full">
+                                <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></span>
+                                <span className="text-[10px] font-bold text-red-700 uppercase tracking-[0.2em]">
+                                    Events
+                                </span>
+                            </div>
+                        </div>
+
+                        <h2 className="text-5xl md:text-7xl font-light text-gray-900 mb-8 tracking-tighter">
+                            Wildlife Events
+                        </h2>
+
+                        <p className="text-gray-500 text-lg max-w-xl font-light leading-relaxed italic">
+                            Experience unforgettable moments with our animals through live feedings and shows.
+                        </p>
+                    </div>
+
+                    {/* MOBILE: Horizontal Scroll | DESKTOP: Grid */}
+                    <div className="flex overflow-x-auto md:grid md:grid-cols-3 gap-8 md:gap-12 pb-8 md:pb-0 snap-x snap-mandatory scrollbar-hide">
+                        {[
+                            {
+                                title: 'Penguin Feeding',
+                                time: '2:30 PM',
+                                desc: 'Watch our playful penguins dive and swim.',
+                                color: 'from-blue-400/20 to-cyan-500/20',
+                                live: true
+                            },
+                            {
+                                title: 'Tropical Bird Show',
+                                time: '1:00 PM',
+                                desc: 'Spectacular flight demonstrations.',
+                                color: 'from-amber-400/20 to-orange-500/20',
+                                live: false
+                            },
+                            {
+                                title: 'Lion Feeding',
+                                time: '4:00 PM',
+                                desc: 'Watch the kings of the jungle at mealtime.',
+                                color: 'from-yellow-400/20 to-amber-500/20',
+                                live: false
+                            }
+                        ].map((event, i) => (
+                            <div key={i} className="group cursor-pointer min-w-[85vw] md:min-w-0 snap-center">
+                                <div className={`relative aspect-[2/3] overflow-hidden mb-8 bg-gradient-to-br ${event.color} flex items-center justify-center`}>
+                                    <div className="absolute inset-0 ring-1 ring-inset ring-black/5 pointer-events-none" />
+
+                                    {event.live && (
+                                        <div className="absolute top-6 right-6">
+                                            <span className="bg-red-500 text-white text-[9px] font-bold px-3 py-1 uppercase tracking-widest shadow-sm flex items-center gap-1.5">
+                                                <span className="w-1 h-1 bg-white rounded-full"></span>
+                                                LIVE
                                             </span>
                                         </div>
-                                        <div className="p-6">
-                                            <h3 className="font-bold text-xl text-gray-900 mb-2">{animal.name}</h3>
-                                            <div className="flex items-center gap-2 text-gray-500 text-sm mb-4">
-                                                <svg className="w-4 h-4 text-emerald-600" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" /></svg>
-                                                <span>{animal.location}</span>
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                                                <span className="text-sm text-emerald-600 font-medium">Live Now</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
+                                    )}
 
-                            <div className="text-center mt-12">
-                                <Link to="/animals" className="inline-flex items-center gap-3 bg-gray-900 hover:bg-gray-800 text-white px-8 py-4 rounded-full font-semibold transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-0.5">
-                                    <span>View All Animals</span>
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
-                                </Link>
+                                    <div className="p-8 opacity-40 group-hover:opacity-100 transition-opacity duration-500">
+                                        <svg className="w-12 h-12 text-gray-900/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1" d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2z" />
+                                        </svg>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-4">
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-[10px] text-emerald-600 font-bold uppercase tracking-[0.2em]">{event.time}</span>
+                                        <div className="h-[1px] flex-grow mx-4 bg-gray-100"></div>
+                                    </div>
+
+                                    <h3 className="text-3xl font-light text-gray-900 leading-none transition-colors group-hover:text-emerald-800">
+                                        {event.title}
+                                    </h3>
+
+                                    <p className="text-gray-500 text-sm font-light leading-relaxed">
+                                        {event.desc}
+                                    </p>
+
+                                    <button className="pt-4 flex items-center gap-3 group/btn">
+                                        <span className="text-[10px] font-bold uppercase tracking-widest text-gray-900 group-hover/btn:text-emerald-600 transition-colors">Join Event</span>
+                                        <svg className="w-4 h-4 transition-transform group-hover/btn:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                                        </svg>
+                                    </button>
+                                </div>
                             </div>
-                        </div>
+                        ))}
+                    </div>
+
+                    <div className="text-center mt-28">
+                        <Link
+                            to="/events"
+                            className="inline-flex flex-col items-center gap-5 group transition-all"
+                        >
+                            <span className="text-gray-900 font-bold uppercase tracking-[0.5em] text-[10px]">
+                                View All Events
+                            </span>
+                            <span className="h-[1px] w-20 bg-gray-200 group-hover:w-40 group-hover:bg-red-500 transition-all duration-700"></span>
+                        </Link>
+                    </div>
+                </div>
             </section>
 
-            {/* Events Preview Section */}
-            <section 
-                id="events-section"
-                className="py-24 bg-gray-50 overflow-hidden"
-            >
+            <section id="tickets-section" className="py-24 bg-white">
                 <div className="container mx-auto px-6 lg:px-12">
-                            <div className="text-center mb-16">
-                                <div className="inline-flex items-center gap-2 bg-white px-4 py-2 rounded-full mb-6 shadow-sm">
-                                    <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
-                                    <span className="text-sm font-medium text-gray-700">Live Events</span>
+                    <div className="mb-14">
+                        <span className="text-[11px] font-bold tracking-[0.2em] text-gray-400 uppercase block mb-3">
+                            PRICING
+                        </span>
+                        <h2 className="text-[42px] font-medium text-gray-900 leading-tight">
+                            Choose the right ticket for you
+                        </h2>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 border border-gray-300 overflow-hidden shadow-sm mb-12">
+                        {[
+                            {
+                                label: 'SENIOR',
+                                price: '₱80',
+                                desc: 'Ages 60+ with valid ID. Priority access included for our elder community.'
+                            },
+                            {
+                                label: 'ADULT',
+                                price: '₱100',
+                                desc: 'Ages 18-59. Perfect for those who want the full experience.'
+                            },
+                            {
+                                label: 'CHILD',
+                                price: '₱50',
+                                desc: 'Ages 5-17. Launch your first visit and start exploring within minutes.'
+                            },
+                            {
+                                label: 'STUDENT',
+                                price: '₱70',
+                                desc: 'Valid for high school and college students with valid academic ID.'
+                            },
+                            {
+                                label: 'RESIDENT',
+                                price: 'FREE',
+                                desc: 'Exclusive for local residents. End-to-end community access.'
+                            }
+                        ].map((t, i) => (
+                            <div
+                                key={i}
+                                className="flex flex-col p-9 bg-white border-r border-b border-gray-300 last:border-r-0 lg:border-b-0"
+                            >
+                                <span className="text-[10px] font-bold tracking-[0.15em] text-gray-400 uppercase mb-6">
+                                    {t.label}
+                                </span>
+
+                                <div className="text-[44px] font-medium text-gray-900 leading-none mb-6">
+                                    {t.price}<span className="text-lg text-gray-400 font-normal"></span>
                                 </div>
-                                <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">Wildlife Events</h2>
-                                <p className="text-gray-600 text-lg max-w-2xl mx-auto">Experience unforgettable moments with our animals through live feedings and shows.</p>
-                            </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
-                                {[
-                                    {
-                                        title: 'Penguin Feeding',
-                                        time: '2:30 PM',
-                                        desc: 'Watch our playful penguins dive and swim.',
-                                        color: 'from-blue-400 to-cyan-500',
-                                        live: true
-                                    },
-                                    {
-                                        title: 'Tropical Bird Show',
-                                        time: '1:00 PM',
-                                        desc: 'Spectacular flight demonstrations.',
-                                        color: 'from-amber-400 to-orange-500',
-                                        live: false
-                                    },
-                                    {
-                                        title: 'Lion Feeding',
-                                        time: '4:00 PM',
-                                        desc: 'Watch the kings of the jungle at mealtime.',
-                                        color: 'from-yellow-400 to-amber-500',
-                                        live: false
-                                    }
-                                ].map((event, i) => (
-                                    <div 
-                                        key={i} 
-                                        className="bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 group hover:-translate-y-1"
-                                    >
-                                        <div className={`h-32 bg-gradient-to-br ${event.color} flex items-center justify-center relative`}>
-                                            {event.live && (
-                                                <span className="absolute top-4 right-4 bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-full animate-pulse flex items-center gap-1.5">
-                                                    <span className="w-1.5 h-1.5 bg-white rounded-full"></span>
-                                                    LIVE
-                                                </span>
-                                            )}
-                                        </div>
-                                        <div className="p-6">
-                                            <div className="flex justify-between items-start mb-3">
-                                                <h3 className="font-bold text-lg text-gray-900">{event.title}</h3>
-                                                <span className="bg-emerald-50 text-emerald-700 text-sm font-bold px-3 py-1 rounded-lg">{event.time}</span>
-                                            </div>
-                                            <p className="text-gray-500 text-sm mb-4">{event.desc}</p>
-                                            <button className="w-full py-3 bg-gray-100 hover:bg-gray-900 hover:text-white text-gray-800 rounded-xl font-semibold transition-all duration-200 flex items-center justify-center gap-2">
-                                                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2z" /></svg>
-                                                Join Event
-                                            </button>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
+                                <div className="h-[1px] w-full bg-gray-100 mb-8" />
 
-                            <div className="text-center mt-12">
-                                <Link to="/events" className="inline-flex items-center gap-3 bg-gray-900 hover:bg-gray-800 text-white px-8 py-4 rounded-full font-semibold transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-0.5">
-                                    <span>View All Events</span>
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
-                                </Link>
+                                <p className="text-[14px] leading-relaxed text-gray-500 min-h-[80px]">
+                                    {t.desc}
+                                </p>
                             </div>
-                        </div>
-            </section>
+                        ))}
+                    </div>
 
-            {/* Ticket Booking Section */}
-            <section 
-                id="tickets-section"
-                className="py-24 bg-white overflow-hidden"
-            >
-                <div className="container mx-auto px-6 lg:px-12 text-center">
-                            <div>
-                                <div className="inline-flex items-center gap-2 bg-emerald-50 px-4 py-2 rounded-full mb-6">
-                                    <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                                    <span className="text-sm font-medium text-emerald-700">Book Online</span>
-                                </div>
-                                <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">Online Ticket Booking</h2>
-                                <p className="text-gray-600 mb-16 text-lg max-w-2xl mx-auto">Secure cloud-based reservations with instant digital confirmation and QR code access.</p>
-                            </div>
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-                                {[
-                                    { title: 'Child Admission', price: '₱50', desc: 'Ages 5-17', IconComponent: Icons.Child },
-                                    { title: 'Adult Admission', price: '₱100', desc: 'Ages 18+', IconComponent: Icons.Adult, featured: true },
-                                    { title: 'Bulusan Residents', price: 'FREE', desc: 'With Valid ID', IconComponent: Icons.Home }
-                                ].map((t, i) => (
-                                    <div
-                                        key={i}
-                                        className={`relative p-8 rounded-3xl transition-all duration-500 group hover:-translate-y-2 ${t.featured
-                                                ? 'bg-gray-900 text-white shadow-2xl shadow-gray-900/30 scale-105'
-                                                : 'bg-white border border-gray-200 hover:border-gray-300 hover:shadow-xl'
-                                            }`}
-                                    >
-                                        {t.featured && (
-                                            <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-xs font-bold px-4 py-1 rounded-full">
-                                                Popular
-                                            </div>
-                                        )}
-                                        <div className={`w-12 h-12 mx-auto mb-4 ${t.featured ? 'text-white' : 'text-emerald-600'}`}>
-                                            {t.IconComponent && <t.IconComponent />}
-                                        </div>
-                                        <h3 className={`text-xl font-bold mb-2 ${t.featured ? 'text-white' : 'text-gray-900'}`}>{t.title}</h3>
-                                        <div className={`text-4xl font-bold mb-4 ${t.featured
-                                                ? 'text-white'
-                                                : 'bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent'
-                                            }`}>{t.price}</div>
-                                        <p className={`mb-8 ${t.featured ? 'text-gray-400' : 'text-gray-500'}`}>{t.desc}</p>
-                                        <Link to="/tickets">
-                                            <button className={`w-full py-3.5 rounded-xl font-semibold transition-all duration-200 ${t.featured
-                                                    ? 'bg-white text-gray-900 hover:bg-gray-100'
-                                                    : 'bg-gray-900 text-white hover:bg-gray-800'
-                                                }`}>Book Now</button>
-                                        </Link>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
+                    <div className="flex justify-center">
+                        <Link to="/tickets">
+                            <button className="px-12 py-4 bg-gray-900 text-white text-sm font-bold tracking-widest uppercase rounded-full hover:bg-gray-800 transition-all duration-300 shadow-lg shadow-gray-200">
+                                Book Your Tickets
+                            </button>
+                        </Link>
+                    </div>
+                </div>
             </section>
 
             <Footer />

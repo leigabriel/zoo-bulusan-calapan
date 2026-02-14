@@ -221,8 +221,8 @@ const Header = () => {
             <div className="container mx-auto px-6 lg:px-12">
                 <div className="flex justify-between items-center">
                     <Link to="/" className="flex items-center gap-3 group">
-                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-400 shadow-lg flex items-center justify-center transition-transform group-hover:scale-105">
-                                <img src="https://cdn-icons-png.flaticon.com/128/1864/1864472.png" alt="Bz Logo" className="w-6 h-6 object-contain" />
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-500 to-teal-400 shadow-lg flex items-center justify-center transition-transform group-hover:scale-105">
+                                <img src="https://cdn-icons-png.flaticon.com/128/1864/1864472.png" alt="Bz Logo" className="w-5 h-5 object-contain" />
                         </div>
                         <span className={`text-4xl font-extrabold tracking-tight transition-colors ${scrolled ? 'text-teal-400' : 'text-teal-400'}`}>
                             BULUSAN <span className='italic font-extrabold text-teal-400'>ZOO</span>
@@ -656,7 +656,7 @@ const Header = () => {
                                         type="text"
                                         value={emailSubject}
                                         onChange={(e) => setEmailSubject(e.target.value)}
-                                        placeholder="Brief description of your inquiry"
+                                        placeholder="..."
                                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                     />
                                 </div>
