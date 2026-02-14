@@ -13,7 +13,7 @@ class User {
 
     static async findByEmailOrUsername(identifier) {
         const [rows] = await db.query(
-            'SELECT * FROM users WHERE email = ? OR username = ?',
+            `SELECT *, is_suspended, suspension_reason, suspended_at FROM users WHERE email = ? OR username = ?`,
             [identifier, identifier]
         );
         return rows[0];

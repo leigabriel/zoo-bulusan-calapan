@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const staffController = require('../controllers/staff-controller');
 const adminController = require('../controllers/admin-controller');
+const messageController = require('../controllers/message-controller');
 const { protect, authorize } = require('../middleware/auth');
 
 router.use(protect);
@@ -54,5 +55,13 @@ router.put('/appeals/:id/review', staffController.reviewAppeal);
 router.get('/notifications', staffController.getNotifications);
 router.put('/notifications/:id/read', staffController.markNotificationRead);
 router.put('/notifications/read-all', staffController.markAllNotificationsRead);
+
+// Messages
+router.get('/messages', messageController.getAllMessages);
+router.put('/messages/:id/read', messageController.markAsRead);
+router.put('/messages/read-all', messageController.markAllAsRead);
+router.put('/messages/:id/respond', messageController.respondToMessage);
+router.delete('/messages/:id', messageController.deleteMessage);
+router.get('/appeals', messageController.getAppeals);
 
 module.exports = router;

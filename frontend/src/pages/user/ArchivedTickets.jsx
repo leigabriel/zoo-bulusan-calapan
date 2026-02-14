@@ -107,7 +107,7 @@ const ArchivedTickets = () => {
                     </svg>
                     <span className="hidden sm:inline">Back</span>
                 </button>
-                <Link
+                {/* <Link
                     to="/"
                     className="pointer-events-auto flex items-center gap-2 px-4 py-2.5 bg-white/90 backdrop-blur-sm text-gray-700 rounded-full shadow-lg hover:bg-white hover:shadow-xl transition-all duration-300 font-medium"
                 >
@@ -115,7 +115,7 @@ const ArchivedTickets = () => {
                         <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                     </svg>
                     <span className="hidden sm:inline">Home</span>
-                </Link>
+                </Link> */}
             </div>
 
             {/* Hero Section */}

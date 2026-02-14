@@ -221,10 +221,11 @@ exports.markTicketUsed = async (req, res) => {
             });
         }
 
-        if (ticket.status !== 'active') {
+        // Allow check-in for confirmed tickets (not just 'active')
+        if (ticket.status !== 'confirmed' && ticket.status !== 'active') {
             return res.status(400).json({ 
                 success: false, 
-                message: `Cannot check in ticket with status: ${ticket.status}`
+                message: `Cannot check in ticket with status: ${ticket.status}. Only confirmed tickets can be checked in.`
             });
         }
 

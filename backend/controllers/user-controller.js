@@ -146,30 +146,29 @@ exports.purchaseTicket = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Please provide all required fields' });
         }
 
-        // For resident tickets, require ID image
         if (ticketType === 'resident' && !residentIdImage) {
             return res.status(400).json({ success: false, message: 'Bulusan resident tickets require a valid ID image for verification' });
         }
 
-        // Ticket pricing
+        if (ticketType === 'student' && !residentIdImage) {
+            return res.status(400).json({ success: false, message: 'Student tickets require a valid student ID image for verification' });
+        }
+
         const prices = {
             adult: 40,
             child: 20,
             senior: 30,
             student: 25,
-            resident: 0  // Free for residents
+            resident: 0
         };
 
         const price = prices[ticketType] !== undefined ? prices[ticketType] : 40;
         const totalPrice = price * quantity;
         
-        // Generate unique booking reference
         const bookingReference = 'ZB-' + crypto.randomBytes(4).toString('hex').toUpperCase();
         
-        // Generate unique QR code data
         const qrCodeData = crypto.randomBytes(16).toString('hex').toUpperCase();
 
-        // Map payment method from frontend
         const paymentMethodMap = {
             'pay_at_park': 'cash',
             'gcash': 'gcash',
@@ -178,11 +177,6 @@ exports.purchaseTicket = async (req, res) => {
         };
         const mappedPaymentMethod = paymentMethodMap[paymentMethod] || paymentMethod || 'cash';
 
-        // Determine payment status based on payment method
-        // Use values that match the database ENUM: 'pending', 'paid', 'refunded', 'free', 'not_paid'
-        // - For 'pay_at_park' (Bulusan Zoo cash): payment_status = 'not_paid'
-        // - For 'gcash': payment_status = 'paid'
-        // - For resident (free): payment_status = 'free' (still requires verification)
         let paymentStatus = 'pending';
         if (ticketType === 'resident' || price === 0) {
             paymentStatus = 'free';
@@ -192,12 +186,10 @@ exports.purchaseTicket = async (req, res) => {
             paymentStatus = 'not_paid';
         }
 
-        // ALL tickets start as 'pending' - requires admin/staff approval
         const ticketStatus = 'pending';
 
-        // Save resident ID image to file if provided
         let savedResidentIdImage = null;
-        if (ticketType === 'resident' && residentIdImage) {
+        if ((ticketType === 'resident' || ticketType === 'student') && residentIdImage) {
             savedResidentIdImage = await saveBase64Image(residentIdImage, req.user.id);
         }
 
@@ -224,16 +216,17 @@ exports.purchaseTicket = async (req, res) => {
                 paymentStatus,
                 mappedPaymentMethod,
                 savedResidentIdImage,
-                ticketType === 'resident' ? 'pending' : null
+                (ticketType === 'resident' || ticketType === 'student') ? 'pending' : null
             ]
         );
 
         const ticketId = result.insertId;
 
-        // Generate appropriate confirmation message
         let confirmationMessage = 'Ticket booked successfully! Your ticket is pending approval.';
         if (ticketType === 'resident') {
             confirmationMessage = 'Free resident ticket booked! Your ID will be verified by our staff before confirmation.';
+        } else if (ticketType === 'student') {
+            confirmationMessage = 'Student ticket booked! Your student ID will be verified by our staff before confirmation.';
         } else if (mappedPaymentMethod === 'cash') {
             confirmationMessage = 'Ticket booked successfully! Please pay at Bulusan Zoo when you arrive. Your ticket is pending confirmation.';
         } else if (mappedPaymentMethod === 'gcash' || mappedPaymentMethod === 'online') {
@@ -256,7 +249,7 @@ exports.purchaseTicket = async (req, res) => {
                 paymentStatus: paymentStatus,
                 paymentMethod: paymentMethod || 'cash',
                 isFree: price === 0,
-                requiresVerification: ticketType === 'resident'
+                requiresVerification: ticketType === 'resident' || ticketType === 'student'
             }
         });
     } catch (error) {

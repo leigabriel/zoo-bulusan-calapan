@@ -144,11 +144,22 @@ exports.login = async (req, res) => {
             return res.status(401).json({ success: false, message: 'Invalid credentials' });
         }
 
+        if (user.is_suspended) {
+            return res.status(403).json({ 
+                success: false, 
+                message: 'Your account has been suspended.',
+                suspended: true,
+                suspensionReason: user.suspension_reason || 'No reason provided',
+                suspendedAt: user.suspended_at,
+                userId: user.id,
+                email: user.email
+            });
+        }
+
         if (!user.is_active) {
             return res.status(403).json({ success: false, message: 'Account is deactivated. Please contact support.' });
         }
 
-        // Check if user has a password (Google-only accounts don't have passwords)
         if (!user.password) {
             return res.status(401).json({ 
                 success: false, 

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { authAPI } from '../../services/api-client';
-import { sanitizeInput, sanitizeEmail, sanitizePhone } from '../../utils/sanitize';
+import { sanitizeInput, sanitizeEmail } from '../../utils/sanitize';
 
 const EyeIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
@@ -75,12 +75,8 @@ const RegisterPage = () => {
         lastName: '',
         username: '',
         email: '',
-        phoneNumber: '',
-        gender: 'prefer_not_to_say',
-        birthday: '',
         password: '',
-        confirmPassword: '',
-        role: 'user'
+        confirmPassword: ''
     });
     const [loading, setLoading] = useState(false);
     const [googleLoading, setGoogleLoading] = useState(false);
@@ -111,8 +107,6 @@ const RegisterPage = () => {
 
         if (name === 'email') {
             sanitizedValue = sanitizeEmail(value);
-        } else if (name === 'phoneNumber') {
-            sanitizedValue = sanitizePhone(value);
         } else if (name !== 'password' && name !== 'confirmPassword') {
             sanitizedValue = sanitizeInput(value);
         }
@@ -140,11 +134,6 @@ const RegisterPage = () => {
         if (!formData.email.trim()) validationErrors.push('Email is required');
         if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
             validationErrors.push('Please enter a valid email address');
-        }
-
-        // Phone number validation (optional but if provided, validate format)
-        if (formData.phoneNumber && !/^[0-9+\-\s()]{7,20}$/.test(formData.phoneNumber)) {
-            validationErrors.push('Please enter a valid phone number');
         }
 
         // Password validation
@@ -181,11 +170,7 @@ const RegisterPage = () => {
                 lastName: formData.lastName.trim(),
                 username: formData.username.trim(),
                 email: formData.email.trim().toLowerCase(),
-                phoneNumber: formData.phoneNumber.trim() || null,
-                gender: formData.gender,
-                birthday: formData.birthday || null,
-                password: formData.password,
-                role: formData.role
+                password: formData.password
             });
 
             if (response.success) {
@@ -335,64 +320,6 @@ const RegisterPage = () => {
                             {touched.email && formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email) && (
                                 <p className="text-xs text-red-600 mt-1">Please enter a valid email address</p>
                             )}
-                        </div>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
-                                <input
-                                    type="tel"
-                                    name="phoneNumber"
-                                    value={formData.phoneNumber}
-                                    onChange={handleChange}
-                                    onBlur={handleBlur}
-                                    autoComplete="tel"
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent"
-                                    placeholder="09123456789"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Gender</label>
-                                <select
-                                    name="gender"
-                                    value={formData.gender}
-                                    onChange={handleChange}
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent bg-white"
-                                >
-                                    <option value="prefer_not_to_say">Prefer not to say</option>
-                                    <option value="male">Male</option>
-                                    <option value="female">Female</option>
-                                    <option value="other">Other</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div hidden>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Role <span className="text-red-500">*</span></label>
-                                <select
-                                    name="role"
-                                    value={formData.role}
-                                    onChange={handleChange}
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent bg-white"
-                                >
-                                    <option value="user">Visitor</option>
-                                    <option value="staff">Staff</option>
-                                    <option value="vet">Veterinarian</option>
-                                    <option value="admin">Administrator</option>
-                                </select>
-                                <p className="text-xs text-gray-500 mt-1">Select your account type</p>
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Birthday</label>
-                                <input
-                                    type="date"
-                                    name="birthday"
-                                    value={formData.birthday}
-                                    onChange={handleChange}
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent"
-                                />
-                            </div>
                         </div>
 
                         <div>

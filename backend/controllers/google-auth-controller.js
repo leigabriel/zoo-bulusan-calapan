@@ -1,13 +1,38 @@
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
+const https = require('https');
 const User = require('../models/user-model');
 
-// Google OAuth 2.0 endpoints
 const GOOGLE_AUTH_URL = 'https://accounts.google.com/o/oauth2/v2/auth';
 const GOOGLE_TOKEN_URL = 'https://oauth2.googleapis.com/token';
 const GOOGLE_CERTS_URL = 'https://www.googleapis.com/oauth2/v3/certs';
 
-// Environment variables validation
+const httpsAgent = new https.Agent({
+    rejectUnauthorized: true,
+    keepAlive: true
+});
+
+const fetchWithRetry = async (url, options, retries = 3) => {
+    for (let i = 0; i < retries; i++) {
+        try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 30000);
+            
+            const response = await fetch(url, {
+                ...options,
+                signal: controller.signal
+            });
+            
+            clearTimeout(timeoutId);
+            return response;
+        } catch (error) {
+            console.error(`Fetch attempt ${i + 1} failed:`, error.message);
+            if (i === retries - 1) throw error;
+            await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
+        }
+    }
+};
+
 const getGoogleConfig = () => {
     const clientId = process.env.GOOGLE_CLIENT_ID;
     const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
@@ -55,7 +80,10 @@ const decodeJwtHeader = (token) => {
  * Fetch Google's public keys for ID token verification
  */
 const fetchGooglePublicKeys = async () => {
-    const response = await fetch(GOOGLE_CERTS_URL);
+    const response = await fetchWithRetry(GOOGLE_CERTS_URL, {
+        method: 'GET',
+        headers: { 'Accept': 'application/json' }
+    });
     if (!response.ok) {
         throw new Error('Failed to fetch Google public keys');
     }
@@ -249,10 +277,12 @@ exports.handleGoogleCallback = async (req, res) => {
 
         console.log('Exchanging code for tokens...');
         
-        // Exchange authorization code for tokens
-        const tokenResponse = await fetch(GOOGLE_TOKEN_URL, {
+        const tokenResponse = await fetchWithRetry(GOOGLE_TOKEN_URL, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            headers: { 
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'Accept': 'application/json'
+            },
             body: new URLSearchParams({
                 code,
                 client_id: clientId,

@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const adminController = require('../controllers/admin-controller');
+const messageController = require('../controllers/message-controller');
 const { protect, authorize } = require('../middleware/auth');
 const multer = require('multer');
 const path = require('path');
@@ -113,5 +114,14 @@ router.get('/model-info', adminController.getModelInfo);
 
 // Image upload route for animals and events
 router.post('/upload-image', imageUpload.single('image'), adminController.uploadImage);
+
+router.get('/messages', messageController.getAllMessages);
+router.get('/messages/unread-count', messageController.getUnreadCount);
+router.get('/messages/:id', messageController.getMessageById);
+router.put('/messages/:id/read', messageController.markAsRead);
+router.put('/messages/read-all', messageController.markAllAsRead);
+router.post('/messages/:id/respond', messageController.respondToMessage);
+router.delete('/messages/:id', messageController.deleteMessage);
+router.get('/appeals', messageController.getAppeals);
 
 module.exports = router;

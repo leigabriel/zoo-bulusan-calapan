@@ -25,12 +25,14 @@ import AdminAnimals from './pages/admin/AdminAnimals';
 import AdminProfile from './pages/admin/AdminProfile';
 import AdminHelpCenter from './pages/admin/AdminHelpCenter';
 import AdminTickets from './pages/admin/AdminTickets';
+import AdminMessages from './pages/admin/AdminMessages';
 import StaffDashboard from './pages/staff/StaffDashboard';
 import StaffEvents from './pages/staff/StaffEvents';
 import StaffTickets from './pages/staff/StaffTickets';
 import StaffAnimals from './pages/staff/StaffAnimals';
 import StaffUsers from './pages/staff/StaffUsers';
 import StaffHelpCenter from './pages/staff/StaffHelpCenter';
+import StaffMessages from './pages/staff/StaffMessages';
 import TicketScanner from './pages/staff/TicketScanner';
 import AdminLayout from './components/layout/AdminLayout';
 import StaffLayout from './components/layout/StaffLayout';
@@ -196,6 +198,13 @@ function AppRoutes() {
                     </AdminLayout>
                 </ProtectedRoute>
             } />
+            <Route path="/admin/messages" element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                    <AdminLayout>
+                        <AdminMessages />
+                    </AdminLayout>
+                </ProtectedRoute>
+            } />
 
             {/* Staff Routes */}
             <Route path="/staff/dashboard" element={
@@ -244,6 +253,13 @@ function AppRoutes() {
                 <ProtectedRoute allowedRoles={['admin', 'staff', 'vet']}>
                     <StaffLayout>
                         <StaffHelpCenter />
+                    </StaffLayout>
+                </ProtectedRoute>
+            } />
+            <Route path="/staff/messages" element={
+                <ProtectedRoute allowedRoles={['admin', 'staff', 'vet']}>
+                    <StaffLayout>
+                        <StaffMessages />
                     </StaffLayout>
                 </ProtectedRoute>
             } />

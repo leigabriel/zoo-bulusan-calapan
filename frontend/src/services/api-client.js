@@ -389,7 +389,7 @@ export const adminAPI = {
 
     suspendUser: async (id, reason) => {
         const response = await fetch(`${API_BASE_URL}/admin/users/${id}/suspend`, {
-            method: 'POST',
+            method: 'PUT',
             headers: getAuthHeaders('admin'),
             body: JSON.stringify({ reason })
         });
@@ -398,7 +398,7 @@ export const adminAPI = {
 
     unsuspendUser: async (id) => {
         const response = await fetch(`${API_BASE_URL}/admin/users/${id}/unsuspend`, {
-            method: 'POST',
+            method: 'PUT',
             headers: getAuthHeaders('admin')
         });
         return handleResponse(response);
@@ -431,7 +431,7 @@ export const adminAPI = {
     // Ticket management - mark as paid, verification, export
     markTicketAsPaid: async (id) => {
         const response = await fetch(`${API_BASE_URL}/admin/tickets/${id}/mark-paid`, {
-            method: 'POST',
+            method: 'PUT',
             headers: getAuthHeaders('admin')
         });
         return handleResponse(response);
@@ -709,7 +709,7 @@ export const staffAPI = {
     // User management - suspend/unsuspend
     suspendUser: async (id, reason) => {
         const response = await fetch(`${API_BASE_URL}/staff/users/${id}/suspend`, {
-            method: 'POST',
+            method: 'PUT',
             headers: getAuthHeaders('staff'),
             body: JSON.stringify({ reason })
         });
@@ -718,7 +718,7 @@ export const staffAPI = {
 
     unsuspendUser: async (id) => {
         const response = await fetch(`${API_BASE_URL}/staff/users/${id}/unsuspend`, {
-            method: 'POST',
+            method: 'PUT',
             headers: getAuthHeaders('staff')
         });
         return handleResponse(response);
@@ -744,7 +744,7 @@ export const staffAPI = {
     // Ticket management - mark as paid, verification
     markTicketAsPaid: async (id) => {
         const response = await fetch(`${API_BASE_URL}/staff/tickets/${id}/mark-paid`, {
-            method: 'POST',
+            method: 'PUT',
             headers: getAuthHeaders('staff')
         });
         return handleResponse(response);
@@ -755,6 +755,54 @@ export const staffAPI = {
             method: 'PUT',
             headers: getAuthHeaders('staff'),
             body: JSON.stringify({ status })
+        });
+        return handleResponse(response);
+    },
+
+    // Messages management
+    getMessages: async () => {
+        const response = await fetch(`${API_BASE_URL}/staff/messages`, {
+            headers: getAuthHeaders('staff')
+        });
+        return handleResponse(response);
+    },
+
+    getAppeals: async () => {
+        const response = await fetch(`${API_BASE_URL}/staff/appeals`, {
+            headers: getAuthHeaders('staff')
+        });
+        return handleResponse(response);
+    },
+
+    markMessageRead: async (id) => {
+        const response = await fetch(`${API_BASE_URL}/staff/messages/${id}/read`, {
+            method: 'PUT',
+            headers: getAuthHeaders('staff')
+        });
+        return handleResponse(response);
+    },
+
+    markAllMessagesRead: async () => {
+        const response = await fetch(`${API_BASE_URL}/staff/messages/read-all`, {
+            method: 'PUT',
+            headers: getAuthHeaders('staff')
+        });
+        return handleResponse(response);
+    },
+
+    respondToMessage: async (id, response) => {
+        const res = await fetch(`${API_BASE_URL}/staff/messages/${id}/respond`, {
+            method: 'PUT',
+            headers: getAuthHeaders('staff'),
+            body: JSON.stringify({ response })
+        });
+        return handleResponse(res);
+    },
+
+    deleteMessage: async (id) => {
+        const response = await fetch(`${API_BASE_URL}/staff/messages/${id}`, {
+            method: 'DELETE',
+            headers: getAuthHeaders('staff')
         });
         return handleResponse(response);
     }
@@ -871,6 +919,87 @@ export const userAPI = {
     }
 };
 
+export const messageAPI = {
+    sendMessage: async (messageData) => {
+        const response = await fetch(`${API_BASE_URL}/messages`, {
+            method: 'POST',
+            headers: getAuthHeaders('user'),
+            body: JSON.stringify(messageData)
+        });
+        return handleResponse(response);
+    },
+
+    getMyMessages: async () => {
+        const response = await fetch(`${API_BASE_URL}/messages/my-messages`, {
+            headers: getAuthHeaders('user')
+        });
+        return handleResponse(response);
+    },
+
+    submitAppeal: async (appealData) => {
+        const response = await fetch(`${API_BASE_URL}/messages/appeal`, {
+            method: 'POST',
+            headers: getAuthHeaders('user'),
+            body: JSON.stringify(appealData)
+        });
+        return handleResponse(response);
+    },
+
+    getAllMessages: async (type = 'admin') => {
+        const response = await fetch(`${API_BASE_URL}/admin/messages`, {
+            headers: getAuthHeaders(type)
+        });
+        return handleResponse(response);
+    },
+
+    getUnreadCount: async (type = 'admin') => {
+        const response = await fetch(`${API_BASE_URL}/admin/messages/unread-count`, {
+            headers: getAuthHeaders(type)
+        });
+        return handleResponse(response);
+    },
+
+    markAsRead: async (id, type = 'admin') => {
+        const response = await fetch(`${API_BASE_URL}/admin/messages/${id}/read`, {
+            method: 'PUT',
+            headers: getAuthHeaders(type)
+        });
+        return handleResponse(response);
+    },
+
+    markAllAsRead: async (type = 'admin') => {
+        const response = await fetch(`${API_BASE_URL}/admin/messages/read-all`, {
+            method: 'PUT',
+            headers: getAuthHeaders(type)
+        });
+        return handleResponse(response);
+    },
+
+    respondToMessage: async (id, response, type = 'admin') => {
+        const res = await fetch(`${API_BASE_URL}/admin/messages/${id}/respond`, {
+            method: 'POST',
+            headers: getAuthHeaders(type),
+            body: JSON.stringify({ response })
+        });
+        return handleResponse(res);
+    },
+
+    deleteMessage: async (id, type = 'admin') => {
+        const response = await fetch(`${API_BASE_URL}/admin/messages/${id}`, {
+            method: 'DELETE',
+            headers: getAuthHeaders(type)
+        });
+        return handleResponse(response);
+    },
+
+    getAppeals: async (type = 'admin') => {
+        const response = await fetch(`${API_BASE_URL}/admin/appeals`, {
+            headers: getAuthHeaders(type)
+        });
+        return handleResponse(response);
+    }
+};
+
 export const predictionAPI = {
     create: async (predictionData) => {
         const token = getToken('user');
@@ -934,6 +1063,32 @@ export const getProfileImageUrl = (profileImg) => {
     
     // Default: assume it's in the backend uploads
     return `${BACKEND_BASE_URL}/uploads/profile-images/${profileImg}`;
+};
+
+/**
+ * Get the full URL for a resident ID image
+ * Handles various formats: full URLs, relative paths, base64 data, and filenames
+ */
+export const getResidentIdImageUrl = (residentIdImg) => {
+    if (!residentIdImg) return null;
+    
+    // If it's a base64 data URL, use it directly
+    if (residentIdImg.startsWith('data:image')) {
+        return residentIdImg;
+    }
+    
+    // If it's already a full URL (http/https), use it directly  
+    if (residentIdImg.startsWith('http')) {
+        return residentIdImg;
+    }
+    
+    // If it's a relative path starting with /uploads, prepend the backend URL
+    if (residentIdImg.startsWith('/uploads')) {
+        return `${BACKEND_BASE_URL}${residentIdImg}`;
+    }
+    
+    // Default: assume it's in the backend resident-id-images folder
+    return `${BACKEND_BASE_URL}/uploads/resident-id-images/${residentIdImg}`;
 };
 
 export { getToken, getAuthHeaders, API_BASE_URL, BACKEND_BASE_URL };

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { adminAPI } from '../../services/api-client';
+import { adminAPI, getResidentIdImageUrl } from '../../services/api-client';
 
 // Icons
 const SearchIcon = () => (
@@ -99,6 +99,10 @@ const AdminTickets = ({ globalSearch = '' }) => {
     const [confirmMessage, setConfirmMessage] = useState('');
     const [confirmTitle, setConfirmTitle] = useState('');
     const [exportLoading, setExportLoading] = useState(false);
+    
+    // Image preview modal state
+    const [showImageModal, setShowImageModal] = useState(false);
+    const [previewImageUrl, setPreviewImageUrl] = useState('');
 
     const events = ['All Events', 'Night Safari Experience', 'Animal Feeding Tour', 'General Admission', 'Wildlife Photography Day', 'Conservation Workshop'];
 
@@ -752,10 +756,15 @@ const AdminTickets = ({ globalSearch = '' }) => {
                                         <div className="space-y-3">
                                             <div className="bg-white rounded-xl p-2 max-h-48 overflow-hidden">
                                                 <img 
-                                                    src={selectedTicket.residentIdImage} 
+                                                    src={getResidentIdImageUrl(selectedTicket.residentIdImage)} 
                                                     alt="Resident ID" 
                                                     className="w-full h-full object-contain rounded-lg cursor-pointer hover:opacity-80"
-                                                    onClick={() => window.open(selectedTicket.residentIdImage, '_blank')}
+                                                    onClick={(e) => {
+                                                        e.preventDefault();
+                                                        e.stopPropagation();
+                                                        setPreviewImageUrl(getResidentIdImageUrl(selectedTicket.residentIdImage));
+                                                        setShowImageModal(true);
+                                                    }}
                                                 />
                                             </div>
                                             <p className="text-xs text-teal-400">Click image to view in full size</p>
@@ -942,6 +951,31 @@ const AdminTickets = ({ globalSearch = '' }) => {
                                 </button>
                             </div>
                         </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Image Preview Modal */}
+            {showImageModal && previewImageUrl && (
+                <div 
+                    className="fixed inset-0 bg-black/90 backdrop-blur-sm z-[70] flex items-center justify-center p-4"
+                    onClick={() => setShowImageModal(false)}
+                >
+                    <div 
+                        className="relative max-w-4xl max-h-[90vh] w-full"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <button
+                            onClick={() => setShowImageModal(false)}
+                            className="absolute -top-12 right-0 p-2 bg-white/10 hover:bg-white/20 rounded-full text-white transition-all"
+                        >
+                            <CloseIcon />
+                        </button>
+                        <img 
+                            src={previewImageUrl} 
+                            alt="Resident ID Preview" 
+                            className="w-full h-full object-contain rounded-xl"
+                        />
                     </div>
                 </div>
             )}

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { authAPI } from '../../services/api-client';
+import { authAPI, messageAPI } from '../../services/api-client';
 import { sanitizeInput } from '../../utils/sanitize';
 
 const EyeIcon = () => (
@@ -254,6 +254,12 @@ const LoginPage = () => {
     const [message, setMessage] = useState({ text: '', type: '' });
     const [showPrivacyModal, setShowPrivacyModal] = useState(false);
     const [showTermsModal, setShowTermsModal] = useState(false);
+    const [showSuspendedModal, setShowSuspendedModal] = useState(false);
+    const [suspensionInfo, setSuspensionInfo] = useState(null);
+    const [showAppealModal, setShowAppealModal] = useState(false);
+    const [appealMessage, setAppealMessage] = useState('');
+    const [appealLoading, setAppealLoading] = useState(false);
+    const [appealSent, setAppealSent] = useState(false);
     const { login } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
@@ -311,13 +317,57 @@ const LoginPage = () => {
                 } else {
                     navigate('/');
                 }
+            } else if (response.suspended) {
+                setSuspensionInfo({
+                    reason: response.suspensionReason,
+                    suspendedAt: response.suspendedAt,
+                    userId: response.userId,
+                    email: response.email
+                });
+                setShowSuspendedModal(true);
             } else {
                 setMessage({ text: response.message || 'Login failed', type: 'error' });
             }
         } catch (err) {
-            setMessage({ text: err.message || 'An error occurred during login', type: 'error' });
+            if (err.suspended) {
+                setSuspensionInfo({
+                    reason: err.suspensionReason,
+                    suspendedAt: err.suspendedAt,
+                    userId: err.userId,
+                    email: err.email
+                });
+                setShowSuspendedModal(true);
+            } else {
+                setMessage({ text: err.message || 'An error occurred during login', type: 'error' });
+            }
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleSubmitAppeal = async () => {
+        if (!appealMessage.trim()) {
+            setMessage({ text: 'Please enter your appeal message', type: 'error' });
+            return;
+        }
+
+        setAppealLoading(true);
+        try {
+            const response = await messageAPI.submitAppeal({
+                subject: 'Suspension Appeal',
+                content: appealMessage.trim()
+            });
+
+            if (response.success) {
+                setAppealSent(true);
+                setAppealMessage('');
+            } else {
+                setMessage({ text: response.message || 'Failed to submit appeal', type: 'error' });
+            }
+        } catch (err) {
+            setMessage({ text: err.message || 'Failed to submit appeal', type: 'error' });
+        } finally {
+            setAppealLoading(false);
         }
     };
 
@@ -348,6 +398,118 @@ const LoginPage = () => {
                 title="Terms of Service"
                 content={TERMS_OF_SERVICE_CONTENT}
             />
+
+            {showSuspendedModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+                    <div className="bg-white rounded-xl shadow-2xl w-full max-w-md flex flex-col">
+                        <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-200 bg-red-50">
+                            <h2 className="text-xl font-bold text-red-800">Account Suspended</h2>
+                            <button
+                                onClick={() => {
+                                    setShowSuspendedModal(false);
+                                    setSuspensionInfo(null);
+                                }}
+                                className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg"
+                            >
+                                <CloseIcon />
+                            </button>
+                        </div>
+                        <div className="p-4 sm:p-6">
+                            <div className="flex items-center gap-3 mb-4">
+                                <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+                                    <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p className="font-medium text-gray-900">Your account has been suspended</p>
+                                    <p className="text-sm text-gray-500">Contact support or submit an appeal</p>
+                                </div>
+                            </div>
+                            <div className="bg-gray-50 rounded-lg p-4 mb-4">
+                                <p className="text-sm font-medium text-gray-600 mb-1">Reason for suspension:</p>
+                                <p className="text-gray-800">{suspensionInfo?.reason || 'No reason provided'}</p>
+                                {suspensionInfo?.suspendedAt && (
+                                    <p className="text-xs text-gray-500 mt-2">
+                                        Suspended on: {new Date(suspensionInfo.suspendedAt).toLocaleDateString()}
+                                    </p>
+                                )}
+                            </div>
+                            <button
+                                onClick={() => {
+                                    setShowSuspendedModal(false);
+                                    setShowAppealModal(true);
+                                }}
+                                className="w-full bg-green-600 text-white py-2.5 rounded-lg font-semibold hover:bg-green-700"
+                            >
+                                Submit an Appeal
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {showAppealModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+                    <div className="bg-white rounded-xl shadow-2xl w-full max-w-md flex flex-col">
+                        <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-200">
+                            <h2 className="text-xl font-bold text-gray-900">Submit Appeal</h2>
+                            <button
+                                onClick={() => {
+                                    setShowAppealModal(false);
+                                    setAppealMessage('');
+                                    setAppealSent(false);
+                                }}
+                                className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg"
+                            >
+                                <CloseIcon />
+                            </button>
+                        </div>
+                        <div className="p-4 sm:p-6">
+                            {appealSent ? (
+                                <div className="text-center py-6">
+                                    <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                        <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                                        </svg>
+                                    </div>
+                                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Appeal Submitted</h3>
+                                    <p className="text-gray-600 mb-4">Your appeal has been submitted successfully. You will be notified once it has been reviewed.</p>
+                                    <button
+                                        onClick={() => {
+                                            setShowAppealModal(false);
+                                            setAppealSent(false);
+                                        }}
+                                        className="px-6 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
+                                    >
+                                        Close
+                                    </button>
+                                </div>
+                            ) : (
+                                <>
+                                    <p className="text-gray-600 mb-4">
+                                        Please explain why you believe your suspension should be lifted. Be respectful and provide relevant details.
+                                    </p>
+                                    <textarea
+                                        value={appealMessage}
+                                        onChange={(e) => setAppealMessage(e.target.value)}
+                                        placeholder="Enter your appeal message..."
+                                        rows={5}
+                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none"
+                                    />
+                                    <button
+                                        onClick={handleSubmitAppeal}
+                                        disabled={appealLoading || !appealMessage.trim()}
+                                        className="w-full mt-4 bg-green-600 text-white py-2.5 rounded-lg font-semibold hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                                    >
+                                        {appealLoading ? 'Submitting...' : 'Submit Appeal'}
+                                    </button>
+                                </>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <div className="flex flex-col md:flex-row w-full max-w-5xl bg-white rounded-2xl overflow-hidden shadow-2xl border-4 border-gray-200">
                 <div className="relative flex flex-col justify-between text-white p-6 sm:p-10 md:w-1/2 rounded-2xl md:rounded-none overflow-hidden min-h-[200px] sm:min-h-[300px]">

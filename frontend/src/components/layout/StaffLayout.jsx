@@ -66,6 +66,13 @@ const HelpIcon = () => (
     </svg>
 );
 
+const MailIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+        <polyline points="22,6 12,13 2,6" />
+    </svg>
+);
+
 const LogoutIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
         <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
@@ -272,6 +279,7 @@ const StaffLayout = ({ children }) => {
         { path: '/staff/tickets', label: 'Tickets', Icon: TicketsIcon },
         { path: '/staff/animals', label: 'Manage Animals', Icon: AnimalsIcon },
         { path: '/staff/users', label: 'Manage Users', Icon: UsersIcon },
+        { path: '/staff/messages', label: 'Messages', Icon: MailIcon },
         { path: '/staff/scanner', label: 'Ticket Scanner', Icon: ScannerIcon },
     ];
 

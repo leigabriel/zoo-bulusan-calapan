@@ -11,8 +11,8 @@ const Tickets = () => {
     const navigate = useNavigate();
     const { user, isAuthenticated } = useAuth();
     const [currentStep, setCurrentStep] = useState(1);
-    const [counts, setCounts] = useState({ adults: 0, children: 0, seniors: 0, residents: 0 });
-    const prices = { adults: 40, children: 20, seniors: 30, residents: 0 };
+    const [counts, setCounts] = useState({ seniors: 0, adults: 0, children: 0, students: 0, residents: 0 });
+    const prices = { seniors: 30, adults: 40, children: 20, students: 25, residents: 0 };
     const [total, setTotal] = useState(0);
     const [companions, setCompanions] = useState([]);
     const [bookingDetails, setBookingDetails] = useState({
@@ -37,6 +37,12 @@ const Tickets = () => {
     const [idUploadError, setIdUploadError] = useState('');
 
     const ticketTypes = {
+        seniors: {
+            name: 'Senior Pass',
+            description: 'Ages 60+',
+            icon: 'fa-user-clock',
+            color: 'bg-purple-500'
+        },
         adults: {
             name: 'Adult Pass',
             description: 'Ages 18-59',
@@ -49,11 +55,11 @@ const Tickets = () => {
             icon: 'fa-child',
             color: 'bg-blue-500'
         },
-        seniors: {
-            name: 'Senior Pass',
-            description: 'Ages 60+',
-            icon: 'fa-user-clock',
-            color: 'bg-purple-500'
+        students: {
+            name: 'Student Pass',
+            description: 'With valid student ID',
+            icon: 'fa-graduation-cap',
+            color: 'bg-orange-500'
         },
         residents: {
             name: 'Bulusan Resident',
@@ -212,6 +218,12 @@ const Tickets = () => {
 
     // Check if resident tickets are selected
     const hasResidentTickets = counts.residents > 0;
+    
+    // Check if student tickets are selected
+    const hasStudentTickets = counts.students > 0;
+    
+    // Check if ID upload is required (for both resident and student tickets)
+    const requiresIdUpload = hasResidentTickets || hasStudentTickets;
 
     const validateStep = (step) => {
         if (step === 1) {
@@ -239,6 +251,11 @@ const Tickets = () => {
             // Validate resident ID image upload if resident tickets are selected
             if (hasResidentTickets && !residentIdImage) {
                 setMessage({ text: 'Please upload a valid ID image for Bulusan resident ticket verification.', type: 'error' });
+                return false;
+            }
+            // Validate student ID image upload if student tickets are selected
+            if (hasStudentTickets && !residentIdImage) {
+                setMessage({ text: 'Please upload a valid student ID image for student ticket verification.', type: 'error' });
                 return false;
             }
         }
@@ -274,9 +291,9 @@ const Tickets = () => {
         try {
             await new Promise(resolve => setTimeout(resolve, 800));
 
-            // Convert image to base64 if resident ticket
+            // Convert image to base64 if resident or student ticket
             let residentIdBase64 = null;
-            if (hasResidentTickets && residentIdImage) {
+            if ((hasResidentTickets || hasStudentTickets) && residentIdImage) {
                 residentIdBase64 = residentIdPreview; // Already base64 from FileReader
             }
 
@@ -285,6 +302,7 @@ const Tickets = () => {
                     adults: 'adult',
                     children: 'child',
                     seniors: 'senior',
+                    students: 'student',
                     residents: 'resident'
                 }[type] || type;
 
@@ -295,7 +313,7 @@ const Tickets = () => {
                     paymentMethod: total === 0 ? 'free' : bookingDetails.paymentMethod,
                     visitorEmail: bookingDetails.email,
                     visitorName: companions[0]?.name || user?.name || 'Guest',
-                    residentIdImage: mapType === 'resident' ? residentIdBase64 : null
+                    residentIdImage: (mapType === 'resident' || mapType === 'student') ? residentIdBase64 : null
                 });
             });
 
@@ -315,7 +333,7 @@ const Tickets = () => {
     };
 
     const resetBooking = () => {
-        setCounts({ adults: 0, children: 0, seniors: 0, residents: 0 });
+        setCounts({ seniors: 0, adults: 0, children: 0, students: 0, residents: 0 });
         setCompanions([]);
         setBookingDetails({ date: '', time: '08:00', email: user?.email || '', phone: '', specialRequests: '', paymentMethod: 'pay_at_park' });
         setCurrentStep(1);
@@ -588,17 +606,25 @@ const Tickets = () => {
                 ))}
             </div>
 
-            {/* Bulusan Resident ID Upload Section */}
-            {hasResidentTickets && (
+            {/* ID Upload Section for Resident and Student Tickets */}
+            {requiresIdUpload && (
                 <div className="mt-6 pt-6 border-t border-gray-200">
                     <h3 className="text-lg font-bold text-teal-800 mb-4 flex items-center gap-2">
-                        <i className="fas fa-id-card"></i> Bulusan Resident ID Verification
+                        <i className="fas fa-id-card"></i> 
+                        {hasResidentTickets && hasStudentTickets 
+                            ? 'ID Verification' 
+                            : hasResidentTickets 
+                                ? 'Bulusan Resident ID Verification' 
+                                : 'Student ID Verification'}
                     </h3>
                     <div className="p-4 bg-teal-50 border border-teal-200 rounded-xl mb-4">
                         <p className="text-sm text-teal-700 mb-3">
                             <i className="fas fa-info-circle mr-2"></i>
-                            Please upload a clear photo of your valid Bulusan resident ID for verification. 
-                            Your ticket will be reviewed by our staff before confirmation.
+                            {hasResidentTickets && hasStudentTickets 
+                                ? 'Please upload a clear photo of your valid ID (Bulusan resident ID or student ID) for verification. Your ticket will be reviewed by our staff before confirmation.'
+                                : hasResidentTickets 
+                                    ? 'Please upload a clear photo of your valid Bulusan resident ID for verification. Your ticket will be reviewed by our staff before confirmation.'
+                                    : 'Please upload a clear photo of your valid student ID for verification. Your ticket will be reviewed by our staff before confirmation.'}
                         </p>
                         <div className="flex flex-col gap-3">
                             <label className="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-teal-300 rounded-xl cursor-pointer bg-white hover:bg-teal-50 transition-colors">
