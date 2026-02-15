@@ -371,15 +371,6 @@ const Home = () => {
                         }}
                     ></div>
 
-                    <div className="absolute inset-0 pointer-events-none opacity-[0.25] mix-blend-overlay">
-                        <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
-                            <filter id="sectionNoise">
-                                <feTurbulence type="fractalNoise" baseFrequency="0.80" numOctaves="4" stitchTiles="stitch" />
-                            </filter>
-                            <rect width="100%" height="100%" filter="url(#sectionNoise)" />
-                        </svg>
-                    </div>
-
                     <div className="relative w-full max-w-7xl min-h-[600px] md:aspect-video bg-[#08140e] rounded-sm flex flex-col items-center justify-center overflow-hidden p-6 sm:p-12 md:p-24 shadow-2xl">
 
                         <div
