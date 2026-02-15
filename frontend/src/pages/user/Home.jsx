@@ -361,109 +361,69 @@ const Home = () => {
                     </div>
                 </section>
 
-                <section id="events-section" className="py-24 bg-white overflow-hidden border-t border-gray-100">
-                    <div className="container mx-auto px-6 lg:px-12">
-                        <div className="text-left mb-24">
-                            <div className="flex flex-col items-start mb-8">
-                                <span className="text-[10px] uppercase tracking-[0.5em] font-bold text-gray-400 mb-5">
-                                    Experiences
-                                </span>
-                                <div className="inline-flex items-center gap-2 px-4 py-1.5 border border-red-100 bg-red-50/50 rounded-full">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></span>
-                                    <span className="text-[10px] font-bold text-red-700 uppercase tracking-[0.2em]">
-                                        Events
-                                    </span>
-                                </div>
-                            </div>
+                <section id="events-section" className="relative bg-teal-600 p-3 sm:p-6 md:p-10 min-h-screen flex items-center justify-center overflow-hidden">
 
-                            <h2 className="text-5xl md:text-7xl font-light text-gray-900 mb-8 tracking-tighter">
+                    <div
+                        className="absolute inset-0 opacity-[0.2]"
+                        style={{
+                            backgroundImage: `radial-gradient(#ffffff 1.5px, transparent 1.5px)`,
+                            backgroundSize: '32px 32px'
+                        }}
+                    ></div>
+
+                    <div className="absolute inset-0 pointer-events-none opacity-[0.25] mix-blend-overlay">
+                        <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+                            <filter id="sectionNoise">
+                                <feTurbulence type="fractalNoise" baseFrequency="0.80" numOctaves="4" stitchTiles="stitch" />
+                            </filter>
+                            <rect width="100%" height="100%" filter="url(#sectionNoise)" />
+                        </svg>
+                    </div>
+
+                    <div className="relative w-full max-w-7xl min-h-[600px] md:aspect-video bg-[#08140e] rounded-sm flex flex-col items-center justify-center overflow-hidden p-6 sm:p-12 md:p-24 shadow-2xl">
+
+                        <div
+                            className="absolute inset-0 pointer-events-none opacity-30"
+                            style={{
+                                background: `radial-gradient(circle at center, transparent 0%, #08140e 90%), 
+                                    repeating-conic-gradient(from 0deg, #555 0deg 0.2deg, transparent 0.2deg 3deg)`
+                            }}
+                        ></div>
+
+                        <div className="relative z-10 flex flex-col items-center text-center w-full max-w-2xl">
+                            <h2 className="text-3xl sm:text-5xl md:text-7xl font-medium text-white mb-6 md:mb-12 tracking-tight leading-[1.1]">
                                 Wildlife Events
                             </h2>
 
-                            <p className="text-gray-500 text-lg max-w-xl font-light leading-relaxed italic">
+                            <p className="text-gray-400 text-sm sm:text-base md:text-lg leading-relaxed mb-10 md:mb-14 px-4 sm:px-0 font-light">
                                 Experience unforgettable moments with our animals through live feedings and shows.
                             </p>
-                        </div>
 
-                        <div className="flex overflow-x-auto md:grid md:grid-cols-3 gap-8 md:gap-12 pb-8 md:pb-0 snap-x snap-mandatory scrollbar-hide">
-                            {[
-                                {
-                                    title: 'Penguin Feeding',
-                                    time: '2:30 PM',
-                                    desc: 'Watch our playful penguins dive and swim.',
-                                    color: 'from-blue-400/20 to-cyan-500/20',
-                                    live: true
-                                },
-                                {
-                                    title: 'Tropical Bird Show',
-                                    time: '1:00 PM',
-                                    desc: 'Spectacular flight demonstrations.',
-                                    color: 'from-amber-400/20 to-orange-500/20',
-                                    live: false
-                                },
-                                {
-                                    title: 'Lion Feeding',
-                                    time: '4:00 PM',
-                                    desc: 'Watch the kings of the jungle at mealtime.',
-                                    color: 'from-yellow-400/20 to-amber-500/20',
-                                    live: false
-                                }
-                            ].map((event, i) => (
-                                <div key={i} className="group cursor-pointer min-w-[85vw] md:min-w-0 snap-center">
-                                    <div className={`relative aspect-[2/3] overflow-hidden mb-8 bg-gradient-to-br ${event.color} flex items-center justify-center`}>
-                                        <div className="absolute inset-0 ring-1 ring-inset ring-black/5 pointer-events-none" />
-
-                                        {event.live && (
-                                            <div className="absolute top-6 right-6">
-                                                <span className="bg-red-500 text-white text-[9px] font-bold px-3 py-1 uppercase tracking-widest shadow-sm flex items-center gap-1.5">
-                                                    <span className="w-1 h-1 bg-white rounded-full"></span>
-                                                    LIVE
-                                                </span>
-                                            </div>
-                                        )}
-
-                                        <div className="p-8 opacity-40 group-hover:opacity-100 transition-opacity duration-500">
-                                            <svg className="w-12 h-12 text-gray-900/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1" d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2z" />
-                                            </svg>
-                                        </div>
-                                    </div>
-
-                                    <div className="space-y-4">
-                                        <div className="flex justify-between items-center">
-                                            <span className="text-[10px] text-emerald-600 font-bold uppercase tracking-[0.2em]">{event.time}</span>
-                                            <div className="h-[1px] flex-grow mx-4 bg-gray-100"></div>
-                                        </div>
-
-                                        <h3 className="text-3xl font-light text-gray-900 leading-none transition-colors group-hover:text-emerald-800">
-                                            {event.title}
-                                        </h3>
-
-                                        <p className="text-gray-500 text-sm font-light leading-relaxed">
-                                            {event.desc}
-                                        </p>
-
-                                        <button className="pt-4 flex items-center gap-3 group/btn">
-                                            <span className="text-[10px] font-bold uppercase tracking-widest text-gray-900 group-hover/btn:text-emerald-600 transition-colors">Join Event</span>
-                                            <svg className="w-4 h-4 transition-transform group-hover/btn:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                                            </svg>
-                                        </button>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-
-                        <div className="text-center mt-28">
                             <Link
                                 to="/events"
-                                className="inline-flex flex-col items-center gap-5 group transition-all"
+                                className="group flex items-center bg-white rounded-[2px] overflow-hidden transition-all active:scale-95 shadow-2xl hover:bg-gray-100"
                             >
-                                <span className="text-gray-900 font-bold uppercase tracking-[0.5em] text-[10px]">
+                                <span className="px-5 py-3.5 sm:px-8 sm:py-4 text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.2em] text-teal-700 border-r border-gray-100">
                                     View All Events
                                 </span>
-                                <span className="h-[1px] w-20 bg-gray-200 group-hover:w-40 group-hover:bg-red-500 transition-all duration-700"></span>
+                                <div className="px-4 py-3.5 sm:px-5 sm:py-4 bg-gray-50 flex items-center justify-center">
+                                    <svg
+                                        className="w-4 h-4 text-teal-700 transition-transform group-hover:translate-x-1"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                                    </svg>
+                                </div>
                             </Link>
+                        </div>
+
+                        <div className="absolute top-6 left-6 sm:top-12 sm:left-12 opacity-20">
+                            <div className="w-12 sm:w-24 h-[1px] bg-white"></div>
+                        </div>
+                        <div className="absolute bottom-6 right-6 sm:bottom-12 sm:right-12 opacity-20">
+                            <div className="w-12 sm:w-24 h-[1px] bg-white"></div>
                         </div>
                     </div>
                 </section>
