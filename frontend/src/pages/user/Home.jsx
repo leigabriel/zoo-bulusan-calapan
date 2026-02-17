@@ -103,9 +103,14 @@ const Home = () => {
                         </div>
 
                         <div className="text-center max-w-4xl mx-auto">
-                            <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6 leading-tight tracking-tight">
-                                Welcome to
-                                <span className="bg-gradient-to-r from-emerald-600 via-teal-500 to-cyan-500 bg-clip-text italic text-transparent"> Bulusan Zoo</span>
+                            <h1 className="text-7xl md:text-7xl font-bold text-gray-900 mb-6 leading-none tracking-tight">
+                                Welcome to <br />
+                                <span
+                                    className="bg-gradient-to-r from-emerald-600 via-teal-500 to-cyan-500 bg-clip-text text-transparent"
+                                    style={{ fontFamily: '"Segoe Script", "cursive"' }}
+                                >
+                                    Bulusan Zoo
+                                </span>
                             </h1>
                             <p className="text-lg md:text-2xl text-gray-600 max-w-5xl mx-auto mb-10 leading-snug">
                                 Experience wildlife like never before with AI-powered tools that make exploring, planning your visit, and discovering amazing animals effortless and unforgettable.
@@ -255,13 +260,14 @@ const Home = () => {
 
                 <section className="relative w-full bg-[#08140e] flex items-center justify-center px-4 sm:px-8 md:px-12 py-16 md:py-24 overflow-hidden">
                     <div className="max-w-[1400px] mx-auto w-full text-center">
-                        <h2 className="flex flex-col gap-2 md:gap-4 text-4xl sm:text-6xl md:text-8xl lg:text-[10rem] font-black leading-[0.95] tracking-tighter uppercase select-none">
+                        <h2 className="flex flex-col gap-2 md:gap-4 text-5xl sm:text-6xl md:text-8xl lg:text-[10rem] font-black leading-[1.2] tracking-tighter select-none">
                             <span
                                 className="block bg-cover bg-center bg-no-repeat bg-clip-text text-transparent transition-opacity duration-700 ease-in"
                                 style={{
                                     backgroundImage: `url('https://images.unsplash.com/photo-1594220862488-117b78382514?q=80&w=1374&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D')`,
                                     WebkitTextFillColor: 'transparent',
-                                    backgroundSize: '120% auto'
+                                    backgroundSize: '80% auto',
+                                    fontFamily: '"Segoe Script", "cursive"'
                                 }}
                             >
                                 Wild by nature.
@@ -482,7 +488,7 @@ const Home = () => {
                         <div className="flex justify-center">
                             <Link to="/tickets">
                                 <button className="px-12 py-4 bg-gray-900 text-white text-sm font-bold tracking-widest uppercase rounded-full hover:bg-gray-800 transition-all duration-300 shadow-lg shadow-gray-200">
-                                    Book Your Tickets
+                                    Buy Your Tickets
                                 </button>
                             </Link>
                         </div>

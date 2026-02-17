@@ -102,7 +102,7 @@ const Footer = () => {
                     <h2 className="text-[8.5vw] md:text-[7.5vw] lg:text-[8.5vw] leading-none font-serif italic whitespace-nowrap opacity-[0.98] tracking-tight flex items-start">
                         Wildsight
                         <span className="text-[2vw] md:text-[2vw] not-italic ml-2 mt-2 md:mt-4 opacity-70">TM</span>
-                        <span className="ml-8 md:ml-12 not-italic">Bulusan Zoo</span>
+                        <span className="ml-8 md:ml-12 not-italic text-green-400">Bulusan Zoo</span>
                     </h2>
                 </div>
 

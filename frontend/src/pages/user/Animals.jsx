@@ -119,7 +119,19 @@ const Animals = () => {
                     </div>
                 )}
 
-                {!loading && !error && (
+                {!loading && !error && filteredAnimals.length === 0 && (
+                    <div className="flex flex-col items-center justify-center py-20">
+                        <div className="w-16 h-16 mb-4 text-gray-300">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+                            </svg>
+                        </div>
+                        <p className="text-lg font-medium text-gray-500">No animals available at the moment.</p>
+                        <p className="text-sm text-gray-400 mt-1">Please check back later.</p>
+                    </div>
+                )}
+
+                {!loading && !error && filteredAnimals.length > 0 && (
                     <div className="grid grid-cols-3 gap-3 md:gap-x-12 md:gap-y-20">
                         {filteredAnimals.map((animal) => (
                             <div key={animal.id} className="group cursor-pointer" onClick={() => setSelectedAnimal(animal)}>

@@ -35,7 +35,10 @@ class Ticket {
 
     static async findByUserId(userId) {
         const [rows] = await db.query(
-            'SELECT * FROM tickets WHERE user_id = ? ORDER BY created_at DESC',
+            `SELECT t.*, CONCAT(u.first_name, ' ', u.last_name) as user_name, u.email as user_email 
+             FROM tickets t 
+             LEFT JOIN users u ON t.user_id = u.id 
+             WHERE t.user_id = ? ORDER BY t.created_at DESC`,
             [userId]
         );
         return rows;

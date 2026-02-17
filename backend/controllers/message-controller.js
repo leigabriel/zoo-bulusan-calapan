@@ -21,20 +21,24 @@ exports.sendMessage = async (req, res) => {
             content: content.trim()
         });
 
-        const admins = await User.getByRole('admin');
-        const staffMembers = await User.getByRole('staff');
-        
-        const recipients = recipientType === 'staff' ? staffMembers : 
-                          recipientType === 'all' ? [...admins, ...staffMembers] : admins;
-        
-        for (const recipient of recipients) {
-            await Notification.create({
-                userId: recipient.id,
-                title: 'New Message Received',
-                message: `New message from ${req.user.firstName || 'a user'}: ${subject}`,
-                type: 'message',
-                link: '/admin/messages'
-            });
+        try {
+            const admins = await User.getByRole('admin');
+            const staffMembers = await User.getByRole('staff');
+            
+            const recipients = recipientType === 'staff' ? staffMembers : 
+                              recipientType === 'all' ? [...admins, ...staffMembers] : admins;
+            
+            for (const recipient of recipients) {
+                await Notification.create({
+                    userId: recipient.id,
+                    title: 'New Message Received',
+                    message: `New message from ${req.user.firstName || 'a user'}: ${subject}`,
+                    type: 'message',
+                    link: '/admin/messages'
+                });
+            }
+        } catch (notificationError) {
+            console.error('Error creating notifications (message was sent):', notificationError);
         }
 
         res.status(201).json({ 

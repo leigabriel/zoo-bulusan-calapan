@@ -24,7 +24,6 @@ const TicketHistory = () => {
         try {
             const response = await userAPI.getMyTickets();
             if (response.success) {
-                // backend returns { success: true, tickets }
                 const raw = response.tickets || response.data || [];
                 const normalized = (raw || []).map(t => ({
                     id: t.id || t.ticket_id || t.ticketId,
@@ -38,7 +37,9 @@ const TicketHistory = () => {
                     status: t.status || 'active',
                     paymentMethod: t.payment_method || t.paymentMethod || 'cash',
                     paymentStatus: t.payment_status || t.paymentStatus || 'pending',
-                    cancellationReason: t.cancellation_reason || t.cancellationReason || t.notes || null
+                    cancellationReason: t.cancellation_reason || t.cancellationReason || t.notes || null,
+                    visitorName: t.visitor_name || t.visitorName || t.user_name || '',
+                    ticketDetails: t.notes || null
                 }));
                 setTickets(normalized);
             }
@@ -131,153 +132,132 @@ const TicketHistory = () => {
     const downloadTicket = async () => {
         if (!selectedTicket) return;
         setDownloading(true);
-        
+
         try {
-            // Create a canvas element for the ticket
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
-            
-            // Set canvas size for a nice ticket layout
-            canvas.width = 600;
-            canvas.height = 800;
-            
-            // Background gradient
-            const gradient = ctx.createLinearGradient(0, 0, 600, 0);
-            gradient.addColorStop(0, '#10b981');
-            gradient.addColorStop(1, '#14b8a6');
-            
-            // Draw ticket background
+
+            canvas.width = 720;
+            canvas.height = 1600;
+
             ctx.fillStyle = '#ffffff';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
-            
-            // Header with gradient
-            ctx.fillStyle = gradient;
-            ctx.fillRect(0, 0, 600, 120);
-            
-            // Zoo logo/title
-            ctx.fillStyle = '#ffffff';
-            ctx.font = 'bold 32px Arial, sans-serif';
+
+            const textColor = '#212631';
+            ctx.fillStyle = textColor;
+            ctx.strokeStyle = textColor;
+
+            const monoFont = '"Brass Mono", "Brass Mono Code", "Courier New", monospace';
+
+            const padding = 60;
+            let y = 60;
+
+            const drawDashedLine = (yPos) => {
+                ctx.beginPath();
+                ctx.setLineDash([5, 5]);
+                ctx.lineWidth = 1.5;
+                ctx.moveTo(padding, yPos);
+                ctx.lineTo(canvas.width - padding, yPos);
+                ctx.stroke();
+                ctx.setLineDash([]);
+            };
+
+            drawDashedLine(y);
+            y += 90;
+
             ctx.textAlign = 'center';
-            ctx.fillText('🦁 Zoo Bulusan Calapan', 300, 55);
-            ctx.font = '16px Arial, sans-serif';
-            ctx.fillText('Entry Ticket', 300, 85);
-            
-            // Ticket type badge
-            ctx.fillStyle = '#ffffff20';
-            ctx.beginPath();
-            ctx.roundRect(200, 100, 200, 30, 5);
-            ctx.fill();
-            ctx.fillStyle = '#ffffff';
-            ctx.font = 'bold 14px Arial, sans-serif';
-            ctx.fillText(selectedTicket.ticketType?.toUpperCase() || 'REGULAR', 300, 120);
-            
-            // Main content area
-            ctx.fillStyle = '#f9fafb';
-            ctx.fillRect(30, 140, 540, 420);
-            
-            // QR Code placeholder area
-            ctx.fillStyle = '#ffffff';
-            ctx.fillRect(200, 160, 200, 200);
-            ctx.strokeStyle = '#e5e7eb';
-            ctx.lineWidth = 2;
-            ctx.strokeRect(200, 160, 200, 200);
-            
-            // Load QR code image
+            ctx.font = `bold 80px ${monoFont}`;
+            ctx.fillText('BULUSAN ZOO', canvas.width / 2, y);
+
+            y += 55;
+            ctx.font = `400 32px ${monoFont}`;
+            ctx.fillText('DIGITAL ENTRY PASS', canvas.width / 2, y);
+
+            y += 50;
+            drawDashedLine(y);
+
+            y += 90;
+
+            const qrSize = 400;
+            const qrX = (canvas.width - qrSize) / 2;
+
             const qrImage = new Image();
             qrImage.crossOrigin = 'anonymous';
             await new Promise((resolve, reject) => {
                 qrImage.onload = resolve;
                 qrImage.onerror = reject;
-                qrImage.src = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${selectedTicket.qrCode}`;
+                qrImage.src = `https://api.qrserver.com/v1/create-qr-code/?size=${qrSize}x${qrSize}&data=${selectedTicket.qrCode}`;
             });
-            ctx.drawImage(qrImage, 210, 170, 180, 180);
+
+            ctx.drawImage(qrImage, qrX, y, qrSize, qrSize);
+
+            y += qrSize + 90;
+            drawDashedLine(y);
+
+            y += 70;
+            ctx.font = `30px ${monoFont}`;
+
+            const drawReceiptLine = (label, value, yPos, isBold = false) => {
+                ctx.textAlign = 'left';
+                ctx.font = isBold ? `bold 30px ${monoFont}` : `30px ${monoFont}`;
+                ctx.fillText(label, padding + 20, yPos);
+
+                ctx.textAlign = 'right';
+                ctx.fillText(String(value).toUpperCase(), canvas.width - padding - 20, yPos);
+            };
+
+            drawReceiptLine('VISITOR:', selectedTicket.visitorName || user?.firstName + ' ' + user?.lastName || 'NOT SPECIFIED', y, true);
+            y += 60;
+
+            drawReceiptLine('REF NO:', selectedTicket.ticketCode || 'N/A', y);
+            y += 60;
+            drawReceiptLine('DATE:', new Date(selectedTicket.visitDate).toLocaleDateString(), y);
+            y += 60;
+            const ticketTypeDisplay = selectedTicket.ticketDetails || selectedTicket.ticketType || 'REGULAR';
+            drawReceiptLine('TYPE:', ticketTypeDisplay, y);
+            y += 60;
+            drawReceiptLine('QTY:', String(selectedTicket.quantity || 1), y);
+            y += 60;
+            drawReceiptLine('TOTAL:', selectedTicket.amount === 0 ? 'FREE' : `PHP ${selectedTicket.amount}`, y, true);
+            y += 60;
             
-            // Dashed line separator
-            ctx.setLineDash([8, 4]);
-            ctx.strokeStyle = '#d1d5db';
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.moveTo(50, 380);
-            ctx.lineTo(550, 380);
-            ctx.stroke();
-            ctx.setLineDash([]);
-            
-            // Ticket details
-            ctx.textAlign = 'left';
-            ctx.fillStyle = '#6b7280';
-            ctx.font = '14px Arial, sans-serif';
-            
-            const details = [
-                { label: 'Booking Reference', value: selectedTicket.ticketCode || 'N/A' },
-                { label: 'Visit Date', value: new Date(selectedTicket.visitDate).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) },
-                { label: 'Quantity', value: `${selectedTicket.quantity || 1} person(s)` },
-                { label: 'Amount', value: selectedTicket.amount === 0 ? 'FREE ENTRY' : `₱${selectedTicket.amount}` },
-                { label: 'Payment', value: getPaymentMethodLabel(selectedTicket.paymentMethod) }
-            ];
-            
-            let yPos = 410;
-            details.forEach(item => {
-                ctx.fillStyle = '#6b7280';
-                ctx.font = '13px Arial, sans-serif';
-                ctx.fillText(item.label, 60, yPos);
-                ctx.fillStyle = '#111827';
-                ctx.font = 'bold 15px Arial, sans-serif';
-                ctx.fillText(item.value, 60, yPos + 20);
-                yPos += 50;
-            });
-            
-            // Status badge
-            const statusColor = selectedTicket.status === 'active' || selectedTicket.status === 'confirmed' ? '#10b981' : '#6b7280';
-            ctx.fillStyle = statusColor + '20';
-            ctx.beginPath();
-            ctx.roundRect(400, 410, 120, 30, 8);
-            ctx.fill();
-            ctx.fillStyle = statusColor;
-            ctx.font = 'bold 14px Arial, sans-serif';
+            const paymentLabel = getPaymentMethodLabel(selectedTicket.paymentMethod);
+            drawReceiptLine('PAYMENT:', paymentLabel, y);
+
+            y += 80;
+            drawDashedLine(y);
+
+            y += 80;
             ctx.textAlign = 'center';
-            ctx.fillText((selectedTicket.status || 'Active').toUpperCase(), 460, 430);
-            
-            // Footer
-            ctx.fillStyle = gradient;
-            ctx.fillRect(0, 580, 600, 220);
-            
-            ctx.fillStyle = '#ffffff';
-            ctx.font = 'bold 16px Arial, sans-serif';
-            ctx.textAlign = 'center';
-            ctx.fillText('Show this ticket at the entrance', 300, 620);
-            
-            ctx.font = '13px Arial, sans-serif';
-            ctx.fillStyle = '#ffffffcc';
-            ctx.fillText('Valid for the specified date only', 300, 650);
-            ctx.fillText('Non-transferable • Non-refundable', 300, 675);
-            
-            // Contact info
-            ctx.font = '12px Arial, sans-serif';
-            ctx.fillStyle = '#ffffff99';
-            ctx.fillText('Zoo Bulusan Calapan, Oriental Mindoro', 300, 720);
-            ctx.fillText('Contact: info@zoobulusancalapan.ph', 300, 740);
-            
-            // Download timestamp
-            ctx.font = '10px Arial, sans-serif';
-            ctx.fillStyle = '#ffffff66';
-            ctx.fillText(`Downloaded: ${new Date().toLocaleString()}`, 300, 780);
-            
-            // Convert to blob and download
+            ctx.font = `bold 36px ${monoFont}`;
+            ctx.fillText('PRESENT QR CODE AT ENTRANCE', canvas.width / 2, y);
+
+            if (selectedTicket.paymentMethod === 'cash' || selectedTicket.paymentMethod === 'pay_at_park') {
+                y += 50;
+                ctx.font = `bold 28px ${monoFont}`;
+                ctx.fillStyle = '#dc2626';
+                ctx.fillText('PAY AT BULUSAN ZOO ENTRANCE', canvas.width / 2, y);
+                ctx.fillStyle = textColor;
+            }
+
+            y += 60;
+            drawDashedLine(y);
+
             canvas.toBlob((blob) => {
                 const url = URL.createObjectURL(blob);
                 const link = document.createElement('a');
                 link.href = url;
-                link.download = `zoo-ticket-${selectedTicket.ticketCode || 'ticket'}.png`;
+                link.download = `ZOO-TICKET-${selectedTicket.ticketCode}.png`;
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
                 URL.revokeObjectURL(url);
                 setDownloading(false);
             }, 'image/png');
+
         } catch (error) {
-            console.error('Error downloading ticket:', error);
+            console.error("Layout error:", error);
             setDownloading(false);
-            alert('Failed to download ticket. Please try again.');
         }
     };
 
@@ -342,13 +322,15 @@ const TicketHistory = () => {
             <div className="max-w-4xl mx-auto px-4 py-12 flex-grow">
                 <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
                     <div className="flex flex-wrap gap-2">
-                        {['all', 'active', 'used', 'expired'].map(f => (
+                        {['all', 'active', 'used', 'expired', 'cancelled'].map(f => (
                             <button
                                 key={f}
                                 onClick={() => setFilter(f)}
                                 className={`px-4 sm:px-6 py-2 sm:py-2.5 rounded-full text-sm sm:text-base font-semibold capitalize transition-all transform hover:-translate-y-0.5 ${filter === f
                                         ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg'
-                                        : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
+                                        : f === 'cancelled' 
+                                            ? 'bg-white text-red-600 hover:bg-red-50 border border-red-200'
+                                            : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
                                     }`}
                             >
                                 {f === 'all' ? 'All' : f.charAt(0).toUpperCase() + f.slice(1)}
@@ -411,11 +393,21 @@ const TicketHistory = () => {
                                         <div className="flex items-start justify-between mb-4">
                                             <div>
                                                 <h3 className="font-bold text-gray-800 text-lg capitalize">
-                                                    {ticket.ticketType} Ticket
+                                                    {ticket.ticketDetails ? 'Multiple Tickets' : `${ticket.ticketType} Ticket`}
                                                 </h3>
-                                                <p className="text-sm text-gray-500 font-mono">
+                                                {ticket.ticketDetails && (
+                                                    <p className="text-sm text-emerald-700 font-medium mt-1 capitalize">
+                                                        {ticket.ticketDetails}
+                                                    </p>
+                                                )}
+                                                <p className="text-sm text-gray-500 font-mono mt-1">
                                                     #{ticket.ticketCode}
                                                 </p>
+                                                {ticket.visitorName && (
+                                                    <p className="text-sm text-emerald-600 font-medium mt-1">
+                                                        {ticket.visitorName}
+                                                    </p>
+                                                )}
                                             </div>
                                             <div className="flex flex-col gap-1 items-end">
                                                 <span className={`px-3 py-1 rounded-full text-sm font-medium capitalize ${getStatusColor(ticket.status)}`}>
@@ -443,21 +435,29 @@ const TicketHistory = () => {
                                                 <p className="font-medium text-gray-800">{ticket.quantity} person(s)</p>
                                             </div>
                                             <div>
-                                                <p className="text-gray-500">Amount</p>
-                                                <p className="font-medium text-emerald-600">
+                                                <p className="text-gray-500">Total Amount</p>
+                                                <p className="font-medium text-emerald-600 text-base">
                                                     {ticket.amount === 0 ? 'FREE' : `₱${ticket.amount}`}
                                                 </p>
                                             </div>
                                             <div>
                                                 <p className="text-gray-500">Payment Method</p>
-                                                <p className="font-medium text-gray-800">{getPaymentMethodLabel(ticket.paymentMethod)}</p>
+                                                <p className={`font-medium ${ticket.paymentMethod === 'cash' || ticket.paymentMethod === 'pay_at_park' ? 'text-orange-600' : 'text-gray-800'}`}>
+                                                    {getPaymentMethodLabel(ticket.paymentMethod)}
+                                                </p>
                                             </div>
+                                            {ticket.ticketDetails && (
+                                                <div className="col-span-2">
+                                                    <p className="text-gray-500">Ticket Details</p>
+                                                    <p className="font-medium text-gray-800 capitalize">{ticket.ticketDetails}</p>
+                                                </div>
+                                            )}
                                             <div className="col-span-2">
                                                 <p className="text-gray-500">Payment Status</p>
-                                                <p className={`font-medium capitalize ${ticket.paymentStatus === 'paid' ? 'text-green-600' : ticket.paymentStatus === 'pending' ? 'text-yellow-600' : 'text-gray-600'}`}>
-                                                    {ticket.paymentStatus === 'pending' && (ticket.paymentMethod === 'cash' || !ticket.paymentMethod)
-                                                        ? 'Pending - Pay at the park entrance'
-                                                        : ticket.paymentStatus}
+                                                <p className={`font-medium capitalize ${ticket.paymentStatus === 'paid' || ticket.paymentStatus === 'free' ? 'text-green-600' : ticket.paymentStatus === 'not_paid' ? 'text-orange-600' : 'text-yellow-600'}`}>
+                                                    {ticket.paymentStatus === 'not_paid' || (ticket.paymentStatus === 'pending' && (ticket.paymentMethod === 'cash' || ticket.paymentMethod === 'pay_at_park'))
+                                                        ? 'Pay at Bulusan Zoo Entrance'
+                                                        : ticket.paymentStatus === 'free' ? 'Free Entry' : ticket.paymentStatus}
                                                 </p>
                                             </div>
                                             {ticket.status === 'cancelled' && ticket.cancellationReason && (
@@ -484,7 +484,6 @@ const TicketHistory = () => {
                                                 >
                                                     View Full QR
                                                 </button>
-                                                {/* Archive button for used/expired tickets */}
                                                 {(ticket.status === 'used' || ticket.status === 'expired') && (
                                                     <button
                                                         onClick={() => handleArchiveTicket(ticket.id)}
@@ -565,7 +564,19 @@ const TicketHistory = () => {
                             <p className="text-center text-gray-500 text-sm mb-4">
                                 Show this QR code at the park entrance
                             </p>
+                            {(selectedTicket.paymentMethod === 'cash' || selectedTicket.paymentMethod === 'pay_at_park') && selectedTicket.paymentStatus !== 'paid' && (
+                                <div className="w-full bg-orange-50 border border-orange-200 rounded-xl p-3 mb-4 text-center">
+                                    <p className="text-orange-700 font-semibold text-sm">Pay at Bulusan Zoo Entrance</p>
+                                    <p className="text-orange-600 text-xs mt-1">Total: {selectedTicket.amount === 0 ? 'FREE' : `₱${selectedTicket.amount}`}</p>
+                                </div>
+                            )}
                             <div className="w-full bg-gray-50 rounded-xl p-4 space-y-2">
+                                {selectedTicket.visitorName && (
+                                    <div className="flex justify-between text-sm">
+                                        <span className="text-gray-500">Visitor:</span>
+                                        <span className="font-medium text-emerald-600">{selectedTicket.visitorName}</span>
+                                    </div>
+                                )}
                                 <div className="flex justify-between text-sm">
                                     <span className="text-gray-500">Booking Ref:</span>
                                     <span className="font-mono font-medium text-gray-800">{selectedTicket.ticketCode}</span>
@@ -583,6 +594,16 @@ const TicketHistory = () => {
                                 <div className="flex justify-between text-sm">
                                     <span className="text-gray-500">Quantity:</span>
                                     <span className="font-medium text-gray-800">{selectedTicket.quantity} person(s)</span>
+                                </div>
+                                <div className="flex justify-between text-sm border-t border-gray-200 pt-2 mt-2">
+                                    <span className="text-gray-500">Total Amount:</span>
+                                    <span className="font-bold text-emerald-600">{selectedTicket.amount === 0 ? 'FREE' : `₱${selectedTicket.amount}`}</span>
+                                </div>
+                                <div className="flex justify-between text-sm">
+                                    <span className="text-gray-500">Payment:</span>
+                                    <span className={`font-medium ${selectedTicket.paymentMethod === 'cash' || selectedTicket.paymentMethod === 'pay_at_park' ? 'text-orange-600' : 'text-gray-800'}`}>
+                                        {getPaymentMethodLabel(selectedTicket.paymentMethod)}
+                                    </span>
                                 </div>
                             </div>
                         </div>

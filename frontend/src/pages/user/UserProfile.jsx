@@ -1,51 +1,25 @@
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { authAPI, getProfileImageUrl as resolveProfileImageUrl } from '../../services/api-client';
-import { sanitizeInput, sanitizePhone } from '../../utils/sanitize';
+import { sanitizeInput } from '../../utils/sanitize';
 
 const UserIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-20 h-20">
-        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-        <circle cx="12" cy="7" r="4" />
-    </svg>
-);
-
-const EditIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-5 h-5">
-        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-    </svg>
-);
-
-const SaveIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-5 h-5">
-        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
-        <polyline points="17 21 17 13 7 13 7 21" />
-        <polyline points="7 3 7 8 15 8" />
-    </svg>
-);
-
-const TrashIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-5 h-5">
-        <polyline points="3 6 5 6 21 6" />
-        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-        <line x1="10" y1="11" x2="10" y2="17" />
-        <line x1="14" y1="11" x2="14" y2="17" />
-    </svg>
-);
-
-const LockIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-5 h-5">
-        <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-        <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-16 h-16 text-gray-300">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
     </svg>
 );
 
 const CameraIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-5 h-5">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4">
         <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
         <circle cx="12" cy="13" r="4" />
+    </svg>
+);
+
+const VerifiedIcon = () => (
+    <svg className="w-5 h-5 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+        <path d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.64.304 1.24.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" />
     </svg>
 );
 
@@ -54,13 +28,9 @@ const UserProfile = () => {
     const navigate = useNavigate();
     const [isEditing, setIsEditing] = useState(false);
     const [loading, setLoading] = useState(false);
-    const [message, setMessage] = useState({ text: '', type: '' });
-    const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [showPasswordModal, setShowPasswordModal] = useState(false);
-    const [deletePassword, setDeletePassword] = useState('');
     const [passwordData, setPasswordData] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
 
-    // Profile image upload states
     const [imagePreview, setImagePreview] = useState(null);
     const [selectedFile, setSelectedFile] = useState(null);
     const [uploadingImage, setUploadingImage] = useState(false);
@@ -68,544 +38,257 @@ const UserProfile = () => {
 
     const [formData, setFormData] = useState({
         firstName: '',
-        lastName: '',
-        phoneNumber: '',
-        gender: '',
-        birthday: ''
+        lastName: ''
     });
 
     useEffect(() => {
         if (user) {
             setFormData({
                 firstName: user.firstName || '',
-                lastName: user.lastName || '',
-                phoneNumber: user.phoneNumber || '',
-                gender: user.gender || 'prefer_not_to_say',
-                birthday: user.birthday ? user.birthday.split('T')[0] : ''
+                lastName: user.lastName || ''
             });
         }
     }, [user]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        let sanitizedValue = value;
-
-        if (name === 'phoneNumber') {
-            sanitizedValue = sanitizePhone(value);
-        } else if (name !== 'gender' && name !== 'birthday') {
-            sanitizedValue = sanitizeInput(value);
-        }
-
-        setFormData({ ...formData, [name]: sanitizedValue });
+        setFormData({ ...formData, [name]: sanitizeInput(value) });
     };
 
-    // Handle file selection for profile image
     const handleFileSelect = (e) => {
         const file = e.target.files[0];
         if (!file) return;
-
-        // Validate file type
-        const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
-        if (!allowedTypes.includes(file.type)) {
-            setMessage({ text: 'Invalid file type. Only JPEG, PNG, and WebP images are allowed.', type: 'error' });
-            return;
-        }
-
-        // Validate file size (2MB max)
-        if (file.size > 2 * 1024 * 1024) {
-            setMessage({ text: 'File too large. Maximum size is 2MB.', type: 'error' });
-            return;
-        }
-
         setSelectedFile(file);
-
-        // Create preview URL
         const reader = new FileReader();
-        reader.onloadend = () => {
-            setImagePreview(reader.result);
-        };
+        reader.onloadend = () => setImagePreview(reader.result);
         reader.readAsDataURL(file);
     };
 
-    // Upload the selected profile image
     const handleImageUpload = async () => {
         if (!selectedFile) return;
-
         setUploadingImage(true);
-        setMessage({ text: '', type: '' });
-
         try {
             const response = await authAPI.uploadProfileImage(selectedFile);
             if (response.success) {
-                // Update user context with new profile image
-                if (response.user) {
-                    updateUser(response.user);
-                }
-                setMessage({ text: 'Profile image updated successfully!', type: 'success' });
+                if (response.user) updateUser(response.user);
                 setSelectedFile(null);
                 setImagePreview(null);
-            } else {
-                setMessage({ text: response.message || 'Failed to upload image', type: 'error' });
             }
         } catch (error) {
-            setMessage({ text: error.message || 'Error uploading image', type: 'error' });
+            console.error(error);
         } finally {
             setUploadingImage(false);
         }
     };
 
-    // Cancel image selection
-    const handleCancelImageSelect = () => {
-        setSelectedFile(null);
-        setImagePreview(null);
-        if (fileInputRef.current) {
-            fileInputRef.current.value = '';
-        }
-    };
-
-    // Remove profile image
     const handleRemoveImage = async () => {
         setUploadingImage(true);
-        setMessage({ text: '', type: '' });
-
         try {
             const response = await authAPI.deleteProfileImage();
             if (response.success) {
-                // Update user context to remove profile image
                 updateUser({ ...user, profileImage: null, profile_image: null });
-                setMessage({ text: 'Profile image removed successfully!', type: 'success' });
-            } else {
-                setMessage({ text: response.message || 'Failed to remove image', type: 'error' });
             }
         } catch (error) {
-            setMessage({ text: error.message || 'Error removing image', type: 'error' });
+            console.error(error);
         } finally {
             setUploadingImage(false);
         }
-    };
-
-    // Get current profile image URL
-    const getProfileImageUrl = () => {
-        if (imagePreview) return imagePreview;
-        
-        const profileImg = user?.profileImage || user?.profile_image;
-        return resolveProfileImageUrl(profileImg);
     };
 
     const handleSave = async () => {
         setLoading(true);
-        setMessage({ text: '', type: '' });
-
         try {
             const response = await authAPI.updateProfile(formData);
             if (response.success) {
-                // Update auth context and storage so UI reflects new profile immediately
-                if (response.user) {
-                    updateUser(response.user);
-                }
-                setMessage({ text: 'Profile updated successfully!', type: 'success' });
+                if (response.user) updateUser(response.user);
                 setIsEditing(false);
-            } else {
-                setMessage({ text: response.message || 'Failed to update profile', type: 'error' });
             }
         } catch (error) {
-            setMessage({ text: error.message || 'An error occurred', type: 'error' });
+            console.error(error);
         } finally {
             setLoading(false);
         }
     };
 
     const handlePasswordChange = async () => {
-        if (passwordData.newPassword !== passwordData.confirmPassword) {
-            setMessage({ text: 'New passwords do not match', type: 'error' });
-            return;
-        }
-
-        if (passwordData.newPassword.length < 6) {
-            setMessage({ text: 'Password must be at least 6 characters', type: 'error' });
-            return;
-        }
-
+        if (passwordData.newPassword !== passwordData.confirmPassword) return;
         setLoading(true);
         try {
-            const response = await authAPI.updatePassword({
-                currentPassword: passwordData.currentPassword,
-                newPassword: passwordData.newPassword
-            });
-
+            const response = await authAPI.updatePassword(passwordData);
             if (response.success) {
-                setMessage({ text: 'Password changed successfully!', type: 'success' });
                 setShowPasswordModal(false);
                 setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
-            } else {
-                setMessage({ text: response.message || 'Failed to change password', type: 'error' });
             }
         } catch (error) {
-            setMessage({ text: error.message || 'An error occurred', type: 'error' });
+            console.error(error);
         } finally {
             setLoading(false);
         }
     };
 
-    const handleDeleteAccount = async () => {
-        if (!deletePassword) {
-            setMessage({ text: 'Please enter your password to confirm', type: 'error' });
-            return;
-        }
-
-        setLoading(true);
-        try {
-            const response = await authAPI.deleteAccount({ password: deletePassword });
-            if (response.success) {
-                logout();
-                navigate('/login', { state: { message: 'Your account has been deleted.' } });
-            } else {
-                setMessage({ text: response.message || 'Failed to delete account', type: 'error' });
-            }
-        } catch (error) {
-            setMessage({ text: error.message || 'An error occurred', type: 'error' });
-        } finally {
-            setLoading(false);
-            setShowDeleteModal(false);
-        }
+    const getProfileImageUrl = () => {
+        if (imagePreview) return imagePreview;
+        return resolveProfileImageUrl(user?.profileImage || user?.profile_image);
     };
 
-    if (!user) {
-        return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-                <p>Please log in to view your profile.</p>
-            </div>
-        );
-    }
+    if (!user) return null;
 
     return (
-        <div className="min-h-screen bg-gray-50 flex flex-col">
-            {/* Floating Navigation */}
-            <div className="fixed top-4 left-4 right-4 z-50 flex justify-between items-center pointer-events-none">
-                <button
-                    onClick={() => navigate('/', { state: { openSidePanel: true } })}
-                    className="pointer-events-auto flex items-center gap-2 px-4 py-2.5 bg-white/90 backdrop-blur-sm text-gray-700 rounded-full shadow-lg hover:bg-white hover:shadow-xl transition-all duration-300 font-medium"
-                >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-                    </svg>
-                    <span className="hidden sm:inline">Back</span>
-                </button>
-                <Link
-                    to="/"
-                    className="pointer-events-auto flex items-center gap-2 px-4 py-2.5 bg-white/90 backdrop-blur-sm text-gray-700 rounded-full shadow-lg hover:bg-white hover:shadow-xl transition-all duration-300 font-medium"
-                >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                    </svg>
-                    <span className="hidden sm:inline">Home</span>
-                </Link>
+        <div className="min-h-screen w-full bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 flex flex-col items-center">
+            <div className="w-full min-h-screen bg-white flex flex-col">
+
+                <div className="relative h-48 sm:h-64 bg-[#F2F4F7] overflow-hidden">
+                    <img
+                        src="https://i.pinimg.com/736x/cf/be/f7/cfbef7ee6088cac3e2e6c01cfe57bfed.jpg"
+                        className="w-full h-full object-cover opacity-60"
+                        alt="Header"
+                    />
+                    <div className="absolute top-6 left-6 z-10">
+                        <button
+                            onClick={() => navigate(-1)}
+                            className="flex items-center gap-2 px-4 py-2 bg-white shadow-sm rounded-full text-sm font-bold text-gray-700 hover:bg-gray-50 transition active:scale-95"
+                        >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 19l-7-7 7-7" /></svg>
+                            Back
+                        </button>
+                    </div>
+                </div>
+
+                <div className="w-full max-w-5xl mx-auto px-6 sm:px-10 flex-grow">
+                    <div className="flex flex-col sm:flex-row justify-between items-start -mt-16 sm:-mt-20 mb-12 gap-6 relative z-10">
+                        <div className="flex flex-col sm:flex-row items-center sm:items-end gap-6">
+                            <div className="relative group">
+                                <div className="w-32 h-32 sm:w-40 sm:h-40 rounded-full border-[6px] border-white shadow-xl overflow-hidden bg-gray-100">
+                                    {getProfileImageUrl() ? (
+                                        <img src={getProfileImageUrl()} alt="Profile" className="w-full h-full object-cover" />
+                                    ) : (
+                                        <div className="w-full h-full flex items-center justify-center bg-gray-50"><UserIcon /></div>
+                                    )}
+                                </div>
+                                <button
+                                    onClick={() => fileInputRef.current?.click()}
+                                    className="absolute bottom-2 right-2 p-2 bg-white border border-gray-100 rounded-full shadow-lg text-gray-700 hover:text-emerald-600 transition"
+                                >
+                                    <CameraIcon />
+                                </button>
+                                <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileSelect} className="hidden" />
+                            </div>
+                            <div className="pb-2 text-center sm:text-left">
+                                <div className="flex items-center justify-center sm:justify-start gap-2 mb-1">
+                                    <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900 tracking-tight">
+                                        {user.firstName} {user.lastName}
+                                    </h1>
+                                    <VerifiedIcon />
+                                </div>
+                                <p className="text-lg text-gray-400 font-medium">@{user.username}</p>
+                                {(user?.profileImage || user?.profile_image) && !selectedFile && (
+                                    <button onClick={handleRemoveImage} className="text-sm text-red-500 font-bold hover:underline mt-2">Remove photo</button>
+                                )}
+                            </div>
+                        </div>
+                        <div className="sm:mt-24 w-full sm:w-auto">
+                            <button
+                                onClick={() => setIsEditing(!isEditing)}
+                                className="w-full sm:w-auto px-8 py-2.5 bg-white border border-gray-200 rounded-lg text-sm font-bold text-gray-700 shadow-sm hover:bg-gray-50 transition"
+                            >
+                                {isEditing ? 'Cancel' : 'Edit profile'}
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="h-px bg-gray-100 mb-12 w-full"></div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 pb-20">
+                        <div className="lg:col-span-4">
+                            <h3 className="text-lg font-bold text-gray-900">Personal information</h3>
+                            <p className="text-sm text-gray-400 mt-2 leading-relaxed">
+                                Manage your personal details and account settings to keep your profile up to date.
+                            </p>
+                        </div>
+
+                        <div className="lg:col-span-8 space-y-10">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                <div className="space-y-2">
+                                    <label className="text-sm font-bold text-gray-700 ml-1">First name</label>
+                                    <input
+                                        name="firstName"
+                                        value={isEditing ? formData.firstName : user.firstName}
+                                        onChange={handleChange}
+                                        disabled={!isEditing}
+                                        className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition disabled:bg-gray-50 disabled:text-gray-400"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-sm font-bold text-gray-700 ml-1">Last name</label>
+                                    <input
+                                        name="lastName"
+                                        value={isEditing ? formData.lastName : user.lastName}
+                                        onChange={handleChange}
+                                        disabled={!isEditing}
+                                        className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition disabled:bg-gray-50 disabled:text-gray-400"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-sm font-bold text-gray-700 ml-1">Email address</label>
+                                <input
+                                    value={user.email}
+                                    disabled
+                                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-400 outline-none cursor-not-allowed"
+                                />
+                            </div>
+
+                            {isEditing && (
+                                <button onClick={handleSave} disabled={loading} className="w-full py-3.5 bg-emerald-600 text-white rounded-xl font-bold shadow-lg shadow-emerald-200 hover:bg-emerald-700 transition active:scale-[0.99] disabled:opacity-50">
+                                    {loading ? 'Processing...' : 'Save Changes'}
+                                </button>
+                            )}
+
+                            <div className="pt-8 border-t border-gray-50">
+                                <h3 className="text-sm font-bold text-gray-900 mb-4 uppercase tracking-wider">Security & Session</h3>
+                                <div className="flex flex-wrap gap-4">
+                                    <button
+                                        onClick={() => setShowPasswordModal(true)}
+                                        className="flex-1 sm:flex-none px-6 py-2.5 border border-gray-200 rounded-lg text-sm font-bold text-gray-700 hover:bg-gray-50 transition"
+                                    >
+                                        Change Password
+                                    </button>
+                                    <button
+                                        onClick={logout}
+                                        className="flex-1 sm:flex-none px-6 py-2.5 border border-red-100 rounded-lg text-sm font-bold text-red-600 hover:bg-red-50 transition"
+                                    >
+                                        Logout
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            {/* Hero Section - matching design system */}
-            <section className="relative text-white py-20 pt-24 bg-cover bg-center" style={{ backgroundImage: 'linear-gradient(135deg, rgba(16,185,129,0.92), rgba(20,184,166,0.92)), url(https://images.unsplash.com/photo-1564349683136-77e08dba1ef7)' }}>
-                <div className="container mx-auto px-4 text-center relative z-10">
-                    {/* Profile Image with Upload */}
-                    <div className="relative inline-block">
-                        <div className="w-28 h-28 rounded-full overflow-hidden mx-auto mb-4 ring-4 ring-white/30 shadow-xl">
-                            {getProfileImageUrl() ? (
-                                <img
-                                    src={getProfileImageUrl()}
-                                    alt="Profile"
-                                    className="w-full h-full object-cover"
-                                    onError={(e) => {
-                                        e.target.onerror = null;
-                                        e.target.src = '/profile-img/default-avatar.svg';
-                                    }}
-                                />
-                            ) : (
-                                <div className="w-full h-full bg-white/20 flex items-center justify-center backdrop-blur-sm">
-                                    <UserIcon />
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Camera button to trigger file input */}
-                        <button
-                            onClick={() => fileInputRef.current?.click()}
-                            disabled={uploadingImage}
-                            className="absolute bottom-3 right-0 w-9 h-9 bg-white text-emerald-600 rounded-full flex items-center justify-center shadow-lg hover:bg-gray-100 transition-colors disabled:opacity-50"
-                            title="Change profile picture"
-                        >
-                            <CameraIcon />
-                        </button>
-
-                        {/* Hidden file input */}
-                        <input
-                            ref={fileInputRef}
-                            type="file"
-                            accept="image/jpeg,image/png,image/webp"
-                            onChange={handleFileSelect}
-                            className="hidden"
-                        />
-                    </div>
-
-                    {/* Image upload actions (shown when file is selected) */}
-                    {selectedFile && (
-                        <div className="flex items-center justify-center gap-3 mb-4 animate-fade-in">
-                            <button
-                                onClick={handleImageUpload}
-                                disabled={uploadingImage}
-                                className="px-4 py-2 bg-white text-emerald-600 rounded-full font-medium text-sm hover:bg-gray-100 transition-colors disabled:opacity-50 flex items-center gap-2 shadow-lg"
-                            >
-                                {uploadingImage ? (
-                                    <>
-                                        <div className="w-4 h-4 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin"></div>
-                                        <span>Uploading...</span>
-                                    </>
-                                ) : (
-                                    <>
-                                        <SaveIcon />
-                                        <span>Save Image</span>
-                                    </>
-                                )}
-                            </button>
-                            <button
-                                onClick={handleCancelImageSelect}
-                                disabled={uploadingImage}
-                                className="px-4 py-2 bg-white/20 text-white rounded-full font-medium text-sm hover:bg-white/30 transition-colors disabled:opacity-50"
-                            >
-                                Cancel
-                            </button>
-                        </div>
-                    )}
-
-                    {/* Remove image button (shown when user has a profile image and no file is selected) */}
-                    {!selectedFile && (user?.profileImage || user?.profile_image) && (
-                        <button
-                            onClick={handleRemoveImage}
-                            disabled={uploadingImage}
-                            className="mb-4 px-3 py-1.5 bg-white/20 text-white/80 rounded-full text-xs font-medium hover:bg-white/30 hover:text-white transition-colors disabled:opacity-50"
-                        >
-                            {uploadingImage ? 'Removing...' : 'Remove photo'}
-                        </button>
-                    )}
-
-                    <h1 className="text-4xl md:text-5xl font-bold mb-2 tracking-tight">
-                        {user.firstName} {user.lastName}
-                    </h1>
-                    <p className="opacity-90 text-lg">@{user.username}</p>
-                    <span className="inline-block mt-3 px-5 py-1.5 bg-white/20 rounded-full text-sm capitalize font-medium backdrop-blur-sm">
-                        {user.role}
-                    </span>
-                </div>
-            </section>
-
-            <section className="py-12 container mx-auto px-4 max-w-4xl flex-grow">
-                {message.text && (
-                    <div className={`mb-6 p-4 rounded-xl ${message.type === 'success'
-                            ? 'bg-green-100 text-green-700 border border-green-300'
-                            : 'bg-red-100 text-red-700 border border-red-300'
-                        }`}>
-                        {message.text}
-                    </div>
-                )}
-
-                <div className="bg-white rounded-3xl shadow-lg overflow-hidden border border-gray-100">
-                    <div className="p-6 border-b flex justify-between items-center">
-                        <h2 className="text-2xl font-bold text-gray-800">Profile Information</h2>
-                        {!isEditing ? (
-                            <button
-                                onClick={() => setIsEditing(true)}
-                                className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-full font-semibold hover:shadow-lg transition-all"
-                            >
-                                <EditIcon /> Edit Profile
-                            </button>
-                        ) : (
-                            <div className="flex gap-2">
-                                <button
-                                    onClick={() => setIsEditing(false)}
-                                    className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    onClick={handleSave}
-                                    disabled={loading}
-                                    className="flex items-center gap-2 px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition disabled:opacity-50"
-                                >
-                                    <SaveIcon /> {loading ? 'Saving...' : 'Save Changes'}
-                                </button>
-                            </div>
-                        )}
-                    </div>
-
-                    <div className="p-6 space-y-6">
-                        <div className="grid md:grid-cols-2 gap-6">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-600 mb-1">First Name</label>
-                                {isEditing ? (
-                                    <input
-                                        type="text"
-                                        name="firstName"
-                                        value={formData.firstName}
-                                        onChange={handleChange}
-                                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                                    />
-                                ) : (
-                                    <p className="text-gray-800 font-medium">{user.firstName}</p>
-                                )}
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-600 mb-1">Last Name</label>
-                                {isEditing ? (
-                                    <input
-                                        type="text"
-                                        name="lastName"
-                                        value={formData.lastName}
-                                        onChange={handleChange}
-                                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                                    />
-                                ) : (
-                                    <p className="text-gray-800 font-medium">{user.lastName}</p>
-                                )}
-                            </div>
-                        </div>
-
-                        <div className="grid md:grid-cols-2 gap-6">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-600 mb-1">Username</label>
-                                <p className="text-gray-800 font-medium">@{user.username}</p>
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-600 mb-1">Email</label>
-                                <p className="text-gray-800 font-medium">{user.email}</p>
-                            </div>
-                        </div>
-
-                        <div className="grid md:grid-cols-2 gap-6">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-600 mb-1">Phone Number</label>
-                                {isEditing ? (
-                                    <input
-                                        type="tel"
-                                        name="phoneNumber"
-                                        value={formData.phoneNumber}
-                                        onChange={handleChange}
-                                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                                        placeholder="09123456789"
-                                    />
-                                ) : (
-                                    <p className="text-gray-800 font-medium">{user.phoneNumber || 'Not provided'}</p>
-                                )}
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-600 mb-1">Gender</label>
-                                {isEditing ? (
-                                    <select
-                                        name="gender"
-                                        value={formData.gender}
-                                        onChange={handleChange}
-                                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white"
-                                    >
-                                        <option value="prefer_not_to_say">Prefer not to say</option>
-                                        <option value="male">Male</option>
-                                        <option value="female">Female</option>
-                                        <option value="other">Other</option>
-                                    </select>
-                                ) : (
-                                    <p className="text-gray-800 font-medium capitalize">{user.gender?.replace('_', ' ') || 'Not provided'}</p>
-                                )}
-                            </div>
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-medium text-gray-600 mb-1">Birthday</label>
-                            {isEditing ? (
-                                <input
-                                    type="date"
-                                    name="birthday"
-                                    value={formData.birthday}
-                                    onChange={handleChange}
-                                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                                />
-                            ) : (
-                                <p className="text-gray-800 font-medium">
-                                    {user.birthday ? new Date(user.birthday).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : 'Not provided'}
-                                </p>
-                            )}
-                        </div>
-                    </div>
-                </div>
-
-                <div className="mt-6 bg-white rounded-2xl shadow-lg p-6">
-                    <h3 className="text-xl font-bold text-gray-800 mb-4">Account Settings</h3>
-                    <div className="flex flex-wrap gap-4">
-                        <button
-                            onClick={() => setShowPasswordModal(true)}
-                            className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
-                        >
-                            <LockIcon /> Change Password
-                        </button>
-                        <button
-                            onClick={() => setShowDeleteModal(true)}
-                            className="flex items-center gap-2 px-4 py-2 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition"
-                        >
-                            <TrashIcon /> Delete Account
-                        </button>
-                    </div>
-                </div>
-            </section>
-
-            {showPasswordModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-                    <div className="bg-white rounded-2xl p-6 w-full max-w-md mx-4">
-                        <h3 className="text-xl font-bold mb-4">Change Password</h3>
-                        <div className="space-y-4">
-                            <input
-                                type="password"
-                                placeholder="Current Password"
-                                value={passwordData.currentPassword}
-                                onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
-                                className="w-full p-3 border rounded-lg"
-                            />
-                            <input
-                                type="password"
-                                placeholder="New Password"
-                                value={passwordData.newPassword}
-                                onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
-                                className="w-full p-3 border rounded-lg"
-                            />
-                            <input
-                                type="password"
-                                placeholder="Confirm New Password"
-                                value={passwordData.confirmPassword}
-                                onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
-                                className="w-full p-3 border rounded-lg"
-                            />
-                        </div>
-                        <div className="flex gap-3 mt-6">
-                            <button onClick={() => setShowPasswordModal(false)} className="flex-1 px-4 py-2 border rounded-lg">Cancel</button>
-                            <button onClick={handlePasswordChange} disabled={loading} className="flex-1 px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 disabled:opacity-50">
-                                {loading ? 'Changing...' : 'Change Password'}
-                            </button>
-                        </div>
+            {selectedFile && (
+                <div className="fixed bottom-10 left-1/2 -translate-x-1/2 flex items-center gap-6 px-8 py-4 bg-white rounded-full shadow-2xl border border-gray-100 z-50 animate-in slide-in-from-bottom-10">
+                    <p className="text-sm font-extrabold text-gray-900">Update photo?</p>
+                    <div className="flex gap-2">
+                        <button onClick={() => { setSelectedFile(null); setImagePreview(null); }} className="px-4 py-2 text-sm font-bold text-gray-400">Cancel</button>
+                        <button onClick={handleImageUpload} disabled={uploadingImage} className="bg-emerald-600 text-white px-6 py-2 rounded-full text-sm font-bold shadow-lg shadow-emerald-100">Update</button>
                     </div>
                 </div>
             )}
 
-            {showDeleteModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-                    <div className="bg-white rounded-2xl p-6 w-full max-w-md mx-4">
-                        <h3 className="text-xl font-bold text-red-600 mb-2">Delete Account</h3>
-                        <p className="text-gray-600 mb-4">This action cannot be undone. Enter your password to confirm.</p>
-                        <input
-                            type="password"
-                            placeholder="Enter your password"
-                            value={deletePassword}
-                            onChange={(e) => setDeletePassword(e.target.value)}
-                            className="w-full p-3 border rounded-lg mb-4"
-                        />
-                        <div className="flex gap-3">
-                            <button onClick={() => setShowDeleteModal(false)} className="flex-1 px-4 py-2 border rounded-lg">Cancel</button>
-                            <button onClick={handleDeleteAccount} disabled={loading} className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg disabled:opacity-50">
-                                {loading ? 'Deleting...' : 'Delete Account'}
-                            </button>
+            {showPasswordModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-md p-4">
+                    <div className="bg-white rounded-[2rem] p-8 w-full max-w-md shadow-2xl">
+                        <h3 className="text-2xl font-black text-gray-900 mb-6">Security</h3>
+                        <div className="space-y-4">
+                            <input type="password" placeholder="Current Password" value={passwordData.currentPassword} onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })} className="w-full px-5 py-3.5 bg-gray-50 border border-transparent rounded-2xl outline-none focus:bg-white focus:border-emerald-500 transition-all" />
+                            <input type="password" placeholder="New Password" value={passwordData.newPassword} onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })} className="w-full px-5 py-3.5 bg-gray-50 border border-transparent rounded-2xl outline-none focus:bg-white focus:border-emerald-500 transition-all" />
+                            <input type="password" placeholder="Confirm New Password" value={passwordData.confirmPassword} onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })} className="w-full px-5 py-3.5 bg-gray-50 border border-transparent rounded-2xl outline-none focus:bg-white focus:border-emerald-500 transition-all" />
+                        </div>
+                        <div className="flex gap-3 mt-10">
+                            <button onClick={() => setShowPasswordModal(false)} className="flex-1 py-3.5 border border-gray-200 rounded-xl font-bold text-gray-400 hover:bg-gray-50 transition">Cancel</button>
+                            <button onClick={handlePasswordChange} disabled={loading} className="flex-1 py-3.5 bg-emerald-600 text-white rounded-xl font-bold shadow-xl shadow-emerald-100 hover:bg-emerald-700 transition">Update</button>
                         </div>
                     </div>
                 </div>

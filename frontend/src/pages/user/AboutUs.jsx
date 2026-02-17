@@ -48,18 +48,20 @@ const AboutUs = () => {
                 <Header />
 
                 <main className="flex-grow pt-24 md:pt-32">
-                    <section className="container mx-auto px-4 md:px-8 max-w-7xl">
+                    <section className="container mx-auto px-4 md:px-8 max-w-8xl">
                         <div className="flex flex-col lg:flex-row justify-between items-start gap-8 md:gap-12 mt-8 md:mt-24">
                             <div className="w-full lg:w-2/3">
                                 <p className="text-[10px] md:text-xs font-bold tracking-[0.3em] text-emerald-600 uppercase mb-4 md:mb-6 flex items-center gap-2">
-                                    <span className="w-2 h-2 rounded-full bg-orange-500 animate-pulse"></span>
+                                    <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
                                     Preserving Calapan's Green Heart
                                 </p>
-                                <h1 className="text-5xl sm:text-7xl md:text-8xl lg:text-9xl font-bold tracking-tighter text-slate-900 leading-[0.9] mb-8 md:mb-12">
+                                <h1 className="text-5xl sm:text-7xl md:text-8xl lg:text-9xl font-bold tracking-tighter text-slate-900 leading-[0.9] mb-8 md:mb-12" style={{
+                                    fontFamily: '"Segoe Script", "cursive"'
+                                }}>
                                     Bulusan <br />
                                     <span className="text-emerald-600">Nature Zoo</span>
                                 </h1>
-                                <p className="text-lg md:text-2xl text-slate-500 max-w-2xl font-normal leading-relaxed">
+                                <p className="text-lg md:text-4xl text-slate-500 max-w-2xl font-normal leading-relaxed">
                                     A 32-acre sanctuary in Calapan City blending century-old rainforests with wildlife education and sustainable eco-tourism.
                                 </p>
                             </div>
@@ -71,7 +73,7 @@ const AboutUs = () => {
                                 </div>
                                 <div className="border-l border-slate-300 pl-4 md:pl-8">
                                     <p className="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-[0.2em] mb-2 md:mb-3">Species</p>
-                                    <p className="text-4xl md:text-7xl lg:text-8xl font-light text-slate-900 tracking-tighter">99</p>
+                                    <p className="text-4xl md:text-7xl lg:text-8xl font-light text-slate-900 tracking-tighter">10+</p>
                                 </div>
                             </div>
                         </div>
@@ -83,8 +85,8 @@ const AboutUs = () => {
                                 { title: "Recreation Area", desc: "Enjoy picnic grounds, camping sites, and wall-climbing facilities within the park's lush interior." }
                             ].map((feature, i) => (
                                 <div key={i} className="group">
-                                    <h3 className="text-xl md:text-2xl font-bold text-slate-900 mb-3 md:mb-4">{feature.title}</h3>
-                                    <p className="text-slate-500 text-base md:text-lg leading-relaxed font-light">
+                                    <h3 className="text-xl md:text-6xl font-bold text-slate-900 mb-3 md:mb-4">{feature.title}</h3>
+                                    <p className="text-slate-500 text-base md:text-2xl leading-relaxed font-light">
                                         {feature.desc}
                                     </p>
                                 </div>
@@ -95,7 +97,10 @@ const AboutUs = () => {
                     <section className="mt-32 md:mt-64 border-t border-slate-100 pt-16 md:pt-24">
                         <div className="container mx-auto px-4 md:px-8 max-w-[1600px]">
                             <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 md:mb-24 gap-4">
-                                <h2 className="text-6xl md:text-8xl lg:text-[10rem] font-bold tracking-tighter uppercase leading-none">Journal</h2>
+                                <h2 className="text-6xl md:text-8xl lg:text-[10rem] font-bold tracking-tighter leading-none"
+                                style={{
+                                    fontFamily: '"Segoe Script", "cursive"'
+                                }}>Archive</h2>
                                 <p className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-slate-400 md:mb-4">Calapan Chronicles / 2026</p>
                             </div>
 
@@ -144,7 +149,7 @@ const AboutUs = () => {
                                     transform: 'rotate(-5deg)'
                                 }}
                             ></div>
-                            <div className="absolute bottom-[-5%] left-[-5%] text-[20vw] md:text-[25vw] font-black text-emerald-900/20 leading-none select-none">
+                            <div className="absolute bottom-[-0%] left-[1.5%] text-[20vw] md:text-[25vw] font-black text-emerald-900/20 leading-none select-none">
                                 BULUSAN
                             </div>
                         </div>

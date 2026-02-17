@@ -127,16 +127,15 @@ const Header = () => {
         setEmailError('');
         try {
             await messageAPI.sendMessage({
-                recipient_type: 'admin',
+                recipientType: 'admin',
                 subject: emailSubject,
-                content: emailMessage,
-                message_type: 'general'
+                content: emailMessage
             });
             setEmailSent(true);
             setEmailSubject('');
             setEmailMessage('');
         } catch (error) {
-            setEmailError(error.response?.data?.message || 'Failed to send message');
+            setEmailError(error.message || 'Failed to send message');
         } finally {
             setEmailLoading(false);
         }
@@ -167,10 +166,20 @@ const Header = () => {
         {
             icon: (
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+            ),
+            label: 'Messages',
+            path: '/my-messages',
+            description: 'View support conversations'
+        },
+        {
+            icon: (
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
             ),
-            label: 'Wildlife Origins 🌍',
+            label: 'Wildlife Origins',
             path: '/map',
             description: 'Explore where animals come from'
         },
@@ -221,15 +230,15 @@ const Header = () => {
             <div className="container mx-auto px-6 lg:px-12">
                 <div className="flex justify-between items-center">
                     <Link to="/" className="flex items-center gap-3 group">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-500 to-teal-400 shadow-lg flex items-center justify-center transition-transform group-hover:scale-105">
+                        {/* <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-500 to-teal-400 shadow-lg flex items-center justify-center transition-transform group-hover:scale-105">
                                 <img src="https://cdn-icons-png.flaticon.com/128/1864/1864472.png" alt="Bz Logo" className="w-5 h-5 object-contain" />
-                        </div>
-                        <span className={`text-4xl font-extrabold tracking-tight transition-colors ${scrolled ? 'text-teal-400' : 'text-teal-400'}`}>
-                            BULUSAN <span className='italic font-extrabold text-teal-400'>ZOO</span>
+                        </div> */}
+                            <span className={`text-4xl font-extrabold tracking-tight transition-colors ${scrolled ? 'text-[#08140e]' : 'text-[#08140e]'}`} style={{ fontFamily: '"Segoe Script", "cursive"' }}>
+                            Bulusan Zoo
                         </span>
                     </Link>
 
-                    <nav className="hidden md:flex items-center gap-1 bg-white/80 backdrop-blur-md px-2 py-2 rounded-full shadow-sm border border-gray-100">
+                    <nav className="hidden md:flex uppercase items-center gap-1 bg-white/80 backdrop-blur-md px-2 py-2 rounded-full shadow-sm border border-gray-100">
                         {navLinks.map((link) => (
                             <Link
                                 key={link.label}

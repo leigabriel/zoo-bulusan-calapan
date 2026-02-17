@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
+import {ReactLenis} from 'lenis/react';
 import AIFloatingButton from '../../components/common/AIFloatingButton';
 import { useAuth } from '../../hooks/use-auth';
 import { userAPI } from '../../services/api-client';
@@ -291,36 +292,42 @@ const Tickets = () => {
         try {
             await new Promise(resolve => setTimeout(resolve, 800));
 
-            // Convert image to base64 if resident or student ticket
             let residentIdBase64 = null;
             if ((hasResidentTickets || hasStudentTickets) && residentIdImage) {
-                residentIdBase64 = residentIdPreview; // Already base64 from FileReader
+                residentIdBase64 = residentIdPreview;
             }
 
-            const purchases = Object.entries(counts).filter(([k, v]) => v > 0).map(([type, qty]) => {
-                const mapType = {
-                    adults: 'adult',
-                    children: 'child',
-                    seniors: 'senior',
-                    students: 'student',
-                    residents: 'resident'
-                }[type] || type;
-
-                return userAPI.purchaseTicket({
-                    ticketType: mapType,
-                    quantity: qty,
-                    visitDate: bookingDetails.date,
-                    paymentMethod: total === 0 ? 'free' : bookingDetails.paymentMethod,
-                    visitorEmail: bookingDetails.email,
-                    visitorName: companions[0]?.name || user?.name || 'Guest',
-                    residentIdImage: (mapType === 'resident' || mapType === 'student') ? residentIdBase64 : null
+            const ticketItems = Object.entries(counts)
+                .filter(([, v]) => v > 0)
+                .map(([type, qty]) => {
+                    const mapType = {
+                        adults: 'adult',
+                        children: 'child',
+                        seniors: 'senior',
+                        students: 'student',
+                        residents: 'resident'
+                    }[type] || type;
+                    return {
+                        ticketType: mapType,
+                        quantity: qty,
+                        pricePerTicket: prices[type]
+                    };
                 });
+
+            const companionNames = companions.map(c => c.name).filter(Boolean);
+
+            const result = await userAPI.purchaseTicket({
+                tickets: ticketItems,
+                visitDate: bookingDetails.date,
+                paymentMethod: total === 0 ? 'free' : bookingDetails.paymentMethod,
+                visitorEmail: bookingDetails.email,
+                visitorName: companionNames[0] || user?.firstName + ' ' + user?.lastName || 'Guest',
+                companions: companionNames,
+                totalAmount: total,
+                residentIdImage: residentIdBase64
             });
 
-            const results = await Promise.all(purchases);
-
-            const first = results && results.length > 0 ? results[0] : null;
-            const code = first?.ticket?.bookingReference || first?.ticket?.ticketCode || generateBookingCode();
+            const code = result?.ticket?.bookingReference || result?.bookingReference || generateBookingCode();
             setBookingCode(code);
             setShowConfirmation(true);
             setCurrentStep(4);
@@ -348,6 +355,7 @@ const Tickets = () => {
 
     // Step Indicator - defined as JSX variable (no function re-creation)
     const stepIndicatorContent = (
+        <ReactLenis root>
         <div className="flex justify-center mb-6 sm:mb-8 overflow-x-auto pb-2">
             <div className="flex items-center space-x-1 sm:space-x-2 md:space-x-4">
                 {[
@@ -381,10 +389,12 @@ const Tickets = () => {
                 ))}
             </div>
         </div>
+        </ReactLenis>
     );
 
     // Ticket Selection - defined as JSX variable
     const ticketSelectionContent = (
+        <ReactLenis root>
         <div className="space-y-3 sm:space-y-4">
             <h2 className="text-xl sm:text-2xl font-bold text-green-800 mb-4 sm:mb-6 flex items-center gap-2">
                 <i className="fas fa-ticket-alt"></i> Select Your Tickets
@@ -464,6 +474,7 @@ const Tickets = () => {
                 )}
             </div>
         </div>
+        </ReactLenis>
     );
 
     // Visit Details - defined as JSX variable
@@ -852,7 +863,7 @@ const Tickets = () => {
             <section
                 className="bg-[#2D5A27] text-white py-28 sm:py-32 md:py-40 text-center relative overflow-hidden"
                 style={{
-                    backgroundImage: 'linear-gradient(rgba(45, 90, 39, 0.9), rgba(58, 140, 125, 0.9)), url(https://images.unsplash.com/photo-1548013146-72479768bada?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80)',
+                    backgroundImage: 'url(https://i.pinimg.com/736x/cf/be/f7/cfbef7ee6088cac3e2e6c01cfe57bfed.jpg)',
                     backgroundSize: 'cover',
                     backgroundPosition: 'center'
                 }}

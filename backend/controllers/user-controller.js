@@ -140,7 +140,128 @@ exports.getSlotAvailability = async (req, res) => {
 
 exports.purchaseTicket = async (req, res) => {
     try {
-        const { ticketType, quantity, visitDate, paymentMethod, visitorEmail, visitorName, companions, residentIdImage } = req.body;
+        const { tickets, ticketType, quantity, visitDate, paymentMethod, visitorEmail, visitorName, companions, totalAmount, residentIdImage } = req.body;
+
+        const prices = {
+            adult: 40,
+            child: 20,
+            senior: 30,
+            student: 25,
+            resident: 0
+        };
+
+        const bookingReference = 'ZB-' + crypto.randomBytes(4).toString('hex').toUpperCase();
+        const qrCodeData = crypto.randomBytes(16).toString('hex').toUpperCase();
+
+        const paymentMethodMap = {
+            'pay_at_park': 'cash',
+            'gcash': 'gcash',
+            'paypal': 'online',
+            'free': 'cash'
+        };
+        const mappedPaymentMethod = paymentMethodMap[paymentMethod] || paymentMethod || 'cash';
+
+        let savedResidentIdImage = null;
+        if (residentIdImage) {
+            savedResidentIdImage = await saveBase64Image(residentIdImage, req.user.id);
+        }
+
+        const db = require('../config/database');
+        const user = await User.findById(req.user.id);
+        const buyerName = visitorName || (user ? `${user.first_name} ${user.last_name}` : 'Guest');
+
+        if (tickets && Array.isArray(tickets) && tickets.length > 0) {
+            if (!visitDate) {
+                return res.status(400).json({ success: false, message: 'Please provide visit date' });
+            }
+
+            const hasResidentOrStudent = tickets.some(t => t.ticketType === 'resident' || t.ticketType === 'student');
+            if (hasResidentOrStudent && !residentIdImage) {
+                return res.status(400).json({ success: false, message: 'Resident or student tickets require a valid ID image for verification' });
+            }
+
+            let calculatedTotal = 0;
+            let totalQuantity = 0;
+            const ticketDetails = [];
+
+            for (const item of tickets) {
+                const price = prices[item.ticketType] !== undefined ? prices[item.ticketType] : 40;
+                const itemTotal = price * item.quantity;
+                calculatedTotal += itemTotal;
+                totalQuantity += item.quantity;
+                ticketDetails.push(`${item.quantity}x ${item.ticketType}`);
+            }
+
+            const finalTotal = totalAmount !== undefined ? totalAmount : calculatedTotal;
+
+            let paymentStatus = 'pending';
+            if (finalTotal === 0) {
+                paymentStatus = 'free';
+            } else if (mappedPaymentMethod === 'gcash' || mappedPaymentMethod === 'online') {
+                paymentStatus = 'paid';
+            } else if (mappedPaymentMethod === 'cash') {
+                paymentStatus = 'not_paid';
+            }
+
+            const ticketStatus = 'pending';
+            const ticketTypesSummary = ticketDetails.join(', ');
+            const primaryType = tickets[0].ticketType;
+
+            const [result] = await db.query(
+                `INSERT INTO tickets (
+                    booking_reference, user_id, visitor_email, visitor_name, visit_date, 
+                    ticket_type, quantity, price_per_ticket, total_amount, status, 
+                    qr_code, payment_status, payment_method, resident_id_image, verification_status, notes
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                [
+                    bookingReference,
+                    req.user.id,
+                    visitorEmail || req.user.email || null,
+                    buyerName,
+                    visitDate,
+                    primaryType,
+                    totalQuantity,
+                    0,
+                    finalTotal,
+                    ticketStatus,
+                    qrCodeData,
+                    paymentStatus,
+                    mappedPaymentMethod,
+                    savedResidentIdImage,
+                    hasResidentOrStudent ? 'pending' : null,
+                    ticketTypesSummary
+                ]
+            );
+
+            const ticketId = result.insertId;
+
+            let confirmationMessage = 'Tickets booked successfully! Your booking is pending approval.';
+            if (hasResidentOrStudent) {
+                confirmationMessage = 'Tickets booked! Your ID will be verified by our staff before confirmation.';
+            } else if (mappedPaymentMethod === 'cash') {
+                confirmationMessage = 'Tickets booked successfully! Please pay at Bulusan Zoo when you arrive.';
+            } else if (mappedPaymentMethod === 'gcash' || mappedPaymentMethod === 'online') {
+                confirmationMessage = 'Payment received! Your tickets are pending admin confirmation.';
+            }
+
+            return res.status(201).json({
+                success: true,
+                message: confirmationMessage,
+                bookingReference: bookingReference,
+                ticket: {
+                    id: ticketId,
+                    bookingReference: bookingReference,
+                    qrCode: qrCodeData,
+                    tickets: tickets,
+                    quantity: totalQuantity,
+                    totalPrice: finalTotal,
+                    visitDate,
+                    status: ticketStatus,
+                    paymentStatus: paymentStatus,
+                    paymentMethod: mappedPaymentMethod
+                }
+            });
+        }
 
         if (!ticketType || !quantity || !visitDate) {
             return res.status(400).json({ success: false, message: 'Please provide all required fields' });
@@ -154,28 +275,8 @@ exports.purchaseTicket = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Student tickets require a valid student ID image for verification' });
         }
 
-        const prices = {
-            adult: 40,
-            child: 20,
-            senior: 30,
-            student: 25,
-            resident: 0
-        };
-
         const price = prices[ticketType] !== undefined ? prices[ticketType] : 40;
         const totalPrice = price * quantity;
-        
-        const bookingReference = 'ZB-' + crypto.randomBytes(4).toString('hex').toUpperCase();
-        
-        const qrCodeData = crypto.randomBytes(16).toString('hex').toUpperCase();
-
-        const paymentMethodMap = {
-            'pay_at_park': 'cash',
-            'gcash': 'gcash',
-            'paypal': 'online',
-            'free': 'cash'
-        };
-        const mappedPaymentMethod = paymentMethodMap[paymentMethod] || paymentMethod || 'cash';
 
         let paymentStatus = 'pending';
         if (ticketType === 'resident' || price === 0) {
@@ -188,13 +289,6 @@ exports.purchaseTicket = async (req, res) => {
 
         const ticketStatus = 'pending';
 
-        let savedResidentIdImage = null;
-        if ((ticketType === 'resident' || ticketType === 'student') && residentIdImage) {
-            savedResidentIdImage = await saveBase64Image(residentIdImage, req.user.id);
-        }
-
-        // Create the ticket with all data in one query
-        const db = require('../config/database');
         const [result] = await db.query(
             `INSERT INTO tickets (
                 booking_reference, user_id, visitor_email, visitor_name, visit_date, 
@@ -205,7 +299,7 @@ exports.purchaseTicket = async (req, res) => {
                 bookingReference,
                 req.user.id,
                 visitorEmail || req.user.email || null,
-                visitorName || null,
+                buyerName,
                 visitDate,
                 ticketType,
                 quantity,
@@ -236,6 +330,7 @@ exports.purchaseTicket = async (req, res) => {
         res.status(201).json({
             success: true,
             message: confirmationMessage,
+            bookingReference: bookingReference,
             ticket: {
                 id: ticketId,
                 bookingReference: bookingReference,

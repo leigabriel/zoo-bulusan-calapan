@@ -11,6 +11,7 @@ import ArchivedTickets from './pages/user/ArchivedTickets';
 import UserProfile from './pages/user/UserProfile';
 import Settings from './pages/user/Settings';
 import Help from './pages/user/Help';
+import UserMessages from './pages/user/UserMessages';
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
 import GoogleAuthSuccess from './pages/auth/GoogleAuthSuccess';
@@ -122,6 +123,11 @@ function AppRoutes() {
             <Route path="/settings" element={
                 <ProtectedRoute allowedRoles={['user', 'staff', 'vet']}>
                     <Settings />
+                </ProtectedRoute>
+            } />
+            <Route path="/my-messages" element={
+                <ProtectedRoute allowedRoles={['user']}>
+                    <UserMessages />
                 </ProtectedRoute>
             } />
             <Route path="/help" element={<Help />} />
