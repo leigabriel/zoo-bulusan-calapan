@@ -38,12 +38,12 @@ const Tickets = () => {
     const [idUploadError, setIdUploadError] = useState('');
 
     const ticketTypes = {
-        seniors: {
-            name: 'Senior Pass',
-            description: 'Ages 60+',
-            icon: 'fa-user-clock',
-            color: 'bg-purple-500'
-        },
+        // seniors: {
+        //     name: 'Senior Pass',
+        //     description: 'Ages 60+',
+        //     icon: 'fa-user-clock',
+        //     color: 'bg-purple-500'
+        // },
         adults: {
             name: 'Adult Pass',
             description: 'Ages 18-59',
@@ -56,12 +56,12 @@ const Tickets = () => {
             icon: 'fa-child',
             color: 'bg-blue-500'
         },
-        students: {
-            name: 'Student Pass',
-            description: 'With valid student ID',
-            icon: 'fa-graduation-cap',
-            color: 'bg-orange-500'
-        },
+        // students: {
+        //     name: 'Student Pass',
+        //     description: 'With valid student ID',
+        //     icon: 'fa-graduation-cap',
+        //     color: 'bg-orange-500'
+        // },
         residents: {
             name: 'Bulusan Resident',
             description: 'Free with valid ID',

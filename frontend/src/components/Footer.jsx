@@ -39,7 +39,7 @@ const Footer = () => {
 
     return (
         <footer className="bg-[#08140e] text-[#f4f4f4] pt-16 md:pt-24 pb-8 md:pb-12 overflow-hidden">
-            <div className="max-w-[1400px] mx-auto px-6 md:px-10 lg:px-16">
+            <div className=" mx-auto px-6 md:px-10 lg:px-16">
 
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-12 lg:gap-16 mb-16 md:mb-24">
 
@@ -50,7 +50,7 @@ const Footer = () => {
                                 alt="Logo"
                                 className="w-5 h-5 opacity-90"
                             />
-                            <span className="text-[10px] md:text-[11px] font-bold tracking-[0.2em] uppercase">Bulusan Zoo</span>
+                            <span className="text-[10px] md:text-[16px] font-bold tracking-[0.2em] uppercase">Bulusan Zoo</span>
                         </div>
 
                         <h4 className="text-[10px] md:text-[11px] font-bold uppercase tracking-[0.15em] mb-4 text-gray-400">
@@ -73,7 +73,7 @@ const Footer = () => {
 
                     <div className="md:col-span-7 lg:col-span-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10 md:gap-8">
                         <div>
-                            <h4 className="text-[10px] md:text-[11px] font-bold uppercase tracking-[0.15em] mb-6 md:mb-8 text-gray-400">Quick Links</h4>
+                            <h4 className="text-[10px] md:text-[16px] font-bold uppercase tracking-[0.15em] mb-6 md:mb-8 text-gray-400">Quick Links</h4>
                             <ul className="space-y-3 md:space-y-4">
                                 {quickLinks.map((link) => (
                                     <li key={link.label}>
@@ -86,7 +86,7 @@ const Footer = () => {
                         </div>
 
                         <div>
-                            <h4 className="text-[10px] md:text-[11px] font-bold uppercase tracking-[0.15em] mb-6 md:mb-8 text-gray-400">Contact Support</h4>
+                            <h4 className="text-[10px] md:text-[16px] font-bold uppercase tracking-[0.15em] mb-6 md:mb-8 text-gray-400">Contact Support</h4>
                             <ul className="space-y-3 md:space-y-4">
                                 {contactInfo.map((item, index) => (
                                     <li key={index} className="text-base md:text-[17px] font-medium text-white/90">

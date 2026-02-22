@@ -260,7 +260,7 @@ const Home = () => {
 
                 <section className="relative w-full bg-[#08140e] flex items-center justify-center px-4 sm:px-8 md:px-12 py-16 md:py-24 overflow-hidden">
                     <div className="max-w-[1400px] mx-auto w-full text-center">
-                        <h2 className="flex flex-col gap-2 md:gap-4 text-5xl sm:text-6xl md:text-8xl lg:text-[10rem] font-black leading-[1.2] tracking-tighter select-none">
+                        <h2 className="flex flex-col gap-2 md:gap-4 text-5xl sm:text-6xl md:text-8xl lg:text-[8rem] font-black leading-[1.2] tracking-tighter select-none">
                             <span
                                 className="block bg-cover bg-center bg-no-repeat bg-clip-text text-transparent transition-opacity duration-700 ease-in"
                                 style={{
@@ -303,23 +303,24 @@ const Home = () => {
                         <div className="flex overflow-x-auto md:grid md:grid-cols-3 gap-8 md:gap-12 pb-8 md:pb-0 snap-x snap-mandatory scrollbar-hide">
                             {[
                                 {
-                                    name: 'African Lions',
-                                    category: 'Mammals',
-                                    location: 'Savanna Zone',
-                                    image: 'https://images.unsplash.com/photo-1546182990-dffeafbe841d?w=600&q=80',
+                                    name: 'Monkey',
+                                    category: 'Mammal',
+                                    location: 'Tropical Forest Habitat',
+                                    image: 'https://images.unsplash.com/photo-1540573133985-87b6da6d54a9?w=1200&q=80',
                                 },
                                 {
-                                    name: 'Asian Elephants',
-                                    category: 'Mammals',
-                                    location: 'Forest Habitat',
-                                    image: 'https://images.unsplash.com/photo-1557050543-4d5f4e07ef46?w=600&q=80',
-                                },
-                                {
-                                    name: 'Tropical Birds',
-                                    category: 'Birds',
+                                    name: 'Dove',
+                                    category: 'Bird',
                                     location: 'Aviary',
-                                    image: 'https://images.unsplash.com/photo-1552728089-57bdde30beb3?w=600&q=80',
+                                    image: 'https://images.unsplash.com/photo-1580980407668-6bb45a674180?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+                                },
+                                {
+                                    name: 'Parrot',
+                                    category: 'Bird',
+                                    location: 'Rainforest Aviary',
+                                    image: 'https://plus.unsplash.com/premium_photo-1673454201378-3867e051dca7?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8cGFycm90fGVufDB8fDB8fHww',
                                 }
+
                             ].map((animal, i) => (
                                 <div key={i} className="group cursor-pointer min-w-[85vw] md:min-w-0 snap-center">
                                     <div className="relative aspect-[2/3] overflow-hidden mb-8 bg-gray-50">
@@ -424,6 +425,79 @@ const Home = () => {
                         </div>
                     </div>
                 </section>
+                            
+                <section id="faq-section" className="py-24 bg-white">
+                    {(() => {
+                        const [activeIndex, setActiveIndex] = React.useState(null);
+                        const faqData = [
+                            {
+                                question: "What are the operating hours of Bulusan Zoo?",
+                                answer: "Bulusan Zoo is open daily from 8:00 AM to 5:00 PM. We recommend arriving early to fully experience all our wildlife exhibits and AI-powered features."
+                            },
+                            {
+                                question: "How can I purchase tickets for my visit?",
+                                answer: "Tickets can be purchased directly through our website via the tickets page or at the main entrance gate. We accept cash and major digital payment methods."
+                            },
+                            {
+                                question: "Is there a special rate for local residents?",
+                                answer: "Yes, entrance is free for local residents of Calapan City. Please bring a valid government-issued ID or proof of residency to avail of this benefit."
+                            },
+                            {
+                                question: "Are animal feeding sessions open to the public?",
+                                answer: "We have scheduled interactive feeding sessions and wildlife shows throughout the day. Check the 'Events' section for the latest daily schedule."
+                            },
+                            {
+                                question: "Is the park accessible for persons with disabilities?",
+                                answer: "Yes, Bulusan Zoo features paved pathways suitable for wheelchairs and priority access for PWDs and senior citizens at all major attractions."
+                            },
+                            {
+                                question: "Does the zoo support conservation programs?",
+                                answer: "Absolutely. A portion of every ticket sale goes directly toward our local wildlife rescue and rehabilitation initiatives in the region."
+                            }
+                        ];
+
+                        return (
+                            <div className="container mx-auto px-6 lg:px-12 max-w-8xl">
+                                <h2 className="text-5xl md:text-8xl font-bold text-gray-900 mb-12 tracking-tight">
+                                    FAQ
+                                </h2>
+
+                                <div className="border-b border-gray-200">
+                                    {faqData.map((item, index) => (
+                                        <div key={index} className="border-t border-gray-200">
+                                            <button
+                                                onClick={() => setActiveIndex(activeIndex === index ? null : index)}
+                                                className="w-full py-7 md:py-9 flex items-center justify-between text-left group transition-all"
+                                            >
+                                                <span className="text-xl md:text-3xl font-medium text-gray-800 pr-8">
+                                                    {item.question}
+                                                </span>
+                                                <div className={`flex-shrink-0 w-10 h-10 border border-gray-200 rounded-lg flex items-center justify-center transition-all duration-300 ${activeIndex === index ? 'bg-gray-900 border-gray-900' : 'bg-white'}`}>
+                                                    <svg
+                                                        className={`w-5 h-5 transition-all duration-300 ${activeIndex === index ? 'text-white rotate-180' : 'text-gray-400'}`}
+                                                        fill="none"
+                                                        stroke="currentColor"
+                                                        viewBox="0 0 24 24"
+                                                    >
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                                                    </svg>
+                                                </div>
+                                            </button>
+
+                                            <div
+                                                className={`overflow-hidden transition-all duration-500 ease-in-out ${activeIndex === index ? 'max-h-96 opacity-100 pb-8' : 'max-h-0 opacity-0'}`}
+                                            >
+                                                <p className="text-gray-500 text-base md:text-lg leading-relaxed max-w-4xl">
+                                                    {item.answer}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        );
+                    })()}
+                </section>
 
                 <section id="tickets-section" className="py-24 bg-white">
                     <div className="container mx-auto px-6 lg:px-12">
@@ -436,13 +510,13 @@ const Home = () => {
                             </h2>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 border border-gray-300 overflow-hidden shadow-sm mb-12">
+                        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 border border-gray-300 overflow-hidden shadow-sm mb-12">
                             {[
-                                {
-                                    label: 'SENIOR',
-                                    price: '₱80',
-                                    desc: 'Ages 60+ with valid ID. Priority access included for our elder community.'
-                                },
+                                // {
+                                //     label: 'SENIOR',
+                                //     price: '₱80',
+                                //     desc: 'Ages 60+ with valid ID. Priority access included for our elder community.'
+                                // },
                                 {
                                     label: 'ADULT',
                                     price: '₱100',
@@ -453,11 +527,11 @@ const Home = () => {
                                     price: '₱50',
                                     desc: 'Ages 5-17. Launch your first visit and start exploring within minutes.'
                                 },
-                                {
-                                    label: 'STUDENT',
-                                    price: '₱70',
-                                    desc: 'Valid for high school and college students with valid academic ID.'
-                                },
+                                // {
+                                //     label: 'STUDENT',
+                                //     price: '₱70',
+                                //     desc: 'Valid for high school and college students with valid academic ID.'
+                                // },
                                 {
                                     label: 'RESIDENT',
                                     price: 'FREE',
@@ -478,7 +552,7 @@ const Home = () => {
 
                                     <div className="h-[1px] w-full bg-gray-100 mb-8" />
 
-                                    <p className="text-[14px] leading-relaxed text-gray-500 min-h-[80px]">
+                                    <p className="text-[18px] leading-relaxed text-gray-500 min-h-[80px]">
                                         {t.desc}
                                     </p>
                                 </div>
