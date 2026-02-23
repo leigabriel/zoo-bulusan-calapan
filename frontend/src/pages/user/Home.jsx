@@ -519,12 +519,12 @@ const Home = () => {
                                 // },
                                 {
                                     label: 'ADULT',
-                                    price: '₱100',
+                                    price: '₱40',
                                     desc: 'Ages 18-59. Perfect for those who want the full experience.'
                                 },
                                 {
                                     label: 'CHILD',
-                                    price: '₱50',
+                                    price: '₱20',
                                     desc: 'Ages 5-17. Launch your first visit and start exploring within minutes.'
                                 },
                                 // {
@@ -560,9 +560,9 @@ const Home = () => {
                         </div>
 
                         <div className="flex justify-center">
-                            <Link to="/tickets">
+                            <Link to="/reservations">
                                 <button className="px-12 py-4 bg-gray-900 text-white text-sm font-bold tracking-widest uppercase rounded-full hover:bg-gray-800 transition-all duration-300 shadow-lg shadow-gray-200">
-                                    Buy Your Tickets
+                                    Reserve Now!
                                 </button>
                             </Link>
                         </div>

@@ -2,16 +2,17 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Home from './pages/user/Home';
 import Animals from './pages/user/Animals';
+import Plants from './pages/user/Plants';
 import Events from './pages/user/Events';
-import Tickets from './pages/user/Tickets';
+import Reservations from './pages/user/Reservations';
 import AboutUs from './pages/user/AboutUs';
 import AnimalDex from './pages/user/AnimalDex';
-import TicketHistory from './pages/user/TicketHistory';
-import ArchivedTickets from './pages/user/ArchivedTickets';
+import ArchivedReservations from './pages/user/ArchivedReservations';
 import UserProfile from './pages/user/UserProfile';
 import Settings from './pages/user/Settings';
 import Help from './pages/user/Help';
 import UserMessages from './pages/user/UserMessages';
+import MiniZooGame from './pages/user/MiniZooGame';
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
 import GoogleAuthSuccess from './pages/auth/GoogleAuthSuccess';
@@ -23,6 +24,8 @@ import Analytics from './pages/admin/Analytics';
 import Reports from './pages/admin/Reports';
 import AdminUsers from './pages/admin/AdminUsers';
 import AdminAnimals from './pages/admin/AdminAnimals';
+import AdminPlants from './pages/admin/AdminPlants';
+import AdminReservations from './pages/admin/AdminReservations';
 import AdminProfile from './pages/admin/AdminProfile';
 import AdminHelpCenter from './pages/admin/AdminHelpCenter';
 import AdminTickets from './pages/admin/AdminTickets';
@@ -30,7 +33,9 @@ import AdminMessages from './pages/admin/AdminMessages';
 import StaffDashboard from './pages/staff/StaffDashboard';
 import StaffEvents from './pages/staff/StaffEvents';
 import StaffTickets from './pages/staff/StaffTickets';
+import StaffReservations from './pages/staff/StaffReservations';
 import StaffAnimals from './pages/staff/StaffAnimals';
+import StaffPlants from './pages/staff/StaffPlants';
 import StaffUsers from './pages/staff/StaffUsers';
 import StaffHelpCenter from './pages/staff/StaffHelpCenter';
 import StaffMessages from './pages/staff/StaffMessages';
@@ -81,6 +86,7 @@ function AppRoutes() {
             {/* Public Routes - accessible to everyone */}
             <Route path="/" element={<Home />} />
             <Route path="/animals" element={<Animals />} />
+            <Route path="/plants" element={<Plants />} />
             <Route path="/events" element={<Events />} />
             <Route path="/about" element={<AboutUs />} />
             <Route path="/animaldex" element={<AnimalDex />} />
@@ -95,24 +101,19 @@ function AppRoutes() {
             <Route path="/access-denied" element={<AccessDenied />} />
 
             {/* Protected User Routes - requires login */}
-            <Route path="/tickets" element={
-                <ProtectedRoute allowedRoles={['user', 'staff', 'vet']}>
-                    <Tickets />
-                </ProtectedRoute>
-            } />
             <Route path="/classifier" element={
                 <ProtectedRoute allowedRoles={['user', 'staff', 'vet']}>
                     <AnimalClassifier />
                 </ProtectedRoute>
             } />
-            <Route path="/my-tickets" element={
+            <Route path="/reservations" element={
                 <ProtectedRoute allowedRoles={['user']}>
-                    <TicketHistory />
+                    <Reservations />
                 </ProtectedRoute>
             } />
-            <Route path="/archived-tickets" element={
+            <Route path="/archived-reservations" element={
                 <ProtectedRoute allowedRoles={['user']}>
-                    <ArchivedTickets />
+                    <ArchivedReservations />
                 </ProtectedRoute>
             } />
             <Route path="/profile" element={
@@ -131,6 +132,7 @@ function AppRoutes() {
                 </ProtectedRoute>
             } />
             <Route path="/help" element={<Help />} />
+            <Route path="/mini-zoo-game" element={<MiniZooGame />} />
 
             {/* Admin Routes */}
             <Route path="/admin/dashboard" element={
@@ -179,6 +181,20 @@ function AppRoutes() {
                 <ProtectedRoute allowedRoles={['admin']}>
                     <AdminLayout>
                         <AdminAnimals />
+                    </AdminLayout>
+                </ProtectedRoute>
+            } />
+            <Route path="/admin/plants" element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                    <AdminLayout>
+                        <AdminPlants />
+                    </AdminLayout>
+                </ProtectedRoute>
+            } />
+            <Route path="/admin/reservations" element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                    <AdminLayout>
+                        <AdminReservations />
                     </AdminLayout>
                 </ProtectedRoute>
             } />
@@ -241,17 +257,24 @@ function AppRoutes() {
                     </StaffLayout>
                 </ProtectedRoute>
             } />
+            <Route path="/staff/plants" element={
+                <ProtectedRoute allowedRoles={['admin', 'staff', 'vet']}>
+                    <StaffLayout>
+                        <StaffPlants />
+                    </StaffLayout>
+                </ProtectedRoute>
+            } />
+            <Route path="/staff/reservations" element={
+                <ProtectedRoute allowedRoles={['admin', 'staff']}>
+                    <StaffLayout>
+                        <StaffReservations />
+                    </StaffLayout>
+                </ProtectedRoute>
+            } />
             <Route path="/staff/users" element={
                 <ProtectedRoute allowedRoles={['admin', 'staff']}>
                     <StaffLayout>
                         <StaffUsers />
-                    </StaffLayout>
-                </ProtectedRoute>
-            } />
-            <Route path="/staff/scanner" element={
-                <ProtectedRoute allowedRoles={['admin', 'staff']}>
-                    <StaffLayout>
-                        <TicketScanner />
                     </StaffLayout>
                 </ProtectedRoute>
             } />
@@ -266,6 +289,13 @@ function AppRoutes() {
                 <ProtectedRoute allowedRoles={['admin', 'staff', 'vet']}>
                     <StaffLayout>
                         <StaffMessages />
+                    </StaffLayout>
+                </ProtectedRoute>
+            } />
+            <Route path="/staff/scanner" element={
+                <ProtectedRoute allowedRoles={['admin', 'staff', 'vet']}>
+                    <StaffLayout>
+                        <TicketScanner />
                     </StaffLayout>
                 </ProtectedRoute>
             } />

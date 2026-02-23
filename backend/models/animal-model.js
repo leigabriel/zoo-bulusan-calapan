@@ -22,19 +22,35 @@ class Animal {
     }
 
     static async create(animalData) {
-        const { name, species, exhibit, description, imageUrl, status } = animalData;
+        const { 
+            name, species, exhibit, description, imageUrl, status,
+            lifespan, weight, length, habitat, diet, animalInformation
+        } = animalData;
         const [result] = await db.query(
-            'INSERT INTO animals (name, species, habitat, description, image_url, status) VALUES (?, ?, ?, ?, ?, ?)',
-            [name, species, exhibit, description || null, imageUrl || null, status || 'healthy']
+            `INSERT INTO animals (name, species, habitat, description, image_url, status, lifespan, weight, length, diet, animal_information) 
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [
+                name, species, exhibit || habitat, description || null, imageUrl || null, 
+                status || 'healthy', lifespan || null, weight || null, length || null,
+                diet || null, animalInformation || null
+            ]
         );
         return result.insertId;
     }
 
     static async update(id, animalData) {
-        const { name, species, exhibit, description, imageUrl, status } = animalData;
+        const { 
+            name, species, exhibit, description, imageUrl, status,
+            lifespan, weight, length, habitat, diet, animalInformation
+        } = animalData;
         const [result] = await db.query(
-            'UPDATE animals SET name = ?, species = ?, habitat = ?, description = ?, image_url = ?, status = ? WHERE id = ?',
-            [name, species, exhibit, description, imageUrl, status, id]
+            `UPDATE animals SET name = ?, species = ?, habitat = ?, description = ?, image_url = ?, 
+             status = ?, lifespan = ?, weight = ?, length = ?, diet = ?, animal_information = ? WHERE id = ?`,
+            [
+                name, species, exhibit || habitat, description, imageUrl, status,
+                lifespan || null, weight || null, length || null, diet || null, 
+                animalInformation || null, id
+            ]
         );
         return result.affectedRows > 0;
     }

@@ -24,11 +24,11 @@ const Icons = {
 };
 
 const DEFAULT_ANIMAL_IMAGES = [
-    'https://images.unsplash.com/photo-1474511320723-9a56873571b7?w=800',
-    'https://images.unsplash.com/photo-1534567153574-2b12153a87f0?w=800',
-    'https://images.unsplash.com/photo-1544985361-b420d7a77043?w=800',
-    'https://images.unsplash.com/photo-1497752531616-c3afd9760a11?w=800',
-    'https://images.unsplash.com/photo-1551085254-e96b210db58a?w=800',
+    // 'https://images.unsplash.com/photo-1474511320723-9a56873571b7?w=800',
+    // 'https://images.unsplash.com/photo-1534567153574-2b12153a87f0?w=800',
+    // 'https://images.unsplash.com/photo-1544985361-b420d7a77043?w=800',
+    // 'https://images.unsplash.com/photo-1497752531616-c3afd9760a11?w=800',
+    // 'https://images.unsplash.com/photo-1551085254-e96b210db58a?w=800',
 ];
 
 const colorVariants = [
@@ -62,12 +62,17 @@ const Animals = () => {
                     description: animal.description || '',
                     status: animal.status || 'healthy',
                     imageUrl: animal.image_url || DEFAULT_ANIMAL_IMAGES[idx % DEFAULT_ANIMAL_IMAGES.length],
-                    colorVariant: colorVariants[idx % colorVariants.length]
+                    colorVariant: colorVariants[idx % colorVariants.length],
+                    lifespan: animal.lifespan || null,
+                    weight: animal.weight || null,
+                    length: animal.length || null,
+                    habitat: animal.habitat || null,
+                    diet: animal.diet || null,
+                    animalInformation: animal.animal_information || animal.animalInformation || null
                 }));
                 setAnimals(transformed);
             } else { setAnimals([]); }
         } catch (err) {
-            console.error(err);
             setError('Failed to load animals.');
             setAnimals([]);
         } finally { setLoading(false); }
@@ -164,26 +169,60 @@ const Animals = () => {
                         <Icons.Close />
                     </button>
 
-                    <div className="max-w-4xl w-full h-full md:h-auto bg-[#F9F9F9] md:bg-transparent grid grid-cols-1 md:grid-cols-2 gap-0 md:gap-12 items-center overflow-y-auto md:overflow-visible">
+                    <div className="max-w-7xl w-full h-full md:h-auto bg-[#F9F9F9] md:bg-transparent grid grid-cols-1 md:grid-cols-2 gap-0 md:gap-12 items-center overflow-y-auto md:overflow-visible">
                         <div className="aspect-[4/5] md:aspect-[4/5] bg-white shadow-2xl overflow-hidden w-full">
                             <img src={selectedAnimal.imageUrl} alt={selectedAnimal.name} className="w-full h-full object-cover" />
                         </div>
                         <div className="p-8 md:p-0">
-                            <h2 className="text-4xl md:text-6xl font-bold uppercase mb-2 leading-tight tracking-tighter">{selectedAnimal.name}</h2>
-                            <p className="text-[10px] md:text-xs uppercase tracking-[0.2em] mb-6 md:mb-8 font-black opacity-40">{selectedAnimal.species}</p>
+                            <h2 className="text-4xl md:text-6xl font-bold uppercase mb-6 md:mb-8 leading-tight tracking-tighter">{selectedAnimal.name}</h2>
                             
                             <div className="space-y-6 md:space-y-8 mb-10 md:mb-12">
-                                <div>
-                                    <h4 className="text-[8px] md:text-[10px] uppercase tracking-widest font-black mb-1 md:mb-2 opacity-30">Habitat / Location</h4>
-                                    <p className="text-sm md:text-lg font-bold leading-tight">{selectedAnimal.exhibit}</p>
-                                </div>
-                                <div>
-                                    <h4 className="text-[8px] md:text-[10px] uppercase tracking-widest font-black mb-1 md:mb-2 opacity-30">About</h4>
-                                    <p className="text-sm md:text-lg font-medium leading-snug opacity-80">{selectedAnimal.description || `A majestic resident of Zoo Bulusan Calapan.`}</p>
-                                </div>
-                                <div className={`inline-block border border-black/10 px-3 py-1.5 md:px-4 md:py-2 text-[8px] md:text-[10px] uppercase tracking-widest font-black ${getStatusInfo(selectedAnimal.status).color}`}>
-                                    Status: {getStatusInfo(selectedAnimal.status).label}
-                                </div>
+                                {(selectedAnimal.lifespan || selectedAnimal.weight || selectedAnimal.length) && (
+                                    <div className="grid grid-cols-3 gap-4">
+                                        {selectedAnimal.lifespan && (
+                                            <div>
+                                                <h4 className="text-[8px] md:text-[10px] uppercase tracking-widest font-black mb-1 opacity-30">Lifespan</h4>
+                                                <p className="text-sm md:text-base font-medium">{selectedAnimal.lifespan}</p>
+                                            </div>
+                                        )}
+                                        {selectedAnimal.weight && (
+                                            <div>
+                                                <h4 className="text-[8px] md:text-[10px] uppercase tracking-widest font-black mb-1 opacity-30">Weight</h4>
+                                                <p className="text-sm md:text-base font-medium">{selectedAnimal.weight}</p>
+                                            </div>
+                                        )}
+                                        {selectedAnimal.length && (
+                                            <div>
+                                                <h4 className="text-[8px] md:text-[10px] uppercase tracking-widest font-black mb-1 opacity-30">Length</h4>
+                                                <p className="text-sm md:text-base font-medium">{selectedAnimal.length}</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                                
+                                {(selectedAnimal.habitat || selectedAnimal.diet) && (
+                                    <div className="grid grid-cols-2 gap-4">
+                                        {selectedAnimal.habitat && (
+                                            <div>
+                                                <h4 className="text-[8px] md:text-[10px] uppercase tracking-widest font-black mb-1 opacity-30">Habitat</h4>
+                                                <p className="text-sm md:text-base font-medium">{selectedAnimal.habitat}</p>
+                                            </div>
+                                        )}
+                                        {selectedAnimal.diet && (
+                                            <div>
+                                                <h4 className="text-[8px] md:text-[10px] uppercase tracking-widest font-black mb-1 opacity-30">Diet</h4>
+                                                <p className="text-sm md:text-base font-medium">{selectedAnimal.diet}</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                                
+                                {(selectedAnimal.animalInformation || selectedAnimal.animal_information) && (
+                                    <div>
+                                        <h4 className="text-[8px] md:text-[10px] uppercase tracking-widest font-black mb-1 md:mb-2 opacity-30">Animal Information</h4>
+                                        <p className="text-sm md:text-base font-medium leading-snug opacity-80">{selectedAnimal.animalInformation || selectedAnimal.animal_information}</p>
+                                    </div>
+                                )}
                             </div>
                             
                             <button onClick={() => setSelectedAnimal(null)} className="w-full md:w-auto px-8 py-4 bg-[#2A2A2A] text-white text-[10px] md:text-xs uppercase tracking-[0.2em] font-bold hover:bg-black transition-all">

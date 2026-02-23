@@ -45,20 +45,41 @@ const Events = () => {
     const fetchEvents = async () => {
         try {
             setLoading(true);
-            const response = await userAPI.getEvents();
+            const response = await userAPI.getEvents(true);
             if (response.success && response.events) {
-                const transformedEvents = response.events.map((event, index) => ({
-                    id: event.id,
-                    title: event.title,
-                    description: event.description || '',
-                    eventDate: formatDateFromDB(event.event_date),
-                    startTime: event.start_time,
-                    endTime: event.end_time,
-                    location: event.location || 'Zoo Bulusan',
-                    status: event.status || 'upcoming',
-                    imageUrl: event.image_url || DEFAULT_EVENT_IMAGES[index % DEFAULT_EVENT_IMAGES.length]
-                }));
-                transformedEvents.sort((a, b) => new Date(a.eventDate) - new Date(b.eventDate));
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                
+                const transformedEvents = response.events.map((event, index) => {
+                    const eventDate = formatDateFromDB(event.event_date);
+                    const eventDateObj = new Date(eventDate + 'T00:00:00');
+                    
+                    let computedStatus = event.status || 'upcoming';
+                    if (eventDateObj < today) {
+                        computedStatus = 'past';
+                    } else if (eventDateObj.getTime() === today.getTime()) {
+                        computedStatus = 'ongoing';
+                    } else if (eventDateObj > today) {
+                        computedStatus = 'upcoming';
+                    }
+                    
+                    return {
+                        id: event.id,
+                        title: event.title,
+                        description: event.description || '',
+                        eventDate: eventDate,
+                        startTime: event.start_time,
+                        endTime: event.end_time,
+                        location: event.location || 'Zoo Bulusan',
+                        status: computedStatus,
+                        imageUrl: event.image_url || DEFAULT_EVENT_IMAGES[index % DEFAULT_EVENT_IMAGES.length]
+                    };
+                });
+                transformedEvents.sort((a, b) => {
+                    if (a.status === 'past' && b.status !== 'past') return 1;
+                    if (a.status !== 'past' && b.status === 'past') return -1;
+                    return new Date(a.eventDate) - new Date(b.eventDate);
+                });
                 setEvents(transformedEvents);
             } else { setEvents([]); }
         } catch (err) {
@@ -95,6 +116,7 @@ const Events = () => {
         switch (status) {
             case 'ongoing': return 'text-blue-700';
             case 'upcoming': return 'text-green-700';
+            case 'past': return 'text-gray-500';
             default: return 'text-green-700';
         }
     };
@@ -119,10 +141,10 @@ const Events = () => {
 
             <div className="container mx-auto px-4 md:px-6 py-4 md:py-12 flex-grow">
                 <div className="flex flex-wrap gap-4 md:gap-8 mb-8 md:mb-16 border-b border-black/10 pb-4 overflow-x-auto no-scrollbar">
-                    {['all', 'upcoming', 'ongoing'].map(f => (
+                    {['all', 'upcoming', 'ongoing', 'past'].map(f => (
                         <button key={f} onClick={() => setFilter(f)}
                             className={`text-[10px] md:text-xs uppercase tracking-widest transition-all whitespace-nowrap ${filter === f ? 'font-black border-b-2 border-black' : 'opacity-50 hover:opacity-100 font-bold'}`}>
-                            {f === 'all' ? 'All Events' : f}
+                            {f === 'all' ? 'All Events' : f === 'past' ? 'Past Events' : f}
                         </button>
                     ))}
                 </div>

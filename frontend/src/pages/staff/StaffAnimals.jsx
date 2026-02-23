@@ -73,7 +73,7 @@ const StaffAnimals = ({ globalSearch = '' }) => {
     const [imageFile, setImageFile] = useState(null);
     const [imagePreview, setImagePreview] = useState(null);
     const [form, setForm] = useState({
-        name: '', species: '', exhibit: '', description: '', imageUrl: '', status: 'healthy'
+        name: '', species: '', exhibit: '', description: '', imageUrl: '', status: 'healthy', lifespan: '', weight: '', length: '', habitat: '', diet: '', animalInformation: ''
     });
 
     useEffect(() => { fetchAnimals(); }, []);
@@ -94,7 +94,7 @@ const StaffAnimals = ({ globalSearch = '' }) => {
 
     const openCreateModal = () => {
         setEditingAnimal(null);
-        setForm({ name: '', species: '', exhibit: '', description: '', imageUrl: '', status: 'healthy' });
+        setForm({ name: '', species: '', exhibit: '', description: '', imageUrl: '', status: 'healthy', lifespan: '', weight: '', length: '', habitat: '', diet: '', animalInformation: '' });
         setImageInputMode('url');
         setImageFile(null);
         setImagePreview(null);
@@ -109,7 +109,13 @@ const StaffAnimals = ({ globalSearch = '' }) => {
             exhibit: animal.habitat || animal.exhibit || '',
             description: animal.description || '',
             imageUrl: animal.image_url || animal.imageUrl || '',
-            status: animal.status || 'healthy'
+            status: animal.status || 'healthy',
+            lifespan: animal.lifespan || '',
+            weight: animal.weight || '',
+            length: animal.length || '',
+            habitat: animal.habitat || '',
+            diet: animal.diet || '',
+            animalInformation: animal.animalInformation || animal.animal_information || ''
         });
         setImageInputMode('url');
         setImageFile(null);
@@ -120,7 +126,7 @@ const StaffAnimals = ({ globalSearch = '' }) => {
     const closeModal = () => {
         setShowModal(false);
         setEditingAnimal(null);
-        setForm({ name: '', species: '', exhibit: '', description: '', imageUrl: '', status: 'healthy' });
+        setForm({ name: '', species: '', exhibit: '', description: '', imageUrl: '', status: 'healthy', lifespan: '', weight: '', length: '', habitat: '', diet: '', animalInformation: '' });
         setImageInputMode('url');
         setImageFile(null);
         setImagePreview(null);
@@ -560,6 +566,76 @@ const StaffAnimals = ({ globalSearch = '' }) => {
                                     rows="3"
                                     className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-[#8cff65] focus:ring-1 focus:ring-[#8cff65]/20 transition-all resize-none"
                                     placeholder="Brief description of the animal..."
+                                />
+                            </div>
+
+                            {/* Lifespan, Weight, Length */}
+                            <div className="grid grid-cols-3 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-400 mb-2">Lifespan</label>
+                                    <input
+                                        type="text"
+                                        value={form.lifespan}
+                                        onChange={(e) => setForm({ ...form, lifespan: sanitizeInput(e.target.value) })}
+                                        className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-[#8cff65] transition-all"
+                                        placeholder="e.g., 10-15 years"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-400 mb-2">Weight</label>
+                                    <input
+                                        type="text"
+                                        value={form.weight}
+                                        onChange={(e) => setForm({ ...form, weight: sanitizeInput(e.target.value) })}
+                                        className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-[#8cff65] transition-all"
+                                        placeholder="e.g., 200 kg"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-400 mb-2">Length</label>
+                                    <input
+                                        type="text"
+                                        value={form.length}
+                                        onChange={(e) => setForm({ ...form, length: sanitizeInput(e.target.value) })}
+                                        className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-[#8cff65] transition-all"
+                                        placeholder="e.g., 2.5 m"
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Habitat & Diet */}
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-400 mb-2">Natural Habitat</label>
+                                    <input
+                                        type="text"
+                                        value={form.habitat}
+                                        onChange={(e) => setForm({ ...form, habitat: sanitizeInput(e.target.value) })}
+                                        className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-[#8cff65] transition-all"
+                                        placeholder="e.g., African Savanna"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-400 mb-2">Diet</label>
+                                    <input
+                                        type="text"
+                                        value={form.diet}
+                                        onChange={(e) => setForm({ ...form, diet: sanitizeInput(e.target.value) })}
+                                        className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-[#8cff65] transition-all"
+                                        placeholder="e.g., Carnivore"
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Additional Information */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-400 mb-2">Additional Information</label>
+                                <textarea
+                                    value={form.animalInformation}
+                                    onChange={(e) => setForm({ ...form, animalInformation: sanitizeInput(e.target.value) })}
+                                    rows="3"
+                                    className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-[#8cff65] transition-all resize-none"
+                                    placeholder="Enter additional details about the animal..."
                                 />
                             </div>
 

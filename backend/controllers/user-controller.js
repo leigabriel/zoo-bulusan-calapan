@@ -53,7 +53,24 @@ exports.updateProfile = async (req, res) => {
             profileImage: user.profile_image
         });
 
-        res.json({ success: true, message: 'Profile updated successfully' });
+        // Fetch updated user to return
+        const updatedUser = await User.findById(req.user.id);
+        res.json({ 
+            success: true, 
+            message: 'Profile updated successfully',
+            user: {
+                id: updatedUser.id,
+                email: updatedUser.email,
+                firstName: updatedUser.first_name,
+                lastName: updatedUser.last_name,
+                fullName: `${updatedUser.first_name || ''} ${updatedUser.last_name || ''}`.trim(),
+                phoneNumber: updatedUser.phone_number,
+                gender: updatedUser.gender,
+                birthday: updatedUser.birthday,
+                profileImage: updatedUser.profile_image,
+                role: updatedUser.role
+            }
+        });
     } catch (error) {
         console.error('Error updating profile:', error);
         res.status(500).json({ success: false, message: 'Error updating profile' });
@@ -88,7 +105,8 @@ exports.getAnimalById = async (req, res) => {
 
 exports.getEvents = async (req, res) => {
     try {
-        const events = await Event.getUpcoming();
+        const { all } = req.query;
+        const events = all === 'true' ? await Event.getAll() : await Event.getUpcoming();
         res.json({ success: true, events });
     } catch (error) {
         console.error('Error getting events:', error);

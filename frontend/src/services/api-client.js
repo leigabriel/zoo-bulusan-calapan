@@ -819,8 +819,24 @@ export const userAPI = {
         return handleResponse(response);
     },
 
-    getEvents: async () => {
-        const response = await fetch(`${API_BASE_URL}/users/events`);
+    getEvents: async (includeAll = false) => {
+        const url = includeAll ? `${API_BASE_URL}/users/events?all=true` : `${API_BASE_URL}/users/events`;
+        const response = await fetch(url);
+        return handleResponse(response);
+    },
+
+    getPlants: async () => {
+        const response = await fetch(`${API_BASE_URL}/plants`);
+        return handleResponse(response);
+    },
+
+    getPlant: async (id) => {
+        const response = await fetch(`${API_BASE_URL}/plants/${id}`);
+        return handleResponse(response);
+    },
+
+    getPlantsByCategory: async (category) => {
+        const response = await fetch(`${API_BASE_URL}/plants/category/${encodeURIComponent(category)}`);
         return handleResponse(response);
     },
 
@@ -995,6 +1011,218 @@ export const messageAPI = {
     getAppeals: async (type = 'admin') => {
         const response = await fetch(`${API_BASE_URL}/admin/appeals`, {
             headers: getAuthHeaders(type)
+        });
+        return handleResponse(response);
+    }
+};
+
+export const plantAPI = {
+    getAll: async () => {
+        const response = await fetch(`${API_BASE_URL}/plants`);
+        return handleResponse(response);
+    },
+
+    getById: async (id) => {
+        const response = await fetch(`${API_BASE_URL}/plants/${id}`);
+        return handleResponse(response);
+    },
+
+    getByCategory: async (category) => {
+        const response = await fetch(`${API_BASE_URL}/plants/category/${encodeURIComponent(category)}`);
+        return handleResponse(response);
+    },
+
+    getStats: async () => {
+        const response = await fetch(`${API_BASE_URL}/plants/stats`);
+        return handleResponse(response);
+    },
+
+    create: async (plantData, type = 'admin') => {
+        const response = await fetch(`${API_BASE_URL}/plants`, {
+            method: 'POST',
+            headers: getAuthHeaders(type),
+            body: JSON.stringify(plantData)
+        });
+        return handleResponse(response);
+    },
+
+    update: async (id, plantData, type = 'admin') => {
+        const response = await fetch(`${API_BASE_URL}/plants/${id}`, {
+            method: 'PUT',
+            headers: getAuthHeaders(type),
+            body: JSON.stringify(plantData)
+        });
+        return handleResponse(response);
+    },
+
+    updateStatus: async (id, status, type = 'admin') => {
+        const response = await fetch(`${API_BASE_URL}/plants/${id}/status`, {
+            method: 'PUT',
+            headers: getAuthHeaders(type),
+            body: JSON.stringify({ status })
+        });
+        return handleResponse(response);
+    },
+
+    delete: async (id, type = 'admin') => {
+        const response = await fetch(`${API_BASE_URL}/plants/${id}`, {
+            method: 'DELETE',
+            headers: getAuthHeaders(type)
+        });
+        return handleResponse(response);
+    }
+};
+
+export const reservationAPI = {
+    getMyTicketReservations: async () => {
+        const response = await fetch(`${API_BASE_URL}/reservations/ticket/my`, {
+            headers: getAuthHeaders('user')
+        });
+        return handleResponse(response);
+    },
+
+    getMyEventReservations: async () => {
+        const response = await fetch(`${API_BASE_URL}/reservations/event/my`, {
+            headers: getAuthHeaders('user')
+        });
+        return handleResponse(response);
+    },
+
+    createTicketReservation: async (reservationData) => {
+        const response = await fetch(`${API_BASE_URL}/reservations/ticket`, {
+            method: 'POST',
+            headers: getAuthHeaders('user'),
+            body: JSON.stringify(reservationData)
+        });
+        return handleResponse(response);
+    },
+
+    createEventReservation: async (reservationData) => {
+        const response = await fetch(`${API_BASE_URL}/reservations/event`, {
+            method: 'POST',
+            headers: getAuthHeaders('user'),
+            body: JSON.stringify(reservationData)
+        });
+        return handleResponse(response);
+    },
+
+    cancelTicketReservation: async (id) => {
+        const response = await fetch(`${API_BASE_URL}/reservations/ticket/${id}`, {
+            method: 'DELETE',
+            headers: getAuthHeaders('user')
+        });
+        return handleResponse(response);
+    },
+
+    cancelEventReservation: async (id) => {
+        const response = await fetch(`${API_BASE_URL}/reservations/event/${id}`, {
+            method: 'DELETE',
+            headers: getAuthHeaders('user')
+        });
+        return handleResponse(response);
+    },
+
+    getAllTicketReservations: async (type = 'admin') => {
+        const response = await fetch(`${API_BASE_URL}/reservations/ticket`, {
+            headers: getAuthHeaders(type)
+        });
+        return handleResponse(response);
+    },
+
+    getAllEventReservations: async (type = 'admin') => {
+        const response = await fetch(`${API_BASE_URL}/reservations/event`, {
+            headers: getAuthHeaders(type)
+        });
+        return handleResponse(response);
+    },
+
+    updateTicketReservationStatus: async (id, status, type = 'admin') => {
+        const response = await fetch(`${API_BASE_URL}/reservations/ticket/${id}/status`, {
+            method: 'PUT',
+            headers: getAuthHeaders(type),
+            body: JSON.stringify({ status })
+        });
+        return handleResponse(response);
+    },
+
+    updateEventReservationStatus: async (id, status, type = 'admin') => {
+        const response = await fetch(`${API_BASE_URL}/reservations/event/${id}/status`, {
+            method: 'PUT',
+            headers: getAuthHeaders(type),
+            body: JSON.stringify({ status })
+        });
+        return handleResponse(response);
+    },
+
+    updateTicketVerificationStatus: async (id, verificationStatus, type = 'admin') => {
+        const response = await fetch(`${API_BASE_URL}/reservations/ticket/${id}/verification`, {
+            method: 'PUT',
+            headers: getAuthHeaders(type),
+            body: JSON.stringify({ verificationStatus })
+        });
+        return handleResponse(response);
+    },
+
+    updateEventVerificationStatus: async (id, verificationStatus, type = 'admin') => {
+        const response = await fetch(`${API_BASE_URL}/reservations/event/${id}/verification`, {
+            method: 'PUT',
+            headers: getAuthHeaders(type),
+            body: JSON.stringify({ verificationStatus })
+        });
+        return handleResponse(response);
+    },
+
+    getStats: async (type = 'admin') => {
+        const response = await fetch(`${API_BASE_URL}/reservations/stats`, {
+            headers: getAuthHeaders(type)
+        });
+        return handleResponse(response);
+    },
+
+    deleteTicketReservation: async (id, type = 'admin') => {
+        const response = await fetch(`${API_BASE_URL}/reservations/ticket/${id}`, {
+            method: 'DELETE',
+            headers: getAuthHeaders(type)
+        });
+        return handleResponse(response);
+    },
+
+    deleteEventReservation: async (id, type = 'admin') => {
+        const response = await fetch(`${API_BASE_URL}/reservations/event/${id}`, {
+            method: 'DELETE',
+            headers: getAuthHeaders(type)
+        });
+        return handleResponse(response);
+    },
+
+    archiveTicketReservation: async (id) => {
+        const response = await fetch(`${API_BASE_URL}/reservations/ticket/${id}/archive`, {
+            method: 'PUT',
+            headers: getAuthHeaders('user')
+        });
+        return handleResponse(response);
+    },
+
+    unarchiveTicketReservation: async (id) => {
+        const response = await fetch(`${API_BASE_URL}/reservations/ticket/${id}/unarchive`, {
+            method: 'PUT',
+            headers: getAuthHeaders('user')
+        });
+        return handleResponse(response);
+    },
+
+    archiveEventReservation: async (id) => {
+        const response = await fetch(`${API_BASE_URL}/reservations/event/${id}/archive`, {
+            method: 'PUT',
+            headers: getAuthHeaders('user')
+        });
+        return handleResponse(response);
+    },
+
+    unarchiveEventReservation: async (id) => {
+        const response = await fetch(`${API_BASE_URL}/reservations/event/${id}/unarchive`, {
+            method: 'PUT',
+            headers: getAuthHeaders('user')
         });
         return handleResponse(response);
     }

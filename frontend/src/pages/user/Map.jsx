@@ -1,324 +1,79 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback, memo } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-// Animal habitat data organized by region with geographic coordinates
 const animalHabitats = [
-    // ===== AFRICA =====
-    {
-        id: 1,
-        name: 'African Lion',
-        species: 'Panthera leo',
-        habitat: 'Sub-Saharan Africa',
-        region: 'Africa',
-        coordinates: [-1.2921, 36.8219], // Kenya
-        icon: '🦁',
-        description: 'The king of the savannah, found in grasslands of Kenya, Tanzania, and South Africa.',
-        category: 'Mammals'
-    },
-    {
-        id: 2,
-        name: 'African Elephant',
-        species: 'Loxodonta africana',
-        habitat: 'Central & Southern Africa',
-        region: 'Africa',
-        coordinates: [-15.4167, 28.2833], // Zambia
-        icon: '🐘',
-        description: 'The largest land animal, roaming the savannahs and forests of Africa.',
-        category: 'Mammals'
-    },
-    {
-        id: 3,
-        name: 'Reticulated Giraffe',
-        species: 'Giraffa reticulata',
-        habitat: 'East Africa',
-        region: 'Africa',
-        coordinates: [0.0236, 37.9062], // Kenya
-        icon: '🦒',
-        description: 'The tallest mammal on Earth, native to Kenya, Ethiopia, and Somalia.',
-        category: 'Mammals'
-    },
-    {
-        id: 4,
-        name: 'Plains Zebra',
-        species: 'Equus quagga',
-        habitat: 'East & Southern Africa',
-        region: 'Africa',
-        coordinates: [-2.3333, 34.8333], // Serengeti, Tanzania
-        icon: '🦓',
-        description: 'Known for distinctive black-and-white stripes, found across African grasslands.',
-        category: 'Mammals'
-    },
-    {
-        id: 5,
-        name: 'Meerkat',
-        species: 'Suricata suricatta',
-        habitat: 'Kalahari Desert',
-        region: 'Africa',
-        coordinates: [-24.7500, 21.0000], // Botswana
-        icon: '🐿️',
-        description: 'Social desert dwellers of the Kalahari in Botswana and Namibia.',
-        category: 'Mammals'
-    },
-    {
-        id: 6,
-        name: 'Western Lowland Gorilla',
-        species: 'Gorilla gorilla gorilla',
-        habitat: 'Central Africa',
-        region: 'Africa',
-        coordinates: [-0.2280, 15.8277], // Congo
-        icon: '🦍',
-        description: 'Our closest relatives, living in the dense forests of Congo, Gabon, and Cameroon.',
-        category: 'Mammals'
-    },
-    {
-        id: 7,
-        name: 'Ring-tailed Lemur',
-        species: 'Lemur catta',
-        habitat: 'Madagascar',
-        region: 'Africa',
-        coordinates: [-18.7669, 46.8691], // Madagascar
-        icon: '🐒',
-        description: 'Endemic to Madagascar, known for their distinctive striped tails.',
-        category: 'Mammals'
-    },
-    {
-        id: 8,
-        name: 'Common Ostrich',
-        species: 'Struthio camelus',
-        habitat: 'African Savannahs',
-        region: 'Africa',
-        coordinates: [12.8628, 15.0557], // Sahel region
-        icon: '🦃',
-        description: 'The largest living bird, native to African savannahs and the Sahel.',
-        category: 'Birds'
-    },
-
-    // ===== ASIA =====
-    {
-        id: 9,
-        name: 'Bengal Tiger',
-        species: 'Panthera tigris tigris',
-        habitat: 'Indian Subcontinent',
-        region: 'Asia',
-        coordinates: [22.5726, 88.3639], // Sundarbans, India
-        icon: '🐅',
-        description: 'The majestic big cat of India, Bangladesh, and Bhutan.',
-        category: 'Mammals'
-    },
-    {
-        id: 10,
-        name: 'Giant Panda',
-        species: 'Ailuropoda melanoleuca',
-        habitat: 'South Central China',
-        region: 'Asia',
-        coordinates: [30.6171, 103.8203], // Sichuan, China
-        icon: '🐼',
-        description: 'Beloved bamboo eater from the mountains of Sichuan, Shaanxi, and Gansu.',
-        category: 'Mammals'
-    },
-    {
-        id: 11,
-        name: 'Asian Elephant',
-        species: 'Elephas maximus',
-        habitat: 'Southeast Asia',
-        region: 'Asia',
-        coordinates: [8.5241, 76.9366], // Kerala, India
-        icon: '🐘',
-        description: 'Smaller than African cousins, found in India, Thailand, and Sri Lanka.',
-        category: 'Mammals'
-    },
-    {
-        id: 12,
-        name: 'Red Panda',
-        species: 'Ailurus fulgens',
-        habitat: 'Eastern Himalayas',
-        region: 'Asia',
-        coordinates: [27.7172, 85.3240], // Nepal
-        icon: '🦊',
-        description: 'The adorable "firefox" of Nepal, Bhutan, and China.',
-        category: 'Mammals'
-    },
-    {
-        id: 13,
-        name: 'Snow Leopard',
-        species: 'Panthera uncia',
-        habitat: 'Central Asian Mountains',
-        region: 'Asia',
-        coordinates: [46.8625, 103.8467], // Mongolia
-        icon: '🐆',
-        description: 'The ghost of the mountains, found in Mongolia, China, and Nepal.',
-        category: 'Mammals'
-    },
-    {
-        id: 14,
-        name: 'Komodo Dragon',
-        species: 'Varanus komodoensis',
-        habitat: 'Indonesian Islands',
-        region: 'Asia',
-        coordinates: [-8.5500, 119.4833], // Komodo Island
-        icon: '🦎',
-        description: 'The world\'s largest lizard, endemic to Komodo, Rinca, and Flores.',
-        category: 'Reptiles'
-    },
-    {
-        id: 15,
-        name: 'Orangutan',
-        species: 'Pongo pygmaeus',
-        habitat: 'Borneo & Sumatra',
-        region: 'Asia',
-        coordinates: [1.4927, 110.3000], // Borneo
-        icon: '🦧',
-        description: 'The great red apes of Indonesia and Malaysia\'s rainforests.',
-        category: 'Mammals'
-    },
-
-    // ===== AUSTRALIA & OCEANIA =====
-    {
-        id: 16,
-        name: 'Red Kangaroo',
-        species: 'Macropus rufus',
-        habitat: 'Central Australia',
-        region: 'Australia & Oceania',
-        coordinates: [-25.2744, 133.7751], // Central Australia
-        icon: '🦘',
-        description: 'Australia\'s iconic marsupial and the largest kangaroo species.',
-        category: 'Mammals'
-    },
-    {
-        id: 17,
-        name: 'Koala',
-        species: 'Phascolarctos cinereus',
-        habitat: 'Eastern Australia',
-        region: 'Australia & Oceania',
-        coordinates: [-33.8688, 151.2093], // Sydney region
-        icon: '🐨',
-        description: 'Eucalyptus-loving marsupials of Eastern and Southern Australia.',
-        category: 'Mammals'
-    },
-    {
-        id: 18,
-        name: 'Emu',
-        species: 'Dromaius novaehollandiae',
-        habitat: 'Mainland Australia',
-        region: 'Australia & Oceania',
-        coordinates: [-31.9505, 115.8605], // Western Australia
-        icon: '🦃',
-        description: 'Australia\'s largest bird and second-largest in the world.',
-        category: 'Birds'
-    },
-    {
-        id: 19,
-        name: 'Tasmanian Devil',
-        species: 'Sarcophilus harrisii',
-        habitat: 'Tasmania',
-        region: 'Australia & Oceania',
-        coordinates: [-42.8821, 147.3272], // Tasmania
-        icon: '🐕',
-        description: 'Fierce carnivorous marsupial found only in Tasmania.',
-        category: 'Mammals'
-    },
-
-    // ===== THE AMERICAS =====
-    {
-        id: 20,
-        name: 'Jaguar',
-        species: 'Panthera onca',
-        habitat: 'Central & South America',
-        region: 'The Americas',
-        coordinates: [-3.4653, -62.2159], // Amazon, Brazil
-        icon: '🐆',
-        description: 'The apex predator of the Americas, from Mexico to Argentina.',
-        category: 'Mammals'
-    },
-    {
-        id: 21,
-        name: 'Capybara',
-        species: 'Hydrochoerus hydrochaeris',
-        habitat: 'South American Wetlands',
-        region: 'The Americas',
-        coordinates: [-16.5000, -56.0000], // Pantanal, Brazil
-        icon: '🐹',
-        description: 'The world\'s largest rodent, native to South American wetlands.',
-        category: 'Mammals'
-    },
-    {
-        id: 22,
-        name: 'Two-Toed Sloth',
-        species: 'Choloepus didactylus',
-        habitat: 'Central & South American Rainforests',
-        region: 'The Americas',
-        coordinates: [9.7489, -83.7534], // Costa Rica
-        icon: '🦥',
-        description: 'Slow-moving tree dwellers of tropical rainforests.',
-        category: 'Mammals'
-    },
-    {
-        id: 23,
-        name: 'American Bison',
-        species: 'Bison bison',
-        habitat: 'North American Great Plains',
-        region: 'The Americas',
-        coordinates: [44.4280, -110.5885], // Yellowstone, USA
-        icon: '🦬',
-        description: 'The iconic symbol of the American West and Great Plains.',
-        category: 'Mammals'
-    },
-    {
-        id: 24,
-        name: 'Bald Eagle',
-        species: 'Haliaeetus leucocephalus',
-        habitat: 'North America',
-        region: 'The Americas',
-        coordinates: [47.7511, -120.7401], // Washington State, USA
-        icon: '🦅',
-        description: 'America\'s national bird, found across USA, Canada, and Northern Mexico.',
-        category: 'Birds'
-    },
-    {
-        id: 25,
-        name: 'Humboldt Penguin',
-        species: 'Spheniscus humboldti',
-        habitat: 'Coastal South America',
-        region: 'The Americas',
-        coordinates: [-33.0472, -71.6127], // Chile coast
-        icon: '🐧',
-        description: 'Warm-weather penguins native to coastal Chile and Peru.',
-        category: 'Birds'
-    },
-
-    // ===== POLAR REGIONS =====
-    {
-        id: 26,
-        name: 'Polar Bear',
-        species: 'Ursus maritimus',
-        habitat: 'Arctic Circle',
-        region: 'Polar Regions',
-        coordinates: [78.2232, 15.6267], // Svalbard, Norway
-        icon: '🐻‍❄️',
-        description: 'The Arctic\'s apex predator, found in Canada, Russia, Greenland, and Alaska.',
-        category: 'Mammals'
-    },
-    {
-        id: 27,
-        name: 'Arctic Fox',
-        species: 'Vulpes lagopus',
-        habitat: 'Arctic Tundra',
-        region: 'Polar Regions',
-        coordinates: [64.9631, -19.0208], // Iceland
-        icon: '🦊',
-        description: 'Hardy tundra survivors across Northern Europe, Asia, and North America.',
-        category: 'Mammals'
-    }
+    { id: 1, name: 'African Lion', species: 'Panthera leo', habitat: 'Sub-Saharan Africa', region: 'Africa', coordinates: [-1.2921, 36.8219], icon: '🦁', image: 'https://images.unsplash.com/photo-1546182990-dffeafbe841d?auto=format&fit=crop&q=80&w=1000', description: 'The king of the savannah, living in social prides. They are apex predators essential for maintaining the balance of herbivore populations.', category: 'Mammals' },
+    { id: 2, name: 'African Elephant', species: 'Loxodonta africana', habitat: 'Central & Southern Africa', region: 'Africa', coordinates: [-15.4167, 28.2833], icon: '🐘', image: 'https://images.unsplash.com/photo-1557050543-4d5f4e07ef46?auto=format&fit=crop&q=80&w=1000', description: 'The largest land animal on Earth. They are "ecosystem engineers," creating paths and water holes used by other species.', category: 'Mammals' },
+    { id: 3, name: 'Bengal Tiger', species: 'Panthera tigris tigris', habitat: 'Indian Subcontinent', region: 'Asia', coordinates: [22.5726, 88.3639], icon: '🐅', image: 'https://images.unsplash.com/photo-1500642805046-e56455171932?auto=format&fit=crop&q=80&w=1000', description: 'A solitary and powerful hunter found in the mangrove forests of the Sundarbans and various Indian national parks.', category: 'Mammals' },
+    { id: 4, name: 'Giant Panda', species: 'Ailuropoda melanoleuca', habitat: 'South Central China', region: 'Asia', coordinates: [30.6171, 103.8203], icon: '🐼', image: 'https://images.unsplash.com/photo-1564349683136-77e08bef1ed1?auto=format&fit=crop&q=80&w=1000', description: 'An evolutionary unique bear that subsists almost entirely on bamboo. They are a global symbol of wildlife conservation.', category: 'Mammals' },
+    { id: 5, name: 'Red Kangaroo', species: 'Macropus rufus', habitat: 'Central Australia', region: 'Australia & Oceania', coordinates: [-25.2744, 133.7751], icon: '🦘', image: 'https://images.unsplash.com/photo-1591010323317-0f622616467a?auto=format&fit=crop&q=80&w=1000', description: 'The world\'s largest marsupial. They are built for energy-efficient travel across the vast, arid Australian Outback.', category: 'Mammals' },
+    { id: 6, name: 'Jaguar', species: 'Panthera onca', habitat: 'Amazon Basin', region: 'The Americas', coordinates: [-3.4653, -62.2159], icon: '🐆', image: 'https://images.unsplash.com/photo-1543967625-f15da8009930?auto=format&fit=crop&q=80&w=1000', description: 'The strongest feline bite force in the world, allowing them to pierce the shells of turtles and caimans.', category: 'Mammals' },
+    { id: 7, name: 'Polar Bear', species: 'Ursus maritimus', habitat: 'Arctic Circle', region: 'Polar Regions', coordinates: [78.2232, 15.6267], icon: '🐻‍❄️', image: 'https://images.unsplash.com/photo-1589656966895-2f33e7653819?auto=format&fit=crop&q=80&w=1000', description: 'A marine mammal that depends on sea ice for hunting seals. They are highly vulnerable to rising global temperatures.', category: 'Mammals' },
+    { id: 8, name: 'Emperor Penguin', species: 'Aptenodytes forsteri', habitat: 'Antarctica', region: 'Polar Regions', coordinates: [-75.2509, -0.0713], icon: '🐧', image: 'https://images.unsplash.com/photo-1517783999520-f068d7431a60?auto=format&fit=crop&q=80&w=1000', description: 'The tallest and heaviest of all living penguin species, they endure the harshest winters on the planet to breed.', category: 'Birds' },
+    { id: 9, name: 'Bald Eagle', species: 'Haliaeetus leucocephalus', habitat: 'North America', region: 'The Americas', coordinates: [45.0, -110.0], icon: '🦅', image: 'https://images.unsplash.com/photo-1501701314321-4d7a86161491?auto=format&fit=crop&q=80&w=1000', description: 'A majestic bird of prey and a symbol of freedom. They are found near large bodies of open water with an abundance of fish.', category: 'Birds' },
+    { id: 10, name: 'Koala', species: 'Phascolarctos cinereus', habitat: 'Eastern Australia', region: 'Australia & Oceania', coordinates: [-33.8688, 151.2093], icon: '🐨', image: 'https://images.unsplash.com/photo-1542617933-72439110f065?auto=format&fit=crop&q=80&w=1000', description: 'An arboreal herbivorous marsupial. They sleep up to 20 hours a day to conserve energy from their low-calorie eucalyptus diet.', category: 'Mammals' },
+    { id: 11, name: 'Komodo Dragon', species: 'Varanus komodoensis', habitat: 'Indonesian Islands', region: 'Asia', coordinates: [-8.4901, 119.4619], icon: '🦎', image: 'https://images.unsplash.com/photo-1545281358-132039785501?auto=format&fit=crop&q=80&w=1000', description: 'The largest extant species of lizard. They use a combination of powerful bites and venom to take down large prey like deer.', category: 'Reptiles' },
+    { id: 12, name: 'American Bison', species: 'Bison bison', habitat: 'Great Plains', region: 'The Americas', coordinates: [44.4280, -110.5885], icon: '🦬', image: 'https://images.unsplash.com/photo-1533202996923-bb5b2909403d?auto=format&fit=crop&q=80&w=1000', description: 'A keystone species of the American prairies. Once nearly extinct, conservation efforts have restored their numbers significantly.', category: 'Mammals' },
+    { id: 13, name: 'Snow Leopard', species: 'Panthera uncia', habitat: 'Himalayas', region: 'Asia', coordinates: [35.8617, 76.5133], icon: '🐆', image: 'https://images.unsplash.com/photo-1610484826967-09c5720778c7?auto=format&fit=crop&q=80&w=1000', description: 'Known as the "Ghost of the Mountains," these elusive cats are perfectly adapted to the cold, rugged terrain of Central Asia.', category: 'Mammals' },
+    { id: 14, name: 'Meerkat', species: 'Suricata suricatta', habitat: 'Kalahari Desert', region: 'Africa', coordinates: [-26.1551, 22.0226], icon: '🦦', image: 'https://images.unsplash.com/photo-1594145070006-25916f1a4157?auto=format&fit=crop&q=80&w=1000', description: 'Small mongooses known for their upright standing posture and highly social family groups called mobs or gangs.', category: 'Mammals' },
+    { id: 15, name: 'Great White Shark', species: 'Carcharodon carcharias', habitat: 'Coastal Waters', region: 'Australia & Oceania', coordinates: [-34.6191, 19.3518], icon: '🦈', image: 'https://images.unsplash.com/photo-1560273074-c93173ec71dd?auto=format&fit=crop&q=80&w=1000', description: 'A massive predatory fish found in coastal surface waters of all major oceans. They play a vital role in marine ecosystems.', category: 'Fish' },
+    { id: 16, name: 'Platypus', species: 'Ornithorhynchus anatinus', habitat: 'Eastern Australia Rivers', region: 'Australia & Oceania', coordinates: [-37.8136, 144.9631], icon: '🦆', image: 'https://images.unsplash.com/photo-1621255556209-66e8550f443a?auto=format&fit=crop&q=80&w=1000', description: 'One of the few mammals that lay eggs. They use electrolocation to find prey in murky river bottoms.', category: 'Mammals' },
+    { id: 17, name: 'Galápagos Tortoise', species: 'Chelonoidis niger', habitat: 'Galápagos Islands', region: 'The Americas', coordinates: [-0.6394, -90.3518], icon: '🐢', image: 'https://images.unsplash.com/photo-1548141024-343038304958?auto=format&fit=crop&q=80&w=1000', description: 'Giant tortoises that can live for over 100 years. Their shells vary in shape based on the specific island environment.', category: 'Reptiles' },
+    { id: 18, name: 'Iberian Lynx', species: 'Lynx pardinus', habitat: 'Southwestern Spain', region: 'The Americas', coordinates: [37.1704, -6.9298], icon: '🐱', image: 'https://images.unsplash.com/photo-1516139008210-96e45d0dd332?auto=format&fit=crop&q=80&w=1000', description: 'The world\'s most endangered feline species, native to the Iberian Peninsula. Intensive conservation is saving them from extinction.', category: 'Mammals' },
+    { id: 19, name: 'Orangutan', species: 'Pongo pygmaeus', habitat: 'Borneo Rainforest', region: 'Asia', coordinates: [1.3521, 110.1903], icon: '🦧', image: 'https://images.unsplash.com/photo-1516934024742-b461fba47600?auto=format&fit=crop&q=80&w=1000', description: 'Highly intelligent great apes that share 97% of their DNA with humans. They are the world\'s largest arboreal mammals.', category: 'Mammals' },
+    { id: 20, name: 'Blue Whale', species: 'Balaenoptera musculus', habitat: 'Open Oceans', region: 'Polar Regions', coordinates: [0.0, -30.0], icon: '🐋', image: 'https://images.unsplash.com/photo-1601618386442-a727d2c3df31?auto=format&fit=crop&q=80&w=1000', description: 'The largest animal to have ever lived. Their heart is the size of a bumper car, and their tongue weighs as much as an elephant.', category: 'Mammals' }
 ];
 
-// Region colors for visual distinction
 const regionColors = {
-    'Africa': '#f59e0b',
-    'Asia': '#ef4444',
-    'Australia & Oceania': '#8b5cf6',
-    'The Americas': '#10b981',
-    'Polar Regions': '#3b82f6'
+    'Africa': '#0D9488',
+    'Asia': '#059669',
+    'Australia & Oceania': '#0891B2',
+    'The Americas': '#10B981',
+    'Polar Regions': '#0284C7'
 };
+
+const DiscoveryList = memo(({ isMobile, filterRegion, setFilterRegion, selectedAnimal, onSelect, onClose }) => (
+    <div className={`flex flex-col h-full bg-white ${!isMobile && 'border-l border-teal-100 shadow-2xl'}`}>
+        <div className="p-6 md:p-8 border-b border-teal-50 bg-teal-50/30">
+            <div className="flex items-center justify-between mb-6">
+                <h1 className="text-xl md:text-2xl font-black tracking-tight text-teal-900">Fauna Discovery</h1>
+                {isMobile && (
+                    <button onClick={onClose} className="p-2 text-teal-400">
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
+                )}
+            </div>
+            <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-2">
+                {['All', ...Object.keys(regionColors)].map(region => (
+                    <button
+                        key={region}
+                        onClick={() => setFilterRegion(region)}
+                        className={`whitespace-nowrap px-4 py-2 rounded-xl text-[10px] font-bold transition-all border ${filterRegion === region ? 'bg-teal-700 text-white border-teal-700 shadow-md' : 'bg-white text-teal-600 border-teal-200 hover:border-teal-400'}`}
+                    >
+                        {region}
+                    </button>
+                ))}
+            </div>
+        </div>
+        <div className="flex-1 overflow-y-auto p-4 space-y-2 hide-scrollbar">
+            {animalHabitats.filter(a => filterRegion === 'All' || a.region === filterRegion).map(animal => (
+                <div
+                    key={animal.id}
+                    onClick={() => onSelect(animal)}
+                    className={`flex items-center gap-4 p-4 rounded-2xl transition-all cursor-pointer ${selectedAnimal?.id === animal.id ? 'bg-teal-800 text-white shadow-lg scale-[1.02]' : 'hover:bg-teal-50 hover:translate-x-1'}`}
+                >
+                    <div className="w-12 h-12 rounded-xl bg-white shadow-sm flex items-center justify-center text-2xl flex-shrink-0">
+                        {animal.icon}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                        <h4 className="font-bold text-sm truncate">{animal.name}</h4>
+                        <p className={`text-[9px] font-bold uppercase tracking-widest ${selectedAnimal?.id === animal.id ? 'text-teal-200' : 'text-teal-500'}`}>{animal.region}</p>
+                    </div>
+                </div>
+            ))}
+        </div>
+    </div>
+));
 
 const MapPage = () => {
     const navigate = useNavigate();
@@ -328,485 +83,165 @@ const MapPage = () => {
     const [selectedAnimal, setSelectedAnimal] = useState(null);
     const [isMapReady, setIsMapReady] = useState(false);
     const [filterRegion, setFilterRegion] = useState('All');
-    const [filterCategory, setFilterCategory] = useState('All');
-
-    const regions = ['All', 'Africa', 'Asia', 'Australia & Oceania', 'The Americas', 'Polar Regions'];
-    const categories = ['All', 'Mammals', 'Birds', 'Reptiles'];
+    const [showExitConfirm, setShowExitConfirm] = useState(false);
+    const [isMobileListOpen, setIsMobileListOpen] = useState(false);
 
     useEffect(() => {
-        // Load Leaflet CSS
-        const linkElement = document.createElement('link');
-        linkElement.rel = 'stylesheet';
-        linkElement.href = '/dist/leaflet.css';
-        document.head.appendChild(linkElement);
-
-        // Load Leaflet JS
-        const scriptElement = document.createElement('script');
-        scriptElement.src = '/dist/leaflet.js';
-        scriptElement.async = true;
-
-        scriptElement.onload = () => {
-            if (mapContainerRef.current && !mapRef.current && window.L) {
-                initializeMap();
-            }
+        const loadLenis = () => {
+            if (window.Lenis) return;
+            const script = document.createElement('script');
+            script.src = 'https://unpkg.com/@studio-freight/lenis@1.0.33/dist/lenis.min.js';
+            script.onload = () => {
+                const lenis = new window.Lenis({ lerp: 0.1, duration: 1.2 });
+                const raf = (time) => { lenis.raf(time); requestAnimationFrame(raf); };
+                requestAnimationFrame(raf);
+            };
+            document.head.appendChild(script);
         };
 
-        document.body.appendChild(scriptElement);
-
-        return () => {
-            if (mapRef.current) {
-                mapRef.current.remove();
-                mapRef.current = null;
-            }
-            if (linkElement.parentNode) {
-                linkElement.parentNode.removeChild(linkElement);
-            }
-            if (scriptElement.parentNode) {
-                scriptElement.parentNode.removeChild(scriptElement);
-            }
+        const loadLeaflet = () => {
+            if (window.L) { initializeMap(); return; }
+            const link = document.createElement('link');
+            link.rel = 'stylesheet'; link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+            document.head.appendChild(link);
+            const script = document.createElement('script');
+            script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+            script.async = true;
+            script.onload = initializeMap;
+            document.body.appendChild(script);
         };
+
+        loadLenis();
+        loadLeaflet();
+        return () => { if (mapRef.current) mapRef.current.remove(); };
     }, []);
 
     const initializeMap = () => {
-        if (!window.L || !mapContainerRef.current) return;
-
+        if (mapRef.current || !mapContainerRef.current) return;
         const L = window.L;
-
-        // Initialize the map centered on a world view
         const map = L.map(mapContainerRef.current, {
-            center: [20, 0],
-            zoom: 2,
-            minZoom: 2,
-            maxZoom: 18,
-            zoomControl: false,
-            scrollWheelZoom: true,
-            dragging: true,
-            doubleClickZoom: true,
-            touchZoom: true,
-            worldCopyJump: true
+            center: [20, 0], zoom: 3, minZoom: 2, zoomControl: false, attributionControl: false
         });
-
-        // Add OpenStreetMap tile layer with a nicer style
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-            maxZoom: 19
-        }).addTo(map);
-
-        // Add custom zoom control to top-right
-        L.control.zoom({
-            position: 'topright'
-        }).addTo(map);
-
-        // Store map reference
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png').addTo(map);
         mapRef.current = map;
         setIsMapReady(true);
-
-        // Add markers for each animal
-        addAnimalMarkers(map, L);
     };
 
-    const getFilteredAnimals = () => {
-        return animalHabitats.filter(animal => {
-            const matchesRegion = filterRegion === 'All' || animal.region === filterRegion;
-            const matchesCategory = filterCategory === 'All' || animal.category === filterCategory;
-            return matchesRegion && matchesCategory;
-        });
-    };
+    const handleSelect = useCallback((animal) => {
+        setSelectedAnimal(animal);
+        setIsMobileListOpen(false);
+        if (mapRef.current) mapRef.current.flyTo(animal.coordinates, 5, { duration: 1.5 });
+    }, []);
 
-    const addAnimalMarkers = (map, L) => {
-        // Clear existing markers
-        markersRef.current.forEach(marker => map.removeLayer(marker));
+    useEffect(() => {
+        if (!isMapReady || !window.L) return;
+        const L = window.L;
+        markersRef.current.forEach(m => mapRef.current.removeLayer(m));
         markersRef.current = [];
 
-        const filteredAnimals = getFilteredAnimals();
+        const filtered = filterRegion === 'All' ? animalHabitats : animalHabitats.filter(a => a.region === filterRegion);
 
-        filteredAnimals.forEach(animal => {
-            const regionColor = regionColors[animal.region] || '#10b981';
-
-            // Create custom icon with emoji and region color
-            const customIcon = L.divIcon({
-                className: 'custom-animal-marker',
-                html: `
-                    <div class="animal-marker-container">
-                        <div class="animal-marker-icon" style="border-color: ${regionColor};">${animal.icon}</div>
-                        <div class="animal-marker-pulse" style="background: ${regionColor};"></div>
-                    </div>
-                `,
-                iconSize: [50, 50],
-                iconAnchor: [25, 25]
+        filtered.forEach(animal => {
+            const icon = L.divIcon({
+                className: 'custom-div-icon',
+                html: `<div class="w-14 h-14 md:w-16 md:h-16 rounded-full border-4 border-white shadow-xl flex items-center justify-center text-3xl md:text-4xl transform hover:scale-110 active:scale-90 transition-all duration-300" style="background: ${regionColors[animal.region]}">${animal.icon}</div>`,
+                iconSize: [64, 64], iconAnchor: [32, 32]
             });
-
-            const marker = L.marker(animal.coordinates, { icon: customIcon })
-                .addTo(map);
-
-            // Create popup content
-            const popupContent = `
-                <div class="animal-popup">
-                    <div class="animal-popup-header" style="background: linear-gradient(135deg, ${regionColor}, ${regionColor}dd);">
-                        <span class="animal-popup-icon">${animal.icon}</span>
-                        <div>
-                            <h3 class="animal-popup-name">${animal.name}</h3>
-                            <p class="animal-popup-species">${animal.species}</p>
-                        </div>
-                    </div>
-                    <div class="animal-popup-body">
-                        <p class="animal-popup-habitat"><strong>🌍 Habitat:</strong> ${animal.habitat}</p>
-                        <p class="animal-popup-desc">${animal.description}</p>
-                        <div class="animal-popup-tags">
-                            <span class="animal-popup-region" style="background: ${regionColor}20; color: ${regionColor};">${animal.region}</span>
-                            <span class="animal-popup-category">${animal.category}</span>
-                        </div>
-                    </div>
-                </div>
-            `;
-
-            marker.bindPopup(popupContent, {
-                maxWidth: 320,
-                className: 'custom-popup'
-            });
-
-            marker.on('click', () => {
-                setSelectedAnimal(animal);
-            });
-
+            const marker = L.marker(animal.coordinates, { icon }).addTo(mapRef.current);
+            marker.on('click', () => handleSelect(animal));
             markersRef.current.push(marker);
         });
-    };
-
-    // Re-add markers when filters change
-    useEffect(() => {
-        if (mapRef.current && window.L && isMapReady) {
-            addAnimalMarkers(mapRef.current, window.L);
-        }
-    }, [filterRegion, filterCategory, isMapReady]);
-
-    const handleGoBack = () => {
-        navigate(-1);
-    };
-
-    const flyToAnimal = (animal) => {
-        if (mapRef.current) {
-            mapRef.current.flyTo(animal.coordinates, 6, {
-                duration: 1.5
-            });
-            setSelectedAnimal(animal);
-
-            // Open the popup for this animal
-            markersRef.current.forEach(marker => {
-                const latlng = marker.getLatLng();
-                if (latlng.lat === animal.coordinates[0] && latlng.lng === animal.coordinates[1]) {
-                    marker.openPopup();
-                }
-            });
-        }
-    };
-
-    const flyToRegion = (region) => {
-        if (!mapRef.current) return;
-
-        const regionCenters = {
-            'Africa': [0, 20, 3],
-            'Asia': [30, 100, 3],
-            'Australia & Oceania': [-25, 135, 4],
-            'The Americas': [10, -80, 3],
-            'Polar Regions': [70, 0, 3]
-        };
-
-        if (regionCenters[region]) {
-            const [lat, lng, zoom] = regionCenters[region];
-            mapRef.current.flyTo([lat, lng], zoom, { duration: 1.5 });
-        }
-    };
-
-    const filteredAnimals = getFilteredAnimals();
+        mapRef.current.invalidateSize();
+    }, [filterRegion, isMapReady, handleSelect]);
 
     return (
-        <>
-            {/* Inject custom styles for markers */}
+        <div className="flex flex-col md:flex-row h-[100dvh] w-full bg-teal-50 overflow-hidden text-teal-950 antialiased">
             <style>{`
-                .custom-animal-marker {
-                    background: transparent;
-                    border: none;
-                }
-                .animal-marker-container {
-                    position: relative;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                }
-                .animal-marker-icon {
-                    font-size: 24px;
-                    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
-                    z-index: 2;
-                    background: white;
-                    border-radius: 50%;
-                    width: 42px;
-                    height: 42px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    border: 3px solid #10b981;
-                    cursor: pointer;
-                    transition: transform 0.2s ease;
-                }
-                .animal-marker-icon:hover {
-                    transform: scale(1.2);
-                }
-                .animal-marker-pulse {
-                    position: absolute;
-                    width: 42px;
-                    height: 42px;
-                    border-radius: 50%;
-                    background: rgba(16, 185, 129, 0.3);
-                    animation: pulse 2s infinite;
-                    z-index: 1;
-                }
-                @keyframes pulse {
-                    0% { transform: scale(1); opacity: 1; }
-                    50% { transform: scale(1.5); opacity: 0.5; }
-                    100% { transform: scale(2); opacity: 0; }
-                }
-                .custom-popup .leaflet-popup-content-wrapper {
-                    border-radius: 16px;
-                    padding: 0;
-                    overflow: hidden;
-                    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-                }
-                .custom-popup .leaflet-popup-content {
-                    margin: 0;
-                    min-width: 260px;
-                }
-                .custom-popup .leaflet-popup-tip {
-                    background: white;
-                }
-                .animal-popup-header {
-                    display: flex;
-                    align-items: center;
-                    gap: 12px;
-                    padding: 16px;
-                    background: linear-gradient(135deg, #10b981, #0d9488);
-                    color: white;
-                }
-                .animal-popup-icon {
-                    font-size: 36px;
-                    background: rgba(255,255,255,0.2);
-                    border-radius: 12px;
-                    width: 56px;
-                    height: 56px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                }
-                .animal-popup-name {
-                    font-size: 18px;
-                    font-weight: 700;
-                    margin: 0;
-                }
-                .animal-popup-species {
-                    font-size: 12px;
-                    opacity: 0.9;
-                    margin: 4px 0 0 0;
-                    font-style: italic;
-                }
-                .animal-popup-body {
-                    padding: 16px;
-                    background: white;
-                }
-                .animal-popup-habitat {
-                    font-size: 13px;
-                    color: #374151;
-                    margin: 0 0 10px 0;
-                }
-                .animal-popup-desc {
-                    font-size: 13px;
-                    color: #6b7280;
-                    margin: 0 0 12px 0;
-                    line-height: 1.5;
-                }
-                .animal-popup-tags {
-                    display: flex;
-                    gap: 8px;
-                    flex-wrap: wrap;
-                }
-                .animal-popup-region {
-                    display: inline-block;
-                    padding: 4px 12px;
-                    border-radius: 20px;
-                    font-size: 11px;
-                    font-weight: 600;
-                }
-                .animal-popup-category {
-                    display: inline-block;
-                    padding: 4px 12px;
-                    background: #f3f4f6;
-                    color: #374151;
-                    border-radius: 20px;
-                    font-size: 11px;
-                    font-weight: 600;
-                }
-                .leaflet-control-zoom a {
-                    width: 36px !important;
-                    height: 36px !important;
-                    line-height: 36px !important;
-                    font-size: 18px !important;
-                    border-radius: 8px !important;
-                }
-                .leaflet-control-zoom {
-                    border: none !important;
-                    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
-                    border-radius: 12px !important;
-                    overflow: hidden;
-                }
+                .leaflet-container { background: #f0fdfa !important; }
+                .hide-scrollbar::-webkit-scrollbar { display: none; }
+                .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
             `}</style>
 
-            <div className="fixed inset-0 flex flex-col bg-gray-100">
-                {/* Header */}
-                <div className="absolute top-0 left-0 right-0 z-[1000] bg-white/95 backdrop-blur-md border-b border-gray-200 px-4 py-3">
-                    <div className="flex items-center justify-between max-w-7xl mx-auto gap-2">
-                        {/* Back Button */}
-                        <button
-                            onClick={handleGoBack}
-                            className="flex items-center gap-2 px-4 py-2.5 bg-gray-900 hover:bg-gray-800 text-white rounded-full font-medium text-sm transition-all duration-200 shadow-lg hover:shadow-xl flex-shrink-0"
-                        >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
-                            </svg>
-                            <span className="hidden sm:inline">Back</span>
-                        </button>
-
-                        {/* Title */}
-                        <div className="flex items-center gap-3 flex-shrink-0">
-                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg">
-                                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                            </div>
-                            <div className="hidden md:block">
-                                <h1 className="text-lg font-bold text-gray-900">Wildlife World Map</h1>
-                                <p className="text-xs text-gray-500">Discover where our {animalHabitats.length} animals originate</p>
-                            </div>
-                        </div>
-
-                        {/* Filters */}
-                        <div className="flex items-center gap-2 flex-shrink-0">
-                            <select
-                                value={filterRegion}
-                                onChange={(e) => {
-                                    setFilterRegion(e.target.value);
-                                    if (e.target.value !== 'All') {
-                                        flyToRegion(e.target.value);
-                                    }
-                                }}
-                                className="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-full font-medium text-xs sm:text-sm transition-colors cursor-pointer border-0 focus:ring-2 focus:ring-emerald-500"
-                            >
-                                {regions.map(region => (
-                                    <option key={region} value={region}>{region}</option>
-                                ))}
-                            </select>
-                            <select
-                                value={filterCategory}
-                                onChange={(e) => setFilterCategory(e.target.value)}
-                                className="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-full font-medium text-xs sm:text-sm transition-colors cursor-pointer border-0 focus:ring-2 focus:ring-emerald-500 hidden sm:block"
-                            >
-                                {categories.map(cat => (
-                                    <option key={cat} value={cat}>{cat}</option>
-                                ))}
-                            </select>
-                        </div>
-                    </div>
+            <div className="flex-1 relative h-full">
+                <div className="absolute top-4 md:top-6 left-4 md:left-6 z-[1000] flex gap-2">
+                    <button onClick={() => setShowExitConfirm(true)} className="h-12 w-12 md:h-14 md:w-14 bg-white rounded-2xl shadow-xl flex items-center justify-center hover:bg-teal-50 transition-all border border-teal-100">
+                        <svg className="w-6 h-6 text-teal-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+                    </button>
+                    <button onClick={() => setIsMobileListOpen(true)} className="md:hidden h-12 w-12 bg-white rounded-2xl shadow-xl flex items-center justify-center border border-teal-100">
+                        <svg className="w-6 h-6 text-teal-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16m-7 6h7" /></svg>
+                    </button>
                 </div>
-
-                {/* Map Container */}
-                <div
-                    ref={mapContainerRef}
-                    className="flex-1 w-full mt-[68px]"
-                    style={{ minHeight: 'calc(100vh - 68px)' }}
-                />
-
-                {/* Animal List Sidebar */}
-                <div className="absolute bottom-4 left-4 right-4 sm:bottom-auto sm:top-[84px] sm:left-4 sm:right-auto sm:w-80 z-[1000]">
-                    <div className="bg-white/95 backdrop-blur-md rounded-2xl shadow-xl border border-gray-200 max-h-[200px] sm:max-h-[calc(100vh-120px)] overflow-hidden flex flex-col">
-                        {/* Sidebar Header */}
-                        <div className="p-3 border-b border-gray-100 bg-gradient-to-r from-emerald-500 to-teal-600">
-                            <div className="flex items-center justify-between">
-                                <h3 className="font-bold text-white text-sm">🌍 Animals ({filteredAnimals.length})</h3>
-                                {filterRegion !== 'All' && (
-                                    <span className="px-2 py-0.5 bg-white/20 rounded-full text-white text-xs">
-                                        {filterRegion}
-                                    </span>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* Animal List */}
-                        <div className="overflow-y-auto flex-1 p-2">
-                            {filteredAnimals.length === 0 ? (
-                                <div className="text-center py-8 text-gray-500">
-                                    <p className="text-sm">No animals match your filters</p>
-                                </div>
-                            ) : (
-                                filteredAnimals.map(animal => (
-                                    <button
-                                        key={animal.id}
-                                        onClick={() => flyToAnimal(animal)}
-                                        className={`w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition-all duration-200 ${selectedAnimal?.id === animal.id
-                                                ? 'bg-emerald-50 border border-emerald-200'
-                                                : 'hover:bg-gray-50'
-                                            }`}
-                                    >
-                                        <span className="text-2xl flex-shrink-0">{animal.icon}</span>
-                                        <div className="flex-1 min-w-0">
-                                            <p className="font-medium text-gray-900 text-sm truncate">{animal.name}</p>
-                                            <p className="text-xs text-gray-500 truncate">{animal.habitat}</p>
-                                        </div>
-                                        <div
-                                            className="w-2 h-2 rounded-full flex-shrink-0"
-                                            style={{ backgroundColor: regionColors[animal.region] }}
-                                            title={animal.region}
-                                        />
-                                    </button>
-                                ))
-                            )}
-                        </div>
-                    </div>
-                </div>
-
-                {/* Region Legend */}
-                <div className="absolute bottom-4 right-4 z-[1000] hidden lg:block">
-                    <div className="bg-white/95 backdrop-blur-md rounded-2xl shadow-xl border border-gray-200 p-4">
-                        <h4 className="font-bold text-gray-700 text-xs mb-3 uppercase tracking-wide">Regions</h4>
-                        <div className="space-y-2">
-                            {Object.entries(regionColors).map(([region, color]) => (
-                                <button
-                                    key={region}
-                                    onClick={() => {
-                                        setFilterRegion(region);
-                                        flyToRegion(region);
-                                    }}
-                                    className="flex items-center gap-2 w-full text-left hover:bg-gray-50 rounded-lg p-1 transition-colors"
-                                >
-                                    <div
-                                        className="w-3 h-3 rounded-full"
-                                        style={{ backgroundColor: color }}
-                                    />
-                                    <span className="text-xs text-gray-600">{region}</span>
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-                </div>
-
-                {/* Loading Overlay */}
-                {!isMapReady && (
-                    <div className="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center z-[2000]">
-                        <div className="text-center">
-                            <div className="w-16 h-16 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                            <p className="text-gray-600 font-medium">Loading Wildlife Map...</p>
-                        </div>
-                    </div>
-                )}
+                <div ref={mapContainerRef} className="h-full w-full" />
             </div>
-        </>
+
+            <aside className="hidden md:block w-80 lg:w-96 h-full z-[1001]">
+                <DiscoveryList filterRegion={filterRegion} setFilterRegion={setFilterRegion} selectedAnimal={selectedAnimal} onSelect={handleSelect} />
+            </aside>
+
+            {isMobileListOpen && (
+                <div className="fixed inset-0 z-[2000] md:hidden">
+                    <div className="absolute inset-0 bg-teal-950/40 backdrop-blur-sm" onClick={() => setIsMobileListOpen(false)} />
+                    <div className="absolute bottom-0 left-0 right-0 h-[80dvh] rounded-t-[2.5rem] overflow-hidden animate-in slide-in-from-bottom duration-300">
+                        <DiscoveryList isMobile={true} filterRegion={filterRegion} setFilterRegion={setFilterRegion} selectedAnimal={selectedAnimal} onSelect={handleSelect} onClose={() => setIsMobileListOpen(false)} />
+                    </div>
+                </div>
+            )}
+
+            {selectedAnimal && (
+                <div className="fixed inset-0 z-[2001] flex items-center justify-center p-0 md:p-8">
+                    <div className="absolute inset-0 bg-teal-950/60 backdrop-blur-md animate-in fade-in duration-300" onClick={() => setSelectedAnimal(null)} />
+                    <div className="relative w-full h-full md:h-auto md:max-w-4xl bg-white md:rounded-[3rem] shadow-2xl overflow-hidden flex flex-col md:flex-row animate-in zoom-in-95 duration-300">
+                        <div className="w-full md:w-1/2 h-[45dvh] md:h-auto relative">
+                            <img src={selectedAnimal.image} alt={selectedAnimal.name} className="w-full h-full object-cover" />
+                            <button onClick={() => setSelectedAnimal(null)} className="absolute top-6 right-6 w-12 h-12 bg-black/30 backdrop-blur-xl rounded-full text-white flex items-center justify-center border border-white/20">
+                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12" /></svg>
+                            </button>
+                        </div>
+                        <div className="flex-1 p-8 md:p-12 overflow-y-auto hide-scrollbar">
+                            <span className="px-4 py-1 rounded-full text-[9px] font-bold uppercase tracking-widest text-white mb-6 inline-block shadow-md" style={{ background: regionColors[selectedAnimal.region] }}>{selectedAnimal.region}</span>
+                            <h2 className="text-4xl md:text-5xl font-black text-teal-900 mb-1 leading-tight">{selectedAnimal.name}</h2>
+                            <p className="text-xl italic text-teal-500 mb-8 font-medium">{selectedAnimal.species}</p>
+                            <div className="grid grid-cols-2 gap-4 mb-8">
+                                <div className="p-5 bg-teal-50 rounded-2xl border border-teal-100/30">
+                                    <p className="text-[9px] uppercase font-black text-teal-400 mb-1">Native Zone</p>
+                                    <p className="font-bold text-teal-800 text-sm">{selectedAnimal.habitat}</p>
+                                </div>
+                                <div className="p-5 bg-teal-50 rounded-2xl border border-teal-100/30">
+                                    <p className="text-[9px] uppercase font-black text-teal-400 mb-1">GPS Mark</p>
+                                    <p className="font-bold text-teal-800 text-sm font-mono">{selectedAnimal.coordinates[0]}°, {selectedAnimal.coordinates[1]}°</p>
+                                </div>
+                            </div>
+                            <div className="space-y-4">
+                                <h4 className="text-xs font-black text-teal-900 uppercase tracking-widest border-b border-teal-100 pb-2">Ecological Note</h4>
+                                <p className="text-teal-700 leading-relaxed text-lg font-medium italic">"{selectedAnimal.description}"</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {showExitConfirm && (
+                <div className="fixed inset-0 z-[3000] flex items-center justify-center p-6">
+                    <div className="absolute inset-0 bg-teal-950/70 backdrop-blur-lg" onClick={() => setShowExitConfirm(false)} />
+                    <div className="relative bg-white p-10 rounded-[2.5rem] shadow-2xl max-w-sm w-full text-center animate-in zoom-in-95 duration-200">
+                        <div className="w-24 h-24 bg-teal-50 rounded-[2rem] flex items-center justify-center text-5xl mx-auto mb-6 shadow-inner">🌏</div>
+                        <h3 className="text-2xl font-black text-teal-900 mb-2">Close Expedition?</h3>
+                        <p className="text-teal-600 mb-8 font-medium leading-relaxed">Your curated discovery view will be cleared.</p>
+                        <div className="flex flex-col gap-3">
+                            <button onClick={() => navigate(-1)} className="w-full py-4 bg-teal-700 text-white rounded-2xl font-bold hover:bg-teal-800 transition-all shadow-lg active:scale-95">End Session</button>
+                            <button onClick={() => setShowExitConfirm(false)} className="w-full py-4 bg-teal-50 text-teal-700 rounded-2xl font-bold hover:bg-teal-100 transition-all">Keep Browsing</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {!isMapReady && (
+                <div className="fixed inset-0 bg-white z-[5000] flex flex-col items-center justify-center gap-6">
+                    <div className="w-12 h-12 border-4 border-teal-100 border-t-teal-600 rounded-full animate-spin" />
+                    <p className="text-teal-900 font-bold text-[10px] uppercase tracking-[0.3em] animate-pulse">Synchronizing Globe...</p>
+                </div>
+            )}
+        </div>
     );
 };
 

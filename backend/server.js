@@ -156,6 +156,8 @@ const staffRoutes = require('./routes/staff-routes');
 const userRoutes = require('./routes/user-routes');
 const aiRoutes = require('./routes/ai-routes');
 const messageRoutes = require('./routes/message-routes');
+const plantRoutes = require('./routes/plant-routes');
+const reservationRoutes = require('./routes/reservation-routes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -219,6 +221,8 @@ app.use('/api/staff', staffRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/messages', messageRoutes);
+app.use('/api/plants', plantRoutes);
+app.use('/api/reservations', reservationRoutes);
 
 app.get('/api/health', async (req, res) => {
     const health = {

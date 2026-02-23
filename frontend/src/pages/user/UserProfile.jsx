@@ -23,6 +23,118 @@ const VerifiedIcon = () => (
     </svg>
 );
 
+const PawIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+        <path d="M12 10.5c-2.5 0-4.5 2.5-4.5 5.5 0 2 1.5 3.5 4.5 3.5s4.5-1.5 4.5-3.5c0-3-2-5.5-4.5-5.5zm-5.5-2c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm11 0c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm-8-1.5c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm5 0c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z"/>
+    </svg>
+);
+
+const AnimalCollection = () => {
+    const [collection, setCollection] = useState([]);
+    const [showRemoveModal, setShowRemoveModal] = useState(false);
+    const [animalToRemove, setAnimalToRemove] = useState(null);
+
+    useEffect(() => {
+        const stored = localStorage.getItem('animalCollection');
+        if (stored) {
+            setCollection(JSON.parse(stored));
+        }
+    }, []);
+
+    const handleRemove = (animalName) => {
+        setAnimalToRemove(animalName);
+        setShowRemoveModal(true);
+    };
+
+    const confirmRemove = () => {
+        const updated = collection.filter(a => a.name !== animalToRemove);
+        setCollection(updated);
+        localStorage.setItem('animalCollection', JSON.stringify(updated));
+        setShowRemoveModal(false);
+        setAnimalToRemove(null);
+    };
+
+    if (collection.length === 0) {
+        return (
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 pb-12">
+                <div className="lg:col-span-4">
+                    <h3 className="text-lg font-bold text-gray-900">Animal Collection</h3>
+                    <p className="text-sm text-gray-400 mt-2 leading-relaxed">
+                        Animals you've captured and verified using the AI Scanner.
+                    </p>
+                </div>
+                <div className="lg:col-span-8">
+                    <div className="bg-gray-50 rounded-2xl p-8 text-center border-2 border-dashed border-gray-200">
+                        <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <PawIcon />
+                        </div>
+                        <h4 className="font-bold text-gray-700 mb-2">No Animals Yet</h4>
+                        <p className="text-sm text-gray-400">Use the AI Scanner to capture and add zoo animals to your collection!</p>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <>
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 pb-12">
+                <div className="lg:col-span-4">
+                    <h3 className="text-lg font-bold text-gray-900">Animal Collection</h3>
+                    <p className="text-sm text-gray-400 mt-2 leading-relaxed">
+                        Animals you've captured and verified using the AI Scanner.
+                    </p>
+                    <p className="text-xs text-emerald-600 font-bold mt-2">{collection.length} animal{collection.length !== 1 ? 's' : ''} collected</p>
+                </div>
+                <div className="lg:col-span-8">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                        {collection.map((animal, index) => (
+                            <div key={index} className="group relative bg-white rounded-2xl overflow-hidden shadow-lg border border-gray-100 hover:shadow-xl transition-all">
+                                {animal.image && (
+                                    <div className="aspect-square overflow-hidden">
+                                        <img src={animal.image} alt={animal.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                                    </div>
+                                )}
+                                <div className="p-3">
+                                    <div className="flex items-center justify-between mb-1">
+                                        <h4 className="font-bold text-gray-900 text-sm">{animal.name}</h4>
+                                        <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-bold">{animal.confidence}%</span>
+                                    </div>
+                                    <p className="text-xs text-gray-400 line-clamp-2">{animal.description}</p>
+                                    <button 
+                                        onClick={() => handleRemove(animal.name)}
+                                        className="mt-2 text-xs text-red-500 hover:text-red-600 font-medium opacity-0 group-hover:opacity-100 transition-opacity"
+                                    >
+                                        Remove
+                                    </button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
+
+            {showRemoveModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-md p-4">
+                    <div className="bg-white rounded-[2rem] p-8 w-full max-w-sm shadow-2xl text-center">
+                        <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-8 h-8 text-red-600">
+                                <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" />
+                            </svg>
+                        </div>
+                        <h3 className="text-xl font-black text-gray-900 mb-2">Remove Animal?</h3>
+                        <p className="text-gray-500 text-sm mb-6">Remove {animalToRemove} from your collection?</p>
+                        <div className="flex gap-3">
+                            <button onClick={() => setShowRemoveModal(false)} className="flex-1 py-3 border border-gray-200 rounded-xl font-bold text-gray-400 hover:bg-gray-50 transition">Cancel</button>
+                            <button onClick={confirmRemove} className="flex-1 py-3 bg-red-600 text-white rounded-xl font-bold shadow-lg hover:bg-red-700 transition">Remove</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </>
+    );
+};
+
 const UserProfile = () => {
     const { user, logout, updateUser } = useAuth();
     const navigate = useNavigate();
@@ -30,6 +142,10 @@ const UserProfile = () => {
     const [loading, setLoading] = useState(false);
     const [showPasswordModal, setShowPasswordModal] = useState(false);
     const [passwordData, setPasswordData] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
+    const [message, setMessage] = useState({ text: '', type: '' });
+    const [passwordError, setPasswordError] = useState('');
+    const [showSaveConfirm, setShowSaveConfirm] = useState(false);
+    const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
     const [imagePreview, setImagePreview] = useState(null);
     const [selectedFile, setSelectedFile] = useState(null);
@@ -70,7 +186,14 @@ const UserProfile = () => {
         try {
             const response = await authAPI.uploadProfileImage(selectedFile);
             if (response.success) {
-                if (response.user) updateUser(response.user);
+                if (response.user) {
+                    updateUser({
+                        ...user,
+                        ...response.user,
+                        profileImage: response.user.profileImage || response.user.profile_image,
+                        profile_image: response.user.profile_image || response.user.profileImage
+                    });
+                }
                 setSelectedFile(null);
                 setImagePreview(null);
             }
@@ -96,34 +219,76 @@ const UserProfile = () => {
     };
 
     const handleSave = async () => {
+        setShowSaveConfirm(false);
         setLoading(true);
+        setMessage({ text: '', type: '' });
         try {
             const response = await authAPI.updateProfile(formData);
             if (response.success) {
-                if (response.user) updateUser(response.user);
+                if (response.user) {
+                    updateUser({
+                        ...user,
+                        ...response.user,
+                        profileImage: response.user.profileImage || user.profileImage || user.profile_image,
+                        profile_image: response.user.profile_image || user.profile_image || user.profileImage
+                    });
+                }
                 setIsEditing(false);
+                setMessage({ text: 'Profile updated successfully!', type: 'success' });
+                setTimeout(() => setMessage({ text: '', type: '' }), 3000);
+            } else {
+                setMessage({ text: response.message || 'Failed to update profile', type: 'error' });
             }
         } catch (error) {
             console.error(error);
+            setMessage({ text: 'An error occurred while updating profile', type: 'error' });
         } finally {
             setLoading(false);
         }
     };
 
     const handlePasswordChange = async () => {
-        if (passwordData.newPassword !== passwordData.confirmPassword) return;
+        setPasswordError('');
+        
+        if (!passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword) {
+            setPasswordError('All fields are required');
+            return;
+        }
+        
+        if (passwordData.newPassword.length < 6) {
+            setPasswordError('New password must be at least 6 characters');
+            return;
+        }
+        
+        if (passwordData.newPassword !== passwordData.confirmPassword) {
+            setPasswordError('New passwords do not match');
+            return;
+        }
+        
         setLoading(true);
         try {
             const response = await authAPI.updatePassword(passwordData);
             if (response.success) {
                 setShowPasswordModal(false);
                 setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+                setPasswordError('');
+                setMessage({ text: 'Password changed successfully!', type: 'success' });
+                setTimeout(() => setMessage({ text: '', type: '' }), 3000);
+            } else {
+                setPasswordError(response.message || 'Failed to change password');
             }
         } catch (error) {
             console.error(error);
+            setPasswordError('An error occurred while changing password');
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleLogout = () => {
+        setShowLogoutConfirm(false);
+        logout();
+        navigate('/');
     };
 
     const getProfileImageUrl = () => {
@@ -240,7 +405,7 @@ const UserProfile = () => {
                             </div>
 
                             {isEditing && (
-                                <button onClick={handleSave} disabled={loading} className="w-full py-3.5 bg-emerald-600 text-white rounded-xl font-bold shadow-lg shadow-emerald-200 hover:bg-emerald-700 transition active:scale-[0.99] disabled:opacity-50">
+                                <button onClick={() => setShowSaveConfirm(true)} disabled={loading} className="w-full py-3.5 bg-emerald-600 text-white rounded-xl font-bold shadow-lg shadow-emerald-200 hover:bg-emerald-700 transition active:scale-[0.99] disabled:opacity-50">
                                     {loading ? 'Processing...' : 'Save Changes'}
                                 </button>
                             )}
@@ -255,7 +420,7 @@ const UserProfile = () => {
                                         Change Password
                                     </button>
                                     <button
-                                        onClick={logout}
+                                        onClick={() => setShowLogoutConfirm(true)}
                                         className="flex-1 sm:flex-none px-6 py-2.5 border border-red-100 rounded-lg text-sm font-bold text-red-600 hover:bg-red-50 transition"
                                     >
                                         Logout
@@ -264,6 +429,10 @@ const UserProfile = () => {
                             </div>
                         </div>
                     </div>
+
+                    <div className="h-px bg-gray-100 my-12 w-full"></div>
+
+                    <AnimalCollection />
                 </div>
             </div>
 
@@ -281,16 +450,70 @@ const UserProfile = () => {
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-md p-4">
                     <div className="bg-white rounded-[2rem] p-8 w-full max-w-md shadow-2xl">
                         <h3 className="text-2xl font-black text-gray-900 mb-6">Security</h3>
+                        {passwordError && (
+                            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm font-medium">
+                                {passwordError}
+                            </div>
+                        )}
                         <div className="space-y-4">
                             <input type="password" placeholder="Current Password" value={passwordData.currentPassword} onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })} className="w-full px-5 py-3.5 bg-gray-50 border border-transparent rounded-2xl outline-none focus:bg-white focus:border-emerald-500 transition-all" />
                             <input type="password" placeholder="New Password" value={passwordData.newPassword} onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })} className="w-full px-5 py-3.5 bg-gray-50 border border-transparent rounded-2xl outline-none focus:bg-white focus:border-emerald-500 transition-all" />
                             <input type="password" placeholder="Confirm New Password" value={passwordData.confirmPassword} onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })} className="w-full px-5 py-3.5 bg-gray-50 border border-transparent rounded-2xl outline-none focus:bg-white focus:border-emerald-500 transition-all" />
                         </div>
                         <div className="flex gap-3 mt-10">
-                            <button onClick={() => setShowPasswordModal(false)} className="flex-1 py-3.5 border border-gray-200 rounded-xl font-bold text-gray-400 hover:bg-gray-50 transition">Cancel</button>
-                            <button onClick={handlePasswordChange} disabled={loading} className="flex-1 py-3.5 bg-emerald-600 text-white rounded-xl font-bold shadow-xl shadow-emerald-100 hover:bg-emerald-700 transition">Update</button>
+                            <button onClick={() => { setShowPasswordModal(false); setPasswordError(''); setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' }); }} className="flex-1 py-3.5 border border-gray-200 rounded-xl font-bold text-gray-400 hover:bg-gray-50 transition">Cancel</button>
+                            <button onClick={handlePasswordChange} disabled={loading} className="flex-1 py-3.5 bg-emerald-600 text-white rounded-xl font-bold shadow-xl shadow-emerald-100 hover:bg-emerald-700 transition disabled:opacity-50">{loading ? 'Updating...' : 'Update'}</button>
                         </div>
                     </div>
+                </div>
+            )}
+
+            {/* Logout Confirmation Modal */}
+            {showLogoutConfirm && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-md p-4">
+                    <div className="bg-white rounded-[2rem] p-8 w-full max-w-sm shadow-2xl text-center">
+                        <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-8 h-8 text-red-600">
+                                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                                <polyline points="16 17 21 12 16 7" />
+                                <line x1="21" y1="12" x2="9" y2="12" />
+                            </svg>
+                        </div>
+                        <h3 className="text-xl font-black text-gray-900 mb-2">Logout?</h3>
+                        <p className="text-gray-500 text-sm mb-6">Are you sure you want to logout of your account?</p>
+                        <div className="flex gap-3">
+                            <button onClick={() => setShowLogoutConfirm(false)} className="flex-1 py-3 border border-gray-200 rounded-xl font-bold text-gray-400 hover:bg-gray-50 transition">Cancel</button>
+                            <button onClick={handleLogout} className="flex-1 py-3 bg-red-600 text-white rounded-xl font-bold shadow-lg hover:bg-red-700 transition">Logout</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Save Profile Confirmation Modal */}
+            {showSaveConfirm && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-md p-4">
+                    <div className="bg-white rounded-[2rem] p-8 w-full max-w-sm shadow-2xl text-center">
+                        <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-8 h-8 text-emerald-600">
+                                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+                                <polyline points="17 21 17 13 7 13 7 21" />
+                                <polyline points="7 3 7 8 15 8" />
+                            </svg>
+                        </div>
+                        <h3 className="text-xl font-black text-gray-900 mb-2">Save Changes?</h3>
+                        <p className="text-gray-500 text-sm mb-6">Are you sure you want to save your profile changes?</p>
+                        <div className="flex gap-3">
+                            <button onClick={() => setShowSaveConfirm(false)} className="flex-1 py-3 border border-gray-200 rounded-xl font-bold text-gray-400 hover:bg-gray-50 transition">Cancel</button>
+                            <button onClick={handleSave} disabled={loading} className="flex-1 py-3 bg-emerald-600 text-white rounded-xl font-bold shadow-lg hover:bg-emerald-700 transition disabled:opacity-50">{loading ? 'Saving...' : 'Save'}</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Success/Error Message Toast */}
+            {message.text && (
+                <div className={`fixed bottom-6 left-1/2 -translate-x-1/2 px-6 py-3 rounded-full shadow-lg z-50 font-bold text-sm animate-in slide-in-from-bottom-4 ${message.type === 'success' ? 'bg-emerald-600 text-white' : 'bg-red-600 text-white'}`}>
+                    {message.text}
                 </div>
             )}
         </div>

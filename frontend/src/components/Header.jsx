@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { getProfileImageUrl, messageAPI } from '../services/api-client';
+import { getProfileImageUrl, messageAPI, userAPI } from '../services/api-client';
 import LogoutModal from './common/LogoutModal';
 import AnimalClassifier from './features/ai-scanner/AnimalClassifier';
+import ReservationHistoryPanel from './features/ReservationHistoryPanel';
 
 const Header = () => {
     const { user, logout } = useAuth();
@@ -11,6 +12,10 @@ const Header = () => {
     const [showLogoutModal, setShowLogoutModal] = useState(false);
     const [showSidePanel, setShowSidePanel] = useState(false);
     const [showAIScanner, setShowAIScanner] = useState(false);
+    const [showHistoryPanel, setShowHistoryPanel] = useState(false);
+    const [showNotificationPanel, setShowNotificationPanel] = useState(false);
+    const [notifications, setNotifications] = useState([]);
+    const [notificationLoading, setNotificationLoading] = useState(false);
     const [scrolled, setScrolled] = useState(false);
     const [showEmailModal, setShowEmailModal] = useState(false);
     const [emailSubject, setEmailSubject] = useState('');
@@ -22,6 +27,7 @@ const Header = () => {
     const location = useLocation();
     const sidePanelRef = useRef(null);
     const aiScannerRef = useRef(null);
+    const notificationPanelRef = useRef(null);
 
     // Track scroll position for header styling
     useEffect(() => {
@@ -88,11 +94,80 @@ const Header = () => {
             if (e.key === 'Escape') {
                 setShowSidePanel(false);
                 setShowAIScanner(false);
+                setShowNotificationPanel(false);
             }
         };
         document.addEventListener('keydown', handleEscape);
         return () => document.removeEventListener('keydown', handleEscape);
     }, []);
+
+    // Close notification panel when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (notificationPanelRef.current && !notificationPanelRef.current.contains(event.target)) {
+                setShowNotificationPanel(false);
+            }
+        };
+
+        if (showNotificationPanel) {
+            document.addEventListener('mousedown', handleClickOutside);
+            document.body.style.overflow = 'hidden';
+        }
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+            document.body.style.overflow = 'unset';
+        };
+    }, [showNotificationPanel]);
+
+    // Fetch notifications when panel opens
+    const fetchNotifications = async () => {
+        if (!user) return;
+        setNotificationLoading(true);
+        try {
+            const notifs = [];
+            const [eventsRes, messagesRes] = await Promise.all([
+                userAPI.getEvents(false).catch(() => ({ success: false })),
+                messageAPI.getMyMessages().catch(() => ({ success: false }))
+            ]);
+            if (eventsRes?.success && eventsRes.events) {
+                const upcomingEvents = eventsRes.events.slice(0, 3).map(event => ({
+                    id: `event-${event.id}`,
+                    type: 'event',
+                    title: event.title,
+                    message: `Upcoming event: ${event.start_date ? new Date(event.start_date).toLocaleDateString() : 'Soon'}`,
+                    time: event.start_date,
+                    icon: 'calendar'
+                }));
+                notifs.push(...upcomingEvents);
+            }
+            if (messagesRes?.success && messagesRes.messages) {
+                const repliedMessages = messagesRes.messages
+                    .filter(msg => msg.admin_response)
+                    .slice(0, 3)
+                    .map(msg => ({
+                        id: `message-${msg.id}`,
+                        type: 'message',
+                        title: msg.subject,
+                        message: 'Admin has responded to your message',
+                        time: msg.responded_at || msg.created_at,
+                        icon: 'mail'
+                    }));
+                notifs.push(...repliedMessages);
+            }
+            notifs.sort((a, b) => new Date(b.time) - new Date(a.time));
+            setNotifications(notifs);
+        } catch (err) {
+            console.error('Error fetching notifications:', err);
+        } finally {
+            setNotificationLoading(false);
+        }
+    };
+
+    const handleOpenNotifications = () => {
+        setShowNotificationPanel(true);
+        fetchNotifications();
+    };
 
     const handleLogout = () => {
         logout();
@@ -103,6 +178,7 @@ const Header = () => {
     const navLinks = [
         { path: '/', label: 'Home' },
         { path: '/animals', label: 'Animals' },
+        { path: '/plants', label: 'Plants' },
         { path: '/events', label: 'Events' },
         { path: '/about', label: 'About' }
     ];
@@ -114,8 +190,9 @@ const Header = () => {
         return '/profile';
     };
 
-    const getTicketsPath = () => {
-        return user && user.role === 'user' ? '/my-tickets' : '/ticket-history';
+    const handleOpenReservationHistory = () => {
+        setShowSidePanel(false);
+        setShowHistoryPanel(true);
     };
 
     const handleSendEmail = async () => {
@@ -141,7 +218,6 @@ const Header = () => {
         }
     };
 
-    // Side panel menu items
     const sideMenuItems = [
         {
             icon: (
@@ -159,9 +235,9 @@ const Header = () => {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
                 </svg>
             ),
-            label: 'My Tickets',
-            path: getTicketsPath(),
-            description: 'View your ticket history'
+            label: 'My Reservation',
+            action: handleOpenReservationHistory,
+            description: 'View your reservation history'
         },
         {
             icon: (
@@ -193,6 +269,17 @@ const Header = () => {
             label: 'Settings',
             path: '/settings',
             description: 'Manage your preferences'
+        },
+        {
+            icon: (
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            ),
+            label: 'Mini Zoo Game',
+            path: '/mini-zoo-game',
+            description: 'Explore a 3D cartoon zoo'
         }
     ];
 
@@ -255,11 +342,28 @@ const Header = () => {
                     </nav>
 
                     <div className="hidden md:flex items-center gap-3">
-                        <Link to="/tickets">
+                        <Link to="/reservations">
                             <button className="bg-gray-900 hover:bg-gray-800 px-6 py-2.5 rounded-full text-white text-sm font-semibold flex items-center gap-2 transition-all duration-200 shadow-lg shadow-gray-900/20 hover:shadow-xl hover:shadow-gray-900/30 hover:-translate-y-0.5">
-                                <span>Buy Tickets</span>
+                                <span>MAKE RESERVATION</span>
                             </button>
                         </Link>
+
+                        {user && (
+                            <button
+                                onClick={handleOpenNotifications}
+                                aria-label="Notifications"
+                                className="relative p-2.5 rounded-full bg-gray-50 border border-gray-200 hover:bg-gray-100 transition-all duration-200"
+                            >
+                                <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                                </svg>
+                                {notifications.length > 0 && (
+                                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-medium">
+                                        {notifications.length > 9 ? '9+' : notifications.length}
+                                    </span>
+                                )}
+                            </button>
+                        )}
 
                         {user ? (
                             <button
@@ -322,8 +426,8 @@ const Header = () => {
                                 </Link>
                             ))}
                             <hr className="border-gray-100 my-3" />
-                            <Link to="/tickets" className="flex items-center justify-center gap-2 bg-gray-900 text-white font-medium py-3 px-4 rounded-xl text-sm">
-                                <span>Buy Tickets</span>
+                            <Link to="/reservations" className="flex items-center justify-center gap-2 bg-gray-900 text-white font-medium py-3 px-4 rounded-xl text-sm">
+                                <span>Make Reservation</span>
                             </Link>
                             {user ? (
                                 <button
@@ -447,23 +551,42 @@ const Header = () => {
                             <p className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-2 px-2">Menu</p>
                             <div className="space-y-1">
                                 {sideMenuItems.map((item, index) => (
-                                    <Link
-                                        key={index}
-                                        to={item.path}
-                                        onClick={() => setShowSidePanel(false)}
-                                        className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 transition-all duration-200 group"
-                                    >
-                                        <div className="w-10 h-10 bg-gray-100 text-gray-600 rounded-xl flex items-center justify-center group-hover:bg-gray-200 transition-colors">
-                                            {item.icon}
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <p className="font-medium text-gray-800 text-sm">{item.label}</p>
-                                            <p className="text-xs text-gray-500 truncate">{item.description}</p>
-                                        </div>
-                                        <svg className="w-4 h-4 text-gray-400 group-hover:text-gray-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-                                        </svg>
-                                    </Link>
+                                    item.action ? (
+                                        <button
+                                            key={index}
+                                            onClick={item.action}
+                                            className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 transition-all duration-200 group text-left"
+                                        >
+                                            <div className="w-10 h-10 bg-gray-100 text-gray-600 rounded-xl flex items-center justify-center group-hover:bg-gray-200 transition-colors">
+                                                {item.icon}
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <p className="font-medium text-gray-800 text-sm">{item.label}</p>
+                                                <p className="text-xs text-gray-500 truncate">{item.description}</p>
+                                            </div>
+                                            <svg className="w-4 h-4 text-gray-400 group-hover:text-gray-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                                            </svg>
+                                        </button>
+                                    ) : (
+                                        <Link
+                                            key={index}
+                                            to={item.path}
+                                            onClick={() => setShowSidePanel(false)}
+                                            className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 transition-all duration-200 group"
+                                        >
+                                            <div className="w-10 h-10 bg-gray-100 text-gray-600 rounded-xl flex items-center justify-center group-hover:bg-gray-200 transition-colors">
+                                                {item.icon}
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <p className="font-medium text-gray-800 text-sm">{item.label}</p>
+                                                <p className="text-xs text-gray-500 truncate">{item.description}</p>
+                                            </div>
+                                            <svg className="w-4 h-4 text-gray-400 group-hover:text-gray-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                                            </svg>
+                                        </Link>
+                                    )
                                 ))}
                             </div>
                         </div>
@@ -714,6 +837,101 @@ const Header = () => {
             onConfirm={handleLogout}
             userName={user?.firstName || user?.username || 'User'}
         />
+        
+        <ReservationHistoryPanel 
+            isOpen={showHistoryPanel} 
+            onClose={() => setShowHistoryPanel(false)} 
+        />
+
+        {/* Notification Panel */}
+        {showNotificationPanel && (
+            <div className="fixed inset-0 z-50 overflow-hidden">
+                <div
+                    className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+                    onClick={() => setShowNotificationPanel(false)}
+                />
+                <div
+                    ref={notificationPanelRef}
+                    className="absolute right-0 top-0 h-full w-full max-w-md bg-white shadow-2xl transform transition-transform duration-300 ease-out animate-slide-in-right"
+                >
+                    <div className="flex items-center justify-between p-4 border-b border-gray-200">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                                <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                                </svg>
+                            </div>
+                            <h2 className="text-lg font-bold text-gray-900">Notifications</h2>
+                        </div>
+                        <button
+                            onClick={() => setShowNotificationPanel(false)}
+                            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                        >
+                            <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+                    <div className="p-4 overflow-y-auto h-[calc(100%-80px)]">
+                        {notificationLoading ? (
+                            <div className="flex items-center justify-center py-12">
+                                <svg className="animate-spin w-8 h-8 text-blue-600" fill="none" viewBox="0 0 24 24">
+                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                                </svg>
+                            </div>
+                        ) : notifications.length === 0 ? (
+                            <div className="text-center py-12">
+                                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                                    </svg>
+                                </div>
+                                <h3 className="text-gray-900 font-semibold mb-1">No notifications</h3>
+                                <p className="text-gray-500 text-sm">You&apos;re all caught up!</p>
+                            </div>
+                        ) : (
+                            <div className="space-y-3">
+                                {notifications.map((notif) => (
+                                    <div 
+                                        key={notif.id} 
+                                        className="p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors cursor-pointer"
+                                    >
+                                        <div className="flex items-start gap-3">
+                                            <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
+                                                notif.type === 'event' ? 'bg-green-100' : 'bg-blue-100'
+                                            }`}>
+                                                {notif.type === 'event' ? (
+                                                    <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                    </svg>
+                                                ) : (
+                                                    <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                                    </svg>
+                                                )}
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <h4 className="font-semibold text-gray-900 text-sm truncate">{notif.title}</h4>
+                                                <p className="text-gray-600 text-sm mt-0.5">{notif.message}</p>
+                                                <p className="text-gray-400 text-xs mt-1">
+                                                    {notif.time ? new Date(notif.time).toLocaleDateString('en-US', {
+                                                        month: 'short',
+                                                        day: 'numeric',
+                                                        hour: '2-digit',
+                                                        minute: '2-digit'
+                                                    }) : 'Recently'}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
+        )}
     </>
     );
 };

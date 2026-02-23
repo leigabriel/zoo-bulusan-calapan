@@ -88,8 +88,8 @@ const AdminDashboard = () => {
         try {
             setLoading(true);
             const [statsRes, usersRes, analyticsRes] = await Promise.all([
-                adminAPI.getDashboard(),
-                adminAPI.getUsers(),
+                adminAPI.getDashboard().catch(() => ({ success: false })),
+                adminAPI.getUsers().catch(() => ({ success: false })),
                 adminAPI.getAnalytics('week').catch(() => ({ success: false })),
             ]);
 
@@ -103,8 +103,8 @@ const AdminDashboard = () => {
                 });
             }
 
-            if (usersRes && usersRes.success) {
-                const normalized = (usersRes.users || []).map(u => ({
+            if (usersRes && usersRes.success && usersRes.users) {
+                const normalized = usersRes.users.map(u => ({
                     id: u.id || u.user_id,
                     firstName: u.firstName || u.first_name || '',
                     lastName: u.lastName || u.last_name || '',
@@ -516,30 +516,33 @@ const AdminDashboard = () => {
                                 <tr key={u.id} className="hover:bg-[#1e1e1e] transition-colors">
                                     <td className="py-4">
                                         <div className="flex items-center gap-3">
-                                            {getProfileImageUrl(u.profileImage || u.profile_image) ? (
+                                            {getProfileImageUrl(u.profileImage) ? (
                                                 <img
-                                                    src={getProfileImageUrl(u.profileImage || u.profile_image)}
-                                                    alt={u.fullName}
+                                                    src={getProfileImageUrl(u.profileImage)}
+                                                    alt={u.fullName || 'User'}
                                                     className="w-10 h-10 rounded-full object-cover"
                                                     onError={(e) => {
+                                                        e.target.onerror = null;
+                                                        e.target.src = '';
                                                         e.target.style.display = 'none';
-                                                        e.target.nextSibling.style.display = 'flex';
+                                                        if (e.target.nextElementSibling) {
+                                                            e.target.nextElementSibling.style.display = 'flex';
+                                                        }
                                                     }}
                                                 />
                                             ) : null}
                                             <div 
-                                                className="w-10 h-10 rounded-full bg-green-400 flex items-center justify-center text-gray-700 font-bold"
-                                                style={{ display: getProfileImageUrl(u.profileImage || u.profile_image) ? 'none' : 'flex' }}
+                                                className="w-10 h-10 rounded-full bg-[#8cff65] flex items-center justify-center text-gray-900 font-bold"
+                                                style={{ display: getProfileImageUrl(u.profileImage) ? 'none' : 'flex' }}
                                             >
-                                                {u.fullName?.substring(0, 1).toUpperCase() || 'U'}
+                                                {(u.fullName || u.firstName || 'U').charAt(0).toUpperCase()}
                                             </div>
                                             <div>
-                                                <p className="font-medium text-white">{u.fullName}</p>
-                                                {/* <p className="text-xs text-gray-500">ID: {u.id}</p> */}
+                                                <p className="font-medium text-white">{u.fullName || `${u.firstName} ${u.lastName}`.trim() || 'Unknown'}</p>
                                             </div>
                                         </div>
                                     </td>
-                                    <td className="py-4 text-gray-300">{u.email}</td>
+                                    <td className="py-4 text-gray-300">{u.email || '-'}</td>
                                     <td className="py-4">
                                         <span className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${u.role === 'admin'
                                                 ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30'

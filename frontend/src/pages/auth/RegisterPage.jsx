@@ -203,7 +203,7 @@ const RegisterPage = () => {
             </div>
 
             <div className="flex flex-col md:flex-row w-full max-w-5xl bg-white rounded-2xl overflow-hidden shadow-2xl border-4 border-gray-200">
-                <div className="relative flex flex-col justify-between text-white p-6 sm:p-10 md:w-1/2 rounded-2xl md:rounded-none overflow-hidden min-h-[200px] sm:min-h-[300px]">
+                <div className="relative hidden md:flex flex-col justify-between text-white p-6 sm:p-10 md:w-1/2 rounded-2xl md:rounded-none overflow-hidden min-h-[200px] sm:min-h-[300px]">
                     <div className="absolute inset-0 bg-gradient-to-br from-green-500 via-green-700 to-green-900"></div>
                     <div className="absolute inset-0">
                         <img

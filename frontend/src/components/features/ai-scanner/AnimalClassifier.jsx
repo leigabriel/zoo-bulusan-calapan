@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import ReactDOM from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import Header from '../../Header';
 import Footer from '../../Footer';
@@ -33,32 +34,35 @@ const SwitchCameraIcon = () => (
 );
 
 const ANIMAL_INFO = {
-    'Bear': { description: "Bears have an excellent sense of smell, better than dogs.", icon: "bear" },
-    'Bird': { description: "Birds are the only animals with feathers.", icon: "bird" },
-    'Cat': { description: "Cats use their whiskers to navigate in the dark.", icon: "cat" },
-    'Cow': { description: "Cows have best friends and get stressed when separated.", icon: "cow" },
-    'Deer': { description: "Deer antlers grow faster than any other living tissue.", icon: "deer" },
-    'Dog': { description: "A dog's nose print is unique, much like a human fingerprint.", icon: "dog" },
-    'Dolphin': { description: "Dolphins give themselves names.", icon: "dolphin" },
-    'Elephant': { description: "Elephants are the only mammals that can't jump.", icon: "elephant" },
-    'Giraffe': { description: "A giraffe's tongue is purple to prevent sunburn!", icon: "giraffe" },
-    'Horse': { description: "Horses can sleep standing up.", icon: "horse" },
-    'Kangaroo': { description: "Kangaroos cannot walk backwards.", icon: "kangaroo" },
-    'Lion': { description: "A lion's roar can be heard from 5 miles away.", icon: "lion" },
-    'Panda': { description: "Pandas spend up to 14 hours a day eating.", icon: "panda" },
-    'Tiger': { description: "No two tigers have the same stripes.", icon: "tiger" },
-    'Zebra': { description: "Zebras stripes act as a bug repellent.", icon: "zebra" }
+    'Bear': { description: "Bears have an excellent sense of smell, better than dogs.", icon: "bear", bulusan: false },
+    'Bird': { description: "Birds are the only animals with feathers.", icon: "bird", bulusan: true },
+    'Cat': { description: "Cats use their whiskers to navigate in the dark.", icon: "cat", bulusan: false },
+    'Cow': { description: "Cows have best friends and get stressed when separated.", icon: "cow", bulusan: false },
+    'Deer': { description: "Deer antlers grow faster than any other living tissue.", icon: "deer", bulusan: true },
+    'Dog': { description: "A dog's nose print is unique, much like a human fingerprint.", icon: "dog", bulusan: false },
+    'Dolphin': { description: "Dolphins give themselves names.", icon: "dolphin", bulusan: false },
+    'Elephant': { description: "Elephants are the only mammals that can't jump.", icon: "elephant", bulusan: true },
+    'Giraffe': { description: "A giraffe's tongue is purple to prevent sunburn!", icon: "giraffe", bulusan: false },
+    'Horse': { description: "Horses can sleep standing up.", icon: "horse", bulusan: true },
+    'Kangaroo': { description: "Kangaroos cannot walk backwards.", icon: "kangaroo", bulusan: false },
+    'Lion': { description: "A lion's roar can be heard from 5 miles away.", icon: "lion", bulusan: true },
+    'Panda': { description: "Pandas spend up to 14 hours a day eating.", icon: "panda", bulusan: false },
+    'Tiger': { description: "No two tigers have the same stripes.", icon: "tiger", bulusan: true },
+    'Zebra': { description: "Zebras stripes act as a bug repellent.", icon: "zebra", bulusan: false }
 };
 const ANIMAL_CLASSES = Object.keys(ANIMAL_INFO);
 
 const AnimalClassifier = ({ embedded = false, expanded: controlledExpanded = false, onExpandChange = () => {} }) => {
-    // State
     const [messages, setMessages] = useState([
         { id: 1, role: 'bot', type: 'text', content: "Hello! Upload a photo or use Camera to identify animals!" }
     ]);
     const [model, setModel] = useState(cachedModel);
     const [isModelLoading, setIsModelLoading] = useState(!cachedModel);
     const [isProcessing, setIsProcessing] = useState(false);
+
+    const [showCollectionModal, setShowCollectionModal] = useState(false);
+    const [capturedAnimal, setCapturedAnimal] = useState(null);
+    const [capturedImage, setCapturedImage] = useState(null);
 
     // Refs
     const imageRef = useRef(null);
@@ -462,9 +466,8 @@ const AnimalClassifier = ({ embedded = false, expanded: controlledExpanded = fal
 
             tf.dispose(tensor);
 
-            const info = ANIMAL_INFO[animalName] || { description: "Unknown species", icon: "question" };
+            const info = ANIMAL_INFO[animalName] || { description: "Unknown species", icon: "question", bulusan: false };
 
-            // Save to DB
             saveToDatabase(animalName, confidencePct);
 
             addBotMessage(info.description, {
@@ -472,6 +475,18 @@ const AnimalClassifier = ({ embedded = false, expanded: controlledExpanded = fal
                 confidence: confidencePct,
                 icon: info.icon
             });
+
+            if (info.bulusan && maxConfidence > 0.6) {
+                setCapturedAnimal({
+                    name: animalName,
+                    confidence: confidencePct,
+                    description: info.description,
+                    icon: info.icon,
+                    capturedAt: new Date().toISOString()
+                });
+                setCapturedImage(analysisImage);
+                setShowCollectionModal(true);
+            }
 
         } catch (error) {
             console.error(error);
@@ -481,6 +496,32 @@ const AnimalClassifier = ({ embedded = false, expanded: controlledExpanded = fal
             setAnalysisImage(null);
         }
     };
+
+    const addToCollection = useCallback(() => {
+        if (!capturedAnimal) return;
+        
+        const existingCollection = JSON.parse(localStorage.getItem('animalCollection') || '[]');
+        const alreadyExists = existingCollection.some(a => a.name === capturedAnimal.name);
+        
+        if (!alreadyExists) {
+            const newAnimal = {
+                ...capturedAnimal,
+                image: capturedImage
+            };
+            existingCollection.push(newAnimal);
+            localStorage.setItem('animalCollection', JSON.stringify(existingCollection));
+        }
+        
+        setShowCollectionModal(false);
+        setCapturedAnimal(null);
+        setCapturedImage(null);
+    }, [capturedAnimal, capturedImage]);
+
+    const closeCollectionModal = useCallback(() => {
+        setShowCollectionModal(false);
+        setCapturedAnimal(null);
+        setCapturedImage(null);
+    }, []);
 
     // 4. Save to Database
     const saveToDatabase = async (animal, confidence) => {
@@ -981,6 +1022,72 @@ const AnimalClassifier = ({ embedded = false, expanded: controlledExpanded = fal
                         </div>
                     </motion.div>
                 </motion.div>
+            )}
+            </AnimatePresence>
+
+            <AnimatePresence>
+            {showCollectionModal && capturedAnimal && ReactDOM.createPortal(
+                <motion.div 
+                    className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                >
+                    <motion.div 
+                        className="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden"
+                        initial={{ scale: 0.9, y: 20 }}
+                        animate={{ scale: 1, y: 0 }}
+                        exit={{ scale: 0.9, y: 20 }}
+                    >
+                        <div className="relative">
+                            {capturedImage && (
+                                <img 
+                                    src={capturedImage} 
+                                    alt={capturedAnimal.name}
+                                    className="w-full h-48 object-cover"
+                                />
+                            )}
+                            <div className="absolute top-3 right-3 bg-emerald-500 text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
+                                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                </svg>
+                                Verified
+                            </div>
+                            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
+                                <h3 className="text-white text-2xl font-bold">{capturedAnimal.name}</h3>
+                                <p className="text-white/80 text-sm">{capturedAnimal.confidence}% Match</p>
+                            </div>
+                        </div>
+                        
+                        <div className="p-5">
+                            <div className="flex items-center gap-2 mb-3">
+                                <div className="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center">
+                                    <PawIcon className="w-5 h-5 text-emerald-600" />
+                                </div>
+                                <span className="text-xs font-bold text-emerald-600 uppercase tracking-wider">Zoo Bulusan Animal</span>
+                            </div>
+                            <p className="text-gray-600 text-sm leading-relaxed mb-5">
+                                {capturedAnimal.description}
+                            </p>
+                            
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={closeCollectionModal}
+                                    className="flex-1 py-3 px-4 border-2 border-gray-200 text-gray-600 rounded-xl font-semibold hover:bg-gray-50 transition"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={addToCollection}
+                                    className="flex-1 py-3 px-4 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl font-semibold hover:from-emerald-600 hover:to-teal-600 transition shadow-lg shadow-emerald-500/25"
+                                >
+                                    Add to Collection
+                                </button>
+                            </div>
+                        </div>
+                    </motion.div>
+                </motion.div>,
+                document.body
             )}
             </AnimatePresence>
 
