@@ -109,8 +109,8 @@ const Footer = () => {
                 <div className="mt-8 md:mt-12 pt-8 md:pt-10 border-t border-white/5 flex flex-col md:flex-row justify-between items-start md:items-end gap-8">
                     <div className="flex flex-col sm:flex-row sm:items-center gap-6">
                         <div className="flex gap-5">
-                            <a href="#" className="opacity-50 hover:opacity-100 transition-opacity"><Icons.Facebook /></a>
-                            <a href="#" className="opacity-50 hover:opacity-100 transition-opacity"><Icons.Instagram /></a>
+                            {/* <a href="#" className="opacity-50 hover:opacity-100 transition-opacity"><Icons.Facebook /></a>
+                            <a href="#" className="opacity-50 hover:opacity-100 transition-opacity"><Icons.Instagram /></a> */}
                         </div>
                         <p className="text-[11px] md:text-[12px] text-gray-500 tracking-wide">
                             © Bulusan Wildlife {currentYear}, All Rights Reserved

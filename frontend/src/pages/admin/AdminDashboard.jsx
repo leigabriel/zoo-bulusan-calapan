@@ -19,6 +19,12 @@ const AnimalIcon = () => (
     </svg>
 );
 
+const PlantIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
+        <path d="M12 22c-4.97 0-9-4.03-9-9 0-3.92 2.51-7.26 6-8.48V2h6v2.52c3.49 1.22 6 4.56 6 8.48 0 4.97-4.03 9-9 9zm-1-4.5v-4.09c-1.18-.45-2-1.59-2-2.91 0-1.66 1.34-3 3-3s3 1.34 3 3c0 1.32-.82 2.46-2 2.91v4.09c2.28-.46 4-2.48 4-4.91 0-2.76-2.24-5-5-5s-5 2.24-5 5c0 2.43 1.72 4.45 4 4.91z" />
+    </svg>
+);
+
 const TicketIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
         <path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z" />
@@ -63,6 +69,7 @@ const AdminDashboard = () => {
     const [stats, setStats] = useState({
         totalUsers: 0,
         totalAnimals: 0,
+        totalPlants: 0,
         totalTickets: 0,
         totalRevenue: 0
     });
@@ -98,6 +105,7 @@ const AdminDashboard = () => {
                 setStats({
                     totalUsers: Number(s.totalUsers || 0),
                     totalAnimals: Number(s.totalAnimals || 0),
+                    totalPlants: Number(s.totalPlants || 0),
                     totalTickets: Number(s.totalTickets || 0),
                     totalRevenue: Number(s.totalRevenue || 0)
                 });
@@ -278,7 +286,7 @@ const AdminDashboard = () => {
             </div>
 
             {/* Stats Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
                 <StatCard
                     title="Total Users"
                     value={stats.totalUsers.toLocaleString()}
@@ -293,6 +301,14 @@ const AdminDashboard = () => {
                     icon={<AnimalIcon />}
                     trend="up"
                     trendValue="3.2%"
+                    trendLabel="vs last month"
+                />
+                <StatCard
+                    title="Total Plants"
+                    value={stats.totalPlants.toLocaleString()}
+                    icon={<PlantIcon />}
+                    trend="up"
+                    trendValue="2.1%"
                     trendLabel="vs last month"
                 />
                 <StatCard

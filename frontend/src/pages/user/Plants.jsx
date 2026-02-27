@@ -79,12 +79,12 @@ const Plants = () => {
 
             <div className="container mx-auto px-4 md:px-6 py-4 md:py-12 flex-grow">
                 <div className="flex flex-wrap gap-4 md:gap-8 mb-8 md:mb-16 border-b border-black/10 pb-4 overflow-x-auto no-scrollbar">
-                    {uniqueCategories.slice(0, 8).map(category => (
+                    {/* {uniqueCategories.slice(0, 8).map(category => (
                         <button key={category} onClick={() => setFilter(category)}
                             className={`text-[10px] md:text-xs uppercase tracking-widest transition-all whitespace-nowrap ${filter === category ? 'font-black border-b-2 border-black' : 'opacity-50 hover:opacity-100 font-bold'}`}>
                             {category}
                         </button>
-                    ))}
+                    ))} */}
                 </div>
 
                 {loading && (

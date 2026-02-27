@@ -3,6 +3,7 @@ const Animal = require('../models/animal-model');
 const Ticket = require('../models/ticket-model');
 const Event = require('../models/event-model');
 const Notification = require('../models/notification-model');
+const Plant = require('../models/plant-model');
 const bcrypt = require('bcryptjs');
 
 exports.getDashboardStats = async (req, res) => {
@@ -10,6 +11,7 @@ exports.getDashboardStats = async (req, res) => {
         const [
             totalUsers,
             totalAnimals,
+            totalPlants,
             totalTickets,
             totalRevenue,
             activeTickets,
@@ -17,6 +19,7 @@ exports.getDashboardStats = async (req, res) => {
         ] = await Promise.all([
             User.count(),
             Animal.count(),
+            Plant.count(),
             Ticket.count(),
             Ticket.getTotalRevenue(),
             Ticket.countByStatus('active'),
@@ -28,6 +31,7 @@ exports.getDashboardStats = async (req, res) => {
             stats: {
                 totalUsers,
                 totalAnimals,
+                totalPlants,
                 totalTickets,
                 totalRevenue,
                 activeTickets,

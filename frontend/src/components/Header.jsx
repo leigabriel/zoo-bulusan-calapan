@@ -1,7 +1,7 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { getProfileImageUrl, messageAPI, userAPI } from '../services/api-client';
+import { getProfileImageUrl, messageAPI, userAPI, reservationAPI } from '../services/api-client';
 import LogoutModal from './common/LogoutModal';
 import AnimalClassifier from './features/ai-scanner/AnimalClassifier';
 import ReservationHistoryPanel from './features/ReservationHistoryPanel';
@@ -120,25 +120,34 @@ const Header = () => {
         };
     }, [showNotificationPanel]);
 
-    // Fetch notifications when panel opens
-    const fetchNotifications = async () => {
+    // Fetch notifications
+    const fetchNotifications = useCallback(async (showLoading = true) => {
         if (!user) return;
-        setNotificationLoading(true);
+        if (showLoading) setNotificationLoading(true);
         try {
             const notifs = [];
-            const [eventsRes, messagesRes] = await Promise.all([
+            const [eventsRes, messagesRes, reservationsRes] = await Promise.all([
                 userAPI.getEvents(false).catch(() => ({ success: false })),
-                messageAPI.getMyMessages().catch(() => ({ success: false }))
+                messageAPI.getMyMessages().catch(() => ({ success: false })),
+                reservationAPI.getMyTicketReservations().catch(() => ({ success: false }))
             ]);
             if (eventsRes?.success && eventsRes.events) {
-                const upcomingEvents = eventsRes.events.slice(0, 3).map(event => ({
-                    id: `event-${event.id}`,
-                    type: 'event',
-                    title: event.title,
-                    message: `Upcoming event: ${event.start_date ? new Date(event.start_date).toLocaleDateString() : 'Soon'}`,
-                    time: event.start_date,
-                    icon: 'calendar'
-                }));
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const upcomingEvents = eventsRes.events
+                    .filter(event => {
+                        const eventDate = new Date(event.event_date || event.start_date);
+                        return eventDate >= today;
+                    })
+                    .slice(0, 3)
+                    .map(event => ({
+                        id: `event-${event.id}`,
+                        type: 'event',
+                        title: event.title,
+                        message: `Upcoming event: ${event.event_date ? new Date(event.event_date).toLocaleDateString() : 'Soon'}`,
+                        time: event.event_date || event.start_date,
+                        path: '/events'
+                    }));
                 notifs.push(...upcomingEvents);
             }
             if (messagesRes?.success && messagesRes.messages) {
@@ -151,9 +160,26 @@ const Header = () => {
                         title: msg.subject,
                         message: 'Admin has responded to your message',
                         time: msg.responded_at || msg.created_at,
-                        icon: 'mail'
+                        path: '/my-messages'
                     }));
                 notifs.push(...repliedMessages);
+            }
+            if (reservationsRes?.success && reservationsRes.reservations) {
+                const upcomingReservations = reservationsRes.reservations
+                    .filter(r => r.status === 'confirmed' || r.status === 'pending')
+                    .slice(0, 3)
+                    .map(reservation => ({
+                        id: `reservation-${reservation.id}`,
+                        type: 'reservation',
+                        title: `Reservation #${reservation.booking_reference || reservation.id}`,
+                        message: reservation.status === 'confirmed' 
+                            ? `Confirmed for ${new Date(reservation.visit_date).toLocaleDateString()}`
+                            : 'Pending confirmation',
+                        time: reservation.created_at,
+                        path: null,
+                        action: 'openReservationHistory'
+                    }));
+                notifs.push(...upcomingReservations);
             }
             notifs.sort((a, b) => new Date(b.time) - new Date(a.time));
             setNotifications(notifs);
@@ -162,7 +188,14 @@ const Header = () => {
         } finally {
             setNotificationLoading(false);
         }
-    };
+    }, [user]);
+
+    // Fetch notifications on mount when user is logged in
+    useEffect(() => {
+        if (user) {
+            fetchNotifications(false);
+        }
+    }, [user, fetchNotifications]);
 
     const handleOpenNotifications = () => {
         setShowNotificationPanel(true);
@@ -218,7 +251,7 @@ const Header = () => {
         }
     };
 
-    const sideMenuItems = [
+    const accountMenuItems = [
         {
             icon: (
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -248,7 +281,10 @@ const Header = () => {
             label: 'Messages',
             path: '/my-messages',
             description: 'View support conversations'
-        },
+        }
+    ];
+
+    const exploreMenuItems = [
         {
             icon: (
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -262,17 +298,6 @@ const Header = () => {
         {
             icon: (
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-            ),
-            label: 'Settings',
-            path: '/settings',
-            description: 'Manage your preferences'
-        },
-        {
-            icon: (
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
@@ -280,6 +305,20 @@ const Header = () => {
             label: 'Mini Zoo Game',
             path: '/mini-zoo-game',
             description: 'Explore a 3D cartoon zoo'
+        }
+    ];
+
+    const settingsMenuItems = [
+        {
+            icon: (
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+            ),
+            label: 'Settings',
+            path: '/settings',
+            description: 'Manage your preferences'
         }
     ];
 
@@ -546,11 +585,11 @@ const Header = () => {
                             </div>
                         )}
 
-                        {/* Main Menu Items */}
+                        {/* Account Items */}
                         <div className="mb-4">
-                            <p className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-2 px-2">Menu</p>
+                            <p className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-2 px-2">Account</p>
                             <div className="space-y-1">
-                                {sideMenuItems.map((item, index) => (
+                                {accountMenuItems.map((item, index) => (
                                     item.action ? (
                                         <button
                                             key={index}
@@ -587,6 +626,58 @@ const Header = () => {
                                             </svg>
                                         </Link>
                                     )
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Explore Items */}
+                        <div className="mb-4">
+                            <p className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-2 px-2">Explore</p>
+                            <div className="space-y-1">
+                                {exploreMenuItems.map((item, index) => (
+                                    <Link
+                                        key={index}
+                                        to={item.path}
+                                        onClick={() => setShowSidePanel(false)}
+                                        className="flex items-center gap-3 p-3 rounded-xl hover:bg-emerald-50 transition-all duration-200 group"
+                                    >
+                                        <div className="w-10 h-10 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center group-hover:bg-emerald-500 group-hover:text-white transition-colors">
+                                            {item.icon}
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <p className="font-medium text-gray-800 text-sm">{item.label}</p>
+                                            <p className="text-xs text-gray-500 truncate">{item.description}</p>
+                                        </div>
+                                        <svg className="w-4 h-4 text-gray-400 group-hover:text-emerald-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                                        </svg>
+                                    </Link>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Settings Items */}
+                        <div className="mb-4">
+                            <p className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-2 px-2">Preferences</p>
+                            <div className="space-y-1">
+                                {settingsMenuItems.map((item, index) => (
+                                    <Link
+                                        key={index}
+                                        to={item.path}
+                                        onClick={() => setShowSidePanel(false)}
+                                        className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 transition-all duration-200 group"
+                                    >
+                                        <div className="w-10 h-10 bg-gray-100 text-gray-600 rounded-xl flex items-center justify-center group-hover:bg-gray-200 transition-colors">
+                                            {item.icon}
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <p className="font-medium text-gray-800 text-sm">{item.label}</p>
+                                            <p className="text-xs text-gray-500 truncate">{item.description}</p>
+                                        </div>
+                                        <svg className="w-4 h-4 text-gray-400 group-hover:text-gray-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                                        </svg>
+                                    </Link>
                                 ))}
                             </div>
                         </div>
@@ -896,14 +987,27 @@ const Header = () => {
                                     <div 
                                         key={notif.id} 
                                         className="p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors cursor-pointer"
+                                        onClick={() => {
+                                            setShowNotificationPanel(false);
+                                            if (notif.action === 'openReservationHistory') {
+                                                setShowHistoryPanel(true);
+                                            } else if (notif.path) {
+                                                navigate(notif.path);
+                                            }
+                                        }}
                                     >
                                         <div className="flex items-start gap-3">
                                             <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
-                                                notif.type === 'event' ? 'bg-green-100' : 'bg-blue-100'
+                                                notif.type === 'event' ? 'bg-green-100' : 
+                                                notif.type === 'reservation' ? 'bg-amber-100' : 'bg-blue-100'
                                             }`}>
                                                 {notif.type === 'event' ? (
                                                     <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                    </svg>
+                                                ) : notif.type === 'reservation' ? (
+                                                    <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
                                                     </svg>
                                                 ) : (
                                                     <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -923,6 +1027,9 @@ const Header = () => {
                                                     }) : 'Recently'}
                                                 </p>
                                             </div>
+                                            <svg className="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                                            </svg>
                                         </div>
                                     </div>
                                 ))}

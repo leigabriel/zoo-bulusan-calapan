@@ -149,22 +149,22 @@ const AboutUs = () => {
                                     transform: 'rotate(-5deg)'
                                 }}
                             ></div>
-                            <div className="absolute bottom-[-0%] left-[1.5%] text-[20vw] md:text-[25vw] font-black text-emerald-900/20 leading-none select-none">
+                            <div className="absolute bottom-[-0%] left-[1.5%] text-[20vw] md:text-[20vw] font-black text-emerald-900/20 leading-none select-none">
                                 BULUSAN
                             </div>
                         </div>
 
                         <div className="container mx-auto relative z-10 flex flex-col md:flex-row items-center justify-between gap-12 md:gap-16">
                             <div className="w-full md:w-1/3 text-center md:text-left">
-                                <h4 className="text-emerald-950 text-xl md:text-2xl font-bold leading-tight max-w-[200px] mx-auto md:mx-0 uppercase">
+                                {/* <h4 className="text-emerald-950 text-xl md:text-2xl font-bold leading-tight max-w-[200px] mx-auto md:mx-0 uppercase">
                                     Step into the <br />
                                     Mindoro Wild
-                                </h4>
+                                </h4> */}
                             </div>
 
                             <div className="w-full md:w-2/3 flex flex-col items-center md:items-end text-center md:text-right">
                                 <nav className="flex flex-col gap-2 mb-8 md:mb-12">
-                                    {['Sanctuary', 'Wildlife', 'Eco-Trail', 'Programs', 'Journal', 'Support', 'Connect'].map((item) => (
+                                    {['Animals', 'Plants', 'Events', '', '', '', ''].map((item) => (
                                         <Link
                                             key={item}
                                             to={`/${item.toLowerCase()}`}
@@ -177,7 +177,7 @@ const AboutUs = () => {
 
                                 <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
                                     <Link
-                                        to="/tickets"
+                                        to="/reservations"
                                         className="px-10 py-4 bg-emerald-950 text-emerald-400 rounded-full font-bold transition-all border border-emerald-950 hover:bg-transparent hover:text-emerald-950 text-center uppercase text-xs tracking-widest"
                                     >
                                         Visit the Zoo
@@ -194,7 +194,7 @@ const AboutUs = () => {
 
                         <div className="absolute top-8 right-8 hidden md:block">
                             <Link
-                                to="/volunteer"
+                                to=""
                                 className="px-6 py-2 bg-emerald-100 text-emerald-900 rounded-full text-[10px] font-bold uppercase tracking-widest hover:bg-white transition-colors"
                             >
                                 Volunteer at Bulusan

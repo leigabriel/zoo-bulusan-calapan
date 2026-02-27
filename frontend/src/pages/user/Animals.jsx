@@ -110,12 +110,12 @@ const Animals = () => {
 
             <div className="container mx-auto px-4 md:px-6 py-4 md:py-12 flex-grow">
                 <div className="flex flex-wrap gap-4 md:gap-8 mb-8 md:mb-16 border-b border-black/10 pb-4 overflow-x-auto no-scrollbar">
-                    {uniqueSpecies.slice(0, 8).map(species => (
+                    {/* {uniqueSpecies.slice(0, 8).map(species => (
                         <button key={species} onClick={() => setFilter(species)}
                             className={`text-[10px] md:text-xs uppercase tracking-widest transition-all whitespace-nowrap ${filter === species ? 'font-black border-b-2 border-black' : 'opacity-50 hover:opacity-100 font-bold'}`}>
                             {species}
                         </button>
-                    ))}
+                    ))} */}
                 </div>
 
                 {loading && (

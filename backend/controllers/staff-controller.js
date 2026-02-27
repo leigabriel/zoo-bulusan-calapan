@@ -3,6 +3,7 @@ const Ticket = require('../models/ticket-model');
 const Event = require('../models/event-model');
 const User = require('../models/user-model');
 const Notification = require('../models/notification-model');
+const Plant = require('../models/plant-model');
 
 exports.getDashboardStats = async (req, res) => {
     try {
@@ -11,12 +12,14 @@ exports.getDashboardStats = async (req, res) => {
             pendingValidations,
             todayVisitors,
             activeAnimals,
+            totalPlants,
             upcomingEvents
         ] = await Promise.all([
             Ticket.countTodayTickets(),
             Ticket.countPendingValidations(),
             Ticket.countTodayVisitors(),
             Animal.count(),
+            Plant.count(),
             Event.countUpcoming()
         ]);
 
@@ -27,6 +30,7 @@ exports.getDashboardStats = async (req, res) => {
                 pendingValidations,
                 todayVisitors,
                 activeAnimals,
+                totalPlants,
                 upcomingEvents
             }
         });

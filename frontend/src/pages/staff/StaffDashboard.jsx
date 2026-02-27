@@ -35,6 +35,12 @@ const AnimalIcon = () => (
     </svg>
 );
 
+const PlantIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
+        <path d="M12 22c-4.97 0-9-4.03-9-9 0-3.92 2.51-7.26 6-8.48V2h6v2.52c3.49 1.22 6 4.56 6 8.48 0 4.97-4.03 9-9 9zm-1-4.5v-4.09c-1.18-.45-2-1.59-2-2.91 0-1.66 1.34-3 3-3s3 1.34 3 3c0 1.32-.82 2.46-2 2.91v4.09c2.28-.46 4-2.48 4-4.91 0-2.76-2.24-5-5-5s-5 2.24-5 5c0 2.43 1.72 4.45 4 4.91z" />
+    </svg>
+);
+
 const ScannerIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
         <path d="M3 7V5a2 2 0 0 1 2-2h2" />
@@ -76,6 +82,7 @@ const StaffDashboard = () => {
         pendingValidations: 0,
         todayVisitors: 0,
         activeAnimals: 0,
+        totalPlants: 0,
         upcomingEvents: 0
     });
     const [recentTickets, setRecentTickets] = useState([]);
@@ -157,7 +164,7 @@ const StaffDashboard = () => {
             </div>
 
             {/* Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
                 <StatCard
                     title="Today's Tickets"
                     value={stats.todayTickets}
@@ -181,6 +188,11 @@ const StaffDashboard = () => {
                     title="Active Animals"
                     value={stats.activeAnimals}
                     icon={<AnimalIcon />}
+                />
+                <StatCard
+                    title="Total Plants"
+                    value={stats.totalPlants}
+                    icon={<PlantIcon />}
                 />
             </div>
 

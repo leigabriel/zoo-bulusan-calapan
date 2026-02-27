@@ -110,7 +110,10 @@ const Events = () => {
         });
     };
 
-    const filteredEvents = events.filter(event => filter === 'all' || event.status === filter);
+    const filteredEvents = events.filter(event => {
+        if (filter === 'all') return event.status !== 'past';
+        return event.status === filter;
+    });
 
     const getStatusStyle = (status) => {
         switch (status) {

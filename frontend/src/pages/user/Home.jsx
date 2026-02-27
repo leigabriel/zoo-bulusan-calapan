@@ -102,8 +102,8 @@ const Home = () => {
                             </div>
                         </div>
 
-                        <div className="text-center max-w-4xl mx-auto">
-                            <h1 className="text-7xl md:text-7xl font-bold text-gray-900 mb-6 leading-none tracking-tight">
+                        <div className="text-center max-w-4xl mx-auto"> <br />
+                            <h1 className="text-5xl md:text-7xl font-bold text-gray-900 mb-6 leading-none tracking-tight">
                                 Welcome to <br />
                                 <span
                                     className="bg-gradient-to-r from-emerald-600 via-teal-500 to-cyan-500 bg-clip-text text-transparent"
@@ -305,20 +305,20 @@ const Home = () => {
                                 {
                                     name: 'Monkey',
                                     category: 'Mammal',
-                                    location: 'Tropical Forest Habitat',
-                                    image: 'https://images.unsplash.com/photo-1540573133985-87b6da6d54a9?w=1200&q=80',
+                                    location: 'Tropical Exhibit - Forests and grasslands',
+                                    image: 'https://images.unsplash.com/photo-1522435229388-6f7a422cd95b?q=80&w=1470&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
                                 },
                                 {
                                     name: 'Dove',
                                     category: 'Bird',
-                                    location: 'Aviary',
+                                    location: 'Bird Aviary - Woodlands and urban areas',
                                     image: 'https://images.unsplash.com/photo-1580980407668-6bb45a674180?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
                                 },
                                 {
                                     name: 'Parrot',
                                     category: 'Bird',
-                                    location: 'Rainforest Aviary',
-                                    image: 'https://plus.unsplash.com/premium_photo-1673454201378-3867e051dca7?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8cGFycm90fGVufDB8fDB8fHww',
+                                    location: 'Bird Aviary - Tropical forests',
+                                    image: 'https://plus.unsplash.com/premium_photo-1709309432181-bda4a0d17e85?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8cGFycm90JTIwd2hpdGV8ZW58MHx8MHx8fDA%3D',
                                 }
 
                             ].map((animal, i) => (
@@ -435,12 +435,12 @@ const Home = () => {
                                 answer: "Bulusan Zoo is open daily from 8:00 AM to 5:00 PM. We recommend arriving early to fully experience all our wildlife exhibits and AI-powered features."
                             },
                             {
-                                question: "How can I purchase tickets for my visit?",
-                                answer: "Tickets can be purchased directly through our website via the tickets page or at the main entrance gate. We accept cash and major digital payment methods."
+                                question: "How can I purchase/reserve tickets for my visit?",
+                                answer: "Tickets can be purchased/reserved directly through our website or at the main entrance gate. We accept cash only, there's no digital payment for now."
                             },
                             {
                                 question: "Is there a special rate for local residents?",
-                                answer: "Yes, entrance is free for local residents of Calapan City. Please bring a valid government-issued ID or proof of residency to avail of this benefit."
+                                answer: "Yes, entrance is free for local residents of Bulusan Calapan City. Please bring a valid government-issued ID or proof of residency to avail of this benefit."
                             },
                             {
                                 question: "Are animal feeding sessions open to the public?",
@@ -487,7 +487,7 @@ const Home = () => {
                                             <div
                                                 className={`overflow-hidden transition-all duration-500 ease-in-out ${activeIndex === index ? 'max-h-96 opacity-100 pb-8' : 'max-h-0 opacity-0'}`}
                                             >
-                                                <p className="text-gray-500 text-base md:text-lg leading-relaxed max-w-4xl">
+                                                <p className="text-gray-500 text-xl md:text-2xl leading-relaxed max-w-4xl">
                                                     {item.answer}
                                                 </p>
                                             </div>
@@ -512,11 +512,6 @@ const Home = () => {
 
                         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 border border-gray-300 overflow-hidden shadow-sm mb-12">
                             {[
-                                // {
-                                //     label: 'SENIOR',
-                                //     price: '₱80',
-                                //     desc: 'Ages 60+ with valid ID. Priority access included for our elder community.'
-                                // },
                                 {
                                     label: 'ADULT',
                                     price: '₱40',
@@ -527,11 +522,6 @@ const Home = () => {
                                     price: '₱20',
                                     desc: 'Ages 5-17. Launch your first visit and start exploring within minutes.'
                                 },
-                                // {
-                                //     label: 'STUDENT',
-                                //     price: '₱70',
-                                //     desc: 'Valid for high school and college students with valid academic ID.'
-                                // },
                                 {
                                     label: 'RESIDENT',
                                     price: 'FREE',

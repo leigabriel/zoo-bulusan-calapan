@@ -14,10 +14,14 @@ USE bulusanzoocalapandatabase;
 
 -- Drop existing tables in correct order (respecting foreign keys)
 DROP TABLE IF EXISTS user_appeals;
+DROP TABLE IF EXISTS user_messages;
 DROP TABLE IF EXISTS notifications;
 DROP TABLE IF EXISTS predictions;
+DROP TABLE IF EXISTS event_reservations;
+DROP TABLE IF EXISTS ticket_reservations;
 DROP TABLE IF EXISTS tickets;
 DROP TABLE IF EXISTS events;
+DROP TABLE IF EXISTS plants;
 DROP TABLE IF EXISTS animals;
 DROP TABLE IF EXISTS users;
 
@@ -78,9 +82,12 @@ CREATE TABLE animals (
     description TEXT DEFAULT NULL,
     habitat VARCHAR(255) DEFAULT NULL,
     diet VARCHAR(255) DEFAULT NULL,
+    animal_information TEXT DEFAULT NULL,
     conservation_status ENUM('least_concern', 'near_threatened', 'vulnerable', 'endangered', 'critically_endangered') DEFAULT 'least_concern',
     age INT DEFAULT NULL,
     weight DECIMAL(10, 2) DEFAULT NULL,
+    lifespan VARCHAR(100) DEFAULT NULL,
+    length DECIMAL(10, 2) DEFAULT NULL,
     image_url VARCHAR(255) DEFAULT NULL,
     status ENUM('healthy', 'sick', 'treatment', 'quarantine', 'critical') DEFAULT 'healthy',
     arrival_date DATE DEFAULT NULL,
@@ -91,6 +98,37 @@ CREATE TABLE animals (
     INDEX idx_animals_species (species),
     INDEX idx_animals_category (category),
     INDEX idx_animals_status (status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- =====================================================
+-- PLANTS TABLE
+-- Stores zoo plant information
+-- =====================================================
+CREATE TABLE plants (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(100) NOT NULL,
+    scientific_name VARCHAR(150) DEFAULT NULL,
+    category ENUM('trees', 'shrubs', 'flowers', 'ferns', 'grasses', 'aquatic', 'succulents', 'vines', 'herbs', 'palms') DEFAULT 'trees',
+    description TEXT DEFAULT NULL,
+    habitat VARCHAR(255) DEFAULT NULL,
+    origin VARCHAR(255) DEFAULT NULL,
+    care_level ENUM('easy', 'moderate', 'difficult') DEFAULT 'moderate',
+    sunlight_requirement ENUM('full_sun', 'partial_shade', 'full_shade') DEFAULT 'partial_shade',
+    water_requirement ENUM('low', 'moderate', 'high') DEFAULT 'moderate',
+    height VARCHAR(100) DEFAULT NULL,
+    bloom_season VARCHAR(100) DEFAULT NULL,
+    is_endangered BOOLEAN DEFAULT FALSE,
+    image_url VARCHAR(255) DEFAULT NULL,
+    status ENUM('healthy', 'growing', 'dormant', 'sick', 'treatment') DEFAULT 'healthy',
+    location VARCHAR(255) DEFAULT NULL,
+    arrival_date DATE DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
+    -- Indexes
+    INDEX idx_plants_name (name),
+    INDEX idx_plants_category (category),
+    INDEX idx_plants_status (status)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- =====================================================
@@ -188,6 +226,37 @@ CREATE TABLE tickets (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- =====================================================
+-- USER MESSAGES TABLE
+-- Stores messages from users to admin/staff
+-- =====================================================
+CREATE TABLE user_messages (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    sender_id INT NOT NULL,
+    sender_type ENUM('user', 'admin', 'staff') DEFAULT 'user',
+    recipient_type ENUM('admin', 'staff', 'all') DEFAULT 'admin',
+    subject VARCHAR(255) NOT NULL,
+    content TEXT NOT NULL,
+    message_type ENUM('general', 'appeal', 'inquiry', 'feedback') DEFAULT 'general',
+    is_read BOOLEAN DEFAULT FALSE,
+    admin_response TEXT DEFAULT NULL,
+    responded_by INT DEFAULT NULL,
+    responded_at TIMESTAMP NULL DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
+    -- Indexes
+    INDEX idx_messages_sender_id (sender_id),
+    INDEX idx_messages_recipient_type (recipient_type),
+    INDEX idx_messages_message_type (message_type),
+    INDEX idx_messages_is_read (is_read),
+    INDEX idx_messages_created_at (created_at),
+    
+    -- Foreign keys
+    CONSTRAINT fk_messages_sender FOREIGN KEY (sender_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT fk_messages_responded_by FOREIGN KEY (responded_by) REFERENCES users(id) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- =====================================================
 -- USER APPEALS TABLE
 -- Stores suspension appeal messages from users
 -- =====================================================
@@ -252,6 +321,104 @@ CREATE TABLE predictions (
     
     -- Foreign keys
     CONSTRAINT fk_predictions_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- =====================================================
+-- TICKET RESERVATIONS TABLE
+-- Stores ticket reservation requests
+-- =====================================================
+CREATE TABLE ticket_reservations (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    reservation_reference VARCHAR(20) NOT NULL,
+    user_id INT DEFAULT NULL,
+    visitor_name VARCHAR(100) NOT NULL,
+    visitor_email VARCHAR(100) NOT NULL,
+    visitor_phone VARCHAR(20) DEFAULT NULL,
+    reservation_date DATE NOT NULL,
+    
+    adult_quantity INT DEFAULT 0,
+    child_quantity INT DEFAULT 0,
+    bulusan_resident_quantity INT DEFAULT 0,
+    total_visitors INT DEFAULT 0,
+    
+    resident_id_image TEXT DEFAULT NULL,
+    verification_status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending',
+    
+    status ENUM('pending', 'confirmed', 'completed', 'cancelled', 'no_show') DEFAULT 'pending',
+    notes TEXT DEFAULT NULL,
+    is_archived BOOLEAN DEFAULT FALSE,
+    
+    confirmed_at TIMESTAMP NULL DEFAULT NULL,
+    confirmed_by INT DEFAULT NULL,
+    cancelled_at TIMESTAMP NULL DEFAULT NULL,
+    cancelled_reason TEXT DEFAULT NULL,
+    
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
+    -- Unique constraints
+    UNIQUE KEY uk_ticket_reservations_reference (reservation_reference),
+    
+    -- Indexes
+    INDEX idx_ticket_reservations_user_id (user_id),
+    INDEX idx_ticket_reservations_date (reservation_date),
+    INDEX idx_ticket_reservations_status (status),
+    INDEX idx_ticket_reservations_created_at (created_at),
+    INDEX idx_ticket_reservations_is_archived (is_archived),
+    
+    -- Foreign keys
+    CONSTRAINT fk_ticket_reservations_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL ON UPDATE CASCADE,
+    CONSTRAINT fk_ticket_reservations_confirmed_by FOREIGN KEY (confirmed_by) REFERENCES users(id) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- =====================================================
+-- EVENT RESERVATIONS TABLE
+-- Stores event registration/reservation requests
+-- =====================================================
+CREATE TABLE event_reservations (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    reservation_reference VARCHAR(20) NOT NULL,
+    user_id INT DEFAULT NULL,
+    event_id INT DEFAULT NULL,
+    
+    venue_event_name VARCHAR(200) DEFAULT NULL,
+    venue_event_date DATE DEFAULT NULL,
+    venue_event_time VARCHAR(50) DEFAULT NULL,
+    venue_event_description TEXT DEFAULT NULL,
+    
+    participant_name VARCHAR(100) NOT NULL,
+    participant_email VARCHAR(100) NOT NULL,
+    participant_phone VARCHAR(20) DEFAULT NULL,
+    
+    number_of_participants INT DEFAULT 1,
+    participant_details TEXT DEFAULT NULL,
+    
+    status ENUM('pending', 'confirmed', 'completed', 'cancelled', 'no_show') DEFAULT 'pending',
+    notes TEXT DEFAULT NULL,
+    is_archived BOOLEAN DEFAULT FALSE,
+    
+    confirmed_at TIMESTAMP NULL DEFAULT NULL,
+    confirmed_by INT DEFAULT NULL,
+    cancelled_at TIMESTAMP NULL DEFAULT NULL,
+    cancelled_reason TEXT DEFAULT NULL,
+    
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
+    -- Unique constraints
+    UNIQUE KEY uk_event_reservations_reference (reservation_reference),
+    
+    -- Indexes
+    INDEX idx_event_reservations_user_id (user_id),
+    INDEX idx_event_reservations_event_id (event_id),
+    INDEX idx_event_reservations_status (status),
+    INDEX idx_event_reservations_created_at (created_at),
+    INDEX idx_event_reservations_is_archived (is_archived),
+    
+    -- Foreign keys
+    CONSTRAINT fk_event_reservations_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL ON UPDATE CASCADE,
+    CONSTRAINT fk_event_reservations_event FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE SET NULL ON UPDATE CASCADE,
+    CONSTRAINT fk_event_reservations_confirmed_by FOREIGN KEY (confirmed_by) REFERENCES users(id) ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- =====================================================

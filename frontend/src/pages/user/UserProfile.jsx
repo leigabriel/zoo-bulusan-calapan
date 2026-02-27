@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { authAPI, getProfileImageUrl as resolveProfileImageUrl } from '../../services/api-client';
 import { sanitizeInput } from '../../utils/sanitize';
+import LogoutModal from '../../components/common/LogoutModal';
 
 const UserIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-16 h-16 text-gray-300">
@@ -302,10 +303,10 @@ const UserProfile = () => {
         <div className="min-h-screen w-full bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 flex flex-col items-center">
             <div className="w-full min-h-screen bg-white flex flex-col">
 
-                <div className="relative h-48 sm:h-64 bg-[#F2F4F7] overflow-hidden">
+                <div className="relative h-48 sm:h-64 bg-[#ebebeb] overflow-hidden">
                     <img
                         src="https://i.pinimg.com/736x/cf/be/f7/cfbef7ee6088cac3e2e6c01cfe57bfed.jpg"
-                        className="w-full h-full object-cover opacity-60"
+                        className="w-full h-full object-cover opacity-40"
                         alt="Header"
                     />
                     <div className="absolute top-6 left-6 z-10">
@@ -340,10 +341,10 @@ const UserProfile = () => {
                             </div>
                             <div className="pb-2 text-center sm:text-left">
                                 <div className="flex items-center justify-center sm:justify-start gap-2 mb-1">
-                                    <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900 tracking-tight">
+                                    <h1 className="text-3xl sm:text-4xl font-extrabold text-[#212631] tracking-tight">
                                         {user.firstName} {user.lastName}
                                     </h1>
-                                    <VerifiedIcon />
+                                    <VerifiedIcon/>
                                 </div>
                                 <p className="text-lg text-gray-400 font-medium">@{user.username}</p>
                                 {(user?.profileImage || user?.profile_image) && !selectedFile && (
@@ -469,25 +470,12 @@ const UserProfile = () => {
             )}
 
             {/* Logout Confirmation Modal */}
-            {showLogoutConfirm && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-md p-4">
-                    <div className="bg-white rounded-[2rem] p-8 w-full max-w-sm shadow-2xl text-center">
-                        <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-8 h-8 text-red-600">
-                                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                                <polyline points="16 17 21 12 16 7" />
-                                <line x1="21" y1="12" x2="9" y2="12" />
-                            </svg>
-                        </div>
-                        <h3 className="text-xl font-black text-gray-900 mb-2">Logout?</h3>
-                        <p className="text-gray-500 text-sm mb-6">Are you sure you want to logout of your account?</p>
-                        <div className="flex gap-3">
-                            <button onClick={() => setShowLogoutConfirm(false)} className="flex-1 py-3 border border-gray-200 rounded-xl font-bold text-gray-400 hover:bg-gray-50 transition">Cancel</button>
-                            <button onClick={handleLogout} className="flex-1 py-3 bg-red-600 text-white rounded-xl font-bold shadow-lg hover:bg-red-700 transition">Logout</button>
-                        </div>
-                    </div>
-                </div>
-            )}
+            <LogoutModal
+                isOpen={showLogoutConfirm}
+                onClose={() => setShowLogoutConfirm(false)}
+                onConfirm={handleLogout}
+                userName={user?.firstName || user?.username || 'User'}
+            />
 
             {/* Save Profile Confirmation Modal */}
             {showSaveConfirm && (
