@@ -290,24 +290,34 @@ const AdminLayout = ({ children }) => {
 
     const menuItems = [
         { path: '/admin/dashboard', label: 'Overview', Icon: OverviewIcon },
+    ];
+
+    const managementItems = [
         { path: '/admin/events', label: 'Events', Icon: EventsIcon },
         { path: '/admin/reservations', label: 'Reservations', Icon: TicketsIcon },
         { path: '/admin/animals', label: 'Manage Animals', Icon: AnimalsIcon },
         { path: '/admin/plants', label: 'Manage Plants', Icon: PlantsIcon },
         { path: '/admin/users', label: 'Manage Users', Icon: UsersIcon },
+    ];
+
+    const communicationItems = [
         { path: '/admin/messages', label: 'Messages', Icon: MailIcon },
+    ];
+
+    const insightItems = [
         { path: '/admin/analytics', label: 'Analytics', Icon: AnalyticsIcon },
         { path: '/admin/reports', label: 'Reports', Icon: ReportsIcon },
     ];
 
-    // Filter menu items based on search query
+    const allMenuItems = [...menuItems, ...managementItems, ...communicationItems, ...insightItems];
+
     const filteredMenuItems = useMemo(() => {
-        if (!searchQuery.trim()) return menuItems;
+        if (!searchQuery.trim()) return allMenuItems;
         const query = searchQuery.toLowerCase();
-        return menuItems.filter(item => 
+        return allMenuItems.filter(item => 
             item.label.toLowerCase().includes(query)
         );
-    }, [searchQuery, menuItems]);
+    }, [searchQuery, allMenuItems]);
 
     const handleNavClick = () => {
         if (window.innerWidth < 1024) {
@@ -381,28 +391,100 @@ const AdminLayout = ({ children }) => {
                 {/* Navigation Menu */}
                 <nav className="flex-1 px-3 py-4 overflow-y-auto" role="navigation">
                     <p className="px-3 mb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                        Dashboards
+                        Main
                     </p>
                     {menuItems.map(item => (
-                            <Link
-                                key={item.path}
-                                to={item.path}
-                                onClick={handleNavClick}
-                                className={`flex items-center gap-3 px-3 py-2.5 mb-1 rounded-xl transition-all duration-200 group ${
-                                    location.pathname === item.path
-                                        ? 'bg-[#8cff65]/10 text-[#8cff65] border-l-2 border-[#8cff65]'
-                                        : 'text-gray-400 hover:bg-[#1e1e1e] hover:text-white'
-                                }`}
-                                aria-current={location.pathname === item.path ? 'page' : undefined}
-                            >
-                                <span className={`transition-colors ${
-                                    location.pathname === item.path ? 'text-[#8cff65]' : 'text-gray-500 group-hover:text-white'
-                                }`}>
-                                    <item.Icon />
-                                </span>
-                                <span className="font-medium">{item.label}</span>
-                            </Link>
-                        ))}
+                        <Link
+                            key={item.path}
+                            to={item.path}
+                            onClick={handleNavClick}
+                            className={`flex items-center gap-3 px-3 py-2.5 mb-1 rounded-xl transition-all duration-200 group ${
+                                location.pathname === item.path
+                                    ? 'bg-[#8cff65]/10 text-[#8cff65] border-l-2 border-[#8cff65]'
+                                    : 'text-gray-400 hover:bg-[#1e1e1e] hover:text-white'
+                            }`}
+                            aria-current={location.pathname === item.path ? 'page' : undefined}
+                        >
+                            <span className={`transition-colors ${
+                                location.pathname === item.path ? 'text-[#8cff65]' : 'text-gray-500 group-hover:text-white'
+                            }`}>
+                                <item.Icon />
+                            </span>
+                            <span className="font-medium">{item.label}</span>
+                        </Link>
+                    ))}
+
+                    <p className="px-3 mt-4 mb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                        Management
+                    </p>
+                    {managementItems.map(item => (
+                        <Link
+                            key={item.path}
+                            to={item.path}
+                            onClick={handleNavClick}
+                            className={`flex items-center gap-3 px-3 py-2.5 mb-1 rounded-xl transition-all duration-200 group ${
+                                location.pathname === item.path
+                                    ? 'bg-[#8cff65]/10 text-[#8cff65] border-l-2 border-[#8cff65]'
+                                    : 'text-gray-400 hover:bg-[#1e1e1e] hover:text-white'
+                            }`}
+                            aria-current={location.pathname === item.path ? 'page' : undefined}
+                        >
+                            <span className={`transition-colors ${
+                                location.pathname === item.path ? 'text-[#8cff65]' : 'text-gray-500 group-hover:text-white'
+                            }`}>
+                                <item.Icon />
+                            </span>
+                            <span className="font-medium">{item.label}</span>
+                        </Link>
+                    ))}
+
+                    <p className="px-3 mt-4 mb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                        Communication
+                    </p>
+                    {communicationItems.map(item => (
+                        <Link
+                            key={item.path}
+                            to={item.path}
+                            onClick={handleNavClick}
+                            className={`flex items-center gap-3 px-3 py-2.5 mb-1 rounded-xl transition-all duration-200 group ${
+                                location.pathname === item.path
+                                    ? 'bg-[#8cff65]/10 text-[#8cff65] border-l-2 border-[#8cff65]'
+                                    : 'text-gray-400 hover:bg-[#1e1e1e] hover:text-white'
+                            }`}
+                            aria-current={location.pathname === item.path ? 'page' : undefined}
+                        >
+                            <span className={`transition-colors ${
+                                location.pathname === item.path ? 'text-[#8cff65]' : 'text-gray-500 group-hover:text-white'
+                            }`}>
+                                <item.Icon />
+                            </span>
+                            <span className="font-medium">{item.label}</span>
+                        </Link>
+                    ))}
+
+                    <p className="px-3 mt-4 mb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                        Insights
+                    </p>
+                    {insightItems.map(item => (
+                        <Link
+                            key={item.path}
+                            to={item.path}
+                            onClick={handleNavClick}
+                            className={`flex items-center gap-3 px-3 py-2.5 mb-1 rounded-xl transition-all duration-200 group ${
+                                location.pathname === item.path
+                                    ? 'bg-[#8cff65]/10 text-[#8cff65] border-l-2 border-[#8cff65]'
+                                    : 'text-gray-400 hover:bg-[#1e1e1e] hover:text-white'
+                            }`}
+                            aria-current={location.pathname === item.path ? 'page' : undefined}
+                        >
+                            <span className={`transition-colors ${
+                                location.pathname === item.path ? 'text-[#8cff65]' : 'text-gray-500 group-hover:text-white'
+                            }`}>
+                                <item.Icon />
+                            </span>
+                            <span className="font-medium">{item.label}</span>
+                        </Link>
+                    ))}
                 </nav>
 
                 {/* Bottom Section - Help & Logout */}
@@ -458,7 +540,7 @@ const AdminLayout = ({ children }) => {
                         </button>
                         <div>
                             <h2 className="text-xl font-bold text-white">
-                                {menuItems.find(item => item.path === location.pathname)?.label || 
+                                {allMenuItems.find(item => item.path === location.pathname)?.label || 
                                  (location.pathname === '/admin/help' ? 'Help Center' : 
                                   location.pathname === '/admin/profile' ? 'Profile' : 'Dashboard')}
                             </h2>

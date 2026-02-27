@@ -20,7 +20,7 @@ const AboutUs = () => {
             id: 2,
             title: "Native Species Care",
             desc: "Our mini zoo focuses on the rehabilitation of endemic wildlife from the Oriental Mindoro region.",
-            image: "https://images.unsplash.com/photo-1504197885-609741792e7f",
+            image: "https://images.unsplash.com/photo-1631886131312-be57ef8311c0?q=80&w=685&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
             grid: "col-span-12 md:col-span-4",
             aspect: "aspect-square"
         },
@@ -36,7 +36,7 @@ const AboutUs = () => {
             id: 4,
             title: "Join Our Rangers",
             desc: "Help protect the biodiversity of MIMAROPA. We are looking for volunteers for our forest monitoring teams.",
-            image: "https://images.unsplash.com/photo-1533221212354-978696123447",
+            image: "https://images.unsplash.com/photo-1568437827868-bab780f2f54e?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTJ8fHpvbyUyMHBhcmt8ZW58MHx8MHx8fDA%3D",
             grid: "col-span-12 md:col-span-4",
             aspect: "aspect-square"
         }

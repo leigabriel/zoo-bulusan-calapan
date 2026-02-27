@@ -6,11 +6,6 @@ import AIFloatingButton from '../../components/common/AIFloatingButton';
 import { userAPI } from '../../services/api-client';
 
 const Icons = {
-    Location: () => (
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-2.5 h-2.5 md:w-3.5 md:h-3.5">
-            <path fillRule="evenodd" d="M11.54 22.351l.07.04.028.016a.76.76 0 00.723 0l.028-.015.071-.041a16.975 16.975 0 001.144-.742 19.58 19.58 0 002.683-2.282c1.944-1.99 3.963-4.98 3.963-8.827a8.25 8.25 0 00-16.5 0c0 3.846 2.02 6.837 3.963 8.827a19.58 19.58 0 002.682 2.282 16.975 16.975 0 001.145.742zM12 13.5a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
-        </svg>
-    ),
     Close: () => (
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
             <path fillRule="evenodd" d="M5.47 5.47a.75.75 0 011.06 0L12 10.94l5.47-5.47a.75.75 0 111.06 1.06L13.06 12l5.47 5.47a.75.75 0 11-1.06 1.06L12 13.06l-5.47 5.47a.75.75 0 01-1.06-1.06L10.94 12 5.47 6.53a.75.75 0 010-1.06z" clipRule="evenodd" />
@@ -31,15 +26,6 @@ const DEFAULT_PLANT_IMAGES = [
     'https://images.unsplash.com/photo-1502331538926-57d1c95a4e7c?w=800',
 ];
 
-const colorVariants = [
-    'from-green-400 to-green-600',
-    'from-emerald-400 to-emerald-600',
-    'from-teal-400 to-teal-600',
-    'from-lime-400 to-lime-600',
-    'from-cyan-400 to-cyan-600',
-    'from-amber-400 to-amber-600',
-];
-
 const Plants = () => {
     const [plants, setPlants] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -57,15 +43,9 @@ const Plants = () => {
                 const transformed = response.plants.map((plant, idx) => ({
                     id: plant.id,
                     name: plant.name,
-                    scientificName: plant.scientific_name || '',
                     category: plant.category || 'Flora',
-                    location: plant.location || 'Zoo Bulusan',
                     description: plant.description || '',
-                    status: plant.status || 'healthy',
-                    careInstructions: plant.care_instructions || '',
-                    isEndangered: plant.is_endangered || false,
-                    imageUrl: plant.image_url || DEFAULT_PLANT_IMAGES[idx % DEFAULT_PLANT_IMAGES.length],
-                    colorVariant: colorVariants[idx % colorVariants.length]
+                    imageUrl: plant.image_url || DEFAULT_PLANT_IMAGES[idx % DEFAULT_PLANT_IMAGES.length]
                 }));
                 setPlants(transformed);
             } else { setPlants([]); }
@@ -78,15 +58,6 @@ const Plants = () => {
 
     const uniqueCategories = ['All', ...new Set(plants.map(p => p.category).filter(Boolean))];
     const filteredPlants = plants.filter(plant => filter === 'All' || plant.category === filter);
-
-    const getStatusInfo = (status) => {
-        switch (status?.toLowerCase()) {
-            case 'healthy': return { label: 'Healthy', color: 'text-green-700' };
-            case 'needs_attention': return { label: 'Needs Attention', color: 'text-yellow-700' };
-            case 'critical': return { label: 'Critical', color: 'text-red-700' };
-            default: return { label: status || 'Active', color: 'text-green-700' };
-        }
-    };
 
     return (
         <ReactLenis root>
@@ -138,21 +109,12 @@ const Plants = () => {
                             <div key={plant.id} className="group cursor-pointer" onClick={() => setSelectedPlant(plant)}>
                                 <div className="aspect-[3/4] md:aspect-[4/5] overflow-hidden mb-3 md:mb-6 bg-white shadow-sm relative">
                                     <img src={plant.imageUrl} alt={plant.name} className="w-full h-full object-cover group-hover:scale-105 transition-all duration-700 ease-out" />
-                                    {plant.isEndangered && (
-                                        <span className="absolute top-2 right-2 bg-red-500 text-white text-[6px] md:text-[8px] uppercase tracking-wider font-bold px-2 py-1 rounded">
-                                            Endangered
-                                        </span>
-                                    )}
                                 </div>
                                 <div className="text-left">
                                     <h3 className="text-[10px] md:text-2xl font-bold mb-1 uppercase tracking-tight leading-tight line-clamp-1">{plant.name}</h3>
                                     <p className="hidden md:block text-sm font-medium opacity-70 leading-snug mb-4 line-clamp-2">
                                         {plant.description || `${plant.name} is part of our botanical collection.`}
                                     </p>
-                                    <div className="flex flex-col md:flex-row items-start md:items-center gap-1 md:gap-4 text-[7px] md:text-[10px] uppercase tracking-widest font-black opacity-40">
-                                        <span className="flex items-center gap-0.5"><Icons.Location /> <span className="line-clamp-1">{plant.location}</span></span>
-                                        <span className={getStatusInfo(plant.status).color}>{getStatusInfo(plant.status).label}</span>
-                                    </div>
                                 </div>
                             </div>
                         ))}
@@ -172,36 +134,14 @@ const Plants = () => {
                     <div className="max-w-4xl w-full h-full md:h-auto bg-[#F9F9F9] md:bg-transparent grid grid-cols-1 md:grid-cols-2 gap-0 md:gap-12 items-center overflow-y-auto md:overflow-visible">
                         <div className="aspect-[4/5] md:aspect-[4/5] bg-white shadow-2xl overflow-hidden w-full relative">
                             <img src={selectedPlant.imageUrl} alt={selectedPlant.name} className="w-full h-full object-cover" />
-                            {selectedPlant.isEndangered && (
-                                <span className="absolute top-4 right-4 bg-red-500 text-white text-[10px] uppercase tracking-wider font-bold px-3 py-1.5 rounded">
-                                    Endangered Species
-                                </span>
-                            )}
                         </div>
                         <div className="p-8 md:p-0">
-                            <h2 className="text-4xl md:text-6xl font-bold uppercase mb-2 leading-tight tracking-tighter">{selectedPlant.name}</h2>
-                            {selectedPlant.scientificName && (
-                                <p className="text-sm md:text-base italic opacity-60 mb-2">{selectedPlant.scientificName}</p>
-                            )}
-                            <p className="text-[10px] md:text-xs uppercase tracking-[0.2em] mb-6 md:mb-8 font-black opacity-40">{selectedPlant.category}</p>
+                            <h2 className="text-4xl md:text-6xl font-bold uppercase mb-6 md:mb-8 leading-tight tracking-tighter">{selectedPlant.name}</h2>
                             
                             <div className="space-y-6 md:space-y-8 mb-10 md:mb-12">
                                 <div>
-                                    <h4 className="text-[8px] md:text-[10px] uppercase tracking-widest font-black mb-1 md:mb-2 opacity-30">Location</h4>
-                                    <p className="text-sm md:text-lg font-bold leading-tight">{selectedPlant.location}</p>
-                                </div>
-                                <div>
                                     <h4 className="text-[8px] md:text-[10px] uppercase tracking-widest font-black mb-1 md:mb-2 opacity-30">About</h4>
                                     <p className="text-sm md:text-lg font-medium leading-snug opacity-80">{selectedPlant.description || `A beautiful specimen in our botanical garden.`}</p>
-                                </div>
-                                {selectedPlant.careInstructions && (
-                                    <div>
-                                        <h4 className="text-[8px] md:text-[10px] uppercase tracking-widest font-black mb-1 md:mb-2 opacity-30">Care Information</h4>
-                                        <p className="text-sm md:text-lg font-medium leading-snug opacity-80">{selectedPlant.careInstructions}</p>
-                                    </div>
-                                )}
-                                <div className={`inline-block border border-black/10 px-3 py-1.5 md:px-4 md:py-2 text-[8px] md:text-[10px] uppercase tracking-widest font-black ${getStatusInfo(selectedPlant.status).color}`}>
-                                    Status: {getStatusInfo(selectedPlant.status).label}
                                 </div>
                             </div>
                             

@@ -38,13 +38,36 @@ class Notification {
 
     // Get recent activity summary for admin/staff dashboard
     static async getActivitySummary() {
-        const [ticketStats] = await db.query(`
-            SELECT 
-                COUNT(*) as total,
-                SUM(CASE WHEN created_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR) THEN 1 ELSE 0 END) as today,
-                SUM(CASE WHEN created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY) THEN 1 ELSE 0 END) as this_week
-            FROM tickets
-        `);
+        // Default values for stats in case tables don't exist
+        let ticketStats = [{ total: 0, today: 0, this_week: 0 }];
+        let pendingTickets = [{ count: 0 }];
+        let recentTickets = [];
+
+        // Try to get ticket stats - table may not exist
+        try {
+            [ticketStats] = await db.query(`
+                SELECT 
+                    COUNT(*) as total,
+                    SUM(CASE WHEN created_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR) THEN 1 ELSE 0 END) as today,
+                    SUM(CASE WHEN created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY) THEN 1 ELSE 0 END) as this_week
+                FROM tickets
+            `);
+
+            [pendingTickets] = await db.query(`
+                SELECT COUNT(*) as count FROM tickets WHERE status = 'pending'
+            `);
+
+            [recentTickets] = await db.query(`
+                SELECT t.*, u.first_name, u.last_name, u.email
+                FROM tickets t
+                LEFT JOIN users u ON t.user_id = u.id
+                ORDER BY t.created_at DESC
+                LIMIT 5
+            `);
+        } catch (error) {
+            // tickets table may not exist - use defaults
+            console.log('Note: tickets table not found, using defaults for ticket stats');
+        }
 
         const [userStats] = await db.query(`
             SELECT 
@@ -67,18 +90,6 @@ class Notification {
                 COUNT(*) as total,
                 SUM(CASE WHEN status = 'upcoming' THEN 1 ELSE 0 END) as upcoming
             FROM events
-        `);
-
-        const [pendingTickets] = await db.query(`
-            SELECT COUNT(*) as count FROM tickets WHERE status = 'pending'
-        `);
-
-        const [recentTickets] = await db.query(`
-            SELECT t.*, u.first_name, u.last_name, u.email
-            FROM tickets t
-            LEFT JOIN users u ON t.user_id = u.id
-            ORDER BY t.created_at DESC
-            LIMIT 5
         `);
 
         return {

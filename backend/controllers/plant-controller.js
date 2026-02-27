@@ -28,7 +28,26 @@ exports.getPlantById = async (req, res) => {
 
 exports.createPlant = async (req, res) => {
     try {
-        const plantId = await Plant.create(req.body);
+        // Map snake_case from frontend to camelCase for model
+        const plantData = {
+            name: req.body.name,
+            scientificName: req.body.scientific_name || req.body.scientificName,
+            category: req.body.category,
+            description: req.body.description,
+            habitat: req.body.habitat,
+            origin: req.body.origin,
+            careLevel: req.body.care_level || req.body.careLevel,
+            sunlightRequirement: req.body.sunlight_requirement || req.body.sunlightRequirement,
+            waterRequirement: req.body.water_requirement || req.body.waterRequirement,
+            height: req.body.height,
+            bloomSeason: req.body.bloom_season || req.body.bloomSeason,
+            isEndangered: req.body.is_endangered || req.body.isEndangered,
+            imageUrl: req.body.image_url || req.body.imageUrl,
+            status: req.body.status,
+            location: req.body.location,
+            arrivalDate: req.body.arrival_date || req.body.arrivalDate
+        };
+        const plantId = await Plant.create(plantData);
         res.status(201).json({
             success: true,
             message: 'Plant created successfully',
@@ -43,7 +62,26 @@ exports.createPlant = async (req, res) => {
 exports.updatePlant = async (req, res) => {
     try {
         const { id } = req.params;
-        const updated = await Plant.update(id, req.body);
+        // Map snake_case from frontend to camelCase for model
+        const plantData = {
+            name: req.body.name,
+            scientificName: req.body.scientific_name || req.body.scientificName,
+            category: req.body.category,
+            description: req.body.description,
+            habitat: req.body.habitat,
+            origin: req.body.origin,
+            careLevel: req.body.care_level || req.body.careLevel,
+            sunlightRequirement: req.body.sunlight_requirement || req.body.sunlightRequirement,
+            waterRequirement: req.body.water_requirement || req.body.waterRequirement,
+            height: req.body.height,
+            bloomSeason: req.body.bloom_season || req.body.bloomSeason,
+            isEndangered: req.body.is_endangered || req.body.isEndangered,
+            imageUrl: req.body.image_url || req.body.imageUrl,
+            status: req.body.status,
+            location: req.body.location,
+            arrivalDate: req.body.arrival_date || req.body.arrivalDate
+        };
+        const updated = await Plant.update(id, plantData);
 
         if (!updated) {
             return res.status(404).json({ success: false, message: 'Plant not found' });

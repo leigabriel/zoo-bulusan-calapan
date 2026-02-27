@@ -1,9 +1,10 @@
 @import "tailwindcss";
 
 body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     /* font-family: 'Narrow Arial', sans-serif; */
     /* font-family: 'JetBrainsMono Nerd Font', monospace; */
-    font-family: 'Brass Mono Code', monospace;
+    /* font-family: 'Brass Mono Code', monospace; */
     /* font-family: 'Space Grotesk', sans-serif; */
     /* font-family: 'Poppins', sans-serif; */
     font-size: 16px;
