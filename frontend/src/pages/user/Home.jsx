@@ -68,32 +68,6 @@ const Home = () => {
                     />
                     <div className="absolute inset-0 bg-gradient-to-b from-white/90 via-white/70 to-transparent" />
 
-                    <FloatingIcon
-                        icon={<svg className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-600" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" /></svg>}
-                        className="top-32 left-[10%] lg:left-[15%] hidden md:flex"
-                        delay={0}
-                    />
-                    <FloatingIcon
-                        icon={<svg className="w-5 h-5 sm:w-6 sm:h-6 text-teal-600" viewBox="0 0 24 24" fill="currentColor"><path d="M19.14 12.94c.04-.31.06-.63.06-.94 0-.31-.02-.63-.06-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z" /></svg>}
-                        className="top-44 right-[10%] lg:right-[18%] hidden md:flex"
-                        delay={0.5}
-                    />
-                    <FloatingIcon
-                        icon={<svg className="w-5 h-5 sm:w-6 sm:h-6 text-cyan-600" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3L1 9l4 2.18v6L12 21l7-3.82v-6l2-1.09V17h2V9L12 3zm6.82 6L12 12.72 5.18 9 12 5.28 18.82 9zM17 15.99l-5 2.73-5-2.73v-3.72L12 15l5-2.73v3.72z" /></svg>}
-                        className="top-56 left-[15%] lg:left-[22%] hidden lg:flex"
-                        delay={1}
-                    />
-                    <FloatingIcon
-                        icon={<svg className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z" /></svg>}
-                        className="top-36 right-[5%] lg:right-[12%] hidden lg:flex"
-                        delay={1.5}
-                    />
-                    <FloatingIcon
-                        icon={<svg className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-500" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" /></svg>}
-                        className="top-64 left-[5%] lg:left-[10%] hidden lg:flex"
-                        delay={2}
-                    />
-
                     <div className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8 pt-16 sm:pt-24 lg:pt-32 pb-8 flex flex-col items-center">
                         <div className="flex justify-center mb-6 sm:mb-8">
                             <div className="inline-flex items-center gap-2 bg-white px-4 py-2 sm:px-5 sm:py-2.5 rounded-full shadow-md border border-gray-100">
@@ -161,97 +135,17 @@ const Home = () => {
                     </div>
                 </section>
 
-                <section
-                    id="about-section"
-                    className="py-16 sm:py-20 md:py-24 bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 overflow-hidden relative w-full"
-                >
-                    <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-                        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 md:gap-10 lg:gap-12 mb-16 md:mb-24">
-
-                            <div className="lg:col-span-5 flex flex-col justify-center">
-                                <div className="flex flex-col gap-6 md:gap-8">
-                                    <span className="text-[10px] sm:text-xs font-bold tracking-[0.2em] sm:tracking-[0.3em] uppercase text-emerald-800/60 break-words">
-                                        The Evolution of Bulusan
-                                    </span>
-                                    <p className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-light leading-relaxed text-slate-800 max-w-xl break-words">
-                                        Founded in 2015, Bulusan Wildlife & Nature Park began as a small conservation initiative in Calapan City. Today, we stand as a testament to modern conservation.
-                                    </p>
-
-                                    <div className="flex gap-4 mt-2 sm:mt-4">
-                                        <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white rounded-sm flex items-center justify-center rotate-[-3deg] shadow-md border border-emerald-100">
-                                            <svg className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
-                                        </div>
-                                        <div className="w-10 h-10 sm:w-12 sm:h-12 bg-emerald-600 rounded-sm flex items-center justify-center rotate-[5deg] shadow-md text-white font-bold text-xs sm:text-sm">
-                                            AI
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="lg:col-span-3 lg:border-l lg:border-emerald-200 lg:pl-8 xl:pl-12 mt-8 lg:mt-0">
-                                <h4 className="text-[10px] sm:text-xs font-bold tracking-[0.2em] sm:tracking-[0.3em] uppercase text-emerald-800/60 mb-6 sm:mb-8 md:mb-10">Metrics</h4>
-                                <ul className="space-y-4 sm:space-y-6">
-                                    {[
-                                        { num: '8+', label: 'Years' },
-                                        { num: '10+', label: 'Animals' }
-                                    ].map((stat, i) => (
-                                        <li key={i} className="group flex items-center justify-between border-b border-emerald-900/10 pb-2 sm:pb-3 cursor-default">
-                                            <span className="text-xs sm:text-sm font-semibold text-emerald-900 uppercase tracking-widest">{stat.label}</span>
-                                            <span className="text-base sm:text-lg font-light text-slate-700 flex items-center gap-2">
-                                                {stat.num} <span className="text-xs text-emerald-500 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">→</span>
-                                            </span>
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
-
-                            <div className="lg:col-span-4 flex flex-col justify-between mt-8 lg:mt-0">
-                                <div>
-                                    <h4 className="text-[10px] sm:text-xs font-bold tracking-[0.2em] sm:tracking-[0.3em] uppercase text-emerald-800/60 mb-6 sm:mb-8 md:mb-10">Information</h4>
-                                    <Link to="/about" className="group block min-h-[44px]">
-                                        <span className="text-xs sm:text-sm font-bold tracking-[0.1em] sm:tracking-[0.15em] uppercase text-emerald-900 block mb-2 break-words">Learn More About Us —</span>
-                                        <div className="h-px w-full bg-emerald-900/20 group-hover:bg-emerald-600 transition-all duration-300"></div>
-                                    </Link>
-                                </div>
-
-                                <div className="mt-8 sm:mt-12 md:mt-16 relative group w-full">
-                                    <img
-                                        src="https://images.unsplash.com/photo-1534567153574-2b12153a87f0?w=800&q=80"
-                                        alt="Wildlife Conservation"
-                                        className="rounded-sm shadow-xl transition-all duration-700 h-40 sm:h-48 md:h-56 lg:h-48 w-full object-cover"
-                                    />
-                                    <div className="absolute inset-0 bg-emerald-900/10 mix-blend-multiply rounded-sm"></div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="mt-12 sm:mt-16 md:mt-20 pt-10 sm:pt-12 md:pt-16 border-t border-emerald-900/10 w-full overflow-hidden">
-                            <h2 className="text-[12vw] sm:text-[10vw] leading-[0.9] sm:leading-[0.8] font-serif uppercase tracking-tighter text-emerald-950 select-none break-words">
-                                Pioneering <span className="inline-block italic font-light text-emerald-800/80">Wildlife</span>
-                                <br />
-                                Conservation
-                            </h2>
-                        </div>
-                    </div>
-
-                    <div className="absolute bottom-0 right-0 w-[300px] h-[300px] sm:w-[450px] sm:h-[450px] md:w-[600px] md:h-[600px] bg-white/40 blur-[80px] sm:blur-[120px] rounded-full translate-y-1/2 translate-x-1/4 -z-0"></div>
-                </section>
-
-                <section className="relative w-full bg-[#08140e] flex items-center justify-center px-4 sm:px-6 md:px-8 lg:px-12 py-12 sm:py-16 md:py-24 overflow-hidden">
-                    <div className="max-w-[1400px] mx-auto w-full text-center">
-                        <h2 className="flex flex-col gap-2 md:gap-4 text-4xl sm:text-5xl md:text-7xl lg:text-[8rem] font-black leading-[1.2] tracking-tighter select-none break-words">
-                            <span
-                                className="block bg-cover bg-center bg-no-repeat bg-clip-text text-transparent transition-opacity duration-700 ease-in"
-                                style={{
-                                    backgroundImage: `url('https://images.unsplash.com/photo-1594220862488-117b78382514?q=80&w=1374&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D')`,
-                                    WebkitTextFillColor: 'transparent',
-                                    backgroundSize: '80% auto',
-                                    fontFamily: '"Segoe Script", "cursive"'
-                                }}
-                            >
-                                Wild by nature.
-                            </span>
-                        </h2>
+                <section className="bg-white min-h-[80vh] flex items-center justify-center px-6 py-20 md:py-32 w-full">
+                    <div className="max-w-[1500px] mx-auto text-center flex flex-col items-center">
+                        <h1 className="text-black text-5xl sm:text-7xl md:text-7xl lg:text-[3.5rem] leading-snug md:leading-[1.15] tracking-tight mb-10 sm:mb-12">
+                            Founded in 2015, Bulusan Wildlife & Nature Park began as a small conservation initiative in Calapan City. Today, we stand as a testament to modern conservation.
+                        </h1>
+                        <Link
+                            to="/about"
+                            className="text-black text-xs sm:text-sm font-semibold border-b border-black pb-1 hover:text-gray-600 hover:border-gray-600 transition-colors duration-300"
+                        >
+                            Learn More About Us
+                        </Link>
                     </div>
                 </section>
 
@@ -347,23 +241,15 @@ const Home = () => {
                     </div>
                 </section>
 
-                <section id="events-section" className="relative bg-teal-600 p-3 sm:p-4 md:p-6 lg:p-10 min-h-[70vh] sm:min-h-[80vh] md:min-h-screen flex items-center justify-center overflow-hidden w-full">
+                <section id="events-section" className="relative bg-white p-3 sm:p-4 md:p-6 lg:p-10 min-h-[70vh] sm:min-h-[80vh] md:min-h-screen flex items-center justify-center overflow-hidden w-full">
 
-                    <div
-                        className="absolute inset-0 opacity-[0.2]"
-                        style={{
-                            backgroundImage: `radial-gradient(#ffffff 1.5px, transparent 1.5px)`,
-                            backgroundSize: '32px 32px'
-                        }}
-                    ></div>
-
-                    <div className="relative w-full max-w-7xl min-h-[400px] sm:min-h-[500px] md:aspect-video bg-[#08140e] rounded-xl sm:rounded-2xl md:rounded-sm flex flex-col items-center justify-center overflow-hidden p-6 sm:p-8 md:p-16 lg:p-24 shadow-2xl">
+                    <div className="relative w-full max-w-[1500px] min-h-[400px] sm:min-h-[500px] md:aspect-video bg-[#08140e] rounded-xl sm:rounded-2xl md:rounded-sm flex flex-col items-center justify-center overflow-hidden p-6 sm:p-8 md:p-16 lg:p-24 shadow-2xl">
 
                         <div
                             className="absolute inset-0 pointer-events-none opacity-30"
                             style={{
                                 background: `radial-gradient(circle at center, transparent 0%, #08140e 90%), 
-                                    repeating-conic-gradient(from 0deg, #555 0deg 0.2deg, transparent 0.2deg 3deg)`
+                                        repeating-conic-gradient(from 0deg, #555 0deg 0.2deg, transparent 0.2deg 3deg)`
                             }}
                         ></div>
 
@@ -436,7 +322,7 @@ const Home = () => {
                         ];
 
                         return (
-                            <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
+                            <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-[1500px]">
                                 <h2 className="text-3xl sm:text-4xl md:text-6xl lg:text-8xl font-bold text-gray-900 mb-8 sm:mb-10 md:mb-12 tracking-tight break-words">
                                     FAQ
                                 </h2>

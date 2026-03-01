@@ -5,7 +5,6 @@ const AuthContext = createContext(null);
 const STORAGE_KEYS = {
     admin: { token: 'admin_token', user: 'admin_user' },
     staff: { token: 'staff_token', user: 'staff_user' },
-    vet: { token: 'staff_token', user: 'staff_user' },
     user: { token: 'user_token', user: 'user_data' }
 };
 
@@ -22,13 +21,13 @@ const generateUUID = () => {
 
 const getStorageKeys = (role) => {
     if (role === 'admin') return STORAGE_KEYS.admin;
-    if (['staff', 'vet'].includes(role)) return STORAGE_KEYS.staff;
+    if (role === 'staff') return STORAGE_KEYS.staff;
     return STORAGE_KEYS.user;
 };
 
 const getSessionType = (role) => {
     if (role === 'admin') return 'admin';
-    if (['staff', 'vet'].includes(role)) return 'staff';
+    if (role === 'staff') return 'staff';
     return 'user';
 };
 
@@ -118,7 +117,7 @@ export const AuthProvider = ({ children }) => {
 
     const isAuthenticated = Boolean(token && user);
     const isAdmin = user?.role === 'admin';
-    const isStaff = ['staff', 'vet'].includes(user?.role);
+    const isStaff = user?.role === 'staff';
     const isUser = user?.role === 'user';
 
     const hasRole = useCallback((roles) => {

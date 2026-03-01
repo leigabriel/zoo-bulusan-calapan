@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import Chart from 'react-apexcharts';
 import { useAuth } from '../../context/AuthContext';
 import { adminAPI, getProfileImageUrl, userAPI } from '../../services/api-client';
 
@@ -393,51 +394,174 @@ const AdminDashboard = () => {
                         </div>
                     </div>
 
-                    {/* Bar Chart */}
-                    <div className="h-48 flex items-end gap-3 mb-4">
-                        {weeklyData.map((item, index) => (
-                            <div key={index} className="flex-1 flex flex-col items-center gap-2">
-                                <div className="w-full flex flex-col items-center gap-1" style={{ height: '160px' }}>
-                                    <div
-                                        className="w-full max-w-[40px] bg-gradient-to-t from-[#8cff65] to-[#4ade80] rounded-t-lg transition-all duration-500 hover:opacity-80"
-                                        style={{ height: `${(item.visitors / maxVisitors) * 100}%` }}
-                                    />
-                                </div>
-                                <span className="text-xs text-gray-500">{item.day}</span>
-                            </div>
-                        ))}
+                    {/* ApexCharts Weekly Bar Chart */}
+                    <div className="h-72">
+                        <Chart
+                            options={{
+                                chart: {
+                                    type: 'bar',
+                                    toolbar: { show: false },
+                                    background: 'transparent',
+                                    animations: {
+                                        enabled: true,
+                                        easing: 'easeinout',
+                                        speed: 800,
+                                    },
+                                },
+                                plotOptions: {
+                                    bar: {
+                                        borderRadius: 6,
+                                        columnWidth: '55%',
+                                        distributed: false,
+                                        dataLabels: { position: 'top' },
+                                    }
+                                },
+                                colors: ['#8cff65', '#4ade80'],
+                                dataLabels: {
+                                    enabled: false,
+                                },
+                                stroke: {
+                                    show: true,
+                                    width: 2,
+                                    colors: ['transparent']
+                                },
+                                xaxis: {
+                                    categories: weeklyData.map(d => d.day),
+                                    labels: {
+                                        style: { colors: '#6b7280', fontSize: '12px' }
+                                    },
+                                    axisBorder: { show: false },
+                                    axisTicks: { show: false },
+                                },
+                                yaxis: {
+                                    labels: {
+                                        style: { colors: '#6b7280', fontSize: '12px' },
+                                        formatter: (val) => Math.round(val)
+                                    }
+                                },
+                                fill: {
+                                    type: 'gradient',
+                                    gradient: {
+                                        shade: 'dark',
+                                        type: 'vertical',
+                                        shadeIntensity: 0.3,
+                                        gradientToColors: ['#4ade80'],
+                                        inverseColors: false,
+                                        opacityFrom: 1,
+                                        opacityTo: 0.85,
+                                        stops: [0, 100]
+                                    }
+                                },
+                                tooltip: {
+                                    theme: 'dark',
+                                    y: {
+                                        formatter: (val, { seriesIndex }) => 
+                                            seriesIndex === 0 ? `${val} visitors` : `₱${val.toLocaleString()}`
+                                    }
+                                },
+                                legend: {
+                                    show: true,
+                                    position: 'top',
+                                    horizontalAlign: 'right',
+                                    labels: { colors: '#9ca3af' },
+                                    markers: {
+                                        width: 10,
+                                        height: 10,
+                                        radius: 12
+                                    }
+                                },
+                                grid: {
+                                    borderColor: '#2a2a2a',
+                                    strokeDashArray: 4,
+                                    xaxis: { lines: { show: false } },
+                                    yaxis: { lines: { show: true } }
+                                },
+                                theme: { mode: 'dark' }
+                            }}
+                            series={[
+                                { name: 'Visitors', data: weeklyData.map(d => d.visitors) },
+                                { name: 'Revenue (₱)', data: weeklyData.map(d => d.revenue) }
+                            ]}
+                            type="bar"
+                            height="100%"
+                        />
                     </div>
 
                     {/* Summary Stats */}
                     <div className="grid grid-cols-3 gap-4 pt-4 border-t border-[#2a2a2a]">
                         <div>
                             <p className="text-gray-400 text-sm">Total Visitors</p>
-                            <p className="text-xl font-bold text-white">1,610</p>
+                            <p className="text-xl font-bold text-white">{weeklyData.reduce((sum, d) => sum + d.visitors, 0).toLocaleString()}</p>
                         </div>
                         <div>
                             <p className="text-gray-400 text-sm">Avg. per day</p>
-                            <p className="text-xl font-bold text-white">230</p>
+                            <p className="text-xl font-bold text-white">{Math.round(weeklyData.reduce((sum, d) => sum + d.visitors, 0) / 7).toLocaleString()}</p>
                         </div>
                         <div>
                             <p className="text-gray-400 text-sm">Peak Day</p>
-                            <p className="text-xl font-bold text-[#8cff65]">Saturday</p>
+                            <p className="text-xl font-bold text-[#8cff65]">{weeklyData.reduce((max, d) => d.visitors > max.visitors ? d : max, weeklyData[0]).day}</p>
                         </div>
                     </div>
                 </div>
 
                 {/* Ticket Distribution */}
                 <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl p-6">
-                    <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center justify-between mb-4">
                         <h3 className="text-lg font-bold text-white">Ticket Types</h3>
                         <button className="text-gray-500 hover:text-white transition">
                             <MoreIcon />
                         </button>
                     </div>
 
-                    <DonutChart data={[]} total={stats.totalTickets} label="Total Tickets" />
+                    {/* ApexCharts Donut */}
+                    <div className="flex justify-center">
+                        <Chart
+                            options={{
+                                chart: {
+                                    type: 'donut',
+                                    background: 'transparent',
+                                },
+                                labels: ['Adult', 'Children', 'Senior', 'Student'],
+                                colors: ['#8cff65', '#22c55e', '#4ade80', '#86efac'],
+                                legend: { show: false },
+                                dataLabels: { enabled: false },
+                                plotOptions: {
+                                    pie: {
+                                        donut: {
+                                            size: '70%',
+                                            labels: {
+                                                show: true,
+                                                total: {
+                                                    show: true,
+                                                    label: 'Total',
+                                                    color: '#9ca3af',
+                                                    fontSize: '14px',
+                                                    formatter: () => stats.totalTickets.toLocaleString()
+                                                },
+                                                value: {
+                                                    color: '#fff',
+                                                    fontSize: '24px',
+                                                    fontWeight: 'bold'
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                stroke: { show: false },
+                                tooltip: {
+                                    theme: 'dark',
+                                    y: { formatter: (val) => `${val} tickets` }
+                                },
+                                theme: { mode: 'dark' }
+                            }}
+                            series={[45, 25, 20, 10]}
+                            type="donut"
+                            width="180"
+                        />
+                    </div>
 
                     {/* Legend */}
-                    <div className="mt-6 space-y-3">
+                    <div className="mt-4 space-y-3">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
                                 <div className="w-3 h-3 rounded-full bg-[#8cff65]"></div>
@@ -495,9 +619,42 @@ const AdminDashboard = () => {
                             <TrendUpIcon /> +42%
                         </span>
                     </div>
-                    <p className="text-3xl font-bold text-white mb-4">₱{(stats.totalRevenue * 0.3).toLocaleString()}</p>
-                    <p className="text-gray-500 text-sm mb-2">Weekly Profit</p>
-                    <AreaChart />
+                    <p className="text-3xl font-bold text-white mb-2">₱{weeklyData.reduce((sum, d) => sum + d.revenue, 0).toLocaleString()}</p>
+                    <p className="text-gray-500 text-sm mb-2">Weekly Revenue</p>
+                    <Chart
+                        options={{
+                            chart: {
+                                type: 'area',
+                                toolbar: { show: false },
+                                sparkline: { enabled: true },
+                                background: 'transparent'
+                            },
+                            colors: ['#8cff65'],
+                            fill: {
+                                type: 'gradient',
+                                gradient: {
+                                    shadeIntensity: 1,
+                                    opacityFrom: 0.4,
+                                    opacityTo: 0,
+                                    stops: [0, 100]
+                                }
+                            },
+                            stroke: {
+                                curve: 'smooth',
+                                width: 2
+                            },
+                            tooltip: { 
+                                enabled: true,
+                                theme: 'dark',
+                                y: { formatter: (val) => `₱${val.toLocaleString()}` }
+                            },
+                            xaxis: { categories: weeklyData.map(d => d.day) },
+                            theme: { mode: 'dark' }
+                        }}
+                        series={[{ name: 'Revenue', data: weeklyData.map(d => d.revenue) }]}
+                        type="area"
+                        height={80}
+                    />
                 </div>
 
                 {/* Revenue Breakdown */}

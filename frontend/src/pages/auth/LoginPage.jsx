@@ -301,7 +301,7 @@ const LoginPage = () => {
 
                 if (response.user.role === 'admin') {
                     navigate('/admin/dashboard');
-                } else if (['staff', 'vet'].includes(response.user.role)) {
+                } else if (response.user.role === 'staff') {
                     navigate('/staff/dashboard');
                 } else {
                     navigate('/');
@@ -507,9 +507,6 @@ const LoginPage = () => {
                             Wildlife<br />
                             Up Close.
                         </h1>
-                        <p className="text-emerald-50 text-base lg:text-lg max-w-md leading-relaxed">
-                            From quick social media updates to in-depth conservation records, our platform lets you stay connected effortlessly.
-                        </p>
                     </div>
                 </div>
             </div>

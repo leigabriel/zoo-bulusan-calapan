@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import * as XLSX from 'xlsx';
 import { adminAPI } from '../../services/api-client';
 import Chart from 'react-apexcharts';
 
@@ -56,6 +57,14 @@ const ChartIcon = () => (
         <line x1="18" y1="20" x2="18" y2="10" />
         <line x1="12" y1="20" x2="12" y2="4" />
         <line x1="6" y1="20" x2="6" y2="14" />
+    </svg>
+);
+
+const DownloadIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+        <polyline points="7 10 12 15 17 10" />
+        <line x1="12" y1="15" x2="12" y2="3" />
     </svg>
 );
 
@@ -342,6 +351,69 @@ const Analytics = () => {
     // Calculate total for ticket distribution percentage
     const totalDistribution = ticketDistribution.reduce((acc, d) => acc + (d.count || 0), 0);
 
+    // Export analytics data to Excel
+    const exportToExcel = () => {
+        // Prepare weekly data sheet
+        const weeklySheet = weeklyData.map(d => ({
+            'Day': d.day,
+            'Tickets': d.tickets || 0,
+            'Visitors': d.visitors || 0,
+            'Revenue (₱)': d.revenue || 0
+        }));
+
+        // Add summary row
+        weeklySheet.push({});
+        weeklySheet.push({
+            'Day': 'TOTAL',
+            'Tickets': weeklyData.reduce((sum, d) => sum + (d.tickets || 0), 0),
+            'Visitors': weeklyData.reduce((sum, d) => sum + (d.visitors || 0), 0),
+            'Revenue (₱)': weeklyData.reduce((sum, d) => sum + (d.revenue || 0), 0)
+        });
+
+        // Prepare monthly data sheet
+        const monthlySheet = monthlyData.map(d => ({
+            'Month': d.month || '',
+            'Revenue (₱)': d.revenue || 0
+        }));
+
+        // Prepare ticket distribution sheet
+        const distributionSheet = ticketDistribution.map(d => ({
+            'Ticket Type': d.type || '',
+            'Count': d.count || 0,
+            'Percentage': totalDistribution > 0 ? `${((d.count / totalDistribution) * 100).toFixed(1)}%` : '0%'
+        }));
+
+        // Prepare summary sheet
+        const summarySheet = [
+            { 'Metric': 'Total Users', 'Value': stats.totalUsers },
+            { 'Metric': 'Total Tickets', 'Value': stats.totalTickets },
+            { 'Metric': 'Total Revenue', 'Value': `₱${stats.totalRevenue.toLocaleString()}` },
+            { 'Metric': 'Today\'s Tickets', 'Value': stats.todayTickets },
+            { 'Metric': 'Today\'s Revenue', 'Value': `₱${stats.todayRevenue.toLocaleString()}` },
+            { 'Metric': 'Ticket Growth', 'Value': `${stats.ticketGrowth}%` },
+            { 'Metric': 'Revenue Growth', 'Value': `${stats.revenueGrowth}%` },
+            { 'Metric': 'Upcoming Events', 'Value': stats.upcomingEvents },
+        ];
+
+        // Create workbook with multiple sheets
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(summarySheet), 'Summary');
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(weeklySheet), 'Weekly Data');
+        if (monthlySheet.length > 0) {
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(monthlySheet), 'Monthly Data');
+        }
+        if (distributionSheet.length > 0) {
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(distributionSheet), 'Ticket Distribution');
+        }
+
+        // Generate filename with date
+        const dateStr = new Date().toISOString().split('T')[0];
+        const filename = `Zoo_Analytics_${timeRange}_${dateStr}.xlsx`;
+
+        // Download file
+        XLSX.writeFile(wb, filename);
+    };
+
     if (loading) {
         return (
             <div className="flex items-center justify-center h-64">
@@ -364,19 +436,28 @@ const Analytics = () => {
                     </h1>
                     <p className="text-gray-500 text-sm mt-1">Monitor your zoo's performance metrics</p>
                 </div>
-                <div className="flex items-center gap-2 bg-[#141414] border border-[#2a2a2a] rounded-xl p-1">
-                    {['week', 'month', 'year'].map((range) => (
-                        <button
-                            key={range}
-                            onClick={() => setTimeRange(range)}
-                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${timeRange === range
-                                    ? 'bg-[#8cff65] text-[#0a0a0a]'
-                                    : 'text-gray-400 hover:text-white'
-                                }`}
-                        >
-                            {range.charAt(0).toUpperCase() + range.slice(1)}
-                        </button>
-                    ))}
+                <div className="flex items-center gap-3">
+                    <button
+                        onClick={exportToExcel}
+                        className="flex items-center gap-2 px-4 py-2 bg-[#8cff65]/10 border border-[#8cff65]/30 text-[#8cff65] rounded-xl hover:bg-[#8cff65]/20 transition"
+                    >
+                        <DownloadIcon />
+                        Export Excel
+                    </button>
+                    <div className="flex items-center gap-2 bg-[#141414] border border-[#2a2a2a] rounded-xl p-1">
+                        {['week', 'month', 'year'].map((range) => (
+                            <button
+                                key={range}
+                                onClick={() => setTimeRange(range)}
+                                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${timeRange === range
+                                        ? 'bg-[#8cff65] text-[#0a0a0a]'
+                                        : 'text-gray-400 hover:text-white'
+                                    }`}
+                            >
+                                {range.charAt(0).toUpperCase() + range.slice(1)}
+                            </button>
+                        ))}
+                    </div>
                 </div>
             </div>
 

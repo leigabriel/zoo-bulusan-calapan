@@ -4,7 +4,6 @@ module.exports = {
     roles: {
         ADMIN: 'admin',
         STAFF: 'staff',
-        VET: 'vet',
         USER: 'user'
     },
     ticketTypes: {

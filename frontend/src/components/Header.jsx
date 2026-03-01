@@ -232,7 +232,7 @@ const Header = () => {
     const getProfilePath = () => {
         if (!user) return '/login';
         if (user.role === 'admin') return '/admin/profile';
-        if (user.role === 'staff' || user.role === 'vet') return '/staff/profile';
+        if (user.role === 'staff') return '/staff/profile';
         return '/profile';
     };
 
@@ -311,7 +311,7 @@ const Header = () => {
         }
     ] : [];
 
-    const staffMenuItems = (user?.role === 'staff' || user?.role === 'vet') ? [
+    const staffMenuItems = (user?.role === 'staff') ? [
         {
             iconUrl: ICONS.setting,
             label: 'Staff Dashboard',

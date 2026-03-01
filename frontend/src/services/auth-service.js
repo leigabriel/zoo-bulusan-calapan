@@ -10,7 +10,7 @@ const TAB_ID_KEY = 'TAB_ID';
 
 const getStorageKeys = (role) => {
     if (role === 'admin') return STORAGE_KEYS.admin;
-    if (['staff', 'vet'].includes(role)) return STORAGE_KEYS.staff;
+    if (role === 'staff') return STORAGE_KEYS.staff;
     return STORAGE_KEYS.user;
 };
 

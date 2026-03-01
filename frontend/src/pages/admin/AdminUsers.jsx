@@ -199,7 +199,6 @@ const AdminUsers = ({ globalSearch = '' }) => {
         switch (role?.toLowerCase()) {
             case 'admin': return 'bg-[#8cff65]/20 text-[#8cff65] border-[#8cff65]/30';
             case 'staff': return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
-            case 'vet': return 'bg-purple-500/20 text-purple-400 border-purple-500/30';
             default: return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
         }
     };
@@ -218,7 +217,6 @@ const AdminUsers = ({ globalSearch = '' }) => {
     const userCounts = {
         total: users.filter(u => u.role !== 'admin').length,
         staff: users.filter(u => u.role === 'staff').length,
-        vet: users.filter(u => u.role === 'vet').length,
         user: users.filter(u => u.role === 'user').length,
     };
 
@@ -269,17 +267,6 @@ const AdminUsers = ({ globalSearch = '' }) => {
                 </div>
                 <div className="bg-[#141414] border border-[#2a2a2a] rounded-xl p-4">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-purple-500/10 rounded-xl flex items-center justify-center text-purple-400">
-                            <span className="text-lg font-bold">V</span>
-                        </div>
-                        <div>
-                            <p className="text-2xl font-bold text-white">{userCounts.vet}</p>
-                            <p className="text-xs text-gray-500">Vets</p>
-                        </div>
-                    </div>
-                </div>
-                <div className="bg-[#141414] border border-[#2a2a2a] rounded-xl p-4">
-                    <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-gray-500/10 rounded-xl flex items-center justify-center text-gray-400">
                             <span className="text-lg font-bold">U</span>
                         </div>
@@ -319,7 +306,6 @@ const AdminUsers = ({ globalSearch = '' }) => {
                             >
                                 <option value="all">All Roles</option>
                                 <option value="staff">Staff</option>
-                                <option value="vet">Vet</option>
                                 <option value="user">User</option>
                             </select>
                             <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none">
@@ -535,7 +521,6 @@ const AdminUsers = ({ globalSearch = '' }) => {
                                 >
                                     <option value="user">User</option>
                                     <option value="staff">Staff</option>
-                                    <option value="vet">Vet</option>
                                     <option value="admin">Admin</option>
                                 </select>
                             </div>

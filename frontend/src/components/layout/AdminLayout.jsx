@@ -550,32 +550,6 @@ const AdminLayout = ({ children }) => {
                         </div>
                     </div>
                     
-                    {/* Global Search Bar */}
-                    <div className="flex-1 max-w-md mx-4 hidden md:block">
-                        <div className="relative">
-                            <input
-                                type="text"
-                                placeholder="Search anything..."
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl py-2.5 pl-10 pr-4 
-                                    text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#8cff65] 
-                                    focus:ring-1 focus:ring-[#8cff65]/20 transition-all"
-                            />
-                            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
-                                <SearchIcon />
-                            </div>
-                            {searchQuery && (
-                                <button
-                                    onClick={() => setSearchQuery('')}
-                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white"
-                                >
-                                    <CloseIcon />
-                                </button>
-                            )}
-                        </div>
-                    </div>
-
                     <div className="flex items-center gap-3">
                         {/* Notification Bell */}
                         <button

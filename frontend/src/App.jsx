@@ -72,7 +72,7 @@ const PublicRoute = ({ children }) => {
 
     if (isAuthenticated && user) {
         if (user.role === 'admin') return <Navigate to="/admin/dashboard" replace />;
-        if (['staff', 'vet'].includes(user.role)) return <Navigate to="/staff/dashboard" replace />;
+        if (user.role === 'staff') return <Navigate to="/staff/dashboard" replace />;
         return <Navigate to="/" replace />;
     }
 
@@ -101,7 +101,7 @@ function AppRoutes() {
 
             {/* Protected User Routes - requires login */}
             <Route path="/classifier" element={
-                <ProtectedRoute allowedRoles={['user', 'staff', 'vet']}>
+                <ProtectedRoute allowedRoles={['user', 'staff']}>
                     <AnimalClassifier />
                 </ProtectedRoute>
             } />
@@ -116,12 +116,12 @@ function AppRoutes() {
                 </ProtectedRoute>
             } />
             <Route path="/profile" element={
-                <ProtectedRoute allowedRoles={['user', 'staff', 'vet']}>
+                <ProtectedRoute allowedRoles={['user', 'staff']}>
                     <UserProfile />
                 </ProtectedRoute>
             } />
             <Route path="/settings" element={
-                <ProtectedRoute allowedRoles={['user', 'staff', 'vet']}>
+                <ProtectedRoute allowedRoles={['user', 'staff']}>
                     <Settings />
                 </ProtectedRoute>
             } />
@@ -229,14 +229,14 @@ function AppRoutes() {
 
             {/* Staff Routes */}
             <Route path="/staff/dashboard" element={
-                <ProtectedRoute allowedRoles={['admin', 'staff', 'vet']}>
+                <ProtectedRoute allowedRoles={['admin', 'staff']}>
                     <StaffLayout>
                         <StaffDashboard />
                     </StaffLayout>
                 </ProtectedRoute>
             } />
             <Route path="/staff/events" element={
-                <ProtectedRoute allowedRoles={['admin', 'staff', 'vet']}>
+                <ProtectedRoute allowedRoles={['admin', 'staff']}>
                     <StaffLayout>
                         <StaffEvents />
                     </StaffLayout>
@@ -250,14 +250,14 @@ function AppRoutes() {
                 </ProtectedRoute>
             } />
             <Route path="/staff/animals" element={
-                <ProtectedRoute allowedRoles={['admin', 'staff', 'vet']}>
+                <ProtectedRoute allowedRoles={['admin', 'staff']}>
                     <StaffLayout>
                         <StaffAnimals />
                     </StaffLayout>
                 </ProtectedRoute>
             } />
             <Route path="/staff/plants" element={
-                <ProtectedRoute allowedRoles={['admin', 'staff', 'vet']}>
+                <ProtectedRoute allowedRoles={['admin', 'staff']}>
                     <StaffLayout>
                         <StaffPlants />
                     </StaffLayout>
@@ -271,21 +271,21 @@ function AppRoutes() {
                 </ProtectedRoute>
             } />
             <Route path="/staff/help" element={
-                <ProtectedRoute allowedRoles={['admin', 'staff', 'vet']}>
+                <ProtectedRoute allowedRoles={['admin', 'staff']}>
                     <StaffLayout>
                         <StaffHelpCenter />
                     </StaffLayout>
                 </ProtectedRoute>
             } />
             <Route path="/staff/messages" element={
-                <ProtectedRoute allowedRoles={['admin', 'staff', 'vet']}>
+                <ProtectedRoute allowedRoles={['admin', 'staff']}>
                     <StaffLayout>
                         <StaffMessages />
                     </StaffLayout>
                 </ProtectedRoute>
             } />
             <Route path="/staff/scanner" element={
-                <ProtectedRoute allowedRoles={['admin', 'staff', 'vet']}>
+                <ProtectedRoute allowedRoles={['admin', 'staff']}>
                     <StaffLayout>
                         <TicketScanner />
                     </StaffLayout>

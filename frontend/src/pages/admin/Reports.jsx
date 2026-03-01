@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import * as XLSX from 'xlsx';
 import { adminAPI } from '../../services/api-client';
 
 // Icons
@@ -116,7 +117,58 @@ const Reports = () => {
     };
 
     const exportReport = (format) => {
-        alert(`Exporting report as ${format.toUpperCase()}`);
+        if (!reportData || !reportData.items?.length) {
+            alert('No data to export. Generate a report first.');
+            return;
+        }
+
+        if (format === 'excel') {
+            // Prepare data for Excel
+            const excelData = reportData.items.map(item => ({
+                'Date': item.date,
+                'Type': item.type,
+                'Quantity': item.quantity,
+                'Amount (₱)': item.amount,
+                'Status': item.status
+            }));
+
+            // Add summary row
+            excelData.push({});
+            excelData.push({
+                'Date': 'SUMMARY',
+                'Type': '',
+                'Quantity': reportData.items.reduce((sum, item) => sum + item.quantity, 0),
+                'Amount (₱)': reportData.totalRevenue,
+                'Status': ''
+            });
+
+            // Create workbook and worksheet
+            const ws = XLSX.utils.json_to_sheet(excelData);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, `${reportTypes.find(t => t.value === reportType)?.label || 'Report'}`);
+
+            // Auto-size columns
+            const maxWidths = {};
+            excelData.forEach(row => {
+                Object.keys(row).forEach(key => {
+                    const value = String(row[key] || '');
+                    maxWidths[key] = Math.max(maxWidths[key] || 10, value.length + 2);
+                });
+            });
+            ws['!cols'] = Object.values(maxWidths).map(w => ({ wch: Math.min(w, 30) }));
+
+            // Generate filename with date
+            const dateStr = dateRange.start && dateRange.end 
+                ? `${dateRange.start}_to_${dateRange.end}` 
+                : new Date().toISOString().split('T')[0];
+            const filename = `Zoo_${reportType}_Report_${dateStr}.xlsx`;
+
+            // Download file
+            XLSX.writeFile(wb, filename);
+        } else if (format === 'pdf') {
+            // For PDF, we could use a library like jspdf, but for now show a message
+            alert('PDF export coming soon! Use Excel export for now.');
+        }
     };
 
     const getStatusBadge = (status) => {

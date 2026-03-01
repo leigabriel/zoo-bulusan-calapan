@@ -64,8 +64,18 @@ exports.getMyMessages = async (req, res) => {
 
 exports.getAllMessages = async (req, res) => {
     try {
-        const recipientType = req.user.role === 'admin' ? 'admin' : 'staff';
-        const messages = await Message.getByRecipientType(recipientType);
+        // Staff and admin should both be able to see all messages to handle user inquiries
+        const isAdminOrStaff = ['admin', 'staff'].includes(req.user.role);
+        let messages;
+        
+        if (isAdminOrStaff) {
+            // Admin and staff can see all messages (admin, staff, and all types)
+            messages = await Message.getAll();
+        } else {
+            // For other roles, filter by their recipient type
+            messages = await Message.getByRecipientType(req.user.role);
+        }
+        
         res.json({ success: true, messages });
     } catch (error) {
         console.error('Error getting messages:', error);
@@ -107,8 +117,17 @@ exports.markAsRead = async (req, res) => {
 
 exports.markAllAsRead = async (req, res) => {
     try {
-        const recipientType = req.user.role === 'admin' ? 'admin' : 'staff';
-        const count = await Message.markAllAsRead(recipientType);
+        const isAdminOrStaff = ['admin', 'staff'].includes(req.user.role);
+        let count;
+        
+        if (isAdminOrStaff) {
+            // Admin and staff can mark all messages as read
+            count = await Message.markAllUnread();
+        } else {
+            const recipientType = req.user.role;
+            count = await Message.markAllAsRead(recipientType);
+        }
+        
         res.json({ success: true, message: `${count} messages marked as read` });
     } catch (error) {
         console.error('Error marking messages as read:', error);

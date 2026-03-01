@@ -41,7 +41,7 @@ const GoogleAuthSuccess = () => {
                 // Redirect based on user role
                 if (userData.role === 'admin') {
                     navigate('/admin/dashboard', { replace: true });
-                } else if (['staff', 'vet'].includes(userData.role)) {
+                } else if (userData.role === 'staff') {
                     navigate('/staff/dashboard', { replace: true });
                 } else {
                     navigate('/', { replace: true });

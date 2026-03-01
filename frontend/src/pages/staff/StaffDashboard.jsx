@@ -222,141 +222,31 @@ const StaffDashboard = () => {
                     <h1 className="text-2xl font-bold text-white">Welcome back, {user?.firstName || user?.fullName || 'Staff'}!</h1>
                     <p className="text-gray-400">Here's what's happening at the zoo today</p>
                 </div>
-                <div className="flex items-center gap-3">
-                    <Link
-                        to="/staff/scanner"
-                        className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-[#8cff65] to-[#4ade80] text-[#0a0a0a] font-semibold rounded-xl hover:from-[#9dff7a] hover:to-[#5ceb91] transition-all shadow-lg shadow-[#8cff65]/20"
-                    >
-                        <ScannerIcon />
-                        Scan Ticket
-                    </Link>
-                </div>
             </div>
 
-            {/* Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+            {/* Stats Grid - Only Total Animals, Total Plants, Total Reservations */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <StatCard
-                    title="Today's Tickets"
-                    value={stats.todayTickets}
-                    icon={<TicketIcon />}
-                    trend={true}
-                    trendValue="+12%"
-                />
-                <StatCard
-                    title="Pending Validations"
-                    value={stats.pendingValidations}
-                    icon={<ClockIcon />}
-                />
-                <StatCard
-                    title="Today's Visitors"
-                    value={stats.todayVisitors}
-                    icon={<UsersIcon />}
-                    trend={true}
-                    trendValue="+8%"
-                />
-                <StatCard
-                    title="Active Animals"
+                    title="Total Animals"
                     value={stats.activeAnimals}
                     icon={<AnimalIcon />}
+                    trend={true}
+                    trendValue="+3%"
                 />
                 <StatCard
                     title="Total Plants"
                     value={stats.totalPlants}
                     icon={<PlantIcon />}
+                    trend={true}
+                    trendValue="+2%"
                 />
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Quick Actions */}
-                <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl p-6">
-                    <h3 className="text-lg font-bold text-white mb-4">Quick Actions</h3>
-                    <div className="grid grid-cols-2 gap-4">
-                        <Link
-                            to="/staff/scanner"
-                            className="p-4 bg-[#8cff65]/10 border border-[#8cff65]/30 rounded-xl text-center hover:bg-[#8cff65]/20 transition flex flex-col items-center"
-                        >
-                            <div className="text-[#8cff65] mb-2"><ScannerIcon /></div>
-                            <p className="font-medium text-[#8cff65]">Scan Ticket</p>
-                        </Link>
-                        <Link
-                            to="/staff/tickets"
-                            className="p-4 bg-blue-500/10 border border-blue-500/30 rounded-xl text-center hover:bg-blue-500/20 transition flex flex-col items-center"
-                        >
-                            <div className="text-blue-400 mb-2"><TicketIcon /></div>
-                            <p className="font-medium text-blue-400">View Tickets</p>
-                        </Link>
-                        <Link
-                            to="/staff/animals"
-                            className="p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-xl text-center hover:bg-yellow-500/20 transition flex flex-col items-center"
-                        >
-                            <div className="text-yellow-400 mb-2"><AnimalIcon /></div>
-                            <p className="font-medium text-yellow-400">Manage Animals</p>
-                        </Link>
-                        <Link
-                            to="/staff/events"
-                            className="p-4 bg-purple-500/10 border border-purple-500/30 rounded-xl text-center hover:bg-purple-500/20 transition flex flex-col items-center"
-                        >
-                            <div className="text-purple-400 mb-2"><CalendarIcon /></div>
-                            <p className="font-medium text-purple-400">Manage Events</p>
-                        </Link>
-                    </div>
-                </div>
-
-                {/* Recent Tickets */}
-                <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl p-6">
-                    <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-lg font-bold text-white">Recent Tickets</h3>
-                        <Link to="/staff/tickets" className="text-[#8cff65] text-sm hover:underline">View all</Link>
-                    </div>
-                    <div className="space-y-3">
-                        {recentTickets.length > 0 ? (
-                            recentTickets.slice(0, 5).map(ticket => (
-                                <div key={ticket.id} className="flex items-center justify-between p-3 bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl">
-                                    <div>
-                                        <p className="font-medium text-white font-mono">#{ticket.booking_reference || ticket.ticketCode}</p>
-                                        <p className="text-sm text-gray-400">{ticket.user_name || ticket.visitorName}</p>
-                                    </div>
-                                    <span className={`px-3 py-1 rounded-full text-xs font-medium border ${ticket.status === 'used' || ticket.status === 'validated'
-                                            ? 'bg-[#8cff65]/20 text-[#8cff65] border-[#8cff65]/30'
-                                            : ticket.status === 'pending' || ticket.status === 'confirmed'
-                                                ? 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30'
-                                                : 'bg-gray-500/20 text-gray-400 border-gray-500/30'
-                                        }`}>
-                                        {ticket.status}
-                                    </span>
-                                </div>
-                            ))
-                        ) : (
-                            <div className="text-center text-gray-500 py-8">
-                                <div className="flex justify-center mb-2"><TicketIcon /></div>
-                                <p>No recent tickets</p>
-                            </div>
-                        )}
-                    </div>
-                </div>
-            </div>
-
-            {/* Today's Schedule */}
-            <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl p-6">
-                <h3 className="text-lg font-bold text-white mb-4">Today's Schedule</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="flex items-center gap-4 p-4 bg-[#8cff65]/10 border border-[#8cff65]/30 rounded-xl">
-                        <div className="w-3 h-3 bg-[#8cff65] rounded-full animate-pulse"></div>
-                        <div className="flex-1">
-                            <p className="font-medium text-white">Morning Shift - Gate Duty</p>
-                            <p className="text-sm text-gray-400">8:00 AM - 12:00 PM</p>
-                        </div>
-                        <span className="text-[#8cff65] text-sm font-medium px-3 py-1 bg-[#8cff65]/20 rounded-full">Active</span>
-                    </div>
-                    <div className="flex items-center gap-4 p-4 bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl">
-                        <div className="w-3 h-3 bg-gray-500 rounded-full"></div>
-                        <div className="flex-1">
-                            <p className="font-medium text-white">Afternoon Shift - Ticket Booth</p>
-                            <p className="text-sm text-gray-400">1:00 PM - 5:00 PM</p>
-                        </div>
-                        <span className="text-gray-400 text-sm font-medium">Upcoming</span>
-                    </div>
-                </div>
+                <StatCard
+                    title="Total Reservations"
+                    value={stats.todayTickets + stats.upcomingEvents}
+                    icon={<TicketIcon />}
+                    trend={true}
+                    trendValue="+8%"
+                />
             </div>
         </div>
     );

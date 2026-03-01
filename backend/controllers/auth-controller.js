@@ -3,7 +3,7 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/user-model');
 const { deleteOldProfileImage, getProfileImagePath } = require('../middleware/upload-profile-image');
 
-const VALID_ROLES = ['admin', 'staff', 'vet', 'user'];
+const VALID_ROLES = ['admin', 'staff', 'user'];
 const VALID_GENDERS = ['male', 'female', 'other', 'prefer_not_to_say'];
 
 
@@ -167,7 +167,7 @@ exports.login = async (req, res) => {
             });
         }
 
-        if (loginType === 'admin' && !['admin', 'staff', 'vet'].includes(user.role)) {
+        if (loginType === 'admin' && !['admin', 'staff'].includes(user.role)) {
             return res.status(403).json({ success: false, message: 'Access denied. Admin privileges required.' });
         }
 

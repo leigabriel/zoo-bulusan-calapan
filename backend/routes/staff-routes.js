@@ -6,7 +6,7 @@ const messageController = require('../controllers/message-controller');
 const { protect, authorize } = require('../middleware/auth');
 
 router.use(protect);
-router.use(authorize('admin', 'staff', 'vet'));
+router.use(authorize('admin', 'staff'));
 
 // Dashboard
 router.get('/dashboard', staffController.getDashboardStats);

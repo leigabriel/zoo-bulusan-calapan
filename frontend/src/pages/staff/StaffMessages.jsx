@@ -212,21 +212,24 @@ const StaffMessages = ({ globalSearch = '' }) => {
     if (loading) {
         return (
             <div className="flex justify-center items-center h-64">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
+                <div className="relative w-16 h-16">
+                    <div className="absolute inset-0 rounded-full border-4 border-[#2a2a2a]"></div>
+                    <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-[#8cff65] animate-spin"></div>
+                </div>
             </div>
         );
     }
 
     return (
-        <div className="p-4 sm:p-6 lg:p-8">
+        <div className="space-y-6">
             {/* Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div className="flex items-center gap-3">
-                    <div className="p-2 bg-emerald-100 rounded-xl">
+                    <div className="w-12 h-12 bg-[#8cff65]/10 rounded-xl flex items-center justify-center text-[#8cff65]">
                         <MailIcon />
                     </div>
                     <div>
-                        <h1 className="text-2xl font-bold text-gray-900">Messages</h1>
+                        <h1 className="text-2xl font-bold text-white">Messages</h1>
                         <p className="text-sm text-gray-500">View and respond to user messages</p>
                     </div>
                 </div>
@@ -234,7 +237,7 @@ const StaffMessages = ({ globalSearch = '' }) => {
                 {unreadCount > 0 && (
                     <button
                         onClick={handleMarkAllAsRead}
-                        className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors"
+                        className="flex items-center gap-2 px-4 py-2.5 bg-[#8cff65] text-[#0a0a0a] font-semibold rounded-xl hover:bg-[#9dff7a] transition-all shadow-lg shadow-[#8cff65]/20"
                     >
                         <CheckIcon />
                         <span>Mark All as Read ({unreadCount})</span>
@@ -243,34 +246,38 @@ const StaffMessages = ({ globalSearch = '' }) => {
             </div>
 
             {/* Tabs */}
-            <div className="flex gap-2 mb-6">
+            <div className="flex gap-2">
                 <button
                     onClick={() => setActiveTab('messages')}
-                    className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                    className={`px-4 py-2.5 rounded-xl font-medium transition-all ${
                         activeTab === 'messages'
-                            ? 'bg-emerald-600 text-white'
-                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                            ? 'bg-[#8cff65] text-[#0a0a0a]'
+                            : 'bg-[#1e1e1e] text-gray-400 hover:bg-[#2a2a2a] hover:text-white'
                     }`}
                 >
                     Messages
                     {messages.filter(m => !m.is_read).length > 0 && (
-                        <span className="ml-2 px-2 py-0.5 bg-white/20 rounded-full text-xs">
+                        <span className={`ml-2 px-2 py-0.5 rounded-full text-xs ${
+                            activeTab === 'messages' ? 'bg-black/20' : 'bg-[#8cff65]/20 text-[#8cff65]'
+                        }`}>
                             {messages.filter(m => !m.is_read).length}
                         </span>
                     )}
                 </button>
                 <button
                     onClick={() => setActiveTab('appeals')}
-                    className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 ${
+                    className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium transition-all ${
                         activeTab === 'appeals'
-                            ? 'bg-orange-600 text-white'
-                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                            ? 'bg-orange-500 text-white'
+                            : 'bg-[#1e1e1e] text-gray-400 hover:bg-[#2a2a2a] hover:text-white'
                     }`}
                 >
                     <AlertIcon />
                     Appeals
                     {appeals.filter(a => !a.is_read).length > 0 && (
-                        <span className="ml-2 px-2 py-0.5 bg-white/20 rounded-full text-xs">
+                        <span className={`px-2 py-0.5 rounded-full text-xs ${
+                            activeTab === 'appeals' ? 'bg-white/20' : 'bg-orange-500/20 text-orange-400'
+                        }`}>
                             {appeals.filter(a => !a.is_read).length}
                         </span>
                     )}
@@ -278,9 +285,9 @@ const StaffMessages = ({ globalSearch = '' }) => {
             </div>
 
             {/* Search and Filter */}
-            <div className="flex flex-col sm:flex-row gap-4 mb-6">
+            <div className="flex flex-col sm:flex-row gap-4">
                 <div className="relative flex-1">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-500">
                         <SearchIcon />
                     </div>
                     <input
@@ -288,13 +295,13 @@ const StaffMessages = ({ globalSearch = '' }) => {
                         placeholder="Search messages..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                        className="w-full pl-11 pr-4 py-3 bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-[#8cff65] focus:ring-1 focus:ring-[#8cff65]/20 transition-all"
                     />
                 </div>
                 <select
                     value={typeFilter}
                     onChange={(e) => setTypeFilter(e.target.value)}
-                    className="px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white"
+                    className="px-4 py-3 bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl text-white focus:outline-none focus:border-[#8cff65] cursor-pointer"
                 >
                     <option value="all">All Messages</option>
                     <option value="unread">Unread</option>
@@ -304,26 +311,28 @@ const StaffMessages = ({ globalSearch = '' }) => {
             </div>
 
             {error && (
-                <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700">
+                <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400">
                     {error}
                 </div>
             )}
 
             {/* Messages List */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl overflow-hidden">
                 {getFilteredData().length === 0 ? (
-                    <div className="p-12 text-center text-gray-500">
-                        <MailIcon className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                        <p className="text-lg font-medium">No {activeTab} found</p>
-                        <p className="text-sm">When users send messages, they will appear here.</p>
+                    <div className="p-12 text-center">
+                        <div className="w-16 h-16 bg-[#1e1e1e] rounded-full flex items-center justify-center mx-auto mb-4 text-gray-600">
+                            <MailIcon />
+                        </div>
+                        <p className="text-lg font-medium text-gray-400">No {activeTab} found</p>
+                        <p className="text-sm text-gray-600 mt-1">When users send messages, they will appear here.</p>
                     </div>
                 ) : (
-                    <div className="divide-y divide-gray-100">
+                    <div className="divide-y divide-[#2a2a2a]">
                         {getFilteredData().map((message) => (
                             <div
                                 key={message.id}
-                                className={`p-4 hover:bg-gray-50 cursor-pointer transition-colors ${
-                                    !message.is_read ? 'bg-blue-50/50' : ''
+                                className={`p-4 hover:bg-[#1e1e1e] cursor-pointer transition-all ${
+                                    !message.is_read ? 'bg-[#8cff65]/5 border-l-2 border-[#8cff65]' : ''
                                 }`}
                                 onClick={() => openMessage(message)}
                             >
@@ -331,27 +340,27 @@ const StaffMessages = ({ globalSearch = '' }) => {
                                     <img
                                         src={getProfileImageUrl(message.sender_profile_image) || '/profile-img/default-avatar.svg'}
                                         alt={message.sender_name}
-                                        className="w-10 h-10 rounded-full object-cover"
+                                        className="w-10 h-10 rounded-full object-cover border border-[#2a2a2a]"
                                         onError={(e) => { e.target.onerror = null; e.target.src = '/profile-img/default-avatar.svg'; }}
                                     />
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center justify-between gap-2">
-                                            <div className="flex items-center gap-2">
-                                                <span className={`font-medium ${!message.is_read ? 'text-gray-900' : 'text-gray-700'}`}>
+                                            <div className="flex items-center gap-2 flex-wrap">
+                                                <span className={`font-medium ${!message.is_read ? 'text-white' : 'text-gray-300'}`}>
                                                     {message.sender_name || 'Unknown User'}
                                                 </span>
                                                 {!message.is_read && (
-                                                    <span className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
+                                                    <span className="px-2 py-0.5 bg-[#8cff65]/20 text-[#8cff65] rounded-full text-xs font-medium">
                                                         New
                                                     </span>
                                                 )}
                                                 {activeTab === 'appeals' && (
-                                                    <span className="px-2 py-0.5 bg-orange-100 text-orange-700 rounded-full text-xs font-medium">
+                                                    <span className="px-2 py-0.5 bg-orange-500/20 text-orange-400 rounded-full text-xs font-medium">
                                                         Appeal
                                                     </span>
                                                 )}
                                                 {message.admin_response && (
-                                                    <span className="px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-xs font-medium">
+                                                    <span className="px-2 py-0.5 bg-blue-500/20 text-blue-400 rounded-full text-xs font-medium">
                                                         Replied
                                                     </span>
                                                 )}
@@ -360,10 +369,10 @@ const StaffMessages = ({ globalSearch = '' }) => {
                                                 {formatDate(message.created_at)}
                                             </span>
                                         </div>
-                                        <p className={`text-sm ${!message.is_read ? 'font-medium text-gray-800' : 'text-gray-600'}`}>
+                                        <p className={`text-sm mt-1 ${!message.is_read ? 'font-medium text-gray-200' : 'text-gray-400'}`}>
                                             {message.subject}
                                         </p>
-                                        <p className="text-sm text-gray-500 truncate mt-1">
+                                        <p className="text-sm text-gray-600 truncate mt-1">
                                             {message.content}
                                         </p>
                                     </div>
@@ -376,32 +385,32 @@ const StaffMessages = ({ globalSearch = '' }) => {
 
             {/* View Message Modal */}
             {showViewModal && selectedMessage && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-                    <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
-                        <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-200">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+                    <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
+                        <div className="flex items-center justify-between p-5 border-b border-[#2a2a2a]">
                             <div className="flex items-center gap-3">
                                 <img
                                     src={getProfileImageUrl(selectedMessage.sender_profile_image) || '/profile-img/default-avatar.svg'}
                                     alt={selectedMessage.sender_name}
-                                    className="w-10 h-10 rounded-full object-cover"
+                                    className="w-10 h-10 rounded-full object-cover border border-[#2a2a2a]"
                                     onError={(e) => { e.target.onerror = null; e.target.src = '/profile-img/default-avatar.svg'; }}
                                 />
                                 <div>
-                                    <h2 className="text-lg font-bold text-gray-900">{selectedMessage.sender_name}</h2>
+                                    <h2 className="text-lg font-bold text-white">{selectedMessage.sender_name}</h2>
                                     <p className="text-sm text-gray-500">{selectedMessage.sender_email}</p>
                                 </div>
                             </div>
                             <button
                                 onClick={() => setShowViewModal(false)}
-                                className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg"
+                                className="p-2 text-gray-500 hover:text-white hover:bg-[#2a2a2a] rounded-lg transition"
                             >
                                 <CloseIcon />
                             </button>
                         </div>
-                        <div className="flex-1 overflow-y-auto p-4 sm:p-6">
+                        <div className="flex-1 overflow-y-auto p-5">
                             <div className="flex items-center gap-2 mb-4">
                                 {activeTab === 'appeals' && (
-                                    <span className="px-2 py-1 bg-orange-100 text-orange-700 rounded-lg text-xs font-medium">
+                                    <span className="px-2 py-1 bg-orange-500/20 text-orange-400 rounded-lg text-xs font-medium">
                                         Suspension Appeal
                                     </span>
                                 )}
@@ -409,22 +418,22 @@ const StaffMessages = ({ globalSearch = '' }) => {
                                     {new Date(selectedMessage.created_at).toLocaleString()}
                                 </span>
                             </div>
-                            <h3 className="text-xl font-semibold text-gray-900 mb-4">{selectedMessage.subject}</h3>
-                            <div className="prose prose-sm max-w-none">
-                                <p className="text-gray-700 whitespace-pre-wrap">{selectedMessage.content}</p>
+                            <h3 className="text-xl font-semibold text-white mb-4">{selectedMessage.subject}</h3>
+                            <div className="prose prose-invert prose-sm max-w-none">
+                                <p className="text-gray-300 whitespace-pre-wrap">{selectedMessage.content}</p>
                             </div>
                             
                             {selectedMessage.admin_response && (
-                                <div className="mt-6 p-4 bg-emerald-50 border border-emerald-200 rounded-xl">
-                                    <p className="text-sm font-medium text-emerald-800 mb-2">Response:</p>
-                                    <p className="text-gray-700 whitespace-pre-wrap">{selectedMessage.admin_response}</p>
+                                <div className="mt-6 p-4 bg-[#8cff65]/10 border border-[#8cff65]/30 rounded-xl">
+                                    <p className="text-sm font-medium text-[#8cff65] mb-2">Response:</p>
+                                    <p className="text-gray-300 whitespace-pre-wrap">{selectedMessage.admin_response}</p>
                                 </div>
                             )}
                         </div>
-                        <div className="flex items-center justify-between p-4 sm:p-6 border-t border-gray-200 bg-gray-50">
+                        <div className="flex items-center justify-between p-5 border-t border-[#2a2a2a]">
                             <button
                                 onClick={() => handleDelete(selectedMessage.id)}
-                                className="flex items-center gap-2 px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                className="flex items-center gap-2 px-4 py-2 text-red-400 hover:bg-red-500/10 rounded-xl transition-colors"
                             >
                                 <TrashIcon />
                                 <span>Delete</span>
@@ -434,7 +443,7 @@ const StaffMessages = ({ globalSearch = '' }) => {
                                     setShowReplyModal(true);
                                     setReplyContent(selectedMessage.admin_response || '');
                                 }}
-                                className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors"
+                                className="flex items-center gap-2 px-4 py-2.5 bg-[#8cff65] text-[#0a0a0a] font-semibold rounded-xl hover:bg-[#9dff7a] transition-all"
                             >
                                 <ReplyIcon />
                                 <span>{selectedMessage.admin_response ? 'Edit Reply' : 'Reply'}</span>
@@ -446,40 +455,40 @@ const StaffMessages = ({ globalSearch = '' }) => {
 
             {/* Reply Modal */}
             {showReplyModal && selectedMessage && (
-                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4">
-                    <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg">
-                        <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-200">
-                            <h2 className="text-lg font-bold text-gray-900">Reply to {selectedMessage.sender_name}</h2>
+                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+                    <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl shadow-2xl w-full max-w-lg">
+                        <div className="flex items-center justify-between p-5 border-b border-[#2a2a2a]">
+                            <h2 className="text-lg font-bold text-white">Reply to {selectedMessage.sender_name}</h2>
                             <button
                                 onClick={() => setShowReplyModal(false)}
-                                className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg"
+                                className="p-2 text-gray-500 hover:text-white hover:bg-[#2a2a2a] rounded-lg transition"
                             >
                                 <CloseIcon />
                             </button>
                         </div>
-                        <div className="p-4 sm:p-6">
-                            <p className="text-sm text-gray-600 mb-4">
-                                Replying to: <span className="font-medium">{selectedMessage.subject}</span>
+                        <div className="p-5">
+                            <p className="text-sm text-gray-500 mb-4">
+                                Replying to: <span className="text-gray-300 font-medium">{selectedMessage.subject}</span>
                             </p>
                             <textarea
                                 value={replyContent}
                                 onChange={(e) => setReplyContent(e.target.value)}
                                 placeholder="Type your response..."
                                 rows={6}
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none"
+                                className="w-full px-4 py-3 bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-[#8cff65] focus:ring-1 focus:ring-[#8cff65]/20 resize-none transition-all"
                             />
                         </div>
-                        <div className="flex justify-end gap-3 p-4 sm:p-6 border-t border-gray-200 bg-gray-50">
+                        <div className="flex justify-end gap-3 p-5 border-t border-[#2a2a2a]">
                             <button
                                 onClick={() => setShowReplyModal(false)}
-                                className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                                className="px-4 py-2 text-gray-400 hover:text-white hover:bg-[#2a2a2a] rounded-xl transition-colors"
                             >
                                 Cancel
                             </button>
                             <button
                                 onClick={handleReply}
                                 disabled={replying || !replyContent.trim()}
-                                className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                                className="flex items-center gap-2 px-4 py-2.5 bg-[#8cff65] text-[#0a0a0a] font-semibold rounded-xl hover:bg-[#9dff7a] transition-all disabled:bg-gray-600 disabled:cursor-not-allowed"
                             >
                                 {replying ? (
                                     <>
@@ -502,7 +511,7 @@ const StaffMessages = ({ globalSearch = '' }) => {
             )}
 
             {toastMessage.text && (
-                <div className={`fixed bottom-6 left-1/2 -translate-x-1/2 px-6 py-3 rounded-full shadow-lg z-50 font-bold text-sm ${toastMessage.type === 'success' ? 'bg-emerald-600 text-white' : 'bg-red-600 text-white'}`}>
+                <div className={`fixed bottom-6 left-1/2 -translate-x-1/2 px-6 py-3 rounded-full shadow-lg z-50 font-bold text-sm ${toastMessage.type === 'success' ? 'bg-[#8cff65] text-[#0a0a0a]' : 'bg-red-500 text-white'}`}>
                     {toastMessage.text}
                 </div>
             )}

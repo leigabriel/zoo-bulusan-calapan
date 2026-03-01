@@ -79,6 +79,13 @@ class Message {
         return result.affectedRows;
     }
 
+    static async markAllUnread() {
+        const [result] = await db.query(
+            `UPDATE user_messages SET is_read = TRUE, updated_at = NOW() WHERE is_read = FALSE`
+        );
+        return result.affectedRows;
+    }
+
     static async delete(id) {
         const [result] = await db.query('DELETE FROM user_messages WHERE id = ?', [id]);
         return result.affectedRows > 0;

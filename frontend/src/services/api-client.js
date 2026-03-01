@@ -37,7 +37,6 @@ const BACKEND_BASE_URL = getBackendBaseUrl();
 export const STORAGE_KEYS = {
     admin: { token: 'admin_token', user: 'admin_user' },
     staff: { token: 'staff_token', user: 'staff_user' },
-    vet: { token: 'staff_token', user: 'staff_user' },
     user: { token: 'user_token', user: 'user_data' }
 };
 
