@@ -117,13 +117,13 @@ const Reservations = () => {
     }, [user]);
 
     useEffect(() => {
-        if (showCreateModal || showConfirmation) {
+        if (showCreateModal || showConfirmation || showHistoryPanel) {
             document.body.style.overflow = 'hidden';
         } else {
             document.body.style.overflow = 'unset';
         }
         return () => { document.body.style.overflow = 'unset'; };
-    }, [showCreateModal, showConfirmation]);
+    }, [showCreateModal, showConfirmation, showHistoryPanel]);
 
     const fetchEvents = async () => {
         try {
@@ -349,156 +349,185 @@ const Reservations = () => {
                     )}
                 </div>
 
-                <div className={`fixed inset-0 z-[100] transition-opacity duration-300 ${showCreateModal ? 'bg-black/50 pointer-events-auto backdrop-blur-sm' : 'bg-transparent pointer-events-none'}`} onClick={closeModal}>
-                    <div className={`fixed inset-y-0 right-0 w-full lg:w-1/2 bg-white shadow-2xl transform transition-transform duration-500 ease-out flex flex-col ${showCreateModal ? 'translate-x-0' : 'translate-x-full'}`} onClick={(e) => e.stopPropagation()}>
-                        <div className="p-6 md:p-8 border-b flex items-center justify-between sticky top-0 bg-white z-10">
+                {/* MODAL FORM REFACTORED */}
+                <div className={`fixed inset-0 z-[100] transition-all duration-300 flex items-center justify-center p-4 sm:p-6 ${showCreateModal ? 'bg-black/40 backdrop-blur-sm pointer-events-auto opacity-100' : 'bg-transparent pointer-events-none opacity-0'}`} onClick={closeModal}>
+                    <div className={`w-full max-w-xl bg-[#F4F4F0] rounded-xl shadow-2xl flex flex-col max-h-full md:max-h-[90vh] transform transition-all duration-300 ease-out overflow-hidden ${showCreateModal ? 'scale-100 translate-y-0' : 'scale-95 translate-y-4'}`} onClick={(e) => e.stopPropagation()}>
+
+                        <div className="px-6 py-6 md:px-8 md:py-8 flex items-start justify-between shrink-0">
                             <div>
-                                <h3 className="text-2xl font-bold">{reservationType === 'ticket' ? 'Zoo Visit' : 'Event'} Reservation</h3>
-                                <p className="text-sm text-gray-500">Provide your details below</p>
+                                <h3 className="text-2xl font-normal text-gray-900 mb-2">
+                                    {reservationType === 'ticket' ? 'Schedule a visit' : 'Book an event'}
+                                </h3>
+                                <p className="text-sm text-gray-600 leading-relaxed max-w-[90%]">
+                                    Our team is here to answer your questions and arrange a {reservationType === 'ticket' ? 'tour of our spaces' : 'venue for your event'}.
+                                </p>
                             </div>
-                            <button onClick={closeModal} className="p-2 hover:bg-gray-100 rounded-full transition-colors"><Icons.Close /></button>
+                            <button onClick={closeModal} className="p-2 -mt-2 -mr-2 text-gray-400 hover:text-gray-900 transition-colors"><Icons.Close /></button>
                         </div>
 
-                        <div className="flex-1 overflow-y-auto px-6 md:px-8 py-8 overscroll-contain touch-pan-y">
-                            {message.text && <div className={`p-4 rounded-xl mb-6 ${message.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>{message.text}</div>}
+                        <div className="flex-1 overflow-y-auto px-6 md:px-8 pb-8 overscroll-contain">
+                            {message.text && (
+                                <div className={`p-4 rounded-lg mb-6 text-sm ${message.type === 'success' ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'}`}>
+                                    {message.text}
+                                </div>
+                            )}
 
-                            <form id="reservation-form" onSubmit={handleCreateReservation} className="space-y-8">
-                                <div className="flex gap-2 p-1 bg-gray-100 rounded-xl">
-                                    <button type="button" onClick={() => setReservationType('ticket')} className={`flex-1 py-3 px-4 rounded-lg text-sm font-semibold transition-all flex items-center justify-center gap-2 ${reservationType === 'ticket' ? 'bg-white text-black shadow-sm' : 'text-gray-500'}`}><Icons.Ticket /> Visit</button>
-                                    <button type="button" onClick={() => setReservationType('event')} className={`flex-1 py-3 px-4 rounded-lg text-sm font-semibold transition-all flex items-center justify-center gap-2 ${reservationType === 'event' ? 'bg-white text-black shadow-sm' : 'text-gray-500'}`}><Icons.Calendar /> Event</button>
+                            <form id="reservation-form" onSubmit={handleCreateReservation} className="space-y-6">
+
+                                {/* Minimalist Tabs Switcher */}
+                                <div className="flex gap-6 border-b border-gray-200 mb-6">
+                                    <button type="button" onClick={() => setReservationType('ticket')} className={`pb-3 text-sm font-medium transition-colors relative ${reservationType === 'ticket' ? 'text-gray-900' : 'text-gray-400 hover:text-gray-600'}`}>
+                                        Tickets
+                                        {reservationType === 'ticket' && <span className="absolute bottom-0 left-0 w-full h-[2px] bg-gray-900"></span>}
+                                    </button>
+                                    <button type="button" onClick={() => setReservationType('event')} className={`pb-3 text-sm font-medium transition-colors relative ${reservationType === 'event' ? 'text-gray-900' : 'text-gray-400 hover:text-gray-600'}`}>
+                                        Venue
+                                        {reservationType === 'event' && <span className="absolute bottom-0 left-0 w-full h-[2px] bg-gray-900"></span>}
+                                    </button>
                                 </div>
 
                                 {reservationType === 'ticket' ? (
-                                    <div className="space-y-6">
-                                        <div className="space-y-3">
-                                            <label className="block text-sm font-bold text-gray-700 uppercase tracking-widest">Select Tickets</label>
+                                    <div className="space-y-8">
+                                        <div className="space-y-2">
                                             {Object.entries(TICKET_TYPES).map(([type, info]) => (
-                                                <div key={type} className={`p-4 rounded-xl border-2 transition-all ${ticketCounts[type] > 0 ? 'border-emerald-500 bg-emerald-50' : 'border-gray-100 bg-gray-50'}`}>
-                                                    <div className="flex items-center justify-between">
+                                                <div key={type} className="flex items-center justify-between py-3 border-b border-gray-200/60">
+                                                    <div>
+                                                        <p className="text-sm font-medium text-gray-900">{info.name}</p>
+                                                        <p className="text-xs text-gray-500 mt-0.5">{info.description}</p>
+                                                    </div>
+                                                    <div className="flex items-center gap-6">
+                                                        <span className="text-sm text-gray-600">{info.price === 0 ? 'Free' : `₱${info.price}`}</span>
                                                         <div className="flex items-center gap-4">
-                                                            <div className={`w-12 h-12 ${info.color} rounded-xl flex items-center justify-center text-white`}>{type === 'adult' && <Icons.User />}{type === 'child' && <Icons.Child />}{type === 'bulusan_resident' && <Icons.Home />}</div>
-                                                            <div><p className="font-bold text-gray-800">{info.name}</p><p className="text-xs text-gray-500">{info.description}</p></div>
-                                                        </div>
-                                                        <div className="flex items-center gap-4">
-                                                            <span className="font-bold text-emerald-600">{info.price === 0 ? 'FREE' : `₱${info.price}`}</span>
-                                                            <div className="flex items-center bg-white rounded-lg border border-gray-200">
-                                                                <button type="button" onClick={() => updateTicketCount(type, -1)} disabled={ticketCounts[type] === 0} className="w-10 h-10 flex items-center justify-center disabled:opacity-20"><Icons.Minus /></button>
-                                                                <span className="w-8 text-center font-bold">{ticketCounts[type]}</span>
-                                                                <button type="button" onClick={() => updateTicketCount(type, 1)} className="w-10 h-10 flex items-center justify-center"><Icons.Plus /></button>
-                                                            </div>
+                                                            <button type="button" onClick={() => updateTicketCount(type, -1)} disabled={ticketCounts[type] === 0} className="text-gray-400 hover:text-gray-900 disabled:opacity-30 transition-colors"><Icons.Minus /></button>
+                                                            <span className="w-5 text-center text-sm">{ticketCounts[type]}</span>
+                                                            <button type="button" onClick={() => updateTicketCount(type, 1)} className="text-gray-400 hover:text-gray-900 transition-colors"><Icons.Plus /></button>
                                                         </div>
                                                     </div>
                                                 </div>
                                             ))}
+
                                             {ticketCounts.bulusan_resident > 0 && (
-                                                <div className="p-4 bg-teal-50 border-2 border-dashed border-teal-200 rounded-xl space-y-3">
-                                                    <label className="block text-xs font-bold text-teal-800 uppercase tracking-widest">Resident ID Proof</label>
-                                                    <label className="flex flex-col items-center justify-center w-full h-32 bg-white border-2 border-dashed border-teal-200 rounded-xl cursor-pointer hover:bg-teal-50 transition-colors relative overflow-hidden">
+                                                <div className="pt-4">
+                                                    <label className="flex flex-col items-center justify-center w-full h-24 border border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-black/5 transition-colors relative overflow-hidden">
                                                         {residentIdPreview ? (
-                                                            <div className="w-full h-full relative">
-                                                                <img src={residentIdPreview} alt="Preview" className="w-full h-full object-contain p-2" />
-                                                                <button type="button" onClick={(e) => { e.preventDefault(); setResidentIdImage(null); setResidentIdPreview(null); }} className="absolute top-2 right-2 bg-red-500 text-white w-6 h-6 rounded-full flex items-center justify-center">×</button>
+                                                            <div className="w-full h-full relative flex items-center justify-center p-2 bg-white/50">
+                                                                <img src={residentIdPreview} alt="Preview" className="h-full object-contain" />
+                                                                <button type="button" onClick={(e) => { e.preventDefault(); setResidentIdImage(null); setResidentIdPreview(null); }} className="absolute top-2 right-2 bg-gray-900 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs">×</button>
                                                             </div>
                                                         ) : (
-                                                            <div className="flex flex-col items-center justify-center text-teal-600"><Icons.Upload /><span className="text-xs font-bold mt-2">Click to Upload</span></div>
+                                                            <div className="flex flex-col items-center justify-center text-gray-500">
+                                                                <Icons.Upload />
+                                                                <span className="text-xs font-medium mt-2">Upload ID Proof</span>
+                                                            </div>
                                                         )}
                                                         <input type="file" accept="image/*" className="hidden" onChange={handleResidentIdUpload} />
                                                     </label>
-                                                    {idUploadError && <p className="text-xs text-red-500">{idUploadError}</p>}
+                                                    {idUploadError && <p className="text-xs text-red-500 mt-2">{idUploadError}</p>}
                                                 </div>
                                             )}
                                         </div>
 
                                         <div className="space-y-4">
-                                            <label className="block text-sm font-bold text-gray-700 uppercase tracking-widest">Visit Info</label>
-                                            <div className="grid grid-cols-1 gap-4">
-                                                <div className="space-y-2"><span className="text-xs font-bold text-gray-400 uppercase">Reservation Date</span><input type="date" value={ticketForm.reservationDate} onChange={e => setTicketForm({ ...ticketForm, reservationDate: e.target.value })} min={getMinDate()} max={getMaxDate()} className="w-full border-2 border-gray-100 rounded-xl px-4 py-4 bg-gray-50 focus:outline-none focus:border-emerald-500 transition-all" required /></div>
-                                                <div className="space-y-2"><span className="text-xs font-bold text-gray-400 uppercase">Full Name</span><input type="text" value={ticketForm.visitorName} onChange={e => setTicketForm({ ...ticketForm, visitorName: sanitizeInput(e.target.value) })} className="w-full border-2 border-gray-100 rounded-xl px-4 py-4 bg-gray-50 focus:outline-none focus:border-emerald-500 transition-all" required /></div>
-                                                <div className="grid md:grid-cols-2 gap-4">
-                                                    <div className="space-y-2"><span className="text-xs font-bold text-gray-400 uppercase">Email</span><input type="email" value={ticketForm.visitorEmail} onChange={e => setTicketForm({ ...ticketForm, visitorEmail: sanitizeEmail(e.target.value) })} className="w-full border-2 border-gray-100 rounded-xl px-4 py-4 bg-gray-50 focus:outline-none focus:border-emerald-500 transition-all" required /></div>
-                                                    <div className="space-y-2"><span className="text-xs font-bold text-gray-400 uppercase">Phone (Optional)</span><input type="tel" value={ticketForm.visitorPhone} onChange={e => setTicketForm({ ...ticketForm, visitorPhone: sanitizePhone(e.target.value) })} className="w-full border-2 border-gray-100 rounded-xl px-4 py-4 bg-gray-50 focus:outline-none focus:border-emerald-500 transition-all" /></div>
+                                            <input type="text" value={ticketForm.visitorName} onChange={e => setTicketForm({ ...ticketForm, visitorName: sanitizeInput(e.target.value) })} placeholder="Full name*" className="w-full bg-transparent border-b border-gray-300 py-3 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:border-gray-900 transition-colors" required />
+                                            <input type="email" value={ticketForm.visitorEmail} onChange={e => setTicketForm({ ...ticketForm, visitorEmail: sanitizeEmail(e.target.value) })} placeholder="Email*" className="w-full bg-transparent border-b border-gray-300 py-3 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:border-gray-900 transition-colors" required />
+                                            <input type="tel" value={ticketForm.visitorPhone} onChange={e => setTicketForm({ ...ticketForm, visitorPhone: sanitizePhone(e.target.value) })} placeholder="Phone (Optional)" className="w-full bg-transparent border-b border-gray-300 py-3 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:border-gray-900 transition-colors" />
+
+                                            <div className="grid grid-cols-2 gap-6">
+                                                <div className="space-y-1">
+                                                    <label className="text-xs text-gray-500">Arrival date*</label>
+                                                    <input type="date" value={ticketForm.reservationDate} onChange={e => setTicketForm({ ...ticketForm, reservationDate: e.target.value })} min={getMinDate()} max={getMaxDate()} className="w-full bg-transparent border-b border-gray-300 py-2 text-sm text-gray-900 focus:outline-none focus:border-gray-900 transition-colors" required />
                                                 </div>
-                                                <div className="space-y-2"><span className="text-xs font-bold text-gray-400 uppercase">Notes</span><textarea value={ticketForm.notes} onChange={e => setTicketForm({ ...ticketForm, notes: sanitizeInput(e.target.value) })} className="w-full border-2 border-gray-100 rounded-xl px-4 py-4 bg-gray-50 focus:outline-none focus:border-emerald-500 transition-all resize-none" rows={3} /></div>
                                             </div>
+
+                                            <input type="text" value={ticketForm.notes} onChange={e => setTicketForm({ ...ticketForm, notes: sanitizeInput(e.target.value) })} placeholder="Additional notes" className="w-full bg-transparent border-b border-gray-300 py-3 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:border-gray-900 transition-colors" />
                                         </div>
                                     </div>
                                 ) : (
-                                    <div className="space-y-6">
-                                        <div className="p-4 bg-purple-50 border-2 border-purple-100 rounded-xl">
-                                            <p className="text-sm font-bold text-purple-900">Venue Booking</p>
-                                            <p className="text-xs text-purple-700">Book Zoo Bulusan Calapan as your event venue</p>
-                                        </div>
-                                        <div className="space-y-4">
-                                            <label className="block text-sm font-bold text-gray-700 uppercase tracking-widest">Event Details</label>
-                                            <div className="space-y-2"><span className="text-xs font-bold text-gray-400 uppercase">Event Name</span><input type="text" value={eventForm.venueEventName} onChange={e => setEventForm({ ...eventForm, venueEventName: sanitizeInput(e.target.value) })} placeholder="e.g. Birthday Party, Corporate Event" className="w-full border-2 border-gray-100 rounded-xl px-4 py-4 bg-gray-50 focus:outline-none focus:border-purple-500 transition-all" required /></div>
-                                            <div className="grid md:grid-cols-2 gap-4">
-                                                <div className="space-y-2"><span className="text-xs font-bold text-gray-400 uppercase">Event Date</span><input type="date" value={eventForm.venueEventDate} onChange={e => setEventForm({ ...eventForm, venueEventDate: e.target.value })} min={getMinDate()} className="w-full border-2 border-gray-100 rounded-xl px-4 py-4 bg-gray-50 focus:outline-none focus:border-purple-500 transition-all" required /></div>
-                                                <div className="space-y-2"><span className="text-xs font-bold text-gray-400 uppercase">Event Time</span><input type="time" value={eventForm.venueEventTime} onChange={e => setEventForm({ ...eventForm, venueEventTime: e.target.value })} className="w-full border-2 border-gray-100 rounded-xl px-4 py-4 bg-gray-50 focus:outline-none focus:border-purple-500 transition-all" /></div>
+                                    <div className="space-y-4">
+                                        <input type="text" value={eventForm.venueEventName} onChange={e => setEventForm({ ...eventForm, venueEventName: sanitizeInput(e.target.value) })} placeholder="Event name*" className="w-full bg-transparent border-b border-gray-300 py-3 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:border-gray-900 transition-colors" required />
+
+                                        <div className="grid grid-cols-2 gap-6">
+                                            <div className="space-y-1">
+                                                <label className="text-xs text-gray-500">Event date*</label>
+                                                <input type="date" value={eventForm.venueEventDate} onChange={e => setEventForm({ ...eventForm, venueEventDate: e.target.value })} min={getMinDate()} className="w-full bg-transparent border-b border-gray-300 py-2 text-sm text-gray-900 focus:outline-none focus:border-gray-900 transition-colors" required />
                                             </div>
-                                            <div className="space-y-2"><span className="text-xs font-bold text-gray-400 uppercase">Event Description</span><textarea value={eventForm.venueEventDescription} onChange={e => setEventForm({ ...eventForm, venueEventDescription: sanitizeInput(e.target.value) })} placeholder="Describe your event..." className="w-full border-2 border-gray-100 rounded-xl px-4 py-4 bg-gray-50 focus:outline-none focus:border-purple-500 transition-all resize-none" rows={3} /></div>
-                                            <div className="space-y-2"><span className="text-xs font-bold text-gray-400 uppercase">Number of Participants</span><input type="number" value={eventForm.numberOfParticipants} onChange={e => setEventForm({ ...eventForm, numberOfParticipants: e.target.value })} min="1" max="500" className="w-full border-2 border-gray-100 rounded-xl px-4 py-4 bg-gray-50" required /></div>
-                                        </div>
-                                        <div className="space-y-4">
-                                            <label className="block text-sm font-bold text-gray-700 uppercase tracking-widest">Organizer Info</label>
-                                            <div className="space-y-2"><span className="text-xs font-bold text-gray-400 uppercase">Organizer Name</span><input type="text" value={eventForm.participantName} onChange={e => setEventForm({ ...eventForm, participantName: sanitizeInput(e.target.value) })} className="w-full border-2 border-gray-100 rounded-xl px-4 py-4 bg-gray-50 focus:outline-none focus:border-purple-500" required /></div>
-                                            <div className="grid md:grid-cols-2 gap-4">
-                                                <div className="space-y-2"><span className="text-xs font-bold text-gray-400 uppercase">Email</span><input type="email" value={eventForm.participantEmail} onChange={e => setEventForm({ ...eventForm, participantEmail: sanitizeEmail(e.target.value) })} className="w-full border-2 border-gray-100 rounded-xl px-4 py-4 bg-gray-50 focus:outline-none focus:border-purple-500" required /></div>
-                                                <div className="space-y-2"><span className="text-xs font-bold text-gray-400 uppercase">Phone (Optional)</span><input type="tel" value={eventForm.participantPhone} onChange={e => setEventForm({ ...eventForm, participantPhone: sanitizePhone(e.target.value) })} className="w-full border-2 border-gray-100 rounded-xl px-4 py-4 bg-gray-50 focus:outline-none focus:border-purple-500" /></div>
+                                            <div className="space-y-1">
+                                                <label className="text-xs text-gray-500">Event time</label>
+                                                <input type="time" value={eventForm.venueEventTime} onChange={e => setEventForm({ ...eventForm, venueEventTime: e.target.value })} className="w-full bg-transparent border-b border-gray-300 py-2 text-sm text-gray-900 focus:outline-none focus:border-gray-900 transition-colors" />
                                             </div>
-                                            <div className="space-y-2"><span className="text-xs font-bold text-gray-400 uppercase">Additional Notes</span><textarea value={eventForm.notes} onChange={e => setEventForm({ ...eventForm, notes: sanitizeInput(e.target.value) })} className="w-full border-2 border-gray-100 rounded-xl px-4 py-4 bg-gray-50 focus:outline-none focus:border-purple-500 transition-all resize-none" rows={2} /></div>
                                         </div>
+
+                                        <input type="number" value={eventForm.numberOfParticipants} onChange={e => setEventForm({ ...eventForm, numberOfParticipants: e.target.value })} placeholder="Number of participants*" min="1" max="500" className="w-full bg-transparent border-b border-gray-300 py-3 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:border-gray-900 transition-colors" required />
+                                        <input type="text" value={eventForm.participantName} onChange={e => setEventForm({ ...eventForm, participantName: sanitizeInput(e.target.value) })} placeholder="Organizer name*" className="w-full bg-transparent border-b border-gray-300 py-3 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:border-gray-900 transition-colors" required />
+                                        <input type="email" value={eventForm.participantEmail} onChange={e => setEventForm({ ...eventForm, participantEmail: sanitizeEmail(e.target.value) })} placeholder="Email*" className="w-full bg-transparent border-b border-gray-300 py-3 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:border-gray-900 transition-colors" required />
+                                        <input type="tel" value={eventForm.participantPhone} onChange={e => setEventForm({ ...eventForm, participantPhone: sanitizePhone(e.target.value) })} placeholder="Phone (Optional)" className="w-full bg-transparent border-b border-gray-300 py-3 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:border-gray-900 transition-colors" />
+                                        <input type="text" value={eventForm.venueEventDescription} onChange={e => setEventForm({ ...eventForm, venueEventDescription: sanitizeInput(e.target.value) })} placeholder="Event description" className="w-full bg-transparent border-b border-gray-300 py-3 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:border-gray-900 transition-colors" />
                                     </div>
                                 )}
+
+                                <div className="flex items-start gap-3 pt-6">
+                                    <div className="mt-0.5">
+                                        <input type="checkbox" required className="w-4 h-4 rounded-sm border-gray-300 text-gray-900 focus:ring-gray-900 bg-transparent" />
+                                    </div>
+                                    <p className="text-sm text-gray-600 leading-relaxed">
+                                        I accept Zoo Bulusan's <a href="#" className="underline hover:text-gray-900">Terms of Service</a> and acknowledge that I have read the <a href="#" className="underline hover:text-gray-900">Privacy Policy</a>.
+                                    </p>
+                                </div>
 
                                 {reservationType === 'ticket' && getTotalVisitors() > 0 && (
-                                    <div className="bg-gray-900 rounded-2xl p-6 text-white space-y-2 shadow-xl">
-                                        <div className="flex justify-between text-sm opacity-60"><span>Total Visitors</span><span>{getTotalVisitors()}</span></div>
-                                        <div className="flex justify-between text-xl font-black"><span>Total Due</span><span className="text-emerald-400">{calculateTotal() === 0 ? 'FREE' : `₱${calculateTotal()}`}</span></div>
-                                        <p className="text-[10px] text-gray-500 uppercase tracking-widest text-center pt-4">Pay at the Entrance</p>
+                                    <div className="flex items-center justify-between pt-2">
+                                        <span className="text-sm text-gray-500">Total Due</span>
+                                        <span className="text-lg font-medium text-gray-900">{calculateTotal() === 0 ? 'Free' : `₱${calculateTotal()}`}</span>
                                     </div>
                                 )}
-                            </form>
-                        </div>
 
-                        <div className="flex gap-4 p-6 md:px-8 bg-white border-t shrink-0">
-                            <button type="button" onClick={closeModal} className="flex-1 py-4 bg-gray-100 font-bold rounded-xl text-gray-600">Cancel</button>
-                            <button type="submit" form="reservation-form" disabled={isSubmitting} className={`flex-1 py-4 font-bold rounded-xl text-white shadow-lg disabled:opacity-50 ${reservationType === 'ticket' ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-purple-600 hover:bg-purple-700'}`}>{isSubmitting ? 'Creating...' : 'Book Now'}</button>
+                                <div className="pt-2">
+                                    <button type="submit" disabled={isSubmitting} className="w-full py-3.5 bg-[#C2C0B8] hover:bg-[#b0aeA5] text-gray-900 text-sm font-medium rounded-lg transition-colors disabled:opacity-50">
+                                        {isSubmitting ? 'Processing...' : (reservationType === 'ticket' ? 'Schedule a visit' : 'Book event')}
+                                    </button>
+                                </div>
+                            </form>
                         </div>
                     </div>
                 </div>
 
+                {/* Confirmation Modal */}
                 {showConfirmation && confirmationData && (
                     <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
-                        <div className="fixed inset-0 bg-black/60 backdrop-blur-md" onClick={closeModal} />
-                        <div className="bg-white rounded-3xl w-full max-w-md p-8 relative z-10 text-center animate-in zoom-in duration-300">
-                            <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6"><Icons.Check /></div>
-                            <h3 className="text-3xl font-black tracking-tight mb-2">RESERVED!</h3>
-                            <p className="text-gray-500 mb-6">Your booking has been secured.</p>
-                            <div className="bg-emerald-50 rounded-2xl p-6 mb-6">
-                                <span className="text-[10px] font-black text-emerald-800 uppercase tracking-widest block mb-1">Ref Number</span>
-                                <span className="text-3xl font-mono font-black text-emerald-900">{confirmationData.reference}</span>
+                        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" onClick={closeModal} />
+                        <div className="bg-[#F4F4F0] rounded-2xl w-full max-w-sm p-8 relative z-10 text-center shadow-2xl animate-in zoom-in duration-300">
+                            <div className="w-16 h-16 bg-gray-200 text-gray-900 rounded-full flex items-center justify-center mx-auto mb-6"><Icons.Check /></div>
+                            <h3 className="text-2xl font-normal text-gray-900 mb-2">Reserved</h3>
+                            <p className="text-sm text-gray-500 mb-6">Your booking has been secured.</p>
+
+                            <div className="bg-white/50 rounded-xl p-6 mb-6">
+                                <span className="text-xs text-gray-500 uppercase tracking-widest block mb-1">Ref Number</span>
+                                <span className="text-xl font-mono text-gray-900">{confirmationData.reference}</span>
                             </div>
+
                             <div className="space-y-3 mb-8 text-left text-sm">
                                 {confirmationData.type === 'ticket' ? (
                                     <>
-                                        <div className="flex justify-between border-b pb-2"><span className="text-gray-400">Date</span><span className="font-bold">{formatDate(confirmationData.date)}</span></div>
-                                        <div className="flex justify-between border-b pb-2"><span className="text-gray-400">Visitors</span><span className="font-bold">{confirmationData.visitors}</span></div>
-                                        <div className="flex justify-between font-bold text-emerald-700 text-lg"><span>Total</span><span>{confirmationData.total === 0 ? 'FREE' : `₱${confirmationData.total}`}</span></div>
+                                        <div className="flex justify-between border-b border-gray-200 pb-2"><span className="text-gray-500">Date</span><span className="font-medium text-gray-900">{formatDate(confirmationData.date)}</span></div>
+                                        <div className="flex justify-between border-b border-gray-200 pb-2"><span className="text-gray-500">Visitors</span><span className="font-medium text-gray-900">{confirmationData.visitors}</span></div>
+                                        <div className="flex justify-between font-medium text-gray-900 text-base pt-1"><span>Total</span><span>{confirmationData.total === 0 ? 'Free' : `₱${confirmationData.total}`}</span></div>
                                     </>
                                 ) : (
                                     <>
-                                        <div className="flex justify-between border-b pb-2"><span className="text-gray-400">Event</span><span className="font-bold">{confirmationData.eventName}</span></div>
-                                        <div className="flex justify-between"><span className="text-gray-400">Date</span><span className="font-bold">{formatDate(confirmationData.eventDate)}</span></div>
+                                        <div className="flex justify-between border-b border-gray-200 pb-2"><span className="text-gray-500">Event</span><span className="font-medium text-gray-900 text-right">{confirmationData.eventName}</span></div>
+                                        <div className="flex justify-between pt-1"><span className="text-gray-500">Date</span><span className="font-medium text-gray-900">{formatDate(confirmationData.eventDate)}</span></div>
                                     </>
                                 )}
                             </div>
+
                             <div className="flex gap-3">
-                                <button onClick={closeModal} className="flex-1 py-4 bg-gray-100 font-bold rounded-2xl">Close</button>
-                                <button onClick={() => { closeModal(); setShowHistoryPanel(true); }} className="flex-1 py-4 bg-black text-white font-bold rounded-2xl">History</button>
+                                <button onClick={closeModal} className="flex-1 py-3 bg-white border border-gray-200 hover:bg-gray-50 text-gray-900 text-sm font-medium rounded-lg transition-colors">Close</button>
+                                <button onClick={() => { closeModal(); setShowHistoryPanel(true); }} className="flex-1 py-3 bg-gray-900 hover:bg-gray-800 text-white text-sm font-medium rounded-lg transition-colors">History</button>
                             </div>
                         </div>
                     </div>
                 )}
+
                 <ReservationHistoryPanel isOpen={showHistoryPanel} onClose={() => setShowHistoryPanel(false)} />
                 <Footer />
                 <AIFloatingButton />
