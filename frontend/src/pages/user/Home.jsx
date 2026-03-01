@@ -61,91 +61,90 @@ const Home = () => {
 
                 <AIFloatingButton />
 
-                <section className="relative min-h-screen overflow-hidden pt-24 pb-12 sm:pb-16 md:pb-24">
+                <section className="relative min-h-screen flex flex-col items-center pt-54 sm:pt-34 md:pt-60 pb-12 bg-[#ebebeb] text-[#212631] overflow-hidden">
                     <div
-                        className="absolute inset-0 bg-cover bg-center bg-no-repeat w-full h-full"
+                        className="absolute inset-0 bg-cover bg-center bg-no-repeat w-full h-full opacity-60"
                         style={{ backgroundImage: `url('https://i.pinimg.com/736x/cf/be/f7/cfbef7ee6088cac3e2e6c01cfe57bfed.jpg')` }}
                     />
-                    <div className="absolute inset-0 bg-gradient-to-b from-white/90 via-white/70 to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-b from-[#ebebeb]/20 via-[#ebebeb]/30 to-[#ebebeb]/40" />
 
-                    <div className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8 pt-16 sm:pt-24 lg:pt-32 pb-8 flex flex-col items-center">
-                        <div className="flex justify-center mb-6 sm:mb-8">
-                            <div className="inline-flex items-center gap-2 bg-white px-4 py-2 sm:px-5 sm:py-2.5 rounded-full shadow-md border border-gray-100">
-                                <span className="text-xs sm:text-sm font-medium text-gray-700 whitespace-nowrap">AI-Powered Wildlife Experience</span>
-                                <span className="text-base sm:text-lg text-amber-500"><Icons.Lion /></span>
-                            </div>
+                    <div className="relative z-10 flex flex-col items-center text-center w-full px-4 sm:px-6 pt-12 sm:pt-0">
+                        <h1 className="flex flex-col items-center w-full">
+                            <span className="text-6xl sm:text-[4rem] md:text-[5rem] lg:text-[6rem] font-normal leading-none tracking-wide">
+                                Welcome to
+                            </span>
+                            <span
+                                className="text-[3.75rem] sm:text-[5rem] md:text-[6.5rem] lg:text-[7.5rem] italic uppercase leading-[0.9] tracking-wide mt-1 sm:mt-1"
+                                style={{ fontFamily: '"Times New Roman", Times, serif' }}
+                            >
+                                Bulusan Zoo
+                            </span>
+                        </h1>
+
+                        <p className="mt-4 sm:mt-6 max-w-[90%] sm:max-w-2xl lg:max-w-3xl text-xl sm:text-xl md:text-[1.35rem] font-semibold sm:font-medium leading-snug sm:leading-[1.4] px-2 sm:px-4">
+                            Experience wildlife like never before with AI-powered tools that make exploring, planning your visit, and discovering amazing animals effortless and unforgettable.
+                        </p>
+
+                        <div className="flex justify-center gap-6 sm:gap-20 md:gap-32 mt-10 sm:mt-14 mb-6 sm:mb-8 text-sm sm:text-base md:text-lg tracking-widest uppercase font-medium">
+                            <Link to="/animals" className="hover:opacity-70 transition-opacity">Animals</Link>
+                            <Link to="/plants" className="hover:opacity-70 transition-opacity">Plants</Link>
+                            <Link to="/events" className="hover:opacity-70 transition-opacity">Events</Link>
                         </div>
 
-                        <div className="text-center w-full max-w-4xl mx-auto px-4"> <br />
-                            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-bold text-gray-900 mb-4 sm:mb-6 leading-tight sm:leading-none tracking-tight break-words">
-                                Welcome to <br />
-                                <span
-                                    className="bg-gradient-to-r from-emerald-600 via-teal-500 to-cyan-500 bg-clip-text text-transparent block sm:inline-block"
-                                    style={{ fontFamily: '"Segoe Script", "cursive"' }}
+                        <div className="w-full max-w-7xl rounded-xl border-4 border-[#ebebeb] bg-[#1c1e26] aspect-[4/5] sm:aspect-video relative overflow-hidden">
+                            {animalImages.map((animal, index) => (
+                                <div
+                                    key={animal.name}
+                                    className={`absolute inset-0 w-full h-full transition-opacity duration-1000 ease-in-out ${index === currentAnimalIndex ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}
                                 >
-                                    Bulusan Zoo
-                                </span>
-                            </h1>
-                            <p className="text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl text-gray-600 max-w-5xl mx-auto mb-8 sm:mb-10 leading-normal sm:leading-snug px-2 sm:px-4 break-words">
-                                Experience wildlife like never before with AI-powered tools that make exploring, planning your visit, and discovering amazing animals effortless and unforgettable.
-                            </p>
-                        </div>
-
-                        <div className="relative mt-8 sm:mt-12 lg:mt-16 flex justify-center pb-8 w-full px-4 sm:px-6">
-                            <div className="relative w-full max-w-7xl aspect-square sm:aspect-[4/3] md:aspect-video rounded-2xl sm:rounded-3xl lg:rounded-4xl overflow-hidden shadow-2xl shadow-gray-900/30 border-2 sm:border-4 border-white/50 bg-gray-100">
-                                {animalImages.map((animal, index) => (
-                                    <div
-                                        key={animal.name}
-                                        className={`absolute inset-0 w-full h-full transition-all duration-1000 ease-in-out ${index === currentAnimalIndex
-                                            ? 'opacity-100 scale-100'
-                                            : 'opacity-0 scale-105'
-                                            }`}
-                                    >
-                                        <img
-                                            src={animal.src}
-                                            alt={animal.name}
-                                            className="w-full h-full object-cover"
-                                        />
-                                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-                                        <div className="absolute bottom-4 left-4 sm:bottom-6 sm:left-6 text-white p-2">
-                                            <h3 className="text-xl sm:text-2xl md:text-3xl font-bold drop-shadow-md">{animal.name}</h3>
-                                        </div>
+                                    <img
+                                        src={animal.src}
+                                        alt={animal.name}
+                                        className="w-full h-full object-cover"
+                                    />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                                    <div className="absolute bottom-4 left-4 sm:bottom-10 sm:left-10 text-white p-2">
+                                        <h3 className="text-xl sm:text-4xl md:text-5xl font-bold drop-shadow-lg" style={{ fontFamily: '"Times New Roman", Times, serif' }}>
+                                            {animal.name}
+                                        </h3>
                                     </div>
-                                ))}
-
-                                <div className="absolute bottom-4 right-4 sm:bottom-6 sm:right-6 flex gap-1.5 flex-wrap max-w-[120px] sm:max-w-[180px] justify-end">
                                 </div>
+                            ))}
 
-                                <button
-                                    onClick={() => setCurrentAnimalIndex((prev) => (prev - 1 + animalImages.length) % animalImages.length)}
-                                    className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/40 flex items-center justify-center text-white transition-all duration-200 z-10 min-h-[44px] min-w-[44px]"
-                                    aria-label="Previous animal"
-                                >
-                                    <svg className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" /></svg>
-                                </button>
-                                <button
-                                    onClick={() => setCurrentAnimalIndex((prev) => (prev + 1) % animalImages.length)}
-                                    className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/40 flex items-center justify-center text-white transition-all duration-200 z-10 min-h-[44px] min-w-[44px]"
-                                    aria-label="Next animal"
-                                >
-                                    <svg className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
-                                </button>
-                            </div>
+                            <button
+                                onClick={() => setCurrentAnimalIndex((prev) => (prev - 1 + animalImages.length) % animalImages.length)}
+                                className="absolute left-2 sm:left-6 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-12 sm:h-12 rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/40 flex items-center justify-center text-white transition-all duration-200 z-20"
+                                aria-label="Previous animal"
+                            >
+                                <svg className="w-4 h-4 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" /></svg>
+                            </button>
+                            <button
+                                onClick={() => setCurrentAnimalIndex((prev) => (prev + 1) % animalImages.length)}
+                                className="absolute right-2 sm:right-6 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-12 sm:h-12 rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/40 flex items-center justify-center text-white transition-all duration-200 z-20"
+                                aria-label="Next animal"
+                            >
+                                <svg className="w-4 h-4 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
+                            </button>
                         </div>
                     </div>
                 </section>
 
-                <section className="bg-white min-h-[80vh] flex items-center justify-center px-6 py-20 md:py-32 w-full">
-                    <div className="max-w-[1500px] mx-auto text-center flex flex-col items-center">
-                        <h1 className="text-black text-5xl sm:text-7xl md:text-7xl lg:text-[3.5rem] leading-snug md:leading-[1.15] tracking-tight mb-10 sm:mb-12">
+                <section className="bg-[#ebebeb] min-h-[80vh] flex items-center px-6 py-20 md:px-16 md:py-32 w-full">
+                    <div className="max-w-[1500px] mx-auto w-full flex flex-col">
+                        <h2 className="text-[#212631] text-2xl md:text-3xl lg:text-4xl uppercase tracking-wide mb-16 md:mb-24">
+                            About Bulusan Zoo
+                        </h2>
+                        <p className="text-[#212631] text-4xl sm:text-5xl md:text-6xl lg:text-[5.5rem] leading-[1.2] md:leading-[1.1] tracking-tight mb-16 md:mb-24">
                             Founded in 2015, Bulusan Wildlife & Nature Park began as a small conservation initiative in Calapan City. Today, we stand as a testament to modern conservation.
-                        </h1>
-                        <Link
-                            to="/about"
-                            className="text-black text-xs sm:text-sm font-semibold border-b border-black pb-1 hover:text-gray-600 hover:border-gray-600 transition-colors duration-300"
-                        >
-                            Learn More About Us
-                        </Link>
+                        </p>
+                        <div className="self-end">
+                            <Link
+                                to="/about"
+                                className="text-[#ebebeb] bg-green-700 font-light hover:underline text-2xl md:text-4xl lg:text-5xl hover:text-gray-200 transition-colors duration-300"
+                            >
+                                more about us
+                            </Link>
+                        </div>
                     </div>
                 </section>
 
