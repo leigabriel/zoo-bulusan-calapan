@@ -148,9 +148,60 @@ const Home = () => {
                     </div>
                 </section>
 
-                
+                <section className="w-full bg-[#ebebeb] text-[#212631] border-1 border-[#d1d1d1]">
+                    <div className="max-w-[1600px] mx-auto px-6 md:px-12 lg:px-16">
+                        <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-[#d1d1d1]">
 
-                <section id="events-section" className="relative bg-white p-3 sm:p-4 md:p-6 lg:p-10 min-h-[10vh] sm:min-h-[80vh] md:min-h-screen flex items-center justify-center overflow-hidden w-full">
+                            <article className="py-16 md:py-24 md:pr-12 lg:pr-16 flex flex-col h-full">
+                                <div className="text-[#212631]/60 text-xs md:text-sm font-mono font-medium tracking-widest mb-6 lg:mb-8">
+                                    <span className="text-[#212631]/40 mr-2">•</span>01
+                                </div>
+                                <h3 className="text-[1.75rem] md:text-3xl lg:text-4xl font-bold text-[#212631] mb-4 lg:mb-6 tracking-tight">
+                                    Philippine Deer
+                                </h3>
+                                <p className="text-base md:text-lg lg:text-xl text-[#212631]/80 leading-relaxed mb-8 lg:mb-12">
+                                    Discover the grace of the endangered Philippine Brown Deer, roaming freely in our carefully reconstructed forest habitat designed to mimic their natural woodland environment.
+                                </p>
+                                <button className="mt-auto self-start border border-[#212631]/30 text-[#212631] text-xs md:text-sm font-bold tracking-widest uppercase px-6 py-3 md:px-8 md:py-4 hover:bg-[#212631] hover:text-[#ebebeb] transition-all duration-300">
+                                    Learn More
+                                </button>
+                            </article>
+
+                            <article className="py-16 md:py-24 md:px-12 lg:px-16 flex flex-col h-full">
+                                <div className="text-[#212631]/60 text-xs md:text-sm font-mono font-medium tracking-widest mb-6 lg:mb-8">
+                                    <span className="text-[#212631]/40 mr-2">•</span>02
+                                </div>
+                                <h3 className="text-[1.75rem] md:text-3xl lg:text-4xl font-bold text-[#212631] mb-4 lg:mb-6 tracking-tight">
+                                    Visayan Warty Pig
+                                </h3>
+                                <p className="text-base md:text-lg lg:text-xl text-[#212631]/80 leading-relaxed mb-8 lg:mb-12">
+                                    Observe the highly intelligent and critically endangered Visayan Warty Pigs. Our conservation breeding program is dedicated to protecting this unique native species.
+                                </p>
+                                <button className="mt-auto self-start border border-[#212631]/30 text-[#212631] text-xs md:text-sm font-bold tracking-widest uppercase px-6 py-3 md:px-8 md:py-4 hover:bg-[#212631] hover:text-[#ebebeb] transition-all duration-300">
+                                    Learn More
+                                </button>
+                            </article>
+
+                            <article className="py-16 md:py-24 md:pl-12 lg:pl-16 flex flex-col h-full">
+                                <div className="text-[#212631]/60 text-xs md:text-sm font-mono font-medium tracking-widest mb-6 lg:mb-8">
+                                    <span className="text-[#212631]/40 mr-2">•</span>03
+                                </div>
+                                <h3 className="text-[1.75rem] md:text-3xl lg:text-4xl font-bold text-[#212631] mb-4 lg:mb-6 tracking-tight">
+                                    Sailfin Lizard
+                                </h3>
+                                <p className="text-base md:text-lg lg:text-xl text-[#212631]/80 leading-relaxed mb-8 lg:mb-12">
+                                    Spot the prehistoric-looking Philippine Sailfin Lizard basking near our replicated river ecosystems, showcasing the incredible reptilian biodiversity of the region.
+                                </p>
+                                <button className="mt-auto self-start border border-[#212631]/30 text-[#212631] text-xs md:text-sm font-bold tracking-widest uppercase px-6 py-3 md:px-8 md:py-4 hover:bg-[#212631] hover:text-[#ebebeb] transition-all duration-300">
+                                    Learn More
+                                </button>
+                            </article>
+
+                        </div>
+                    </div>
+                </section>
+
+                <section id="events-section" className="relative bg-[#ebebeb] p-3 sm:p-4 md:p-6 lg:p-10 min-h-[10vh] sm:min-h-[80vh] md:min-h-screen flex items-center justify-center overflow-hidden w-full">
 
                     <div className="relative w-full max-w-[1500px] min-h-[400px] sm:min-h-[500px] md:aspect-video bg-[#08140e] rounded-xl sm:rounded-2xl md:rounded-sm flex flex-col items-center justify-center overflow-hidden p-6 sm:p-8 md:p-16 lg:p-24 shadow-2xl">
 

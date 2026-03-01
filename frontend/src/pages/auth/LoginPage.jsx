@@ -516,7 +516,7 @@ const LoginPage = () => {
             <div className="w-full md:w-1/2 flex flex-col justify-center px-6 py-12 sm:px-12 lg:px-24 bg-white">
                 <div className="w-full max-w-md mx-auto">
                     <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-2 tracking-tight">
-                        <span className='text-emerald-600 italic text-[1.5rem]'>Bulusan Zoo</span> <br />
+                        <span className='text-emerald-600 text-[1.5rem]'>Bulusan Zoo</span> <br />
                         Welcome Back!
                     </h2>
                     <p className="text-gray-500 text-sm lg:text-base mb-10">
