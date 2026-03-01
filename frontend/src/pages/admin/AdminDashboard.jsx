@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { adminAPI, getProfileImageUrl } from '../../services/api-client';
+import { adminAPI, getProfileImageUrl, userAPI } from '../../services/api-client';
 
 // Icons
 const UsersIcon = () => (
@@ -66,6 +66,7 @@ const MoreIcon = () => (
 
 const AdminDashboard = () => {
     const { user } = useAuth();
+
     const [stats, setStats] = useState({
         totalUsers: 0,
         totalAnimals: 0,
@@ -73,8 +74,10 @@ const AdminDashboard = () => {
         totalTickets: 0,
         totalRevenue: 0
     });
+
     const [recentUsers, setRecentUsers] = useState([]);
     const [loading, setLoading] = useState(true);
+
     const [weeklyData, setWeeklyData] = useState([
         { day: 'Mon', visitors: 0, revenue: 0 },
         { day: 'Tue', visitors: 0, revenue: 0 },
@@ -85,7 +88,7 @@ const AdminDashboard = () => {
         { day: 'Sun', visitors: 0, revenue: 0 },
     ]);
 
-    const maxVisitors = Math.max(...weeklyData.map(d => d.visitors), 1); // Avoid division by zero
+    const maxVisitors = Math.max(...weeklyData.map(d => d.visitors), 1);
 
     useEffect(() => {
         fetchDashboardData();
@@ -94,52 +97,92 @@ const AdminDashboard = () => {
     const fetchDashboardData = async () => {
         try {
             setLoading(true);
-            const [statsRes, usersRes, analyticsRes] = await Promise.all([
-                adminAPI.getDashboard().catch(() => ({ success: false })),
-                adminAPI.getUsers().catch(() => ({ success: false })),
-                adminAPI.getAnalytics('week').catch(() => ({ success: false })),
+
+            const [dashboardRes, usersRes, analyticsRes, animalsRes, plantsRes] = await Promise.all([
+                adminAPI.getDashboard().catch(() => null),
+                adminAPI.getUsers().catch(() => null),
+                adminAPI.getAnalytics('week').catch(() => null),
+                adminAPI.getAnimals?.().catch(() => null),
+                adminAPI.getPlants?.().catch(() => null),
             ]);
 
-            if (statsRes && statsRes.success) {
-                const s = statsRes.stats || {};
-                setStats({
-                    totalUsers: Number(s.totalUsers || 0),
-                    totalAnimals: Number(s.totalAnimals || 0),
-                    totalPlants: Number(s.totalPlants || 0),
-                    totalTickets: Number(s.totalTickets || 0),
-                    totalRevenue: Number(s.totalRevenue || 0)
-                });
+            let updatedStats = {
+                totalUsers: 0,
+                totalAnimals: 0,
+                totalPlants: 0,
+                totalTickets: 0,
+                totalRevenue: 0
+            };
+
+            if (dashboardRes?.success) {
+                const s = dashboardRes.stats || dashboardRes.data || dashboardRes;
+
+                updatedStats.totalUsers = Number(
+                    s.totalUsers ?? s.total_users ?? s.usersCount
+                ) || 0;
+
+                updatedStats.totalAnimals = Number(
+                    s.totalAnimals ?? s.total_animals ?? s.animalsCount
+                ) || 0;
+
+                updatedStats.totalPlants = Number(
+                    s.totalPlants ?? s.total_plants ?? s.plantsCount
+                ) || 0;
+
+                updatedStats.totalTickets = Number(
+                    s.totalTickets ?? s.total_tickets ?? s.ticketsCount
+                ) || 0;
+
+                updatedStats.totalRevenue = Number(
+                    s.totalRevenue ?? s.total_revenue ?? s.revenue
+                ) || 0;
             }
 
-            if (usersRes && usersRes.success && usersRes.users) {
+            if (usersRes?.success && Array.isArray(usersRes.users)) {
                 const normalized = usersRes.users.map(u => ({
                     id: u.id || u.user_id,
                     firstName: u.firstName || u.first_name || '',
                     lastName: u.lastName || u.last_name || '',
-                    fullName: u.fullName || `${u.firstName || u.first_name || ''} ${u.lastName || u.last_name || ''}`.trim(),
+                    fullName:
+                        u.fullName ||
+                        `${u.firstName || u.first_name || ''} ${u.lastName || u.last_name || ''}`.trim(),
                     email: u.email,
                     role: u.role,
                     profileImage: u.profileImage || u.profile_image,
                     createdAt: u.createdAt || u.created_at
                 }));
+
                 setRecentUsers(normalized.slice(0, 6));
+                updatedStats.totalUsers = normalized.length;
             }
 
-            // Set weekly chart data from analytics
-            if (analyticsRes && analyticsRes.success && analyticsRes.data?.weeklyData) {
+            if ((!updatedStats.totalAnimals || updatedStats.totalAnimals === 0) && animalsRes?.success && Array.isArray(animalsRes.animals)) {
+                updatedStats.totalAnimals = animalsRes.animals.length;
+            }
+
+            if ((!updatedStats.totalPlants || updatedStats.totalPlants === 0) && plantsRes?.success && Array.isArray(plantsRes.plants)) {
+                updatedStats.totalPlants = plantsRes.plants.length;
+            }
+
+            if (analyticsRes?.success && analyticsRes?.data?.weeklyData) {
                 const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
                 const filledData = days.map(day => {
                     const found = analyticsRes.data.weeklyData.find(d => d.day === day);
                     return {
                         day,
-                        visitors: found?.visitors || 0,
-                        revenue: found?.revenue || 0
+                        visitors: Number(found?.visitors) || 0,
+                        revenue: Number(found?.revenue) || 0
                     };
                 });
+
                 setWeeklyData(filledData);
             }
+
+            setStats(updatedStats);
+
         } catch (error) {
-            console.error('Error fetching dashboard data:', error);
+            console.error('Dashboard fetch error:', error);
         } finally {
             setLoading(false);
         }

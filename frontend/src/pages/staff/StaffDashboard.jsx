@@ -95,14 +95,84 @@ const StaffDashboard = () => {
     const fetchDashboardData = async () => {
         try {
             setLoading(true);
-            const [statsRes, ticketsRes] = await Promise.all([
-                staffAPI.getDashboardStats(),
-                staffAPI.getRecentTickets ? staffAPI.getRecentTickets() : Promise.resolve({ success: true, data: [] })
+
+            const [
+                statsRes,
+                ticketsRes,
+                animalsRes,
+                plantsRes
+            ] = await Promise.all([
+                staffAPI.getDashboardStats().catch(() => null),
+                staffAPI.getRecentTickets
+                    ? staffAPI.getRecentTickets().catch(() => null)
+                    : Promise.resolve({ success: true, data: [] }),
+                staffAPI.getAnimals?.().catch(() => null),
+                staffAPI.getPlants?.().catch(() => null)
             ]);
-            if (statsRes.success) setStats(statsRes.data);
-            if (ticketsRes.success) setRecentTickets(ticketsRes.data || []);
+
+            let updatedStats = {
+                todayTickets: 0,
+                pendingValidations: 0,
+                todayVisitors: 0,
+                activeAnimals: 0,
+                totalPlants: 0,
+                upcomingEvents: 0
+            };
+
+            if (statsRes?.success) {
+                const d = statsRes.data || statsRes.stats || statsRes;
+
+                updatedStats.todayTickets = Number(
+                    d.todayTickets ?? d.today_tickets ?? d.ticketsToday
+                ) || 0;
+
+                updatedStats.pendingValidations = Number(
+                    d.pendingValidations ?? d.pending_validations ?? d.pendingCount
+                ) || 0;
+
+                updatedStats.todayVisitors = Number(
+                    d.todayVisitors ?? d.today_visitors ?? d.visitorsToday
+                ) || 0;
+
+                updatedStats.activeAnimals = Number(
+                    d.activeAnimals ?? d.active_animals ?? d.animalsCount
+                ) || 0;
+
+                updatedStats.totalPlants = Number(
+                    d.totalPlants ?? d.total_plants ?? d.plantsCount
+                ) || 0;
+
+                updatedStats.upcomingEvents = Number(
+                    d.upcomingEvents ?? d.upcoming_events ?? d.eventsCount
+                ) || 0;
+            }
+
+            if (
+                (!updatedStats.activeAnimals || updatedStats.activeAnimals === 0) &&
+                animalsRes?.success &&
+                Array.isArray(animalsRes.animals || animalsRes.data)
+            ) {
+                const animalsArray = animalsRes.animals || animalsRes.data;
+                updatedStats.activeAnimals = animalsArray.length;
+            }
+
+            if (
+                (!updatedStats.totalPlants || updatedStats.totalPlants === 0) &&
+                plantsRes?.success &&
+                Array.isArray(plantsRes.plants || plantsRes.data)
+            ) {
+                const plantsArray = plantsRes.plants || plantsRes.data;
+                updatedStats.totalPlants = plantsArray.length;
+            }
+
+            if (ticketsRes?.success) {
+                setRecentTickets(ticketsRes.data || ticketsRes.tickets || []);
+            }
+
+            setStats(updatedStats);
+
         } catch (error) {
-            console.error('Error fetching dashboard data:', error);
+            console.error('Dashboard fetch error:', error);
         } finally {
             setLoading(false);
         }

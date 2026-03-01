@@ -67,11 +67,18 @@ const StaffPlants = ({ globalSearch = '' }) => {
     const [categoryFilter, setCategoryFilter] = useState('all');
     const [form, setForm] = useState({
         name: '',
+        scientificName: '',
+        category: 'trees',
         description: '',
+        location: '',
+        status: 'healthy',
         imageUrl: ''
     });
     const [saving, setSaving] = useState(false);
     const [deleteConfirm, setDeleteConfirm] = useState(null);
+
+    const categoryOptions = ['trees', 'shrubs', 'flowers', 'ferns', 'palms', 'succulents', 'aquatic', 'medicinal'];
+    const statusOptions = ['healthy', 'growing', 'dormant', 'sick', 'treatment'];
 
     useEffect(() => { fetchPlants(); }, []);
 
@@ -91,7 +98,11 @@ const StaffPlants = ({ globalSearch = '' }) => {
         setEditingPlant(null);
         setForm({
             name: '',
+            scientificName: '',
+            category: 'trees',
             description: '',
+            location: '',
+            status: 'healthy',
             imageUrl: ''
         });
         setShowModal(true);
@@ -101,7 +112,11 @@ const StaffPlants = ({ globalSearch = '' }) => {
         setEditingPlant(plant);
         setForm({
             name: plant.name || '',
+            scientificName: plant.scientific_name || '',
+            category: plant.category || 'trees',
             description: plant.description || '',
+            location: plant.location || '',
+            status: plant.status || 'healthy',
             imageUrl: plant.image_url || ''
         });
         setShowModal(true);
@@ -112,7 +127,11 @@ const StaffPlants = ({ globalSearch = '' }) => {
         setEditingPlant(null);
         setForm({
             name: '',
+            scientificName: '',
+            category: 'trees',
             description: '',
+            location: '',
+            status: 'healthy',
             imageUrl: ''
         });
     };
@@ -123,8 +142,12 @@ const StaffPlants = ({ globalSearch = '' }) => {
         try {
             const plantData = {
                 name: form.name,
+                scientificName: form.scientificName,
+                category: form.category,
                 description: form.description,
-                image_url: form.imageUrl
+                location: form.location,
+                status: form.status,
+                imageUrl: form.imageUrl
             };
 
             let res;
@@ -444,16 +467,65 @@ const StaffPlants = ({ globalSearch = '' }) => {
                         </div>
 
                         <form onSubmit={savePlant} className="p-6 space-y-4">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-400 mb-2">Name *</label>
-                                <input
-                                    type="text"
-                                    value={form.name}
-                                    onChange={e => setForm({ ...form, name: sanitizeInput(e.target.value) })}
-                                    className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-[#8cff65] transition-all"
-                                    placeholder="e.g., Narra Tree"
-                                    required
-                                />
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-400 mb-2">Name *</label>
+                                    <input
+                                        type="text"
+                                        value={form.name}
+                                        onChange={e => setForm({ ...form, name: sanitizeInput(e.target.value) })}
+                                        className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-[#8cff65] transition-all"
+                                        placeholder="e.g., Narra Tree"
+                                        required
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-400 mb-2">Scientific Name</label>
+                                    <input
+                                        type="text"
+                                        value={form.scientificName}
+                                        onChange={e => setForm({ ...form, scientificName: sanitizeInput(e.target.value) })}
+                                        className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-[#8cff65] transition-all italic"
+                                        placeholder="e.g., Pterocarpus indicus"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-400 mb-2">Category</label>
+                                    <select
+                                        value={form.category}
+                                        onChange={e => setForm({ ...form, category: e.target.value })}
+                                        className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#8cff65] transition-all capitalize"
+                                    >
+                                        {categoryOptions.map(cat => (
+                                            <option key={cat} value={cat} className="capitalize">{cat}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-400 mb-2">Status</label>
+                                    <select
+                                        value={form.status}
+                                        onChange={e => setForm({ ...form, status: e.target.value })}
+                                        className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#8cff65] transition-all capitalize"
+                                    >
+                                        {statusOptions.map(s => (
+                                            <option key={s} value={s} className="capitalize">{s}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-400 mb-2">Location</label>
+                                    <input
+                                        type="text"
+                                        value={form.location}
+                                        onChange={e => setForm({ ...form, location: sanitizeInput(e.target.value) })}
+                                        className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-[#8cff65] transition-all"
+                                        placeholder="e.g., Garden Area A"
+                                    />
+                                </div>
                             </div>
 
                             <div>

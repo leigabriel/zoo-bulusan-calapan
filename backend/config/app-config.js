@@ -8,10 +8,9 @@ module.exports = {
         USER: 'user'
     },
     ticketTypes: {
-        ADULT: { name: 'adult', price: 150 },
-        CHILD: { name: 'child', price: 100 },
-        SENIOR: { name: 'senior', price: 120 },
-        FAMILY: { name: 'family', price: 450 }
+        ADULT: { name: 'adult', price: 40 },
+        CHILD: { name: 'child', price: 20 },
+        RESIDENT: { name: 'resident', price: 'free' }
     },
     animalStatus: ['healthy', 'sick', 'critical', 'quarantine'],
     ticketStatus: ['active', 'used', 'expired', 'cancelled']

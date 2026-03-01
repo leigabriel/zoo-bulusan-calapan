@@ -1,22 +1,25 @@
 const db = require('../config/database');
 
 class Ticket {
+    // Dashboard statistics - uses ticket_reservations table
     static async getAll() {
         const [rows] = await db.query(
-            `SELECT t.*, CONCAT(u.first_name, ' ', u.last_name) as user_name, u.email as user_email 
-             FROM tickets t 
-             LEFT JOIN users u ON t.user_id = u.id 
-             ORDER BY t.created_at DESC`
+            `SELECT tr.*, tr.reservation_reference as booking_reference, tr.visitor_name,
+                    CONCAT(u.first_name, ' ', u.last_name) as user_name, u.email as user_email 
+             FROM ticket_reservations tr 
+             LEFT JOIN users u ON tr.user_id = u.id 
+             ORDER BY tr.created_at DESC`
         );
         return rows;
     }
 
     static async findById(id) {
         const [rows] = await db.query(
-            `SELECT t.*, CONCAT(u.first_name, ' ', u.last_name) as user_name, u.email as user_email 
-             FROM tickets t 
-             LEFT JOIN users u ON t.user_id = u.id 
-             WHERE t.id = ?`,
+            `SELECT tr.*, tr.reservation_reference as booking_reference, tr.visitor_name,
+                    CONCAT(u.first_name, ' ', u.last_name) as user_name, u.email as user_email 
+             FROM ticket_reservations tr 
+             LEFT JOIN users u ON tr.user_id = u.id 
+             WHERE tr.id = ?`,
             [id]
         );
         return rows[0];
@@ -24,10 +27,11 @@ class Ticket {
 
     static async findByCode(code) {
         const [rows] = await db.query(
-            `SELECT t.*, CONCAT(u.first_name, ' ', u.last_name) as user_name, u.email as user_email 
-             FROM tickets t 
-             LEFT JOIN users u ON t.user_id = u.id 
-             WHERE t.booking_reference = ?`,
+            `SELECT tr.*, tr.reservation_reference as booking_reference, tr.visitor_name,
+                    CONCAT(u.first_name, ' ', u.last_name) as user_name, u.email as user_email 
+             FROM ticket_reservations tr 
+             LEFT JOIN users u ON tr.user_id = u.id 
+             WHERE tr.reservation_reference = ?`,
             [code]
         );
         return rows[0];
@@ -35,28 +39,29 @@ class Ticket {
 
     static async findByUserId(userId) {
         const [rows] = await db.query(
-            `SELECT t.*, CONCAT(u.first_name, ' ', u.last_name) as user_name, u.email as user_email 
-             FROM tickets t 
-             LEFT JOIN users u ON t.user_id = u.id 
-             WHERE t.user_id = ? ORDER BY t.created_at DESC`,
+            `SELECT tr.*, tr.reservation_reference as booking_reference, tr.visitor_name,
+                    CONCAT(u.first_name, ' ', u.last_name) as user_name, u.email as user_email 
+             FROM ticket_reservations tr 
+             LEFT JOIN users u ON tr.user_id = u.id 
+             WHERE tr.user_id = ? ORDER BY tr.created_at DESC`,
             [userId]
         );
         return rows;
     }
 
     static async create(ticketData) {
-        const { userId, bookingReference, visitorEmail, ticketType, quantity, pricePerTicket, totalAmount, visitDate, status, residentIdImage } = ticketData;
+        const { userId, bookingReference, visitorEmail, visitorName, visitorPhone, visitDate, adultQuantity, childQuantity, bulusanResidentQuantity, totalVisitors, status, residentIdImage } = ticketData;
         const [result] = await db.query(
-            `INSERT INTO tickets (booking_reference, user_id, visitor_email, visit_date, ticket_type, quantity, price_per_ticket, total_amount, status, resident_id_image) 
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            [bookingReference, userId || null, visitorEmail || null, visitDate, ticketType, quantity, pricePerTicket || 0, totalAmount || 0, status || 'pending', residentIdImage || null]
+            `INSERT INTO ticket_reservations (reservation_reference, user_id, visitor_email, visitor_name, visitor_phone, reservation_date, adult_quantity, child_quantity, bulusan_resident_quantity, total_visitors, status, resident_id_image) 
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [bookingReference, userId || null, visitorEmail || null, visitorName || null, visitorPhone || null, visitDate, adultQuantity || 0, childQuantity || 0, bulusanResidentQuantity || 0, totalVisitors || 1, status || 'pending', residentIdImage || null]
         );
         return result.insertId;
     }
 
     static async updateStatus(id, status) {
         const [result] = await db.query(
-            'UPDATE tickets SET status = ? WHERE id = ?',
+            'UPDATE ticket_reservations SET status = ? WHERE id = ?',
             [status, id]
         );
         return result.affectedRows > 0;
@@ -65,38 +70,46 @@ class Ticket {
     static async validateTicket(code) {
         const ticket = await this.findByCode(code);
         if (!ticket) return { valid: false, message: 'Ticket not found' };
-        if (ticket.status === 'used') return { valid: false, message: 'Ticket already used' };
-        if (ticket.status === 'expired') return { valid: false, message: 'Ticket expired' };
+        if (ticket.status === 'used' || ticket.status === 'completed') return { valid: false, message: 'Ticket already used' };
+        if (ticket.status === 'expired' || ticket.status === 'cancelled') return { valid: false, message: 'Ticket expired or cancelled' };
 
-        await this.updateStatus(ticket.id, 'used');
+        await this.updateStatus(ticket.id, 'completed');
         return { valid: true, message: 'Ticket validated successfully', ticket };
     }
 
     static async count() {
-        const [rows] = await db.query('SELECT COUNT(*) as total FROM tickets');
+        const [rows] = await db.query('SELECT COUNT(*) as total FROM ticket_reservations');
         return rows[0].total;
     }
 
     static async countByStatus(status) {
         const [rows] = await db.query(
-            'SELECT COUNT(*) as total FROM tickets WHERE status = ?',
+            'SELECT COUNT(*) as total FROM ticket_reservations WHERE status = ?',
             [status]
         );
         return rows[0].total;
     }
 
     static async getTotalRevenue() {
+        // Ticket reservations are free entry system - return 0 or calculate from visitor counts
+        // Since this zoo uses reservations (not purchases), revenue is calculated differently
         const [rows] = await db.query(
-            'SELECT SUM(total_amount) as total FROM tickets WHERE status != "cancelled"'
+            `SELECT COALESCE(SUM(
+                (adult_quantity * 40) + 
+                (child_quantity * 20) + 
+                (bulusan_resident_quantity * 0)
+            ), 0) as total FROM ticket_reservations WHERE status IN ('confirmed', 'completed')`
         );
         return rows[0].total || 0;
     }
 
     static async getRevenueByDateRange(startDate, endDate) {
         const [rows] = await db.query(
-            `SELECT DATE(created_at) as date, SUM(total_amount) as revenue, COUNT(*) as count 
-             FROM tickets 
-             WHERE created_at BETWEEN ? AND ? AND status != 'cancelled'
+            `SELECT DATE(created_at) as date, 
+                    COALESCE(SUM((adult_quantity * 40) + (child_quantity * 20)), 0) as revenue, 
+                    COUNT(*) as count 
+             FROM ticket_reservations 
+             WHERE created_at BETWEEN ? AND ? AND status NOT IN ('cancelled', 'no_show')
              GROUP BY DATE(created_at)
              ORDER BY date ASC`,
             [startDate, endDate]
@@ -105,8 +118,8 @@ class Ticket {
     }
 
     static async updateTicketWithDetails(id, updateData) {
-        const { status, paymentStatus, paymentMethod, cancellationReason, checkedInBy } = updateData;
-        let query = 'UPDATE tickets SET ';
+        const { status, cancellationReason, confirmedBy } = updateData;
+        let query = 'UPDATE ticket_reservations SET ';
         const params = [];
         const updates = [];
 
@@ -114,24 +127,19 @@ class Ticket {
             updates.push('status = ?');
             params.push(status);
         }
-        if (paymentStatus) {
-            updates.push('payment_status = ?');
-            params.push(paymentStatus);
-        }
-        if (paymentMethod) {
-            updates.push('payment_method = ?');
-            params.push(paymentMethod);
-        }
         if (cancellationReason !== undefined) {
             updates.push('notes = ?');
             params.push(cancellationReason);
         }
-        if (status === 'used' || status === 'confirmed') {
-            updates.push('checked_in_at = NOW()');
-            if (checkedInBy) {
-                updates.push('checked_in_by = ?');
-                params.push(checkedInBy);
+        if (status === 'completed' || status === 'confirmed') {
+            updates.push('confirmed_at = NOW()');
+            if (confirmedBy) {
+                updates.push('confirmed_by = ?');
+                params.push(confirmedBy);
             }
+        }
+        if (status === 'cancelled') {
+            updates.push('cancelled_at = NOW()');
         }
 
         if (updates.length === 0) return false;
@@ -143,28 +151,13 @@ class Ticket {
         return result.affectedRows > 0;
     }
 
-    static async updatePaymentStatus(id, paymentStatus) {
-        const [result] = await db.query(
-            'UPDATE tickets SET payment_status = ? WHERE id = ?',
-            [paymentStatus, id]
-        );
-        return result.affectedRows > 0;
-    }
-
-    static async updateQRCode(id, qrCode) {
-        const [result] = await db.query(
-            'UPDATE tickets SET qr_code = ? WHERE id = ?',
-            [qrCode, id]
-        );
-        return result.affectedRows > 0;
-    }
-
     static async findByQRCode(qrCode) {
         const [rows] = await db.query(
-            `SELECT t.*, CONCAT(u.first_name, ' ', u.last_name) as user_name, u.email as user_email 
-             FROM tickets t 
-             LEFT JOIN users u ON t.user_id = u.id 
-             WHERE t.qr_code = ?`,
+            `SELECT tr.*, tr.reservation_reference as booking_reference, tr.visitor_name,
+                    CONCAT(u.first_name, ' ', u.last_name) as user_name, u.email as user_email 
+             FROM ticket_reservations tr 
+             LEFT JOIN users u ON tr.user_id = u.id 
+             WHERE tr.reservation_reference = ?`,
             [qrCode]
         );
         return rows[0];
@@ -172,11 +165,12 @@ class Ticket {
 
     static async getByDateRange(startDate, endDate) {
         const [rows] = await db.query(
-            `SELECT t.*, CONCAT(u.first_name, ' ', u.last_name) as user_name, u.email as user_email 
-             FROM tickets t 
-             LEFT JOIN users u ON t.user_id = u.id 
-             WHERE t.visit_date BETWEEN ? AND ?
-             ORDER BY t.visit_date ASC`,
+            `SELECT tr.*, tr.reservation_reference as booking_reference, tr.visitor_name,
+                    CONCAT(u.first_name, ' ', u.last_name) as user_name, u.email as user_email 
+             FROM ticket_reservations tr 
+             LEFT JOIN users u ON tr.user_id = u.id 
+             WHERE tr.reservation_date BETWEEN ? AND ?
+             ORDER BY tr.reservation_date ASC`,
             [startDate, endDate]
         );
         return rows;
@@ -184,57 +178,56 @@ class Ticket {
 
     static async getTodayTickets() {
         const [rows] = await db.query(
-            `SELECT t.*, CONCAT(u.first_name, ' ', u.last_name) as user_name, u.email as user_email 
-             FROM tickets t 
-             LEFT JOIN users u ON t.user_id = u.id 
-             WHERE DATE(t.visit_date) = CURDATE()
-             ORDER BY t.created_at DESC`
+            `SELECT tr.*, tr.reservation_reference as booking_reference, tr.visitor_name,
+                    CONCAT(u.first_name, ' ', u.last_name) as user_name, u.email as user_email 
+             FROM ticket_reservations tr 
+             LEFT JOIN users u ON tr.user_id = u.id 
+             WHERE DATE(tr.reservation_date) = CURDATE()
+             ORDER BY tr.created_at DESC`
         );
         return rows;
     }
 
     static async countTodayTickets() {
         const [rows] = await db.query(
-            'SELECT COUNT(*) as total FROM tickets WHERE DATE(visit_date) = CURDATE()'
+            'SELECT COUNT(*) as total FROM ticket_reservations WHERE DATE(reservation_date) = CURDATE()'
         );
         return rows[0].total;
     }
 
     static async countPendingValidations() {
         const [rows] = await db.query(
-            "SELECT COUNT(*) as total FROM tickets WHERE status = 'confirmed' AND DATE(visit_date) = CURDATE()"
+            "SELECT COUNT(*) as total FROM ticket_reservations WHERE status = 'confirmed' AND DATE(reservation_date) = CURDATE()"
         );
         return rows[0].total;
     }
 
     static async countTodayVisitors() {
         const [rows] = await db.query(
-            "SELECT COALESCE(SUM(quantity), 0) as total FROM tickets WHERE DATE(visit_date) = CURDATE() AND status IN ('confirmed', 'used')"
+            "SELECT COALESCE(SUM(total_visitors), 0) as total FROM ticket_reservations WHERE DATE(reservation_date) = CURDATE() AND status IN ('confirmed', 'completed')"
         );
         return rows[0].total;
     }
 
     static async getRecentTickets(limit = 5) {
         const [rows] = await db.query(
-            `SELECT t.*, CONCAT(u.first_name, ' ', u.last_name) as user_name, u.email as user_email 
-             FROM tickets t 
-             LEFT JOIN users u ON t.user_id = u.id 
-             ORDER BY t.created_at DESC
+            `SELECT tr.*, tr.reservation_reference as booking_reference, tr.visitor_name,
+                    CONCAT(u.first_name, ' ', u.last_name) as user_name, u.email as user_email 
+             FROM ticket_reservations tr 
+             LEFT JOIN users u ON tr.user_id = u.id 
+             ORDER BY tr.created_at DESC
              LIMIT ?`,
             [limit]
         );
         return rows;
     }
 
-    static async expireOldTickets() {
-        // Expire tickets where:
-        // 1. Visit date has passed, OR
-        // 2. 7 days have passed since purchase (for pending tickets)
+    static async expireOldReservations() {
         const [result] = await db.query(
-            `UPDATE tickets SET status = 'expired' 
+            `UPDATE ticket_reservations SET status = 'no_show' 
              WHERE status IN ('pending', 'confirmed') 
              AND (
-                visit_date < CURDATE()
+                reservation_date < CURDATE()
                 OR (status = 'pending' AND created_at < DATE_SUB(NOW(), INTERVAL 7 DAY))
              )`
         );
@@ -242,24 +235,13 @@ class Ticket {
     }
 
     static async countByDateAndTime(date, time) {
-        // Note: visit_time is stored as 'morning', 'afternoon', 'full_day'
-        // Map the hour to the time slot category
-        let timeCategory = 'full_day';
-        const hour = parseInt(time.split(':')[0]);
-        if (hour < 12) {
-            timeCategory = 'morning';
-        } else {
-            timeCategory = 'afternoon';
-        }
-
-        // Count tickets for this date with matching or full_day visit time
+        // Count reservations for this date
         const [rows] = await db.query(
-            `SELECT COALESCE(SUM(quantity), 0) as total 
-             FROM tickets 
-             WHERE DATE(visit_date) = ? 
-             AND status IN ('pending', 'confirmed', 'used')
-             AND (visit_time = ? OR visit_time = 'full_day')`,
-            [date, timeCategory]
+            `SELECT COALESCE(SUM(total_visitors), 0) as total 
+             FROM ticket_reservations 
+             WHERE DATE(reservation_date) = ? 
+             AND status IN ('pending', 'confirmed', 'completed')`,
+            [date]
         );
         return rows[0].total;
     }
@@ -268,15 +250,15 @@ class Ticket {
     static async getWeeklyAnalytics() {
         const [rows] = await db.query(
             `SELECT 
-                DATE(visit_date) as date,
-                DAYNAME(visit_date) as day,
+                DATE(reservation_date) as date,
+                DAYNAME(reservation_date) as day,
                 COUNT(*) as tickets,
-                COALESCE(SUM(quantity), 0) as visitors,
-                COALESCE(SUM(total_amount), 0) as revenue
-             FROM tickets 
-             WHERE visit_date >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
-             AND status IN ('confirmed', 'used')
-             GROUP BY DATE(visit_date), DAYNAME(visit_date)
+                COALESCE(SUM(total_visitors), 0) as visitors,
+                COALESCE(SUM((adult_quantity * 40) + (child_quantity * 20)), 0) as revenue
+             FROM ticket_reservations 
+             WHERE reservation_date >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
+             AND status IN ('confirmed', 'completed')
+             GROUP BY DATE(reservation_date), DAYNAME(reservation_date)
              ORDER BY date ASC`
         );
         return rows;
@@ -286,15 +268,15 @@ class Ticket {
     static async getMonthlyAnalytics() {
         const [rows] = await db.query(
             `SELECT 
-                DATE_FORMAT(visit_date, '%Y-%m') as month,
-                DATE_FORMAT(visit_date, '%b') as monthName,
+                DATE_FORMAT(reservation_date, '%Y-%m') as month,
+                DATE_FORMAT(reservation_date, '%b') as monthName,
                 COUNT(*) as tickets,
-                COALESCE(SUM(quantity), 0) as visitors,
-                COALESCE(SUM(total_amount), 0) as revenue
-             FROM tickets 
-             WHERE visit_date >= DATE_SUB(CURDATE(), INTERVAL 12 MONTH)
-             AND status IN ('confirmed', 'used')
-             GROUP BY DATE_FORMAT(visit_date, '%Y-%m'), DATE_FORMAT(visit_date, '%b')
+                COALESCE(SUM(total_visitors), 0) as visitors,
+                COALESCE(SUM((adult_quantity * 40) + (child_quantity * 20)), 0) as revenue
+             FROM ticket_reservations 
+             WHERE reservation_date >= DATE_SUB(CURDATE(), INTERVAL 12 MONTH)
+             AND status IN ('confirmed', 'completed')
+             GROUP BY DATE_FORMAT(reservation_date, '%Y-%m'), DATE_FORMAT(reservation_date, '%b')
              ORDER BY month ASC`
         );
         return rows;
@@ -304,90 +286,103 @@ class Ticket {
     static async getTicketTypeDistribution() {
         const [rows] = await db.query(
             `SELECT 
-                ticket_type as type,
-                COUNT(*) as count,
-                COALESCE(SUM(total_amount), 0) as revenue
-             FROM tickets 
-             WHERE status IN ('confirmed', 'used')
-             GROUP BY ticket_type`
+                'adult' as type,
+                COALESCE(SUM(adult_quantity), 0) as count,
+                COALESCE(SUM(adult_quantity * 40), 0) as revenue
+             FROM ticket_reservations 
+             WHERE status IN ('confirmed', 'completed')
+             UNION ALL
+             SELECT 
+                'child' as type,
+                COALESCE(SUM(child_quantity), 0) as count,
+                COALESCE(SUM(child_quantity * 20), 0) as revenue
+             FROM ticket_reservations 
+             WHERE status IN ('confirmed', 'completed')
+             UNION ALL
+             SELECT 
+                'resident' as type,
+                COALESCE(SUM(bulusan_resident_quantity), 0) as count,
+                0 as revenue
+             FROM ticket_reservations 
+             WHERE status IN ('confirmed', 'completed')`
         );
-        return rows;
+        return rows.filter(r => r.count > 0);
     }
 
     // Get daily stats for comparison
     static async getDailyComparison() {
         const [rows] = await db.query(
             `SELECT 
-                (SELECT COUNT(*) FROM tickets WHERE DATE(created_at) = CURDATE()) as today_tickets,
-                (SELECT COUNT(*) FROM tickets WHERE DATE(created_at) = DATE_SUB(CURDATE(), INTERVAL 1 DAY)) as yesterday_tickets,
-                (SELECT COALESCE(SUM(total_amount), 0) FROM tickets WHERE DATE(created_at) = CURDATE() AND status != 'cancelled') as today_revenue,
-                (SELECT COALESCE(SUM(total_amount), 0) FROM tickets WHERE DATE(created_at) = DATE_SUB(CURDATE(), INTERVAL 1 DAY) AND status != 'cancelled') as yesterday_revenue`
+                (SELECT COUNT(*) FROM ticket_reservations WHERE DATE(created_at) = CURDATE()) as today_tickets,
+                (SELECT COUNT(*) FROM ticket_reservations WHERE DATE(created_at) = DATE_SUB(CURDATE(), INTERVAL 1 DAY)) as yesterday_tickets,
+                (SELECT COALESCE(SUM((adult_quantity * 40) + (child_quantity * 20)), 0) FROM ticket_reservations WHERE DATE(created_at) = CURDATE() AND status NOT IN ('cancelled', 'no_show')) as today_revenue,
+                (SELECT COALESCE(SUM((adult_quantity * 40) + (child_quantity * 20)), 0) FROM ticket_reservations WHERE DATE(created_at) = DATE_SUB(CURDATE(), INTERVAL 1 DAY) AND status NOT IN ('cancelled', 'no_show')) as yesterday_revenue`
         );
         return rows[0];
     }
 
-    // Archive ticket
+    // Archive reservation
     static async archiveTicket(ticketId) {
         const [result] = await db.query(
-            'UPDATE tickets SET is_archived = TRUE, updated_at = NOW() WHERE id = ?',
+            'UPDATE ticket_reservations SET is_archived = TRUE, updated_at = NOW() WHERE id = ?',
             [ticketId]
         );
         return result.affectedRows > 0;
     }
 
-    // Unarchive ticket
+    // Unarchive reservation
     static async unarchiveTicket(ticketId) {
         const [result] = await db.query(
-            'UPDATE tickets SET is_archived = FALSE, updated_at = NOW() WHERE id = ?',
+            'UPDATE ticket_reservations SET is_archived = FALSE, updated_at = NOW() WHERE id = ?',
             [ticketId]
         );
         return result.affectedRows > 0;
     }
 
-    // Archive multiple tickets
+    // Archive multiple reservations
     static async archiveMultiple(ticketIds) {
         if (!ticketIds || ticketIds.length === 0) return 0;
         const [result] = await db.query(
-            'UPDATE tickets SET is_archived = TRUE, updated_at = NOW() WHERE id IN (?)',
+            'UPDATE ticket_reservations SET is_archived = TRUE, updated_at = NOW() WHERE id IN (?)',
             [ticketIds]
         );
         return result.affectedRows;
     }
 
-    // Get archived tickets by user
+    // Get archived reservations by user
     static async getArchivedByUserId(userId) {
         const [rows] = await db.query(
-            'SELECT * FROM tickets WHERE user_id = ? AND is_archived = TRUE ORDER BY created_at DESC',
+            'SELECT * FROM ticket_reservations WHERE user_id = ? AND is_archived = TRUE ORDER BY created_at DESC',
             [userId]
         );
         return rows;
     }
 
-    // Get active (non-archived) tickets by user
+    // Get active (non-archived) reservations by user
     static async getActiveByUserId(userId) {
         const [rows] = await db.query(
-            'SELECT * FROM tickets WHERE user_id = ? AND (is_archived = FALSE OR is_archived IS NULL) ORDER BY created_at DESC',
+            'SELECT * FROM ticket_reservations WHERE user_id = ? AND (is_archived = FALSE OR is_archived IS NULL) ORDER BY created_at DESC',
             [userId]
         );
         return rows;
     }
 
-    // Mark ticket as paid
-    static async markAsPaid(ticketId, paidBy = null) {
+    // Mark reservation as confirmed
+    static async markAsPaid(ticketId, confirmedBy = null) {
         const [result] = await db.query(
-            `UPDATE tickets SET payment_status = 'paid', checked_in_by = ?, updated_at = NOW() WHERE id = ?`,
-            [paidBy, ticketId]
+            `UPDATE ticket_reservations SET status = 'confirmed', confirmed_by = ?, confirmed_at = NOW(), updated_at = NOW() WHERE id = ?`,
+            [confirmedBy, ticketId]
         );
         return result.affectedRows > 0;
     }
 
-    // Update verification status (for resident tickets)
+    // Update verification status (for resident reservations)
     static async updateVerificationStatus(ticketId, status) {
         const validStatuses = ['pending', 'approved', 'rejected'];
         if (!validStatuses.includes(status)) return false;
         
         const [result] = await db.query(
-            'UPDATE tickets SET verification_status = ?, updated_at = NOW() WHERE id = ?',
+            'UPDATE ticket_reservations SET verification_status = ?, updated_at = NOW() WHERE id = ?',
             [status, ticketId]
         );
         return result.affectedRows > 0;

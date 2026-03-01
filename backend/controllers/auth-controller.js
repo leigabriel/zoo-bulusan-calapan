@@ -141,7 +141,7 @@ exports.login = async (req, res) => {
 
         const user = await User.findByEmailOrUsername(identifier);
         if (!user) {
-            return res.status(401).json({ success: false, message: 'Invalid credentials' });
+            return res.status(401).json({ success: false, message: 'Invalid Email/Username or Password' });
         }
 
         if (user.is_suspended) {

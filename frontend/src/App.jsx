@@ -12,7 +12,7 @@ import UserProfile from './pages/user/UserProfile';
 import Settings from './pages/user/Settings';
 import Help from './pages/user/Help';
 import UserMessages from './pages/user/UserMessages';
-import MiniZooGame from './pages/user/MiniZooGame';
+import MiniZooGameLauncher from './pages/user/MiniZooGameLauncher';
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
 import GoogleAuthSuccess from './pages/auth/GoogleAuthSuccess';
@@ -36,7 +36,6 @@ import StaffTickets from './pages/staff/StaffTickets';
 import StaffReservations from './pages/staff/StaffReservations';
 import StaffAnimals from './pages/staff/StaffAnimals';
 import StaffPlants from './pages/staff/StaffPlants';
-import StaffUsers from './pages/staff/StaffUsers';
 import StaffHelpCenter from './pages/staff/StaffHelpCenter';
 import StaffMessages from './pages/staff/StaffMessages';
 import TicketScanner from './pages/staff/TicketScanner';
@@ -132,7 +131,7 @@ function AppRoutes() {
                 </ProtectedRoute>
             } />
             <Route path="/help" element={<Help />} />
-            <Route path="/mini-zoo-game" element={<MiniZooGame />} />
+            <Route path="/mini-zoo-game" element={<MiniZooGameLauncher />} />
 
             {/* Admin Routes */}
             <Route path="/admin/dashboard" element={
@@ -268,13 +267,6 @@ function AppRoutes() {
                 <ProtectedRoute allowedRoles={['admin', 'staff']}>
                     <StaffLayout>
                         <StaffReservations />
-                    </StaffLayout>
-                </ProtectedRoute>
-            } />
-            <Route path="/staff/users" element={
-                <ProtectedRoute allowedRoles={['admin', 'staff']}>
-                    <StaffLayout>
-                        <StaffUsers />
                     </StaffLayout>
                 </ProtectedRoute>
             } />

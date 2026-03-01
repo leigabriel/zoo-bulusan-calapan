@@ -49,9 +49,7 @@ const GoogleIcon = () => (
     </svg>
 );
 
-// Map OAuth error codes to user-friendly messages
 const getErrorMessage = (errorCode) => {
-    // Decode the error code in case it was URL-encoded
     const decodedError = decodeURIComponent(errorCode).toLowerCase();
 
     const errorMessages = {
@@ -68,12 +66,10 @@ const getErrorMessage = (errorCode) => {
         'configuration_error': 'Service configuration error. Please try again later.'
     };
 
-    // Check for exact match first
     if (errorMessages[errorCode]) {
         return errorMessages[errorCode];
     }
 
-    // Check for common error patterns in decoded message
     if (decodedError.includes('missing required google oauth')) {
         return 'Google Sign-In is not configured. Please contact support.';
     }
@@ -87,7 +83,6 @@ const getErrorMessage = (errorCode) => {
         return 'Network error. Please check your connection and try again.';
     }
 
-    // In development, show the actual error for debugging
     if (import.meta.env.DEV && errorCode !== 'authentication_failed') {
         console.error('OAuth error:', errorCode, decodedError);
     }
@@ -221,21 +216,21 @@ const PolicyModal = ({ isOpen, onClose, title, content }) => {
                     <h2 id="modal-title" className="text-xl sm:text-2xl font-bold text-gray-900">{title}</h2>
                     <button
                         onClick={onClose}
-                        className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                        className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 min-h-[44px] min-w-[44px] flex items-center justify-center"
                         aria-label="Close modal"
                     >
                         <CloseIcon />
                     </button>
                 </div>
                 <div className="flex-1 overflow-y-auto p-4 sm:p-6">
-                    <div className="prose prose-sm max-w-none text-gray-600 whitespace-pre-line">
+                    <div className="prose prose-sm max-w-none text-gray-600 whitespace-pre-line text-sm sm:text-base leading-relaxed">
                         {content}
                     </div>
                 </div>
                 <div className="p-4 sm:p-6 border-t border-gray-200">
                     <button
                         onClick={onClose}
-                        className="w-full bg-green-600 text-white py-2.5 rounded-lg font-semibold hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+                        className="w-full bg-emerald-600 text-white py-3 rounded-lg font-semibold hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 min-h-[44px]"
                     >
                         I Understand
                     </button>
@@ -266,19 +261,15 @@ const LoginPage = () => {
     const [searchParams] = useSearchParams();
 
     useEffect(() => {
-        // Check for success message from navigation state
         if (location.state?.message) {
             setMessage({ text: location.state.message, type: 'success' });
         }
 
-        // Check for OAuth error in URL params
         const errorParam = searchParams.get('error');
         if (errorParam) {
             const errorMessage = getErrorMessage(errorParam);
-            // In development, show the raw error code for debugging
             const debugInfo = import.meta.env.DEV ? ` (Code: ${decodeURIComponent(errorParam)})` : '';
             setMessage({ text: errorMessage + debugInfo, type: 'error' });
-            // Clean up URL
             window.history.replaceState(null, '', '/login');
         }
     }, [location, searchParams]);
@@ -287,10 +278,8 @@ const LoginPage = () => {
         setGoogleLoading(true);
         setMessage({ text: '', type: '' });
 
-        // Redirect to backend Google OAuth endpoint
-        // Use VITE_BACKEND_URL if available, otherwise derive from VITE_API_URL
-        const backendUrl = import.meta.env.VITE_BACKEND_URL || 
-            import.meta.env.VITE_API_URL?.replace('/api', '') || 
+        const backendUrl = import.meta.env.VITE_BACKEND_URL ||
+            import.meta.env.VITE_API_URL?.replace('/api', '') ||
             'http://localhost:5000';
         window.location.href = `${backendUrl}/auth/google`;
     };
@@ -372,19 +361,7 @@ const LoginPage = () => {
     };
 
     return (
-        <div className="relative isolate bg-green-950 flex justify-center items-center min-h-screen px-4 py-6 sm:py-8">
-            <div
-                aria-hidden="true"
-                className="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80"
-            >
-                <div
-                    style={{
-                        clipPath: "polygon(74.1% 44.1%, 100% 61.6%, 97.5% 26.9%, 85.5% 0.1%, 80.7% 2%, 72.5% 32.5%, 60.2% 62.4%, 52.4% 68.1%, 47.5% 58.3%, 45.2% 34.5%, 27.5% 76.7%, 0.1% 64.9%, 17.9% 100%, 27.6% 76.8%, 76.1% 97.7%, 74.1% 44.1%)",
-                    }}
-                    className="relative left-[calc(50%-11rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[30deg] bg-gradient-to-tr from-[#4ade80] to-[#22d3ee] opacity-30 sm:left-[calc(50%-30rem)] sm:w-[72.1875rem]"
-                />
-            </div>
-
+        <div className="flex min-h-screen w-full bg-white">
             <PolicyModal
                 isOpen={showPrivacyModal}
                 onClose={() => setShowPrivacyModal(false)}
@@ -400,35 +377,35 @@ const LoginPage = () => {
             />
 
             {showSuspendedModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
                     <div className="bg-white rounded-xl shadow-2xl w-full max-w-md flex flex-col">
-                        <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-200 bg-red-50">
+                        <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-200 bg-red-50 rounded-t-xl">
                             <h2 className="text-xl font-bold text-red-800">Account Suspended</h2>
                             <button
                                 onClick={() => {
                                     setShowSuspendedModal(false);
                                     setSuspensionInfo(null);
                                 }}
-                                className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg"
+                                className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg min-h-[44px] min-w-[44px] flex items-center justify-center"
                             >
                                 <CloseIcon />
                             </button>
                         </div>
                         <div className="p-4 sm:p-6">
                             <div className="flex items-center gap-3 mb-4">
-                                <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+                                <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center shrink-0">
                                     <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                                     </svg>
                                 </div>
                                 <div>
-                                    <p className="font-medium text-gray-900">Your account has been suspended</p>
+                                    <p className="font-medium text-gray-900 text-sm sm:text-base">Your account has been suspended</p>
                                     <p className="text-sm text-gray-500">Contact support or submit an appeal</p>
                                 </div>
                             </div>
-                            <div className="bg-gray-50 rounded-lg p-4 mb-4">
+                            <div className="bg-gray-50 rounded-lg p-4 mb-4 border border-gray-100">
                                 <p className="text-sm font-medium text-gray-600 mb-1">Reason for suspension:</p>
-                                <p className="text-gray-800">{suspensionInfo?.reason || 'No reason provided'}</p>
+                                <p className="text-gray-800 text-sm sm:text-base break-words">{suspensionInfo?.reason || 'No reason provided'}</p>
                                 {suspensionInfo?.suspendedAt && (
                                     <p className="text-xs text-gray-500 mt-2">
                                         Suspended on: {new Date(suspensionInfo.suspendedAt).toLocaleDateString()}
@@ -440,7 +417,7 @@ const LoginPage = () => {
                                     setShowSuspendedModal(false);
                                     setShowAppealModal(true);
                                 }}
-                                className="w-full bg-green-600 text-white py-2.5 rounded-lg font-semibold hover:bg-green-700"
+                                className="w-full bg-emerald-600 text-white py-3 rounded-lg font-semibold hover:bg-emerald-700 min-h-[44px] transition-colors"
                             >
                                 Submit an Appeal
                             </button>
@@ -450,7 +427,7 @@ const LoginPage = () => {
             )}
 
             {showAppealModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
                     <div className="bg-white rounded-xl shadow-2xl w-full max-w-md flex flex-col">
                         <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-200">
                             <h2 className="text-xl font-bold text-gray-900">Submit Appeal</h2>
@@ -460,7 +437,7 @@ const LoginPage = () => {
                                     setAppealMessage('');
                                     setAppealSent(false);
                                 }}
-                                className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg"
+                                className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg min-h-[44px] min-w-[44px] flex items-center justify-center"
                             >
                                 <CloseIcon />
                             </button>
@@ -468,26 +445,26 @@ const LoginPage = () => {
                         <div className="p-4 sm:p-6">
                             {appealSent ? (
                                 <div className="text-center py-6">
-                                    <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                        <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                        <svg className="w-8 h-8 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
                                         </svg>
                                     </div>
                                     <h3 className="text-lg font-semibold text-gray-900 mb-2">Appeal Submitted</h3>
-                                    <p className="text-gray-600 mb-4">Your appeal has been submitted successfully. You will be notified once it has been reviewed.</p>
+                                    <p className="text-sm sm:text-base text-gray-600 mb-6">Your appeal has been submitted successfully. You will be notified once it has been reviewed.</p>
                                     <button
                                         onClick={() => {
                                             setShowAppealModal(false);
                                             setAppealSent(false);
                                         }}
-                                        className="px-6 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
+                                        className="px-6 py-3 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 min-h-[44px] w-full transition-colors"
                                     >
                                         Close
                                     </button>
                                 </div>
                             ) : (
                                 <>
-                                    <p className="text-gray-600 mb-4">
+                                    <p className="text-sm sm:text-base text-gray-600 mb-4">
                                         Please explain why you believe your suspension should be lifted. Be respectful and provide relevant details.
                                     </p>
                                     <textarea
@@ -495,12 +472,12 @@ const LoginPage = () => {
                                         onChange={(e) => setAppealMessage(e.target.value)}
                                         placeholder="Enter your appeal message..."
                                         rows={5}
-                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none"
+                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none text-sm sm:text-base outline-none transition-all"
                                     />
                                     <button
                                         onClick={handleSubmitAppeal}
                                         disabled={appealLoading || !appealMessage.trim()}
-                                        className="w-full mt-4 bg-green-600 text-white py-2.5 rounded-lg font-semibold hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                                        className="w-full mt-4 bg-emerald-600 text-white py-3 rounded-lg font-semibold hover:bg-emerald-700 disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed min-h-[44px] transition-colors"
                                     >
                                         {appealLoading ? 'Submitting...' : 'Submit Appeal'}
                                     </button>
@@ -511,61 +488,57 @@ const LoginPage = () => {
                 </div>
             )}
 
-            <div className="flex flex-col md:flex-row w-full max-w-5xl bg-white rounded-2xl overflow-hidden shadow-2xl border-4 border-gray-200">
-                <div className="relative hidden md:flex flex-col justify-between text-white p-6 sm:p-10 md:w-1/2 rounded-2xl md:rounded-none overflow-hidden min-h-[200px] sm:min-h-[300px]">
-                    <div className="absolute inset-0 bg-gradient-to-br from-green-500 via-green-700 to-green-900"></div>
-                    <div className="absolute inset-0">
-                        <img
-                            src="https://images.unsplash.com/photo-1534567153574-2b12153a87f0?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80"
-                            alt="Wildlife background"
-                            className="w-full h-full object-cover opacity-60"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-green-900/90 via-green-800/70 to-green-700/60"></div>
+            <div className="relative hidden md:flex md:w-1/2 flex-col justify-between p-12 lg:p-16 overflow-hidden bg-emerald-900">
+                <img
+                    src="https://images.unsplash.com/photo-1516426122078-c23e76319801?ixlib=rb-4.0.3&auto=format&fit=crop&w=2068&q=80"
+                    alt="Wildlife background"
+                    className="absolute inset-0 w-full h-full object-cover opacity-50 mix-blend-overlay"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-emerald-950 via-emerald-900/40 to-transparent"></div>
+
+                <div className="relative z-10 flex flex-col h-full justify-between">
+                    <div className="flex items-center gap-3 text-white">
+                        <span className="font-bold text-xl tracking-widest uppercase">Zoo Bulusan</span>
                     </div>
-                    <div className="relative z-10 flex flex-col justify-between h-full">
-                        <div>
-                            <p className="text-base sm:text-lg opacity-80 font-semibold mb-2">
-                                ZOO BULUSAN
-                            </p>
-                            <h1 className="text-2xl sm:text-4xl font-extrabold leading-snug">
-                                Experience Wildlife Up Close
-                            </h1>
-                        </div>
-                        <div className="mt-6 sm:mt-10 opacity-80 text-sm">
-                            <p className="mb-2 font-medium">Sorsogon&apos;s Premier Wildlife Sanctuary</p>
-                            <div className="flex flex-wrap gap-2 opacity-90 text-xs">
-                                <span className="bg-white/10 px-2 py-1 rounded">Wildlife</span>
-                                <span className="bg-white/10 px-2 py-1 rounded">Conservation</span>
-                                <span className="bg-white/10 px-2 py-1 rounded">Education</span>
-                            </div>
-                        </div>
+
+                    <div className="mt-auto">
+                        <h1 className="text-4xl lg:text-5xl xl:text-6xl font-bold text-white leading-tight mb-6">
+                            Experience<br />
+                            Wildlife<br />
+                            Up Close.
+                        </h1>
+                        <p className="text-emerald-50 text-base lg:text-lg max-w-md leading-relaxed">
+                            From quick social media updates to in-depth conservation records, our platform lets you stay connected effortlessly.
+                        </p>
                     </div>
                 </div>
+            </div>
 
-                <div className="md:w-1/2 w-full p-6 sm:p-8 flex flex-col justify-center">
-                    <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 mb-1">
-                        Welcome Back
-                    </h1>
-                    <p className="text-gray-500 text-sm mb-6">
-                        Please log in to your account to continue.
+            <div className="w-full md:w-1/2 flex flex-col justify-center px-6 py-12 sm:px-12 lg:px-24 bg-white">
+                <div className="w-full max-w-md mx-auto">
+                    <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-2 tracking-tight">
+                        Welcome Back!
+                    </h2>
+                    <p className="text-gray-500 text-sm lg:text-base mb-10">
+                        Log in to start exploring wildlife conservation with ease.
                     </p>
 
                     {message.text && (
-                        <div className={`p-3 mb-4 rounded-lg border flex items-center gap-3 ${message.type === 'success'
-                                ? 'bg-green-50 text-green-800 border-green-200'
-                                : 'bg-red-50 text-red-800 border-red-200'
+                        <div className={`p-4 mb-6 rounded-lg border flex items-center gap-3 ${message.type === 'success'
+                            ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                            : 'bg-red-50 text-red-800 border-red-200'
                             }`}>
                             <span className="flex-shrink-0">
                                 {message.type === 'success' ? <SuccessIcon /> : <ErrorIcon />}
                             </span>
-                            <span className="text-sm font-medium">{message.text}</span>
+                            <span className="text-sm font-medium break-words">{message.text}</span>
                         </div>
                     )}
 
-                    <form className="space-y-4" onSubmit={handleSubmit}>
+                    <form className="space-y-6" onSubmit={handleSubmit}>
                         <div>
-                            <label htmlFor="identifier" className="block text-sm font-medium text-gray-700 mb-1">
-                                Email or Username
+                            <label htmlFor="identifier" className="block text-sm font-semibold text-gray-900 mb-2">
+                                Email
                             </label>
                             <input
                                 type="text"
@@ -573,13 +546,13 @@ const LoginPage = () => {
                                 value={identifier}
                                 onChange={(e) => setIdentifier(sanitizeInput(e.target.value))}
                                 required
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent transition"
-                                placeholder="Enter email or username"
+                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition text-sm"
+                                placeholder="Input your email"
                             />
                         </div>
 
                         <div>
-                            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+                            <label htmlFor="password" className="block text-sm font-semibold text-gray-900 mb-2">
                                 Password
                             </label>
                             <div className="relative">
@@ -589,28 +562,28 @@ const LoginPage = () => {
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                     required
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent transition pr-10"
-                                    placeholder="Enter your password"
+                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition pr-12 text-sm"
+                                    placeholder="Input your password"
                                 />
                                 <button
                                     type="button"
                                     onClick={() => setShowPassword(!showPassword)}
-                                    className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-600 hover:text-green-700 focus:outline-none"
+                                    className="absolute inset-y-0 right-0 flex items-center px-4 text-gray-400 hover:text-gray-600 focus:outline-none"
                                 >
                                     {showPassword ? <EyeOffIcon /> : <EyeIcon />}
                                 </button>
                             </div>
                         </div>
 
-                        <div className="flex items-center justify-between text-sm">
-                            <label className="flex items-center space-x-2">
+                        <div className="flex flex-row items-center justify-between text-sm py-2">
+                            <label className="flex items-center space-x-2 cursor-pointer select-none">
                                 <input
                                     type="checkbox"
-                                    className="h-4 w-4 text-green-600 border-gray-300 rounded"
+                                    className="h-4 w-4 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500"
                                 />
-                                <span className="text-gray-600">Remember me</span>
+                                <span className="text-gray-600 font-medium">Remember Me</span>
                             </label>
-                            <Link to="#" className="text-green-600 hover:underline font-medium">
+                            <Link to="#" className="text-gray-500 hover:text-gray-900 transition-colors">
                                 Forgot Password?
                             </Link>
                         </div>
@@ -618,27 +591,25 @@ const LoginPage = () => {
                         <button
                             type="submit"
                             disabled={loading || googleLoading}
-                            className="w-full bg-green-600 text-white py-2.5 rounded-lg font-semibold hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                            className="w-full bg-emerald-600 text-white py-3.5 rounded-lg font-semibold hover:bg-emerald-700 disabled:bg-emerald-300 disabled:cursor-not-allowed transition-colors text-sm"
                         >
-                            {loading ? 'Logging in...' : 'Log in'}
+                            {loading ? 'Logging in...' : 'Login'}
                         </button>
 
-                        {/* Divider */}
-                        <div className="relative my-4">
+                        <div className="relative my-8">
                             <div className="absolute inset-0 flex items-center">
-                                <div className="w-full border-t border-gray-300"></div>
+                                <div className="w-full border-t border-gray-200"></div>
                             </div>
-                            <div className="relative flex justify-center text-sm">
-                                <span className="px-2 bg-white text-gray-500">or</span>
+                            <div className="relative flex justify-center text-xs">
+                                <span className="px-4 bg-white text-gray-400">Or continue with</span>
                             </div>
                         </div>
 
-                        {/* Google Sign-In Button */}
                         <button
                             type="button"
                             onClick={handleGoogleSignIn}
                             disabled={loading || googleLoading}
-                            className="w-full flex items-center justify-center gap-3 bg-white text-gray-700 py-2.5 px-4 rounded-lg font-medium border border-gray-300 hover:bg-gray-50 hover:border-gray-400 disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors"
+                            className="w-full flex items-center justify-center gap-3 bg-white text-gray-700 py-3.5 px-4 rounded-lg font-medium border border-gray-200 hover:bg-gray-50 disabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors text-sm"
                         >
                             {googleLoading ? (
                                 <>
@@ -653,19 +624,19 @@ const LoginPage = () => {
                             )}
                         </button>
 
-                        <div className="text-center text-sm mt-2">
-                            Don&apos;t have an account?{' '}
-                            <Link to="/signup" className="text-green-600 hover:underline font-medium">
-                                Register
+                        <div className="text-center text-sm mt-8 text-gray-600">
+                            Don't have an account?{' '}
+                            <Link to="/signup" className="text-gray-900 font-bold hover:underline">
+                                Sign up here
                             </Link>
                         </div>
 
-                        <div className="text-center text-xs text-gray-500 mt-4 pt-4 border-t border-gray-100">
+                        <div className="text-center text-xs text-gray-400 mt-8 pt-6">
                             By logging in, you agree to our{' '}
                             <button
                                 type="button"
                                 onClick={() => setShowTermsModal(true)}
-                                className="text-green-600 hover:underline font-medium"
+                                className="text-gray-500 hover:text-gray-800 transition-colors underline"
                             >
                                 Terms of Service
                             </button>
@@ -673,25 +644,13 @@ const LoginPage = () => {
                             <button
                                 type="button"
                                 onClick={() => setShowPrivacyModal(true)}
-                                className="text-green-600 hover:underline font-medium"
+                                className="text-gray-500 hover:text-gray-800 transition-colors underline"
                             >
                                 Privacy Policy
                             </button>
                         </div>
                     </form>
                 </div>
-            </div>
-
-            <div
-                aria-hidden="true"
-                className="absolute inset-x-0 top-[calc(100%-13rem)] -z-10 transform-gpu overflow-hidden blur-3xl sm:top-[calc(100%-30rem)]"
-            >
-                <div
-                    style={{
-                        clipPath: "polygon(74.1% 44.1%, 100% 61.6%, 97.5% 26.9%, 85.5% 0.1%, 80.7% 2%, 72.5% 32.5%, 60.2% 62.4%, 52.4% 68.1%, 47.5% 58.3%, 45.2% 34.5%, 27.5% 76.7%, 0.1% 64.9%, 17.9% 100%, 27.6% 76.8%, 76.1% 97.7%, 74.1% 44.1%)",
-                    }}
-                    className="relative left-[calc(50%+3rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 bg-gradient-to-tr from-[#4ade80] to-[#22d3ee] opacity-30 sm:left-[calc(50%+36rem)] sm:w-[50.1875rem]"
-                />
             </div>
         </div>
     );

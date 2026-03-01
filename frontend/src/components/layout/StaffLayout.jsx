@@ -290,7 +290,6 @@ const StaffLayout = ({ children }) => {
         { path: '/staff/reservations', label: 'Reservations', Icon: TicketsIcon },
         { path: '/staff/animals', label: 'Manage Animals', Icon: AnimalsIcon },
         { path: '/staff/plants', label: 'Manage Plants', Icon: PlantsIcon },
-        { path: '/staff/users', label: 'Manage Users', Icon: UsersIcon },
     ];
 
     const communicationItems = [

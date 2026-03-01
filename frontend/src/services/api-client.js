@@ -569,21 +569,6 @@ export const staffAPI = {
         return handleResponse(response);
     },
 
-    // Users endpoints (read-only for staff)
-    getUsers: async () => {
-        const response = await fetch(`${API_BASE_URL}/staff/users`, {
-            headers: getAuthHeaders('staff')
-        });
-        return handleResponse(response);
-    },
-
-    getUserById: async (id) => {
-        const response = await fetch(`${API_BASE_URL}/staff/users/${id}`, {
-            headers: getAuthHeaders('staff')
-        });
-        return handleResponse(response);
-    },
-
     // ====== CRUD Operations for Staff ======
 
     // Animals CRUD
@@ -640,33 +625,6 @@ export const staffAPI = {
         return handleResponse(response);
     },
 
-    // Users CRUD
-    createUser: async (userData) => {
-        const response = await fetch(`${API_BASE_URL}/staff/users`, {
-            method: 'POST',
-            headers: getAuthHeaders('staff'),
-            body: JSON.stringify(userData)
-        });
-        return handleResponse(response);
-    },
-
-    updateUser: async (id, userData) => {
-        const response = await fetch(`${API_BASE_URL}/staff/users/${id}`, {
-            method: 'PUT',
-            headers: getAuthHeaders('staff'),
-            body: JSON.stringify(userData)
-        });
-        return handleResponse(response);
-    },
-
-    deleteUser: async (id) => {
-        const response = await fetch(`${API_BASE_URL}/staff/users/${id}`, {
-            method: 'DELETE',
-            headers: getAuthHeaders('staff')
-        });
-        return handleResponse(response);
-    },
-
     // Dashboard stats
     getDashboardStats: async () => {
         const response = await fetch(`${API_BASE_URL}/staff/dashboard`, {
@@ -700,24 +658,6 @@ export const staffAPI = {
 
     markAllNotificationsRead: async () => {
         const response = await fetch(`${API_BASE_URL}/staff/notifications/read-all`, {
-            method: 'PUT',
-            headers: getAuthHeaders('staff')
-        });
-        return handleResponse(response);
-    },
-
-    // User management - suspend/unsuspend
-    suspendUser: async (id, reason) => {
-        const response = await fetch(`${API_BASE_URL}/staff/users/${id}/suspend`, {
-            method: 'PUT',
-            headers: getAuthHeaders('staff'),
-            body: JSON.stringify({ reason })
-        });
-        return handleResponse(response);
-    },
-
-    unsuspendUser: async (id) => {
-        const response = await fetch(`${API_BASE_URL}/staff/users/${id}/unsuspend`, {
             method: 'PUT',
             headers: getAuthHeaders('staff')
         });

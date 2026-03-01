@@ -138,69 +138,6 @@ const AboutUs = () => {
                             </div>
                         </div>
                     </section>
-
-                    <section className="relative min-h-screen w-full overflow-hidden bg-emerald-950 flex items-center justify-center py-20 px-4 md:px-12">
-                        <div className="absolute inset-0 z-0">
-                            <div className="absolute top-0 left-0 w-full h-full bg-teal-900/40"></div>
-                            <div
-                                className="absolute top-[-10%] left-[-10%] w-[120%] h-[120%] bg-emerald-400 opacity-90 transition-transform duration-1000"
-                                style={{
-                                    clipPath: 'polygon(15% 0%, 100% 0%, 75% 100%, 0% 100%)',
-                                    transform: 'rotate(-5deg)'
-                                }}
-                            ></div>
-                            <div className="absolute bottom-[-0%] left-[1.5%] text-[20vw] md:text-[20vw] font-black text-emerald-900/20 leading-none select-none">
-                                BULUSAN
-                            </div>
-                        </div>
-
-                        <div className="container mx-auto relative z-10 flex flex-col md:flex-row items-center justify-between gap-12 md:gap-16">
-                            <div className="w-full md:w-1/3 text-center md:text-left">
-                                {/* <h4 className="text-emerald-950 text-xl md:text-2xl font-bold leading-tight max-w-[200px] mx-auto md:mx-0 uppercase">
-                                    Step into the <br />
-                                    Mindoro Wild
-                                </h4> */}
-                            </div>
-
-                            <div className="w-full md:w-2/3 flex flex-col items-center md:items-end text-center md:text-right">
-                                <nav className="flex flex-col gap-2 mb-8 md:mb-12">
-                                    {['Animals', 'Plants', 'Events', '', '', '', ''].map((item) => (
-                                        <Link
-                                            key={item}
-                                            to={`/${item.toLowerCase()}`}
-                                            className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-bold tracking-tighter text-emerald-950 hover:text-white transition-all duration-300 leading-[0.85]"
-                                        >
-                                            {item}
-                                        </Link>
-                                    ))}
-                                </nav>
-
-                                <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
-                                    <Link
-                                        to="/reservations"
-                                        className="px-10 py-4 bg-emerald-950 text-emerald-400 rounded-full font-bold transition-all border border-emerald-950 hover:bg-transparent hover:text-emerald-950 text-center uppercase text-xs tracking-widest"
-                                    >
-                                        Visit the Zoo
-                                    </Link>
-                                    <Link
-                                        to="/events"
-                                        className="px-10 py-4 border-2 border-emerald-950 text-emerald-950 rounded-full font-bold hover:bg-emerald-950 hover:text-emerald-400 transition-all text-center uppercase text-xs tracking-widest"
-                                    >
-                                        Help Conserve
-                                    </Link>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="absolute top-8 right-8 hidden md:block">
-                            <Link
-                                to=""
-                                className="px-6 py-2 bg-emerald-100 text-emerald-900 rounded-full text-[10px] font-bold uppercase tracking-widest hover:bg-white transition-colors"
-                            >
-                                Volunteer at Bulusan
-                            </Link>
-                        </div>
-                    </section>
                 </main>
 
                 <Footer />

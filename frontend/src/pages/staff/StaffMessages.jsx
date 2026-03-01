@@ -59,6 +59,7 @@ const StaffMessages = ({ globalSearch = '' }) => {
     const [searchQuery, setSearchQuery] = useState('');
     const [activeTab, setActiveTab] = useState('messages');
     const [typeFilter, setTypeFilter] = useState('all');
+    const [toastMessage, setToastMessage] = useState({ text: '', type: '' });
     
     const [selectedMessage, setSelectedMessage] = useState(null);
     const [showViewModal, setShowViewModal] = useState(false);
@@ -134,8 +135,12 @@ const StaffMessages = ({ globalSearch = '' }) => {
             setShowReplyModal(false);
             setReplyContent('');
             setShowViewModal(false);
+            setToastMessage({ text: 'Reply sent successfully', type: 'success' });
+            setTimeout(() => setToastMessage({ text: '', type: '' }), 3000);
         } catch (err) {
             console.error('Error sending reply:', err);
+            setToastMessage({ text: 'Failed to send reply', type: 'error' });
+            setTimeout(() => setToastMessage({ text: '', type: '' }), 3000);
         } finally {
             setReplying(false);
         }
@@ -493,6 +498,12 @@ const StaffMessages = ({ globalSearch = '' }) => {
                             </button>
                         </div>
                     </div>
+                </div>
+            )}
+
+            {toastMessage.text && (
+                <div className={`fixed bottom-6 left-1/2 -translate-x-1/2 px-6 py-3 rounded-full shadow-lg z-50 font-bold text-sm ${toastMessage.type === 'success' ? 'bg-emerald-600 text-white' : 'bg-red-600 text-white'}`}>
+                    {toastMessage.text}
                 </div>
             )}
         </div>

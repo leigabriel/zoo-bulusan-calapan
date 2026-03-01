@@ -26,12 +26,12 @@ exports.getDashboardStats = async (req, res) => {
         res.json({
             success: true,
             data: {
-                todayTickets,
-                pendingValidations,
-                todayVisitors,
-                activeAnimals,
-                totalPlants,
-                upcomingEvents
+                todayTickets: Number(todayTickets) || 0,
+                pendingValidations: Number(pendingValidations) || 0,
+                todayVisitors: Number(todayVisitors) || 0,
+                activeAnimals: Number(activeAnimals) || 0,
+                totalPlants: Number(totalPlants) || 0,
+                upcomingEvents: Number(upcomingEvents) || 0
             }
         });
     } catch (error) {
@@ -107,7 +107,7 @@ exports.checkTicket = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Ticket code is required' });
         }
 
-        // Try to find by booking reference or QR code
+        // Try to find by reservation reference
         let ticket = await Ticket.findByCode(code);
         if (!ticket) {
             ticket = await Ticket.findByQRCode(code);
@@ -118,29 +118,29 @@ exports.checkTicket = async (req, res) => {
         }
 
         // Check ticket status
-        if (ticket.status === 'used') {
+        if (ticket.status === 'completed') {
             return res.status(400).json({ 
                 success: false, 
                 message: 'Ticket has already been used',
                 ticket: {
                     id: ticket.id,
-                    bookingReference: ticket.booking_reference,
+                    bookingReference: ticket.booking_reference || ticket.reservation_reference,
                     visitorName: ticket.user_name || ticket.visitor_name,
-                    ticketType: ticket.ticket_type,
-                    visitDate: ticket.visit_date,
+                    totalVisitors: ticket.total_visitors,
+                    visitDate: ticket.reservation_date,
                     status: ticket.status,
-                    checkedInAt: ticket.checked_in_at
+                    confirmedAt: ticket.confirmed_at
                 }
             });
         }
 
-        if (ticket.status === 'cancelled') {
+        if (ticket.status === 'cancelled' || ticket.status === 'no_show') {
             return res.status(400).json({ 
                 success: false, 
                 message: 'Ticket has been cancelled',
                 ticket: {
                     id: ticket.id,
-                    bookingReference: ticket.booking_reference,
+                    bookingReference: ticket.booking_reference || ticket.reservation_reference,
                     status: ticket.status
                 }
             });
@@ -152,8 +152,8 @@ exports.checkTicket = async (req, res) => {
                 message: 'Ticket has expired',
                 ticket: {
                     id: ticket.id,
-                    bookingReference: ticket.booking_reference,
-                    visitDate: ticket.visit_date,
+                    bookingReference: ticket.booking_reference || ticket.reservation_reference,
+                    visitDate: ticket.reservation_date,
                     status: ticket.status
                 }
             });
@@ -162,7 +162,7 @@ exports.checkTicket = async (req, res) => {
         // Check if visit date matches today using local timezone
         const now = new Date();
         const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-        const visitDateObj = new Date(ticket.visit_date);
+        const visitDateObj = new Date(ticket.reservation_date);
         const visitDate = `${visitDateObj.getFullYear()}-${String(visitDateObj.getMonth() + 1).padStart(2, '0')}-${String(visitDateObj.getDate()).padStart(2, '0')}`;
         
         if (visitDate !== today) {
@@ -171,10 +171,10 @@ exports.checkTicket = async (req, res) => {
                 message: `Ticket is valid for ${visitDate}, not today`,
                 ticket: {
                     id: ticket.id,
-                    bookingReference: ticket.booking_reference,
+                    bookingReference: ticket.booking_reference || ticket.reservation_reference,
                     visitorName: ticket.user_name || ticket.visitor_name,
-                    ticketType: ticket.ticket_type,
-                    visitDate: ticket.visit_date,
+                    totalVisitors: ticket.total_visitors,
+                    visitDate: ticket.reservation_date,
                     status: ticket.status
                 }
             });
@@ -186,14 +186,14 @@ exports.checkTicket = async (req, res) => {
             message: 'Ticket is valid - ready for check-in',
             ticket: {
                 id: ticket.id,
-                bookingReference: ticket.booking_reference,
+                bookingReference: ticket.booking_reference || ticket.reservation_reference,
                 visitorName: ticket.user_name || ticket.visitor_name,
                 visitorEmail: ticket.user_email || ticket.visitor_email,
-                ticketType: ticket.ticket_type,
-                quantity: ticket.quantity,
-                visitDate: ticket.visit_date,
-                totalAmount: ticket.total_amount,
-                paymentStatus: ticket.payment_status,
+                adultQuantity: ticket.adult_quantity,
+                childQuantity: ticket.child_quantity,
+                residentQuantity: ticket.bulusan_resident_quantity,
+                totalVisitors: ticket.total_visitors,
+                visitDate: ticket.reservation_date,
                 status: ticket.status
             }
         });
@@ -218,25 +218,25 @@ exports.markTicketUsed = async (req, res) => {
             return res.status(404).json({ success: false, message: 'Ticket not found' });
         }
 
-        if (ticket.status === 'used') {
+        if (ticket.status === 'completed') {
             return res.status(400).json({ 
                 success: false, 
                 message: 'Ticket has already been used'
             });
         }
 
-        // Allow check-in for confirmed tickets (not just 'active')
-        if (ticket.status !== 'confirmed' && ticket.status !== 'active') {
+        // Allow check-in for confirmed tickets
+        if (ticket.status !== 'confirmed') {
             return res.status(400).json({ 
                 success: false, 
                 message: `Cannot check in ticket with status: ${ticket.status}. Only confirmed tickets can be checked in.`
             });
         }
 
-        // Mark ticket as used
+        // Mark ticket as completed
         await Ticket.updateTicketWithDetails(ticket.id, { 
-            status: 'used',
-            checkedInBy: req.user.id
+            status: 'completed',
+            confirmedBy: req.user.id
         });
 
         res.json({
@@ -244,12 +244,11 @@ exports.markTicketUsed = async (req, res) => {
             message: 'Ticket checked in successfully',
             ticket: {
                 id: ticket.id,
-                bookingReference: ticket.booking_reference,
+                bookingReference: ticket.booking_reference || ticket.reservation_reference,
                 visitorName: ticket.user_name || ticket.visitor_name,
-                ticketType: ticket.ticket_type,
-                quantity: ticket.quantity,
-                visitDate: ticket.visit_date,
-                status: 'used'
+                totalVisitors: ticket.total_visitors,
+                visitDate: ticket.reservation_date,
+                status: 'completed'
             }
         });
     } catch (error) {
@@ -306,25 +305,24 @@ exports.getTicketById = async (req, res) => {
 exports.updateTicketStatus = async (req, res) => {
     try {
         const { id } = req.params;
-        const { status, cancellationReason, paymentStatus } = req.body;
+        const { status, cancellationReason } = req.body;
 
         const ticket = await Ticket.findById(id);
         if (!ticket) {
             return res.status(404).json({ success: false, message: 'Ticket not found' });
         }
 
-        const validStatuses = ['pending', 'confirmed', 'used', 'cancelled', 'expired'];
+        const validStatuses = ['pending', 'confirmed', 'completed', 'cancelled', 'no_show'];
         if (status && !validStatuses.includes(status)) {
             return res.status(400).json({ success: false, message: 'Invalid status' });
         }
 
         const updateData = {};
         if (status) updateData.status = status;
-        if (paymentStatus) updateData.paymentStatus = paymentStatus;
         if (status === 'cancelled' && cancellationReason) {
             updateData.cancellationReason = cancellationReason;
         }
-        updateData.checkedInBy = req.user.id;
+        updateData.confirmedBy = req.user.id;
 
         const updated = await Ticket.updateTicketWithDetails(id, updateData);
 

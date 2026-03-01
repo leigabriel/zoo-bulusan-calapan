@@ -112,9 +112,6 @@ const Plants = () => {
                                 </div>
                                 <div className="text-left">
                                     <h3 className="text-[10px] md:text-2xl font-bold mb-1 uppercase tracking-tight leading-tight line-clamp-1">{plant.name}</h3>
-                                    <p className="hidden md:block text-sm font-medium opacity-70 leading-snug mb-4 line-clamp-2">
-                                        {plant.description || `${plant.name} is part of our botanical collection.`}
-                                    </p>
                                 </div>
                             </div>
                         ))}

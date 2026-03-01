@@ -72,7 +72,7 @@ const AIChatAssistant = ({ onClose }) => {
                 <div className="flex justify-between items-start mb-10">
                     <div className="flex flex-col items-start gap-6">
                         <div className="relative group">
-                            <div className="w-24 h-24 bg-emerald-50 rounded-[2.5rem] flex items-center justify-center shadow-2xl shadow-emerald-900/10 ring-8 ring-emerald-50/50 overflow-hidden transition-transform duration-500 hover:scale-105">
+                            <div className="w-24 h-24 bg-emerald-400 rounded-[2.5rem] flex items-center justify-center shadow-2xl shadow-emerald-900/10 ring-8 ring-emerald-50/50 overflow-hidden transition-transform duration-500 hover:scale-105">
                                 <img
                                     src="https://cdn-icons-png.flaticon.com/128/1864/1864472.png"
                                     className="w-20 h-20 object-contain p-2"
@@ -83,9 +83,9 @@ const AIChatAssistant = ({ onClose }) => {
                         </div>
                         <div>
                             <div className="flex items-center gap-2">
-                                <h2 className="text-2xl font-black text-emerald-950 tracking-tighter">Zooey <span className="text-emerald-500">AI</span></h2>
+                                <h2 className="text-2xl font-bold uppercase text-emerald-950">Zooey <span className="text-emerald-500">AI</span></h2>
                             </div>
-                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] mt-1">Virtual Wildlife Expert</p>
+                            {/* <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] mt-1">Virtual Wildlife Expert</p> */}
                         </div>
                     </div>
                     <button
@@ -96,10 +96,10 @@ const AIChatAssistant = ({ onClose }) => {
                     </button>
                 </div>
 
-                <h1 className="text-4xl md:text-6xl font-black text-emerald-950 leading-[1] tracking-tighter max-w-md">
+                {/* <h1 className="text-4xl md:text-6xl font-black text-emerald-950 leading-[1] tracking-tighter max-w-md">
                     Explore the <br />
                     <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 via-teal-500 to-cyan-500">Zoo Sanctuary.</span>
-                </h1>
+                </h1> */}
             </header>
 
             <div className="flex-1 overflow-hidden relative bg-[#FBFBFC]">

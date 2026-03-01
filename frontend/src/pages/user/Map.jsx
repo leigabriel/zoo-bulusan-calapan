@@ -223,12 +223,12 @@ const MapPage = () => {
             {showExitConfirm && (
                 <div className="fixed inset-0 z-[3000] flex items-center justify-center p-6">
                     <div className="absolute inset-0 bg-teal-950/70 backdrop-blur-lg" onClick={() => setShowExitConfirm(false)} />
-                    <div className="relative bg-white p-10 rounded-[2.5rem] shadow-2xl max-w-sm w-full text-center animate-in zoom-in-95 duration-200">
-                        <div className="w-24 h-24 bg-teal-50 rounded-[2rem] flex items-center justify-center text-5xl mx-auto mb-6 shadow-inner">🌏</div>
+                    <div className="relative bg-white p-10 rounded-4xl shadow-2xl max-w-sm w-full text-center animate-in zoom-in-95 duration-200">
+                        {/* <div className="w-24 h-24 bg-teal-50 rounded-[2rem] flex items-center justify-center text-5xl mx-auto mb-6 shadow-inner">🌏</div> */}
                         <h3 className="text-2xl font-black text-teal-900 mb-2">Close Expedition?</h3>
                         <p className="text-teal-600 mb-8 font-medium leading-relaxed">Your curated discovery view will be cleared.</p>
                         <div className="flex flex-col gap-3">
-                            <button onClick={() => navigate(-1)} className="w-full py-4 bg-teal-700 text-white rounded-2xl font-bold hover:bg-teal-800 transition-all shadow-lg active:scale-95">End Session</button>
+                            <button onClick={() => navigate(-1)} className="w-full py-4 bg-red-700 text-white rounded-2xl font-bold hover:bg-red-800 transition-all shadow-lg active:scale-95">Leave</button>
                             <button onClick={() => setShowExitConfirm(false)} className="w-full py-4 bg-teal-50 text-teal-700 rounded-2xl font-bold hover:bg-teal-100 transition-all">Keep Browsing</button>
                         </div>
                     </div>

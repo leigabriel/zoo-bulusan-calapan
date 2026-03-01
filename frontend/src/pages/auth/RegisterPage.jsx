@@ -1,6 +1,7 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { authAPI } from '../../services/api-client';
+import { useState, useEffect } from 'react';
+import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
+import { authAPI, messageAPI } from '../../services/api-client';
 import { sanitizeInput, sanitizeEmail } from '../../utils/sanitize';
 
 const EyeIcon = () => (
@@ -14,6 +15,13 @@ const EyeOffIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
         <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
         <line x1="1" y1="1" x2="23" y2="23" />
+    </svg>
+);
+
+const CloseIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
+        <line x1="18" y1="6" x2="6" y2="18" />
+        <line x1="6" y1="6" x2="18" y2="18" />
     </svg>
 );
 
@@ -54,7 +62,6 @@ const XIcon = () => (
     </svg>
 );
 
-// Password validation helper
 const validatePassword = (password) => {
     return {
         minLength: password.length >= 8,
@@ -67,6 +74,197 @@ const validatePassword = (password) => {
 const isPasswordValid = (password) => {
     const validation = validatePassword(password);
     return validation.minLength && validation.hasUppercase && validation.hasNumber && validation.hasSymbol;
+};
+
+const getErrorMessage = (errorCode) => {
+    const decodedError = decodeURIComponent(errorCode).toLowerCase();
+
+    const errorMessages = {
+        'google_auth_cancelled': 'Google sign-in was cancelled. Please try again.',
+        'access_denied': 'Google sign-in was cancelled. Please try again.',
+        'invalid_request': 'Invalid authentication request. Please try again.',
+        'invalid_state': 'Authentication session expired. Please try again.',
+        'token_exchange_failed': 'Failed to complete authentication. Please try again.',
+        'no_id_token': 'Failed to verify your identity. Please try again.',
+        'invalid_user_data': 'Could not retrieve your profile. Please try again.',
+        'email_linked_different_account': 'This email is already linked to a different account.',
+        'account_deactivated': 'Your account has been deactivated. Please contact support.',
+        'authentication_failed': 'Authentication failed. Please try again.',
+        'configuration_error': 'Service configuration error. Please try again later.'
+    };
+
+    if (errorMessages[errorCode]) {
+        return errorMessages[errorCode];
+    }
+
+    if (decodedError.includes('missing required google oauth')) {
+        return 'Google Sign-In is not configured. Please contact support.';
+    }
+    if (decodedError.includes('invalid token') || decodedError.includes('token signature')) {
+        return 'Failed to verify your identity. Please try again.';
+    }
+    if (decodedError.includes('expired')) {
+        return 'Authentication session expired. Please try again.';
+    }
+    if (decodedError.includes('network') || decodedError.includes('fetch')) {
+        return 'Network error. Please check your connection and try again.';
+    }
+
+    if (import.meta.env.DEV && errorCode !== 'authentication_failed') {
+        console.error('OAuth error:', errorCode, decodedError);
+    }
+
+    return 'An error occurred during sign-in. Please try again.';
+};
+
+const PRIVACY_POLICY_CONTENT = `
+Last Updated: December 15, 2025
+
+1. INFORMATION WE COLLECT
+We collect information you provide directly to us, such as when you create an account, make a purchase, or contact us for support. This includes:
+- Personal identification information (name, email address, phone number)
+- Account credentials (username, password)
+- Payment information (processed securely through third-party providers)
+- Visit history and ticket purchases
+
+2. HOW WE USE YOUR INFORMATION
+We use the information we collect to:
+- Process transactions and send related information
+- Send promotional communications (with your consent)
+- Respond to your comments, questions, and requests
+- Monitor and analyze trends, usage, and activities
+- Improve our services and develop new features
+
+3. INFORMATION SHARING
+We do not sell, trade, or rent your personal information to third parties. We may share your information only in the following circumstances:
+- With service providers who assist in our operations
+- To comply with legal obligations
+- To protect our rights and safety
+
+4. DATA SECURITY
+We implement appropriate security measures to protect your personal information against unauthorized access, alteration, disclosure, or destruction.
+
+5. YOUR RIGHTS
+You have the right to:
+- Access your personal information
+- Correct inaccurate data
+- Request deletion of your data
+- Opt-out of marketing communications
+
+6. COOKIES
+We use cookies and similar technologies to enhance your experience and gather information about visitors and visits to our website.
+
+7. CONTACT US
+If you have questions about this Privacy Policy, please contact us at:
+Email: privacy@zoobulusan.com
+Address: Zoo Bulusan, Sorsogon, Philippines
+`;
+
+const TERMS_OF_SERVICE_CONTENT = `
+Last Updated: December 15, 2025
+
+1. ACCEPTANCE OF TERMS
+By accessing and using Zoo Bulusan's services, you agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use our services.
+
+2. USE OF SERVICES
+You agree to use our services only for lawful purposes and in accordance with these Terms. You are responsible for:
+- Maintaining the confidentiality of your account
+- All activities that occur under your account
+- Ensuring your account information is accurate
+
+3. TICKET PURCHASES
+- All ticket sales are final unless otherwise stated
+- Tickets are non-transferable
+- Valid identification may be required for entry
+- Children must be accompanied by adults
+
+4. VISITOR CONDUCT
+While visiting Zoo Bulusan, you agree to:
+- Follow all posted rules and staff instructions
+- Respect all animals and their habitats
+- Not feed animals unless authorized
+- Not litter or damage property
+- Supervise children at all times
+
+5. INTELLECTUAL PROPERTY
+All content on our website and services, including text, graphics, logos, and images, is the property of Zoo Bulusan and is protected by copyright laws.
+
+6. LIMITATION OF LIABILITY
+Zoo Bulusan shall not be liable for any indirect, incidental, special, consequential, or punitive damages resulting from your use of our services.
+
+7. MODIFICATIONS
+We reserve the right to modify these Terms at any time. Continued use of our services after changes constitutes acceptance of the new Terms.
+
+8. GOVERNING LAW
+These Terms shall be governed by the laws of the Republic of the Philippines.
+
+9. CONTACT INFORMATION
+For questions regarding these Terms, contact us at:
+Email: support@zoobulusan.com
+Phone: +63 (XXX) XXX-XXXX
+`;
+
+const PolicyModal = ({ isOpen, onClose, title, content }) => {
+    if (!isOpen) return null;
+
+    const handleBackdropClick = (e) => {
+        if (e.target === e.currentTarget) {
+            onClose();
+        }
+    };
+
+    const handleKeyDown = (e) => {
+        if (e.key === 'Escape') {
+            onClose();
+        }
+    };
+
+    useEffect(() => {
+        if (isOpen) {
+            document.addEventListener('keydown', handleKeyDown);
+            document.body.style.overflow = 'hidden';
+        }
+        return () => {
+            document.removeEventListener('keydown', handleKeyDown);
+            document.body.style.overflow = 'unset';
+        };
+    }, [isOpen]);
+
+    return (
+        <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+            onClick={handleBackdropClick}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="modal-title"
+        >
+            <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[85vh] flex flex-col">
+                <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-200">
+                    <h2 id="modal-title" className="text-xl sm:text-2xl font-bold text-gray-900">{title}</h2>
+                    <button
+                        onClick={onClose}
+                        className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 min-h-[44px] min-w-[44px] flex items-center justify-center"
+                        aria-label="Close modal"
+                    >
+                        <CloseIcon />
+                    </button>
+                </div>
+                <div className="flex-1 overflow-y-auto p-4 sm:p-6">
+                    <div className="prose prose-sm max-w-none text-gray-600 whitespace-pre-line text-sm sm:text-base leading-relaxed">
+                        {content}
+                    </div>
+                </div>
+                <div className="p-4 sm:p-6 border-t border-gray-200">
+                    <button
+                        onClick={onClose}
+                        className="w-full bg-emerald-600 text-white py-3 rounded-lg font-semibold hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 min-h-[44px]"
+                    >
+                        I Understand
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
 };
 
 const RegisterPage = () => {
@@ -85,18 +283,30 @@ const RegisterPage = () => {
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [touched, setTouched] = useState({});
+    const [showPrivacyModal, setShowPrivacyModal] = useState(false);
+    const [showTermsModal, setShowTermsModal] = useState(false);
     const navigate = useNavigate();
+    const location = useLocation();
+    const [searchParams] = useSearchParams();
 
     const passwordValidation = validatePassword(formData.password);
+
+    useEffect(() => {
+        const errorParam = searchParams.get('error');
+        if (errorParam) {
+            const errorMessage = getErrorMessage(errorParam);
+            const debugInfo = import.meta.env.DEV ? ` (Code: ${decodeURIComponent(errorParam)})` : '';
+            setErrors([errorMessage + debugInfo]);
+            window.history.replaceState(null, '', '/signup');
+        }
+    }, [location, searchParams]);
 
     const handleGoogleSignUp = () => {
         setGoogleLoading(true);
         setErrors([]);
 
-        // Redirect to backend Google OAuth endpoint
-        // Use VITE_BACKEND_URL if available, otherwise derive from VITE_API_URL
-        const backendUrl = import.meta.env.VITE_BACKEND_URL || 
-            import.meta.env.VITE_API_URL?.replace('/api', '') || 
+        const backendUrl = import.meta.env.VITE_BACKEND_URL ||
+            import.meta.env.VITE_API_URL?.replace('/api', '') ||
             'http://localhost:5000';
         window.location.href = `${backendUrl}/auth/google`;
     };
@@ -124,7 +334,6 @@ const RegisterPage = () => {
     const validateForm = () => {
         const validationErrors = [];
 
-        // Required fields
         if (!formData.firstName.trim()) validationErrors.push('First name is required');
         if (!formData.lastName.trim()) validationErrors.push('Last name is required');
         if (!formData.username.trim()) validationErrors.push('Username is required');
@@ -136,7 +345,6 @@ const RegisterPage = () => {
             validationErrors.push('Please enter a valid email address');
         }
 
-        // Password validation
         if (!formData.password) {
             validationErrors.push('Password is required');
         } else if (!isPasswordValid(formData.password)) {
@@ -189,64 +397,69 @@ const RegisterPage = () => {
     };
 
     return (
-        <div className="relative isolate bg-green-950 flex justify-center items-center min-h-screen px-4 py-6 sm:py-8">
-            <div
-                aria-hidden="true"
-                className="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80"
-            >
-                <div
-                    style={{
-                        clipPath: "polygon(74.1% 44.1%, 100% 61.6%, 97.5% 26.9%, 85.5% 0.1%, 80.7% 2%, 72.5% 32.5%, 60.2% 62.4%, 52.4% 68.1%, 47.5% 58.3%, 45.2% 34.5%, 27.5% 76.7%, 0.1% 64.9%, 17.9% 100%, 27.6% 76.8%, 76.1% 97.7%, 74.1% 44.1%)",
-                    }}
-                    className="relative left-[calc(50%-11rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[30deg] bg-gradient-to-tr from-[#4ade80] to-[#22d3ee] opacity-30 sm:left-[calc(50%-30rem)] sm:w-[72.1875rem]"
-                />
-            </div>
+        <div className="flex min-h-screen w-full bg-white">
+            <PolicyModal
+                isOpen={showPrivacyModal}
+                onClose={() => setShowPrivacyModal(false)}
+                title="Privacy Policy"
+                content={PRIVACY_POLICY_CONTENT}
+            />
 
-            <div className="flex flex-col md:flex-row w-full max-w-5xl bg-white rounded-2xl overflow-hidden shadow-2xl border-4 border-gray-200">
-                <div className="relative hidden md:flex flex-col justify-between text-white p-6 sm:p-10 md:w-1/2 rounded-2xl md:rounded-none overflow-hidden min-h-[200px] sm:min-h-[300px]">
-                    <div className="absolute inset-0 bg-gradient-to-br from-green-500 via-green-700 to-green-900"></div>
-                    <div className="absolute inset-0">
-                        <img
-                            src="https://images.unsplash.com/photo-1534567153574-2b12153a87f0?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80"
-                            alt="Wildlife background"
-                            className="w-full h-full object-cover opacity-60"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-green-900/90 via-green-800/70 to-green-700/60"></div>
+            <PolicyModal
+                isOpen={showTermsModal}
+                onClose={() => setShowTermsModal(false)}
+                title="Terms of Service"
+                content={TERMS_OF_SERVICE_CONTENT}
+            />
+
+            <div className="relative hidden md:flex md:w-1/2 flex-col justify-between p-12 lg:p-16 overflow-hidden bg-emerald-900 min-h-screen">
+                <img
+                    src="https://images.unsplash.com/photo-1516426122078-c23e76319801?ixlib=rb-4.0.3&auto=format&fit=crop&w=2068&q=80"
+                    alt="Wildlife background"
+                    className="absolute inset-0 w-full h-full object-cover opacity-50 mix-blend-overlay"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-emerald-950 via-emerald-900/40 to-transparent"></div>
+
+                <div className="relative z-10 flex flex-col h-full justify-between">
+                    <div className="flex items-center gap-3 text-white">
+                        <span className="font-bold text-xl tracking-widest uppercase">Zoo Bulusan</span>
                     </div>
-                    <div className="relative z-10 flex flex-col justify-between h-full">
-                        <div>
-                            <p className="text-base sm:text-lg font-semibold opacity-80 mb-2">Join the adventure</p>
-                            <h1 className="text-2xl sm:text-4xl font-extrabold leading-snug">Become part of<br />Zoo Bulusan family</h1>
-                        </div>
-                        <div className="mt-6 sm:mt-10 opacity-80 text-sm">
-                            <p className="mb-2 font-medium">Experience</p>
-                            <div className="flex flex-wrap gap-2 opacity-90 text-xs">
-                                <span className="bg-white/10 px-2 py-1 rounded">Wildlife Tours</span>
-                                <span className="bg-white/10 px-2 py-1 rounded">AI Scanner</span>
-                                <span className="bg-white/10 px-2 py-1 rounded">Events</span>
-                            </div>
+
+                    <div className="mt-auto">
+                        <h1 className="text-4xl lg:text-5xl xl:text-6xl font-bold text-white leading-tight mb-8">
+                            Become part of<br />
+                            Zoo Bulusan<br />
+                            family.
+                        </h1>
+                        <div className="flex flex-wrap gap-3 text-sm font-medium">
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <div className="md:w-1/2 w-full p-6 sm:p-8 flex flex-col justify-center max-h-[90vh] overflow-y-auto">
-                    <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 mb-1">Create your Account</h1>
-                    <p className="text-gray-500 text-sm mb-6">Register to explore Zoo Bulusan&apos;s amazing wildlife.</p>
+            <div className="w-full md:w-1/2 flex flex-col justify-center px-6 py-12 sm:px-12 lg:px-24 bg-white min-h-screen overflow-y-auto">
+                <div className="w-full max-w-md mx-auto">
+                    <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-2 tracking-tight">
+                        Create Account
+                    </h2>
+                    <p className="text-gray-500 text-sm lg:text-base mb-8 leading-relaxed">
+                        Register to explore Zoo Bulusan's amazing wildlife.
+                    </p>
 
                     {successMessage && (
-                        <div className="p-3 mb-4 rounded-lg bg-green-50 text-green-800 border border-green-200 flex items-center gap-3">
+                        <div className="p-4 mb-6 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-200 flex items-center gap-3">
                             <span className="flex-shrink-0"><SuccessIcon /></span>
                             <span className="text-sm font-medium">{successMessage}</span>
                         </div>
                     )}
 
                     {errors.length > 0 && (
-                        <div className="p-3 mb-4 rounded-lg bg-red-50 text-red-800 border border-red-200">
+                        <div className="p-4 mb-6 rounded-lg bg-red-50 text-red-800 border border-red-200">
                             <div className="flex items-center gap-2 mb-2">
                                 <ErrorIcon />
                                 <span className="font-medium text-sm">Please fix the following errors:</span>
                             </div>
-                            <ul className="list-disc pl-8 m-0 text-sm space-y-1">
+                            <ul className="list-disc pl-8 m-0 text-sm space-y-1 text-red-700">
                                 {errors.map((error, index) => (
                                     <li key={index}>{error}</li>
                                 ))}
@@ -254,10 +467,10 @@ const RegisterPage = () => {
                         </div>
                     )}
 
-                    <form className="space-y-4" onSubmit={handleSubmit} noValidate>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <form className="space-y-5" onSubmit={handleSubmit} noValidate>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">First Name <span className="text-red-500">*</span></label>
+                                <label className="block text-sm font-semibold text-gray-900 mb-2">First Name <span className="text-emerald-600">*</span></label>
                                 <input
                                     type="text"
                                     name="firstName"
@@ -266,12 +479,12 @@ const RegisterPage = () => {
                                     onBlur={handleBlur}
                                     required
                                     autoComplete="given-name"
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent"
+                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition text-sm"
                                     placeholder="Juan"
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Last Name <span className="text-red-500">*</span></label>
+                                <label className="block text-sm font-semibold text-gray-900 mb-2">Last Name <span className="text-emerald-600">*</span></label>
                                 <input
                                     type="text"
                                     name="lastName"
@@ -280,14 +493,14 @@ const RegisterPage = () => {
                                     onBlur={handleBlur}
                                     required
                                     autoComplete="family-name"
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent"
+                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition text-sm"
                                     placeholder="Dela Cruz"
                                 />
                             </div>
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Username <span className="text-red-500">*</span></label>
+                            <label className="block text-sm font-semibold text-gray-900 mb-2">Username <span className="text-emerald-600">*</span></label>
                             <input
                                 type="text"
                                 name="username"
@@ -296,16 +509,16 @@ const RegisterPage = () => {
                                 onBlur={handleBlur}
                                 required
                                 autoComplete="username"
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent"
+                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition text-sm"
                                 placeholder="juandelacruz"
                             />
                             {touched.username && formData.username && formData.username.length < 3 && (
-                                <p className="text-xs text-red-600 mt-1">Username must be at least 3 characters</p>
+                                <p className="text-xs text-red-500 mt-2 font-medium">Username must be at least 3 characters</p>
                             )}
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Email <span className="text-red-500">*</span></label>
+                            <label className="block text-sm font-semibold text-gray-900 mb-2">Email <span className="text-emerald-600">*</span></label>
                             <input
                                 type="email"
                                 name="email"
@@ -314,16 +527,16 @@ const RegisterPage = () => {
                                 onBlur={handleBlur}
                                 required
                                 autoComplete="email"
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent"
+                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition text-sm"
                                 placeholder="juan@example.com"
                             />
                             {touched.email && formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email) && (
-                                <p className="text-xs text-red-600 mt-1">Please enter a valid email address</p>
+                                <p className="text-xs text-red-500 mt-2 font-medium">Please enter a valid email address</p>
                             )}
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Password <span className="text-red-500">*</span></label>
+                            <label className="block text-sm font-semibold text-gray-900 mb-2">Password <span className="text-emerald-600">*</span></label>
                             <div className="relative">
                                 <input
                                     type={showPassword ? "text" : "password"}
@@ -333,35 +546,34 @@ const RegisterPage = () => {
                                     onBlur={handleBlur}
                                     required
                                     autoComplete="new-password"
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent pr-10"
+                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition pr-12 text-sm"
                                     placeholder="Min. 8 characters"
                                 />
                                 <button
                                     type="button"
                                     onClick={() => setShowPassword(!showPassword)}
-                                    className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-600 hover:text-green-700 focus:outline-none"
+                                    className="absolute inset-y-0 right-0 flex items-center px-4 text-gray-400 hover:text-gray-600 focus:outline-none"
                                     aria-label={showPassword ? "Hide password" : "Show password"}
                                 >
                                     {showPassword ? <EyeOffIcon /> : <EyeIcon />}
                                 </button>
                             </div>
-                            {/* Password strength indicator */}
                             {formData.password && (
-                                <div className="mt-2 space-y-1">
-                                    <div className="grid grid-cols-2 gap-2 text-xs">
-                                        <div className={`flex items-center gap-1 ${passwordValidation.minLength ? 'text-green-600' : 'text-gray-400'}`}>
+                                <div className="mt-3 space-y-2 p-3 bg-gray-50 rounded-lg border border-gray-100">
+                                    <div className="grid grid-cols-2 gap-3 text-xs font-medium">
+                                        <div className={`flex items-center gap-2 ${passwordValidation.minLength ? 'text-emerald-600' : 'text-gray-400'}`}>
                                             {passwordValidation.minLength ? <CheckIcon /> : <XIcon />}
                                             <span>8+ characters</span>
                                         </div>
-                                        <div className={`flex items-center gap-1 ${passwordValidation.hasUppercase ? 'text-green-600' : 'text-gray-400'}`}>
+                                        <div className={`flex items-center gap-2 ${passwordValidation.hasUppercase ? 'text-emerald-600' : 'text-gray-400'}`}>
                                             {passwordValidation.hasUppercase ? <CheckIcon /> : <XIcon />}
                                             <span>Uppercase letter</span>
                                         </div>
-                                        <div className={`flex items-center gap-1 ${passwordValidation.hasNumber ? 'text-green-600' : 'text-gray-400'}`}>
+                                        <div className={`flex items-center gap-2 ${passwordValidation.hasNumber ? 'text-emerald-600' : 'text-gray-400'}`}>
                                             {passwordValidation.hasNumber ? <CheckIcon /> : <XIcon />}
                                             <span>Number</span>
                                         </div>
-                                        <div className={`flex items-center gap-1 ${passwordValidation.hasSymbol ? 'text-green-600' : 'text-gray-400'}`}>
+                                        <div className={`flex items-center gap-2 ${passwordValidation.hasSymbol ? 'text-emerald-600' : 'text-gray-400'}`}>
                                             {passwordValidation.hasSymbol ? <CheckIcon /> : <XIcon />}
                                             <span>Symbol (!@#$...)</span>
                                         </div>
@@ -371,7 +583,7 @@ const RegisterPage = () => {
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Confirm Password <span className="text-red-500">*</span></label>
+                            <label className="block text-sm font-semibold text-gray-900 mb-2">Confirm Password <span className="text-emerald-600">*</span></label>
                             <div className="relative">
                                 <input
                                     type={showConfirmPassword ? "text" : "password"}
@@ -381,47 +593,45 @@ const RegisterPage = () => {
                                     onBlur={handleBlur}
                                     required
                                     autoComplete="new-password"
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent pr-10"
+                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition pr-12 text-sm"
                                     placeholder="Confirm password"
                                 />
                                 <button
                                     type="button"
                                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                    className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-600 hover:text-green-700 focus:outline-none"
+                                    className="absolute inset-y-0 right-0 flex items-center px-4 text-gray-400 hover:text-gray-600 focus:outline-none"
                                     aria-label={showConfirmPassword ? "Hide password" : "Show password"}
                                 >
                                     {showConfirmPassword ? <EyeOffIcon /> : <EyeIcon />}
                                 </button>
                             </div>
                             {touched.confirmPassword && formData.confirmPassword && formData.password !== formData.confirmPassword && (
-                                <p className="text-xs text-red-600 mt-1">Passwords do not match</p>
+                                <p className="text-xs text-red-500 mt-2 font-medium">Passwords do not match</p>
                             )}
                         </div>
 
                         <button
                             type="submit"
                             disabled={loading || googleLoading}
-                            className="w-full bg-green-600 text-white py-2.5 rounded-lg font-semibold hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                            className="w-full bg-emerald-600 text-white py-3.5 mt-4 rounded-lg font-semibold hover:bg-emerald-700 disabled:bg-emerald-300 disabled:cursor-not-allowed transition-colors text-sm"
                         >
                             {loading ? 'Creating account...' : 'Register'}
                         </button>
 
-                        {/* Divider */}
-                        <div className="relative my-4">
+                        <div className="relative my-8">
                             <div className="absolute inset-0 flex items-center">
-                                <div className="w-full border-t border-gray-300"></div>
+                                <div className="w-full border-t border-gray-200"></div>
                             </div>
-                            <div className="relative flex justify-center text-sm">
-                                <span className="px-2 bg-white text-gray-500">or</span>
+                            <div className="relative flex justify-center text-xs">
+                                <span className="px-4 bg-white text-gray-400 font-medium">Or continue with</span>
                             </div>
                         </div>
 
-                        {/* Google Sign-Up Button */}
                         <button
                             type="button"
                             onClick={handleGoogleSignUp}
                             disabled={loading || googleLoading}
-                            className="w-full flex items-center justify-center gap-3 bg-white text-gray-700 py-2.5 px-4 rounded-lg font-medium border border-gray-300 hover:bg-gray-50 hover:border-gray-400 disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors"
+                            className="w-full flex items-center justify-center gap-3 bg-white text-gray-700 py-3.5 px-4 rounded-lg font-medium border border-gray-300 hover:bg-gray-50 disabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors text-sm"
                         >
                             {googleLoading ? (
                                 <>
@@ -435,27 +645,34 @@ const RegisterPage = () => {
                                 </>
                             )}
                         </button>
+
+                        <div className="text-center mt-8 text-sm text-gray-600">
+                            Already have an account?{' '}
+                            <Link to="/login" className="text-emerald-600 font-bold hover:underline">
+                                Login
+                            </Link>
+                        </div>
+
+                        <div className="text-center text-xs text-gray-400 mt-8 pt-6">
+                            By registering, you agree to our{' '}
+                            <button
+                                type="button"
+                                onClick={() => setShowTermsModal(true)}
+                                className="text-gray-500 hover:text-gray-800 transition-colors underline"
+                            >
+                                Terms of Service
+                            </button>
+                            {' '}and{' '}
+                            <button
+                                type="button"
+                                onClick={() => setShowPrivacyModal(true)}
+                                className="text-gray-500 hover:text-gray-800 transition-colors underline"
+                            >
+                                Privacy Policy
+                            </button>
+                        </div>
                     </form>
-
-                    <div className="text-center mt-6 text-sm">
-                        Already have an account?{' '}
-                        <Link to="/login" className="text-green-600 hover:underline font-medium">
-                            Login
-                        </Link>
-                    </div>
                 </div>
-            </div>
-
-            <div
-                aria-hidden="true"
-                className="absolute inset-x-0 top-[calc(100%-13rem)] -z-10 transform-gpu overflow-hidden blur-3xl sm:top-[calc(100%-30rem)]"
-            >
-                <div
-                    style={{
-                        clipPath: "polygon(74.1% 44.1%, 100% 61.6%, 97.5% 26.9%, 85.5% 0.1%, 80.7% 2%, 72.5% 32.5%, 60.2% 62.4%, 52.4% 68.1%, 47.5% 58.3%, 45.2% 34.5%, 27.5% 76.7%, 0.1% 64.9%, 17.9% 100%, 27.6% 76.8%, 76.1% 97.7%, 74.1% 44.1%)",
-                    }}
-                    className="relative left-[calc(50%+3rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 bg-gradient-to-tr from-[#4ade80] to-[#22d3ee] opacity-30 sm:left-[calc(50%+36rem)] sm:w-[50.1875rem]"
-                />
             </div>
         </div>
     );

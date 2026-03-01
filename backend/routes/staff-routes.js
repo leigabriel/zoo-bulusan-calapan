@@ -39,13 +39,7 @@ router.post('/events', adminController.createEvent);
 router.put('/events/:id', adminController.updateEvent);
 router.delete('/events/:id', adminController.deleteEvent);
 
-// Users - Management for staff (limited to user role management)
-router.get('/users', staffController.getAllUsers);
-router.get('/users/:id', staffController.getUserById);
-router.post('/users', adminController.createUser);
-router.put('/users/:id', adminController.updateUser);
-router.put('/users/:id/suspend', staffController.suspendUser);
-router.put('/users/:id/unsuspend', staffController.unsuspendUser);
+
 
 // Appeals management
 router.get('/appeals', staffController.getPendingAppeals);

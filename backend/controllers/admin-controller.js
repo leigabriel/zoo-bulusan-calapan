@@ -29,13 +29,13 @@ exports.getDashboardStats = async (req, res) => {
         res.json({
             success: true,
             stats: {
-                totalUsers,
-                totalAnimals,
-                totalPlants,
-                totalTickets,
-                totalRevenue,
-                activeTickets,
-                upcomingEvents
+                totalUsers: Number(totalUsers) || 0,
+                totalAnimals: Number(totalAnimals) || 0,
+                totalPlants: Number(totalPlants) || 0,
+                totalTickets: Number(totalTickets) || 0,
+                totalRevenue: Number(totalRevenue) || 0,
+                activeTickets: Number(activeTickets) || 0,
+                upcomingEvents: Number(upcomingEvents) || 0
             }
         });
     } catch (error) {
@@ -298,30 +298,24 @@ exports.getTicketById = async (req, res) => {
 exports.updateTicketStatus = async (req, res) => {
     try {
         const { id } = req.params;
-        const { status, paymentStatus, cancellationReason } = req.body;
+        const { status, cancellationReason } = req.body;
 
         const ticket = await Ticket.findById(id);
         if (!ticket) {
             return res.status(404).json({ success: false, message: 'Ticket not found' });
         }
 
-        const validStatuses = ['pending', 'confirmed', 'used', 'cancelled', 'expired'];
+        const validStatuses = ['pending', 'confirmed', 'completed', 'cancelled', 'no_show'];
         if (status && !validStatuses.includes(status)) {
             return res.status(400).json({ success: false, message: 'Invalid status' });
         }
 
-        const validPaymentStatuses = ['pending', 'paid', 'refunded'];
-        if (paymentStatus && !validPaymentStatuses.includes(paymentStatus)) {
-            return res.status(400).json({ success: false, message: 'Invalid payment status' });
-        }
-
         const updateData = {};
         if (status) updateData.status = status;
-        if (paymentStatus) updateData.paymentStatus = paymentStatus;
         if (status === 'cancelled' && cancellationReason) {
             updateData.cancellationReason = cancellationReason;
         }
-        updateData.checkedInBy = req.user.id;
+        updateData.confirmedBy = req.user.id;
 
         const updated = await Ticket.updateTicketWithDetails(id, updateData);
 
@@ -791,23 +785,22 @@ exports.exportTickets = async (req, res) => {
 
         if (format === 'csv') {
             // Generate CSV
-            const headers = ['ID', 'Booking Reference', 'Visitor Name', 'Email', 'Type', 'Quantity', 'Amount', 'Visit Date', 'Status', 'Payment Status', 'Payment Method', 'Created At'];
+            const headers = ['ID', 'Reference', 'Visitor Name', 'Email', 'Adults', 'Children', 'Residents', 'Total Visitors', 'Reservation Date', 'Status', 'Created At'];
             const csvRows = [headers.join(',')];
             
             tickets.forEach(t => {
                 const row = [
                     t.id,
-                    t.booking_reference,
+                    t.booking_reference || t.reservation_reference,
                     `"${(t.user_name || t.visitor_name || '').replace(/"/g, '""')}"`,
                     t.user_email || t.visitor_email || '',
-                    t.ticket_type,
-                    t.quantity,
-                    t.total_amount,
-                    t.visit_date ? t.visit_date.toISOString().split('T')[0] : '',
+                    t.adult_quantity || 0,
+                    t.child_quantity || 0,
+                    t.bulusan_resident_quantity || 0,
+                    t.total_visitors || 0,
+                    t.reservation_date ? (t.reservation_date instanceof Date ? t.reservation_date.toISOString().split('T')[0] : t.reservation_date) : '',
                     t.status,
-                    t.payment_status,
-                    t.payment_method,
-                    t.created_at ? t.created_at.toISOString() : ''
+                    t.created_at ? (t.created_at instanceof Date ? t.created_at.toISOString() : t.created_at) : ''
                 ];
                 csvRows.push(row.join(','));
             });
