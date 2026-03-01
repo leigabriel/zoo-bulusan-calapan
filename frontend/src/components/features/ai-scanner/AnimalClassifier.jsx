@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import Header from '../../Header';
 import Footer from '../../Footer';
+import { userAPI } from '../../../services/api-client';
 import * as tf from '@tensorflow/tfjs';
 import '@tensorflow/tfjs-backend-webgl';
 
@@ -497,19 +498,50 @@ const AnimalClassifier = ({ embedded = false, expanded: controlledExpanded = fal
         }
     };
 
-    const addToCollection = useCallback(() => {
+    const addToCollection = useCallback(async () => {
         if (!capturedAnimal) return;
         
-        const existingCollection = JSON.parse(localStorage.getItem('animalCollection') || '[]');
-        const alreadyExists = existingCollection.some(a => a.name === capturedAnimal.name);
-        
-        if (!alreadyExists) {
-            const newAnimal = {
-                ...capturedAnimal,
-                image: capturedImage
-            };
-            existingCollection.push(newAnimal);
-            localStorage.setItem('animalCollection', JSON.stringify(existingCollection));
+        try {
+            // Try to save to database first
+            const response = await userAPI.addToCollection({
+                animalName: capturedAnimal.name,
+                description: capturedAnimal.description || '',
+                category: capturedAnimal.category || 'Unknown',
+                confidence: capturedAnimal.confidence || 0,
+                capturedImage: capturedImage
+            });
+
+            if (response.success) {
+                console.log('Animal added to collection in database');
+            } else {
+                console.warn('Failed to save to database, falling back to localStorage:', response.message);
+                // Fallback to localStorage if database fails
+                const existingCollection = JSON.parse(localStorage.getItem('animalCollection') || '[]');
+                const alreadyExists = existingCollection.some(a => a.name === capturedAnimal.name);
+                
+                if (!alreadyExists) {
+                    const newAnimal = {
+                        ...capturedAnimal,
+                        image: capturedImage
+                    };
+                    existingCollection.push(newAnimal);
+                    localStorage.setItem('animalCollection', JSON.stringify(existingCollection));
+                }
+            }
+        } catch (error) {
+            console.error('Error saving to database, using localStorage:', error);
+            // Fallback to localStorage if API call fails (e.g., not logged in)
+            const existingCollection = JSON.parse(localStorage.getItem('animalCollection') || '[]');
+            const alreadyExists = existingCollection.some(a => a.name === capturedAnimal.name);
+            
+            if (!alreadyExists) {
+                const newAnimal = {
+                    ...capturedAnimal,
+                    image: capturedImage
+                };
+                existingCollection.push(newAnimal);
+                localStorage.setItem('animalCollection', JSON.stringify(existingCollection));
+            }
         }
         
         setShowCollectionModal(false);

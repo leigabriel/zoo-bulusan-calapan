@@ -1,6 +1,7 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user-model');
+const StaffActivity = require('../models/staff-activity-model');
 const { deleteOldProfileImage, getProfileImagePath } = require('../middleware/upload-profile-image');
 
 const VALID_ROLES = ['admin', 'staff', 'user'];
@@ -179,6 +180,33 @@ exports.login = async (req, res) => {
         const tabId = req.headers['x-tab-id'] || req.body.tabId || null;
         const token = generateToken(user.id, user.role, tabId);
 
+        // Track login for staff/admin
+        if (['staff', 'admin'].includes(user.role)) {
+            const ipAddress = req.ip || req.connection?.remoteAddress || 'unknown';
+            const userAgent = req.headers['user-agent'] || 'unknown';
+            
+            // Update last login
+            await StaffActivity.updateLastLogin(user.id, ipAddress);
+            
+            // Create session
+            await StaffActivity.createSession({
+                staffId: user.id,
+                sessionToken: token.substring(0, 50),
+                ipAddress,
+                userAgent,
+                deviceInfo: userAgent.substring(0, 255)
+            });
+            
+            // Log the login activity
+            await StaffActivity.logActivity({
+                staffId: user.id,
+                actionType: 'login',
+                actionDescription: 'User logged in',
+                ipAddress,
+                userAgent
+            });
+        }
+
         res.json({
             success: true,
             message: 'Login successful',
@@ -342,6 +370,24 @@ exports.deleteAccount = async (req, res) => {
 
 exports.logout = async (req, res) => {
     try {
+        // Track logout for staff/admin
+        if (req.user && ['staff', 'admin'].includes(req.user.role)) {
+            const ipAddress = req.ip || req.connection?.remoteAddress || 'unknown';
+            const userAgent = req.headers['user-agent'] || 'unknown';
+            
+            // End the session
+            await StaffActivity.endSession(req.user.id);
+            
+            // Log the logout activity
+            await StaffActivity.logActivity({
+                staffId: req.user.id,
+                actionType: 'logout',
+                actionDescription: 'User logged out',
+                ipAddress,
+                userAgent
+            });
+        }
+        
         res.json({ success: true, message: 'Logged out successfully' });
     } catch (error) {
         console.error('Logout error:', error);
@@ -450,5 +496,66 @@ exports.deleteProfileImage = async (req, res) => {
             success: false,
             message: 'Error removing profile image'
         });
+    }
+};
+
+// Public appeal submission for suspended users (no auth required)
+exports.submitPublicAppeal = async (req, res) => {
+    try {
+        const { email, content, subject } = req.body;
+
+        if (!email || !content) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Email and appeal message are required' 
+            });
+        }
+
+        // Find user by email
+        const user = await User.findByEmail(email.toLowerCase().trim());
+        if (!user) {
+            return res.status(404).json({ success: false, message: 'User not found with this email' });
+        }
+
+        // Verify user is actually suspended (using is_suspended field, not status)
+        if (!user.is_suspended) {
+            return res.status(400).json({ success: false, message: 'This action is only available for suspended accounts' });
+        }
+
+        const db = require('../config/database');
+        const Message = require('../models/message-model');
+        const Notification = require('../models/notification-model');
+
+        // Create the appeal message
+        const messageId = await Message.createAppealMessage({
+            senderId: user.id,
+            subject: subject || 'Suspension Appeal',
+            content: content.trim()
+        });
+
+        // Notify admins
+        const admins = await User.getByRole('admin');
+        for (const admin of admins) {
+            try {
+                await Notification.create({
+                    userId: admin.id,
+                    title: 'New Suspension Appeal',
+                    message: `${user.first_name} ${user.last_name} has submitted a suspension appeal`,
+                    type: 'appeal',
+                    link: '/admin/messages'
+                });
+            } catch (notifyError) {
+                console.error('Error notifying admin:', notifyError);
+            }
+        }
+
+        res.status(201).json({ 
+            success: true, 
+            message: 'Appeal submitted successfully. You will be notified of the decision via email.',
+            messageId 
+        });
+    } catch (error) {
+        console.error('Error submitting public appeal:', error);
+        res.status(500).json({ success: false, message: 'Error submitting appeal' });
     }
 };

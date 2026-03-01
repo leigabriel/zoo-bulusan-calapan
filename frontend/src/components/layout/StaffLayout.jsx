@@ -282,7 +282,7 @@ const StaffLayout = ({ children }) => {
     };
 
     const menuItems = [
-        { path: '/staff/dashboard', label: 'Dashboard', Icon: OverviewIcon },
+        { path: '/staff/dashboard', label: 'Overview', Icon: OverviewIcon },
     ];
 
     const managementItems = [

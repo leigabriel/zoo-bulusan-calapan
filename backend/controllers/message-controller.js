@@ -1,6 +1,7 @@
 const Message = require('../models/message-model');
 const Notification = require('../models/notification-model');
 const User = require('../models/user-model');
+const { logStaffActivity } = require('../middleware/track-activity');
 
 exports.sendMessage = async (req, res) => {
     try {
@@ -182,12 +183,26 @@ exports.respondToMessage = async (req, res) => {
             [response.trim(), req.user.id, id]
         );
 
-        await Notification.create({
-            userId: message.sender_id,
-            title: 'Response to Your Message',
-            message: `Admin has responded to your message: ${message.subject}`,
-            type: 'message'
-        });
+        // Try to create notification (non-critical)
+        try {
+            await Notification.create({
+                userId: message.sender_id,
+                title: 'Response to Your Message',
+                message: `Admin has responded to your message: ${message.subject}`,
+                type: 'message'
+            });
+        } catch (notificationError) {
+            console.error('Error creating notification (response was saved):', notificationError);
+        }
+
+        // Track staff/admin activity
+        if (['admin', 'staff'].includes(req.user.role)) {
+            try {
+                await logStaffActivity(req, 'message_reply', `Responded to message: ${message.subject}`);
+            } catch (activityError) {
+                console.error('Error logging activity:', activityError);
+            }
+        }
 
         res.json({ success: true, message: 'Response sent successfully' });
     } catch (error) {

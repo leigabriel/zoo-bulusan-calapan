@@ -86,6 +86,13 @@ const StaffDashboard = () => {
         upcomingEvents: 0
     });
     const [recentTickets, setRecentTickets] = useState([]);
+    const [recentAnimals, setRecentAnimals] = useState([]);
+    const [recentPlants, setRecentPlants] = useState([]);
+    const [activitySummary, setActivitySummary] = useState({
+        todayActions: 0,
+        weekActions: 0,
+        lastActivity: null
+    });
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -147,26 +154,44 @@ const StaffDashboard = () => {
                 ) || 0;
             }
 
-            if (
-                (!updatedStats.activeAnimals || updatedStats.activeAnimals === 0) &&
-                animalsRes?.success &&
-                Array.isArray(animalsRes.animals || animalsRes.data)
-            ) {
+            // Always populate animals preview if data is available
+            if (animalsRes?.success && Array.isArray(animalsRes.animals || animalsRes.data)) {
                 const animalsArray = animalsRes.animals || animalsRes.data;
-                updatedStats.activeAnimals = animalsArray.length;
+                // Update stats count if not already set from dashboard stats
+                if (!updatedStats.activeAnimals || updatedStats.activeAnimals === 0) {
+                    updatedStats.activeAnimals = animalsArray.length;
+                }
+                // Get 4 most recent animals for preview
+                setRecentAnimals(animalsArray.slice(0, 4));
             }
 
-            if (
-                (!updatedStats.totalPlants || updatedStats.totalPlants === 0) &&
-                plantsRes?.success &&
-                Array.isArray(plantsRes.plants || plantsRes.data)
-            ) {
+            // Always populate plants preview if data is available
+            if (plantsRes?.success && Array.isArray(plantsRes.plants || plantsRes.data)) {
                 const plantsArray = plantsRes.plants || plantsRes.data;
-                updatedStats.totalPlants = plantsArray.length;
+                // Update stats count if not already set from dashboard stats
+                if (!updatedStats.totalPlants || updatedStats.totalPlants === 0) {
+                    updatedStats.totalPlants = plantsArray.length;
+                }
+                // Get 4 most recent plants for preview
+                setRecentPlants(plantsArray.slice(0, 4));
             }
 
             if (ticketsRes?.success) {
                 setRecentTickets(ticketsRes.data || ticketsRes.tickets || []);
+            }
+
+            // Fetch activity summary for this staff member
+            try {
+                const activityRes = await staffAPI.getMyActivitySummary?.().catch(() => null);
+                if (activityRes?.success) {
+                    setActivitySummary({
+                        todayActions: activityRes.todayActions || 0,
+                        weekActions: activityRes.weekActions || 0,
+                        lastActivity: activityRes.lastActivity || null
+                    });
+                }
+            } catch (activityErr) {
+                console.error('Error fetching activity summary:', activityErr);
             }
 
             setStats(updatedStats);
@@ -247,6 +272,127 @@ const StaffDashboard = () => {
                     trend={true}
                     trendValue="+8%"
                 />
+            </div>
+
+            {/* Activity Summary Card */}
+            <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl p-6">
+                <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-lg font-semibold text-white">Your Activity Summary</h2>
+                    <span className="text-xs text-gray-500">Last 7 days</span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div className="bg-[#1a1a1a] rounded-xl p-4">
+                        <p className="text-gray-400 text-sm">Today's Actions</p>
+                        <p className="text-2xl font-bold text-[#8cff65]">{activitySummary.todayActions}</p>
+                    </div>
+                    <div className="bg-[#1a1a1a] rounded-xl p-4">
+                        <p className="text-gray-400 text-sm">This Week</p>
+                        <p className="text-2xl font-bold text-white">{activitySummary.weekActions}</p>
+                    </div>
+                    <div className="bg-[#1a1a1a] rounded-xl p-4">
+                        <p className="text-gray-400 text-sm">Last Activity</p>
+                        <p className="text-sm font-medium text-white truncate">
+                            {activitySummary.lastActivity || 'No recent activity'}
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            {/* Animals & Plants Preview Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Animals Preview */}
+                <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl p-6">
+                    <div className="flex items-center justify-between mb-4">
+                        <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+                            <AnimalIcon />
+                            Animals
+                        </h2>
+                        <Link 
+                            to="/staff/animals" 
+                            className="text-sm text-[#8cff65] hover:underline flex items-center gap-1"
+                        >
+                            View All
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                            </svg>
+                        </Link>
+                    </div>
+                    {recentAnimals.length > 0 ? (
+                        <div className="grid grid-cols-2 gap-3">
+                            {recentAnimals.map((animal, idx) => (
+                                <div 
+                                    key={animal.id || idx} 
+                                    className="bg-[#1a1a1a] rounded-xl p-3 hover:border-[#8cff65]/30 border border-transparent transition-all"
+                                >
+                                    <div className="aspect-square rounded-lg bg-[#2a2a2a] mb-2 overflow-hidden">
+                                        {animal.image_url ? (
+                                            <img 
+                                                src={animal.image_url} 
+                                                alt={animal.name} 
+                                                className="w-full h-full object-cover"
+                                            />
+                                        ) : (
+                                            <div className="w-full h-full flex items-center justify-center text-gray-500">
+                                                <AnimalIcon />
+                                            </div>
+                                        )}
+                                    </div>
+                                    <p className="text-white text-sm font-medium truncate">{animal.name}</p>
+                                    <p className="text-gray-500 text-xs truncate">{animal.species || animal.category || 'Unknown'}</p>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <p className="text-gray-500 text-center py-8">No animals to display</p>
+                    )}
+                </div>
+
+                {/* Plants Preview */}
+                <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl p-6">
+                    <div className="flex items-center justify-between mb-4">
+                        <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+                            <PlantIcon />
+                            Plants
+                        </h2>
+                        <Link 
+                            to="/staff/plants" 
+                            className="text-sm text-[#8cff65] hover:underline flex items-center gap-1"
+                        >
+                            View All
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                            </svg>
+                        </Link>
+                    </div>
+                    {recentPlants.length > 0 ? (
+                        <div className="grid grid-cols-2 gap-3">
+                            {recentPlants.map((plant, idx) => (
+                                <div 
+                                    key={plant.id || idx} 
+                                    className="bg-[#1a1a1a] rounded-xl p-3 hover:border-[#8cff65]/30 border border-transparent transition-all"
+                                >
+                                    <div className="aspect-square rounded-lg bg-[#2a2a2a] mb-2 overflow-hidden">
+                                        {plant.image_url ? (
+                                            <img 
+                                                src={plant.image_url} 
+                                                alt={plant.name} 
+                                                className="w-full h-full object-cover"
+                                            />
+                                        ) : (
+                                            <div className="w-full h-full flex items-center justify-center text-gray-500">
+                                                <PlantIcon />
+                                            </div>
+                                        )}
+                                    </div>
+                                    <p className="text-white text-sm font-medium truncate">{plant.name}</p>
+                                    <p className="text-gray-500 text-xs truncate">{plant.species || plant.category || 'Unknown'}</p>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <p className="text-gray-500 text-center py-8">No plants to display</p>
+                    )}
+                </div>
             </div>
         </div>
     );

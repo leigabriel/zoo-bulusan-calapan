@@ -4,6 +4,25 @@ const Event = require('../models/event-model');
 const User = require('../models/user-model');
 const Notification = require('../models/notification-model');
 const Plant = require('../models/plant-model');
+const StaffActivity = require('../models/staff-activity-model');
+const { logStaffActivity } = require('../middleware/track-activity');
+
+exports.getMyActivitySummary = async (req, res) => {
+    try {
+        const staffId = req.user.id;
+        const summary = await StaffActivity.getActivitySummary(staffId);
+        
+        res.json({
+            success: true,
+            todayActions: summary.todayActions || 0,
+            weekActions: summary.weekActions || 0,
+            lastActivity: summary.lastAction || null
+        });
+    } catch (error) {
+        console.error('Error getting activity summary:', error);
+        res.status(500).json({ success: false, message: 'Error fetching activity summary' });
+    }
+};
 
 exports.getDashboardStats = async (req, res) => {
     try {
@@ -85,11 +104,19 @@ exports.updateAnimalStatus = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Invalid status' });
         }
 
+        const animal = await Animal.findById(id);
+        if (!animal) {
+            return res.status(404).json({ success: false, message: 'Animal not found' });
+        }
+
         const updated = await Animal.updateStatus(id, status);
 
         if (!updated) {
-            return res.status(404).json({ success: false, message: 'Animal not found' });
+            return res.status(404).json({ success: false, message: 'Failed to update animal status' });
         }
+
+        // Log staff activity
+        await logStaffActivity(req, 'animal_update', `Updated animal "${animal.name}" status to ${status}`, 'animal', id);
 
         res.json({ success: true, message: 'Animal status updated successfully' });
     } catch (error) {
@@ -239,6 +266,9 @@ exports.markTicketUsed = async (req, res) => {
             confirmedBy: req.user.id
         });
 
+        // Log staff activity
+        await logStaffActivity(req, 'ticket_update', `Checked in ticket #${ticket.booking_reference || ticket.reservation_reference}`, 'reservation', ticket.id);
+
         res.json({
             success: true,
             message: 'Ticket checked in successfully',
@@ -329,6 +359,9 @@ exports.updateTicketStatus = async (req, res) => {
         if (!updated) {
             return res.status(500).json({ success: false, message: 'Failed to update ticket' });
         }
+
+        // Log staff activity
+        await logStaffActivity(req, 'ticket_update', `Updated ticket #${ticket.booking_reference || ticket.reservation_reference} status to ${status}`, 'reservation', id);
 
         res.json({ success: true, message: 'Ticket updated successfully' });
     } catch (error) {
@@ -623,5 +656,31 @@ exports.updateVerificationStatus = async (req, res) => {
     } catch (error) {
         console.error('Error updating verification status:', error);
         res.status(500).json({ success: false, message: 'Error updating verification status' });
+    }
+};
+
+exports.getPlants = async (req, res) => {
+    try {
+        const plants = await Plant.getAll();
+        res.json({ success: true, plants });
+    } catch (error) {
+        console.error('Error getting plants:', error);
+        res.status(500).json({ success: false, message: 'Error fetching plants' });
+    }
+};
+
+exports.getPlantById = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const plant = await Plant.findById(id);
+
+        if (!plant) {
+            return res.status(404).json({ success: false, message: 'Plant not found' });
+        }
+
+        res.json({ success: true, plant });
+    } catch (error) {
+        console.error('Error getting plant:', error);
+        res.status(500).json({ success: false, message: 'Error fetching plant' });
     }
 };

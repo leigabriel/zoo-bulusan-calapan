@@ -76,11 +76,34 @@ const Reports = () => {
     const [dateRange, setDateRange] = useState({ start: '', end: '' });
     const [reportData, setReportData] = useState(null);
     const [loading, setLoading] = useState(false);
+    const [statsLoading, setStatsLoading] = useState(true);
     const [quickStats, setQuickStats] = useState({
-        totalRevenue: 328500,
-        ticketsSold: 2766,
-        visitors: 4521,
+        totalRevenue: 0,
+        ticketsSold: 0,
+        visitors: 0,
     });
+
+    // Fetch quick stats on mount
+    useEffect(() => {
+        const fetchQuickStats = async () => {
+            try {
+                setStatsLoading(true);
+                const response = await adminAPI.getQuickStats();
+                if (response.success && response.data) {
+                    setQuickStats({
+                        totalRevenue: response.data.totalRevenue || 0,
+                        ticketsSold: response.data.ticketsSold || 0,
+                        visitors: response.data.visitors || 0,
+                    });
+                }
+            } catch (error) {
+                console.error('Error fetching quick stats:', error);
+            } finally {
+                setStatsLoading(false);
+            }
+        };
+        fetchQuickStats();
+    }, []);
 
     const reportTypes = [
         { value: 'sales', label: 'Sales Report', icon: ChartIcon },
@@ -92,25 +115,32 @@ const Reports = () => {
     const generateReport = async () => {
         setLoading(true);
         try {
-            // Simulate API call
-            await new Promise(resolve => setTimeout(resolve, 1000));
-
-            // Mock data for demonstration
-            setReportData({
-                totalRevenue: 125600,
-                ticketsSold: 892,
-                visitors: 1243,
-                items: [
-                    { date: '2024-01-15', type: 'Adult Ticket', amount: 250, quantity: 5, status: 'Completed' },
-                    { date: '2024-01-15', type: 'Child Ticket', amount: 150, quantity: 3, status: 'Completed' },
-                    { date: '2024-01-14', type: 'Event Pass', amount: 500, quantity: 2, status: 'Completed' },
-                    { date: '2024-01-14', type: 'Adult Ticket', amount: 200, quantity: 4, status: 'Completed' },
-                    { date: '2024-01-13', type: 'Senior Ticket', amount: 175, quantity: 5, status: 'Completed' },
-                    { date: '2024-01-13', type: 'Child Ticket', amount: 100, quantity: 2, status: 'Refunded' },
-                ],
-            });
+            const response = await adminAPI.getReportData(dateRange.start, dateRange.end, reportType);
+            
+            if (response.success && response.data) {
+                setReportData({
+                    totalRevenue: response.data.totalRevenue || 0,
+                    ticketsSold: response.data.ticketsSold || 0,
+                    visitors: response.data.visitors || 0,
+                    items: response.data.items || [],
+                });
+            } else {
+                console.error('Failed to generate report:', response.message);
+                setReportData({
+                    totalRevenue: 0,
+                    ticketsSold: 0,
+                    visitors: 0,
+                    items: [],
+                });
+            }
         } catch (error) {
             console.error('Error generating report:', error);
+            setReportData({
+                totalRevenue: 0,
+                ticketsSold: 0,
+                visitors: 0,
+                items: [],
+            });
         } finally {
             setLoading(false);
         }

@@ -6,6 +6,87 @@ import LogoutModal from './common/LogoutModal';
 import AnimalClassifier from './features/ai-scanner/AnimalClassifier';
 import ReservationHistoryPanel from './features/ReservationHistoryPanel';
 
+const ICONS = {
+    home: 'https://cdn-icons-png.flaticon.com/128/3917/3917743.png',
+    animals: 'https://cdn-icons-png.flaticon.com/128/5527/5527836.png',
+    plants: 'https://cdn-icons-png.flaticon.com/128/19009/19009811.png',
+    events: 'https://cdn-icons-png.flaticon.com/128/9586/9586200.png',
+    notification: 'https://cdn-icons-png.flaticon.com/128/3917/3917256.png',
+    menu: 'https://cdn-icons-png.flaticon.com/128/3917/3917762.png',
+    close: 'https://cdn-icons-png.flaticon.com/128/4338/4338828.png',
+    ticket: 'https://cdn-icons-png.flaticon.com/128/14703/14703145.png',
+    profile: 'https://cdn-icons-png.flaticon.com/128/3917/3917796.png',
+    messages: 'https://cdn-icons-png.flaticon.com/128/3916/3916613.png',
+    wildlife: 'https://cdn-icons-png.flaticon.com/128/9585/9585894.png',
+    game: 'https://cdn-icons-png.flaticon.com/128/17390/17390411.png',
+    setting: 'https://cdn-icons-png.flaticon.com/128/17586/17586903.png',
+    camera: 'https://cdn-icons-png.flaticon.com/128/3917/3917085.png',
+    help: 'https://cdn-icons-png.flaticon.com/128/3916/3916708.png',
+    support: 'https://cdn-icons-png.flaticon.com/128/16850/16850034.png',
+    logout: 'https://cdn-icons-png.flaticon.com/128/17720/17720307.png',
+    about: 'https://cdn-icons-png.flaticon.com/128/3916/3916708.png',
+};
+
+const NAV_LINKS = [
+    { path: '/', label: 'Home', iconUrl: ICONS.home },
+    { path: '/animals', label: 'Animals', iconUrl: ICONS.animals },
+    { path: '/plants', label: 'Plants', iconUrl: ICONS.plants },
+    { path: '/events', label: 'Events', iconUrl: ICONS.events },
+    { path: '/about', label: 'About', iconUrl: ICONS.about },
+];
+
+const IconBtn = ({ src, alt, onClick, badge, className = '' }) => (
+    <button
+        onClick={onClick}
+        className={`relative flex items-center justify-center w-9 h-9 rounded-full hover:bg-gray-100 transition-colors flex-shrink-0 ${className}`}
+    >
+        <img src={src} alt={alt} className="w-[18px] h-[18px] object-contain opacity-55" />
+        {badge > 0 && (
+            <span className="absolute top-0.5 right-0.5 min-w-[15px] h-[15px] px-0.5 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center border border-white leading-none">
+                {badge > 9 ? '9+' : badge}
+            </span>
+        )}
+    </button>
+);
+
+const CloseBtn = ({ onClick }) => (
+    <button
+        onClick={onClick}
+        className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-gray-100 transition-colors flex-shrink-0"
+    >
+        <img src={ICONS.close} alt="Close" className="w-3.5 h-3.5 object-contain opacity-40" />
+    </button>
+);
+
+const SectionLabel = ({ label }) => (
+    <p className="px-1 pt-5 pb-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-widest">{label}</p>
+);
+
+const MenuItem = ({ iconUrl, label, badge, danger, to, onClick, onClose, isLast }) => {
+    const inner = (
+        <span className={`flex items-center gap-3 px-4 py-3 transition-colors group ${danger ? 'hover:bg-red-50/60' : 'hover:bg-gray-50'} ${!isLast ? 'border-b border-gray-50' : ''}`}>
+            <span className={`w-8 h-8 flex items-center justify-center rounded-xl flex-shrink-0 ${danger ? 'bg-red-50' : 'bg-gray-50'}`}>
+                <img
+                    src={iconUrl}
+                    alt={label}
+                    className="w-[15px] h-[15px] object-contain"
+                    style={danger ? { filter: 'invert(30%) sepia(80%) saturate(700%) hue-rotate(330deg)' } : { opacity: 0.5 }}
+                />
+            </span>
+            <span className={`text-[13px] font-medium flex-1 text-left leading-none ${danger ? 'text-red-500' : 'text-gray-700'}`}>
+                {label}
+            </span>
+            {badge && (
+                <span className="px-1.5 py-0.5 bg-emerald-700 text-white rounded text-[9px] font-semibold uppercase tracking-wide flex-shrink-0">
+                    {badge}
+                </span>
+            )}
+        </span>
+    );
+    if (to) return <Link to={to} onClick={onClose} className="block">{inner}</Link>;
+    return <button onClick={onClick} className="w-full">{inner}</button>;
+};
+
 const Header = () => {
     const { user, logout } = useAuth();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -23,40 +104,17 @@ const Header = () => {
     const [emailLoading, setEmailLoading] = useState(false);
     const [emailSent, setEmailSent] = useState(false);
     const [emailError, setEmailError] = useState('');
+
     const navigate = useNavigate();
     const location = useLocation();
     const sidePanelRef = useRef(null);
     const aiScannerRef = useRef(null);
     const notificationPanelRef = useRef(null);
 
-    const ICONS = {
-        home: 'https://cdn-icons-png.flaticon.com/128/3917/3917743.png',
-        animals: 'https://cdn-icons-png.flaticon.com/128/5527/5527836.png',
-        plants: 'https://cdn-icons-png.flaticon.com/128/19009/19009811.png',
-        events: 'https://cdn-icons-png.flaticon.com/128/9586/9586200.png',
-        notification: 'https://cdn-icons-png.flaticon.com/128/3917/3917256.png',
-        menu: 'https://cdn-icons-png.flaticon.com/128/3917/3917762.png',
-        close: 'https://cdn-icons-png.flaticon.com/128/4338/4338828.png',
-        ticket: 'https://cdn-icons-png.flaticon.com/128/14703/14703145.png',
-        profile: 'https://cdn-icons-png.flaticon.com/128/3917/3917796.png',
-        messages: 'https://cdn-icons-png.flaticon.com/128/3916/3916613.png',
-        wildlife: 'https://cdn-icons-png.flaticon.com/128/9585/9585894.png',
-        game: 'https://cdn-icons-png.flaticon.com/128/17390/17390411.png',
-        setting: 'https://cdn-icons-png.flaticon.com/128/17586/17586903.png',
-        camera: 'https://cdn-icons-png.flaticon.com/128/3917/3917085.png',
-        help: 'https://cdn-icons-png.flaticon.com/128/3916/3916708.png',
-        support: 'https://cdn-icons-png.flaticon.com/128/16850/16850034.png',
-        logout: 'https://cdn-icons-png.flaticon.com/128/17720/17720307.png',
-        login: 'https://cdn-icons-png.flaticon.com/128/5528/5528158.png',
-        about: 'https://cdn-icons-png.flaticon.com/128/3916/3916708.png'
-    };
-
     useEffect(() => {
-        const handleScroll = () => {
-            setScrolled(window.scrollY > 20);
-        };
-        window.addEventListener('scroll', handleScroll);
-        return () => window.removeEventListener('scroll', handleScroll);
+        const onScroll = () => setScrolled(window.scrollY > 20);
+        window.addEventListener('scroll', onScroll);
+        return () => window.removeEventListener('scroll', onScroll);
     }, []);
 
     useEffect(() => {
@@ -69,71 +127,35 @@ const Header = () => {
         }
     }, [location]);
 
-    useEffect(() => {
-        const handleClickOutside = (event) => {
-            if (sidePanelRef.current && !sidePanelRef.current.contains(event.target)) {
-                setShowSidePanel(false);
+    const useOutsideClick = (ref, isOpen, setter) => {
+        useEffect(() => {
+            const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setter(false); };
+            if (isOpen) {
+                document.addEventListener('mousedown', handler);
+                document.body.style.overflow = 'hidden';
             }
-        };
+            return () => {
+                document.removeEventListener('mousedown', handler);
+                document.body.style.overflow = 'unset';
+            };
+        }, [isOpen]);
+    };
 
-        if (showSidePanel) {
-            document.addEventListener('mousedown', handleClickOutside);
-            document.body.style.overflow = 'hidden';
-        }
-
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-            document.body.style.overflow = 'unset';
-        };
-    }, [showSidePanel]);
+    useOutsideClick(sidePanelRef, showSidePanel, setShowSidePanel);
+    useOutsideClick(aiScannerRef, showAIScanner, setShowAIScanner);
+    useOutsideClick(notificationPanelRef, showNotificationPanel, setShowNotificationPanel);
 
     useEffect(() => {
-        const handleClickOutside = (event) => {
-            if (aiScannerRef.current && !aiScannerRef.current.contains(event.target)) {
-                setShowAIScanner(false);
-            }
-        };
-
-        if (showAIScanner) {
-            document.addEventListener('mousedown', handleClickOutside);
-            document.body.style.overflow = 'hidden';
-        }
-
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-            document.body.style.overflow = 'unset';
-        };
-    }, [showAIScanner]);
-
-    useEffect(() => {
-        const handleEscape = (e) => {
+        const onKey = (e) => {
             if (e.key === 'Escape') {
                 setShowSidePanel(false);
                 setShowAIScanner(false);
                 setShowNotificationPanel(false);
             }
         };
-        document.addEventListener('keydown', handleEscape);
-        return () => document.removeEventListener('keydown', handleEscape);
+        document.addEventListener('keydown', onKey);
+        return () => document.removeEventListener('keydown', onKey);
     }, []);
-
-    useEffect(() => {
-        const handleClickOutside = (event) => {
-            if (notificationPanelRef.current && !notificationPanelRef.current.contains(event.target)) {
-                setShowNotificationPanel(false);
-            }
-        };
-
-        if (showNotificationPanel) {
-            document.addEventListener('mousedown', handleClickOutside);
-            document.body.style.overflow = 'hidden';
-        }
-
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-            document.body.style.overflow = 'unset';
-        };
-    }, [showNotificationPanel]);
 
     const fetchNotifications = useCallback(async (showLoading = true) => {
         if (!user) return;
@@ -143,57 +165,39 @@ const Header = () => {
             const [eventsRes, messagesRes, reservationsRes] = await Promise.all([
                 userAPI.getEvents(false).catch(() => ({ success: false })),
                 messageAPI.getMyMessages().catch(() => ({ success: false })),
-                reservationAPI.getMyTicketReservations().catch(() => ({ success: false }))
+                reservationAPI.getMyTicketReservations().catch(() => ({ success: false })),
             ]);
             if (eventsRes?.success && eventsRes.events) {
                 const today = new Date();
                 today.setHours(0, 0, 0, 0);
-                const upcomingEvents = eventsRes.events
-                    .filter(event => {
-                        const eventDate = new Date(event.event_date || event.start_date);
-                        return eventDate >= today;
-                    })
+                eventsRes.events
+                    .filter(e => new Date(e.event_date || e.start_date) >= today)
                     .slice(0, 3)
-                    .map(event => ({
-                        id: `event-${event.id}`,
-                        type: 'event',
-                        title: event.title,
-                        message: `Upcoming event: ${event.event_date ? new Date(event.event_date).toLocaleDateString() : 'Soon'}`,
-                        time: event.event_date || event.start_date,
-                        path: '/events'
+                    .forEach(e => notifs.push({
+                        id: `event-${e.id}`, type: 'event', title: e.title,
+                        message: `Upcoming: ${e.event_date ? new Date(e.event_date).toLocaleDateString() : 'Soon'}`,
+                        time: e.event_date || e.start_date, path: '/events',
                     }));
-                notifs.push(...upcomingEvents);
             }
             if (messagesRes?.success && messagesRes.messages) {
-                const repliedMessages = messagesRes.messages
-                    .filter(msg => msg.admin_response)
-                    .slice(0, 3)
-                    .map(msg => ({
-                        id: `message-${msg.id}`,
-                        type: 'message',
-                        title: msg.subject,
-                        message: 'Admin has responded to your message',
-                        time: msg.responded_at || msg.created_at,
-                        path: '/my-messages'
-                    }));
-                notifs.push(...repliedMessages);
+                messagesRes.messages.filter(m => m.admin_response).slice(0, 3).forEach(m => notifs.push({
+                    id: `message-${m.id}`, type: 'message', title: m.subject,
+                    message: 'Admin has responded to your message',
+                    time: m.responded_at || m.created_at, path: '/my-messages',
+                }));
             }
             if (reservationsRes?.success && reservationsRes.reservations) {
-                const upcomingReservations = reservationsRes.reservations
+                reservationsRes.reservations
                     .filter(r => r.status === 'confirmed' || r.status === 'pending')
                     .slice(0, 3)
-                    .map(reservation => ({
-                        id: `reservation-${reservation.id}`,
-                        type: 'reservation',
-                        title: `Reservation #${reservation.booking_reference || reservation.id}`,
-                        message: reservation.status === 'confirmed'
-                            ? `Confirmed for ${new Date(reservation.visit_date).toLocaleDateString()}`
+                    .forEach(r => notifs.push({
+                        id: `reservation-${r.id}`, type: 'reservation',
+                        title: `Reservation #${r.booking_reference || r.id}`,
+                        message: r.status === 'confirmed'
+                            ? `Confirmed for ${new Date(r.visit_date).toLocaleDateString()}`
                             : 'Pending confirmation',
-                        time: reservation.created_at,
-                        path: null,
-                        action: 'openReservationHistory'
+                        time: r.created_at, path: null, action: 'openReservationHistory',
                     }));
-                notifs.push(...upcomingReservations);
             }
             notifs.sort((a, b) => new Date(b.time) - new Date(a.time));
             setNotifications(notifs);
@@ -204,30 +208,28 @@ const Header = () => {
         }
     }, [user]);
 
-    useEffect(() => {
-        if (user) {
-            fetchNotifications(false);
+    useEffect(() => { if (user) fetchNotifications(false); }, [user, fetchNotifications]);
+
+    const handleLogout = () => { logout(); setShowLogoutModal(false); navigate('/'); };
+    const closeSidePanel = () => setShowSidePanel(false);
+    const openNotifications = () => { setShowNotificationPanel(true); fetchNotifications(); };
+    const openEmailModal = () => { closeSidePanel(); setShowEmailModal(true); setEmailSent(false); setEmailError(''); };
+
+    const handleSendEmail = async () => {
+        if (!emailSubject.trim() || !emailMessage.trim()) { setEmailError('Please fill in both fields'); return; }
+        setEmailLoading(true);
+        setEmailError('');
+        try {
+            await messageAPI.sendMessage({ recipientType: 'admin', subject: emailSubject, content: emailMessage });
+            setEmailSent(true);
+            setEmailSubject('');
+            setEmailMessage('');
+        } catch (e) {
+            setEmailError(e.message || 'Failed to send message');
+        } finally {
+            setEmailLoading(false);
         }
-    }, [user, fetchNotifications]);
-
-    const handleOpenNotifications = () => {
-        setShowNotificationPanel(true);
-        fetchNotifications();
     };
-
-    const handleLogout = () => {
-        logout();
-        setShowLogoutModal(false);
-        navigate('/');
-    };
-
-    const navLinks = [
-        { path: '/', label: 'Home', iconUrl: ICONS.home },
-        { path: '/animals', label: 'Animals', iconUrl: ICONS.animals },
-        { path: '/plants', label: 'Plants', iconUrl: ICONS.plants },
-        { path: '/events', label: 'Events', iconUrl: ICONS.events },
-        { path: '/about', label: 'About', iconUrl: ICONS.about }
-    ];
 
     const getProfilePath = () => {
         if (!user) return '/login';
@@ -236,457 +238,258 @@ const Header = () => {
         return '/profile';
     };
 
-    const handleOpenReservationHistory = () => {
-        setShowSidePanel(false);
-        setShowHistoryPanel(true);
-    };
+    const handleOpenReservationHistory = () => { closeSidePanel(); setShowHistoryPanel(true); };
 
-    const handleSendEmail = async () => {
-        if (!emailSubject.trim() || !emailMessage.trim()) {
-            setEmailError('Please fill in both subject and message');
-            return;
-        }
-        setEmailLoading(true);
-        setEmailError('');
-        try {
-            await messageAPI.sendMessage({
-                recipientType: 'admin',
-                subject: emailSubject,
-                content: emailMessage
-            });
-            setEmailSent(true);
-            setEmailSubject('');
-            setEmailMessage('');
-        } catch (error) {
-            setEmailError(error.message || 'Failed to send message');
-        } finally {
-            setEmailLoading(false);
-        }
-    };
-
-    const accountMenuItems = [
-        {
-            iconUrl: ICONS.profile,
-            label: 'My Account',
-            path: getProfilePath()
-        },
-        {
-            iconUrl: ICONS.ticket,
-            label: 'My Reservation',
-            action: handleOpenReservationHistory
-        },
-        {
-            iconUrl: ICONS.messages,
-            label: 'Messages',
-            path: '/my-messages'
-        }
+    const quickItems = [
+        ...(user?.role === 'admin' ? [{ iconUrl: ICONS.setting, label: 'Admin Dashboard', path: '/admin/dashboard' }] : []),
+        ...(user?.role === 'staff' ? [{ iconUrl: ICONS.setting, label: 'Staff Dashboard', path: '/staff/dashboard' }] : []),
     ];
 
-    const exploreMenuItems = [
-        {
-            iconUrl: ICONS.wildlife,
-            label: 'Wildlife Origins',
-            path: '/map'
-        },
-        {
-            iconUrl: ICONS.game,
-            label: 'Mini Zoo Game',
-            path: '/mini-zoo-game'
-        }
+    const accountItems = [
+        { iconUrl: ICONS.profile, label: 'My Account', path: getProfilePath() },
+        { iconUrl: ICONS.ticket, label: 'My Reservation', action: handleOpenReservationHistory },
+        { iconUrl: ICONS.messages, label: 'Messages', path: '/my-messages' },
     ];
 
-    const settingsMenuItems = [
-        {
-            iconUrl: ICONS.setting,
-            label: 'Settings',
-            path: '/settings'
-        }
+    const exploreItems = [
+        { iconUrl: ICONS.wildlife, label: 'Wildlife Origins', path: '/map' },
+        { iconUrl: ICONS.game, label: 'Mini Zoo Game', path: '/mini-zoo-game' },
     ];
 
-    const adminMenuItems = user?.role === 'admin' ? [
-        {
-            iconUrl: ICONS.setting,
-            label: 'Admin Dashboard',
-            path: '/admin/dashboard'
-        }
-    ] : [];
-
-    const staffMenuItems = (user?.role === 'staff') ? [
-        {
-            iconUrl: ICONS.setting,
-            label: 'Staff Dashboard',
-            path: '/staff/dashboard'
-        }
-    ] : [];
+    const avatarSrc = getProfileImageUrl(user?.profileImage || user?.profile_image) || '/profile-img/default-avatar.svg';
+    const displayName = user?.firstName || user?.username;
 
     return (
         <>
-            <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'bg-white/95 shadow-sm py-2 backdrop-blur-2xl' : 'bg-white/90 py-3'} md:bg-transparent md:py-5`}>
-                <div className="container mx-auto px-4 lg:px-12 flex justify-between items-center w-full h-14">
-                    <Link to="/" className="flex items-center">
-                        <span className="text-[22px] md:text-2xl font-extrabold tracking-tight text-[#08140e]" style={{ fontFamily: '"Segoe Script", "cursive"' }}>
-                            Bulusan Zoo
-                        </span>
-                    </Link>
+            <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-200 ${scrolled ? 'bg-white/96 backdrop-blur-md shadow-[0_1px_0_rgba(0,0,0,0.07)]' : 'bg-white/85 backdrop-blur-sm'}`} style={{ paddingTop: 'env(safe-area-inset-top)' }}>
+                <div className="mx-auto px-4 sm:px-6 lg:px-10 max-w-[2000px]" style={{ height: '56px' }}>
 
-                    <nav className="hidden md:flex uppercase items-center gap-1 bg-white/80 backdrop-blur-md px-2 py-2 rounded-full shadow-sm border border-gray-100">
-                        {navLinks.map((link) => (
-                            <Link
-                                key={link.label}
-                                to={link.path}
-                                className={`px-5 py-2 rounded-full text-sm font-bold transition-all duration-200 ${location.pathname === link.path
-                                        ? 'bg-green-800 text-white shadow-sm'
-                                        : 'text-gray-600 hover:text-green-800 hover:bg-green-50'
-                                    }`}
-                            >
-                                {link.label}
+                    <div className="flex items-center h-full">
+
+                        <div className="flex items-center flex-shrink-0 w-[180px]">
+                            <Link to="/" className="flex items-center">
+                                <span className="text-[18px] font-bold text-gray-900 tracking-tight leading-none" style={{ fontFamily: '"Segoe Script", cursive' }}>
+                                    Bulusan Zoo
+                                </span>
                             </Link>
-                        ))}
-                    </nav>
+                        </div>
 
-                    <div className="hidden md:flex items-center gap-3">
-                        <Link to="/reservations">
-                            <button className="bg-gray-900 hover:bg-gray-800 px-6 py-2.5 rounded-full text-white text-sm font-bold flex items-center gap-2 transition-all duration-200 shadow-lg shadow-gray-900/20 hover:shadow-xl hover:shadow-gray-900/30 hover:-translate-y-0.5">
-                                <span>MAKE RESERVATION</span>
-                            </button>
-                        </Link>
+                        <nav className="hidden md:flex flex-1 items-center justify-center">
+                            <div className="flex items-center gap-0.5 bg-gray-100/80 rounded-full px-1.5 py-1.5">
+                                {NAV_LINKS.map((link) => (
+                                    <Link
+                                        key={link.path}
+                                        to={link.path}
+                                        className={`px-4 py-1.5 rounded-full text-[13px] font-medium transition-all duration-150 whitespace-nowrap ${location.pathname === link.path
+                                                ? 'bg-white text-gray-900 shadow-sm'
+                                                : 'text-gray-500 hover:text-gray-800'
+                                            }`}
+                                    >
+                                        {link.label}
+                                    </Link>
+                                ))}
+                            </div>
+                        </nav>
 
-                        {user && (
-                            <button
-                                onClick={handleOpenNotifications}
-                                className="relative p-2.5 rounded-full bg-gray-50 border border-gray-200 hover:bg-gray-100 transition-all duration-200"
-                            >
-                                <img src={ICONS.notification} alt="Notifications" className="w-5 h-5 object-contain" />
-                                {notifications.length > 0 && (
-                                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-[#f8312f] text-white text-xs rounded-full flex items-center justify-center font-bold">
-                                        {notifications.length > 9 ? '9+' : notifications.length}
-                                    </span>
-                                )}
-                            </button>
-                        )}
-
-                        {user ? (
-                            <button
-                                onClick={() => setShowSidePanel(true)}
-                                className="flex items-center gap-2 px-3 py-2 rounded-full bg-gray-50 border border-gray-200 hover:bg-gray-100 transition-all duration-200"
-                            >
-                                <img
-                                    src={getProfileImageUrl(user.profileImage || user.profile_image) || '/profile-img/default-avatar.svg'}
-                                    alt="Profile"
-                                    className="w-8 h-8 rounded-full object-cover shadow-sm"
-                                    onError={(e) => { e.target.onerror = null; e.target.src = '/profile-img/default-avatar.svg'; }}
-                                />
-                                <span className="font-bold text-gray-800 text-sm hidden lg:block">{user.firstName || user.username}</span>
-                            </button>
-                        ) : (
-                            <Link to="/login">
-                                <button className="px-5 py-2.5 rounded-full text-gray-800 text-sm font-bold bg-white hover:bg-gray-50 transition-all duration-200 border border-gray-200 flex items-center shadow-sm">
-                                    Login
+                        <div className="hidden md:flex items-center justify-end gap-2 flex-shrink-0 w-[180px]">
+                            <Link to="/reservations">
+                                <button className="px-4 py-1.5 rounded-full bg-gray-900 text-white text-[13px] font-medium hover:bg-gray-700 transition-colors whitespace-nowrap">
+                                    Reserve
                                 </button>
                             </Link>
-                        )}
-                    </div>
-
-                    <div className="flex md:hidden items-center gap-5">
-                        <Link to="/reservations" className="flex items-center justify-center p-1">
-                            <img src={ICONS.ticket} alt="Reservation" className="w-6 h-6 object-contain" />
-                        </Link>
-
-                        <button onClick={handleOpenNotifications} className="relative flex items-center justify-center p-1">
-                            <img src={ICONS.notification} alt="Notifications" className="w-6 h-6 object-contain" />
-                            {notifications.length > 0 && (
-                                <span className="absolute top-0 right-0 translate-x-1/4 -translate-y-1/4 w-[18px] h-[18px] bg-[#f8312f] text-white text-[10px] rounded-full flex items-center justify-center font-bold border-[1.5px] border-white">
-                                    {notifications.length > 9 ? '9+' : notifications.length}
-                                </span>
+                            {user && (
+                                <IconBtn src={ICONS.notification} alt="Notifications" onClick={openNotifications} badge={notifications.length} />
                             )}
-                        </button>
+                            {user ? (
+                                <button
+                                    onClick={() => setShowSidePanel(true)}
+                                    className="flex items-center gap-2 pl-1 pr-3 py-1 rounded-full border border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50 transition-all"
+                                >
+                                    <img
+                                        src={avatarSrc}
+                                        alt="Profile"
+                                        className="w-7 h-7 rounded-full object-cover flex-shrink-0"
+                                        onError={(e) => { e.target.onerror = null; e.target.src = '/profile-img/default-avatar.svg'; }}
+                                    />
+                                    <span className="text-[13px] font-medium text-gray-700 hidden lg:block max-w-[80px] truncate">
+                                        {displayName}
+                                    </span>
+                                </button>
+                            ) : (
+                                <Link to="/login">
+                                    <button className="px-4 py-1.5 rounded-full text-[13px] font-medium text-gray-700 border border-gray-200 bg-white hover:bg-gray-50 transition-colors">
+                                        Login
+                                    </button>
+                                </Link>
+                            )}
+                        </div>
 
-                        <button
-                            className="flex items-center justify-center p-1"
-                            onClick={() => setIsMenuOpen(true)}
-                        >
-                            <img src={ICONS.menu} alt="Menu" className="w-6 h-6 object-contain" />
-                        </button>
+                        <div className="flex md:hidden items-center gap-1 ml-auto">
+                            <Link to="/reservations" className="flex items-center justify-center w-9 h-9 rounded-full hover:bg-gray-100 transition-colors flex-shrink-0">
+                                <img src={ICONS.ticket} alt="Reserve" className="w-[18px] h-[18px] object-contain opacity-55" />
+                            </Link>
+                            <IconBtn src={ICONS.notification} alt="Notifications" onClick={openNotifications} badge={notifications.length} />
+                            <IconBtn src={ICONS.menu} alt="Menu" onClick={() => setIsMenuOpen(true)} />
+                        </div>
+
                     </div>
                 </div>
             </header>
 
             {isMenuOpen && (
-                <div className="fixed inset-0 z-[120] bg-white flex flex-col animate-fade-in md:hidden">
-                    <div className="flex justify-between items-center px-4 h-[60px] border-b border-gray-100 flex-shrink-0">
-                        <span className="text-[22px] font-extrabold tracking-tight text-[#08140e]" style={{ fontFamily: '"Segoe Script", "cursive"' }}>
+                <div className="fixed inset-0 z-[120] bg-white flex flex-col md:hidden">
+                    <div className="flex items-center justify-between px-4 border-b border-gray-100 flex-shrink-0" style={{ height: '56px' }}>
+                        <span className="text-[18px] font-bold text-gray-900 leading-none" style={{ fontFamily: '"Segoe Script", cursive' }}>
                             Bulusan Zoo
                         </span>
-                        <button onClick={() => setIsMenuOpen(false)} className="p-2 touch-target">
-                            <img src={ICONS.close} alt="Close Menu" className="w-6 h-6 object-contain" />
-                        </button>
+                        <CloseBtn onClick={() => setIsMenuOpen(false)} />
                     </div>
 
-                    <div className="flex-1 overflow-y-auto px-6 py-8 flex flex-col">
+                    <div className="flex-1 overflow-y-auto flex flex-col px-4 py-4">
                         {user ? (
-                            <div
-                                onClick={() => {
-                                    setIsMenuOpen(false);
-                                    setShowSidePanel(true);
-                                }}
-                                className="flex items-center gap-4 bg-gray-50 p-4 rounded-2xl mb-8 border border-gray-100 shadow-sm active:scale-[0.98] transition-transform cursor-pointer"
+                            <button
+                                onClick={() => { setIsMenuOpen(false); setShowSidePanel(true); }}
+                                className="flex items-center gap-3 w-full px-4 py-3 rounded-xl border border-gray-100 bg-gray-50 hover:bg-gray-100 transition-colors text-left mb-3"
                             >
                                 <img
-                                    src={getProfileImageUrl(user.profileImage || user.profile_image) || '/profile-img/default-avatar.svg'}
+                                    src={avatarSrc}
                                     alt="Profile"
-                                    className="w-14 h-14 rounded-full object-cover shadow-sm bg-white"
+                                    className="w-9 h-9 rounded-full object-cover flex-shrink-0"
                                     onError={(e) => { e.target.onerror = null; e.target.src = '/profile-img/default-avatar.svg'; }}
                                 />
-                                <div className="flex-1 min-w-0">
-                                    <span className="font-bold text-gray-900 text-lg block truncate">{user.firstName || user.username}</span>
-                                    <span className="text-sm text-green-800 font-bold">View Profile & Settings</span>
+                                <div className="min-w-0">
+                                    <p className="text-[13px] font-semibold text-gray-900 truncate">{displayName}</p>
+                                    <p className="text-[11px] text-gray-400 mt-0.5">View account</p>
                                 </div>
-                            </div>
+                            </button>
                         ) : (
-                            <div className="mb-8">
-                                <Link
-                                    to="/login"
-                                    onClick={() => setIsMenuOpen(false)}
-                                    className="w-full flex items-center justify-center bg-green-800 text-white font-bold py-4 rounded-xl shadow-md active:bg-green-900 transition-colors text-lg"
-                                >
+                            <Link to="/login" onClick={() => setIsMenuOpen(false)} className="mb-3">
+                                <button className="w-full py-3 rounded-xl bg-gray-900 text-white text-[13px] font-medium">
                                     Login / Sign Up
-                                </Link>
-                            </div>
+                                </button>
+                            </Link>
                         )}
 
-                        <nav className="flex flex-col gap-2 flex-1">
-                            {navLinks.map((link) => {
-                                const isActive = location.pathname === link.path;
+                        <div className="flex flex-col gap-0.5">
+                            {NAV_LINKS.map((link) => {
+                                const active = location.pathname === link.path;
                                 return (
                                     <Link
-                                        key={link.label}
+                                        key={link.path}
                                         to={link.path}
                                         onClick={() => setIsMenuOpen(false)}
-                                        className={`flex items-center gap-4 p-4 rounded-2xl transition-all ${isActive
-                                                ? 'bg-green-50 text-green-800 font-bold'
-                                                : 'text-gray-700 font-bold hover:bg-gray-50'
-                                            }`}
+                                        className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${active ? 'bg-gray-900' : 'hover:bg-gray-50'}`}
                                     >
-                                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isActive ? 'bg-green-100' : 'bg-gray-100'}`}>
-                                            <img src={link.iconUrl} alt={link.label} className="w-6 h-6 object-contain" />
-                                        </div>
-                                        <span className="text-xl">{link.label}</span>
+                                        <img
+                                            src={link.iconUrl}
+                                            alt={link.label}
+                                            className="w-4 h-4 object-contain flex-shrink-0"
+                                            style={{ opacity: active ? 1 : 0.45, filter: active ? 'brightness(0) invert(1)' : 'none' }}
+                                        />
+                                        <span className={`text-[13px] font-medium ${active ? 'text-white' : 'text-gray-600'}`}>
+                                            {link.label}
+                                        </span>
                                     </Link>
                                 );
                             })}
-                        </nav>
+                        </div>
 
                         {user && (
-                            <div className="mt-8 pt-6 border-t border-gray-100">
-                                <button
-                                    onClick={() => {
-                                        setIsMenuOpen(false);
-                                        setShowLogoutModal(true);
-                                    }}
-                                    className="flex items-center gap-4 p-4 w-full text-red-600 font-bold rounded-2xl hover:bg-red-50 transition-colors"
-                                >
-                                    <div className="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center">
-                                        <img src={ICONS.logout} alt="Logout" className="w-6 h-6 object-contain" />
-                                    </div>
-                                    <span className="text-xl">Sign Out</span>
-                                </button>
-                            </div>
+                            <button
+                                onClick={() => { setIsMenuOpen(false); setShowLogoutModal(true); }}
+                                className="flex items-center gap-3 px-4 py-3 rounded-xl text-red-500 hover:bg-red-50 transition-colors mt-4"
+                            >
+                                <img
+                                    src={ICONS.logout}
+                                    alt="Sign Out"
+                                    className="w-4 h-4 object-contain flex-shrink-0"
+                                    style={{ filter: 'invert(30%) sepia(80%) saturate(700%) hue-rotate(330deg) opacity(0.75)' }}
+                                />
+                                <span className="text-[13px] font-medium">Sign Out</span>
+                            </button>
                         )}
                     </div>
                 </div>
             )}
 
             {showSidePanel && (
-                <div className="fixed inset-0 z-[120] flex md:justify-end bg-white md:bg-black/40 backdrop-blur-sm animate-fade-in">
+                <div className="fixed inset-0 z-[120] flex justify-end bg-black/25 backdrop-blur-[2px]">
                     <div
                         ref={sidePanelRef}
-                        className="w-full h-full md:w-[400px] bg-gray-50 shadow-2xl flex flex-col"
+                        className="w-full h-full md:w-[300px] bg-gray-50 shadow-2xl flex flex-col"
                         role="dialog"
                         aria-modal="true"
-                        aria-labelledby="side-panel-title"
                     >
-                        <div className="bg-white px-6 pt-8 pb-6 border-b border-gray-200 z-10 shadow-sm">
-                            <div className="flex items-center justify-between mb-8">
-                                <h2 id="side-panel-title" className="text-2xl font-extrabold text-gray-900 tracking-tight">Account</h2>
-                                <button
-                                    onClick={() => setShowSidePanel(false)}
-                                    className="p-2 bg-gray-50 hover:bg-gray-100 rounded-full transition-colors"
-                                >
-                                    <img src={ICONS.close} alt="Close" className="w-5 h-5 object-contain" />
-                                </button>
+                        <div className="flex-shrink-0 px-5 pt-5 pb-4 bg-white border-b border-gray-100">
+                            <div className="flex items-center justify-between mb-4">
+                                <span className="text-[13px] font-semibold text-gray-800">Account</span>
+                                <CloseBtn onClick={closeSidePanel} />
                             </div>
-
                             {user && (
-                                <div className="flex items-center gap-5">
+                                <div className="flex items-center gap-3">
                                     <img
-                                        src={getProfileImageUrl(user.profileImage || user.profile_image) || '/profile-img/default-avatar.svg'}
+                                        src={avatarSrc}
                                         alt="Profile"
-                                        className="w-20 h-20 rounded-full object-cover shadow-sm border border-gray-100"
+                                        className="w-11 h-11 rounded-full object-cover border border-gray-100 flex-shrink-0"
                                         onError={(e) => { e.target.onerror = null; e.target.src = '/profile-img/default-avatar.svg'; }}
                                     />
-                                    <div className="flex-1 min-w-0">
-                                        <p className="font-extrabold text-gray-900 text-xl truncate">
-                                            {user.firstName || user.username}
-                                        </p>
-                                        <p className="text-gray-500 text-sm truncate font-medium mt-0.5">{user.email}</p>
-                                        {/* <span className="inline-block mt-2.5 px-3 py-1 bg-green-800 text-white rounded-lg text-xs font-bold tracking-widest uppercase shadow-sm">
-                                            {user.role}
-                                        </span> */}
+                                    <div className="min-w-0">
+                                        <p className="text-[13px] font-semibold text-gray-900 truncate">{displayName}</p>
+                                        <p className="text-[11px] text-gray-400 truncate mt-0.5">{user.email}</p>
                                     </div>
                                 </div>
                             )}
                         </div>
 
-                        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6">
-                            {(adminMenuItems.length > 0 || staffMenuItems.length > 0) && (
-                                <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
-                                    <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest px-5 py-3.5 bg-gray-50/80 border-b border-gray-100">Quick Access</p>
-                                    <div className="flex flex-col">
-                                        {[...adminMenuItems, ...staffMenuItems].map((item, index) => (
-                                            <Link
-                                                key={index}
-                                                to={item.path}
-                                                onClick={() => setShowSidePanel(false)}
-                                                className={`flex items-center gap-4 p-4.5 hover:bg-gray-50 transition-colors group ${index !== [...adminMenuItems, ...staffMenuItems].length - 1 ? 'border-b border-gray-100' : ''}`}
-                                            >
-                                                <div className="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center group-hover:bg-green-50 transition-colors">
-                                                    <img src={item.iconUrl} alt={item.label} className="w-5 h-5 object-contain" />
-                                                </div>
-                                                <p className="font-bold text-gray-800 text-[15px]">{item.label}</p>
-                                            </Link>
+                        <div className="flex-1 overflow-y-auto px-4 pb-6">
+                            {quickItems.length > 0 && (
+                                <>
+                                    <SectionLabel label="Quick Access" />
+                                    <div className="rounded-xl overflow-hidden border border-gray-100 bg-white">
+                                        {quickItems.map((item, i) => (
+                                            <MenuItem key={i} iconUrl={item.iconUrl} label={item.label} to={item.path} onClose={closeSidePanel} isLast={i === quickItems.length - 1} />
                                         ))}
                                     </div>
-                                </div>
+                                </>
                             )}
 
-                            <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
-                                <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest px-5 py-3.5 bg-gray-50/80 border-b border-gray-100">Account Settings</p>
-                                <div className="flex flex-col">
-                                    {accountMenuItems.map((item, index) => (
-                                        item.action ? (
-                                            <button
-                                                key={index}
-                                                onClick={item.action}
-                                                className={`flex items-center gap-4 px-5 py-4 hover:bg-gray-50 transition-colors group text-left ${index !== accountMenuItems.length - 1 ? 'border-b border-gray-100' : ''}`}
-                                            >
-                                                <div className="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center group-hover:bg-green-50 transition-colors">
-                                                    <img src={item.iconUrl} alt={item.label} className="w-5 h-5 object-contain" />
-                                                </div>
-                                                <p className="font-bold text-gray-800 text-[15px]">{item.label}</p>
-                                            </button>
-                                        ) : (
-                                            <Link
-                                                key={index}
-                                                to={item.path}
-                                                onClick={() => setShowSidePanel(false)}
-                                                className={`flex items-center gap-4 px-5 py-4 hover:bg-gray-50 transition-colors group ${index !== accountMenuItems.length - 1 ? 'border-b border-gray-100' : ''}`}
-                                            >
-                                                <div className="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center group-hover:bg-green-50 transition-colors">
-                                                    <img src={item.iconUrl} alt={item.label} className="w-5 h-5 object-contain" />
-                                                </div>
-                                                <p className="font-bold text-gray-800 text-[15px]">{item.label}</p>
-                                            </Link>
-                                        )
-                                    ))}
-                                </div>
+                            <SectionLabel label="Account" />
+                            <div className="rounded-xl overflow-hidden border border-gray-100 bg-white">
+                                {accountItems.map((item, i) => (
+                                    <MenuItem key={i} iconUrl={item.iconUrl} label={item.label} to={item.path} onClick={item.action} onClose={closeSidePanel} isLast={i === accountItems.length - 1} />
+                                ))}
                             </div>
 
-                            <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
-                                <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest px-5 py-3.5 bg-gray-50/80 border-b border-gray-100">Explore</p>
-                                <div className="flex flex-col">
-                                    {exploreMenuItems.map((item, index) => (
-                                        <Link
-                                            key={index}
-                                            to={item.path}
-                                            onClick={() => setShowSidePanel(false)}
-                                            className={`flex items-center gap-4 px-5 py-4 hover:bg-gray-50 transition-colors group ${index !== exploreMenuItems.length - 1 ? 'border-b border-gray-100' : ''}`}
-                                        >
-                                            <div className="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center group-hover:bg-green-50 transition-colors">
-                                                <img src={item.iconUrl} alt={item.label} className="w-5 h-5 object-contain" />
-                                            </div>
-                                            <p className="font-bold text-gray-800 text-[15px]">{item.label}</p>
-                                        </Link>
-                                    ))}
-                                </div>
+                            <SectionLabel label="Explore" />
+                            <div className="rounded-xl overflow-hidden border border-gray-100 bg-white">
+                                {exploreItems.map((item, i) => (
+                                    <MenuItem key={i} iconUrl={item.iconUrl} label={item.label} to={item.path} onClose={closeSidePanel} isLast={i === exploreItems.length - 1} />
+                                ))}
                             </div>
 
-                            <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
-                                <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest px-5 py-3.5 bg-gray-50/80 border-b border-gray-100">Preferences & AI</p>
-                                <div className="flex flex-col">
-                                    {settingsMenuItems.map((item, index) => (
-                                        <Link
-                                            key={`settings-${index}`}
-                                            to={item.path}
-                                            onClick={() => setShowSidePanel(false)}
-                                            className="flex items-center gap-4 px-5 py-4 hover:bg-gray-50 transition-colors group border-b border-gray-100"
-                                        >
-                                            <div className="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center group-hover:bg-green-50 transition-colors">
-                                                <img src={item.iconUrl} alt={item.label} className="w-5 h-5 object-contain" />
-                                            </div>
-                                            <p className="font-bold text-gray-800 text-[15px]">{item.label}</p>
-                                        </Link>
-                                    ))}
-
-                                    <button
-                                        onClick={() => {
-                                            setShowSidePanel(false);
-                                            setShowAIScanner(true);
-                                        }}
-                                        className="flex items-center gap-4 px-5 py-4 hover:bg-gray-50 transition-colors group text-left"
-                                    >
-                                        <div className="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center group-hover:bg-green-50 transition-colors">
-                                            <img src={ICONS.camera} alt="AI Scanner" className="w-5 h-5 object-contain" />
-                                        </div>
-                                        <div className="flex-1 flex items-center justify-between">
-                                            <p className="font-bold text-gray-800 text-[15px]">AI Animal Scanner</p>
-                                            <span className="px-2 py-1 bg-green-800 text-white rounded-md text-[10px] font-bold uppercase tracking-wider">New</span>
-                                        </div>
-                                    </button>
-                                </div>
+                            <SectionLabel label="Preferences & AI" />
+                            <div className="rounded-xl overflow-hidden border border-gray-100 bg-white">
+                                <MenuItem iconUrl={ICONS.setting} label="Settings" to="/settings" onClose={closeSidePanel} isLast={false} />
+                                <MenuItem
+                                    iconUrl={ICONS.camera}
+                                    label="AI Animal Scanner"
+                                    badge="New"
+                                    onClick={() => { closeSidePanel(); setShowAIScanner(true); }}
+                                    isLast={true}
+                                />
                             </div>
 
-                            <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm pb-2">
-                                <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest px-5 py-3.5 bg-gray-50/80 border-b border-gray-100">Help & Support</p>
-                                <div className="flex flex-col">
-                                    <Link
-                                        to="/help"
-                                        onClick={() => setShowSidePanel(false)}
-                                        className="flex items-center gap-4 px-5 py-4 hover:bg-gray-50 transition-colors group border-b border-gray-100"
-                                    >
-                                        <div className="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center group-hover:bg-green-50 transition-colors">
-                                            <img src={ICONS.help} alt="Help Center" className="w-5 h-5 object-contain" />
-                                        </div>
-                                        <p className="font-bold text-gray-800 text-[15px]">Help Center</p>
-                                    </Link>
-
-                                    <button
-                                        onClick={() => {
-                                            setShowSidePanel(false);
-                                            setShowEmailModal(true);
-                                            setEmailSent(false);
-                                            setEmailError('');
-                                        }}
-                                        className="flex items-center gap-4 px-5 py-4 hover:bg-gray-50 transition-colors group text-left border-b border-gray-100"
-                                    >
-                                        <div className="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center group-hover:bg-green-50 transition-colors">
-                                            <img src={ICONS.support} alt="Contact Support" className="w-5 h-5 object-contain" />
-                                        </div>
-                                        <p className="font-bold text-gray-800 text-[15px]">Contact Support</p>
-                                    </button>
-
-                                    <button
-                                        onClick={() => {
-                                            setShowSidePanel(false);
-                                            setShowLogoutModal(true);
-                                        }}
-                                        className="flex items-center gap-4 px-5 py-4 hover:bg-red-50 transition-colors group text-left"
-                                    >
-                                        <div className="w-10 h-10 bg-red-50 rounded-xl flex items-center justify-center group-hover:bg-red-100 transition-colors">
-                                            <img src={ICONS.logout} alt="Logout" className="w-5 h-5 object-contain" />
-                                        </div>
-                                        <p className="font-bold text-red-600 text-[15px]">Sign Out</p>
-                                    </button>
-                                </div>
+                            <SectionLabel label="Help" />
+                            <div className="rounded-xl overflow-hidden border border-gray-100 bg-white">
+                                <MenuItem iconUrl={ICONS.help} label="Help Center" to="/help" onClose={closeSidePanel} isLast={false} />
+                                <MenuItem iconUrl={ICONS.support} label="Contact Support" onClick={openEmailModal} isLast={false} />
+                                <MenuItem
+                                    iconUrl={ICONS.logout}
+                                    label="Sign Out"
+                                    danger
+                                    onClick={() => { closeSidePanel(); setShowLogoutModal(true); }}
+                                    isLast={true}
+                                />
                             </div>
                         </div>
                     </div>
@@ -695,38 +498,23 @@ const Header = () => {
 
             {showAIScanner && (
                 <div className="fixed inset-0 z-[100] flex justify-end">
-                    <div
-                        className="absolute inset-0 bg-black/40 backdrop-blur-sm animate-fade-in"
-                        onClick={() => setShowAIScanner(false)}
-                    />
-
+                    <div className="absolute inset-0 bg-black/25 backdrop-blur-[2px]" onClick={() => setShowAIScanner(false)} />
                     <div
                         ref={aiScannerRef}
-                        className="relative w-full max-w-lg bg-white h-full shadow-2xl animate-slide-in-right overflow-hidden flex flex-col"
+                        className="relative w-full max-w-lg bg-white h-full shadow-2xl flex flex-col"
                         role="dialog"
                         aria-modal="true"
-                        aria-labelledby="ai-scanner-title"
                     >
-                        <div className="p-4 border-b border-gray-100 bg-green-800 flex-shrink-0">
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
-                                        <img src={ICONS.camera} alt="AI Icon" className="w-5 h-5 object-contain brightness-0 invert" />
-                                    </div>
-                                    <div>
-                                        <h2 id="ai-scanner-title" className="text-lg font-bold text-white">AI Animal Scanner</h2>
-                                        <p className="text-green-200 text-xs font-medium">Identify animals with AI</p>
-                                    </div>
-                                </div>
-                                <button
-                                    onClick={() => setShowAIScanner(false)}
-                                    className="p-2 hover:bg-white/20 rounded-xl transition-colors text-white"
-                                >
-                                    <img src={ICONS.close} alt="Close" className="w-5 h-5 object-contain brightness-0 invert" />
-                                </button>
+                        <div className="flex items-center gap-3 px-5 py-4 border-b border-gray-100 flex-shrink-0">
+                            <div className="w-8 h-8 bg-emerald-700 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <img src={ICONS.camera} alt="AI" className="w-4 h-4 object-contain brightness-0 invert" />
                             </div>
+                            <div className="flex-1 min-w-0">
+                                <p className="text-[13px] font-semibold text-gray-900">AI Animal Scanner</p>
+                                <p className="text-[11px] text-gray-400">Identify animals with AI</p>
+                            </div>
+                            <CloseBtn onClick={() => setShowAIScanner(false)} />
                         </div>
-
                         <div className="flex-1 overflow-y-auto">
                             <AnimalClassifier embedded={true} />
                         </div>
@@ -735,87 +523,125 @@ const Header = () => {
             )}
 
             {showEmailModal && (
-                <div className="fixed inset-0 z-[130] flex items-center justify-center bg-black/50 p-4">
-                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md flex flex-col max-h-[90vh]">
-                        <div className="flex items-center justify-between p-5 border-b border-gray-100 bg-gray-50 rounded-t-2xl">
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm border border-gray-200">
-                                    <img src={ICONS.support} alt="Email Icon" className="w-5 h-5 object-contain" />
-                                </div>
-                                <h2 className="text-lg font-extrabold text-gray-900">Contact Support</h2>
-                            </div>
-                            <button
-                                onClick={() => {
-                                    setShowEmailModal(false);
-                                    setEmailSubject('');
-                                    setEmailMessage('');
-                                    setEmailError('');
-                                }}
-                                className="p-2 bg-white border border-gray-200 hover:bg-gray-100 rounded-full transition-colors"
-                            >
-                                <img src={ICONS.close} alt="Close" className="w-4 h-4 object-contain" />
-                            </button>
+                <div className="fixed inset-0 z-[130] flex items-center justify-center bg-black/25 backdrop-blur-[2px] p-4">
+                    <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm">
+                        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+                            <span className="text-[13px] font-semibold text-gray-900">Contact Support</span>
+                            <CloseBtn onClick={() => { setShowEmailModal(false); setEmailSubject(''); setEmailMessage(''); setEmailError(''); }} />
                         </div>
-                        <div className="p-5 overflow-y-auto">
+                        <div className="p-5">
                             {emailSent ? (
-                                <div className="text-center py-8">
-                                    <div className="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-green-100">
-                                        <span className="text-3xl">🎉</span>
+                                <div className="flex flex-col items-center text-center py-5 gap-3">
+                                    <div className="w-11 h-11 bg-emerald-50 border border-emerald-100 rounded-full flex items-center justify-center">
+                                        <span className="text-emerald-600 text-base font-bold">✓</span>
                                     </div>
-                                    <h3 className="text-xl font-extrabold text-gray-900 mb-2">Message Sent!</h3>
-                                    <p className="text-gray-600 mb-6 font-medium">Your message has been sent to the admin team. They will respond as soon as possible.</p>
+                                    <div>
+                                        <p className="text-[13px] font-semibold text-gray-900">Message Sent</p>
+                                        <p className="text-[11px] text-gray-400 mt-0.5">We'll respond as soon as possible.</p>
+                                    </div>
                                     <button
-                                        onClick={() => {
-                                            setShowEmailModal(false);
-                                            setEmailSent(false);
-                                        }}
-                                        className="w-full py-3.5 bg-gray-900 text-white font-bold rounded-xl hover:bg-black transition-colors"
+                                        onClick={() => { setShowEmailModal(false); setEmailSent(false); }}
+                                        className="w-full py-2.5 bg-gray-900 text-white text-[13px] font-medium rounded-lg hover:bg-gray-700 transition-colors mt-2"
                                     >
                                         Close
                                     </button>
                                 </div>
                             ) : (
-                                <>
-                                    <p className="text-gray-600 mb-5 font-medium text-sm">
-                                        Send a message to our support team. We'll get back to you as soon as possible.
-                                    </p>
+                                <div className="flex flex-col gap-4">
                                     {emailError && (
-                                        <div className="mb-5 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm font-bold">
-                                            {emailError}
-                                        </div>
+                                        <p className="text-[11px] text-red-500 bg-red-50 px-3 py-2 rounded-lg">{emailError}</p>
                                     )}
-                                    <div className="mb-4">
-                                        <label className="block text-sm font-bold text-gray-800 mb-1.5">Subject</label>
+                                    <div>
+                                        <label className="block text-[11px] font-medium text-gray-500 mb-1.5">Subject</label>
                                         <input
                                             type="text"
                                             value={emailSubject}
                                             onChange={(e) => setEmailSubject(e.target.value)}
-                                            placeholder="..."
-                                            className="w-full px-4 py-3.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-800 focus:border-transparent outline-none transition-all font-medium"
+                                            placeholder="What's this about?"
+                                            className="w-full px-3 py-2.5 text-[13px] border border-gray-200 rounded-lg focus:ring-1 focus:ring-gray-400 focus:border-gray-400 outline-none transition-all"
                                         />
                                     </div>
-                                    <div className="mb-6">
-                                        <label className="block text-sm font-bold text-gray-800 mb-1.5">Message</label>
+                                    <div>
+                                        <label className="block text-[11px] font-medium text-gray-500 mb-1.5">Message</label>
                                         <textarea
                                             value={emailMessage}
                                             onChange={(e) => setEmailMessage(e.target.value)}
-                                            placeholder="Describe your issue or question in detail..."
-                                            rows={5}
-                                            className="w-full px-4 py-3.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-800 focus:border-transparent resize-none outline-none transition-all font-medium"
+                                            placeholder="Describe your issue..."
+                                            rows={4}
+                                            className="w-full px-3 py-2.5 text-[13px] border border-gray-200 rounded-lg focus:ring-1 focus:ring-gray-400 focus:border-gray-400 outline-none resize-none transition-all"
                                         />
                                     </div>
                                     <button
                                         onClick={handleSendEmail}
                                         disabled={emailLoading || !emailSubject.trim() || !emailMessage.trim()}
-                                        className="w-full bg-green-800 text-white py-3.5 rounded-xl font-bold hover:bg-green-900 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors"
+                                        className="w-full py-2.5 bg-gray-900 text-white text-[13px] font-medium rounded-lg hover:bg-gray-700 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors"
                                     >
-                                        {emailLoading ? (
-                                            <span>Sending...</span>
-                                        ) : (
-                                            <span>Send Message</span>
-                                        )}
+                                        {emailLoading ? 'Sending…' : 'Send Message'}
                                     </button>
-                                </>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {showNotificationPanel && (
+                <div className="fixed inset-0 z-[120] overflow-hidden">
+                    <div className="absolute inset-0 bg-black/25 backdrop-blur-[2px]" onClick={() => setShowNotificationPanel(false)} />
+                    <div
+                        ref={notificationPanelRef}
+                        className="absolute right-0 top-0 h-full w-full max-w-sm bg-white shadow-2xl flex flex-col"
+                    >
+                        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 flex-shrink-0">
+                            <span className="text-[13px] font-semibold text-gray-900">Notifications</span>
+                            <CloseBtn onClick={() => setShowNotificationPanel(false)} />
+                        </div>
+                        <div className="flex-1 overflow-y-auto p-4">
+                            {notificationLoading ? (
+                                <div className="flex items-center justify-center py-12">
+                                    <span className="text-[13px] text-gray-400">Loading…</span>
+                                </div>
+                            ) : notifications.length === 0 ? (
+                                <div className="flex flex-col items-center justify-center py-16 gap-2">
+                                    <div className="w-11 h-11 bg-gray-50 rounded-full flex items-center justify-center">
+                                        <img src={ICONS.notification} alt="" className="w-5 h-5 object-contain opacity-25" />
+                                    </div>
+                                    <p className="text-[13px] font-medium text-gray-500">No notifications</p>
+                                    <p className="text-[11px] text-gray-400">You're all caught up!</p>
+                                </div>
+                            ) : (
+                                <div className="flex flex-col gap-2">
+                                    {notifications.map((notif) => (
+                                        <button
+                                            key={notif.id}
+                                            className="w-full text-left flex items-start gap-3 p-3.5 rounded-xl border border-gray-100 hover:border-gray-200 hover:bg-gray-50 transition-all"
+                                            onClick={() => {
+                                                setShowNotificationPanel(false);
+                                                if (notif.action === 'openReservationHistory') setShowHistoryPanel(true);
+                                                else if (notif.path) navigate(notif.path);
+                                            }}
+                                        >
+                                            <div className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${notif.type === 'event' ? 'bg-emerald-50' :
+                                                    notif.type === 'reservation' ? 'bg-orange-50' : 'bg-gray-50'
+                                                }`}>
+                                                <img
+                                                    src={notif.type === 'event' ? ICONS.events : notif.type === 'reservation' ? ICONS.ticket : ICONS.messages}
+                                                    alt=""
+                                                    className="w-4 h-4 object-contain opacity-55"
+                                                />
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-[13px] font-medium text-gray-800 truncate">{notif.title}</p>
+                                                <p className="text-[11px] text-gray-400 mt-0.5 leading-relaxed">{notif.message}</p>
+                                                <p className="text-[10px] text-gray-300 mt-1.5">
+                                                    {notif.time
+                                                        ? new Date(notif.time).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+                                                        : 'Recently'}
+                                                </p>
+                                            </div>
+                                        </button>
+                                    ))}
+                                </div>
                             )}
                         </div>
                     </div>
@@ -833,87 +659,6 @@ const Header = () => {
                 isOpen={showHistoryPanel}
                 onClose={() => setShowHistoryPanel(false)}
             />
-
-            {showNotificationPanel && (
-                <div className="fixed inset-0 z-[120] overflow-hidden">
-                    <div
-                        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-                        onClick={() => setShowNotificationPanel(false)}
-                    />
-                    <div
-                        ref={notificationPanelRef}
-                        className="absolute right-0 top-0 h-full w-full max-w-md bg-gray-50 shadow-2xl transform transition-transform duration-300 ease-out animate-slide-in-right flex flex-col"
-                    >
-                        <div className="flex items-center justify-between p-5 bg-white border-b border-gray-200 flex-shrink-0 z-10 shadow-sm">
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
-                                    <img src={ICONS.notification} alt="Notification" className="w-5 h-5 object-contain" />
-                                </div>
-                                <h2 className="text-xl font-extrabold text-gray-900 tracking-tight">Notifications</h2>
-                            </div>
-                            <button
-                                onClick={() => setShowNotificationPanel(false)}
-                                className="p-2 bg-gray-50 hover:bg-gray-100 rounded-full transition-colors"
-                            >
-                                <img src={ICONS.close} alt="Close" className="w-5 h-5 object-contain" />
-                            </button>
-                        </div>
-
-                        <div className="flex-1 overflow-y-auto p-5">
-                            {notificationLoading ? (
-                                <div className="flex items-center justify-center py-12">
-                                    <span className="font-bold text-gray-400">Loading...</span>
-                                </div>
-                            ) : notifications.length === 0 ? (
-                                <div className="text-center py-16 bg-white rounded-2xl border border-gray-200 shadow-sm">
-                                    <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-gray-100">
-                                        <img src={ICONS.notification} alt="Empty" className="w-8 h-8 object-contain opacity-40" />
-                                    </div>
-                                    <h3 className="text-gray-900 font-extrabold text-lg mb-1">No notifications</h3>
-                                    <p className="text-gray-500 text-sm font-medium">You're all caught up!</p>
-                                </div>
-                            ) : (
-                                <div className="space-y-3">
-                                    {notifications.map((notif) => (
-                                        <div
-                                            key={notif.id}
-                                            className="p-4 bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-md hover:border-green-200 transition-all cursor-pointer group"
-                                            onClick={() => {
-                                                setShowNotificationPanel(false);
-                                                if (notif.action === 'openReservationHistory') {
-                                                    setShowHistoryPanel(true);
-                                                } else if (notif.path) {
-                                                    navigate(notif.path);
-                                                }
-                                            }}
-                                        >
-                                            <div className="flex items-start gap-4">
-                                                <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${notif.type === 'event' ? 'bg-green-100' :
-                                                        notif.type === 'reservation' ? 'bg-orange-100' : 'bg-gray-100'
-                                                    }`}>
-                                                    <img src={notif.type === 'event' ? ICONS.events : notif.type === 'reservation' ? ICONS.ticket : ICONS.messages} alt="Type" className="w-6 h-6 object-contain" />
-                                                </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <h4 className="font-extrabold text-gray-900 text-[15px] truncate mb-0.5 group-hover:text-green-800 transition-colors">{notif.title}</h4>
-                                                    <p className="text-gray-600 text-sm leading-snug font-medium">{notif.message}</p>
-                                                    <p className="text-gray-400 text-xs mt-2 font-bold">
-                                                        {notif.time ? new Date(notif.time).toLocaleDateString('en-US', {
-                                                            month: 'short',
-                                                            day: 'numeric',
-                                                            hour: '2-digit',
-                                                            minute: '2-digit'
-                                                        }) : 'Recently'}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                </div>
-            )}
         </>
     );
 };

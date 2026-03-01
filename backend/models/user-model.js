@@ -46,7 +46,7 @@ class User {
     static async getAll() {
         const [rows] = await db.query(
             `SELECT id, first_name, last_name, username, email, phone_number, gender, birthday, 
-             role, profile_image, is_active, created_at 
+             role, profile_image, is_active, is_suspended, suspension_reason, suspended_at, created_at 
              FROM users ORDER BY created_at DESC`
         );
         return rows;

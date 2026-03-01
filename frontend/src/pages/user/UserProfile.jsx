@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { authAPI, getProfileImageUrl as resolveProfileImageUrl } from '../../services/api-client';
+import { authAPI, userAPI, getProfileImageUrl as resolveProfileImageUrl } from '../../services/api-client';
 import { sanitizeInput } from '../../utils/sanitize';
 import LogoutModal from '../../components/common/LogoutModal';
 
@@ -34,26 +34,93 @@ const AnimalCollection = () => {
     const [collection, setCollection] = useState([]);
     const [showRemoveModal, setShowRemoveModal] = useState(false);
     const [animalToRemove, setAnimalToRemove] = useState(null);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const stored = localStorage.getItem('animalCollection');
-        if (stored) {
-            setCollection(JSON.parse(stored));
-        }
+        const loadCollection = async () => {
+            try {
+                // Try to load from database first
+                const response = await userAPI.getCollection();
+                if (response.success && response.collection) {
+                    // Transform database format to component format
+                    const dbCollection = response.collection.map(item => ({
+                        id: item.id,
+                        name: item.animal_name,
+                        description: item.description,
+                        category: item.category,
+                        confidence: item.confidence,
+                        image: item.captured_image,
+                        fromDatabase: true
+                    }));
+                    setCollection(dbCollection);
+                } else {
+                    // Fallback to localStorage
+                    const stored = localStorage.getItem('animalCollection');
+                    if (stored) {
+                        setCollection(JSON.parse(stored));
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading collection from database:', error);
+                // Fallback to localStorage
+                const stored = localStorage.getItem('animalCollection');
+                if (stored) {
+                    setCollection(JSON.parse(stored));
+                }
+            } finally {
+                setLoading(false);
+            }
+        };
+        loadCollection();
     }, []);
 
-    const handleRemove = (animalName) => {
-        setAnimalToRemove(animalName);
+    const handleRemove = (animal) => {
+        setAnimalToRemove(animal);
         setShowRemoveModal(true);
     };
 
-    const confirmRemove = () => {
-        const updated = collection.filter(a => a.name !== animalToRemove);
-        setCollection(updated);
-        localStorage.setItem('animalCollection', JSON.stringify(updated));
+    const confirmRemove = async () => {
+        const animal = animalToRemove;
+        
+        try {
+            if (animal.fromDatabase && animal.id) {
+                // Remove from database
+                await userAPI.removeFromCollection(animal.id);
+            } else {
+                // Remove from localStorage
+                const updated = collection.filter(a => a.name !== animal.name);
+                localStorage.setItem('animalCollection', JSON.stringify(updated));
+            }
+            
+            const updated = collection.filter(a => a.name !== animal.name);
+            setCollection(updated);
+        } catch (error) {
+            console.error('Error removing from collection:', error);
+            // Still update UI
+            const updated = collection.filter(a => a.name !== animal.name);
+            setCollection(updated);
+            localStorage.setItem('animalCollection', JSON.stringify(updated));
+        }
+        
         setShowRemoveModal(false);
         setAnimalToRemove(null);
     };
+
+    if (loading) {
+        return (
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 pb-12">
+                <div className="lg:col-span-4">
+                    <h3 className="text-lg font-bold text-gray-900">Animal Collection</h3>
+                    <p className="text-sm text-gray-400 mt-2 leading-relaxed">
+                        Animals you've captured and verified using the AI Scanner.
+                    </p>
+                </div>
+                <div className="lg:col-span-8 flex justify-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
+                </div>
+            </div>
+        );
+    }
 
     if (collection.length === 0) {
         return (
@@ -103,7 +170,7 @@ const AnimalCollection = () => {
                                     </div>
                                     <p className="text-xs text-gray-400 line-clamp-2">{animal.description}</p>
                                     <button 
-                                        onClick={() => handleRemove(animal.name)}
+                                        onClick={() => handleRemove(animal)}
                                         className="mt-2 text-xs text-red-500 hover:text-red-600 font-medium opacity-0 group-hover:opacity-100 transition-opacity"
                                     >
                                         Remove
@@ -124,7 +191,7 @@ const AnimalCollection = () => {
                             </svg>
                         </div>
                         <h3 className="text-xl font-black text-gray-900 mb-2">Remove Animal?</h3>
-                        <p className="text-gray-500 text-sm mb-6">Remove {animalToRemove} from your collection?</p>
+                        <p className="text-gray-500 text-sm mb-6">Remove {animalToRemove?.name} from your collection?</p>
                         <div className="flex gap-3">
                             <button onClick={() => setShowRemoveModal(false)} className="flex-1 py-3 border border-gray-200 rounded-xl font-bold text-gray-400 hover:bg-gray-50 transition">Cancel</button>
                             <button onClick={confirmRemove} className="flex-1 py-3 bg-red-600 text-white rounded-xl font-bold shadow-lg hover:bg-red-700 transition">Remove</button>

@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const adminController = require('../controllers/admin-controller');
 const messageController = require('../controllers/message-controller');
+const monitoringController = require('../controllers/monitoring-controller');
 const { protect, authorize } = require('../middleware/auth');
 const multer = require('multer');
 const path = require('path');
@@ -76,6 +77,10 @@ router.get('/animals', adminController.getAllAnimals);
 router.post('/animals', adminController.createAnimal);
 router.put('/animals/:id', adminController.updateAnimal);
 router.delete('/animals/:id', adminController.deleteAnimal);
+router.get('/plants', adminController.getAllPlants);
+router.post('/plants', adminController.createPlant);
+router.put('/plants/:id', adminController.updatePlant);
+router.delete('/plants/:id', adminController.deletePlant);
 router.get('/events', adminController.getAllEvents);
 router.post('/events', adminController.createEvent);
 router.put('/events/:id', adminController.updateEvent);
@@ -87,6 +92,8 @@ router.put('/tickets/:id/status', adminController.updateTicketStatus);
 router.put('/tickets/:id/mark-paid', adminController.markTicketAsPaid);
 router.put('/tickets/:id/verification', adminController.updateVerificationStatus);
 router.get('/reports/revenue', adminController.getRevenueReport);
+router.get('/reports/data', adminController.getReportData);
+router.get('/reports/quick-stats', adminController.getQuickStats);
 router.get('/analytics', adminController.getAnalytics);
 
 // User management routes
@@ -123,5 +130,13 @@ router.put('/messages/read-all', messageController.markAllAsRead);
 router.post('/messages/:id/respond', messageController.respondToMessage);
 router.delete('/messages/:id', messageController.deleteMessage);
 router.get('/appeals', messageController.getAppeals);
+
+// Staff Monitoring routes (admin only)
+router.get('/monitoring/dashboard', monitoringController.getMonitoringDashboard);
+router.get('/monitoring/sessions', monitoringController.getActiveSessions);
+router.get('/monitoring/activities', monitoringController.getRecentActivities);
+router.get('/monitoring/staff-stats', monitoringController.getStaffStats);
+router.get('/monitoring/staff/:staffId/timeline', monitoringController.getStaffTimeline);
+router.post('/monitoring/heartbeat', monitoringController.heartbeat);
 
 module.exports = router;

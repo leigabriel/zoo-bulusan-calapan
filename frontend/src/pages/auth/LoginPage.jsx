@@ -342,7 +342,9 @@ const LoginPage = () => {
 
         setAppealLoading(true);
         try {
-            const response = await messageAPI.submitAppeal({
+            // Use the public appeal endpoint which doesn't require authentication
+            const response = await authAPI.submitPublicAppeal({
+                email: suspensionInfo?.email || identifier,
                 subject: 'Suspension Appeal',
                 content: appealMessage.trim()
             });
@@ -490,7 +492,7 @@ const LoginPage = () => {
 
             <div className="relative hidden md:flex md:w-1/2 flex-col justify-between p-12 lg:p-16 overflow-hidden bg-emerald-900">
                 <img
-                    src="https://images.unsplash.com/photo-1516426122078-c23e76319801?ixlib=rb-4.0.3&auto=format&fit=crop&w=2068&q=80"
+                    src="https://images.unsplash.com/photo-1522435229388-6f7a422cd95b?q=80&w=1470&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
                     alt="Wildlife background"
                     className="absolute inset-0 w-full h-full object-cover opacity-50 mix-blend-overlay"
                 />
@@ -514,6 +516,7 @@ const LoginPage = () => {
             <div className="w-full md:w-1/2 flex flex-col justify-center px-6 py-12 sm:px-12 lg:px-24 bg-white">
                 <div className="w-full max-w-md mx-auto">
                     <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-2 tracking-tight">
+                        <span className='text-emerald-600 italic text-[1.5rem]'>Bulusan Zoo</span> <br />
                         Welcome Back!
                     </h2>
                     <p className="text-gray-500 text-sm lg:text-base mb-10">
@@ -535,7 +538,7 @@ const LoginPage = () => {
                     <form className="space-y-6" onSubmit={handleSubmit}>
                         <div>
                             <label htmlFor="identifier" className="block text-sm font-semibold text-gray-900 mb-2">
-                                Email
+                                Email or Username
                             </label>
                             <input
                                 type="text"
@@ -544,7 +547,7 @@ const LoginPage = () => {
                                 onChange={(e) => setIdentifier(sanitizeInput(e.target.value))}
                                 required
                                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition text-sm"
-                                placeholder="Input your email"
+                                placeholder="Input your email or username"
                             />
                         </div>
 

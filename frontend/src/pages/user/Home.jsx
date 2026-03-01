@@ -70,18 +70,18 @@ const Home = () => {
 
                     <div className="relative z-10 flex flex-col items-center text-center w-full px-4 sm:px-6 pt-12 sm:pt-0">
                         <h1 className="flex flex-col items-center w-full">
-                            <span className="text-6xl sm:text-[4rem] md:text-[5rem] lg:text-[6rem] font-normal leading-none tracking-wide">
+                            <span className="text-4xl sm:text-[4rem] md:text-[5rem] lg:text-[6rem] font-normal leading-none tracking-wide">
                                 Welcome to
                             </span>
                             <span
-                                className="text-[3.75rem] sm:text-[5rem] md:text-[6.5rem] lg:text-[7.5rem] italic uppercase leading-[0.9] tracking-wide mt-1 sm:mt-1"
+                                className="text-[2.75rem] sm:text-[5rem] md:text-[6.5rem] lg:text-[7.5rem] italic uppercase leading-[0.9] tracking-wide mt-1 sm:mt-1"
                                 style={{ fontFamily: '"Times New Roman", Times, serif' }}
                             >
                                 Bulusan Zoo
                             </span>
                         </h1>
 
-                        <p className="mt-4 sm:mt-6 max-w-[90%] sm:max-w-2xl lg:max-w-3xl text-xl sm:text-xl md:text-[1.35rem] font-semibold sm:font-medium leading-snug sm:leading-[1.4] px-2 sm:px-4">
+                        <p className="mt-4 sm:mt-6 max-w-[90%] sm:max-w-2xl lg:max-w-3xl tracking-tight text-xl sm:text-xl md:text-[1.35rem] sm:font-medium leading-[1.2] sm:leading-[1.4] px-2 sm:px-4">
                             Experience wildlife like never before with AI-powered tools that make exploring, planning your visit, and discovering amazing animals effortless and unforgettable.
                         </p>
 
@@ -148,99 +148,9 @@ const Home = () => {
                     </div>
                 </section>
 
-                <section id="animals-section" className="py-16 sm:py-20 md:py-24 bg-white overflow-hidden w-full">
-                    <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-                        <div className="text-left mb-12 sm:mb-16 md:mb-24">
-                            <div className="flex flex-col items-start mb-6 sm:mb-8">
-                                <span className="text-[10px] sm:text-xs uppercase tracking-[0.3em] sm:tracking-[0.5em] font-bold text-gray-400 mb-4 sm:mb-5 break-words">
-                                    Wildlife Exhibition
-                                </span>
-                                <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 border border-emerald-100 bg-emerald-50/50 rounded-full">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                                    <span className="text-[9px] sm:text-[10px] font-bold text-emerald-700 uppercase tracking-[0.1em] sm:tracking-[0.2em] whitespace-nowrap">
-                                        Our Wildlife
-                                    </span>
-                                </div>
-                            </div>
+                
 
-                            <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-light text-gray-900 mb-4 sm:mb-6 md:mb-8 tracking-tighter break-words">
-                                Meet Our Animals
-                            </h2>
-
-                            <p className="text-sm sm:text-base md:text-lg text-gray-500 max-w-xl font-light leading-relaxed italic break-words">
-                                Discover the incredible wildlife roaming freely at our AI-powered nature park.
-                            </p>
-                        </div>
-
-                        <div className="flex overflow-x-auto lg:grid lg:grid-cols-3 gap-6 sm:gap-8 md:gap-12 pb-8 lg:pb-0 snap-x snap-mandatory scrollbar-hide w-full">
-                            {[
-                                {
-                                    name: 'Monkey',
-                                    category: 'Mammal',
-                                    location: 'Tropical Exhibit - Forests and grasslands',
-                                    image: 'https://images.unsplash.com/photo-1522435229388-6f7a422cd95b?q=80&w=1470&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-                                },
-                                {
-                                    name: 'Dove',
-                                    category: 'Bird',
-                                    location: 'Bird Aviary - Woodlands and urban areas',
-                                    image: 'https://images.unsplash.com/photo-1580980407668-6bb45a674180?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-                                },
-                                {
-                                    name: 'Parrot',
-                                    category: 'Bird',
-                                    location: 'Bird Aviary - Tropical forests',
-                                    image: 'https://plus.unsplash.com/premium_photo-1709309432181-bda4a0d17e85?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8cGFycm90JTIwd2hpdGV8ZW58MHx8MHx8fDA%3D',
-                                }
-
-                            ].map((animal, i) => (
-                                <div key={i} className="group cursor-pointer min-w-[85vw] sm:min-w-[60vw] md:min-w-[45vw] lg:min-w-0 snap-center">
-                                    <div className="relative aspect-[2/3] overflow-hidden mb-6 sm:mb-8 bg-gray-50 w-full">
-                                        <img
-                                            src={animal.image}
-                                            alt={animal.name}
-                                            className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
-                                        />
-                                        <div className="absolute top-4 right-4 sm:top-6 sm:right-6">
-                                            <span className="bg-white/95 backdrop-blur-sm text-gray-900 text-[8px] sm:text-[9px] font-bold px-2 sm:px-3 py-1 uppercase tracking-widest shadow-sm">
-                                                {animal.category}
-                                            </span>
-                                        </div>
-                                        <div className="absolute inset-0 ring-1 ring-inset ring-black/5 pointer-events-none" />
-                                    </div>
-
-                                    <div className="space-y-3 sm:space-y-4 px-2 sm:px-0">
-                                        <h3 className="text-2xl sm:text-3xl font-light text-gray-900 leading-none transition-colors group-hover:text-emerald-800 break-words">
-                                            {animal.name}
-                                        </h3>
-
-                                        <div className="flex items-start sm:items-center gap-2 text-gray-400">
-                                            <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 opacity-60 flex-shrink-0 mt-0.5 sm:mt-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                                            </svg>
-                                            <span className="text-[10px] sm:text-[11px] uppercase tracking-wider sm:tracking-widest font-medium italic break-words">{animal.location}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-
-                        <div className="text-center mt-12 sm:mt-16 md:mt-24 lg:mt-28">
-                            <Link
-                                to="/animals"
-                                className="inline-flex flex-col items-center gap-3 sm:gap-5 group transition-all min-h-[44px]"
-                            >
-                                <span className="text-gray-900 font-bold uppercase tracking-[0.3em] sm:tracking-[0.5em] text-[9px] sm:text-[10px] break-words">
-                                    View All Animals
-                                </span>
-                                <span className="h-[1px] w-12 sm:w-20 bg-gray-200 group-hover:w-24 sm:group-hover:w-40 group-hover:bg-emerald-500 transition-all duration-700"></span>
-                            </Link>
-                        </div>
-                    </div>
-                </section>
-
-                <section id="events-section" className="relative bg-white p-3 sm:p-4 md:p-6 lg:p-10 min-h-[70vh] sm:min-h-[80vh] md:min-h-screen flex items-center justify-center overflow-hidden w-full">
+                <section id="events-section" className="relative bg-white p-3 sm:p-4 md:p-6 lg:p-10 min-h-[10vh] sm:min-h-[80vh] md:min-h-screen flex items-center justify-center overflow-hidden w-full">
 
                     <div className="relative w-full max-w-[1500px] min-h-[400px] sm:min-h-[500px] md:aspect-video bg-[#08140e] rounded-xl sm:rounded-2xl md:rounded-sm flex flex-col items-center justify-center overflow-hidden p-6 sm:p-8 md:p-16 lg:p-24 shadow-2xl">
 

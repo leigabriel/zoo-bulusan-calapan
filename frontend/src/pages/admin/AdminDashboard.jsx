@@ -67,6 +67,7 @@ const MoreIcon = () => (
 
 const AdminDashboard = () => {
     const { user } = useAuth();
+    const [timeFilter, setTimeFilter] = useState('today');
 
     const [stats, setStats] = useState({
         totalUsers: 0,
@@ -93,16 +94,16 @@ const AdminDashboard = () => {
 
     useEffect(() => {
         fetchDashboardData();
-    }, []);
+    }, [timeFilter]);
 
     const fetchDashboardData = async () => {
         try {
             setLoading(true);
 
             const [dashboardRes, usersRes, analyticsRes, animalsRes, plantsRes] = await Promise.all([
-                adminAPI.getDashboard().catch(() => null),
+                adminAPI.getDashboard(timeFilter).catch(() => null),
                 adminAPI.getUsers().catch(() => null),
-                adminAPI.getAnalytics('week').catch(() => null),
+                adminAPI.getAnalytics(timeFilter).catch(() => null),
                 adminAPI.getAnimals?.().catch(() => null),
                 adminAPI.getPlants?.().catch(() => null),
             ]);
@@ -320,11 +321,15 @@ const AdminDashboard = () => {
                     <p className="text-gray-400">Here&apos;s what&apos;s happening with your zoo today.</p>
                 </div>
                 <div className="flex items-center gap-2">
-                    <select className="bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-[#8cff65]">
-                        <option>Today</option>
-                        <option>This Week</option>
-                        <option>This Month</option>
-                        <option>This Year</option>
+                    <select 
+                        value={timeFilter}
+                        onChange={(e) => setTimeFilter(e.target.value)}
+                        className="bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-[#8cff65]"
+                    >
+                        <option value="today">Today</option>
+                        <option value="week">This Week</option>
+                        <option value="month">This Month</option>
+                        <option value="year">This Year</option>
                     </select>
                 </div>
             </div>

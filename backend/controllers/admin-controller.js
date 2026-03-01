@@ -5,24 +5,71 @@ const Event = require('../models/event-model');
 const Notification = require('../models/notification-model');
 const Plant = require('../models/plant-model');
 const bcrypt = require('bcryptjs');
+const db = require('../config/database');
+
+// Helper to get date range based on period
+const getDateRange = (period) => {
+    const now = new Date();
+    let startDate;
+    
+    switch (period) {
+        case 'today':
+            startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            break;
+        case 'week':
+            startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7);
+            break;
+        case 'month':
+            startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+            break;
+        case 'year':
+            startDate = new Date(now.getFullYear(), 0, 1);
+            break;
+        default:
+            startDate = null;
+    }
+    
+    return startDate;
+};
 
 exports.getDashboardStats = async (req, res) => {
     try {
+        const { period = 'today' } = req.query;
+        const startDate = getDateRange(period);
+        
+        // For counts that should be filtered by period
+        let ticketsQuery, revenueQuery;
+        
+        if (startDate) {
+            const dateStr = startDate.toISOString().slice(0, 19).replace('T', ' ');
+            const [ticketsResult] = await db.query(
+                'SELECT COUNT(*) as count FROM ticket_reservations WHERE created_at >= ?',
+                [dateStr]
+            );
+            const [revenueResult] = await db.query(
+                `SELECT COALESCE(SUM((adult_quantity * 40) + (child_quantity * 20)), 0) as total 
+                 FROM ticket_reservations 
+                 WHERE status IN ('confirmed', 'completed') AND created_at >= ?`,
+                [dateStr]
+            );
+            ticketsQuery = ticketsResult[0]?.count || 0;
+            revenueQuery = revenueResult[0]?.total || 0;
+        } else {
+            ticketsQuery = await Ticket.count();
+            revenueQuery = await Ticket.getTotalRevenue();
+        }
+
         const [
             totalUsers,
             totalAnimals,
             totalPlants,
-            totalTickets,
-            totalRevenue,
             activeTickets,
             upcomingEvents
         ] = await Promise.all([
             User.count(),
             Animal.count(),
             Plant.count(),
-            Ticket.count(),
-            Ticket.getTotalRevenue(),
-            Ticket.countByStatus('active'),
+            Ticket.countByStatus('confirmed'),
             Event.countUpcoming()
         ]);
 
@@ -32,11 +79,12 @@ exports.getDashboardStats = async (req, res) => {
                 totalUsers: Number(totalUsers) || 0,
                 totalAnimals: Number(totalAnimals) || 0,
                 totalPlants: Number(totalPlants) || 0,
-                totalTickets: Number(totalTickets) || 0,
-                totalRevenue: Number(totalRevenue) || 0,
+                totalTickets: Number(ticketsQuery) || 0,
+                totalRevenue: Number(revenueQuery) || 0,
                 activeTickets: Number(activeTickets) || 0,
                 upcomingEvents: Number(upcomingEvents) || 0
-            }
+            },
+            period
         });
     } catch (error) {
         console.error('Error getting dashboard stats:', error);
@@ -269,6 +317,63 @@ exports.deleteEvent = async (req, res) => {
     }
 };
 
+// ====== Plant CRUD ======
+exports.getAllPlants = async (req, res) => {
+    try {
+        const plants = await Plant.getAll();
+        res.json({ success: true, plants });
+    } catch (error) {
+        console.error('Error getting plants:', error);
+        res.status(500).json({ success: false, message: 'Error fetching plants' });
+    }
+};
+
+exports.createPlant = async (req, res) => {
+    try {
+        const plantId = await Plant.create(req.body);
+        res.status(201).json({
+            success: true,
+            message: 'Plant created successfully',
+            plantId
+        });
+    } catch (error) {
+        console.error('Error creating plant:', error);
+        res.status(500).json({ success: false, message: 'Error creating plant' });
+    }
+};
+
+exports.updatePlant = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const updated = await Plant.update(id, req.body);
+
+        if (!updated) {
+            return res.status(404).json({ success: false, message: 'Plant not found' });
+        }
+
+        res.json({ success: true, message: 'Plant updated successfully' });
+    } catch (error) {
+        console.error('Error updating plant:', error);
+        res.status(500).json({ success: false, message: 'Error updating plant' });
+    }
+};
+
+exports.deletePlant = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const deleted = await Plant.delete(id);
+
+        if (!deleted) {
+            return res.status(404).json({ success: false, message: 'Plant not found' });
+        }
+
+        res.json({ success: true, message: 'Plant deleted successfully' });
+    } catch (error) {
+        console.error('Error deleting plant:', error);
+        res.status(500).json({ success: false, message: 'Error deleting plant' });
+    }
+};
+
 exports.getAllTickets = async (req, res) => {
     try {
         const tickets = await Ticket.getAll();
@@ -432,6 +537,206 @@ exports.getAnalytics = async (req, res) => {
     } catch (error) {
         console.error('Error getting analytics:', error);
         res.status(500).json({ success: false, message: 'Error fetching analytics data' });
+    }
+};
+
+// Comprehensive Report Data endpoint
+exports.getReportData = async (req, res) => {
+    try {
+        const { startDate, endDate, reportType = 'sales' } = req.query;
+        
+        // Default to last 30 days if no date range provided
+        const now = new Date();
+        const defaultStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 30);
+        const start = startDate || formatLocalDate(defaultStart);
+        const end = endDate || formatLocalDate(now);
+
+        // Query for report items based on report type
+        let items = [];
+        let totalRevenue = 0;
+        let ticketsSold = 0;
+        let visitors = 0;
+
+        if (reportType === 'sales' || reportType === 'tickets') {
+            // Get detailed ticket data for the date range
+            const [rows] = await db.query(
+                `SELECT 
+                    DATE(tr.created_at) as date,
+                    tr.reservation_reference,
+                    tr.visitor_name,
+                    tr.adult_quantity,
+                    tr.child_quantity,
+                    tr.bulusan_resident_quantity,
+                    tr.total_visitors,
+                    tr.status,
+                    (tr.adult_quantity * 40) + (tr.child_quantity * 20) as amount
+                 FROM ticket_reservations tr
+                 WHERE DATE(tr.created_at) BETWEEN ? AND ?
+                 ORDER BY tr.created_at DESC
+                 LIMIT 100`,
+                [start, end]
+            );
+
+            // Transform to report items
+            for (const row of rows) {
+                if (row.adult_quantity > 0) {
+                    items.push({
+                        date: formatLocalDate(new Date(row.date)),
+                        type: 'Adult Ticket',
+                        quantity: row.adult_quantity,
+                        amount: row.adult_quantity * 40,
+                        status: row.status === 'completed' || row.status === 'confirmed' ? 'Completed' : 
+                               row.status === 'cancelled' ? 'Cancelled' : 'Pending',
+                        reference: row.reservation_reference
+                    });
+                }
+                if (row.child_quantity > 0) {
+                    items.push({
+                        date: formatLocalDate(new Date(row.date)),
+                        type: 'Child Ticket',
+                        quantity: row.child_quantity,
+                        amount: row.child_quantity * 20,
+                        status: row.status === 'completed' || row.status === 'confirmed' ? 'Completed' : 
+                               row.status === 'cancelled' ? 'Cancelled' : 'Pending',
+                        reference: row.reservation_reference
+                    });
+                }
+                if (row.bulusan_resident_quantity > 0) {
+                    items.push({
+                        date: formatLocalDate(new Date(row.date)),
+                        type: 'Bulusan Resident',
+                        quantity: row.bulusan_resident_quantity,
+                        amount: 0,
+                        status: row.status === 'completed' || row.status === 'confirmed' ? 'Completed' : 
+                               row.status === 'cancelled' ? 'Cancelled' : 'Pending',
+                        reference: row.reservation_reference
+                    });
+                }
+            }
+
+            // Get totals for the date range
+            const [totals] = await db.query(
+                `SELECT 
+                    COALESCE(SUM((adult_quantity * 40) + (child_quantity * 20)), 0) as totalRevenue,
+                    COALESCE(SUM(adult_quantity + child_quantity + bulusan_resident_quantity), 0) as ticketsSold,
+                    COALESCE(SUM(total_visitors), 0) as visitors
+                 FROM ticket_reservations
+                 WHERE DATE(created_at) BETWEEN ? AND ?
+                 AND status NOT IN ('cancelled', 'no_show')`,
+                [start, end]
+            );
+
+            totalRevenue = parseFloat(totals[0]?.totalRevenue) || 0;
+            ticketsSold = parseInt(totals[0]?.ticketsSold) || 0;
+            visitors = parseInt(totals[0]?.visitors) || 0;
+
+        } else if (reportType === 'visitors') {
+            // Get visitor data grouped by date
+            const [rows] = await db.query(
+                `SELECT 
+                    DATE(reservation_date) as date,
+                    SUM(total_visitors) as visitors,
+                    SUM(adult_quantity) as adults,
+                    SUM(child_quantity) as children,
+                    SUM(bulusan_resident_quantity) as residents,
+                    COUNT(*) as reservations
+                 FROM ticket_reservations
+                 WHERE DATE(reservation_date) BETWEEN ? AND ?
+                 AND status IN ('confirmed', 'completed')
+                 GROUP BY DATE(reservation_date)
+                 ORDER BY date DESC`,
+                [start, end]
+            );
+
+            items = rows.map(row => ({
+                date: formatLocalDate(new Date(row.date)),
+                type: 'Daily Visitors',
+                quantity: parseInt(row.visitors) || 0,
+                amount: 0,
+                status: 'Completed',
+                details: `${row.adults || 0} adults, ${row.children || 0} children, ${row.residents || 0} residents`
+            }));
+
+            const [totals] = await db.query(
+                `SELECT 
+                    COALESCE(SUM(total_visitors), 0) as visitors,
+                    COUNT(*) as ticketsSold
+                 FROM ticket_reservations
+                 WHERE DATE(reservation_date) BETWEEN ? AND ?
+                 AND status IN ('confirmed', 'completed')`,
+                [start, end]
+            );
+
+            visitors = parseInt(totals[0]?.visitors) || 0;
+            ticketsSold = parseInt(totals[0]?.ticketsSold) || 0;
+
+        } else if (reportType === 'events') {
+            // Get event data
+            const [rows] = await db.query(
+                `SELECT 
+                    id,
+                    title,
+                    DATE(event_date) as date,
+                    status,
+                    created_at
+                 FROM events
+                 WHERE DATE(event_date) BETWEEN ? AND ?
+                 ORDER BY event_date DESC`,
+                [start, end]
+            );
+
+            items = rows.map(row => ({
+                date: formatLocalDate(new Date(row.date)),
+                type: 'Event',
+                quantity: 1,
+                amount: 0,
+                status: row.status === 'active' ? 'Active' : 
+                       row.status === 'completed' ? 'Completed' : 'Cancelled',
+                name: row.title
+            }));
+        }
+
+        res.json({
+            success: true,
+            data: {
+                totalRevenue,
+                ticketsSold,
+                visitors,
+                items,
+                period: { startDate: start, endDate: end },
+                reportType
+            }
+        });
+
+    } catch (error) {
+        console.error('Error generating report data:', error);
+        res.status(500).json({ success: false, message: 'Error generating report data' });
+    }
+};
+
+// Get quick stats for reports page
+exports.getQuickStats = async (req, res) => {
+    try {
+        const [stats] = await db.query(
+            `SELECT 
+                COALESCE(SUM((adult_quantity * 40) + (child_quantity * 20)), 0) as totalRevenue,
+                COALESCE(SUM(adult_quantity + child_quantity + bulusan_resident_quantity), 0) as ticketsSold,
+                COALESCE(SUM(total_visitors), 0) as visitors
+             FROM ticket_reservations
+             WHERE status NOT IN ('cancelled', 'no_show')`
+        );
+
+        res.json({
+            success: true,
+            data: {
+                totalRevenue: parseFloat(stats[0]?.totalRevenue) || 0,
+                ticketsSold: parseInt(stats[0]?.ticketsSold) || 0,
+                visitors: parseInt(stats[0]?.visitors) || 0
+            }
+        });
+    } catch (error) {
+        console.error('Error getting quick stats:', error);
+        res.status(500).json({ success: false, message: 'Error fetching quick stats' });
     }
 };
 

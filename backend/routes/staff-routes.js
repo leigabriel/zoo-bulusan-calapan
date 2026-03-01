@@ -11,6 +11,7 @@ router.use(authorize('admin', 'staff'));
 // Dashboard
 router.get('/dashboard', staffController.getDashboardStats);
 router.get('/recent-tickets', staffController.getRecentTickets);
+router.get('/my-activity-summary', staffController.getMyActivitySummary);
 
 // Animals - Full CRUD for staff
 router.get('/animals', staffController.getAnimals);
@@ -19,6 +20,13 @@ router.post('/animals', adminController.createAnimal);
 router.put('/animals/:id', adminController.updateAnimal);
 router.put('/animals/:id/status', staffController.updateAnimalStatus);
 router.delete('/animals/:id', adminController.deleteAnimal);
+
+// Plants - Full CRUD for staff
+router.get('/plants', staffController.getPlants);
+router.get('/plants/:id', staffController.getPlantById);
+router.post('/plants', adminController.createPlant);
+router.put('/plants/:id', adminController.updatePlant);
+router.delete('/plants/:id', adminController.deletePlant);
 
 // Tickets
 router.get('/tickets', staffController.getAllTickets);

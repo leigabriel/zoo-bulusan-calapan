@@ -104,6 +104,16 @@ const handleResponse = async (response) => {
     }
     
     if (!response.ok) {
+        // For suspended users, preserve the suspension info by throwing an error with all fields
+        if (data.suspended) {
+            const error = new Error(data.message || 'Account suspended');
+            error.suspended = true;
+            error.suspensionReason = data.suspensionReason;
+            error.suspendedAt = data.suspendedAt;
+            error.userId = data.userId;
+            error.email = data.email;
+            throw error;
+        }
         throw new Error(data.message || 'Request failed');
     }
     return data;
@@ -188,12 +198,22 @@ export const authAPI = {
             headers: getAuthHeaders(type)
         });
         return handleResponse(response);
+    },
+
+    // Submit appeal for suspended users (public, no auth required)
+    submitPublicAppeal: async (appealData) => {
+        const response = await fetch(`${API_BASE_URL}/auth/appeal`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(appealData)
+        });
+        return handleResponse(response);
     }
 };
 
 export const adminAPI = {
-    getDashboard: async () => {
-        const response = await fetch(`${API_BASE_URL}/admin/dashboard`, {
+    getDashboard: async (period = 'today') => {
+        const response = await fetch(`${API_BASE_URL}/admin/dashboard?period=${period}`, {
             headers: getAuthHeaders('admin')
         });
         return handleResponse(response);
@@ -332,6 +352,25 @@ export const adminAPI = {
         return handleResponse(response);
     },
 
+    getReportData: async (startDate, endDate, reportType = 'sales') => {
+        const params = new URLSearchParams();
+        if (startDate) params.append('startDate', startDate);
+        if (endDate) params.append('endDate', endDate);
+        params.append('reportType', reportType);
+        
+        const response = await fetch(`${API_BASE_URL}/admin/reports/data?${params}`, {
+            headers: getAuthHeaders('admin')
+        });
+        return handleResponse(response);
+    },
+
+    getQuickStats: async () => {
+        const response = await fetch(`${API_BASE_URL}/admin/reports/quick-stats`, {
+            headers: getAuthHeaders('admin')
+        });
+        return handleResponse(response);
+    },
+
     getAnalytics: async (timeRange = 'week') => {
         const response = await fetch(`${API_BASE_URL}/admin/analytics?timeRange=${timeRange}`, {
             headers: getAuthHeaders('admin')
@@ -456,6 +495,89 @@ export const adminAPI = {
             headers: getAuthHeaders('admin')
         });
         return handleResponse(response);
+    },
+
+    // Staff Monitoring APIs
+    getMonitoringDashboard: async () => {
+        const response = await fetch(`${API_BASE_URL}/admin/monitoring/dashboard`, {
+            headers: getAuthHeaders('admin')
+        });
+        return handleResponse(response);
+    },
+
+    getActiveSessions: async () => {
+        const response = await fetch(`${API_BASE_URL}/admin/monitoring/sessions`, {
+            headers: getAuthHeaders('admin')
+        });
+        return handleResponse(response);
+    },
+
+    getRecentActivities: async (options = {}) => {
+        const params = new URLSearchParams();
+        if (options.limit) params.append('limit', options.limit);
+        if (options.staffId) params.append('staffId', options.staffId);
+        if (options.actionType) params.append('actionType', options.actionType);
+        
+        const response = await fetch(`${API_BASE_URL}/admin/monitoring/activities?${params}`, {
+            headers: getAuthHeaders('admin')
+        });
+        return handleResponse(response);
+    },
+
+    getStaffStats: async () => {
+        const response = await fetch(`${API_BASE_URL}/admin/monitoring/staff-stats`, {
+            headers: getAuthHeaders('admin')
+        });
+        return handleResponse(response);
+    },
+
+    getStaffTimeline: async (staffId, limit = 20) => {
+        const response = await fetch(`${API_BASE_URL}/admin/monitoring/staff/${staffId}/timeline?limit=${limit}`, {
+            headers: getAuthHeaders('admin')
+        });
+        return handleResponse(response);
+    },
+
+    sendHeartbeat: async () => {
+        const response = await fetch(`${API_BASE_URL}/admin/monitoring/heartbeat`, {
+            method: 'POST',
+            headers: getAuthHeaders('admin')
+        });
+        return handleResponse(response);
+    },
+
+    // Plants management
+    getPlants: async () => {
+        const response = await fetch(`${API_BASE_URL}/admin/plants`, {
+            headers: getAuthHeaders('admin')
+        });
+        return handleResponse(response);
+    },
+
+    createPlant: async (plantData) => {
+        const response = await fetch(`${API_BASE_URL}/admin/plants`, {
+            method: 'POST',
+            headers: getAuthHeaders('admin'),
+            body: JSON.stringify(plantData)
+        });
+        return handleResponse(response);
+    },
+
+    updatePlant: async (id, plantData) => {
+        const response = await fetch(`${API_BASE_URL}/admin/plants/${id}`, {
+            method: 'PUT',
+            headers: getAuthHeaders('admin'),
+            body: JSON.stringify(plantData)
+        });
+        return handleResponse(response);
+    },
+
+    deletePlant: async (id) => {
+        const response = await fetch(`${API_BASE_URL}/admin/plants/${id}`, {
+            method: 'DELETE',
+            headers: getAuthHeaders('admin')
+        });
+        return handleResponse(response);
     }
 };
 
@@ -467,8 +589,29 @@ export const staffAPI = {
         return handleResponse(response);
     },
 
+    getDashboardStats: async () => {
+        const response = await fetch(`${API_BASE_URL}/staff/dashboard`, {
+            headers: getAuthHeaders('staff')
+        });
+        return handleResponse(response);
+    },
+
+    getMyActivitySummary: async () => {
+        const response = await fetch(`${API_BASE_URL}/staff/my-activity-summary`, {
+            headers: getAuthHeaders('staff')
+        });
+        return handleResponse(response);
+    },
+
     getAnimals: async () => {
         const response = await fetch(`${API_BASE_URL}/staff/animals`, {
+            headers: getAuthHeaders('staff')
+        });
+        return handleResponse(response);
+    },
+
+    getPlants: async () => {
+        const response = await fetch(`${API_BASE_URL}/staff/plants`, {
             headers: getAuthHeaders('staff')
         });
         return handleResponse(response);
@@ -868,6 +1011,38 @@ export const userAPI = {
 
     getMyAppeals: async () => {
         const response = await fetch(`${API_BASE_URL}/users/appeals`, {
+            headers: getAuthHeaders('user')
+        });
+        return handleResponse(response);
+    },
+
+    // Collection API (AI Scanner)
+    getCollection: async () => {
+        const response = await fetch(`${API_BASE_URL}/users/collection`, {
+            headers: getAuthHeaders('user')
+        });
+        return handleResponse(response);
+    },
+
+    addToCollection: async (animalData) => {
+        const response = await fetch(`${API_BASE_URL}/users/collection`, {
+            method: 'POST',
+            headers: getAuthHeaders('user'),
+            body: JSON.stringify(animalData)
+        });
+        return handleResponse(response);
+    },
+
+    removeFromCollection: async (id) => {
+        const response = await fetch(`${API_BASE_URL}/users/collection/${id}`, {
+            method: 'DELETE',
+            headers: getAuthHeaders('user')
+        });
+        return handleResponse(response);
+    },
+
+    getCollectionStats: async () => {
+        const response = await fetch(`${API_BASE_URL}/users/collection/stats`, {
             headers: getAuthHeaders('user')
         });
         return handleResponse(response);
