@@ -44,7 +44,7 @@ const AboutUs = () => {
 
     return (
         <ReactLenis root>
-            <div className="min-h-screen bg-white text-slate-900 selection:bg-emerald-200 overflow-x-hidden flex flex-col">
+            <div className="min-h-screen bg-[#ebebeb] text-[#212631] selection:bg-emerald-200 overflow-x-hidden flex flex-col">
                 <Header />
 
                 <main className="flex-grow pt-24 md:pt-32">

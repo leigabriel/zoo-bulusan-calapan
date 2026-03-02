@@ -61,7 +61,7 @@ const Plants = () => {
 
     return (
         <ReactLenis root>
-        <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 flex flex-col text-[#2A2A2A]">
+        <div className="min-h-screen bg-[#ebebeb] flex flex-col text-[#2A2A2A]">
             <Header />
             
             <section className="relative px-4 md:px-6 pt-24 pb-8 md:pt-40 md:pb-16 max-w-7xl mx-auto w-full">

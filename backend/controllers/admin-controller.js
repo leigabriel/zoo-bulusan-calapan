@@ -469,7 +469,7 @@ exports.getAnalytics = async (req, res) => {
     try {
         const { timeRange = 'week' } = req.query;
 
-        // Get all analytics data in parallel
+        // Get all analytics data in parallel - pass timeRange for proper filtering
         const [
             weeklyData,
             monthlyData,
@@ -479,17 +479,19 @@ exports.getAnalytics = async (req, res) => {
             totalAnimals,
             totalTickets,
             totalRevenue,
-            upcomingEvents
+            upcomingEvents,
+            timeRangeStats
         ] = await Promise.all([
-            Ticket.getWeeklyAnalytics(),
-            Ticket.getMonthlyAnalytics(),
-            Ticket.getTicketTypeDistribution(),
+            Ticket.getWeeklyAnalytics(timeRange),
+            Ticket.getMonthlyAnalytics(timeRange),
+            Ticket.getTicketTypeDistribution(timeRange),
             Ticket.getDailyComparison(),
             User.count(),
             Animal.count(),
             Ticket.count(),
             Ticket.getTotalRevenue(),
-            Event.countUpcoming()
+            Event.countUpcoming(),
+            Ticket.getStatsForTimeRange(timeRange)
         ]);
 
         // Calculate growth rates
@@ -506,13 +508,15 @@ exports.getAnalytics = async (req, res) => {
                 summary: {
                     totalUsers,
                     totalAnimals,
-                    totalTickets,
-                    totalRevenue,
+                    // Use timeRange-specific stats for filtered view
+                    totalTickets: timeRangeStats.totalTickets || totalTickets,
+                    totalRevenue: parseFloat(timeRangeStats.totalRevenue) || totalRevenue,
                     upcomingEvents,
                     todayTickets: dailyComparison.today_tickets,
                     todayRevenue: dailyComparison.today_revenue,
                     ticketGrowth: parseFloat(ticketGrowth),
-                    revenueGrowth: parseFloat(revenueGrowth)
+                    revenueGrowth: parseFloat(revenueGrowth),
+                    timeRange // Include current filter in response
                 },
                 weeklyData: weeklyData.map(d => ({
                     day: d.day?.substring(0, 3) || 'N/A',

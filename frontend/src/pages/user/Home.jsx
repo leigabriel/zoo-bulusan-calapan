@@ -19,31 +19,6 @@ const animalImages = [
     { src: 'https://images.unsplash.com/photo-1522231796108-23cbe9982a9c?q=80&w=735&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', name: 'Donkey' }
 ];
 
-const FloatingIcon = ({ icon, className, delay = 0 }) => (
-    <div
-        className={`absolute bg-white rounded-2xl shadow-lg p-3 animate-float ${className}`}
-        style={{ animationDelay: `${delay}s` }}
-    >
-        {icon}
-    </div>
-);
-
-const Icons = {
-    Lion: () => (
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z" />
-        </svg>
-    ),
-    Ticket: () => (
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
-            <path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z" />
-            <path d="M13 5v2" />
-            <path d="M13 17v2" />
-            <path d="M13 11v2" />
-        </svg>
-    )
-};
-
 const Home = () => {
     const [currentAnimalIndex, setCurrentAnimalIndex] = useState(0);
 
@@ -129,7 +104,7 @@ const Home = () => {
                     </div>
                 </section>
 
-                <section className="bg-[#ebebeb] min-h-[80vh] flex items-center px-6 py-20 md:px-16 md:py-32 w-full">
+                <section className="bg-[#ebebeb] min-h-[40vh] flex items-center px-6 py-20 md:px-16 md:py-32 w-full">
                     <div className="max-w-[1500px] mx-auto w-full flex flex-col">
                         <h2 className="text-[#212631] text-2xl md:text-3xl lg:text-4xl uppercase tracking-wide mb-16 md:mb-24">
                             About Bulusan Zoo
@@ -138,33 +113,38 @@ const Home = () => {
                             Founded in 2015, Bulusan Wildlife & Nature Park began as a small conservation initiative in Calapan City. Today, we stand as a testament to modern conservation.
                         </p>
                         <div className="self-end">
-                            <Link
-                                to="/about"
-                                className="text-[#ebebeb] bg-green-700 font-light hover:underline text-2xl md:text-4xl lg:text-5xl hover:text-gray-200 transition-colors duration-300"
-                            >
-                                more about us
+                            <Link to="/about" className="mt-auto self-start border border-[#212631]/30 text-[#212631] text-xs md:text-sm font-bold tracking-widest uppercase px-6 py-3 md:px-8 md:py-4 hover:bg-[#212631] hover:text-[#ebebeb] transition-all duration-300">
+                                View All
                             </Link>
                         </div>
                     </div>
                 </section>
 
-                <section className="w-full bg-[#ebebeb] text-[#212631] border-1 border-[#d1d1d1]">
+                <section className="bg-[#ebebeb] flex items-center px-6 py-12 md:px-16 md:py-24 w-full">
+                    <div className="max-w-[1450px] mx-auto w-full flex flex-col">
+                        <h1 className="text-[#212631] text-6xl sm:text-5xl md:text-6xl lg:text-7xl font-medium leading-tight md:leading-[1.1] tracking-tight">
+                            Animals
+                        </h1>
+                        <p className="mt-4 text-[#212631]/80 text-xl md:text-lg lg:text-xl max-w-3xl">
+                            Explore the diverse wildlife at Bulusan Zoo. Learn about their habitats, behaviors, and conservation efforts.
+                        </p>
+                    </div>
+                </section>
+
+                <section id='animal' className="w-full bg-[#ebebeb] text-[#212631] border-1 border-[#d1d1d1]">
                     <div className="max-w-[1600px] mx-auto px-6 md:px-12 lg:px-16">
                         <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-[#d1d1d1]">
-
+                            
                             <article className="py-16 md:py-24 md:pr-12 lg:pr-16 flex flex-col h-full">
                                 <div className="text-[#212631]/60 text-xs md:text-sm font-mono font-medium tracking-widest mb-6 lg:mb-8">
                                     <span className="text-[#212631]/40 mr-2">•</span>01
                                 </div>
                                 <h3 className="text-[1.75rem] md:text-3xl lg:text-4xl font-bold text-[#212631] mb-4 lg:mb-6 tracking-tight">
-                                    Philippine Deer
+                                    Parrot
                                 </h3>
                                 <p className="text-base md:text-lg lg:text-xl text-[#212631]/80 leading-relaxed mb-8 lg:mb-12">
-                                    Discover the grace of the endangered Philippine Brown Deer, roaming freely in our carefully reconstructed forest habitat designed to mimic their natural woodland environment.
+                                    A white parrot is a predominantly white bird, commonly a cockatoo such as the Umbrella Cockatoo or the Sulphur-crested Cockatoo. It has a strong curved beak, zygodactyl feet, and a movable crest used for communication. White parrots are intelligent, social, and capable of vocal mimicry.
                                 </p>
-                                <button className="mt-auto self-start border border-[#212631]/30 text-[#212631] text-xs md:text-sm font-bold tracking-widest uppercase px-6 py-3 md:px-8 md:py-4 hover:bg-[#212631] hover:text-[#ebebeb] transition-all duration-300">
-                                    Learn More
-                                </button>
                             </article>
 
                             <article className="py-16 md:py-24 md:px-12 lg:px-16 flex flex-col h-full">
@@ -172,14 +152,11 @@ const Home = () => {
                                     <span className="text-[#212631]/40 mr-2">•</span>02
                                 </div>
                                 <h3 className="text-[1.75rem] md:text-3xl lg:text-4xl font-bold text-[#212631] mb-4 lg:mb-6 tracking-tight">
-                                    Visayan Warty Pig
+                                    Tiger
                                 </h3>
                                 <p className="text-base md:text-lg lg:text-xl text-[#212631]/80 leading-relaxed mb-8 lg:mb-12">
-                                    Observe the highly intelligent and critically endangered Visayan Warty Pigs. Our conservation breeding program is dedicated to protecting this unique native species.
+                                    A tiger is a large, powerful wild cat known for its distinctive orange coat with black stripes. It is a top predator, primarily hunting deer, wild boar, and other large mammals. Tigers are solitary, territorial, and highly adaptable to various habitats such as forests, grasslands, and wetlands.
                                 </p>
-                                <button className="mt-auto self-start border border-[#212631]/30 text-[#212631] text-xs md:text-sm font-bold tracking-widest uppercase px-6 py-3 md:px-8 md:py-4 hover:bg-[#212631] hover:text-[#ebebeb] transition-all duration-300">
-                                    Learn More
-                                </button>
                             </article>
 
                             <article className="py-16 md:py-24 md:pl-12 lg:pl-16 flex flex-col h-full">
@@ -187,14 +164,14 @@ const Home = () => {
                                     <span className="text-[#212631]/40 mr-2">•</span>03
                                 </div>
                                 <h3 className="text-[1.75rem] md:text-3xl lg:text-4xl font-bold text-[#212631] mb-4 lg:mb-6 tracking-tight">
-                                    Sailfin Lizard
+                                    Monkey
                                 </h3>
                                 <p className="text-base md:text-lg lg:text-xl text-[#212631]/80 leading-relaxed mb-8 lg:mb-12">
-                                    Spot the prehistoric-looking Philippine Sailfin Lizard basking near our replicated river ecosystems, showcasing the incredible reptilian biodiversity of the region.
+                                    A monkey is a primate known for its agility, intelligence, and social behavior. Most species have flexible limbs, prehensile hands or tails, and keen eyesight. Monkeys live in groups and are found in diverse habitats, including forests, savannas, and mountains.
                                 </p>
-                                <button className="mt-auto self-start border border-[#212631]/30 text-[#212631] text-xs md:text-sm font-bold tracking-widest uppercase px-6 py-3 md:px-8 md:py-4 hover:bg-[#212631] hover:text-[#ebebeb] transition-all duration-300">
-                                    Learn More
-                                </button>
+                                    <Link to="/animals" className="mt-24 self-end border border-[#212631]/30 text-[#212631] text-xs md:text-sm font-bold tracking-widest uppercase px-6 py-3 md:px-8 md:py-4 hover:bg-[#212631] hover:text-[#ebebeb] transition-all duration-300">
+                                        View All
+                                    </Link>
                             </article>
 
                         </div>
@@ -251,7 +228,7 @@ const Home = () => {
                     </div>
                 </section>
 
-                <section id="faq-section" className="py-16 sm:py-20 md:py-24 bg-white w-full">
+                <section id="faq-section" className="py-16 sm:py-20 md:py-24 bg-[#ebebeb] w-full">
                     {(() => {
                         const [activeIndex, setActiveIndex] = React.useState(null);
                         const faqData = [
@@ -297,9 +274,9 @@ const Home = () => {
                                                 <span className="text-base sm:text-lg md:text-2xl lg:text-3xl font-medium text-gray-800 pr-4 sm:pr-8 leading-snug break-words">
                                                     {item.question}
                                                 </span>
-                                                <div className={`flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 border border-gray-200 rounded-md sm:rounded-lg flex items-center justify-center transition-all duration-300 min-w-[32px] sm:min-w-[40px] ${activeIndex === index ? 'bg-gray-900 border-gray-900' : 'bg-white'}`}>
+                                                <div className={`flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 border border-gray-200 rounded-md sm:rounded-lg flex items-center justify-center transition-all duration-300 min-w-[32px] sm:min-w-[40px] ${activeIndex === index ? 'bg-gray-900 border-gray-900' : 'bg-[#ebebeb]'}`}>
                                                     <svg
-                                                        className={`w-4 h-4 sm:w-5 sm:h-5 transition-all duration-300 ${activeIndex === index ? 'text-white rotate-180' : 'text-gray-400'}`}
+                                                        className={`w-4 h-4 sm:w-5 sm:h-5 transition-all duration-300 ${activeIndex === index ? 'text-white rotate-180' : 'text-[#212631]'}`}
                                                         fill="none"
                                                         stroke="currentColor"
                                                         viewBox="0 0 24 24"

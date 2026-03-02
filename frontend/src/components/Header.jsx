@@ -261,28 +261,28 @@ const Header = () => {
 
     return (
         <>
-            <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-200 ${scrolled ? 'bg-white/96 backdrop-blur-md shadow-[0_1px_0_rgba(0,0,0,0.07)]' : 'bg-white/85 backdrop-blur-sm'}`} style={{ paddingTop: 'env(safe-area-inset-top)' }}>
+            <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-200 ${scrolled ? 'bg-[#ebebeb]/10 backdrop-blur-lg shadow-[0_1px_0_rgba(0,0,0,0.07)]' : ''}`} style={{ paddingTop: 'env(safe-area-inset-top)' }}>
                 <div className="mx-auto px-4 sm:px-6 lg:px-10 max-w-[2000px]" style={{ height: '56px' }}>
 
                     <div className="flex items-center h-full">
 
                         <div className="flex items-center flex-shrink-0 w-[180px]">
                             <Link to="/" className="flex items-center">
-                                <span className="text-[18px] font-bold text-gray-900 tracking-tight leading-none" style={{ fontFamily: '"Segoe Script", cursive' }}>
+                                <span className="text-[18px] font-bold text-[#212631] tracking-tight" style={{ fontFamily: '"Times New Roman", serif' }}>
                                     Bulusan Zoo
                                 </span>
                             </Link>
                         </div>
 
                         <nav className="hidden md:flex flex-1 items-center justify-center">
-                            <div className="flex items-center gap-0.5 bg-gray-100/80 rounded-full px-1.5 py-1.5">
+                            <div className="flex items-center gap-0.5 bg-[#212631] rounded-full px-1.5 py-1.5">
                                 {NAV_LINKS.map((link) => (
                                     <Link
                                         key={link.path}
                                         to={link.path}
                                         className={`px-4 py-1.5 rounded-full text-[13px] font-medium transition-all duration-150 whitespace-nowrap ${location.pathname === link.path
-                                                ? 'bg-white text-gray-900 shadow-sm'
-                                                : 'text-gray-500 hover:text-gray-800'
+                                                ? 'bg-[#ebebeb] text-gray-900 shadow-sm'
+                                                : 'text-[#ebebeb]/80 hover:text-gray-200'
                                             }`}
                                     >
                                         {link.label}

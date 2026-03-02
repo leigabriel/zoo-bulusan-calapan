@@ -247,7 +247,14 @@ class Ticket {
     }
 
     // Get weekly analytics data (last 7 days)
-    static async getWeeklyAnalytics() {
+    static async getWeeklyAnalytics(timeRange = 'week') {
+        let dateCondition = 'DATE_SUB(CURDATE(), INTERVAL 7 DAY)';
+        if (timeRange === 'month') {
+            dateCondition = 'DATE_SUB(CURDATE(), INTERVAL 30 DAY)';
+        } else if (timeRange === 'year') {
+            dateCondition = 'DATE_SUB(CURDATE(), INTERVAL 365 DAY)';
+        }
+        
         const [rows] = await db.query(
             `SELECT 
                 DATE(reservation_date) as date,
@@ -256,7 +263,7 @@ class Ticket {
                 COALESCE(SUM(total_visitors), 0) as visitors,
                 COALESCE(SUM((adult_quantity * 40) + (child_quantity * 20)), 0) as revenue
              FROM ticket_reservations 
-             WHERE reservation_date >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
+             WHERE reservation_date >= ${dateCondition}
              AND status IN ('confirmed', 'completed')
              GROUP BY DATE(reservation_date), DAYNAME(reservation_date)
              ORDER BY date ASC`
@@ -264,8 +271,17 @@ class Ticket {
         return rows;
     }
 
-    // Get monthly analytics data (last 12 months)
-    static async getMonthlyAnalytics() {
+    // Get monthly analytics data (variable based on timeRange)
+    static async getMonthlyAnalytics(timeRange = 'week') {
+        let intervalMonths = 12;
+        if (timeRange === 'week') {
+            intervalMonths = 3;
+        } else if (timeRange === 'month') {
+            intervalMonths = 6;
+        } else if (timeRange === 'year') {
+            intervalMonths = 12;
+        }
+        
         const [rows] = await db.query(
             `SELECT 
                 DATE_FORMAT(reservation_date, '%Y-%m') as month,
@@ -274,7 +290,7 @@ class Ticket {
                 COALESCE(SUM(total_visitors), 0) as visitors,
                 COALESCE(SUM((adult_quantity * 40) + (child_quantity * 20)), 0) as revenue
              FROM ticket_reservations 
-             WHERE reservation_date >= DATE_SUB(CURDATE(), INTERVAL 12 MONTH)
+             WHERE reservation_date >= DATE_SUB(CURDATE(), INTERVAL ${intervalMonths} MONTH)
              AND status IN ('confirmed', 'completed')
              GROUP BY DATE_FORMAT(reservation_date, '%Y-%m'), DATE_FORMAT(reservation_date, '%b')
              ORDER BY month ASC`
@@ -282,31 +298,61 @@ class Ticket {
         return rows;
     }
 
-    // Get ticket type distribution
-    static async getTicketTypeDistribution() {
+    // Get ticket type distribution (with optional timeRange filter)
+    static async getTicketTypeDistribution(timeRange = 'week') {
+        let dateCondition = '';
+        if (timeRange === 'week') {
+            dateCondition = 'AND reservation_date >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)';
+        } else if (timeRange === 'month') {
+            dateCondition = 'AND reservation_date >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)';
+        } else if (timeRange === 'year') {
+            dateCondition = 'AND reservation_date >= DATE_SUB(CURDATE(), INTERVAL 365 DAY)';
+        }
+        
         const [rows] = await db.query(
             `SELECT 
                 'adult' as type,
                 COALESCE(SUM(adult_quantity), 0) as count,
                 COALESCE(SUM(adult_quantity * 40), 0) as revenue
              FROM ticket_reservations 
-             WHERE status IN ('confirmed', 'completed')
+             WHERE status IN ('confirmed', 'completed') ${dateCondition}
              UNION ALL
              SELECT 
                 'child' as type,
                 COALESCE(SUM(child_quantity), 0) as count,
                 COALESCE(SUM(child_quantity * 20), 0) as revenue
              FROM ticket_reservations 
-             WHERE status IN ('confirmed', 'completed')
+             WHERE status IN ('confirmed', 'completed') ${dateCondition}
              UNION ALL
              SELECT 
                 'resident' as type,
                 COALESCE(SUM(bulusan_resident_quantity), 0) as count,
                 0 as revenue
              FROM ticket_reservations 
-             WHERE status IN ('confirmed', 'completed')`
+             WHERE status IN ('confirmed', 'completed') ${dateCondition}`
         );
         return rows.filter(r => r.count > 0);
+    }
+
+    // Get tickets and revenue for a specific time range
+    static async getStatsForTimeRange(timeRange = 'week') {
+        let dateCondition = 'DATE_SUB(CURDATE(), INTERVAL 7 DAY)';
+        if (timeRange === 'month') {
+            dateCondition = 'DATE_SUB(CURDATE(), INTERVAL 30 DAY)';
+        } else if (timeRange === 'year') {
+            dateCondition = 'DATE_SUB(CURDATE(), INTERVAL 365 DAY)';
+        }
+        
+        const [rows] = await db.query(
+            `SELECT 
+                COUNT(*) as totalTickets,
+                COALESCE(SUM((adult_quantity * 40) + (child_quantity * 20)), 0) as totalRevenue,
+                COALESCE(SUM(total_visitors), 0) as totalVisitors
+             FROM ticket_reservations 
+             WHERE reservation_date >= ${dateCondition}
+             AND status IN ('confirmed', 'completed')`
+        );
+        return rows[0] || { totalTickets: 0, totalRevenue: 0, totalVisitors: 0 };
     }
 
     // Get daily stats for comparison

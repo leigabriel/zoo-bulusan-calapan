@@ -298,14 +298,14 @@ const StaffDashboard = () => {
                 </div>
             </div>
 
-            {/* Animals & Plants Preview Grid */}
+            {/* Animals & Plants Tables */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Animals Preview */}
-                <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl p-6">
-                    <div className="flex items-center justify-between mb-4">
+                {/* Animals Table */}
+                <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl overflow-hidden">
+                    <div className="flex items-center justify-between p-4 border-b border-[#2a2a2a]">
                         <h2 className="text-lg font-semibold text-white flex items-center gap-2">
                             <AnimalIcon />
-                            Animals
+                            Animals Overview
                         </h2>
                         <Link 
                             to="/staff/animals" 
@@ -318,41 +318,63 @@ const StaffDashboard = () => {
                         </Link>
                     </div>
                     {recentAnimals.length > 0 ? (
-                        <div className="grid grid-cols-2 gap-3">
-                            {recentAnimals.map((animal, idx) => (
-                                <div 
-                                    key={animal.id || idx} 
-                                    className="bg-[#1a1a1a] rounded-xl p-3 hover:border-[#8cff65]/30 border border-transparent transition-all"
-                                >
-                                    <div className="aspect-square rounded-lg bg-[#2a2a2a] mb-2 overflow-hidden">
-                                        {animal.image_url ? (
-                                            <img 
-                                                src={animal.image_url} 
-                                                alt={animal.name} 
-                                                className="w-full h-full object-cover"
-                                            />
-                                        ) : (
-                                            <div className="w-full h-full flex items-center justify-center text-gray-500">
-                                                <AnimalIcon />
-                                            </div>
-                                        )}
-                                    </div>
-                                    <p className="text-white text-sm font-medium truncate">{animal.name}</p>
-                                    <p className="text-gray-500 text-xs truncate">{animal.species || animal.category || 'Unknown'}</p>
-                                </div>
-                            ))}
+                        <div className="overflow-x-auto">
+                            <table className="w-full">
+                                <thead className="bg-[#1a1a1a]">
+                                    <tr>
+                                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Animal</th>
+                                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider hidden sm:table-cell">Species</th>
+                                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider hidden md:table-cell">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-[#2a2a2a]">
+                                    {recentAnimals.map((animal, idx) => (
+                                        <tr key={animal.id || idx} className="hover:bg-[#1e1e1e]/50 transition-colors">
+                                            <td className="px-4 py-3">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-10 h-10 rounded-lg bg-[#2a2a2a] overflow-hidden flex-shrink-0">
+                                                        {animal.image_url ? (
+                                                            <img src={animal.image_url} alt={animal.name} className="w-full h-full object-cover" />
+                                                        ) : (
+                                                            <div className="w-full h-full flex items-center justify-center text-gray-500">
+                                                                <AnimalIcon />
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    <div className="min-w-0">
+                                                        <p className="text-white text-sm font-medium truncate">{animal.name}</p>
+                                                        <p className="text-gray-500 text-xs truncate sm:hidden">{animal.species || animal.category || 'Unknown'}</p>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="px-4 py-3 text-gray-400 text-sm hidden sm:table-cell">{animal.species || animal.category || 'Unknown'}</td>
+                                            <td className="px-4 py-3 hidden md:table-cell">
+                                                <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
+                                                    animal.status === 'active' || animal.status === 'healthy' 
+                                                        ? 'bg-[#8cff65]/20 text-[#8cff65]' 
+                                                        : animal.status === 'sick' || animal.status === 'treatment'
+                                                        ? 'bg-yellow-500/20 text-yellow-400'
+                                                        : 'bg-gray-500/20 text-gray-400'
+                                                }`}>
+                                                    {animal.status || 'Active'}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
                         </div>
                     ) : (
-                        <p className="text-gray-500 text-center py-8">No animals to display</p>
+                        <div className="p-8 text-center text-gray-500">No animals to display</div>
                     )}
                 </div>
 
-                {/* Plants Preview */}
-                <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl p-6">
-                    <div className="flex items-center justify-between mb-4">
+                {/* Plants Table */}
+                <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl overflow-hidden">
+                    <div className="flex items-center justify-between p-4 border-b border-[#2a2a2a]">
                         <h2 className="text-lg font-semibold text-white flex items-center gap-2">
                             <PlantIcon />
-                            Plants
+                            Plants Overview
                         </h2>
                         <Link 
                             to="/staff/plants" 
@@ -365,32 +387,54 @@ const StaffDashboard = () => {
                         </Link>
                     </div>
                     {recentPlants.length > 0 ? (
-                        <div className="grid grid-cols-2 gap-3">
-                            {recentPlants.map((plant, idx) => (
-                                <div 
-                                    key={plant.id || idx} 
-                                    className="bg-[#1a1a1a] rounded-xl p-3 hover:border-[#8cff65]/30 border border-transparent transition-all"
-                                >
-                                    <div className="aspect-square rounded-lg bg-[#2a2a2a] mb-2 overflow-hidden">
-                                        {plant.image_url ? (
-                                            <img 
-                                                src={plant.image_url} 
-                                                alt={plant.name} 
-                                                className="w-full h-full object-cover"
-                                            />
-                                        ) : (
-                                            <div className="w-full h-full flex items-center justify-center text-gray-500">
-                                                <PlantIcon />
-                                            </div>
-                                        )}
-                                    </div>
-                                    <p className="text-white text-sm font-medium truncate">{plant.name}</p>
-                                    <p className="text-gray-500 text-xs truncate">{plant.species || plant.category || 'Unknown'}</p>
-                                </div>
-                            ))}
+                        <div className="overflow-x-auto">
+                            <table className="w-full">
+                                <thead className="bg-[#1a1a1a]">
+                                    <tr>
+                                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Plant</th>
+                                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider hidden sm:table-cell">Category</th>
+                                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider hidden md:table-cell">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-[#2a2a2a]">
+                                    {recentPlants.map((plant, idx) => (
+                                        <tr key={plant.id || idx} className="hover:bg-[#1e1e1e]/50 transition-colors">
+                                            <td className="px-4 py-3">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-10 h-10 rounded-lg bg-[#2a2a2a] overflow-hidden flex-shrink-0">
+                                                        {plant.image_url ? (
+                                                            <img src={plant.image_url} alt={plant.name} className="w-full h-full object-cover" />
+                                                        ) : (
+                                                            <div className="w-full h-full flex items-center justify-center text-gray-500">
+                                                                <PlantIcon />
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    <div className="min-w-0">
+                                                        <p className="text-white text-sm font-medium truncate">{plant.name}</p>
+                                                        <p className="text-gray-500 text-xs truncate sm:hidden">{plant.species || plant.category || 'Unknown'}</p>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="px-4 py-3 text-gray-400 text-sm hidden sm:table-cell">{plant.species || plant.category || 'Unknown'}</td>
+                                            <td className="px-4 py-3 hidden md:table-cell">
+                                                <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
+                                                    plant.status === 'healthy' || plant.status === 'active'
+                                                        ? 'bg-[#8cff65]/20 text-[#8cff65]' 
+                                                        : plant.status === 'wilting' || plant.status === 'needs_care'
+                                                        ? 'bg-yellow-500/20 text-yellow-400'
+                                                        : 'bg-gray-500/20 text-gray-400'
+                                                }`}>
+                                                    {plant.status || 'Healthy'}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
                         </div>
                     ) : (
-                        <p className="text-gray-500 text-center py-8">No plants to display</p>
+                        <div className="p-8 text-center text-gray-500">No plants to display</div>
                     )}
                 </div>
             </div>

@@ -64,6 +64,8 @@ const AnimalClassifier = ({ embedded = false, expanded: controlledExpanded = fal
     const [showCollectionModal, setShowCollectionModal] = useState(false);
     const [capturedAnimal, setCapturedAnimal] = useState(null);
     const [capturedImage, setCapturedImage] = useState(null);
+    const [isAddingToCollection, setIsAddingToCollection] = useState(false);
+    const [collectionNotification, setCollectionNotification] = useState(null);
 
     // Refs
     const imageRef = useRef(null);
@@ -474,18 +476,23 @@ const AnimalClassifier = ({ embedded = false, expanded: controlledExpanded = fal
             addBotMessage(info.description, {
                 animal: animalName,
                 confidence: confidencePct,
-                icon: info.icon
+                icon: info.icon,
+                isBulusanAnimal: info.bulusan
             });
 
-            if (info.bulusan && maxConfidence > 0.6) {
+            // Show collection modal for ALL recognized animals with confidence > 50%
+            // Priority badge shown for Bulusan zoo animals
+            if (maxConfidence > 0.5 && animalName !== 'Unknown') {
+                const imageToSave = analysisImage; // Capture before clearing
                 setCapturedAnimal({
                     name: animalName,
                     confidence: confidencePct,
                     description: info.description,
                     icon: info.icon,
+                    isBulusanAnimal: info.bulusan,
                     capturedAt: new Date().toISOString()
                 });
-                setCapturedImage(analysisImage);
+                setCapturedImage(imageToSave);
                 setShowCollectionModal(true);
             }
 
@@ -498,8 +505,15 @@ const AnimalClassifier = ({ embedded = false, expanded: controlledExpanded = fal
         }
     };
 
+    const showNotification = useCallback((message, type = 'success') => {
+        setCollectionNotification({ message, type });
+        setTimeout(() => setCollectionNotification(null), 3000);
+    }, []);
+
     const addToCollection = useCallback(async () => {
-        if (!capturedAnimal) return;
+        if (!capturedAnimal || isAddingToCollection) return;
+        
+        setIsAddingToCollection(true);
         
         try {
             // Try to save to database first
@@ -512,20 +526,27 @@ const AnimalClassifier = ({ embedded = false, expanded: controlledExpanded = fal
             });
 
             if (response.success) {
-                console.log('Animal added to collection in database');
+                showNotification(`${capturedAnimal.name} added to your collection!`, 'success');
+                addBotMessage(`Great! ${capturedAnimal.name} has been added to your collection. View it in your profile!`);
+            } else if (response.message?.includes('already')) {
+                showNotification(`${capturedAnimal.name} is already in your collection`, 'info');
             } else {
-                console.warn('Failed to save to database, falling back to localStorage:', response.message);
                 // Fallback to localStorage if database fails
                 const existingCollection = JSON.parse(localStorage.getItem('animalCollection') || '[]');
                 const alreadyExists = existingCollection.some(a => a.name === capturedAnimal.name);
                 
-                if (!alreadyExists) {
+                if (alreadyExists) {
+                    showNotification(`${capturedAnimal.name} is already in your collection`, 'info');
+                } else {
                     const newAnimal = {
                         ...capturedAnimal,
-                        image: capturedImage
+                        image: capturedImage,
+                        addedAt: new Date().toISOString()
                     };
                     existingCollection.push(newAnimal);
                     localStorage.setItem('animalCollection', JSON.stringify(existingCollection));
+                    showNotification(`${capturedAnimal.name} saved locally! Log in to sync.`, 'success');
+                    addBotMessage(`${capturedAnimal.name} saved locally. Log in to sync your collection across devices!`);
                 }
             }
         } catch (error) {
@@ -534,26 +555,33 @@ const AnimalClassifier = ({ embedded = false, expanded: controlledExpanded = fal
             const existingCollection = JSON.parse(localStorage.getItem('animalCollection') || '[]');
             const alreadyExists = existingCollection.some(a => a.name === capturedAnimal.name);
             
-            if (!alreadyExists) {
+            if (alreadyExists) {
+                showNotification(`${capturedAnimal.name} is already in your collection`, 'info');
+            } else {
                 const newAnimal = {
                     ...capturedAnimal,
-                    image: capturedImage
+                    image: capturedImage,
+                    addedAt: new Date().toISOString()
                 };
                 existingCollection.push(newAnimal);
                 localStorage.setItem('animalCollection', JSON.stringify(existingCollection));
+                showNotification(`${capturedAnimal.name} saved locally! Log in to sync.`, 'success');
+                addBotMessage(`${capturedAnimal.name} saved locally. Log in to sync your collection across devices!`);
             }
+        } finally {
+            setIsAddingToCollection(false);
+            setShowCollectionModal(false);
+            setCapturedAnimal(null);
+            setCapturedImage(null);
         }
-        
-        setShowCollectionModal(false);
-        setCapturedAnimal(null);
-        setCapturedImage(null);
-    }, [capturedAnimal, capturedImage]);
+    }, [capturedAnimal, capturedImage, isAddingToCollection, showNotification]);
 
     const closeCollectionModal = useCallback(() => {
+        if (isAddingToCollection) return; // Prevent closing while saving
         setShowCollectionModal(false);
         setCapturedAnimal(null);
         setCapturedImage(null);
-    }, []);
+    }, [isAddingToCollection]);
 
     // 4. Save to Database
     const saveToDatabase = async (animal, confidence) => {
@@ -1079,11 +1107,15 @@ const AnimalClassifier = ({ embedded = false, expanded: controlledExpanded = fal
                                     className="w-full h-48 object-cover"
                                 />
                             )}
-                            <div className="absolute top-3 right-3 bg-emerald-500 text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
+                            <div className={`absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1 ${
+                                capturedAnimal.isBulusanAnimal 
+                                    ? 'bg-emerald-500 text-white' 
+                                    : 'bg-blue-500 text-white'
+                            }`}>
                                 <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                                     <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                                 </svg>
-                                Verified
+                                {capturedAnimal.isBulusanAnimal ? 'Zoo Animal' : 'Identified'}
                             </div>
                             <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
                                 <h3 className="text-white text-2xl font-bold">{capturedAnimal.name}</h3>
@@ -1093,10 +1125,18 @@ const AnimalClassifier = ({ embedded = false, expanded: controlledExpanded = fal
                         
                         <div className="p-5">
                             <div className="flex items-center gap-2 mb-3">
-                                <div className="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center">
-                                    <PawIcon className="w-5 h-5 text-emerald-600" />
+                                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                                    capturedAnimal.isBulusanAnimal ? 'bg-emerald-100' : 'bg-blue-100'
+                                }`}>
+                                    <PawIcon className={`w-5 h-5 ${
+                                        capturedAnimal.isBulusanAnimal ? 'text-emerald-600' : 'text-blue-600'
+                                    }`} />
                                 </div>
-                                <span className="text-xs font-bold text-emerald-600 uppercase tracking-wider">Zoo Bulusan Animal</span>
+                                <span className={`text-xs font-bold uppercase tracking-wider ${
+                                    capturedAnimal.isBulusanAnimal ? 'text-emerald-600' : 'text-blue-600'
+                                }`}>
+                                    {capturedAnimal.isBulusanAnimal ? 'Zoo Bulusan Animal' : 'Animal Identified'}
+                                </span>
                             </div>
                             <p className="text-gray-600 text-sm leading-relaxed mb-5">
                                 {capturedAnimal.description}
@@ -1105,19 +1145,73 @@ const AnimalClassifier = ({ embedded = false, expanded: controlledExpanded = fal
                             <div className="flex gap-3">
                                 <button
                                     onClick={closeCollectionModal}
-                                    className="flex-1 py-3 px-4 border-2 border-gray-200 text-gray-600 rounded-xl font-semibold hover:bg-gray-50 transition"
+                                    disabled={isAddingToCollection}
+                                    className="flex-1 py-3 px-4 border-2 border-gray-200 text-gray-600 rounded-xl font-semibold hover:bg-gray-50 transition disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     onClick={addToCollection}
-                                    className="flex-1 py-3 px-4 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl font-semibold hover:from-emerald-600 hover:to-teal-600 transition shadow-lg shadow-emerald-500/25"
+                                    disabled={isAddingToCollection}
+                                    className={`flex-1 py-3 px-4 text-white rounded-xl font-semibold transition shadow-lg disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2 ${
+                                        capturedAnimal.isBulusanAnimal 
+                                            ? 'bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 shadow-emerald-500/25'
+                                            : 'bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 shadow-blue-500/25'
+                                    }`}
                                 >
-                                    Add to Collection
+                                    {isAddingToCollection ? (
+                                        <>
+                                            <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                                            </svg>
+                                            Saving...
+                                        </>
+                                    ) : (
+                                        'Add to Collection'
+                                    )}
                                 </button>
                             </div>
                         </div>
                     </motion.div>
+                </motion.div>,
+                document.body
+            )}
+            </AnimatePresence>
+
+            {/* Collection Notification Toast */}
+            <AnimatePresence>
+            {collectionNotification && ReactDOM.createPortal(
+                <motion.div 
+                    className="fixed bottom-6 left-1/2 z-[10000] -translate-x-1/2"
+                    initial={{ opacity: 0, y: 50, x: '-50%' }}
+                    animate={{ opacity: 1, y: 0, x: '-50%' }}
+                    exit={{ opacity: 0, y: 20, x: '-50%' }}
+                >
+                    <div className={`px-5 py-3 rounded-xl shadow-xl flex items-center gap-3 ${
+                        collectionNotification.type === 'success' 
+                            ? 'bg-emerald-500 text-white' 
+                            : collectionNotification.type === 'error'
+                                ? 'bg-red-500 text-white'
+                                : 'bg-blue-500 text-white'
+                    }`}>
+                        {collectionNotification.type === 'success' && (
+                            <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                            </svg>
+                        )}
+                        {collectionNotification.type === 'info' && (
+                            <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                            </svg>
+                        )}
+                        {collectionNotification.type === 'error' && (
+                            <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                            </svg>
+                        )}
+                        <span className="font-medium text-sm">{collectionNotification.message}</span>
+                    </div>
                 </motion.div>,
                 document.body
             )}

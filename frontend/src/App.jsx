@@ -6,7 +6,6 @@ import Plants from './pages/user/Plants';
 import Events from './pages/user/Events';
 import Reservations from './pages/user/Reservations';
 import AboutUs from './pages/user/AboutUs';
-import AnimalDex from './pages/user/AnimalDex';
 import ArchivedReservations from './pages/user/ArchivedReservations';
 import UserProfile from './pages/user/UserProfile';
 import Settings from './pages/user/Settings';
@@ -89,7 +88,7 @@ function AppRoutes() {
             <Route path="/plants" element={<Plants />} />
             <Route path="/events" element={<Events />} />
             <Route path="/about" element={<AboutUs />} />
-            <Route path="/animaldex" element={<AnimalDex />} />
+            <Route path="/animaldex" element={<AnimalClassifier />} />
             <Route path="/map" element={<MapPage />} />
 
             {/* Auth Routes */}
