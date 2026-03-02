@@ -78,8 +78,8 @@ const Settings = () => {
     const [activeSection, setActiveSection] = useState('preferences');
     const [message, setMessage] = useState({ text: '', type: '' });
 
-    // Settings state
-    const [settings, setSettings] = useState({
+    // Load settings from localStorage on mount
+    const getDefaultSettings = () => ({
         notifications: {
             emailNotifications: true,
             pushNotifications: true,
@@ -99,6 +99,23 @@ const Settings = () => {
         }
     });
 
+    const [settings, setSettings] = useState(() => {
+        const saved = localStorage.getItem('userSettings');
+        if (saved) {
+            try {
+                return JSON.parse(saved);
+            } catch {
+                return getDefaultSettings();
+            }
+        }
+        return getDefaultSettings();
+    });
+
+    // Save settings to localStorage whenever they change
+    useEffect(() => {
+        localStorage.setItem('userSettings', JSON.stringify(settings));
+    }, [settings]);
+
     const updateSetting = (category, key, value) => {
         setSettings(prev => ({
             ...prev,
@@ -107,8 +124,13 @@ const Settings = () => {
                 [key]: value
             }
         }));
-        setMessage({ text: 'Settings updated successfully!', type: 'success' });
+        setMessage({ text: 'Settings saved!', type: 'success' });
         setTimeout(() => setMessage({ text: '', type: '' }), 2000);
+    };
+
+    const showFeatureNotAvailable = (featureName) => {
+        setMessage({ text: `${featureName} feature coming soon!`, type: 'info' });
+        setTimeout(() => setMessage({ text: '', type: '' }), 3000);
     };
 
     const menuItems = [
@@ -352,7 +374,10 @@ const Settings = () => {
                         <div>
                             <h3 className="text-lg font-semibold text-gray-800 mb-4">Data Management</h3>
                             <div className="space-y-4">
-                                <button className="w-full flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
+                                <button 
+                                    onClick={() => showFeatureNotAvailable('Download Data')}
+                                    className="w-full flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors"
+                                >
                                     <div className="flex items-center gap-3">
                                         <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600">
                                             <Icons.Database />
@@ -362,10 +387,13 @@ const Settings = () => {
                                             <p className="text-sm text-gray-500">Get a copy of your data</p>
                                         </div>
                                     </div>
-                                    <Icons.ChevronRight />
+                                    <span className="px-2 py-1 bg-yellow-100 text-yellow-700 text-xs font-medium rounded-full">Soon</span>
                                 </button>
 
-                                <button className="w-full flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
+                                <button 
+                                    onClick={() => showFeatureNotAvailable('Data Report')}
+                                    className="w-full flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors"
+                                >
                                     <div className="flex items-center gap-3">
                                         <div className="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center text-purple-600">
                                             <Icons.Document />
@@ -375,7 +403,7 @@ const Settings = () => {
                                             <p className="text-sm text-gray-500">Full report of your activity</p>
                                         </div>
                                     </div>
-                                    <Icons.ChevronRight />
+                                    <span className="px-2 py-1 bg-yellow-100 text-yellow-700 text-xs font-medium rounded-full">Soon</span>
                                 </button>
 
                                 <button
@@ -434,8 +462,11 @@ const Settings = () => {
             {/* Main Content */}
             <div className="flex-grow container mx-auto px-4 py-8 max-w-6xl">
                 {message.text && (
-                    <div className={`mb-6 p-4 rounded-xl ${message.type === 'success'
+                    <div className={`mb-6 p-4 rounded-xl ${
+                        message.type === 'success'
                             ? 'bg-green-100 text-green-700 border border-green-300'
+                            : message.type === 'info'
+                            ? 'bg-blue-100 text-blue-700 border border-blue-300'
                             : 'bg-red-100 text-red-700 border border-red-300'
                         }`}>
                         {message.text}

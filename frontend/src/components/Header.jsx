@@ -5,6 +5,7 @@ import { getProfileImageUrl, messageAPI, userAPI, reservationAPI } from '../serv
 import LogoutModal from './common/LogoutModal';
 import AnimalClassifier from './features/ai-scanner/AnimalClassifier';
 import ReservationHistoryPanel from './features/ReservationHistoryPanel';
+import { MiniZooGameModal } from '../pages/user/MiniZooGameLauncher';
 
 const ICONS = {
     home: 'https://cdn-icons-png.flaticon.com/128/3917/3917743.png',
@@ -95,7 +96,16 @@ const Header = () => {
     const [showAIScanner, setShowAIScanner] = useState(false);
     const [showHistoryPanel, setShowHistoryPanel] = useState(false);
     const [showNotificationPanel, setShowNotificationPanel] = useState(false);
+    const [showMiniZooGame, setShowMiniZooGame] = useState(false);
     const [notifications, setNotifications] = useState([]);
+    const [readNotificationIds, setReadNotificationIds] = useState(() => {
+        try {
+            const saved = localStorage.getItem('readNotificationIds');
+            return saved ? JSON.parse(saved) : [];
+        } catch {
+            return [];
+        }
+    });
     const [notificationLoading, setNotificationLoading] = useState(false);
     const [scrolled, setScrolled] = useState(false);
     const [showEmailModal, setShowEmailModal] = useState(false);
@@ -210,6 +220,38 @@ const Header = () => {
 
     useEffect(() => { if (user) fetchNotifications(false); }, [user, fetchNotifications]);
 
+    // Persist read notification IDs to localStorage
+    useEffect(() => {
+        localStorage.setItem('readNotificationIds', JSON.stringify(readNotificationIds));
+    }, [readNotificationIds]);
+
+    // Compute unread count
+    const unreadCount = notifications.filter(n => !readNotificationIds.includes(n.id)).length;
+
+    // Mark a single notification as read
+    const markNotificationRead = (notificationId) => {
+        if (!readNotificationIds.includes(notificationId)) {
+            setReadNotificationIds(prev => [...prev, notificationId]);
+        }
+    };
+
+    // Mark all notifications as read
+    const markAllNotificationsRead = () => {
+        const allIds = notifications.map(n => n.id);
+        setReadNotificationIds(prev => [...new Set([...prev, ...allIds])]);
+    };
+
+    // Handle notification click
+    const handleNotificationClick = (notif) => {
+        markNotificationRead(notif.id);
+        setShowNotificationPanel(false);
+        if (notif.action === 'openReservationHistory') {
+            setShowHistoryPanel(true);
+        } else if (notif.path) {
+            navigate(notif.path);
+        }
+    };
+
     const handleLogout = () => { logout(); setShowLogoutModal(false); navigate('/'); };
     const closeSidePanel = () => setShowSidePanel(false);
     const openNotifications = () => { setShowNotificationPanel(true); fetchNotifications(); };
@@ -240,6 +282,8 @@ const Header = () => {
 
     const handleOpenReservationHistory = () => { closeSidePanel(); setShowHistoryPanel(true); };
 
+    const handleOpenMiniZooGame = () => { closeSidePanel(); setShowMiniZooGame(true); };
+
     const quickItems = [
         ...(user?.role === 'admin' ? [{ iconUrl: ICONS.setting, label: 'Admin Dashboard', path: '/admin/dashboard' }] : []),
         ...(user?.role === 'staff' ? [{ iconUrl: ICONS.setting, label: 'Staff Dashboard', path: '/staff/dashboard' }] : []),
@@ -253,7 +297,7 @@ const Header = () => {
 
     const exploreItems = [
         { iconUrl: ICONS.wildlife, label: 'Wildlife Origins', path: '/map' },
-        { iconUrl: ICONS.game, label: 'Mini Zoo Game', path: '/mini-zoo-game' },
+        { iconUrl: ICONS.game, label: 'Mini Zoo Game', action: handleOpenMiniZooGame },
     ];
 
     const avatarSrc = getProfileImageUrl(user?.profileImage || user?.profile_image) || '/profile-img/default-avatar.svg';
@@ -298,7 +342,7 @@ const Header = () => {
                                 </button>
                             </Link>
                             {user && (
-                                <IconBtn src={ICONS.notification} alt="Notifications" onClick={openNotifications} badge={notifications.length} />
+                                <IconBtn src={ICONS.notification} alt="Notifications" onClick={openNotifications} badge={unreadCount} />
                             )}
                             {user ? (
                                 <button
@@ -328,7 +372,7 @@ const Header = () => {
                             <Link to="/reservations" className="flex items-center justify-center w-9 h-9 rounded-full hover:bg-gray-100 transition-colors flex-shrink-0">
                                 <img src={ICONS.ticket} alt="Reserve" className="w-[18px] h-[18px] object-contain opacity-55" />
                             </Link>
-                            <IconBtn src={ICONS.notification} alt="Notifications" onClick={openNotifications} badge={notifications.length} />
+                            <IconBtn src={ICONS.notification} alt="Notifications" onClick={openNotifications} badge={unreadCount} />
                             <IconBtn src={ICONS.menu} alt="Menu" onClick={() => setIsMenuOpen(true)} />
                         </div>
 
@@ -463,7 +507,7 @@ const Header = () => {
                             <SectionLabel label="Explore" />
                             <div className="rounded-xl overflow-hidden border border-gray-100 bg-white">
                                 {exploreItems.map((item, i) => (
-                                    <MenuItem key={i} iconUrl={item.iconUrl} label={item.label} to={item.path} onClose={closeSidePanel} isLast={i === exploreItems.length - 1} />
+                                    <MenuItem key={i} iconUrl={item.iconUrl} label={item.label} to={item.path} onClick={item.action} onClose={closeSidePanel} isLast={i === exploreItems.length - 1} />
                                 ))}
                             </div>
 
@@ -593,8 +637,25 @@ const Header = () => {
                         className="absolute right-0 top-0 h-full w-full max-w-sm bg-white shadow-2xl flex flex-col"
                     >
                         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 flex-shrink-0">
-                            <span className="text-[13px] font-semibold text-gray-900">Notifications</span>
-                            <CloseBtn onClick={() => setShowNotificationPanel(false)} />
+                            <div className="flex items-center gap-3">
+                                <span className="text-[13px] font-semibold text-gray-900">Notifications</span>
+                                {unreadCount > 0 && (
+                                    <span className="px-1.5 py-0.5 bg-red-500 text-white text-[10px] font-bold rounded-full">
+                                        {unreadCount}
+                                    </span>
+                                )}
+                            </div>
+                            <div className="flex items-center gap-2">
+                                {unreadCount > 0 && (
+                                    <button
+                                        onClick={markAllNotificationsRead}
+                                        className="text-[11px] font-medium text-emerald-600 hover:text-emerald-700 transition-colors px-2 py-1 rounded hover:bg-emerald-50"
+                                    >
+                                        Mark all read
+                                    </button>
+                                )}
+                                <CloseBtn onClick={() => setShowNotificationPanel(false)} />
+                            </div>
                         </div>
                         <div className="flex-1 overflow-y-auto p-4">
                             {notificationLoading ? (
@@ -611,36 +672,42 @@ const Header = () => {
                                 </div>
                             ) : (
                                 <div className="flex flex-col gap-2">
-                                    {notifications.map((notif) => (
-                                        <button
-                                            key={notif.id}
-                                            className="w-full text-left flex items-start gap-3 p-3.5 rounded-xl border border-gray-100 hover:border-gray-200 hover:bg-gray-50 transition-all"
-                                            onClick={() => {
-                                                setShowNotificationPanel(false);
-                                                if (notif.action === 'openReservationHistory') setShowHistoryPanel(true);
-                                                else if (notif.path) navigate(notif.path);
-                                            }}
-                                        >
-                                            <div className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${notif.type === 'event' ? 'bg-emerald-50' :
-                                                    notif.type === 'reservation' ? 'bg-orange-50' : 'bg-gray-50'
-                                                }`}>
-                                                <img
-                                                    src={notif.type === 'event' ? ICONS.events : notif.type === 'reservation' ? ICONS.ticket : ICONS.messages}
-                                                    alt=""
-                                                    className="w-4 h-4 object-contain opacity-55"
-                                                />
-                                            </div>
-                                            <div className="flex-1 min-w-0">
-                                                <p className="text-[13px] font-medium text-gray-800 truncate">{notif.title}</p>
-                                                <p className="text-[11px] text-gray-400 mt-0.5 leading-relaxed">{notif.message}</p>
-                                                <p className="text-[10px] text-gray-300 mt-1.5">
-                                                    {notif.time
-                                                        ? new Date(notif.time).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
-                                                        : 'Recently'}
-                                                </p>
-                                            </div>
-                                        </button>
-                                    ))}
+                                    {notifications.map((notif) => {
+                                        const isRead = readNotificationIds.includes(notif.id);
+                                        return (
+                                            <button
+                                                key={notif.id}
+                                                className={`w-full text-left flex items-start gap-3 p-3.5 rounded-xl border transition-all ${
+                                                    isRead
+                                                        ? 'border-gray-50 bg-gray-50/50 hover:bg-gray-100'
+                                                        : 'border-emerald-100 bg-emerald-50/30 hover:bg-emerald-50'
+                                                }`}
+                                                onClick={() => handleNotificationClick(notif)}
+                                            >
+                                                <div className={`relative w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${notif.type === 'event' ? 'bg-emerald-50' :
+                                                        notif.type === 'reservation' ? 'bg-orange-50' : 'bg-gray-50'
+                                                    }`}>
+                                                    <img
+                                                        src={notif.type === 'event' ? ICONS.events : notif.type === 'reservation' ? ICONS.ticket : ICONS.messages}
+                                                        alt=""
+                                                        className="w-4 h-4 object-contain opacity-55"
+                                                    />
+                                                    {!isRead && (
+                                                        <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-emerald-500 rounded-full"></span>
+                                                    )}
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <p className={`text-[13px] font-medium truncate ${isRead ? 'text-gray-500' : 'text-gray-800'}`}>{notif.title}</p>
+                                                    <p className={`text-[11px] mt-0.5 leading-relaxed ${isRead ? 'text-gray-400' : 'text-gray-500'}`}>{notif.message}</p>
+                                                    <p className="text-[10px] text-gray-300 mt-1.5">
+                                                        {notif.time
+                                                            ? new Date(notif.time).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+                                                            : 'Recently'}
+                                                    </p>
+                                                </div>
+                                            </button>
+                                        );
+                                    })}
                                 </div>
                             )}
                         </div>
@@ -658,6 +725,11 @@ const Header = () => {
             <ReservationHistoryPanel
                 isOpen={showHistoryPanel}
                 onClose={() => setShowHistoryPanel(false)}
+            />
+
+            <MiniZooGameModal
+                isOpen={showMiniZooGame}
+                onClose={() => setShowMiniZooGame(false)}
             />
         </>
     );

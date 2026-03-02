@@ -101,6 +101,11 @@ const AdminEvents = () => {
     const [imageInputMode, setImageInputMode] = useState('url'); // 'url' or 'upload'
     const [imageFile, setImageFile] = useState(null);
     const [imagePreview, setImagePreview] = useState(null);
+    
+    // Confirmation modal states
+    const [showConfirmModal, setShowConfirmModal] = useState(false);
+    const [confirmAction, setConfirmAction] = useState(null); // 'create', 'update', 'delete'
+    const [confirmData, setConfirmData] = useState(null);
 
     const handleImageFileChange = (e) => {
         const file = e.target.files[0];
@@ -249,7 +254,20 @@ const AdminEvents = () => {
             return;
         }
 
+        // Show confirmation modal
+        const actionType = selectedEvent && modalMode === 'edit' ? 'update' : 'create';
+        setConfirmAction(actionType);
+        setConfirmData({
+            title: formData.title,
+            eventDate: formData.eventDate,
+            status: formData.status
+        });
+        setShowConfirmModal(true);
+    };
+
+    const executeSubmit = async () => {
         setSaving(true);
+        setShowConfirmModal(false);
         try {
             let imageUrl = formData.imageUrl;
 
@@ -299,12 +317,21 @@ const AdminEvents = () => {
         }
     };
 
-    const handleDelete = async () => {
+    const handleDelete = () => {
         if (!selectedEvent) return;
 
-        if (!window.confirm('Are you sure you want to delete this event?')) return;
+        setConfirmAction('delete');
+        setConfirmData({
+            title: formData.title || selectedEvent.title,
+            eventDate: formData.eventDate || selectedEvent.extendedProps?.eventDate,
+            id: selectedEvent.id
+        });
+        setShowConfirmModal(true);
+    };
 
+    const executeDelete = async () => {
         setSaving(true);
+        setShowConfirmModal(false);
         try {
             const response = await adminAPI.deleteEvent(selectedEvent.id);
             if (response.success) {
@@ -317,6 +344,14 @@ const AdminEvents = () => {
             setError(err.message || 'Failed to delete event');
         } finally {
             setSaving(false);
+        }
+    };
+
+    const handleConfirmAction = () => {
+        if (confirmAction === 'delete') {
+            executeDelete();
+        } else {
+            executeSubmit();
         }
     };
 
@@ -1137,6 +1172,83 @@ const AdminEvents = () => {
                                 </div>
                             </form>
                         )}
+                    </div>
+                </div>
+            )}
+
+            {/* Confirmation Modal */}
+            {showConfirmModal && (
+                <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
+                    <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl w-full max-w-md p-6">
+                        <div className={`w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 ${
+                            confirmAction === 'delete' ? 'bg-red-500/20' : 'bg-[#8cff65]/20'
+                        }`}>
+                            {confirmAction === 'delete' ? (
+                                <TrashIcon />
+                            ) : confirmAction === 'update' ? (
+                                <EditIcon />
+                            ) : (
+                                <PlusIcon />
+                            )}
+                        </div>
+                        <h3 className="text-xl font-bold text-white text-center mb-2">
+                            {confirmAction === 'delete' ? 'Delete Event' : 
+                             confirmAction === 'update' ? 'Update Event' : 'Create Event'}
+                        </h3>
+                        <p className="text-gray-400 text-center mb-4">
+                            {confirmAction === 'delete' 
+                                ? 'Are you sure you want to delete this event? This action cannot be undone.'
+                                : confirmAction === 'update'
+                                ? 'Are you sure you want to update this event?'
+                                : 'Are you sure you want to create this event?'}
+                        </p>
+                        
+                        {confirmData && (
+                            <div className="bg-[#1e1e1e] rounded-xl p-4 mb-6 space-y-2">
+                                <div className="flex justify-between text-sm">
+                                    <span className="text-gray-500">Title</span>
+                                    <span className="text-white font-medium">{confirmData.title}</span>
+                                </div>
+                                <div className="flex justify-between text-sm">
+                                    <span className="text-gray-500">Date</span>
+                                    <span className="text-white font-medium">
+                                        {confirmData.eventDate ? new Date(confirmData.eventDate + 'T00:00:00').toLocaleDateString('en-US', {
+                                            month: 'short', day: 'numeric', year: 'numeric'
+                                        }) : '-'}
+                                    </span>
+                                </div>
+                                {confirmData.status && (
+                                    <div className="flex justify-between text-sm">
+                                        <span className="text-gray-500">Status</span>
+                                        <span className="text-white font-medium capitalize">{confirmData.status}</span>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => {
+                                    setShowConfirmModal(false);
+                                    setConfirmAction(null);
+                                    setConfirmData(null);
+                                }}
+                                className="flex-1 px-4 py-3 bg-[#2a2a2a] hover:bg-[#3a3a3a] text-white rounded-xl font-medium transition"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleConfirmAction}
+                                disabled={saving}
+                                className={`flex-1 px-4 py-3 rounded-xl font-medium transition disabled:opacity-50 ${
+                                    confirmAction === 'delete'
+                                        ? 'bg-red-500 hover:bg-red-600 text-white'
+                                        : 'bg-[#8cff65] hover:bg-[#7ae857] text-black'
+                                }`}
+                            >
+                                {saving ? 'Processing...' : 'Confirm'}
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}

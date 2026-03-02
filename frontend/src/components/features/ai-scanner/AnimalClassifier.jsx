@@ -24,9 +24,6 @@ const PawIcon = ({ className }) => (
 const CameraIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
 );
-const LiveIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
-);
 const CloseIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
 );
@@ -52,6 +49,12 @@ const ANIMAL_INFO = {
     'Zebra': { description: "Zebras stripes act as a bug repellent.", icon: "zebra", bulusan: false }
 };
 const ANIMAL_CLASSES = Object.keys(ANIMAL_INFO);
+
+// Detect mobile device
+const isMobileDevice = () => {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) 
+        || window.innerWidth < 768;
+};
 
 const AnimalClassifier = ({ embedded = false, expanded: controlledExpanded = false, onExpandChange = () => {} }) => {
     const [messages, setMessages] = useState([
@@ -79,22 +82,18 @@ const AnimalClassifier = ({ embedded = false, expanded: controlledExpanded = fal
     const [cameraReady, setCameraReady] = useState(false);
     const [cameraFacing, setCameraFacing] = useState('environment');
     const [cameraError, setCameraError] = useState(null);
+    const [isMobile, setIsMobile] = useState(isMobileDevice());
     const videoRef = useRef(null);
     const streamRef = useRef(null);
 
-    // Live Detection State
-    const [showLiveModal, setShowLiveModal] = useState(false);
-    const [liveDetection, setLiveDetection] = useState(null);
-    const [isDetecting, setIsDetecting] = useState(false);
-    const liveVideoRef = useRef(null);
-    const liveStreamRef = useRef(null);
-    const animationRef = useRef(null);
-    const [liveCameraFacing, setLiveCameraFacing] = useState('environment');
-    const [liveCameraReady, setLiveCameraReady] = useState(false);
-    const [liveCameraError, setLiveCameraError] = useState(null);
-    const lastSavedAnimal = useRef(null);
-
     const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
+    // Check for mobile on resize
+    useEffect(() => {
+        const handleResize = () => setIsMobile(isMobileDevice());
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     // 1. Load Model
     useEffect(() => {
@@ -130,7 +129,6 @@ const AnimalClassifier = ({ embedded = false, expanded: controlledExpanded = fal
     useEffect(() => {
         return () => {
             stopCameraStream();
-            stopLiveDetection();
         };
     }, []);
 
@@ -176,8 +174,8 @@ const AnimalClassifier = ({ embedded = false, expanded: controlledExpanded = fal
             const constraints = {
                 video: {
                     facingMode: facingMode,
-                    width: { ideal: 640 },
-                    height: { ideal: 480 }
+                    width: { ideal: isMobile ? 1080 : 640 },
+                    height: { ideal: isMobile ? 1920 : 480 }
                 },
                 audio: false
             };
@@ -211,16 +209,24 @@ const AnimalClassifier = ({ embedded = false, expanded: controlledExpanded = fal
         setCameraError(null);
         setCameraReady(false);
         
+        // Prevent background scroll on mobile
+        if (isMobile) {
+            document.body.style.overflow = 'hidden';
+        }
+        
         // Small delay to ensure modal is rendered
         setTimeout(() => {
             startCameraStream(cameraFacing);
         }, 150);
-    }, [cameraFacing, startCameraStream]);
+    }, [cameraFacing, startCameraStream, isMobile]);
 
     const closeCameraModal = useCallback(() => {
         stopCameraStream();
         setShowCameraModal(false);
         setCameraError(null);
+        
+        // Restore background scroll
+        document.body.style.overflow = '';
     }, [stopCameraStream]);
 
     const switchCamera = useCallback(async () => {
@@ -256,195 +262,6 @@ const AnimalClassifier = ({ embedded = false, expanded: controlledExpanded = fal
         setIsProcessing(true);
         setAnalysisImage(dataUrl);
     }, [cameraReady, cameraFacing, closeCameraModal]);
-
-    // ========== LIVE DETECTION FUNCTIONS ==========
-    const stopLiveDetection = useCallback(() => {
-        if (animationRef.current) {
-            cancelAnimationFrame(animationRef.current);
-            animationRef.current = null;
-        }
-        if (liveStreamRef.current) {
-            liveStreamRef.current.getTracks().forEach(track => track.stop());
-            liveStreamRef.current = null;
-        }
-        if (liveVideoRef.current) {
-            liveVideoRef.current.srcObject = null;
-        }
-        setLiveCameraReady(false);
-        setIsDetecting(false);
-        setLiveDetection(null);
-        lastSavedAnimal.current = null;
-    }, []);
-
-    const startLiveCamera = useCallback(async (facingMode) => {
-        try {
-            setLiveCameraError(null);
-            setLiveCameraReady(false);
-            
-            if (liveStreamRef.current) {
-                liveStreamRef.current.getTracks().forEach(track => track.stop());
-            }
-            
-            const constraints = {
-                video: {
-                    facingMode: facingMode,
-                    width: { ideal: 640 },
-                    height: { ideal: 480 }
-                },
-                audio: false
-            };
-            
-            const stream = await navigator.mediaDevices.getUserMedia(constraints);
-            liveStreamRef.current = stream;
-            
-            if (liveVideoRef.current) {
-                liveVideoRef.current.srcObject = stream;
-                liveVideoRef.current.onloadedmetadata = () => {
-                    liveVideoRef.current.play()
-                        .then(() => {
-                            setLiveCameraReady(true);
-                            startDetectionLoop();
-                        })
-                        .catch(err => {
-                            console.error('Live video play failed:', err);
-                            setLiveCameraError('Failed to start video preview');
-                        });
-                };
-            }
-        } catch (err) {
-            console.error('Live camera access error:', err);
-            setLiveCameraError(
-                err.name === 'NotAllowedError' 
-                    ? 'Camera access denied. Please allow camera permission.' 
-                    : 'Unable to access camera.'
-            );
-        }
-    }, []);
-
-    const startDetectionLoop = useCallback(() => {
-        if (!model) return;
-        
-        setIsDetecting(true);
-        
-        const detectFrame = async () => {
-            if (!liveVideoRef.current || !liveStreamRef.current || !model) {
-                return;
-            }
-            
-            const video = liveVideoRef.current;
-            if (video.readyState !== 4) {
-                animationRef.current = requestAnimationFrame(detectFrame);
-                return;
-            }
-
-            try {
-                const tensor = tf.tidy(() => {
-                    const img = tf.browser.fromPixels(video);
-                    const resized = tf.image.resizeBilinear(img, [150, 150]);
-                    return resized.expandDims(0).div(255.0);
-                });
-
-                const predictions = await model.predict(tensor).data();
-                const maxConfidence = Math.max(...predictions);
-                const predictedIndex = predictions.indexOf(maxConfidence);
-                const animalName = ANIMAL_CLASSES[predictedIndex] || 'Unknown';
-                const confidencePct = (maxConfidence * 100).toFixed(1);
-
-                tf.dispose(tensor);
-
-                // Only show detection if confidence > 60%
-                if (maxConfidence > 0.6) {
-                    setLiveDetection({
-                        animal: animalName,
-                        confidence: confidencePct,
-                        info: ANIMAL_INFO[animalName]
-                    });
-                } else {
-                    setLiveDetection({
-                        animal: 'Scanning...',
-                        confidence: confidencePct,
-                        info: { description: 'Point camera at an animal' }
-                    });
-                }
-            } catch (err) {
-                console.error('Detection error:', err);
-            }
-
-            // Continue loop (~8 FPS for performance)
-            setTimeout(() => {
-                animationRef.current = requestAnimationFrame(detectFrame);
-            }, 125);
-        };
-
-        animationRef.current = requestAnimationFrame(detectFrame);
-    }, [model]);
-
-    const openLiveModal = useCallback(() => {
-        setShowLiveModal(true);
-        setLiveCameraError(null);
-        setLiveCameraReady(false);
-        setLiveDetection(null);
-        lastSavedAnimal.current = null;
-        
-        setTimeout(() => {
-            startLiveCamera(liveCameraFacing);
-        }, 150);
-    }, [liveCameraFacing, startLiveCamera]);
-
-    const closeLiveModal = useCallback(() => {
-        stopLiveDetection();
-        setShowLiveModal(false);
-        setLiveCameraError(null);
-    }, [stopLiveDetection]);
-
-    const switchLiveCamera = useCallback(async () => {
-        const newFacing = liveCameraFacing === 'environment' ? 'user' : 'environment';
-        setLiveCameraFacing(newFacing);
-        stopLiveDetection();
-        await startLiveCamera(newFacing);
-    }, [liveCameraFacing, stopLiveDetection, startLiveCamera]);
-
-    const saveLiveDetection = useCallback(() => {
-        if (!liveDetection || liveDetection.animal === 'Scanning...' || !liveVideoRef.current) return;
-        
-        // Prevent duplicate saves
-        if (lastSavedAnimal.current === liveDetection.animal) return;
-        lastSavedAnimal.current = liveDetection.animal;
-
-        const video = liveVideoRef.current;
-        const canvas = document.createElement('canvas');
-        canvas.width = video.videoWidth || 640;
-        canvas.height = video.videoHeight || 480;
-        const ctx = canvas.getContext('2d');
-        
-        if (liveCameraFacing === 'user') {
-            ctx.translate(canvas.width, 0);
-            ctx.scale(-1, 1);
-        }
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
-
-        // Add to messages
-        setMessages(prev => [...prev, 
-            { id: Date.now(), role: 'user', type: 'image', content: dataUrl }
-        ]);
-        
-        const info = ANIMAL_INFO[liveDetection.animal] || { description: "Unknown species" };
-        addBotMessage(info.description, {
-            animal: liveDetection.animal,
-            confidence: liveDetection.confidence,
-            icon: info.icon
-        });
-
-        // Save to database
-        currentFileName.current = `live-detection-${Date.now()}.jpg`;
-        saveToDatabase(liveDetection.animal, liveDetection.confidence);
-        
-        // Allow another save after 3 seconds
-        setTimeout(() => {
-            lastSavedAnimal.current = null;
-        }, 3000);
-    }, [liveDetection, liveCameraFacing]);
 
     const addBotMessage = (text, meta = null) => {
         setMessages(prev => [...prev, { id: Date.now(), role: 'bot', type: meta ? 'result' : 'text', content: text, meta }]);
@@ -765,32 +582,105 @@ const AnimalClassifier = ({ embedded = false, expanded: controlledExpanded = fal
                             <CameraIcon />
                             <span>Camera</span>
                         </motion.button>
-
-                        {/* Live Detection Button */}
-                        <motion.button
-                            onClick={openLiveModal}
-                            disabled={isProcessing || isModelLoading}
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
-                            className={`flex-1 py-2.5 px-3 rounded-xl font-medium flex items-center justify-center gap-2 transition-all text-sm shadow-md ${isProcessing || isModelLoading
-                                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                                    : 'bg-gradient-to-r from-rose-500 to-orange-500 text-white hover:shadow-lg hover:shadow-rose-500/25'
-                                }`}
-                        >
-                            <LiveIcon />
-                            <span>Live</span>
-                        </motion.button>
                     </div>
                     
                     <p className="text-center text-xs text-purple-400 mt-2 font-medium">
-                        Upload • Capture • Real-time Detection
+                        Upload an image or capture with camera
                     </p>
                 </div>
             </div>
 
-            {/* --- CAMERA CAPTURE MODAL --- */}
+            {/* --- MOBILE FULL-PAGE CAMERA VIEW --- */}
+            {showCameraModal && isMobile && ReactDOM.createPortal(
+                <div className="fixed inset-0 z-[9999] bg-black flex flex-col">
+                    {/* Camera Preview - Full Screen */}
+                    <div className="flex-1 relative overflow-hidden">
+                        <video
+                            ref={videoRef}
+                            className={`w-full h-full object-cover ${cameraFacing === 'user' ? 'scale-x-[-1]' : ''}`}
+                            playsInline
+                            muted
+                            autoPlay
+                        />
+                        
+                        {/* Loading State */}
+                        {!cameraReady && !cameraError && (
+                            <div className="absolute inset-0 flex items-center justify-center bg-black">
+                                <div className="text-center">
+                                    <div className="w-12 h-12 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                                    <p className="text-gray-300 text-sm">Starting camera...</p>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Error State */}
+                        {cameraError && (
+                            <div className="absolute inset-0 flex items-center justify-center bg-black">
+                                <div className="text-center p-6">
+                                    <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                                        <svg className="w-8 h-8 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                        </svg>
+                                    </div>
+                                    <p className="text-red-400 text-base mb-6">{cameraError}</p>
+                                    <button
+                                        onClick={closeCameraModal}
+                                        className="px-6 py-3 bg-gray-800 text-white rounded-xl text-sm font-medium hover:bg-gray-700 transition"
+                                    >
+                                        Go Back
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Frame Guide */}
+                        {cameraReady && (
+                            <div className="absolute inset-6 border-2 border-purple-400/50 rounded-2xl pointer-events-none">
+                                <div className="absolute -top-px -left-px w-10 h-10 border-t-3 border-l-3 border-purple-400 rounded-tl-2xl"></div>
+                                <div className="absolute -top-px -right-px w-10 h-10 border-t-3 border-r-3 border-purple-400 rounded-tr-2xl"></div>
+                                <div className="absolute -bottom-px -left-px w-10 h-10 border-b-3 border-l-3 border-purple-400 rounded-bl-2xl"></div>
+                                <div className="absolute -bottom-px -right-px w-10 h-10 border-b-3 border-r-3 border-purple-400 rounded-br-2xl"></div>
+                            </div>
+                        )}
+
+                        {/* Top Controls */}
+                        <div className="absolute top-0 left-0 right-0 p-4 flex items-center justify-between" style={{ paddingTop: 'max(1rem, env(safe-area-inset-top))' }}>
+                            <button
+                                onClick={closeCameraModal}
+                                className="w-10 h-10 bg-black/50 backdrop-blur-sm rounded-full flex items-center justify-center text-white"
+                            >
+                                <CloseIcon />
+                            </button>
+                            <div className="px-4 py-2 bg-black/50 backdrop-blur-sm rounded-full">
+                                <p className="text-white text-xs font-medium">Point at an animal</p>
+                            </div>
+                            <button
+                                onClick={switchCamera}
+                                disabled={!cameraReady}
+                                className="w-10 h-10 bg-black/50 backdrop-blur-sm rounded-full flex items-center justify-center text-white disabled:opacity-50"
+                            >
+                                <SwitchCameraIcon />
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Bottom Controls */}
+                    <div className="bg-black p-6 flex items-center justify-center" style={{ paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom))' }}>
+                        <button
+                            onClick={capturePhoto}
+                            disabled={!cameraReady}
+                            className="w-20 h-20 bg-white hover:bg-gray-100 rounded-full transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center shadow-lg active:scale-95 border-4 border-purple-300"
+                        >
+                            <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-full"></div>
+                        </button>
+                    </div>
+                </div>,
+                document.body
+            )}
+
+            {/* --- CAMERA CAPTURE MODAL (Desktop) --- */}
             <AnimatePresence>
-            {showCameraModal && (
+            {showCameraModal && !isMobile && (
                 <motion.div 
                     className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
                     initial={{ opacity: 0 }}
@@ -903,182 +793,6 @@ const AnimalClassifier = ({ embedded = false, expanded: controlledExpanded = fal
                             <p className="text-center text-xs text-slate-500 mt-3">
                                 Point camera at an animal and tap to capture
                             </p>
-                        </div>
-                    </motion.div>
-                </motion.div>
-            )}
-            </AnimatePresence>
-
-            {/* --- LIVE DETECTION MODAL --- */}
-            <AnimatePresence>
-            {showLiveModal && (
-                <motion.div 
-                    className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 backdrop-blur-sm p-4"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                >
-                    <motion.div 
-                        className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden"
-                        initial={{ scale: 0.9, y: 20 }}
-                        animate={{ scale: 1, y: 0 }}
-                        exit={{ scale: 0.9, y: 20 }}
-                    >
-                        {/* Modal Header */}
-                        <div className="flex items-center justify-between p-3 border-b border-orange-100 bg-gradient-to-r from-rose-500 to-orange-500">
-                            <div className="flex items-center gap-2 text-white">
-                                <LiveIcon />
-                                <div>
-                                    <h3 className="font-bold text-sm">Live Detection</h3>
-                                    <p className="text-[10px] text-white/80">Real-time AI scanning</p>
-                                </div>
-                            </div>
-                            <button
-                                onClick={closeLiveModal}
-                                className="p-1.5 hover:bg-white/20 rounded-lg transition text-white"
-                            >
-                                <CloseIcon />
-                            </button>
-                        </div>
-
-                        {/* Live Camera Preview */}
-                        <div className="relative bg-black aspect-[4/3]">
-                            <video
-                                ref={liveVideoRef}
-                                className={`w-full h-full object-cover ${liveCameraFacing === 'user' ? 'scale-x-[-1]' : ''}`}
-                                playsInline
-                                muted
-                                autoPlay
-                            />
-                            
-                            {/* Loading State */}
-                            {!liveCameraReady && !liveCameraError && (
-                                <div className="absolute inset-0 flex items-center justify-center bg-slate-900">
-                                    <div className="text-center">
-                                        <div className="w-10 h-10 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
-                                        <p className="text-gray-400 text-sm">Starting camera...</p>
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Error State */}
-                            {liveCameraError && (
-                                <div className="absolute inset-0 flex items-center justify-center bg-slate-900">
-                                    <div className="text-center p-6">
-                                        <div className="w-12 h-12 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-3">
-                                            <svg className="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                                            </svg>
-                                        </div>
-                                        <p className="text-red-400 text-sm mb-4">{liveCameraError}</p>
-                                        <button
-                                            onClick={closeLiveModal}
-                                            className="px-4 py-2 bg-slate-700 text-white rounded-lg text-sm hover:bg-slate-600 transition"
-                                        >
-                                            Close
-                                        </button>
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Scanning Frame */}
-                            {liveCameraReady && (
-                                <>
-                                    {/* Corner brackets */}
-                                    <div className="absolute inset-4 pointer-events-none">
-                                        <div className="absolute -top-px -left-px w-8 h-8 border-t-3 border-l-3 border-orange-400 rounded-tl-lg"></div>
-                                        <div className="absolute -top-px -right-px w-8 h-8 border-t-3 border-r-3 border-orange-400 rounded-tr-lg"></div>
-                                        <div className="absolute -bottom-px -left-px w-8 h-8 border-b-3 border-l-3 border-orange-400 rounded-bl-lg"></div>
-                                        <div className="absolute -bottom-px -right-px w-8 h-8 border-b-3 border-r-3 border-orange-400 rounded-br-lg"></div>
-                                    </div>
-                                    
-                                    {/* Scanning line animation */}
-                                    {isDetecting && (
-                                        <div className="absolute inset-x-4 top-4 h-1 overflow-hidden">
-                                            <div className="h-full w-full bg-gradient-to-r from-transparent via-orange-400 to-transparent animate-pulse"></div>
-                                        </div>
-                                    )}
-
-                                    {/* Live indicator */}
-                                    <div className="absolute top-3 left-3 flex items-center gap-1.5 bg-red-600 px-2 py-1 rounded-full">
-                                        <span className="w-2 h-2 bg-white rounded-full animate-pulse"></span>
-                                        <span className="text-white text-[10px] font-bold">LIVE</span>
-                                    </div>
-                                </>
-                            )}
-
-                            {/* Detection Result Overlay */}
-                            {liveDetection && liveCameraReady && (
-                                <div className="absolute bottom-0 left-0 right-0 p-3">
-                                    <div className={`bg-white/95 backdrop-blur-sm rounded-xl p-3 border-2 shadow-lg ${liveDetection.animal !== 'Scanning...' 
-                                            ? 'border-purple-500' 
-                                            : 'border-gray-300'
-                                        }`}>
-                                        <div className="flex items-center gap-3">
-                                            <div className={`p-2 rounded-xl ${liveDetection.animal !== 'Scanning...' 
-                                                    ? 'bg-purple-100' 
-                                                    : 'bg-gray-100'
-                                                }`}>
-                                                <PawIcon className={`w-8 h-8 flex-shrink-0 ${liveDetection.animal !== 'Scanning...' 
-                                                        ? 'text-purple-600' 
-                                                        : 'text-gray-400'
-                                                    }`} />
-                                            </div>
-                                            <div className="flex-1 min-w-0">
-                                                <div className="flex items-center gap-2">
-                                                    <h4 className={`font-bold text-lg ${liveDetection.animal !== 'Scanning...' 
-                                                            ? 'text-purple-700' 
-                                                            : 'text-gray-500'
-                                                        }`}>
-                                                        {liveDetection.animal}
-                                                    </h4>
-                                                    {liveDetection.animal !== 'Scanning...' && (
-                                                        <span className="text-xs bg-purple-500 text-white px-2 py-0.5 rounded-full font-bold">
-                                                            {liveDetection.confidence}%
-                                                        </span>
-                                                    )}
-                                                </div>
-                                                <p className="text-xs text-gray-500 truncate">
-                                                    {liveDetection.info?.description || 'Point camera at an animal'}
-                                                </p>
-                                            </div>
-                                            {liveDetection.animal !== 'Scanning...' && (
-                                                <button
-                                                    onClick={saveLiveDetection}
-                                                    className="px-3 py-2 bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white text-xs font-bold rounded-lg transition flex-shrink-0 shadow-md"
-                                                >
-                                                    Save
-                                                </button>
-                                            )}
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Live Controls */}
-                        <div className="p-3 bg-slate-100 flex items-center justify-between">
-                            <button
-                                onClick={switchLiveCamera}
-                                disabled={!liveCameraReady}
-                                className="p-2.5 bg-white hover:bg-slate-50 rounded-full transition disabled:opacity-50 disabled:cursor-not-allowed text-orange-500 shadow-sm"
-                                title="Switch Camera"
-                            >
-                                <SwitchCameraIcon />
-                            </button>
-
-                            <div className="text-center">
-                                <p className="text-xs text-slate-500 font-medium">
-                                    {isDetecting ? 'AI is analyzing frames...' : 'Starting detection...'}
-                                </p>
-                            </div>
-
-                            <button
-                                onClick={closeLiveModal}
-                                className="px-4 py-2 bg-gradient-to-r from-rose-500 to-orange-500 hover:from-rose-600 hover:to-orange-600 rounded-xl transition text-white text-sm font-medium shadow-md"
-                            >
-                                Stop
-                            </button>
                         </div>
                     </motion.div>
                 </motion.div>

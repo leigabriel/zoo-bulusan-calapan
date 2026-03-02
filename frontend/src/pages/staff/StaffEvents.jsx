@@ -86,6 +86,8 @@ const StaffEvents = ({ globalSearch = '' }) => {
     const [showModal, setShowModal] = useState(false);
     const [editingEvent, setEditingEvent] = useState(null);
     const [deleteConfirm, setDeleteConfirm] = useState(null);
+    const [showSaveConfirm, setShowSaveConfirm] = useState(false);
+    const [confirmData, setConfirmData] = useState(null);
     const [saving, setSaving] = useState(false);
     const [imageInputMode, setImageInputMode] = useState('url');
     const [imageFile, setImageFile] = useState(null);
@@ -171,6 +173,17 @@ const StaffEvents = ({ globalSearch = '' }) => {
 
     const saveEvent = async (e) => {
         e.preventDefault();
+        // Show confirmation modal instead of directly saving
+        setConfirmData({
+            isUpdate: !!editingEvent,
+            title: form.title,
+            eventDate: form.eventDate,
+            status: form.status
+        });
+        setShowSaveConfirm(true);
+    };
+
+    const executeSave = async () => {
         setSaving(true);
         try {
             const eventData = {
@@ -194,6 +207,8 @@ const StaffEvents = ({ globalSearch = '' }) => {
             if (res.success) {
                 await fetchEvents();
                 closeModal();
+                setShowSaveConfirm(false);
+                setConfirmData(null);
             } else {
                 alert(res.message || 'Failed to save event');
             }
@@ -634,6 +649,65 @@ const StaffEvents = ({ globalSearch = '' }) => {
                             </button>
                             <button onClick={() => removeEvent(deleteConfirm.id)} className="flex-1 px-4 py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl font-medium transition">
                                 Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Save Confirmation Modal */}
+            {showSaveConfirm && confirmData && (
+                <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
+                    <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl w-full max-w-md p-6">
+                        <div className={`w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 bg-[#8cff65]/20`}>
+                            {confirmData.isUpdate ? <EditIcon /> : <PlusIcon />}
+                        </div>
+                        <h3 className="text-xl font-bold text-white text-center mb-2">
+                            {confirmData.isUpdate ? 'Update Event' : 'Create Event'}
+                        </h3>
+                        <p className="text-gray-400 text-center mb-4">
+                            {confirmData.isUpdate 
+                                ? 'Are you sure you want to update this event?'
+                                : 'Are you sure you want to create this event?'}
+                        </p>
+                        
+                        <div className="bg-[#1e1e1e] rounded-xl p-4 mb-6 space-y-2">
+                            <div className="flex justify-between text-sm">
+                                <span className="text-gray-500">Title</span>
+                                <span className="text-white font-medium">{confirmData.title}</span>
+                            </div>
+                            <div className="flex justify-between text-sm">
+                                <span className="text-gray-500">Date</span>
+                                <span className="text-white font-medium">
+                                    {confirmData.eventDate ? new Date(confirmData.eventDate + 'T00:00:00').toLocaleDateString('en-US', {
+                                        month: 'short', day: 'numeric', year: 'numeric'
+                                    }) : '-'}
+                                </span>
+                            </div>
+                            {confirmData.status && (
+                                <div className="flex justify-between text-sm">
+                                    <span className="text-gray-500">Status</span>
+                                    <span className="text-white font-medium capitalize">{confirmData.status}</span>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => {
+                                    setShowSaveConfirm(false);
+                                    setConfirmData(null);
+                                }}
+                                className="flex-1 px-4 py-3 bg-[#2a2a2a] hover:bg-[#3a3a3a] text-white rounded-xl font-medium transition"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={executeSave}
+                                disabled={saving}
+                                className="flex-1 px-4 py-3 bg-[#8cff65] hover:bg-[#7ae857] text-black rounded-xl font-medium transition disabled:opacity-50"
+                            >
+                                {saving ? 'Processing...' : 'Confirm'}
                             </button>
                         </div>
                     </div>

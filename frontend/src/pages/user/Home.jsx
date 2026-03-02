@@ -114,7 +114,7 @@ const Home = () => {
                         </p>
                         <div className="self-end">
                             <Link to="/about" className="mt-auto self-start border border-[#212631]/30 text-[#212631] text-xs md:text-sm font-bold tracking-widest uppercase px-6 py-3 md:px-8 md:py-4 hover:bg-[#212631] hover:text-[#ebebeb] transition-all duration-300">
-                                View All
+                                More
                             </Link>
                         </div>
                     </div>

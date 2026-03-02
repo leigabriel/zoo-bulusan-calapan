@@ -37,6 +37,20 @@ const ReplyIcon = () => (
     </svg>
 );
 
+const PlusIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+        <line x1="12" y1="5" x2="12" y2="19" />
+        <line x1="5" y1="12" x2="19" y2="12" />
+    </svg>
+);
+
+const SendIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+        <line x1="22" y1="2" x2="11" y2="13" />
+        <polygon points="22 2 15 22 11 13 2 9 22 2" />
+    </svg>
+);
+
 const UserMessages = () => {
     const navigate = useNavigate();
     const { user } = useAuth();
@@ -46,6 +60,12 @@ const UserMessages = () => {
     const [selectedMessage, setSelectedMessage] = useState(null);
     const [showDetail, setShowDetail] = useState(false);
     const [filter, setFilter] = useState('all');
+    
+    // New message modal state
+    const [showNewMessageModal, setShowNewMessageModal] = useState(false);
+    const [newMessage, setNewMessage] = useState({ subject: '', content: '' });
+    const [sending, setSending] = useState(false);
+    const [sendSuccess, setSendSuccess] = useState(false);
 
     useEffect(() => {
         fetchMessages();
@@ -63,6 +83,39 @@ const UserMessages = () => {
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleSendMessage = async (e) => {
+        e.preventDefault();
+        if (!newMessage.subject.trim() || !newMessage.content.trim()) return;
+        
+        setSending(true);
+        try {
+            const response = await messageAPI.sendMessage({
+                subject: newMessage.subject.trim(),
+                content: newMessage.content.trim()
+            });
+            if (response.success) {
+                setSendSuccess(true);
+                setTimeout(() => {
+                    setShowNewMessageModal(false);
+                    setNewMessage({ subject: '', content: '' });
+                    setSendSuccess(false);
+                    fetchMessages();
+                }, 1500);
+            }
+        } catch (err) {
+            console.error('Error sending message:', err);
+            setError('Failed to send message. Please try again.');
+        } finally {
+            setSending(false);
+        }
+    };
+
+    const closeNewMessageModal = () => {
+        setShowNewMessageModal(false);
+        setNewMessage({ subject: '', content: '' });
+        setSendSuccess(false);
     };
 
     const filteredMessages = messages.filter(msg => {
@@ -139,12 +192,13 @@ const UserMessages = () => {
                                 </button>
                             ))}
                         </div>
-                        <Link
-                            to="/help"
-                            className="bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] lg:text-xs font-bold py-2 lg:py-2.5 px-4 lg:px-6 rounded-xl transition-all shadow-lg shadow-emerald-500/20 active:scale-95 whitespace-nowrap"
+                        <button
+                            onClick={() => setShowNewMessageModal(true)}
+                            className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] lg:text-xs font-bold py-2 lg:py-2.5 px-4 lg:px-6 rounded-xl transition-all shadow-lg shadow-emerald-500/20 active:scale-95 whitespace-nowrap"
                         >
+                            <PlusIcon />
                             NEW
-                        </Link>
+                        </button>
                     </div>
 
                     <div className="flex-1 overflow-y-auto px-4 lg:px-6 py-3 lg:py-4 space-y-2 lg:space-y-3">
@@ -286,6 +340,87 @@ const UserMessages = () => {
                     </div>
                 )}
             </div>
+
+            {/* New Message Modal */}
+            {showNewMessageModal && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-white rounded-2xl lg:rounded-3xl w-full max-w-lg shadow-2xl animate-in zoom-in-95 fade-in duration-300">
+                        {sendSuccess ? (
+                            <div className="p-8 text-center">
+                                <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <svg className="w-8 h-8 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                    </svg>
+                                </div>
+                                <h3 className="text-xl font-bold text-gray-900 mb-2">Message Sent!</h3>
+                                <p className="text-gray-500 text-sm">Your message has been submitted. We'll respond shortly.</p>
+                            </div>
+                        ) : (
+                            <>
+                                <div className="flex items-center justify-between p-5 lg:p-6 border-b border-gray-100">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center text-emerald-600">
+                                            <MailIcon />
+                                        </div>
+                                        <div>
+                                            <h3 className="text-lg font-bold text-gray-900">New Message</h3>
+                                            <p className="text-xs text-gray-400">Send a message to support</p>
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={closeNewMessageModal}
+                                        className="p-2 rounded-xl bg-gray-100 text-gray-500 hover:bg-gray-200 transition-colors"
+                                    >
+                                        <CloseIcon />
+                                    </button>
+                                </div>
+
+                                <form onSubmit={handleSendMessage} className="p-5 lg:p-6 space-y-4">
+                                    <div>
+                                        <label className="block text-sm font-semibold text-gray-700 mb-2">Subject</label>
+                                        <input
+                                            type="text"
+                                            value={newMessage.subject}
+                                            onChange={(e) => setNewMessage(prev => ({ ...prev, subject: e.target.value }))}
+                                            placeholder="What is this about?"
+                                            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm"
+                                            required
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-semibold text-gray-700 mb-2">Message</label>
+                                        <textarea
+                                            value={newMessage.content}
+                                            onChange={(e) => setNewMessage(prev => ({ ...prev, content: e.target.value }))}
+                                            placeholder="Describe your issue or question in detail..."
+                                            rows={5}
+                                            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm resize-none"
+                                            required
+                                        />
+                                    </div>
+                                    <div className="flex gap-3 pt-2">
+                                        <button
+                                            type="button"
+                                            onClick={closeNewMessageModal}
+                                            className="flex-1 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl transition-colors"
+                                        >
+                                            Cancel
+                                        </button>
+                                        <button
+                                            type="submit"
+                                            disabled={sending || !newMessage.subject.trim() || !newMessage.content.trim()}
+                                            className="flex-1 flex items-center justify-center gap-2 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                        >
+                                            <SendIcon />
+                                            {sending ? 'Sending...' : 'Send Message'}
+                                        </button>
+                                    </div>
+                                </form>
+                            </>
+                        )}
+                    </div>
+                </div>
+            )}
         </ReactLenis>
     );
 };

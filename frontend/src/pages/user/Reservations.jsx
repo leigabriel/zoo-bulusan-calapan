@@ -97,6 +97,9 @@ const Reservations = () => {
     const [idUploadError, setIdUploadError] = useState('');
     const [eventForm, setEventForm] = useState({ venueEventName: '', venueEventDate: '', venueEventTime: '', venueEventDescription: '', numberOfParticipants: 1, participantName: '', participantEmail: '', participantPhone: '', notes: '' });
     const [showHistoryPanel, setShowHistoryPanel] = useState(false);
+    // Confirmation modal states
+    const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
+    const [showCloseConfirm, setShowCloseConfirm] = useState(false);
 
     useEffect(() => {
         const loadData = async () => {
@@ -186,13 +189,11 @@ const Reservations = () => {
         return true;
     };
 
-    const handleCreateReservation = async (e) => {
-        e.preventDefault();
+    const handleCreateReservation = async () => {
         setIsSubmitting(true);
         setMessage({ text: '', type: '' });
         try {
             if (reservationType === 'ticket') {
-                if (!validateTicketForm()) { setIsSubmitting(false); return; }
                 const res = await reservationAPI.createTicketReservation({
                     visitorName: ticketForm.visitorName,
                     visitorEmail: ticketForm.visitorEmail,
@@ -219,7 +220,6 @@ const Reservations = () => {
                     throw new Error(res.message || 'Failed to create reservation');
                 }
             } else {
-                if (!eventForm.venueEventName || !eventForm.venueEventDate) { setMessage({ text: 'Please provide event name and date', type: 'error' }); setIsSubmitting(false); return; }
                 const res = await reservationAPI.createEventReservation({
                     venueEventName: eventForm.venueEventName,
                     venueEventDate: eventForm.venueEventDate,
@@ -264,11 +264,48 @@ const Reservations = () => {
         setMessage({ text: '', type: '' });
     };
 
+    const hasFormData = () => {
+        if (reservationType === 'ticket') {
+            return getTotalVisitors() > 0 || ticketForm.reservationDate || ticketForm.notes;
+        } else {
+            return eventForm.venueEventName || eventForm.venueEventDate || eventForm.venueEventDescription;
+        }
+    };
+
+    const handleCloseAttempt = () => {
+        if (hasFormData()) {
+            setShowCloseConfirm(true);
+        } else {
+            closeModal();
+        }
+    };
+
     const closeModal = () => {
         setShowCreateModal(false);
         setShowConfirmation(false);
         setConfirmationData(null);
+        setShowSubmitConfirm(false);
+        setShowCloseConfirm(false);
         resetForms();
+    };
+
+    const handleSubmitAttempt = (e) => {
+        e.preventDefault();
+        setMessage({ text: '', type: '' });
+        if (reservationType === 'ticket') {
+            if (!validateTicketForm()) return;
+        } else {
+            if (!eventForm.venueEventName || !eventForm.venueEventDate) {
+                setMessage({ text: 'Please provide event name and date', type: 'error' });
+                return;
+            }
+        }
+        setShowSubmitConfirm(true);
+    };
+
+    const confirmSubmit = async () => {
+        setShowSubmitConfirm(false);
+        await handleCreateReservation();
     };
 
     const formatDate = (dateStr) => {
@@ -350,7 +387,7 @@ const Reservations = () => {
                 </div>
 
                 {/* MODAL FORM REFACTORED */}
-                <div className={`fixed inset-0 z-[100] transition-all duration-300 flex items-center justify-center p-4 sm:p-6 ${showCreateModal ? 'bg-black/40 backdrop-blur-sm pointer-events-auto opacity-100' : 'bg-transparent pointer-events-none opacity-0'}`} onClick={closeModal}>
+                <div className={`fixed inset-0 z-[100] transition-all duration-300 flex items-center justify-center p-4 sm:p-6 ${showCreateModal ? 'bg-black/40 backdrop-blur-sm pointer-events-auto opacity-100' : 'bg-transparent pointer-events-none opacity-0'}`} onClick={handleCloseAttempt}>
                     <div className={`w-full max-w-xl bg-[#F4F4F0] rounded-xl shadow-2xl flex flex-col max-h-full md:max-h-[90vh] transform transition-all duration-300 ease-out overflow-hidden ${showCreateModal ? 'scale-100 translate-y-0' : 'scale-95 translate-y-4'}`} onClick={(e) => e.stopPropagation()}>
 
                         <div className="px-6 py-6 md:px-8 md:py-8 flex items-start justify-between shrink-0">
@@ -362,7 +399,7 @@ const Reservations = () => {
                                     Our team is here to answer your questions and arrange a {reservationType === 'ticket' ? 'tour of our spaces' : 'venue for your event'}.
                                 </p>
                             </div>
-                            <button onClick={closeModal} className="p-2 -mt-2 -mr-2 text-gray-400 hover:text-gray-900 transition-colors"><Icons.Close /></button>
+                            <button onClick={handleCloseAttempt} className="p-2 -mt-2 -mr-2 text-gray-400 hover:text-gray-900 transition-colors"><Icons.Close /></button>
                         </div>
 
                         <div className="flex-1 overflow-y-auto px-6 md:px-8 pb-8 overscroll-contain">
@@ -372,7 +409,7 @@ const Reservations = () => {
                                 </div>
                             )}
 
-                            <form id="reservation-form" onSubmit={handleCreateReservation} className="space-y-6">
+                            <form id="reservation-form" onSubmit={handleSubmitAttempt} className="space-y-6">
 
                                 {/* Minimalist Tabs Switcher */}
                                 <div className="flex gap-6 border-b border-gray-200 mb-6">
@@ -523,6 +560,115 @@ const Reservations = () => {
                             <div className="flex gap-3">
                                 <button onClick={closeModal} className="flex-1 py-3 bg-white border border-gray-200 hover:bg-gray-50 text-gray-900 text-sm font-medium rounded-lg transition-colors">Close</button>
                                 <button onClick={() => { closeModal(); setShowHistoryPanel(true); }} className="flex-1 py-3 bg-gray-900 hover:bg-gray-800 text-white text-sm font-medium rounded-lg transition-colors">History</button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Submit Confirmation Modal */}
+                {showSubmitConfirm && (
+                    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[110] flex items-center justify-center p-4">
+                        <div className="bg-white rounded-xl w-full max-w-md p-6 shadow-2xl">
+                            <div className="w-14 h-14 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <Icons.Ticket />
+                            </div>
+                            <h3 className="text-xl font-semibold text-gray-900 text-center mb-2">
+                                Confirm Reservation
+                            </h3>
+                            <p className="text-gray-500 text-center text-sm mb-6">
+                                Please review your reservation details before submitting.
+                            </p>
+                            
+                            <div className="bg-gray-50 rounded-lg p-4 mb-6 space-y-2 text-sm">
+                                {reservationType === 'ticket' ? (
+                                    <>
+                                        <div className="flex justify-between">
+                                            <span className="text-gray-500">Type</span>
+                                            <span className="font-medium text-gray-900">Ticket Reservation</span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span className="text-gray-500">Date</span>
+                                            <span className="font-medium text-gray-900">{formatDate(ticketForm.reservationDate)}</span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span className="text-gray-500">Visitors</span>
+                                            <span className="font-medium text-gray-900">{getTotalVisitors()} person(s)</span>
+                                        </div>
+                                        <div className="flex justify-between border-t border-gray-200 pt-2 mt-2">
+                                            <span className="text-gray-700 font-medium">Total</span>
+                                            <span className="font-bold text-emerald-600">₱{calculateTotal()}</span>
+                                        </div>
+                                    </>
+                                ) : (
+                                    <>
+                                        <div className="flex justify-between">
+                                            <span className="text-gray-500">Type</span>
+                                            <span className="font-medium text-gray-900">Event Reservation</span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span className="text-gray-500">Event</span>
+                                            <span className="font-medium text-gray-900">{eventForm.venueEventName}</span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span className="text-gray-500">Date</span>
+                                            <span className="font-medium text-gray-900">{formatDate(eventForm.venueEventDate)}</span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span className="text-gray-500">Participants</span>
+                                            <span className="font-medium text-gray-900">{eventForm.numberOfParticipants} person(s)</span>
+                                        </div>
+                                    </>
+                                )}
+                            </div>
+
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={() => setShowSubmitConfirm(false)}
+                                    className="flex-1 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg transition-colors"
+                                >
+                                    Go Back
+                                </button>
+                                <button
+                                    onClick={confirmSubmit}
+                                    disabled={isSubmitting}
+                                    className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50"
+                                >
+                                    {isSubmitting ? 'Submitting...' : 'Confirm'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Close Confirmation Modal */}
+                {showCloseConfirm && (
+                    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[110] flex items-center justify-center p-4">
+                        <div className="bg-white rounded-xl w-full max-w-md p-6 shadow-2xl">
+                            <div className="w-14 h-14 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-7 h-7 text-amber-600">
+                                    <path fillRule="evenodd" d="M9.401 3.003c1.155-2 4.043-2 5.197 0l7.355 12.748c1.154 2-.29 4.5-2.599 4.5H4.645c-2.309 0-3.752-2.5-2.598-4.5L9.4 3.003zM12 8.25a.75.75 0 01.75.75v3.75a.75.75 0 01-1.5 0V9a.75.75 0 01.75-.75zm0 8.25a.75.75 0 100-1.5.75.75 0 000 1.5z" clipRule="evenodd" />
+                                </svg>
+                            </div>
+                            <h3 className="text-xl font-semibold text-gray-900 text-center mb-2">
+                                Discard Changes?
+                            </h3>
+                            <p className="text-gray-500 text-center text-sm mb-6">
+                                You have unsaved changes. Are you sure you want to close without submitting?
+                            </p>
+
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={() => setShowCloseConfirm(false)}
+                                    className="flex-1 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg transition-colors"
+                                >
+                                    Continue Editing
+                                </button>
+                                <button
+                                    onClick={closeModal}
+                                    className="flex-1 py-3 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors"
+                                >
+                                    Discard
+                                </button>
                             </div>
                         </div>
                     </div>
