@@ -3,20 +3,14 @@ import { Link } from 'react-router-dom';
 
 const Icons = {
     ChevronRight: () => (
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
             <polyline points="9 18 15 12 9 6"></polyline>
         </svg>
     ),
-    Facebook: () => (
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
-            <path d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V15H8v-3h2V9.5C10 7.57 11.57 6 13.5 6H16v3h-2c-.55 0-1 .45-1 1V12h3l-.5 3h-2.5v6.8c4.56-.93 8-4.96 8-9.8z" />
-        </svg>
-    ),
-    Instagram: () => (
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
-            <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
-            <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
-            <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+    ArrowUp: () => (
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
+            <line x1="12" y1="19" x2="12" y2="5"></line>
+            <polyline points="5 12 12 5 19 12"></polyline>
         </svg>
     )
 };
@@ -26,9 +20,9 @@ const Footer = () => {
 
     const quickLinks = [
         { path: '/', label: 'Home' },
-        { path: '/animals', label: 'Animals' },
+        { path: '/animals', label: 'Collections' },
         { path: '/events', label: 'Events' },
-        { path: '/about', label: 'About Us' }
+        { path: '/about', label: 'Company' }
     ];
 
     const contactInfo = [
@@ -37,93 +31,105 @@ const Footer = () => {
         { text: 'info@bulusanwildlife.com' }
     ];
 
+    const scrollToTop = () => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
     return (
-        <footer className="bg-[#08140e] text-[#f4f4f4] pt-16 md:pt-24 pb-8 md:pb-12 overflow-hidden">
-            <div className=" mx-auto px-6 md:px-10 lg:px-16">
+        <footer className="bg-[#00FF00] text-[#212631] pt-12 md:pt-16 pb-6 px-6 md:px-12 relative overflow-hidden">
 
-                <div className="grid grid-cols-1 md:grid-cols-12 gap-12 lg:gap-16 mb-16 md:mb-24">
+            <div className="flex justify-between items-start mb-24 relative z-10">
+                <h1 className="text-4xl md:text-6xl font-black uppercase tracking-tighter leading-[0.9]">
+                    Wildlife<br />
+                    Conservation
+                </h1>
+                <button
+                    onClick={scrollToTop}
+                    className="p-3 border-2 border-[#212631] rounded-lg hover:bg-[#212631] hover:text-[#00FF00] transition-colors cursor-pointer"
+                    aria-label="Scroll to top"
+                >
+                    <Icons.ArrowUp />
+                </button>
+            </div>
 
-                    <div className="md:col-span-5 lg:col-span-4">
-                        <div className="flex items-center gap-2 mb-8 md:mb-12">
-                            <img
-                                src="https://cdn-icons-png.flaticon.com/128/1864/1864472.png"
-                                alt="Logo"
-                                className="w-5 h-5 opacity-90"
-                            />
-                            <span className="text-[10px] md:text-[16px] font-bold tracking-[0.2em] uppercase">Bulusan Zoo</span>
-                        </div>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-12 lg:gap-8 mb-8 relative z-10">
 
-                        <h4 className="text-[10px] md:text-[11px] font-bold uppercase tracking-[0.15em] mb-4 text-gray-400">
-                            Email Us
-                        </h4>
-                        <div className="relative w-full max-w-sm group">
-                            <input
-                                type="email"
-                                placeholder="Email"
-                                className="w-full bg-transparent border-b border-white/20 py-3 md:py-4 pr-10 text-sm focus:outline-none focus:border-white/60 transition-colors placeholder:text-gray-600 rounded-none"
-                            />
-                            <button className="absolute right-0 top-1/2 -translate-y-1/2 text-white/40 group-hover:text-white transition-colors">
-                                <Icons.ChevronRight />
-                            </button>
-                        </div>
-                        <p className="mt-4 text-[10px] md:text-[11px] text-gray-500 leading-relaxed">
-                            Your information is never disclosed to third parties.
-                        </p>
-                    </div>
-
-                    <div className="md:col-span-7 lg:col-span-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10 md:gap-8">
-                        <div>
-                            <h4 className="text-[10px] md:text-[16px] font-bold uppercase tracking-[0.15em] mb-6 md:mb-8 text-gray-400">Quick Links</h4>
-                            <ul className="space-y-3 md:space-y-4">
-                                {quickLinks.map((link) => (
-                                    <li key={link.label}>
-                                        <Link to={link.path} className="text-base md:text-[17px] font-medium hover:opacity-60 transition-opacity">
-                                            {link.label}
-                                        </Link>
-                                    </li>
-                                ))}
-                            </ul>
-                        </div>
-
-                        <div>
-                            <h4 className="text-[10px] md:text-[16px] font-bold uppercase tracking-[0.15em] mb-6 md:mb-8 text-gray-400">Contact Support</h4>
-                            <ul className="space-y-3 md:space-y-4">
-                                {contactInfo.map((item, index) => (
-                                    <li key={index} className="text-base md:text-[17px] font-medium text-white/90">
-                                        {item.text}
-                                    </li>
-                                ))}
-                            </ul>
-                        </div>
-                    </div>
+                <div>
+                    <h4 className="text-sm md:text-base font-black uppercase tracking-wide mb-6">Bulusan Zoo</h4>
+                    <ul className="space-y-1">
+                        {contactInfo.map((item, index) => (
+                            <li key={index} className="text-sm md:text-base font-medium uppercase tracking-wide">
+                                {item.text}
+                            </li>
+                        ))}
+                    </ul>
                 </div>
 
-                <div className="relative py-8 md:py-12 pointer-events-none overflow-visible">
-                    <h2 className="text-[8.5vw] md:text-[7.5vw] lg:text-[8.5vw] text-green-400 leading-none font-serif italic whitespace-nowrap opacity-[0.98] tracking-tight flex items-start">Bulusan Zoo
-                    </h2>
+                <div>
+                    <h4 className="text-sm md:text-base font-black uppercase tracking-wide mb-6">Navigation</h4>
+                    <ul className="space-y-1">
+                        {quickLinks.map((link) => (
+                            <li key={link.label}>
+                                <Link to={link.path} className="text-sm md:text-base font-medium uppercase tracking-wide hover:opacity-60 transition-opacity">
+                                    {link.label}
+                                </Link>
+                            </li>
+                        ))}
+                    </ul>
                 </div>
 
-                <div className="mt-8 md:mt-12 pt-8 md:pt-10 border-t border-white/5 flex flex-col md:flex-row justify-between items-start md:items-end gap-8">
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-6">
-                        <div className="flex gap-5">
-                            {/* <a href="#" className="opacity-50 hover:opacity-100 transition-opacity"><Icons.Facebook /></a>
-                            <a href="#" className="opacity-50 hover:opacity-100 transition-opacity"><Icons.Instagram /></a> */}
-                        </div>
-                        <p className="text-[11px] md:text-[12px] text-gray-500 tracking-wide">
-                            © Bulusan Wildlife {currentYear}, All Rights Reserved
-                        </p>
+                <div>
+                    <h4 className="text-sm md:text-base font-black uppercase tracking-wide mb-6">Newsletter</h4>
+                    <div className="relative w-full max-w-[250px] group">
+                        <input
+                            type="email"
+                            placeholder="EMAIL ADDRESS"
+                            className="w-full bg-transparent border-b-2 border-[#212631] py-2 pr-10 text-sm font-bold placeholder-[#212631]/60 focus:outline-none focus:border-[#212631] uppercase transition-colors rounded-none"
+                        />
+                        <button className="absolute right-0 top-1/2 -translate-y-1/2 text-[#212631] hover:opacity-60 transition-opacity">
+                            <Icons.ChevronRight />
+                        </button>
                     </div>
+                    <p className="mt-3 text-[10px] md:text-xs font-medium uppercase opacity-70 tracking-wide max-w-[250px]">
+                        Your information is never disclosed to third parties.
+                    </p>
+                </div>
 
-                    <div className="flex flex-col gap-2 md:text-right w-full md:w-auto">
-                        <p className="text-[10px] md:text-[11px] text-gray-500 max-w-md md:ml-auto">
-                            No Surprises Act: You have the right to receive a Good Faith Estimate of what your services may cost
-                        </p>
-                        {/* <p className="text-[10px] text-gray-600 italic">
-                            Designed by Canvas
-                        </p> */}
-                    </div>
+                <div>
+                    <h4 className="text-sm md:text-base font-black uppercase tracking-wide mb-6">Follow</h4>
+                    <ul className="space-y-1">
+                        <li>
+                            <a href="#" className="text-sm md:text-base font-medium uppercase tracking-wide hover:opacity-60 transition-opacity">Facebook</a>
+                        </li>
+                        <li>
+                            <a href="#" className="text-sm md:text-base font-medium uppercase tracking-wide hover:opacity-60 transition-opacity">Instagram</a>
+                        </li>
+                    </ul>
+                </div>
+
+            </div>
+
+            <div className="w-full relative z-10 flex justify-center items-center overflow-hidden -mx-2 md:mb-4">
+                <h2 className="text-[20vw] md:text-[23vw] font-bold leading-[0.75] tracking-wider text-[#212631] lowercase">
+                    bulusan
+                </h2>
+            </div>
+
+            <div className="border border-[#212631] rounded-sm p-3 md:p-4 flex flex-col md:flex-row justify-between items-center gap-4 relative z-10">
+                <div className="flex items-center gap-4">
+                    <span className="text-sm md:text-base font-bold uppercase tracking-wide">
+                        ©{currentYear} Bulusan Zoo
+                    </span>
+                    <span className="hidden md:inline-block text-xs uppercase font-medium opacity-80">
+                        Bulusan Wildlife Conservation Inc.
+                    </span>
+                </div>
+
+                <div className="text-xs md:text-sm font-medium uppercase tracking-wide text-center md:text-right">
+                    No Surprises Act – Good Faith Estimate
                 </div>
             </div>
+
         </footer>
     );
 };

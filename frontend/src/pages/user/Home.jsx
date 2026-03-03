@@ -130,6 +130,64 @@ const plantHoverImages = {
     sampaguita: 'https://images.unsplash.com/photo-1591857177580-dc82b9ac4e1e?w=600&h=600&fit=crop',
 };
 
+function ArticleCard({ a, i, onMove, setHovered, onTap }) {
+    const cardRef = useRef(null);
+    const cardInView = useInView(cardRef, { once: false, amount: 0.15 });
+    return (
+        <article
+            ref={cardRef}
+            className={a.className}
+            onMouseMove={(e) => onMove(e, a.key)}
+            onMouseLeave={() => setHovered(null)}
+            onClick={() => onTap(a.key)}
+        >
+            <motion.div
+                initial={{ opacity: 0, y: 60, filter: 'blur(4px)' }}
+                animate={cardInView ? { opacity: 1, y: 0, filter: 'blur(0px)' } : { opacity: 0, y: 60, filter: 'blur(4px)' }}
+                transition={{ duration: 1.1, delay: i * 0.18, ease }}
+            >
+                <div className="text-[#212631]/40 text-xs md:text-sm font-mono font-medium tracking-widest mb-6 lg:mb-8">
+                    <span className="text-[#212631]/25 mr-2">•</span>{a.num}
+                </div>
+            </motion.div>
+
+            <div className="overflow-hidden mb-4 lg:mb-6">
+                <motion.h3
+                    initial={{ y: '110%', skewY: 3 }}
+                    animate={cardInView ? { y: '0%', skewY: 0 } : { y: '110%', skewY: 3 }}
+                    transition={{ duration: 0.9, delay: i * 0.18 + 0.12, ease }}
+                    className="text-[1.75rem] md:text-3xl lg:text-4xl font-bold text-[#212631] tracking-tight"
+                >
+                    {a.title}
+                </motion.h3>
+            </div>
+
+            <motion.p
+                initial={{ opacity: 0, y: 20 }}
+                animate={cardInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+                transition={{ duration: 0.9, delay: i * 0.18 + 0.3, ease }}
+                className="text-base md:text-lg lg:text-xl text-[#212631]/70 leading-relaxed mb-8 lg:mb-12"
+            >
+                {a.desc}
+            </motion.p>
+
+            <span className="md:hidden text-[10px] font-mono tracking-widest text-[#212631]/40 uppercase">Tap to view image</span>
+            {a.link && (
+                <motion.div
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={cardInView ? { opacity: 1, x: 0 } : { opacity: 0, x: 20 }}
+                    transition={{ duration: 0.7, delay: 0.5, ease }}
+                    className="mt-auto pt-12"
+                >
+                    <MagneticButton to={a.link} className="self-end border border-[#212631]/30 text-[#212631] text-xs md:text-sm font-bold tracking-widest uppercase px-6 py-3 md:px-8 md:py-4 hover:bg-[#212631] hover:text-[#ebebeb] transition-all duration-300 inline-block">
+                        View All
+                    </MagneticButton>
+                </motion.div>
+            )}
+        </article>
+    );
+}
+
 function ArticleGrid({ articles, images, label }) {
     const [hovered, setHovered] = useState(null);
     const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
@@ -162,55 +220,7 @@ function ArticleGrid({ articles, images, label }) {
 
                 <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-[#d1d1d1]">
                     {articles.map((a, i) => (
-                        <motion.article
-                            key={a.key}
-                            initial={{ opacity: 0, y: 80, filter: 'blur(4px)' }}
-                            whileInView={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-                            viewport={{ once: false, amount: 0.15 }}
-                            transition={{ duration: 1.1, delay: i * 0.18, ease }}
-                            className={a.className}
-                            onMouseMove={(e) => onMove(e, a.key)}
-                            onMouseLeave={() => setHovered(null)}
-                            onClick={() => onTap(a.key)}
-                        >
-                            <div className="text-[#212631]/40 text-xs md:text-sm font-mono font-medium tracking-widest mb-6 lg:mb-8">
-                                <span className="text-[#212631]/25 mr-2">•</span>{a.num}
-                            </div>
-                            <div className="overflow-hidden mb-4 lg:mb-6">
-                                <motion.h3
-                                    initial={{ y: '110%', skewY: 3 }}
-                                    whileInView={{ y: '0%', skewY: 0 }}
-                                    viewport={{ once: false, amount: 0.3 }}
-                                    transition={{ duration: 0.9, delay: i * 0.18 + 0.15, ease }}
-                                    className="text-[1.75rem] md:text-3xl lg:text-4xl font-bold text-[#212631] tracking-tight"
-                                >
-                                    {a.title}
-                                </motion.h3>
-                            </div>
-                            <motion.p
-                                initial={{ opacity: 0, y: 20 }}
-                                whileInView={{ opacity: 1, y: 0 }}
-                                viewport={{ once: false, amount: 0.2 }}
-                                transition={{ duration: 0.9, delay: i * 0.18 + 0.3, ease }}
-                                className="text-base md:text-lg lg:text-xl text-[#212631]/70 leading-relaxed mb-8 lg:mb-12"
-                            >
-                                {a.desc}
-                            </motion.p>
-                            <span className="md:hidden text-[10px] font-mono tracking-widest text-[#212631]/40 uppercase">Tap to view image</span>
-                            {a.link && (
-                                <motion.div
-                                    initial={{ opacity: 0, x: 20 }}
-                                    whileInView={{ opacity: 1, x: 0 }}
-                                    viewport={{ once: false, amount: 0.5 }}
-                                    transition={{ duration: 0.7, delay: 0.5, ease }}
-                                    className="mt-auto pt-12"
-                                >
-                                    <MagneticButton to={a.link} className="self-end border border-[#212631]/30 text-[#212631] text-xs md:text-sm font-bold tracking-widest uppercase px-6 py-3 md:px-8 md:py-4 hover:bg-[#212631] hover:text-[#ebebeb] transition-all duration-300 inline-block">
-                                        View All
-                                    </MagneticButton>
-                                </motion.div>
-                            )}
-                        </motion.article>
+                        <ArticleCard key={a.key} a={a} i={i} onMove={onMove} setHovered={setHovered} onTap={onTap} />
                     ))}
                 </div>
             </div>
@@ -367,7 +377,7 @@ function FaqSection() {
     const smoothLabelX = useSpring(labelX, springCfg);
 
     return (
-        <section ref={sectionRef} id="faq-section" className="py-16 sm:py-20 md:py-24 bg-[#ebebeb] w-full overflow-hidden">
+        <section ref={sectionRef} id="faq-section" className="py-16 sm:py-20 md:py-24 bg-[#ebebeb] w-full">
             <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-[1500px]">
                 <motion.div style={{ x: smoothLabelX }} className="flex items-center gap-4 mb-6 md:mb-8">
                     <motion.div
@@ -402,10 +412,10 @@ function FaqSection() {
                     {faqData.map((item, index) => (
                         <motion.div
                             key={index}
-                            initial={{ opacity: 0, y: 40, clipPath: 'inset(0 0 100% 0)' }}
-                            whileInView={{ opacity: 1, y: 0, clipPath: 'inset(0 0 0% 0)' }}
+                            initial={{ opacity: 0, y: 32 }}
+                            whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: false, amount: 0.1 }}
-                            transition={{ duration: 0.65, delay: index * 0.07, ease }}
+                            transition={{ duration: 0.6, delay: index * 0.06, ease }}
                             className="border-t border-gray-200"
                         >
                             <button
@@ -425,15 +435,18 @@ function FaqSection() {
                                     </svg>
                                 </div>
                             </button>
-                            <div className={`overflow-hidden transition-all duration-500 ease-in-out ${activeIndex === index ? 'max-h-[500px] sm:max-h-96 opacity-100 pb-6 sm:pb-8' : 'max-h-0 opacity-0'}`}>
-                                <motion.p
-                                    initial={{ y: 10, opacity: 0 }}
-                                    animate={activeIndex === index ? { y: 0, opacity: 1 } : { y: 10, opacity: 0 }}
-                                    transition={{ duration: 0.4, ease }}
-                                    className="text-gray-500 text-sm sm:text-base md:text-xl lg:text-2xl leading-relaxed max-w-4xl"
-                                >
-                                    {item.answer}
-                                </motion.p>
+                            <div
+                                style={{
+                                    display: 'grid',
+                                    gridTemplateRows: activeIndex === index ? '1fr' : '0fr',
+                                    transition: 'grid-template-rows 0.45s cubic-bezier(0.16,1,0.3,1)',
+                                }}
+                            >
+                                <div style={{ overflow: 'hidden' }}>
+                                    <p className={`text-gray-500 text-sm sm:text-base md:text-xl lg:text-2xl leading-relaxed max-w-4xl pb-6 sm:pb-8 transition-opacity duration-300 ${activeIndex === index ? 'opacity-100' : 'opacity-0'}`}>
+                                        {item.answer}
+                                    </p>
+                                </div>
                             </div>
                         </motion.div>
                     ))}
