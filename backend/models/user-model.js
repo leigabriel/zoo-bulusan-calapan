@@ -114,7 +114,40 @@ class User {
 
     static async verifyEmail(id) {
         const [result] = await db.query(
-            'UPDATE users SET email_verified = TRUE, updated_at = NOW() WHERE id = ?',
+            `UPDATE users SET email_verified = TRUE, 
+             email_verification_token = NULL, 
+             email_verification_token_expiry = NULL, 
+             updated_at = NOW() WHERE id = ?`,
+            [id]
+        );
+        return result.affectedRows > 0;
+    }
+
+    static async setVerificationToken(id, token, expiresAt) {
+        const [result] = await db.query(
+            `UPDATE users SET email_verification_token = ?, 
+             email_verification_token_expiry = ?, 
+             updated_at = NOW() WHERE id = ?`,
+            [token, expiresAt, id]
+        );
+        return result.affectedRows > 0;
+    }
+
+    static async findByVerificationToken(token) {
+        const [rows] = await db.query(
+            `SELECT id, email, first_name, email_verified, 
+             email_verification_token_expiry FROM users 
+             WHERE email_verification_token = ?`,
+            [token]
+        );
+        return rows[0];
+    }
+
+    static async clearVerificationToken(id) {
+        const [result] = await db.query(
+            `UPDATE users SET email_verification_token = NULL, 
+             email_verification_token_expiry = NULL, 
+             updated_at = NOW() WHERE id = ?`,
             [id]
         );
         return result.affectedRows > 0;

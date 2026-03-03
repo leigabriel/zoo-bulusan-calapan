@@ -267,6 +267,65 @@ const PolicyModal = ({ isOpen, onClose, title, content }) => {
     );
 };
 
+const EmailIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-16 h-16">
+        <rect x="2" y="4" width="20" height="16" rx="2" />
+        <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+    </svg>
+);
+
+const EmailVerificationModal = ({ isOpen, onClose, email, onNavigateToLogin }) => {
+    if (!isOpen) return null;
+
+    const handleBackdropClick = (e) => {
+        if (e.target === e.currentTarget) {
+            onClose();
+        }
+    };
+
+    return (
+        <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+            onClick={handleBackdropClick}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="verification-modal-title"
+        >
+            <div className="bg-white rounded-xl shadow-2xl w-full max-w-md flex flex-col">
+                <div className="p-6 sm:p-8 text-center">
+                    <div className="mx-auto w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mb-6">
+                        <span className="text-emerald-600"><EmailIcon /></span>
+                    </div>
+                    <h2 id="verification-modal-title" className="text-2xl font-bold text-gray-900 mb-3">
+                        Verify Your Email
+                    </h2>
+                    <p className="text-gray-600 mb-4">
+                        We've sent a verification link to:
+                    </p>
+                    <p className="text-emerald-600 font-semibold mb-6 break-all">
+                        {email}
+                    </p>
+                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
+                        <p className="text-amber-800 text-sm">
+                            Please check your inbox and click the verification link to activate your account. 
+                            The link will expire in <strong>1 hour</strong>.
+                        </p>
+                    </div>
+                    <p className="text-gray-500 text-sm mb-6">
+                        Didn't receive the email? Check your spam folder or request a new verification link from the login page.
+                    </p>
+                    <button
+                        onClick={onNavigateToLogin}
+                        className="w-full bg-emerald-600 text-white py-3 rounded-lg font-semibold hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 min-h-[44px] transition-colors"
+                    >
+                        Go to Login
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
 const RegisterPage = () => {
     const [formData, setFormData] = useState({
         firstName: '',
@@ -285,6 +344,8 @@ const RegisterPage = () => {
     const [touched, setTouched] = useState({});
     const [showPrivacyModal, setShowPrivacyModal] = useState(false);
     const [showTermsModal, setShowTermsModal] = useState(false);
+    const [showVerificationModal, setShowVerificationModal] = useState(false);
+    const [registeredEmail, setRegisteredEmail] = useState('');
     const navigate = useNavigate();
     const location = useLocation();
     const [searchParams] = useSearchParams();
@@ -382,10 +443,23 @@ const RegisterPage = () => {
             });
 
             if (response.success) {
-                setSuccessMessage('Registration successful! Redirecting to login...');
-                setTimeout(() => {
-                    navigate('/login', { state: { message: 'Registration successful! Please log in to continue.' } });
-                }, 1500);
+                if (response.requiresVerification) {
+                    setRegisteredEmail(formData.email.trim().toLowerCase());
+                    setShowVerificationModal(true);
+                    setFormData({
+                        firstName: '',
+                        lastName: '',
+                        username: '',
+                        email: '',
+                        password: '',
+                        confirmPassword: ''
+                    });
+                } else {
+                    setSuccessMessage('Registration successful! Redirecting to login...');
+                    setTimeout(() => {
+                        navigate('/login', { state: { message: 'Registration successful! Please log in to continue.' } });
+                    }, 1500);
+                }
             } else {
                 setErrors([response.message || 'Registration failed']);
             }
@@ -410,6 +484,16 @@ const RegisterPage = () => {
                 onClose={() => setShowTermsModal(false)}
                 title="Terms of Service"
                 content={TERMS_OF_SERVICE_CONTENT}
+            />
+
+            <EmailVerificationModal
+                isOpen={showVerificationModal}
+                onClose={() => setShowVerificationModal(false)}
+                email={registeredEmail}
+                onNavigateToLogin={() => {
+                    setShowVerificationModal(false);
+                    navigate('/login', { state: { message: 'Please check your email to verify your account before logging in.' } });
+                }}
             />
 
             <div className="relative hidden md:flex md:w-1/2 flex-col justify-between p-12 lg:p-16 overflow-hidden bg-emerald-900 min-h-screen">

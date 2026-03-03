@@ -208,6 +208,16 @@ export const authAPI = {
             body: JSON.stringify(appealData)
         });
         return handleResponse(response);
+    },
+
+    // Resend email verification (public, no auth required)
+    resendVerification: async (data) => {
+        const response = await fetch(`${API_BASE_URL}/auth/resend-verification`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        return handleResponse(response);
     }
 };
 

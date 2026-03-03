@@ -10,7 +10,9 @@ const {
     logout,
     uploadProfileImage,
     deleteProfileImage,
-    submitPublicAppeal
+    submitPublicAppeal,
+    verifyEmail,
+    resendVerification
 } = require('../controllers/auth-controller');
 const { protect } = require('../middleware/auth');
 const { handleProfileImageUpload } = require('../middleware/upload-profile-image');
@@ -19,6 +21,8 @@ const { handleProfileImageUpload } = require('../middleware/upload-profile-image
 router.post('/register', register);
 router.post('/login', login);
 router.post('/appeal', submitPublicAppeal);
+router.get('/verify-email', verifyEmail);
+router.post('/resend-verification', resendVerification);
 
 // Protected routes (auth required)
 router.get('/me', protect, getMe);

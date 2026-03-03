@@ -255,6 +255,8 @@ const LoginPage = () => {
     const [appealMessage, setAppealMessage] = useState('');
     const [appealLoading, setAppealLoading] = useState(false);
     const [appealSent, setAppealSent] = useState(false);
+    const [verificationEmail, setVerificationEmail] = useState('');
+    const [resendingVerification, setResendingVerification] = useState(false);
     const { login } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
@@ -265,6 +267,13 @@ const LoginPage = () => {
             setMessage({ text: location.state.message, type: 'success' });
         }
 
+        // Check for verified parameter from email verification redirect
+        const verifiedParam = searchParams.get('verified');
+        if (verifiedParam === 'true') {
+            setMessage({ text: 'Email verified successfully! You can now log in.', type: 'success' });
+            window.history.replaceState(null, '', '/login');
+        }
+
         const errorParam = searchParams.get('error');
         if (errorParam) {
             const errorMessage = getErrorMessage(errorParam);
@@ -273,6 +282,25 @@ const LoginPage = () => {
             window.history.replaceState(null, '', '/login');
         }
     }, [location, searchParams]);
+
+    const handleResendVerification = async () => {
+        if (!verificationEmail) return;
+        
+        setResendingVerification(true);
+        try {
+            const response = await authAPI.resendVerification({ email: verificationEmail });
+            if (response.success) {
+                setMessage({ text: 'Verification email sent! Please check your inbox.', type: 'success' });
+                setVerificationEmail('');
+            } else {
+                setMessage({ text: response.message || 'Failed to resend verification email', type: 'error' });
+            }
+        } catch (err) {
+            setMessage({ text: err.message || 'Failed to resend verification email', type: 'error' });
+        } finally {
+            setResendingVerification(false);
+        }
+    };
 
     const handleGoogleSignIn = () => {
         setGoogleLoading(true);
@@ -314,6 +342,12 @@ const LoginPage = () => {
                     email: response.email
                 });
                 setShowSuspendedModal(true);
+            } else if (response.requiresVerification) {
+                setVerificationEmail(response.email || identifier);
+                setMessage({ 
+                    text: response.message || 'Please verify your email before logging in.', 
+                    type: 'warning' 
+                });
             } else {
                 setMessage({ text: response.message || 'Login failed', type: 'error' });
             }
@@ -326,6 +360,12 @@ const LoginPage = () => {
                     email: err.email
                 });
                 setShowSuspendedModal(true);
+            } else if (err.requiresVerification) {
+                setVerificationEmail(err.email || identifier);
+                setMessage({ 
+                    text: err.message || 'Please verify your email before logging in.', 
+                    type: 'warning' 
+                });
             } else {
                 setMessage({ text: err.message || 'An error occurred during login', type: 'error' });
             }
@@ -524,14 +564,29 @@ const LoginPage = () => {
                     </p>
 
                     {message.text && (
-                        <div className={`p-4 mb-6 rounded-lg border flex items-center gap-3 ${message.type === 'success'
-                            ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
-                            : 'bg-red-50 text-red-800 border-red-200'
+                        <div className={`p-4 mb-6 rounded-lg border flex flex-col gap-3 ${
+                            message.type === 'success'
+                                ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                                : message.type === 'warning'
+                                    ? 'bg-amber-50 text-amber-800 border-amber-200'
+                                    : 'bg-red-50 text-red-800 border-red-200'
                             }`}>
-                            <span className="flex-shrink-0">
-                                {message.type === 'success' ? <SuccessIcon /> : <ErrorIcon />}
-                            </span>
-                            <span className="text-sm font-medium break-words">{message.text}</span>
+                            <div className="flex items-center gap-3">
+                                <span className="flex-shrink-0">
+                                    {message.type === 'success' ? <SuccessIcon /> : <ErrorIcon />}
+                                </span>
+                                <span className="text-sm font-medium break-words">{message.text}</span>
+                            </div>
+                            {verificationEmail && message.type === 'warning' && (
+                                <button
+                                    type="button"
+                                    onClick={handleResendVerification}
+                                    disabled={resendingVerification}
+                                    className="w-full mt-2 bg-amber-600 text-white py-2.5 rounded-lg font-medium hover:bg-amber-700 disabled:bg-amber-300 disabled:cursor-not-allowed transition-colors text-sm"
+                                >
+                                    {resendingVerification ? 'Sending...' : 'Resend Verification Email'}
+                                </button>
+                            )}
                         </div>
                     )}
 
