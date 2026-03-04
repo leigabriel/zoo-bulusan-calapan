@@ -544,7 +544,7 @@ const Home = () => {
 
                 <section className="bg-[#ebebeb] py-12 md:py-16 overflow-hidden">
                     <div className="max-w-[1500px] mx-auto px-6 md:px-16 grid grid-cols-3 gap-4 md:gap-12">
-                        {[{ value: 120, suffix: '+', label: 'Species' }, { value: 15, suffix: 'k+', label: 'Visitors / Year' }, { value: 8, suffix: '', label: 'Hectares' }].map((stat, i) => (
+                        {[{ value: 10, suffix: '+', label: 'Species' }, { value: 15, suffix: '+', label: 'Plants' }, { value: 100, suffix: '+', label: 'Visitors / Year' }].map((stat, i) => (
                             <motion.div key={i} initial={{ opacity: 0, y: 36 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: false, amount: 0.2 }} transition={{ duration: 0.85, delay: i * 0.13, ease }} className="flex flex-col items-start">
                                 <span className="text-3xl sm:text-5xl md:text-7xl font-bold text-[#212631] tabular-nums leading-none"><CounterNumber value={stat.value} suffix={stat.suffix} /></span>
                                 <span className="text-[#212631]/50 text-[10px] sm:text-xs md:text-sm uppercase tracking-widest mt-1 md:mt-3">{stat.label}</span>
