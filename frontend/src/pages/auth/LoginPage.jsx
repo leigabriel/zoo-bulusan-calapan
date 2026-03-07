@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-do
 import { useAuth } from '../../context/AuthContext';
 import { authAPI, messageAPI } from '../../services/api-client';
 import { sanitizeInput } from '../../utils/sanitize';
+import AuthSuccessModal from '../../components/common/AuthSuccessModal';
 
 const EyeIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
@@ -257,6 +258,9 @@ const LoginPage = () => {
     const [appealSent, setAppealSent] = useState(false);
     const [verificationEmail, setVerificationEmail] = useState('');
     const [resendingVerification, setResendingVerification] = useState(false);
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
+    const [successUserName, setSuccessUserName] = useState('');
+    const [pendingRedirect, setPendingRedirect] = useState(null);
     const { login } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
@@ -326,14 +330,22 @@ const LoginPage = () => {
 
             if (response.success) {
                 login(response.user, response.token);
+                
+                // Set user name for success modal
+                const userName = response.user.firstName || response.user.username || 'User';
+                setSuccessUserName(userName);
 
+                // Determine redirect path
+                let redirectPath = '/';
                 if (response.user.role === 'admin') {
-                    navigate('/admin/dashboard');
+                    redirectPath = '/admin/dashboard';
                 } else if (response.user.role === 'staff') {
-                    navigate('/staff/dashboard');
-                } else {
-                    navigate('/');
+                    redirectPath = '/staff/dashboard';
                 }
+                
+                // Store pending redirect and show success modal
+                setPendingRedirect(redirectPath);
+                setShowSuccessModal(true);
             } else if (response.suspended) {
                 setSuspensionInfo({
                     reason: response.suspensionReason,
@@ -404,6 +416,19 @@ const LoginPage = () => {
 
     return (
         <div className="flex min-h-screen w-full bg-white">
+            <AuthSuccessModal 
+                isOpen={showSuccessModal}
+                onClose={() => {
+                    setShowSuccessModal(false);
+                    if (pendingRedirect) {
+                        navigate(pendingRedirect);
+                    }
+                }}
+                type="login"
+                userName={successUserName}
+                autoCloseDelay={2500}
+            />
+
             <PolicyModal
                 isOpen={showPrivacyModal}
                 onClose={() => setShowPrivacyModal(false)}

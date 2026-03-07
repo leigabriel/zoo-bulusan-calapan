@@ -13,7 +13,8 @@ import {
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 import AIFloatingButton from '../../components/common/AIFloatingButton';
-import HeroSection3D from './HeroSection3D';
+import HeroSection3D from './home-section/HeroSection3D';
+import Bulusan from './home-section/Bulusan';
 import '../../App.css';
 
 const ease = [0.16, 1, 0.3, 1];
@@ -454,7 +455,7 @@ const Home = () => {
     const eventsScale = useSpring(useTransform(eventsP, [0, 0.6], [0.86, 1]), { stiffness: 55, damping: 20 });
 
     return (
-        <ReactLenis root options={{ lerp: 0.075, duration: 1.5, smoothWheel: true }}>
+        <ReactLenis root options={{ lerp: 0.03, duration: 2, smoothWheel: true, smoothTouch: true, wheelMultiplier: 0.9, touchMultiplier: 2, infinite: false }}>
             <div className="relative min-h-screen bg-[#ebebeb]">
                 <Header />
                 <AIFloatingButton />
@@ -490,6 +491,8 @@ const Home = () => {
                             ))}
                         </div>
                     </section>
+
+                    <Bulusan />
 
                     <section className="bg-[#ebebeb] flex items-center px-6 py-12 md:px-16 md:py-24 w-full overflow-hidden">
                         <div className="max-w-[1450px] mx-auto w-full flex flex-col">

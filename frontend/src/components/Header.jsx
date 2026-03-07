@@ -89,7 +89,7 @@ const MenuItem = ({ iconUrl, label, badge, danger, to, onClick, onClose, isLast 
 };
 
 const Header = () => {
-    const { user, logout } = useAuth();
+    const { user, logout, loading: authLoading } = useAuth();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [showLogoutModal, setShowLogoutModal] = useState(false);
     const [showSidePanel, setShowSidePanel] = useState(false);
@@ -115,6 +115,7 @@ const Header = () => {
     const [emailLoading, setEmailLoading] = useState(false);
     const [emailSent, setEmailSent] = useState(false);
     const [emailError, setEmailError] = useState('');
+    const [isLoggingOut, setIsLoggingOut] = useState(false);
 
     const navigate = useNavigate();
     const location = useLocation();
@@ -259,7 +260,21 @@ const Header = () => {
         }
     };
 
-    const handleLogout = () => { logout(); setShowLogoutModal(false); navigate('/'); };
+    const handleLogout = async () => { 
+        setIsLoggingOut(true);
+        try {
+            // Small delay for visual feedback
+            await new Promise(resolve => setTimeout(resolve, 500));
+            logout(); 
+            setShowLogoutModal(false); 
+            // Redirect to login page for proper flow
+            navigate('/login'); 
+        } catch (error) {
+            console.error('Logout error:', error);
+        } finally {
+            setIsLoggingOut(false);
+        }
+    };
     const closeSidePanel = () => setShowSidePanel(false);
     const openNotifications = () => { setShowNotificationPanel(true); fetchNotifications(); };
     const openEmailModal = () => { closeSidePanel(); setShowEmailModal(true); setEmailSent(false); setEmailError(''); };
@@ -319,6 +334,7 @@ const Header = () => {
                     <div className="flex items-center h-full">
                         <div className="flex items-center flex-shrink-0 w-[180px]">
                             <Link to="/" className="flex items-center" onClick={() => setIsMenuOpen(false)}>
+                                <img src="https://cdn-icons-png.flaticon.com/128/12801/12801273.png" alt="Logo" className="w-6 h-6 object-contain mr-2" />
                                 <span className="text-[18px] font-bold text-[#212631] tracking-tight">
                                     BULUSAN ZOO
                                 </span>
@@ -331,6 +347,7 @@ const Header = () => {
                                     <Link
                                         key={link.path}
                                         to={link.path}
+                                        onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
                                         className={`px-4 py-1.5 rounded-full text-[13px] font-medium transition-all duration-150 whitespace-nowrap ${location.pathname === link.path
                                             ? 'bg-[#ebebeb] text-gray-900 shadow-sm'
                                             : 'text-[#ebebeb]/80 hover:text-gray-200'
@@ -351,7 +368,11 @@ const Header = () => {
                             {user && (
                                 <IconBtn src={ICONS.notification} alt="Notifications" onClick={openNotifications} badge={unreadCount} />
                             )}
-                            {user ? (
+                            {authLoading ? (
+                                <div className="flex items-center gap-2 px-4 py-1.5">
+                                    <div className="w-4 h-4 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin" />
+                                </div>
+                            ) : user ? (
                                 <button
                                     onClick={() => setShowSidePanel(true)}
                                     className="flex items-center gap-2 pl-1 pr-3 py-1 rounded-full border border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50 transition-all"
@@ -412,7 +433,7 @@ const Header = () => {
                                 <Link
                                     key={link.path}
                                     to={link.path}
-                                    onClick={() => setIsMenuOpen(false)}
+                                    onClick={() => { setIsMenuOpen(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
                                     className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${active ? 'bg-gray-900' : 'hover:bg-gray-50'}`}
                                 >
                                     <img
@@ -427,7 +448,11 @@ const Header = () => {
                                 </Link>
                             );
                         })}
-                        {!user ? (
+                        {authLoading ? (
+                            <div className="flex items-center justify-center py-3 mt-2">
+                                <div className="w-5 h-5 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin" />
+                            </div>
+                        ) : !user ? (
                             <Link to="/login" onClick={() => setIsMenuOpen(false)} className="mt-2">
                                 <button className="w-full py-3 rounded-xl bg-gray-900 text-white text-[13px] font-medium">
                                     Login / Sign Up

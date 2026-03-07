@@ -4,10 +4,15 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Header from '../../Header';
 import Footer from '../../Footer';
 import { userAPI } from '../../../services/api-client';
-import * as tf from '@tensorflow/tfjs';
-import '@tensorflow/tfjs-backend-webgl';
-
-let cachedModel = null;
+import { 
+    loadLocalModel, 
+    isModelReady, 
+    detectAnimal, 
+    getCurrentSource,
+    getSourceDisplayName 
+} from '../../../services/ai-detection-service';
+import { fetchAnimalDescription } from '../../../services/animal-description-service';
+import { ANIMAL_DATABASE, AI_SOURCE } from '../../../config/ai-service-config';
 
 const RobotIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="10" rx="2" /><circle cx="12" cy="5" r="2" /><path d="M12 7v4" /><line x1="8" y1="16" x2="8" y2="16" /><line x1="16" y1="16" x2="16" y2="16" /></svg>
@@ -31,24 +36,8 @@ const SwitchCameraIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 19H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h5"/><path d="M13 5h7a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-5"/><circle cx="12" cy="12" r="3"/><path d="m18 22-3-3 3-3"/><path d="m6 2 3 3-3 3"/></svg>
 );
 
-const ANIMAL_INFO = {
-    'Bear': { description: "Bears have an excellent sense of smell, better than dogs.", icon: "bear", bulusan: false },
-    'Bird': { description: "Birds are the only animals with feathers.", icon: "bird", bulusan: true },
-    'Cat': { description: "Cats use their whiskers to navigate in the dark.", icon: "cat", bulusan: false },
-    'Cow': { description: "Cows have best friends and get stressed when separated.", icon: "cow", bulusan: false },
-    'Deer': { description: "Deer antlers grow faster than any other living tissue.", icon: "deer", bulusan: true },
-    'Dog': { description: "A dog's nose print is unique, much like a human fingerprint.", icon: "dog", bulusan: false },
-    'Dolphin': { description: "Dolphins give themselves names.", icon: "dolphin", bulusan: false },
-    'Elephant': { description: "Elephants are the only mammals that can't jump.", icon: "elephant", bulusan: true },
-    'Giraffe': { description: "A giraffe's tongue is purple to prevent sunburn!", icon: "giraffe", bulusan: false },
-    'Horse': { description: "Horses can sleep standing up.", icon: "horse", bulusan: true },
-    'Kangaroo': { description: "Kangaroos cannot walk backwards.", icon: "kangaroo", bulusan: false },
-    'Lion': { description: "A lion's roar can be heard from 5 miles away.", icon: "lion", bulusan: true },
-    'Panda': { description: "Pandas spend up to 14 hours a day eating.", icon: "panda", bulusan: false },
-    'Tiger': { description: "No two tigers have the same stripes.", icon: "tiger", bulusan: true },
-    'Zebra': { description: "Zebras stripes act as a bug repellent.", icon: "zebra", bulusan: false }
-};
-const ANIMAL_CLASSES = Object.keys(ANIMAL_INFO);
+// Use unified animal database from config
+const ANIMAL_INFO = ANIMAL_DATABASE;
 
 // Detect mobile device
 const isMobileDevice = () => {
@@ -58,10 +47,9 @@ const isMobileDevice = () => {
 
 const AnimalClassifier = ({ embedded = false, expanded: controlledExpanded = false, onExpandChange = () => {} }) => {
     const [messages, setMessages] = useState([
-        { id: 1, role: 'bot', type: 'text', content: "Hello! Upload a photo or use Camera to identify animals!" }
+        { id: 1, role: 'bot', type: 'text', content: `Hello! Upload a photo or use Camera to identify animals! (Using ${getSourceDisplayName()})` }
     ]);
-    const [model, setModel] = useState(cachedModel);
-    const [isModelLoading, setIsModelLoading] = useState(!cachedModel);
+    const [isModelLoading, setIsModelLoading] = useState(!isModelReady());
     const [isProcessing, setIsProcessing] = useState(false);
 
     const [showCollectionModal, setShowCollectionModal] = useState(false);
@@ -95,21 +83,22 @@ const AnimalClassifier = ({ embedded = false, expanded: controlledExpanded = fal
         return () => window.removeEventListener('resize', handleResize);
     }, []);
 
-    // 1. Load Model
+    // 1. Load Model (only for local source)
     useEffect(() => {
-        const loadModel = async () => {
-            if (cachedModel) { setIsModelLoading(false); return; }
+        const initModel = async () => {
+            // Skip loading if using API source
+            if (AI_SOURCE === 'animaldetect') {
+                setIsModelLoading(false);
+                return;
+            }
+            
+            if (isModelReady()) { 
+                setIsModelLoading(false); 
+                return; 
+            }
+            
             try {
-                await tf.ready();
-                const loadedModel = await tf.loadLayersModel('/models/model.json');
-
-                // Warmup GPU
-                const zero = tf.zeros([1, 150, 150, 3]);
-                loadedModel.predict(zero).dispose();
-                zero.dispose();
-
-                cachedModel = loadedModel;
-                setModel(loadedModel);
+                await loadLocalModel();
                 setIsModelLoading(false);
             } catch (err) {
                 console.error(err);
@@ -117,7 +106,7 @@ const AnimalClassifier = ({ embedded = false, expanded: controlledExpanded = fal
                 setIsModelLoading(false);
             }
         };
-        loadModel();
+        initModel();
     }, []);
 
     // Auto-scroll
@@ -267,55 +256,148 @@ const AnimalClassifier = ({ embedded = false, expanded: controlledExpanded = fal
         setMessages(prev => [...prev, { id: Date.now(), role: 'bot', type: meta ? 'result' : 'text', content: text, meta }]);
     };
 
-    // 3. Predict
+    // 3. Predict using AI detection service
     const runPrediction = async () => {
-        if (!model || !imageRef.current) return;
+        if (!imageRef.current) {
+            console.warn('[Scanner] No image reference available');
+            return;
+        }
+        
+        // For local model, check if it's ready
+        if (AI_SOURCE === 'local' && !isModelReady()) {
+            addBotMessage("Please wait, AI model is still loading...");
+            return;
+        }
+
+        console.log('[Scanner] Starting prediction...');
 
         try {
-            const tensor = tf.tidy(() => {
-                const img = tf.browser.fromPixels(imageRef.current);
-                const resized = tf.image.resizeBilinear(img, [150, 150]);
-                return resized.expandDims(0).div(255.0);
+            // Use the unified detection service
+            const result = await detectAnimal(imageRef.current);
+            
+            console.log('[Scanner] Detection result received:', result);
+            
+            // Handle unsuccessful detection with specific error messages
+            if (!result.success) {
+                const errorMessage = result.error || "Sorry, I couldn't identify the animal in this image.";
+                console.warn('[Scanner] Detection unsuccessful:', result.errorType, result.error);
+                
+                // Show specific error message based on type
+                if (result.errorType === 'EMPTY_RESULT' || result.errorType === 'NO_ANIMAL_DETECTED') {
+                    addBotMessage("I couldn't detect any animal in this image. Please try a clearer photo with the animal more visible.");
+                } else if (result.fallbackAttempted) {
+                    addBotMessage(`${errorMessage} (Both AI services were tried)`);
+                } else {
+                    addBotMessage(errorMessage);
+                }
+                return;
+            }
+
+            const { animal: animalName, confidence, category, isBulusanAnimal, fallback, source, warning } = result;
+            const confidencePct = parseFloat(confidence);
+            
+            // Log detection source and result
+            console.log('[Scanner] Detection successful:', { 
+                animalName, 
+                confidence: confidencePct + '%', 
+                source, 
+                fallback,
+                warning 
             });
+            
+            // Handle low confidence warning
+            if (warning) {
+                console.warn('[Scanner] Detection warning:', warning);
+            }
+            
+            // Check if detection result is valid (not Unknown with 0% confidence)
+            if (animalName === 'Unknown' || confidencePct === 0) {
+                addBotMessage("I couldn't confidently identify the animal in this image. The detection result was inconclusive. Please try a different image.");
+                return;
+            }
+            
+            // Fetch description from Wikipedia API (this is now the PRIMARY source)
+            let animalDescription = "";
+            let animalCategory = category || "Animal";
+            let wikipediaData = null;
+            
+            try {
+                console.log('[Scanner] Fetching Wikipedia description for:', animalName);
+                const descriptionResult = await fetchAnimalDescription(animalName);
+                
+                if (descriptionResult.success && descriptionResult.description) {
+                    animalDescription = descriptionResult.description;
+                    animalCategory = descriptionResult.category || category || "Animal";
+                    wikipediaData = {
+                        title: descriptionResult.title,
+                        thumbnail: descriptionResult.thumbnail,
+                        pageUrl: descriptionResult.pageUrl,
+                        scientificName: descriptionResult.scientificName
+                    };
+                    console.log('[Scanner] Wikipedia description fetched successfully');
+                } else {
+                    // Generate a simple description without relying on internal database
+                    animalDescription = `A ${animalName.toLowerCase()} has been detected with ${confidencePct}% confidence.`;
+                    if (descriptionResult.error) {
+                        console.warn('[Scanner] Wikipedia fetch had error:', descriptionResult.error);
+                    }
+                }
+            } catch (descError) {
+                console.warn('[Scanner] Description fetch failed:', descError);
+                // Generate a simple description without relying on internal database  
+                animalDescription = `A ${animalName.toLowerCase()} has been detected. Description unavailable at this time.`;
+            }
+            
+            // Check if animal is in Bulusan Zoo (this is the ONLY thing we use internal DB for)
+            const bulusanInfo = ANIMAL_INFO[animalName];
+            const isInBulusan = bulusanInfo?.bulusan || isBulusanAnimal || false;
 
-            const predictions = await model.predict(tensor).data();
-            const maxConfidence = Math.max(...predictions);
-            const predictedIndex = predictions.indexOf(maxConfidence);
-            const animalName = ANIMAL_CLASSES[predictedIndex] || 'Unknown';
-            const confidencePct = (maxConfidence * 100).toFixed(1);
-
-            tf.dispose(tensor);
-
-            const info = ANIMAL_INFO[animalName] || { description: "Unknown species", icon: "question", bulusan: false };
-
+            // Save to prediction database
             saveToDatabase(animalName, confidencePct);
 
-            addBotMessage(info.description, {
+            // Build result message
+            let resultMessage = animalDescription;
+            if (fallback) {
+                resultMessage += '';
+            }
+            
+            // Add source indicator for debugging (can be removed in production)
+            if (source) {
+                console.log('[Scanner] Result source:', source);
+            }
+            
+            addBotMessage(resultMessage, {
                 animal: animalName,
                 confidence: confidencePct,
-                icon: info.icon,
-                isBulusanAnimal: info.bulusan
+                icon: animalName.toLowerCase(),
+                isBulusanAnimal: isInBulusan,
+                category: animalCategory,
+                wikipediaData
             });
 
-            // Show collection modal for ALL recognized animals with confidence > 50%
-            // Priority badge shown for Bulusan zoo animals
-            if (maxConfidence > 0.5 && animalName !== 'Unknown') {
-                const imageToSave = analysisImage; // Capture before clearing
+            // Show collection modal for recognized animals with confidence > 40%
+            // Lowered threshold slightly since we've improved detection
+            if (confidencePct > 40 && animalName !== 'Unknown') {
+                const imageToSave = analysisImage;
                 setCapturedAnimal({
                     name: animalName,
                     confidence: confidencePct,
-                    description: info.description,
-                    icon: info.icon,
-                    isBulusanAnimal: info.bulusan,
-                    capturedAt: new Date().toISOString()
+                    description: animalDescription,
+                    category: animalCategory,
+                    icon: animalName.toLowerCase(),
+                    isBulusanAnimal: isInBulusan,
+                    capturedAt: new Date().toISOString(),
+                    wikipediaData
                 });
                 setCapturedImage(imageToSave);
                 setShowCollectionModal(true);
             }
 
         } catch (error) {
-            console.error(error);
-            addBotMessage("Sorry, I encountered an error analyzing that image.");
+            // This should rarely happen now since detectAnimal handles errors internally
+            console.error('[Scanner] Unexpected detection error:', error);
+            const userMessage = error.message || "Sorry, I encountered an error analyzing that image. Please try again.";
+            addBotMessage(userMessage);
         } finally {
             setIsProcessing(false);
             setAnalysisImage(null);

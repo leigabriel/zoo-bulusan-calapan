@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-do
 import { useAuth } from '../../context/AuthContext';
 import { authAPI, messageAPI } from '../../services/api-client';
 import { sanitizeInput, sanitizeEmail } from '../../utils/sanitize';
+import AuthSuccessModal from '../../components/common/AuthSuccessModal';
 
 const EyeIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
@@ -346,6 +347,7 @@ const RegisterPage = () => {
     const [showTermsModal, setShowTermsModal] = useState(false);
     const [showVerificationModal, setShowVerificationModal] = useState(false);
     const [registeredEmail, setRegisteredEmail] = useState('');
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
     const navigate = useNavigate();
     const location = useLocation();
     const [searchParams] = useSearchParams();
@@ -455,10 +457,16 @@ const RegisterPage = () => {
                         confirmPassword: ''
                     });
                 } else {
-                    setSuccessMessage('Registration successful! Redirecting to login...');
-                    setTimeout(() => {
-                        navigate('/login', { state: { message: 'Registration successful! Please log in to continue.' } });
-                    }, 1500);
+                    // Show success modal for immediate registration without email verification
+                    setShowSuccessModal(true);
+                    setFormData({
+                        firstName: '',
+                        lastName: '',
+                        username: '',
+                        email: '',
+                        password: '',
+                        confirmPassword: ''
+                    });
                 }
             } else {
                 setErrors([response.message || 'Registration failed']);
@@ -472,6 +480,17 @@ const RegisterPage = () => {
 
     return (
         <div className="flex min-h-screen w-full bg-white">
+            <AuthSuccessModal 
+                isOpen={showSuccessModal}
+                onClose={() => {
+                    setShowSuccessModal(false);
+                    navigate('/login', { state: { message: 'Registration successful! Please log in to continue.' } });
+                }}
+                type="register"
+                message="Your account has been created successfully. You can now log in."
+                autoCloseDelay={2500}
+            />
+
             <PolicyModal
                 isOpen={showPrivacyModal}
                 onClose={() => setShowPrivacyModal(false)}
