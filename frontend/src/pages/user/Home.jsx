@@ -20,8 +20,6 @@ const ease = [0.16, 1, 0.3, 1];
 const easeOut = [0.0, 0.0, 0.2, 1];
 const springCfg = { stiffness: 80, damping: 25, restDelta: 0.001 };
 
-// --- Sub-components ---
-
 function SplitReveal({ children, delay = 0, className = '' }) {
     const triggerRef = useRef(null);
     const inView = useInView(triggerRef, { once: false, amount: 0.1 });
@@ -96,12 +94,10 @@ function HorizontalMarquee({ text, speed = 38, opacity = 0.07 }) {
     );
 }
 
-// --- Data ---
-
 const animalArticles = [
-    { key: 'parrot', num: '01', title: 'Parrot', desc: 'A white parrot is a predominantly white bird, commonly a cockatoo such as the Umbrella Cockatoo or the Sulphur-crested Cockatoo. It has a strong curved beak, zygodactyl feet, and a movable crest used for communication.', className: 'py-16 md:py-24 md:pr-12 lg:pr-16 flex flex-col h-full', link: null },
-    { key: 'tiger', num: '02', title: 'Tiger', desc: 'A tiger is a large, powerful wild cat known for its distinctive orange coat with black stripes. It is a top predator, primarily hunting deer, wild boar, and other large mammals.', className: 'py-16 md:py-24 md:px-12 lg:px-16 flex flex-col h-full', link: null },
-    { key: 'monkey', num: '03', title: 'Monkey', desc: 'A monkey is a primate known for its agility, intelligence, and social behavior. Most species have flexible limbs, prehensile hands or tails, and keen eyesight.', className: 'py-16 md:py-24 md:pl-12 lg:pl-16 flex flex-col h-full', link: '/animals' },
+    { key: 'parrot', num: '01', title: 'Parrot', desc: 'A white parrot is a predominantly white bird, commonly a cockatoo such as the Umbrella Cockatoo or the Sulphur-crested Cockatoo. It has a strong curved beak, zygodactyl feet, and a movable crest used for communication. White parrots are intelligent, social, and capable of vocal mimicry.', className: 'py-16 md:py-24 md:pr-12 lg:pr-16 flex flex-col h-full', link: null },
+    { key: 'tiger', num: '02', title: 'Tiger', desc: 'A tiger is a large, powerful wild cat known for its distinctive orange coat with black stripes. It is a top predator, primarily hunting deer, wild boar, and other large mammals. Tigers are solitary, territorial, and highly adaptable to various habitats such as forests, grasslands, and wetlands.', className: 'py-16 md:py-24 md:px-12 lg:px-16 flex flex-col h-full', link: null },
+    { key: 'monkey', num: '03', title: 'Monkey', desc: 'A monkey is a primate known for its agility, intelligence, and social behavior. Most species have flexible limbs, prehensile hands or tails, and keen eyesight. Monkeys live in groups and are found in diverse habitats, including forests, savannas, and mountains.', className: 'py-16 md:py-24 md:pl-12 lg:pl-16 flex flex-col h-full', link: '/animals' },
 ];
 
 const animalHoverImages = {
@@ -111,9 +107,9 @@ const animalHoverImages = {
 };
 
 const plantArticles = [
-    { key: 'sunflower', num: '01', title: 'Sunflower', desc: "A sunflower is a tall, fast-growing plant known for its large, bright yellow flower heads that track the sun's movement. Native to North America, it produces edible seeds.", className: 'py-16 md:py-24 md:pr-12 lg:pr-16 flex flex-col h-full', link: null },
-    { key: 'rose', num: '02', title: 'Rose', desc: 'A rose is a woody perennial flowering plant of the genus Rosa, celebrated for its layered petals and rich fragrance. It comes in hundreds of varieties.', className: 'py-16 md:py-24 md:px-12 lg:px-16 flex flex-col h-full', link: null },
-    { key: 'sampaguita', num: '03', title: 'Sampaguita', desc: 'Sampaguita is a small, star-shaped white flower and the national flower of the Philippines. Known for its intense, sweet fragrance, it is commonly strung into garlands.', className: 'py-16 md:py-24 md:pl-12 lg:pl-16 flex flex-col h-full', link: '/plants' },
+    { key: 'sunflower', num: '01', title: 'Sunflower', desc: "A sunflower is a tall, fast-growing plant known for its large, bright yellow flower heads that track the sun's movement. Native to North America, it produces edible seeds rich in oil and nutrients. Sunflowers are widely cultivated for food, agriculture, and ornamental purposes.", className: 'py-16 md:py-24 md:pr-12 lg:pr-16 flex flex-col h-full', link: null },
+    { key: 'rose', num: '02', title: 'Rose', desc: 'A rose is a woody perennial flowering plant of the genus Rosa, celebrated for its layered petals and rich fragrance. It comes in hundreds of varieties and colors, each carrying symbolic meaning. Roses are among the most cultivated flowers globally, prized in gardens, perfumery, and culture.', className: 'py-16 md:py-24 md:px-12 lg:px-16 flex flex-col h-full', link: null },
+    { key: 'sampaguita', num: '03', title: 'Sampaguita', desc: 'Sampaguita is a small, star-shaped white flower and the national flower of the Philippines. Known for its intense, sweet fragrance, it is commonly strung into garlands used in religious offerings, ceremonies, and as a symbol of purity and devotion. It blooms year-round in tropical climates.', className: 'py-16 md:py-24 md:pl-12 lg:pl-16 flex flex-col h-full', link: '/plants' },
 ];
 
 const plantHoverImages = {
@@ -121,17 +117,6 @@ const plantHoverImages = {
     rose: 'https://images.unsplash.com/photo-1455582916367-25f75bfc6710?w=600&h=600&fit=crop',
     sampaguita: 'https://images.unsplash.com/photo-1591857177580-dc82b9ac4e1e?w=600&h=600&fit=crop',
 };
-
-const faqData = [
-    { question: 'What are the operating hours of Bulusan Zoo?', answer: 'Bulusan Zoo is open daily from 8:00 AM to 5:00 PM. We recommend arriving early to fully experience all our wildlife exhibits.' },
-    { question: 'How can I purchase/reserve tickets for my visit?', answer: "Tickets can be purchased/reserved directly through our website or at the main entrance gate. We accept cash only at this time." },
-    { question: 'Is there a special rate for local residents?', answer: 'Yes, entrance is free for local residents of Bulusan Calapan City. Please bring a valid government-issued ID to avail of this benefit.' },
-    { question: 'Are animal feeding sessions open to the public?', answer: "We have scheduled interactive feeding sessions and wildlife shows throughout the day. Check the 'Events' section for the latest schedule." },
-    { question: 'Is the park accessible for persons with disabilities?', answer: 'Yes, Bulusan Zoo features paved pathways suitable for wheelchairs and priority access for PWDs and senior citizens.' },
-    { question: 'Does the zoo support conservation programs?', answer: 'Absolutely. A portion of every ticket sale goes directly toward our local wildlife rescue and rehabilitation initiatives.' },
-];
-
-// --- Sections ---
 
 function ArticleCard({ a, i, onMove, setHovered, onTap }) {
     const cardRef = useRef(null);
@@ -173,12 +158,19 @@ function ArticleCard({ a, i, onMove, setHovered, onTap }) {
             >
                 {a.desc}
             </motion.p>
+
+            <span className="md:hidden text-[10px] tracking-widest text-[#212631]/40 uppercase">Tap to view image</span>
             {a.link && (
-                <div className="mt-auto pt-12">
-                    <MagneticButton to={a.link} className="border border-[#212631]/30 text-[#212631] text-xs md:text-sm font-bold tracking-widest uppercase px-8 py-4 hover:bg-[#212631] hover:text-[#ebebeb] transition-all duration-300 inline-block">
+                <motion.div
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={cardInView ? { opacity: 1, x: 0 } : { opacity: 0, x: 20 }}
+                    transition={{ duration: 0.7, delay: 0.5, ease }}
+                    className="mt-auto pt-12"
+                >
+                    <MagneticButton to={a.link} className="self-end border border-[#212631]/30 text-[#212631] text-xs md:text-sm font-bold tracking-widest uppercase px-6 py-3 md:px-8 md:py-4 hover:bg-[#212631] hover:text-[#ebebeb] transition-all duration-300 inline-block">
                         View All
                     </MagneticButton>
-                </div>
+                </motion.div>
             )}
         </article>
     );
@@ -189,39 +181,74 @@ function ArticleGrid({ articles, images, label }) {
     const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
     const [popup, setPopup] = useState(null);
     const sectionRef = useRef(null);
+
     const { scrollYProgress } = useScroll({ target: sectionRef, offset: ['start end', 'end start'] });
     const lineRevealWidth = useTransform(scrollYProgress, [0.05, 0.35], ['0%', '100%']);
     const smoothLine = useSpring(lineRevealWidth, { stiffness: 60, damping: 20 });
+
     const onMove = (e, key) => { setHovered(key); setMousePos({ x: e.clientX, y: e.clientY }); };
     const onTap = (key) => { if (window.matchMedia('(hover: none)').matches) setPopup(key); };
 
     return (
         <div ref={sectionRef}>
-            <div className="max-w-[1600px] border border-[#212631]/10 mx-auto px-6 md:px-12 lg:px-16">
+            <div className="max-w-[1600px] mx-auto px-6 md:px-12 lg:px-16">
                 <div className="relative mb-0 pt-8 md:pt-12">
                     <div className="h-[1px] bg-[#d1d1d1] w-full" />
                     <motion.div className="absolute top-8 md:top-12 left-0 h-[1px] bg-[#212631]" style={{ width: smoothLine }} />
-                    <span className="inline-block mt-3 text-[10px] font-bold tracking-[0.25em] text-[#212631]/40 uppercase">{label}</span>
+                    <motion.span
+                        initial={{ opacity: 0, y: 10 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: false, amount: 0.5 }}
+                        transition={{ duration: 0.6, ease }}
+                        className="inline-block mt-3 text-[10px] font-bold tracking-[0.25em] text-[#212631]/40 uppercase"
+                    >
+                        {label}
+                    </motion.span>
                 </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-[#d1d1d1]">
-                    {articles.map((a, i) => (<ArticleCard key={a.key} a={a} i={i} onMove={onMove} setHovered={setHovered} onTap={onTap} />))}
+                    {articles.map((a, i) => (
+                        <ArticleCard key={a.key} a={a} i={i} onMove={onMove} setHovered={setHovered} onTap={onTap} />
+                    ))}
                 </div>
             </div>
+
             <AnimatePresence>
                 {hovered && (
                     <motion.div
+                        key={hovered}
                         className="hidden md:block fixed z-50 pointer-events-none"
                         style={{ left: mousePos.x + 22, top: mousePos.y - 130 }}
-                        initial={{ opacity: 0, scale: 0.8 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.8 }}
+                        initial={{ opacity: 0, scale: 0.6, rotate: -10, y: 20 }}
+                        animate={{ opacity: 1, scale: 1, rotate: 0, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.6, rotate: 10, y: -10 }}
+                        transition={{ duration: 0.4, ease }}
                     >
                         <div className="w-56 h-56 overflow-hidden shadow-2xl border border-[#d1d1d1]">
-                            <img src={images[hovered]} alt={hovered} className="w-full h-full object-cover" />
+                            <motion.img
+                                src={images[hovered]}
+                                alt={hovered}
+                                className="w-full h-full object-cover"
+                                initial={{ scale: 1.2 }}
+                                animate={{ scale: 1 }}
+                                transition={{ duration: 0.5, ease }}
+                            />
                         </div>
                     </motion.div>
                 )}
             </AnimatePresence>
+
+            {popup && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#212631]/70 backdrop-blur-sm md:hidden" onClick={() => setPopup(null)}>
+                    <div className="bg-[#ebebeb] mx-6 overflow-hidden shadow-2xl max-w-sm w-full" onClick={(e) => e.stopPropagation()}>
+                        <div className="w-full aspect-[4/3]"><img src={images[popup]} alt={popup} className="w-full h-full object-cover" /></div>
+                        <div className="p-6">
+                            <h3 className="text-2xl font-bold text-[#212631] tracking-tight capitalize mb-4">{popup}</h3>
+                            <button onClick={() => setPopup(null)} className="w-full border border-[#212631]/30 text-[#212631] text-xs font-bold tracking-widest uppercase py-3 hover:bg-[#212631] hover:text-[#ebebeb] transition-all duration-300">Close</button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
@@ -300,11 +327,33 @@ function EventsSection({ eventsRef, eventsScale }) {
                             </div>
                         </Link>
                     </motion.div>
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={inView ? { opacity: 1 } : { opacity: 0 }}
+                        transition={{ duration: 1.2, delay: 0.7 }}
+                        className="absolute bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1.5 md:bottom-10"
+                    >
+                        <span className="text-white/20 text-[9px] tracking-[0.3em] uppercase">Scroll</span>
+                        <motion.div
+                            animate={{ y: [0, 6, 0] }}
+                            transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
+                            className="w-[1px] h-6 bg-white/20"
+                        />
+                    </motion.div>
                 </div>
             </motion.div>
         </section>
     );
 }
+
+const faqData = [
+    { question: 'What are the operating hours of Bulusan Zoo?', answer: 'Bulusan Zoo is open daily from 8:00 AM to 5:00 PM. We recommend arriving early to fully experience all our wildlife exhibits and AI-powered features.' },
+    { question: 'How can I purchase/reserve tickets for my visit?', answer: "Tickets can be purchased/reserved directly through our website or at the main entrance gate. We accept cash only, there's no digital payment for now." },
+    { question: 'Is there a special rate for local residents?', answer: 'Yes, entrance is free for local residents of Bulusan Calapan City. Please bring a valid government-issued ID or proof of residency to avail of this benefit.' },
+    { question: 'Are animal feeding sessions open to the public?', answer: "We have scheduled interactive feeding sessions and wildlife shows throughout the day. Check the 'Events' section for the latest daily schedule." },
+    { question: 'Is the park accessible for persons with disabilities?', answer: 'Yes, Bulusan Zoo features paved pathways suitable for wheelchairs and priority access for PWDs and senior citizens at all major attractions.' },
+    { question: 'Does the zoo support conservation programs?', answer: 'Absolutely. A portion of every ticket sale goes directly toward our local wildlife rescue and rehabilitation initiatives in the region.' },
+];
 
 function FaqSection() {
     const [activeIndex, setActiveIndex] = useState(null);
@@ -327,7 +376,15 @@ function FaqSection() {
                         style={{ originX: 0 }}
                         className="w-8 h-[1px] bg-[#212631]/30"
                     />
-                    <span className="text-[10px] tracking-[0.25em] text-[#212631]/40 uppercase">Questions</span>
+                    <motion.span
+                        initial={{ opacity: 0 }}
+                        whileInView={{ opacity: 1 }}
+                        viewport={{ once: false, amount: 0.5 }}
+                        transition={{ duration: 0.6, delay: 0.2 }}
+                        className="text-[10px] tracking-[0.25em] text-[#212631]/40 uppercase"
+                    >
+                        Questions
+                    </motion.span>
                 </motion.div>
                 <div ref={headingRef} className="overflow-hidden mb-12 md:mb-16">
                     <motion.h2
@@ -341,44 +398,51 @@ function FaqSection() {
                 </div>
                 <div className="border-b border-gray-200">
                     {faqData.map((item, index) => (
-                        <div key={index} className="border-t border-gray-200">
+                        <motion.div
+                            key={index}
+                            initial={{ opacity: 0, y: 32 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true, amount: 0.1 }}
+                            transition={{ duration: 0.6, delay: index * 0.06, ease }}
+                            className="border-t border-gray-200"
+                        >
                             <button
                                 onClick={() => setActiveIndex(activeIndex === index ? null : index)}
-                                className="w-full py-6 flex items-center justify-between text-left group transition-all"
+                                className="w-full py-5 sm:py-6 md:py-9 flex items-center justify-between text-left group transition-all min-h-[44px]"
                             >
-                                <motion.span className="text-base sm:text-lg md:text-2xl font-medium text-gray-800 pr-8 leading-snug break-words">
+                                <motion.span
+                                    className="text-base sm:text-lg md:text-2xl lg:text-3xl font-medium text-gray-800 pr-4 sm:pr-8 leading-snug break-words"
+                                    whileHover={{ x: 6 }}
+                                    transition={{ duration: 0.3, ease }}
+                                >
                                     {item.question}
                                 </motion.span>
-                                <div className={`flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center transition-all ${activeIndex === index ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-900'}`}>
-                                    <svg className={`w-4 h-4 transition-transform duration-300 ${activeIndex === index ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <div className={`flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 border border-gray-200 rounded-md sm:rounded-lg flex items-center justify-center transition-all duration-300 min-w-[32px] sm:min-w-[40px] ${activeIndex === index ? 'bg-gray-900 border-gray-900' : 'bg-[#ebebeb]'}`}>
+                                    <svg className={`w-4 h-4 sm:w-5 sm:h-5 transition-all duration-300 ${activeIndex === index ? 'text-white rotate-180' : 'text-[#212631]'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
                                     </svg>
                                 </div>
                             </button>
-                            <AnimatePresence>
-                                {activeIndex === index && (
-                                    <motion.div
-                                        initial={{ height: 0, opacity: 0 }}
-                                        animate={{ height: 'auto', opacity: 1 }}
-                                        exit={{ height: 0, opacity: 0 }}
-                                        transition={{ duration: 0.4, ease }}
-                                        className="overflow-hidden"
-                                    >
-                                        <p className="text-gray-500 text-sm sm:text-base md:text-xl pb-8 max-w-4xl leading-relaxed">
-                                            {item.answer}
-                                        </p>
-                                    </motion.div>
-                                )}
-                            </AnimatePresence>
-                        </div>
+                            <div
+                                style={{
+                                    display: 'grid',
+                                    gridTemplateRows: activeIndex === index ? '1fr' : '0fr',
+                                    transition: 'grid-template-rows 0.45s cubic-bezier(0.16,1,0.3,1)',
+                                }}
+                            >
+                                <div style={{ overflow: 'hidden' }}>
+                                    <p className={`text-gray-500 text-sm sm:text-base md:text-xl lg:text-2xl leading-relaxed max-w-4xl pb-6 sm:pb-8 transition-opacity duration-300 ${activeIndex === index ? 'opacity-100' : 'opacity-0'}`}>
+                                        {item.answer}
+                                    </p>
+                                </div>
+                            </div>
+                        </motion.div>
                     ))}
                 </div>
             </div>
         </section>
     );
 }
-
-// --- Main Page ---
 
 const Home = () => {
     const aboutRef = useRef(null);
@@ -396,87 +460,149 @@ const Home = () => {
                 <AIFloatingButton />
 
                 <main>
-                    {/* 3D HERO SECTION */}
                     <HeroSection3D />
 
-                    <div className="bg-[#ebebeb] py-5 overflow-hidden">
-                        <HorizontalMarquee text="Bulusan Zoo · Wildlife · Nature · Conservation" speed={42} />
-                    </div>
-
-                    {/* ABOUT SECTION */}
-                    <section ref={aboutRef} className="bg-[#ebebeb] min-h-[40vh] flex items-center px-6 py-20 md:px-16 md:py-32 w-full overflow-hidden">
+                    <section ref={aboutRef} className="bg-[#007a55] min-h-[80vh] flex items-center px-6 py-20 md:px-16 md:py-32 w-full overflow-hidden">
                         <div className="max-w-[1500px] mx-auto w-full flex flex-col">
-                            <h2 className="text-[#212631] text-2xl md:text-3xl lg:text-4xl uppercase tracking-wide mb-16 md:mb-24">
+                            <h2 className="text-[#ebebeb] text-2xl md:text-3xl lg:text-4xl uppercase tracking-wide mb-16 md:mb-24">
                                 <SplitReveal>About Bulusan Zoo</SplitReveal>
                             </h2>
                             <motion.div style={{ x: aboutX }} className="mb-16 md:mb-24">
                                 {['Founded in 2015,', 'Bulusan Wildlife & Nature Park', 'began as a small conservation', 'initiative in Calapan City.'].map((line, i) => (
-                                    <p key={i} className="text-[#212631] text-4xl sm:text-5xl md:text-6xl lg:text-[5.5rem] leading-[1.2] md:leading-[1.1] tracking-tight">
+                                    <p key={i} className="text-[#ebebeb] text-4xl sm:text-5xl md:text-6xl lg:text-[5rem] leading-[1.2] md:leading-[1.2] tracking-tight">
                                         <SplitReveal delay={i * 0.075}>{line}</SplitReveal>
                                     </p>
                                 ))}
                             </motion.div>
                             <motion.div initial={{ opacity: 0, x: 50 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: false, amount: 0.3 }} transition={{ duration: 0.9, ease }} className="self-end">
-                                <MagneticButton to="/about" className="border border-[#212631]/30 text-[#212631] text-xs md:text-sm font-bold tracking-widest uppercase px-8 py-4 hover:bg-[#212631] hover:text-[#ebebeb] transition-all duration-300 inline-block">More</MagneticButton>
+                                <MagneticButton to="/about" className="border border-[#ebebeb]/30 text-[#ebebeb] text-xs md:text-sm font-bold tracking-widest uppercase px-8 py-4 hover:bg-[#212631] hover:text-[#ebebeb] transition-all duration-300 inline-block">More</MagneticButton>
                             </motion.div>
                         </div>
                     </section>
 
-                    {/* STATS SECTION */}
-                    <section className="bg-[#ebebeb] py-12 md:py-16 overflow-hidden">
-                        <div className="max-w-[1500px] mx-auto px-6 md:px-16 grid grid-cols-3 gap-4 md:gap-12">
+                    <section className="bg-[#007a55] py-12 md:py-16 overflow-hidden">
+                        <div className="max-w-[1650px] mx-auto px-6 md:px-16 grid grid-cols-3 gap-4 md:gap-12">
                             {[{ value: 10, suffix: '+', label: 'Species' }, { value: 15, suffix: '+', label: 'Plants' }, { value: 100, suffix: '+', label: 'Visitors / Year' }].map((stat, i) => (
                                 <motion.div key={i} className="flex flex-col items-start">
-                                    <span className="text-3xl sm:text-5xl md:text-7xl font-bold text-[#212631] tabular-nums leading-none"><CounterNumber value={stat.value} suffix={stat.suffix} /></span>
-                                    <span className="text-[#212631]/50 text-[10px] sm:text-xs md:text-sm uppercase tracking-widest mt-1 md:mt-3">{stat.label}</span>
+                                    <span className="text-3xl sm:text-5xl md:text-7xl font-bold text-[#ebebeb] tabular-nums leading-none"><CounterNumber value={stat.value} suffix={stat.suffix} /></span>
+                                    <span className="text-[#ebebeb]/50 text-[10px] sm:text-xs md:text-sm uppercase tracking-widest mt-1 md:mt-3">{stat.label}</span>
                                 </motion.div>
                             ))}
                         </div>
                     </section>
 
-                    {/* WILDLIFE & FLORA GRIDS */}
-                    <section id="animal" className="w-full bg-[#ebebeb] text-[#212631] py-12">
+                    <section className="bg-[#ebebeb] flex items-center px-6 py-12 md:px-16 md:py-24 w-full overflow-hidden">
+                        <div className="max-w-[1450px] mx-auto w-full flex flex-col">
+                            <h1 className="text-[#212631] text-6xl sm:text-5xl md:text-6xl lg:text-7xl font-medium leading-tight md:leading-[1.1] tracking-tight">
+                                <SplitReveal>Animals and Plants</SplitReveal>
+                            </h1>
+                            <motion.p initial={{ opacity: 0, y: 22 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: false, amount: 0.2 }} transition={{ duration: 0.9, delay: 0.2, ease }} className="mt-4 text-[#212631]/80 text-xl md:text-lg lg:text-xl max-w-3xl">
+                                Discover a diverse collection of animals and plants from around the world, each with unique stories and characteristics that inspire wonder and conservation.
+                            </motion.p>
+                        </div>
+                    </section>
+
+                    <section id="animal" className="w-full bg-[#ebebeb] text-[#212631] border-1 border-[#d1d1d1]">
                         <ArticleGrid articles={animalArticles} images={animalHoverImages} label="— Wildlife" />
                     </section>
 
-                    <section id="plant" className="w-full bg-[#ebebeb] text-[#212631] py-12">
+                    <section id="plant" className="w-full bg-[#ebebeb] text-[#212631] border-1 border-[#d1d1d1]">
                         <ArticleGrid articles={plantArticles} images={plantHoverImages} label="— Flora" />
                     </section>
 
-                    {/* EVENTS SECTION */}
                     <EventsSection eventsRef={eventsRef} eventsScale={eventsScale} />
 
-                    {/* FAQ SECTION */}
                     <FaqSection />
 
-                    {/* PRICING SECTION */}
                     <section id="tickets-section" className="py-16 sm:py-20 md:py-24 bg-[#ebebeb] w-full">
-                        <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-[1500px]">
-                            <div className="mb-14">
-                                <span className="text-[10px] font-bold tracking-[0.2em] text-gray-400 uppercase block mb-3">PRICING</span>
-                                <h2 className="text-2xl sm:text-4xl font-medium text-gray-900 leading-tight">
+                        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+
+                            <div className="mb-10 sm:mb-12 md:mb-14">
+                                <motion.span
+                                    initial={{ opacity: 0, y: 12 }}
+                                    whileInView={{ opacity: 1, y: 0 }}
+                                    viewport={{ once: true, amount: 0.3 }}
+                                    transition={{ duration: 0.65 }}
+                                    className="text-[10px] sm:text-[11px] font-bold tracking-[0.15em] sm:tracking-[0.2em] text-gray-400 uppercase block mb-2 sm:mb-3"
+                                >
+                                    PRICING
+                                </motion.span>
+
+                                <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-[42px] font-medium text-gray-900 leading-tight">
                                     <SplitReveal delay={0.1}>Choose the right ticket for you</SplitReveal>
                                 </h2>
                             </div>
-                            <div className="grid grid-cols-1 lg:grid-cols-3 border border-[#212631]/20 overflow-hidden shadow-sm mb-12 rounded-lg lg:rounded-none">
+
+                            <div className="grid grid-cols-1 lg:grid-cols-3 border border-[#212631]/20 rounded-lg lg:rounded-none shadow-sm mb-8 sm:mb-10 md:mb-12">
+
                                 {[
-                                    { label: 'ADULT', price: '₱40', desc: 'Ages 18-59. Perfect for those who want the full experience.' },
-                                    { label: 'CHILD', price: '₱20', desc: 'Ages 5-17. Launch your first visit and start exploring within minutes.' },
-                                    { label: 'RESIDENT', price: 'FREE', desc: 'Exclusive for local residents of Calapan City.' },
+                                    {
+                                        label: "ADULT",
+                                        price: "₱40",
+                                        desc: "Ages 18-59. Perfect for those who want the full experience."
+                                    },
+                                    {
+                                        label: "CHILD",
+                                        price: "₱20",
+                                        desc: "Ages 5-17. Launch your first visit and start exploring within minutes."
+                                    },
+                                    {
+                                        label: "RESIDENT",
+                                        price: "FREE",
+                                        desc: "Exclusive for local residents. End-to-end community access."
+                                    }
                                 ].map((t, i) => (
-                                    <motion.div key={i} initial={{ opacity: 0, y: 56 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: false, amount: 0.15 }} transition={{ duration: 0.9, delay: i * 0.15, ease }} className="flex flex-col p-9 bg-white border-b lg:border-r lg:border-b-0 border-gray-300 last:border-0">
-                                        <span className="text-[10px] font-bold tracking-[0.15em] text-gray-400 uppercase mb-6">{t.label}</span>
-                                        <div className="text-[44px] font-medium text-gray-900 leading-none mb-6">{t.price}</div>
-                                        <div className="h-[1px] w-full bg-gray-100 mb-8" />
-                                        <p className="text-[18px] leading-relaxed text-gray-500 min-h-[80px]">{t.desc}</p>
+
+                                    <motion.div
+                                        key={i}
+                                        initial={{ opacity: 0, y: 56 }}
+                                        whileInView={{ opacity: 1, y: 0 }}
+                                        viewport={{ once: true, amount: 0.1 }}
+                                        transition={{ duration: 0.9, delay: i * 0.15 }}
+                                        className="flex flex-col justify-between p-6 sm:p-8 md:p-9 bg-white border-b lg:border-r lg:border-b-0 border-gray-300 last:border-b-0 lg:last:border-r-0"
+                                    >
+
+                                        <span className="text-[9px] sm:text-[10px] font-bold tracking-[0.1em] sm:tracking-[0.15em] text-gray-400 uppercase mb-4 sm:mb-6">
+                                            {t.label}
+                                        </span>
+
+                                        <div className="flex items-center h-[60px] mb-4 sm:mb-6">
+                                            <motion.div
+                                                initial={{ y: 40, opacity: 0 }}
+                                                whileInView={{ y: 0, opacity: 1 }}
+                                                viewport={{ once: true }}
+                                                transition={{ duration: 0.7, delay: i * 0.15 + 0.1 }}
+                                                className="text-3xl sm:text-4xl md:text-[44px] font-medium text-gray-900 leading-none"
+                                            >
+                                                {t.price}
+                                            </motion.div>
+                                        </div>
+
+                                        <div className="h-[1px] w-full bg-gray-200 mb-6 sm:mb-8" />
+
+                                        <p className="text-sm sm:text-base md:text-[18px] leading-relaxed text-gray-500 min-h-[70px]">
+                                            {t.desc}
+                                        </p>
+
                                     </motion.div>
                                 ))}
+
                             </div>
-                            <motion.div initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: false, amount: 0.3 }} className="flex justify-center">
+
+                            <motion.div
+                                initial={{ opacity: 0, y: 24 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                viewport={{ once: true, amount: 0.3 }}
+                                transition={{ duration: 0.85, delay: 0.3 }}
+                                className="flex justify-center"
+                            >
                                 <Link to="/reservations">
-                                    <button className="px-12 py-4 bg-gray-900 text-white text-sm font-bold tracking-widest uppercase rounded-full hover:bg-gray-800 transition-all shadow-lg shadow-gray-200">Reserve Now!</button>
+                                    <button className="px-8 py-3.5 sm:px-10 sm:py-4 md:px-12 md:py-4 bg-gray-900 text-white text-xs sm:text-sm font-bold tracking-wider sm:tracking-widest uppercase rounded-full hover:bg-gray-800 transition-all duration-300 shadow-lg shadow-gray-200 min-h-[44px]">
+                                        Reserve Now
+                                    </button>
                                 </Link>
                             </motion.div>
+
                         </div>
                     </section>
                 </main>

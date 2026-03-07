@@ -56,7 +56,7 @@ const BulusanTitle = () => {
                     key={i}
                     className="inline-block select-none"
                     style={{
-                        fontSize: "clamp(3.5rem, 17vw, 17vw)",
+                        fontSize: "clamp(1.5rem, 17vw, 17vw)",
                         fontFamily: "'Times New Roman', Georgia, serif",
                         fontStyle: "italic",
                         fontWeight: 900,

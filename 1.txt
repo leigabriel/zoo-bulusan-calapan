@@ -616,6 +616,15 @@ const Home = () => {
 
 export default Home;
 
+
+
+
+
+
+
+
+
+
 import React, { useRef, Suspense, useState, useEffect } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { useGLTF, Environment, Center } from '@react-three/drei';
