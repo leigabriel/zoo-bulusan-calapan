@@ -276,14 +276,14 @@ const AboutUs = () => {
 
                         <motion.div style={{ y: titleY }} className="flex-1 flex items-center py-10 md:py-0">
                             <div className="w-full">
-                                <h1 className="text-[clamp(3.2rem,9.5vw,8rem)] font-medium tracking-[-0.035em] text-[#212631] leading-[0.86] mb-0">
+                                <h1 className="text-[clamp(3.2rem,9.5vw,8rem)] font-medium tracking-[-0.035em] text-[#007a55] leading-[0.86] mb-0">
                                     <Chars text="Bulusan" delay={0.08} stagger={0.044} />
                                     <br />
                                     <span className="flex items-baseline gap-[0.15em] flex-wrap">
                                         <Chars text="Nature" delay={0.36} stagger={0.038} />
                                         <Chars
                                             text="Zoo"
-                                            className="text-[#212631]"
+                                            className="text-[#007a55]"
                                             delay={0.62}
                                             stagger={0.044}
                                         />

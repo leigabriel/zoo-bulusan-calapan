@@ -108,6 +108,7 @@ const Header = () => {
     });
     const [notificationLoading, setNotificationLoading] = useState(false);
     const [scrolled, setScrolled] = useState(false);
+    const [isNavVisible, setIsNavVisible] = useState(true);
     const [showEmailModal, setShowEmailModal] = useState(false);
     const [emailSubject, setEmailSubject] = useState('');
     const [emailMessage, setEmailMessage] = useState('');
@@ -120,12 +121,22 @@ const Header = () => {
     const sidePanelRef = useRef(null);
     const aiScannerRef = useRef(null);
     const notificationPanelRef = useRef(null);
+    const lastScrollY = useRef(0);
 
     useEffect(() => {
-        const onScroll = () => setScrolled(window.scrollY > 20);
-        window.addEventListener('scroll', onScroll);
+        const onScroll = () => {
+            const currentScrollY = window.scrollY;
+            if (currentScrollY > lastScrollY.current && currentScrollY > 56 && !isMenuOpen) {
+                setIsNavVisible(false);
+            } else {
+                setIsNavVisible(true);
+            }
+            setScrolled(currentScrollY > 20);
+            lastScrollY.current = currentScrollY;
+        };
+        window.addEventListener('scroll', onScroll, { passive: true });
         return () => window.removeEventListener('scroll', onScroll);
-    }, []);
+    }, [isMenuOpen]);
 
     useEffect(() => {
         setIsMenuOpen(false);
@@ -148,7 +159,7 @@ const Header = () => {
                 document.removeEventListener('mousedown', handler);
                 document.body.style.overflow = 'unset';
             };
-        }, [isOpen]);
+        }, [isOpen, ref, setter]);
     };
 
     useOutsideClick(sidePanelRef, showSidePanel, setShowSidePanel);
@@ -161,6 +172,7 @@ const Header = () => {
                 setShowSidePanel(false);
                 setShowAIScanner(false);
                 setShowNotificationPanel(false);
+                setIsMenuOpen(false);
             }
         };
         document.addEventListener('keydown', onKey);
@@ -220,28 +232,23 @@ const Header = () => {
 
     useEffect(() => { if (user) fetchNotifications(false); }, [user, fetchNotifications]);
 
-    // Persist read notification IDs to localStorage
     useEffect(() => {
         localStorage.setItem('readNotificationIds', JSON.stringify(readNotificationIds));
     }, [readNotificationIds]);
 
-    // Compute unread count
     const unreadCount = notifications.filter(n => !readNotificationIds.includes(n.id)).length;
 
-    // Mark a single notification as read
     const markNotificationRead = (notificationId) => {
         if (!readNotificationIds.includes(notificationId)) {
             setReadNotificationIds(prev => [...prev, notificationId]);
         }
     };
 
-    // Mark all notifications as read
     const markAllNotificationsRead = () => {
         const allIds = notifications.map(n => n.id);
         setReadNotificationIds(prev => [...new Set([...prev, ...allIds])]);
     };
 
-    // Handle notification click
     const handleNotificationClick = (notif) => {
         markNotificationRead(notif.id);
         setShowNotificationPanel(false);
@@ -281,7 +288,6 @@ const Header = () => {
     };
 
     const handleOpenReservationHistory = () => { closeSidePanel(); setShowHistoryPanel(true); };
-
     const handleOpenMiniZooGame = () => { closeSidePanel(); setShowMiniZooGame(true); };
 
     const quickItems = [
@@ -305,15 +311,16 @@ const Header = () => {
 
     return (
         <>
-            <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-200 ${scrolled ? 'bg-[#ebebeb]/10 backdrop-blur-lg shadow-[0_1px_0_rgba(0,0,0,0.07)]' : ''}`} style={{ paddingTop: 'env(safe-area-inset-top)' }}>
-                <div className="mx-auto px-4 sm:px-6 lg:px-10 max-w-[2000px]" style={{ height: '56px' }}>
-
+            <header
+                className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ease-in-out ${scrolled ? '' : ''} ${isNavVisible ? 'translate-y-0' : '-translate-y-full'}`}
+                style={{ paddingTop: 'env(safe-area-inset-top)' }}
+            >
+                <div className="mx-auto px-4 sm:px-6 lg:px-10 max-w-[1800px]" style={{ height: '56px' }}>
                     <div className="flex items-center h-full">
-
                         <div className="flex items-center flex-shrink-0 w-[180px]">
-                            <Link to="/" className="flex items-center">
-                                <span className="text-[18px] font-bold text-[#212631] tracking-tight" style={{ fontFamily: '"Times New Roman", serif' }}>
-                                    Bulusan Zoo
+                            <Link to="/" className="flex items-center" onClick={() => setIsMenuOpen(false)}>
+                                <span className="text-[18px] font-bold text-[#212631] tracking-tight">
+                                    BULUSAN ZOO
                                 </span>
                             </Link>
                         </div>
@@ -325,8 +332,8 @@ const Header = () => {
                                         key={link.path}
                                         to={link.path}
                                         className={`px-4 py-1.5 rounded-full text-[13px] font-medium transition-all duration-150 whitespace-nowrap ${location.pathname === link.path
-                                                ? 'bg-[#ebebeb] text-gray-900 shadow-sm'
-                                                : 'text-[#ebebeb]/80 hover:text-gray-200'
+                                            ? 'bg-[#ebebeb] text-gray-900 shadow-sm'
+                                            : 'text-[#ebebeb]/80 hover:text-gray-200'
                                             }`}
                                     >
                                         {link.label}
@@ -373,27 +380,19 @@ const Header = () => {
                                 <img src={ICONS.ticket} alt="Reserve" className="w-[18px] h-[18px] object-contain opacity-55" />
                             </Link>
                             <IconBtn src={ICONS.notification} alt="Notifications" onClick={openNotifications} badge={unreadCount} />
-                            <IconBtn src={ICONS.menu} alt="Menu" onClick={() => setIsMenuOpen(true)} />
+                            <IconBtn src={isMenuOpen ? ICONS.close : ICONS.menu} alt="Menu" onClick={() => setIsMenuOpen(!isMenuOpen)} />
                         </div>
-
                     </div>
                 </div>
-            </header>
 
-            {isMenuOpen && (
-                <div className="fixed inset-0 z-[120] bg-white flex flex-col md:hidden">
-                    <div className="flex items-center justify-between px-4 border-b border-gray-100 flex-shrink-0" style={{ height: '56px' }}>
-                        <span className="text-[18px] font-bold text-gray-900 leading-none" style={{ fontFamily: '"Segoe Script", cursive' }}>
-                            Bulusan Zoo
-                        </span>
-                        <CloseBtn onClick={() => setIsMenuOpen(false)} />
-                    </div>
-
-                    <div className="flex-1 overflow-y-auto flex flex-col px-4 py-4">
-                        {user ? (
+                <div
+                    className={`md:hidden absolute top-full left-0 w-full bg-white border-t border-gray-100 shadow-xl overflow-hidden transition-all duration-300 ease-in-out origin-top flex flex-col ${isMenuOpen ? 'max-h-[80vh] opacity-100' : 'max-h-0 opacity-0 pointer-events-none'}`}
+                >
+                    <div className="flex flex-col p-4 gap-1">
+                        {user && (
                             <button
                                 onClick={() => { setIsMenuOpen(false); setShowSidePanel(true); }}
-                                className="flex items-center gap-3 w-full px-4 py-3 rounded-xl border border-gray-100 bg-gray-50 hover:bg-gray-100 transition-colors text-left mb-3"
+                                className="flex items-center gap-3 w-full px-4 py-3 rounded-xl border border-gray-100 bg-gray-50 hover:bg-gray-100 transition-colors text-left mb-2"
                             >
                                 <img
                                     src={avatarSrc}
@@ -403,45 +402,41 @@ const Header = () => {
                                 />
                                 <div className="min-w-0">
                                     <p className="text-[13px] font-semibold text-gray-900 truncate">{displayName}</p>
-                                    <p className="text-[11px] text-gray-400 mt-0.5">View account</p>
+                                    <p className="text-[11px] text-gray-400 mt-0.5">View Account</p>
                                 </div>
                             </button>
-                        ) : (
-                            <Link to="/login" onClick={() => setIsMenuOpen(false)} className="mb-3">
+                        )}
+                        {NAV_LINKS.map((link) => {
+                            const active = location.pathname === link.path;
+                            return (
+                                <Link
+                                    key={link.path}
+                                    to={link.path}
+                                    onClick={() => setIsMenuOpen(false)}
+                                    className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${active ? 'bg-gray-900' : 'hover:bg-gray-50'}`}
+                                >
+                                    <img
+                                        src={link.iconUrl}
+                                        alt={link.label}
+                                        className="w-4 h-4 object-contain flex-shrink-0"
+                                        style={{ opacity: active ? 1 : 0.45, filter: active ? 'brightness(0) invert(1)' : 'none' }}
+                                    />
+                                    <span className={`text-[13px] font-medium ${active ? 'text-white' : 'text-gray-600'}`}>
+                                        {link.label}
+                                    </span>
+                                </Link>
+                            );
+                        })}
+                        {!user ? (
+                            <Link to="/login" onClick={() => setIsMenuOpen(false)} className="mt-2">
                                 <button className="w-full py-3 rounded-xl bg-gray-900 text-white text-[13px] font-medium">
                                     Login / Sign Up
                                 </button>
                             </Link>
-                        )}
-
-                        <div className="flex flex-col gap-0.5">
-                            {NAV_LINKS.map((link) => {
-                                const active = location.pathname === link.path;
-                                return (
-                                    <Link
-                                        key={link.path}
-                                        to={link.path}
-                                        onClick={() => setIsMenuOpen(false)}
-                                        className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${active ? 'bg-gray-900' : 'hover:bg-gray-50'}`}
-                                    >
-                                        <img
-                                            src={link.iconUrl}
-                                            alt={link.label}
-                                            className="w-4 h-4 object-contain flex-shrink-0"
-                                            style={{ opacity: active ? 1 : 0.45, filter: active ? 'brightness(0) invert(1)' : 'none' }}
-                                        />
-                                        <span className={`text-[13px] font-medium ${active ? 'text-white' : 'text-gray-600'}`}>
-                                            {link.label}
-                                        </span>
-                                    </Link>
-                                );
-                            })}
-                        </div>
-
-                        {user && (
+                        ) : (
                             <button
                                 onClick={() => { setIsMenuOpen(false); setShowLogoutModal(true); }}
-                                className="flex items-center gap-3 px-4 py-3 rounded-xl text-red-500 hover:bg-red-50 transition-colors mt-4"
+                                className="flex items-center gap-3 px-4 py-3 rounded-xl text-red-500 hover:bg-red-50 transition-colors mt-2"
                             >
                                 <img
                                     src={ICONS.logout}
@@ -454,266 +449,271 @@ const Header = () => {
                         )}
                     </div>
                 </div>
-            )}
+            </header>
 
-            {showSidePanel && (
-                <div className="fixed inset-0 z-[120] flex justify-end bg-black/25 backdrop-blur-[2px]">
-                    <div
-                        ref={sidePanelRef}
-                        className="w-full h-full md:w-[300px] bg-gray-50 shadow-2xl flex flex-col"
-                        role="dialog"
-                        aria-modal="true"
-                    >
-                        <div className="flex-shrink-0 px-5 pt-5 pb-4 bg-white border-b border-gray-100">
-                            <div className="flex items-center justify-between mb-4">
-                                <span className="text-[13px] font-semibold text-gray-800">Account</span>
-                                <CloseBtn onClick={closeSidePanel} />
-                            </div>
-                            {user && (
-                                <div className="flex items-center gap-3">
-                                    <img
-                                        src={avatarSrc}
-                                        alt="Profile"
-                                        className="w-11 h-11 rounded-full object-cover border border-gray-100 flex-shrink-0"
-                                        onError={(e) => { e.target.onerror = null; e.target.src = '/profile-img/default-avatar.svg'; }}
-                                    />
-                                    <div className="min-w-0">
-                                        <p className="text-[13px] font-semibold text-gray-900 truncate">{displayName}</p>
-                                        <p className="text-[11px] text-gray-400 truncate mt-0.5">{user.email}</p>
-                                    </div>
-                                </div>
-                            )}
+            <div className={`fixed inset-0 z-[120] flex justify-end transition-all duration-300 ${showSidePanel ? 'visible' : 'invisible'}`}>
+                <div
+                    className={`absolute inset-0 bg-black/25 backdrop-blur-[2px] transition-opacity duration-300 ${showSidePanel ? 'opacity-100' : 'opacity-0'}`}
+                    onClick={closeSidePanel}
+                />
+                <div
+                    ref={sidePanelRef}
+                    className={`w-full h-full md:w-[300px] bg-gray-50 shadow-2xl flex flex-col transform transition-transform duration-300 relative ${showSidePanel ? 'translate-x-0' : 'translate-x-full'}`}
+                    role="dialog"
+                    aria-modal="true"
+                >
+                    <div className="flex-shrink-0 px-5 pt-5 pb-4 bg-white border-b border-gray-100">
+                        <div className="flex items-center justify-between mb-4">
+                            <span className="text-[13px] font-semibold text-gray-800">Account</span>
+                            <CloseBtn onClick={closeSidePanel} />
                         </div>
-
-                        <div className="flex-1 overflow-y-auto px-4 pb-6">
-                            {quickItems.length > 0 && (
-                                <>
-                                    <SectionLabel label="Quick Access" />
-                                    <div className="rounded-xl overflow-hidden border border-gray-100 bg-white">
-                                        {quickItems.map((item, i) => (
-                                            <MenuItem key={i} iconUrl={item.iconUrl} label={item.label} to={item.path} onClose={closeSidePanel} isLast={i === quickItems.length - 1} />
-                                        ))}
-                                    </div>
-                                </>
-                            )}
-
-                            <SectionLabel label="Account" />
-                            <div className="rounded-xl overflow-hidden border border-gray-100 bg-white">
-                                {accountItems.map((item, i) => (
-                                    <MenuItem key={i} iconUrl={item.iconUrl} label={item.label} to={item.path} onClick={item.action} onClose={closeSidePanel} isLast={i === accountItems.length - 1} />
-                                ))}
-                            </div>
-
-                            <SectionLabel label="Explore" />
-                            <div className="rounded-xl overflow-hidden border border-gray-100 bg-white">
-                                {exploreItems.map((item, i) => (
-                                    <MenuItem key={i} iconUrl={item.iconUrl} label={item.label} to={item.path} onClick={item.action} onClose={closeSidePanel} isLast={i === exploreItems.length - 1} />
-                                ))}
-                            </div>
-
-                            <SectionLabel label="Preferences & AI" />
-                            <div className="rounded-xl overflow-hidden border border-gray-100 bg-white">
-                                <MenuItem iconUrl={ICONS.setting} label="Settings" to="/settings" onClose={closeSidePanel} isLast={false} />
-                                <MenuItem
-                                    iconUrl={ICONS.camera}
-                                    label="AI Animal Scanner"
-                                    badge="New"
-                                    onClick={() => { closeSidePanel(); setShowAIScanner(true); }}
-                                    isLast={true}
-                                />
-                            </div>
-
-                            <SectionLabel label="Help" />
-                            <div className="rounded-xl overflow-hidden border border-gray-100 bg-white">
-                                <MenuItem iconUrl={ICONS.help} label="Help Center" to="/help" onClose={closeSidePanel} isLast={false} />
-                                <MenuItem iconUrl={ICONS.support} label="Contact Support" onClick={openEmailModal} isLast={false} />
-                                <MenuItem
-                                    iconUrl={ICONS.logout}
-                                    label="Sign Out"
-                                    danger
-                                    onClick={() => { closeSidePanel(); setShowLogoutModal(true); }}
-                                    isLast={true}
-                                />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {showAIScanner && (
-                <div className="fixed inset-0 z-[100] flex justify-end">
-                    <div className="absolute inset-0 bg-black/25 backdrop-blur-[2px]" onClick={() => setShowAIScanner(false)} />
-                    <div
-                        ref={aiScannerRef}
-                        className="relative w-full max-w-lg bg-white h-full shadow-2xl flex flex-col"
-                        role="dialog"
-                        aria-modal="true"
-                    >
-                        <div className="flex items-center gap-3 px-5 py-4 border-b border-gray-100 flex-shrink-0">
-                            <div className="w-8 h-8 bg-emerald-700 rounded-lg flex items-center justify-center flex-shrink-0">
-                                <img src={ICONS.camera} alt="AI" className="w-4 h-4 object-contain brightness-0 invert" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                                <p className="text-[13px] font-semibold text-gray-900">AI Animal Scanner</p>
-                                <p className="text-[11px] text-gray-400">Identify animals with AI</p>
-                            </div>
-                            <CloseBtn onClick={() => setShowAIScanner(false)} />
-                        </div>
-                        <div className="flex-1 overflow-y-auto">
-                            <AnimalClassifier embedded={true} />
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {showEmailModal && (
-                <div className="fixed inset-0 z-[130] flex items-center justify-center bg-black/25 backdrop-blur-[2px] p-4">
-                    <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm">
-                        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-                            <span className="text-[13px] font-semibold text-gray-900">Contact Support</span>
-                            <CloseBtn onClick={() => { setShowEmailModal(false); setEmailSubject(''); setEmailMessage(''); setEmailError(''); }} />
-                        </div>
-                        <div className="p-5">
-                            {emailSent ? (
-                                <div className="flex flex-col items-center text-center py-5 gap-3">
-                                    <div className="w-11 h-11 bg-emerald-50 border border-emerald-100 rounded-full flex items-center justify-center">
-                                        <span className="text-emerald-600 text-base font-bold">✓</span>
-                                    </div>
-                                    <div>
-                                        <p className="text-[13px] font-semibold text-gray-900">Message Sent</p>
-                                        <p className="text-[11px] text-gray-400 mt-0.5">We'll respond as soon as possible.</p>
-                                    </div>
-                                    <button
-                                        onClick={() => { setShowEmailModal(false); setEmailSent(false); }}
-                                        className="w-full py-2.5 bg-gray-900 text-white text-[13px] font-medium rounded-lg hover:bg-gray-700 transition-colors mt-2"
-                                    >
-                                        Close
-                                    </button>
-                                </div>
-                            ) : (
-                                <div className="flex flex-col gap-4">
-                                    {emailError && (
-                                        <p className="text-[11px] text-red-500 bg-red-50 px-3 py-2 rounded-lg">{emailError}</p>
-                                    )}
-                                    <div>
-                                        <label className="block text-[11px] font-medium text-gray-500 mb-1.5">Subject</label>
-                                        <input
-                                            type="text"
-                                            value={emailSubject}
-                                            onChange={(e) => setEmailSubject(e.target.value)}
-                                            placeholder="What's this about?"
-                                            className="w-full px-3 py-2.5 text-[13px] border border-gray-200 rounded-lg focus:ring-1 focus:ring-gray-400 focus:border-gray-400 outline-none transition-all"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-[11px] font-medium text-gray-500 mb-1.5">Message</label>
-                                        <textarea
-                                            value={emailMessage}
-                                            onChange={(e) => setEmailMessage(e.target.value)}
-                                            placeholder="Describe your issue..."
-                                            rows={4}
-                                            className="w-full px-3 py-2.5 text-[13px] border border-gray-200 rounded-lg focus:ring-1 focus:ring-gray-400 focus:border-gray-400 outline-none resize-none transition-all"
-                                        />
-                                    </div>
-                                    <button
-                                        onClick={handleSendEmail}
-                                        disabled={emailLoading || !emailSubject.trim() || !emailMessage.trim()}
-                                        className="w-full py-2.5 bg-gray-900 text-white text-[13px] font-medium rounded-lg hover:bg-gray-700 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors"
-                                    >
-                                        {emailLoading ? 'Sending…' : 'Send Message'}
-                                    </button>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {showNotificationPanel && (
-                <div className="fixed inset-0 z-[120] overflow-hidden">
-                    <div className="absolute inset-0 bg-black/25 backdrop-blur-[2px]" onClick={() => setShowNotificationPanel(false)} />
-                    <div
-                        ref={notificationPanelRef}
-                        className="absolute right-0 top-0 h-full w-full max-w-sm bg-white shadow-2xl flex flex-col"
-                    >
-                        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 flex-shrink-0">
+                        {user && (
                             <div className="flex items-center gap-3">
-                                <span className="text-[13px] font-semibold text-gray-900">Notifications</span>
-                                {unreadCount > 0 && (
-                                    <span className="px-1.5 py-0.5 bg-red-500 text-white text-[10px] font-bold rounded-full">
-                                        {unreadCount}
-                                    </span>
-                                )}
+                                <img
+                                    src={avatarSrc}
+                                    alt="Profile"
+                                    className="w-11 h-11 rounded-full object-cover border border-gray-100 flex-shrink-0"
+                                    onError={(e) => { e.target.onerror = null; e.target.src = '/profile-img/default-avatar.svg'; }}
+                                />
+                                <div className="min-w-0">
+                                    <p className="text-[13px] font-semibold text-gray-900 truncate">{displayName}</p>
+                                    <p className="text-[11px] text-gray-400 truncate mt-0.5">{user.email}</p>
+                                </div>
                             </div>
-                            <div className="flex items-center gap-2">
-                                {unreadCount > 0 && (
-                                    <button
-                                        onClick={markAllNotificationsRead}
-                                        className="text-[11px] font-medium text-emerald-600 hover:text-emerald-700 transition-colors px-2 py-1 rounded hover:bg-emerald-50"
-                                    >
-                                        Mark all read
-                                    </button>
-                                )}
-                                <CloseBtn onClick={() => setShowNotificationPanel(false)} />
-                            </div>
+                        )}
+                    </div>
+
+                    <div className="flex-1 overflow-y-auto px-4 pb-6">
+                        {quickItems.length > 0 && (
+                            <>
+                                <SectionLabel label="Quick Access" />
+                                <div className="rounded-xl overflow-hidden border border-gray-100 bg-white">
+                                    {quickItems.map((item, i) => (
+                                        <MenuItem key={i} iconUrl={item.iconUrl} label={item.label} to={item.path} onClose={closeSidePanel} isLast={i === quickItems.length - 1} />
+                                    ))}
+                                </div>
+                            </>
+                        )}
+
+                        <SectionLabel label="Account" />
+                        <div className="rounded-xl overflow-hidden border border-gray-100 bg-white">
+                            {accountItems.map((item, i) => (
+                                <MenuItem key={i} iconUrl={item.iconUrl} label={item.label} to={item.path} onClick={item.action} onClose={closeSidePanel} isLast={i === accountItems.length - 1} />
+                            ))}
                         </div>
-                        <div className="flex-1 overflow-y-auto p-4">
-                            {notificationLoading ? (
-                                <div className="flex items-center justify-center py-12">
-                                    <span className="text-[13px] text-gray-400">Loading…</span>
-                                </div>
-                            ) : notifications.length === 0 ? (
-                                <div className="flex flex-col items-center justify-center py-16 gap-2">
-                                    <div className="w-11 h-11 bg-gray-50 rounded-full flex items-center justify-center">
-                                        <img src={ICONS.notification} alt="" className="w-5 h-5 object-contain opacity-25" />
-                                    </div>
-                                    <p className="text-[13px] font-medium text-gray-500">No notifications</p>
-                                    <p className="text-[11px] text-gray-400">You're all caught up!</p>
-                                </div>
-                            ) : (
-                                <div className="flex flex-col gap-2">
-                                    {notifications.map((notif) => {
-                                        const isRead = readNotificationIds.includes(notif.id);
-                                        return (
-                                            <button
-                                                key={notif.id}
-                                                className={`w-full text-left flex items-start gap-3 p-3.5 rounded-xl border transition-all ${
-                                                    isRead
-                                                        ? 'border-gray-50 bg-gray-50/50 hover:bg-gray-100'
-                                                        : 'border-emerald-100 bg-emerald-50/30 hover:bg-emerald-50'
-                                                }`}
-                                                onClick={() => handleNotificationClick(notif)}
-                                            >
-                                                <div className={`relative w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${notif.type === 'event' ? 'bg-emerald-50' :
-                                                        notif.type === 'reservation' ? 'bg-orange-50' : 'bg-gray-50'
-                                                    }`}>
-                                                    <img
-                                                        src={notif.type === 'event' ? ICONS.events : notif.type === 'reservation' ? ICONS.ticket : ICONS.messages}
-                                                        alt=""
-                                                        className="w-4 h-4 object-contain opacity-55"
-                                                    />
-                                                    {!isRead && (
-                                                        <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-emerald-500 rounded-full"></span>
-                                                    )}
-                                                </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <p className={`text-[13px] font-medium truncate ${isRead ? 'text-gray-500' : 'text-gray-800'}`}>{notif.title}</p>
-                                                    <p className={`text-[11px] mt-0.5 leading-relaxed ${isRead ? 'text-gray-400' : 'text-gray-500'}`}>{notif.message}</p>
-                                                    <p className="text-[10px] text-gray-300 mt-1.5">
-                                                        {notif.time
-                                                            ? new Date(notif.time).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
-                                                            : 'Recently'}
-                                                    </p>
-                                                </div>
-                                            </button>
-                                        );
-                                    })}
-                                </div>
-                            )}
+
+                        <SectionLabel label="Explore" />
+                        <div className="rounded-xl overflow-hidden border border-gray-100 bg-white">
+                            {exploreItems.map((item, i) => (
+                                <MenuItem key={i} iconUrl={item.iconUrl} label={item.label} to={item.path} onClick={item.action} onClose={closeSidePanel} isLast={i === exploreItems.length - 1} />
+                            ))}
+                        </div>
+
+                        <SectionLabel label="Preferences & AI" />
+                        <div className="rounded-xl overflow-hidden border border-gray-100 bg-white">
+                            <MenuItem iconUrl={ICONS.setting} label="Settings" to="/settings" onClose={closeSidePanel} isLast={false} />
+                            <MenuItem
+                                iconUrl={ICONS.camera}
+                                label="AI Animal Scanner"
+                                badge="New"
+                                onClick={() => { closeSidePanel(); setShowAIScanner(true); }}
+                                isLast={true}
+                            />
+                        </div>
+
+                        <SectionLabel label="Help" />
+                        <div className="rounded-xl overflow-hidden border border-gray-100 bg-white">
+                            <MenuItem iconUrl={ICONS.help} label="Help Center" to="/help" onClose={closeSidePanel} isLast={false} />
+                            <MenuItem iconUrl={ICONS.support} label="Contact Support" onClick={openEmailModal} isLast={false} />
+                            <MenuItem
+                                iconUrl={ICONS.logout}
+                                label="Sign Out"
+                                danger
+                                onClick={() => { closeSidePanel(); setShowLogoutModal(true); }}
+                                isLast={true}
+                            />
                         </div>
                     </div>
                 </div>
-            )}
+            </div>
+
+            <div className={`fixed inset-0 z-[100] flex justify-end transition-all duration-300 ${showAIScanner ? 'visible' : 'invisible'}`}>
+                <div
+                    className={`absolute inset-0 bg-black/25 backdrop-blur-[2px] transition-opacity duration-300 ${showAIScanner ? 'opacity-100' : 'opacity-0'}`}
+                    onClick={() => setShowAIScanner(false)}
+                />
+                <div
+                    ref={aiScannerRef}
+                    className={`relative w-full max-w-lg h-full bg-white shadow-2xl flex flex-col transform transition-transform duration-300 ${showAIScanner ? 'translate-x-0' : 'translate-x-full'}`}
+                    role="dialog"
+                    aria-modal="true"
+                >
+                    <div className="flex items-center gap-3 px-5 py-4 border-b border-gray-100 flex-shrink-0">
+                        <div className="w-8 h-8 bg-emerald-700 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <img src={ICONS.camera} alt="AI" className="w-4 h-4 object-contain brightness-0 invert" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                            <p className="text-[13px] font-semibold text-gray-900">AI Animal Scanner</p>
+                            <p className="text-[11px] text-gray-400">Identify animals with AI</p>
+                        </div>
+                        <CloseBtn onClick={() => setShowAIScanner(false)} />
+                    </div>
+                    <div className="flex-1 overflow-y-auto">
+                        {showAIScanner && <AnimalClassifier embedded={true} />}
+                    </div>
+                </div>
+            </div>
+
+            <div className={`fixed inset-0 z-[130] flex items-center justify-center p-4 transition-all duration-300 ${showEmailModal ? 'visible' : 'invisible'}`}>
+                <div
+                    className={`absolute inset-0 bg-black/25 backdrop-blur-[2px] transition-opacity duration-300 ${showEmailModal ? 'opacity-100' : 'opacity-0'}`}
+                    onClick={() => { setShowEmailModal(false); setEmailSubject(''); setEmailMessage(''); setEmailError(''); }}
+                />
+                <div className={`bg-white rounded-2xl shadow-xl w-full max-w-sm relative transform transition-all duration-300 ${showEmailModal ? 'scale-100 translate-y-0 opacity-100' : 'scale-95 translate-y-4 opacity-0'}`}>
+                    <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+                        <span className="text-[13px] font-semibold text-gray-900">Contact Support</span>
+                        <CloseBtn onClick={() => { setShowEmailModal(false); setEmailSubject(''); setEmailMessage(''); setEmailError(''); }} />
+                    </div>
+                    <div className="p-5">
+                        {emailSent ? (
+                            <div className="flex flex-col items-center text-center py-5 gap-3">
+                                <div className="w-11 h-11 bg-emerald-50 border border-emerald-100 rounded-full flex items-center justify-center">
+                                    <span className="text-emerald-600 text-base font-bold">✓</span>
+                                </div>
+                                <div>
+                                    <p className="text-[13px] font-semibold text-gray-900">Message Sent</p>
+                                    <p className="text-[11px] text-gray-400 mt-0.5">We'll respond as soon as possible.</p>
+                                </div>
+                                <button
+                                    onClick={() => { setShowEmailModal(false); setEmailSent(false); }}
+                                    className="w-full py-2.5 bg-gray-900 text-white text-[13px] font-medium rounded-lg hover:bg-gray-700 transition-colors mt-2"
+                                >
+                                    Close
+                                </button>
+                            </div>
+                        ) : (
+                            <div className="flex flex-col gap-4">
+                                {emailError && (
+                                    <p className="text-[11px] text-red-500 bg-red-50 px-3 py-2 rounded-lg">{emailError}</p>
+                                )}
+                                <div>
+                                    <label className="block text-[11px] font-medium text-gray-500 mb-1.5">Subject</label>
+                                    <input
+                                        type="text"
+                                        value={emailSubject}
+                                        onChange={(e) => setEmailSubject(e.target.value)}
+                                        placeholder="What's this about?"
+                                        className="w-full px-3 py-2.5 text-[13px] border border-gray-200 rounded-lg focus:ring-1 focus:ring-gray-400 focus:border-gray-400 outline-none transition-all"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-[11px] font-medium text-gray-500 mb-1.5">Message</label>
+                                    <textarea
+                                        value={emailMessage}
+                                        onChange={(e) => setEmailMessage(e.target.value)}
+                                        placeholder="Describe your issue..."
+                                        rows={4}
+                                        className="w-full px-3 py-2.5 text-[13px] border border-gray-200 rounded-lg focus:ring-1 focus:ring-gray-400 focus:border-gray-400 outline-none resize-none transition-all"
+                                    />
+                                </div>
+                                <button
+                                    onClick={handleSendEmail}
+                                    disabled={emailLoading || !emailSubject.trim() || !emailMessage.trim()}
+                                    className="w-full py-2.5 bg-gray-900 text-white text-[13px] font-medium rounded-lg hover:bg-gray-700 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors"
+                                >
+                                    {emailLoading ? 'Sending…' : 'Send Message'}
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
+
+            <div className={`fixed inset-0 z-[120] overflow-hidden transition-all duration-300 ${showNotificationPanel ? 'visible' : 'invisible'}`}>
+                <div
+                    className={`absolute inset-0 bg-black/25 backdrop-blur-[2px] transition-opacity duration-300 ${showNotificationPanel ? 'opacity-100' : 'opacity-0'}`}
+                    onClick={() => setShowNotificationPanel(false)}
+                />
+                <div
+                    ref={notificationPanelRef}
+                    className={`absolute right-0 top-0 h-full w-full max-w-sm bg-white shadow-2xl flex flex-col transform transition-transform duration-300 ${showNotificationPanel ? 'translate-x-0' : 'translate-x-full'}`}
+                >
+                    <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 flex-shrink-0">
+                        <div className="flex items-center gap-3">
+                            <span className="text-[13px] font-semibold text-gray-900">Notifications</span>
+                            {unreadCount > 0 && (
+                                <span className="px-1.5 py-0.5 bg-red-500 text-white text-[10px] font-bold rounded-full">
+                                    {unreadCount}
+                                </span>
+                            )}
+                        </div>
+                        <div className="flex items-center gap-2">
+                            {unreadCount > 0 && (
+                                <button
+                                    onClick={markAllNotificationsRead}
+                                    className="text-[11px] font-medium text-emerald-600 hover:text-emerald-700 transition-colors px-2 py-1 rounded hover:bg-emerald-50"
+                                >
+                                    Mark all read
+                                </button>
+                            )}
+                            <CloseBtn onClick={() => setShowNotificationPanel(false)} />
+                        </div>
+                    </div>
+                    <div className="flex-1 overflow-y-auto p-4">
+                        {notificationLoading ? (
+                            <div className="flex items-center justify-center py-12">
+                                <span className="text-[13px] text-gray-400">Loading…</span>
+                            </div>
+                        ) : notifications.length === 0 ? (
+                            <div className="flex flex-col items-center justify-center py-16 gap-2">
+                                <div className="w-11 h-11 bg-gray-50 rounded-full flex items-center justify-center">
+                                    <img src={ICONS.notification} alt="" className="w-5 h-5 object-contain opacity-25" />
+                                </div>
+                                <p className="text-[13px] font-medium text-gray-500">No notifications</p>
+                                <p className="text-[11px] text-gray-400">You're all caught up!</p>
+                            </div>
+                        ) : (
+                            <div className="flex flex-col gap-2">
+                                {notifications.map((notif) => {
+                                    const isRead = readNotificationIds.includes(notif.id);
+                                    return (
+                                        <button
+                                            key={notif.id}
+                                            className={`w-full text-left flex items-start gap-3 p-3.5 rounded-xl border transition-all ${isRead
+                                                ? 'border-gray-50 bg-gray-50/50 hover:bg-gray-100'
+                                                : 'border-emerald-100 bg-emerald-50/30 hover:bg-emerald-50'
+                                                }`}
+                                            onClick={() => handleNotificationClick(notif)}
+                                        >
+                                            <div className={`relative w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${notif.type === 'event' ? 'bg-emerald-50' :
+                                                notif.type === 'reservation' ? 'bg-orange-50' : 'bg-gray-50'
+                                                }`}>
+                                                <img
+                                                    src={notif.type === 'event' ? ICONS.events : notif.type === 'reservation' ? ICONS.ticket : ICONS.messages}
+                                                    alt=""
+                                                    className="w-4 h-4 object-contain opacity-55"
+                                                />
+                                                {!isRead && (
+                                                    <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-emerald-500 rounded-full"></span>
+                                                )}
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <p className={`text-[13px] font-medium truncate ${isRead ? 'text-gray-500' : 'text-gray-800'}`}>{notif.title}</p>
+                                                <p className={`text-[11px] mt-0.5 leading-relaxed ${isRead ? 'text-gray-400' : 'text-gray-500'}`}>{notif.message}</p>
+                                                <p className="text-[10px] text-gray-300 mt-1.5">
+                                                    {notif.time
+                                                        ? new Date(notif.time).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+                                                        : 'Recently'}
+                                                </p>
+                                            </div>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
 
             <LogoutModal
                 isOpen={showLogoutModal}

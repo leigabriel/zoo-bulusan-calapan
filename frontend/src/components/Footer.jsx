@@ -47,7 +47,7 @@ const SplitText = ({ text, className = "", delay = 0, staggerDelay = 0.035 }) =>
 const BulusanTitle = () => {
     const ref = useRef(null);
     const isInView = useInView(ref, { once: false, margin: "-5%" });
-    const letters = "bulusan".split("");
+    const letters = "bulusan zoo".split("");
 
     return (
         <div ref={ref} className="flex justify-start items-end overflow-hidden px-6 md:px-14">
@@ -56,7 +56,7 @@ const BulusanTitle = () => {
                     key={i}
                     className="inline-block select-none"
                     style={{
-                        fontSize: "clamp(4.5rem, 17vw, 17vw)",
+                        fontSize: "clamp(3.5rem, 17vw, 17vw)",
                         fontFamily: "'Times New Roman', Georgia, serif",
                         fontStyle: "italic",
                         fontWeight: 900,
@@ -152,7 +152,7 @@ const Footer = () => {
         { path: "/animals", label: "Animals" },
         { path: "/plants", label: "Plants" },
         { path: "/events", label: "Events" },
-        { path: "/reservation", label: "Reservation" },
+        { path: "/reservations", label: "Reservation" },
         { path: "/about", label: "About" },
     ];
 
@@ -168,7 +168,7 @@ const Footer = () => {
         <footer
             ref={footerRef}
             className="min-h-screen flex flex-col justify-between px-6 md:px-14 py-10 relative overflow-hidden"
-            style={{ backgroundColor: "#212631", color: "#ebebeb" }}
+            style={{ backgroundColor: "#007a55", color: "#ebebeb" }}
         >
             <motion.div
                 initial={{ opacity: 0 }}
@@ -233,7 +233,7 @@ const Footer = () => {
                 <div>
                     <h4
                         className="uppercase tracking-[0.2em] mb-6 opacity-30"
-                        style={{ fontSize: "clamp(9px, 0.85vw, 12px)", color: "#ebebeb" }}
+                        style={{ fontSize: "clamp(9px, 0.85vw, 16px)", color: "#ebebeb" }}
                     >
                         Contact
                     </h4>
@@ -244,7 +244,7 @@ const Footer = () => {
                                 initial={{ opacity: 0, y: 8 }}
                                 animate={isInView ? { opacity: 0.6, y: 0 } : {}}
                                 transition={{ duration: 0.4, delay: 0.2 + i * 0.07 }}
-                                style={{ fontSize: "clamp(10px, 1vw, 13px)", color: "#ebebeb" }}
+                                style={{ fontSize: "clamp(10px, 1vw, 14px)", color: "#ebebeb" }}
                             >
                                 {item}
                             </motion.li>
@@ -255,7 +255,7 @@ const Footer = () => {
                 <div>
                     <h4
                         className="uppercase tracking-[0.2em] mb-6 opacity-30"
-                        style={{ fontSize: "clamp(9px, 0.85vw, 12px)", color: "#ebebeb" }}
+                        style={{ fontSize: "clamp(9px, 0.85vw, 16px)", color: "#ebebeb" }}
                     >
                         Organization
                     </h4>
@@ -264,7 +264,7 @@ const Footer = () => {
                         animate={isInView ? { opacity: 0.5 } : { opacity: 0 }}
                         transition={{ duration: 0.6, delay: 0.3 }}
                         className="leading-relaxed"
-                        style={{ fontSize: "clamp(10px, 1vw, 13px)", color: "#ebebeb" }}
+                        style={{ fontSize: "clamp(10px, 1vw, 14px)", color: "#ebebeb" }}
                     >
                         Bulusan Wildlife Conservation Inc. is committed to habitat protection,
                         biodiversity awareness, and sustainable conservation programs.

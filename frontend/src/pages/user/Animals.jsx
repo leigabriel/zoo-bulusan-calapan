@@ -1,241 +1,421 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 import { ReactLenis } from 'lenis/react';
 import AIFloatingButton from '../../components/common/AIFloatingButton';
 import { userAPI } from '../../services/api-client';
 
-const Icons = {
-    Location: () => (
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-2.5 h-2.5 md:w-3.5 md:h-3.5">
-            <path fillRule="evenodd" d="M11.54 22.351l.07.04.028.016a.76.76 0 00.723 0l.028-.015.071-.041a16.975 16.975 0 001.144-.742 19.58 19.58 0 002.683-2.282c1.944-1.99 3.963-4.98 3.963-8.827a8.25 8.25 0 00-16.5 0c0 3.846 2.02 6.837 3.963 8.827a19.58 19.58 0 002.682 2.282 16.975 16.975 0 001.145.742zM12 13.5a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
-        </svg>
-    ),
-    Close: () => (
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
-            <path fillRule="evenodd" d="M5.47 5.47a.75.75 0 011.06 0L12 10.94l5.47-5.47a.75.75 0 111.06 1.06L13.06 12l5.47 5.47a.75.75 0 11-1.06 1.06L12 13.06l-5.47 5.47a.75.75 0 01-1.06-1.06L10.94 12 5.47 6.53a.75.75 0 010-1.06z" clipRule="evenodd" />
-        </svg>
-    ),
-    Empty: () => (
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none" stroke="currentColor" strokeWidth="12" className="w-16 h-16">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M226.5 92.9c14.3 42.9-.3 86.2-32.6 96.8s-70.1-15.6-84.4-58.5s.3-86.2 32.6-96.8s70.1 15.6 84.4 58.5zM100.4 198.6c18.9 32.4 14.3 70.1-10.2 84.1s-59.7-.9-78.5-33.3S-2.7 179.3 21.8 165.3s59.7 .9 78.5 33.3zM69.2 401.2C121.6 259.9 214.7 224 256 224s134.4 35.9 186.8 177.2c3.6 9.7 5.2 20.1 5.2 30.5v1.6c0 25.8-20.9 46.7-46.7 46.7c-11.5 0-22.9-1.4-34-4.2l-88-22c-15.3-3.8-31.3-3.8-46.6 0l-88 22c-11.1 2.8-22.5 4.2-34 4.2C84.9 480 64 459.1 64 433.3v-1.6c0-10.4 1.6-20.8 5.2-30.5zM421.8 282.7c-24.5-14-29.1-51.7-10.2-84.1s54-47.3 78.5-33.3s29.1 51.7 10.2 84.1s-54 47.3-78.5 33.3zM310.1 189.7c-32.3-10.6-46.9-53.9-32.6-96.8s52.1-69.1 84.4-58.5s46.9 53.9 32.6 96.8s-52.1 69.1-84.4 58.5z" />
-        </svg>
-    )
+const statusMap = {
+    healthy: { label: 'Healthy', dot: 'bg-green-400' },
+    sick: { label: 'Under Care', dot: 'bg-red-400' },
+    recovering: { label: 'Recovering', dot: 'bg-amber-400' },
+};
+const getStatus = (s) => statusMap[s?.toLowerCase()] ?? { label: s || 'Active', dot: 'bg-green-400' };
+
+const deduplicateById = (arr) => {
+    const seen = new Set();
+    return arr.filter(item => {
+        if (seen.has(item.id)) return false;
+        seen.add(item.id);
+        return true;
+    });
 };
 
-const DEFAULT_ANIMAL_IMAGES = [
-    // 'https://images.unsplash.com/photo-1474511320723-9a56873571b7?w=800',
-    // 'https://images.unsplash.com/photo-1534567153574-2b12153a87f0?w=800',
-    // 'https://images.unsplash.com/photo-1544985361-b420d7a77043?w=800',
-    // 'https://images.unsplash.com/photo-1497752531616-c3afd9760a11?w=800',
-    // 'https://images.unsplash.com/photo-1551085254-e96b210db58a?w=800',
-];
+const CloseIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-3.5 h-3.5">
+        <path fillRule="evenodd" d="M5.47 5.47a.75.75 0 011.06 0L12 10.94l5.47-5.47a.75.75 0 111.06 1.06L13.06 12l5.47 5.47a.75.75 0 11-1.06 1.06L12 13.06l-5.47 5.47a.75.75 0 01-1.06-1.06L10.94 12 5.47 6.53a.75.75 0 010-1.06z" clipRule="evenodd" />
+    </svg>
+);
 
-const colorVariants = [
-    'from-amber-400 to-amber-600',
-    'from-blue-400 to-blue-600',
-    'from-green-400 to-green-600',
-    'from-red-400 to-red-600',
-    'from-purple-400 to-purple-600',
-    'from-teal-400 to-teal-600',
-];
+const AnimalImage = ({ animal, big = false, hovered = false }) => (
+    <div className="relative w-full overflow-hidden" style={{ aspectRatio: '1 / 1' }}>
+        {animal.imageUrl ? (
+            <motion.img
+                src={animal.imageUrl}
+                alt={animal.name}
+                className="absolute inset-0 w-full h-full object-cover block"
+                animate={{ scale: hovered ? 1.04 : 1 }}
+                transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
+            />
+        ) : (
+            <div className="absolute inset-0 bg-[#212631]/5 flex items-center justify-center">
+                <span className={`font-black uppercase text-[#212631]/10 tracking-tighter ${big ? 'text-7xl' : 'text-4xl'}`}>
+                    {animal.name[0]}
+                </span>
+            </div>
+        )}
+    </div>
+);
+
+const CellMeta = ({ animal, index, big = false }) => {
+    const status = getStatus(animal.status);
+    const num = String(index + 1).padStart(3, '0');
+    return (
+        <div className={`flex items-center justify-between border-t border-[#212631]/10 ${big ? 'px-3.5 py-2.5' : 'px-2.5 py-1.5'}`}>
+            <div className="flex items-center gap-1.5 min-w-0 flex-1 overflow-hidden">
+                <span className="text-[8px] tracking-[0.16em] uppercase font-bold text-[#212631]/30 shrink-0">{num}</span>
+                <span className={`font-semibold text-[#212631] truncate ${big ? 'text-xs' : 'text-[10px]'}`}>
+                    {animal.name}
+                </span>
+            </div>
+            <span className={`shrink-0 rounded-full ml-2 ${status.dot} ${big ? 'w-1.5 h-1.5' : 'w-1.5 h-1.5'} opacity-50`} />
+        </div>
+    );
+};
+
+const BigCell = ({ animal, index, onClick }) => {
+    const [hovered, setHovered] = useState(false);
+    return (
+        <div
+            className="cursor-pointer bg-[#ebebeb] overflow-hidden flex flex-col border-r border-[#212631]/10"
+            onMouseEnter={() => setHovered(true)}
+            onMouseLeave={() => setHovered(false)}
+            onClick={() => onClick(animal)}
+        >
+            <AnimalImage animal={animal} big hovered={hovered} />
+            <CellMeta animal={animal} index={index} big />
+        </div>
+    );
+};
+
+const SmallCell = ({ animal, index, onClick, borderRight = false, borderBottom = false }) => {
+    const [hovered, setHovered] = useState(false);
+    return (
+        <div
+            className={`cursor-pointer bg-[#ebebeb] overflow-hidden flex flex-col ${borderRight ? 'border-r border-[#212631]/10' : ''} ${borderBottom ? 'border-b border-[#212631]/10' : ''}`}
+            onMouseEnter={() => setHovered(true)}
+            onMouseLeave={() => setHovered(false)}
+            onClick={() => onClick(animal)}
+        >
+            <AnimalImage animal={animal} hovered={hovered} />
+            <CellMeta animal={animal} index={index} />
+        </div>
+    );
+};
+
+const RowBlock = ({ group, startIndex, bigOnLeft, onClick }) => {
+    const [bigAnimal, ...rest] = group;
+    const smalls = rest.slice(0, 4);
+
+    const BigSide = (
+        <BigCell
+            animal={bigAnimal}
+            index={startIndex}
+            onClick={onClick}
+        />
+    );
+
+    const SmallSide = (
+        <div className="grid grid-cols-2">
+            {smalls.map((animal, i) => (
+                <SmallCell
+                    key={animal.id}
+                    animal={animal}
+                    index={startIndex + 1 + i}
+                    onClick={onClick}
+                    borderRight={i % 2 === 0}
+                    borderBottom={i < 2 && smalls.length > 2}
+                />
+            ))}
+        </div>
+    );
+
+    return (
+        <div className="grid grid-cols-2 border-t border-l border-[#212631]/10">
+            {bigOnLeft ? (
+                <>
+                    {BigSide}
+                    {SmallSide}
+                </>
+            ) : (
+                <>
+                    <div className="border-r border-[#212631]/10">{SmallSide}</div>
+                    {BigSide}
+                </>
+            )}
+        </div>
+    );
+};
+
+const Stat = ({ label, value }) => (
+    <div>
+        <p className="text-[8px] tracking-[0.18em] uppercase font-black text-[#212631]/30 mb-1">{label}</p>
+        <p className="text-sm font-semibold text-[#212631]">{value}</p>
+    </div>
+);
+
+const DetailModal = ({ animal, onClose }) => {
+    const status = getStatus(animal.status);
+
+    useEffect(() => {
+        document.body.style.overflow = 'hidden';
+        return () => { document.body.style.overflow = ''; };
+    }, []);
+
+    useEffect(() => {
+        const onKey = (e) => { if (e.key === 'Escape') onClose(); };
+        window.addEventListener('keydown', onKey);
+        return () => window.removeEventListener('keydown', onKey);
+    }, [onClose]);
+
+    const hasStats = animal.lifespan || animal.weight || animal.length;
+    const hasHabDiet = animal.habitat || animal.diet;
+    const hasInfo = animal.animalInformation || animal.description;
+
+    return (
+        <motion.div
+            className="fixed inset-0 z-[300] flex items-center justify-center p-0 md:p-6"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.18 }}
+        >
+            <div
+                className="absolute inset-0 bg-[#212631]/50 backdrop-blur-sm"
+                onClick={onClose}
+            />
+
+            <motion.div
+                className="relative z-10 flex flex-col bg-[#ebebeb] border border-[#212631]/10 w-full h-full md:h-auto md:max-w-[760px] md:max-h-[85vh] overflow-hidden"
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 12 }}
+                transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
+            >
+                <div className="flex items-center justify-between px-4 py-3 border-b border-[#212631]/10 shrink-0">
+                    <div className="flex items-center gap-2.5">
+                        <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${status.dot}`} />
+                        <span className="text-[9px] tracking-[0.18em] uppercase font-bold text-[#212631]/40">
+                            {animal.species} — {status.label}
+                        </span>
+                    </div>
+                    <button
+                        onClick={onClose}
+                        className="w-7 h-7 flex items-center justify-center text-[#212631] opacity-40 hover:opacity-100 transition-opacity cursor-pointer"
+                        aria-label="Close"
+                    >
+                        <CloseIcon />
+                    </button>
+                </div>
+
+                <div className="flex flex-col md:flex-row flex-1 overflow-y-auto md:overflow-hidden">
+                    <div className="shrink-0 md:w-[320px] p-5 border-b md:border-b-0 md:border-r border-[#212631]/10 flex items-start justify-center">
+                        <div className="w-full overflow-hidden" style={{ aspectRatio: '1 / 1' }}>
+                            {animal.imageUrl ? (
+                                <img
+                                    src={animal.imageUrl}
+                                    alt={animal.name}
+                                    className="w-full h-full object-cover block"
+                                />
+                            ) : (
+                                <div className="w-full h-full bg-[#212631]/5 flex items-center justify-center">
+                                    <span className="text-7xl font-black uppercase text-[#212631]/10 tracking-tighter">
+                                        {animal.name[0]}
+                                    </span>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    <div className="flex-1 flex flex-col p-5 md:overflow-y-auto">
+                        <h2 className="font-black uppercase text-[#212631] leading-[0.88] tracking-tighter mb-5"
+                            style={{ fontSize: 'clamp(24px, 3vw, 40px)' }}>
+                            {animal.name}
+                        </h2>
+
+                        {hasStats && (
+                            <div className="grid grid-cols-3 gap-3 pb-4 mb-4 border-b border-[#212631]/10">
+                                {animal.lifespan && <Stat label="Lifespan" value={animal.lifespan} />}
+                                {animal.weight && <Stat label="Weight" value={animal.weight} />}
+                                {animal.length && <Stat label="Length" value={animal.length} />}
+                            </div>
+                        )}
+
+                        {hasHabDiet && (
+                            <div className="grid grid-cols-2 gap-3 pb-4 mb-4 border-b border-[#212631]/10">
+                                {animal.habitat && <Stat label="Habitat" value={animal.habitat} />}
+                                {animal.diet && <Stat label="Diet" value={animal.diet} />}
+                            </div>
+                        )}
+
+                        {hasInfo && (
+                            <p className="text-sm leading-relaxed text-[#212631]/55 flex-1">
+                                {animal.animalInformation || animal.description}
+                            </p>
+                        )}
+
+                        <div className="flex items-center justify-between pt-4 mt-4 border-t border-[#212631]/10">
+                            <span className="text-[9px] tracking-[0.16em] uppercase font-bold text-[#212631]/30">
+                                {animal.exhibit}
+                            </span>
+                            <button
+                                onClick={onClose}
+                                className="text-[9px] tracking-[0.18em] uppercase font-black text-[#212631] border border-[#212631]/20 px-4 py-2 hover:bg-[#212631] hover:text-[#ebebeb] transition-colors duration-150 cursor-pointer"
+                            >
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </motion.div>
+        </motion.div>
+    );
+};
+
+const MobileCell = ({ animal, index, onClick }) => {
+    const [hovered, setHovered] = useState(false);
+    return (
+        <div
+            className="border-r border-b border-[#212631]/10 overflow-hidden bg-[#ebebeb] cursor-pointer flex flex-col"
+            onMouseEnter={() => setHovered(true)}
+            onMouseLeave={() => setHovered(false)}
+            onClick={() => onClick(animal)}
+        >
+            <AnimalImage animal={animal} hovered={hovered} />
+            <CellMeta animal={animal} index={index} />
+        </div>
+    );
+};
 
 const Animals = () => {
     const [animals, setAnimals] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [selectedAnimal, setSelectedAnimal] = useState(null);
-    const [filter, setFilter] = useState('All');
 
-    useEffect(() => { fetchAnimals(); }, []);
-
-    const fetchAnimals = async () => {
+    const fetchAnimals = useCallback(async () => {
         try {
             setLoading(true);
+            setError('');
             const response = await userAPI.getAnimals();
-            if (response.success && response.animals) {
-                const transformed = response.animals.map((animal, idx) => ({
-                    id: animal.id,
-                    name: animal.name,
-                    species: animal.species || 'Unknown',
-                    exhibit: animal.habitat || animal.exhibit || 'Zoo Bulusan',
-                    description: animal.description || '',
-                    status: animal.status || 'healthy',
-                    imageUrl: animal.image_url || DEFAULT_ANIMAL_IMAGES[idx % DEFAULT_ANIMAL_IMAGES.length],
-                    colorVariant: colorVariants[idx % colorVariants.length],
-                    lifespan: animal.lifespan || null,
-                    weight: animal.weight || null,
-                    length: animal.length || null,
-                    habitat: animal.habitat || null,
-                    diet: animal.diet || null,
-                    animalInformation: animal.animal_information || animal.animalInformation || null
+            if (response.success && Array.isArray(response.animals)) {
+                const mapped = response.animals.map((a) => ({
+                    id: a.id,
+                    name: a.name,
+                    species: a.species || 'Unknown',
+                    exhibit: a.habitat || a.exhibit || 'Zoo Bulusan',
+                    description: a.description || '',
+                    status: a.status || 'healthy',
+                    imageUrl: a.image_url || null,
+                    lifespan: a.lifespan || null,
+                    weight: a.weight || null,
+                    length: a.length || null,
+                    habitat: a.habitat || null,
+                    diet: a.diet || null,
+                    animalInformation: a.animal_information || a.animalInformation || null,
                 }));
-                setAnimals(transformed);
-            } else { setAnimals([]); }
-        } catch (err) {
-            setError('Failed to load animals.');
+                setAnimals(deduplicateById(mapped));
+            } else {
+                setAnimals([]);
+            }
+        } catch {
+            setError('Failed to load animals. Please try again.');
             setAnimals([]);
-        } finally { setLoading(false); }
-    };
-
-    const uniqueSpecies = ['All', ...new Set(animals.map(a => a.species).filter(Boolean))];
-    const filteredAnimals = animals.filter(animal => filter === 'All' || animal.species === filter);
-
-    const getStatusInfo = (status) => {
-        switch (status?.toLowerCase()) {
-            case 'healthy': return { label: 'Healthy', color: 'text-green-700' };
-            case 'sick': return { label: 'Under Care', color: 'text-red-700' };
-            case 'recovering': return { label: 'Recovering', color: 'text-yellow-700' };
-            default: return { label: status || 'Active', color: 'text-green-700' };
+        } finally {
+            setLoading(false);
         }
-    };
+    }, []);
+
+    useEffect(() => { fetchAnimals(); }, [fetchAnimals]);
+
+    const rows = [];
+    for (let i = 0; i < animals.length; i += 5) {
+        rows.push({ group: animals.slice(i, i + 5), startIndex: i });
+    }
 
     return (
         <ReactLenis root>
-        <div className="min-h-screen bg-[#ebebeb] flex flex-col text-[#2A2A2A]">
-            <Header />
-            
-            <section className="relative px-4 md:px-6 pt-24 pb-8 md:pt-40 md:pb-16 max-w-7xl mx-auto w-full">
-                <div className="flex flex-col md:flex-row justify-between items-start gap-4">
-                    <div className="max-w-2xl text-left">
-                        <h1 className="text-3xl md:text-7xl lg:text-8xl font-bold uppercase leading-tight md:leading-[0.9] tracking-tighter mb-4 md:mb-8">
-                            Meet Our<br />Animals
-                        </h1>
-                        <p className="text-sm md:text-xl font-medium opacity-80 max-w-md leading-snug">
-                            Discover the incredible wildlife at Zoo Bulusan Calapan through our most beloved residents.
-                        </p>
+            <div className="min-h-screen bg-[#ebebeb] flex flex-col text-[#212631]">
+                <Header />
+
+                <section className="pt-14 md:pt-20 w-full">
+                    <div className="flex items-center justify-between px-4 md:px-5 py-2.5 border-b border-[#212631]/10">
+                        <span className="text-[9px] tracking-[0.18em] uppercase font-bold text-[#212631]/32">
+                            Animals
+                        </span>
+                        <span className="text-[9px] tracking-[0.18em] uppercase font-bold text-[#212631]/32">
+                            {!loading && animals.length > 0 ? `${animals.length} animals` : ''}
+                        </span>
                     </div>
-                </div>
-            </section>
 
-            <div className="container mx-auto px-4 md:px-6 py-4 md:py-12 flex-grow">
-                <div className="flex flex-wrap gap-4 md:gap-8 mb-8 md:mb-16 border-b border-black/10 pb-4 overflow-x-auto no-scrollbar">
-                    {/* {uniqueSpecies.slice(0, 8).map(species => (
-                        <button key={species} onClick={() => setFilter(species)}
-                            className={`text-[10px] md:text-xs uppercase tracking-widest transition-all whitespace-nowrap ${filter === species ? 'font-black border-b-2 border-black' : 'opacity-50 hover:opacity-100 font-bold'}`}>
-                            {species}
-                        </button>
-                    ))} */}
-                </div>
+                    <h1 className="font-normal uppercase text-[#212631] leading-[0.88] tracking-tighter px-4 md:px-5 pt-1.5 pb-2"
+                        style={{ fontSize: 'clamp(38px, 8vw, 108px)' }}>
+                        Meet Our Animals
+                    </h1>
 
-                {loading && (
-                    <div className="flex items-center justify-center py-20">
-                        <div className="w-8 h-8 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
-                    </div>
-                )}
+                    <div className="h-px bg-[#212631]/10" />
+                </section>
 
-                {!loading && !error && filteredAnimals.length === 0 && (
-                    <div className="flex flex-col items-center justify-center py-20">
-                        <div className="w-16 h-16 mb-4 text-gray-300">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
-                            </svg>
+                <main className="flex-1">
+                    {loading && (
+                        <div className="flex items-center justify-center py-32">
+                            <motion.div
+                                className="w-5 h-5 rounded-full border-[1.5px] border-[#212631]/15 border-t-[#212631]"
+                                animate={{ rotate: 360 }}
+                                transition={{ repeat: Infinity, duration: 0.85, ease: 'linear' }}
+                            />
                         </div>
-                        <p className="text-lg font-medium text-gray-500">No animals available at the moment.</p>
-                        <p className="text-sm text-gray-400 mt-1">Please check back later.</p>
-                    </div>
-                )}
+                    )}
 
-                {!loading && !error && filteredAnimals.length > 0 && (
-                    <div className="grid grid-cols-3 gap-3 md:gap-x-12 md:gap-y-20">
-                        {filteredAnimals.map((animal) => (
-                            <div key={animal.id} className="group cursor-pointer" onClick={() => setSelectedAnimal(animal)}>
-                                <div className="aspect-[3/4] md:aspect-[4/5] overflow-hidden mb-3 md:mb-6 bg-white shadow-sm">
-                                    <img src={animal.imageUrl} alt={animal.name} className="w-full h-full object-cover group-hover:scale-105 transition-all duration-700 ease-out" />
-                                </div>
-                                <div className="text-left">
-                                    <h3 className="text-[10px] md:text-2xl font-bold mb-1 uppercase tracking-tight leading-tight line-clamp-1">{animal.name}</h3>
-                                    <p className="hidden md:block text-sm font-medium opacity-70 leading-snug mb-4 line-clamp-2">
-                                        {animal.description || `${animal.name} is one of our beloved residents.`}
-                                    </p>
-                                    <div className="flex flex-col md:flex-row items-start md:items-center gap-1 md:gap-4 text-[7px] md:text-[10px] uppercase tracking-widest font-black opacity-40">
-                                        <span className="flex items-center gap-0.5"><Icons.Location /> <span className="line-clamp-1">{animal.exhibit}</span></span>
-                                        <span className={getStatusInfo(animal.status).color}>{getStatusInfo(animal.status).label}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                )}
-            </div>
-
-            {selectedAnimal && (
-                <div className="fixed inset-0 bg-black/40 md:bg-[#ebebeb]/95 z-[100] flex items-center justify-center p-0 md:p-6 backdrop-blur-sm overflow-y-auto">
-                    {/* Fixed X Button for Mobile Accessibility */}
-                    <button 
-                        onClick={() => setSelectedAnimal(null)} 
-                        className="fixed top-6 right-6 md:absolute md:-top-12 md:-right-12 p-3 bg-white md:bg-transparent rounded-full md:rounded-none shadow-lg md:shadow-none z-[110] text-black transition-transform active:scale-95"
-                    >
-                        <Icons.Close />
-                    </button>
-
-                    <div className="max-w-7xl w-full h-full md:h-auto bg-[#F9F9F9] md:bg-transparent grid grid-cols-1 md:grid-cols-2 gap-0 md:gap-12 items-center overflow-y-auto md:overflow-visible">
-                        <div className="aspect-[4/5] md:aspect-[4/5] bg-white shadow-2xl overflow-hidden w-full">
-                            <img src={selectedAnimal.imageUrl} alt={selectedAnimal.name} className="w-full h-full object-cover" />
-                        </div>
-                        <div className="p-8 md:p-0">
-                            <h2 className="text-4xl md:text-6xl font-bold uppercase mb-6 md:mb-8 leading-tight tracking-tighter">{selectedAnimal.name}</h2>
-                            
-                            <div className="space-y-6 md:space-y-8 mb-10 md:mb-12">
-                                {(selectedAnimal.lifespan || selectedAnimal.weight || selectedAnimal.length) && (
-                                    <div className="grid grid-cols-3 gap-4">
-                                        {selectedAnimal.lifespan && (
-                                            <div>
-                                                <h4 className="text-[8px] md:text-[10px] uppercase tracking-widest font-black mb-1 opacity-30">Lifespan</h4>
-                                                <p className="text-sm md:text-base font-medium">{selectedAnimal.lifespan}</p>
-                                            </div>
-                                        )}
-                                        {selectedAnimal.weight && (
-                                            <div>
-                                                <h4 className="text-[8px] md:text-[10px] uppercase tracking-widest font-black mb-1 opacity-30">Weight</h4>
-                                                <p className="text-sm md:text-base font-medium">{selectedAnimal.weight}</p>
-                                            </div>
-                                        )}
-                                        {selectedAnimal.length && (
-                                            <div>
-                                                <h4 className="text-[8px] md:text-[10px] uppercase tracking-widest font-black mb-1 opacity-30">Length</h4>
-                                                <p className="text-sm md:text-base font-medium">{selectedAnimal.length}</p>
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
-                                
-                                {(selectedAnimal.habitat || selectedAnimal.diet) && (
-                                    <div className="grid grid-cols-2 gap-4">
-                                        {selectedAnimal.habitat && (
-                                            <div>
-                                                <h4 className="text-[8px] md:text-[10px] uppercase tracking-widest font-black mb-1 opacity-30">Habitat</h4>
-                                                <p className="text-sm md:text-base font-medium">{selectedAnimal.habitat}</p>
-                                            </div>
-                                        )}
-                                        {selectedAnimal.diet && (
-                                            <div>
-                                                <h4 className="text-[8px] md:text-[10px] uppercase tracking-widest font-black mb-1 opacity-30">Diet</h4>
-                                                <p className="text-sm md:text-base font-medium">{selectedAnimal.diet}</p>
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
-                                
-                                {(selectedAnimal.animalInformation || selectedAnimal.animal_information) && (
-                                    <div>
-                                        <h4 className="text-[8px] md:text-[10px] uppercase tracking-widest font-black mb-1 md:mb-2 opacity-30">Animal Information</h4>
-                                        <p className="text-sm md:text-base font-medium leading-snug opacity-80">{selectedAnimal.animalInformation || selectedAnimal.animal_information}</p>
-                                    </div>
-                                )}
-                            </div>
-                            
-                            <button onClick={() => setSelectedAnimal(null)} className="w-full md:w-auto px-8 py-4 bg-[#2A2A2A] text-white text-[10px] md:text-xs uppercase tracking-[0.2em] font-bold hover:bg-black transition-all">
-                                Return to Gallery
+                    {!loading && error && (
+                        <div className="flex flex-col items-center gap-3 py-24 px-6">
+                            <p className="text-[10px] tracking-widest uppercase font-bold text-[#212631]/35">{error}</p>
+                            <button
+                                onClick={fetchAnimals}
+                                className="text-[9px] tracking-[0.18em] uppercase font-black text-[#212631] border border-[#212631]/20 px-4 py-2 hover:bg-[#212631] hover:text-[#ebebeb] transition-colors cursor-pointer"
+                            >
+                                Retry
                             </button>
                         </div>
-                    </div>
-                </div>
-            )}
+                    )}
 
-            <Footer />
-            <AIFloatingButton />
-        </div>
+                    {!loading && !error && animals.length === 0 && (
+                        <p className="text-center py-28 font-black uppercase tracking-tighter text-[#212631]/6"
+                            style={{ fontSize: 'clamp(32px, 5vw, 56px)' }}>
+                            No animals available
+                        </p>
+                    )}
+
+                    {!loading && !error && animals.length > 0 && (
+                        <>
+                            <div className="hidden md:block">
+                                {rows.map(({ group, startIndex }, rowIdx) => (
+                                    <RowBlock
+                                        key={`row-${startIndex}`}
+                                        group={group}
+                                        startIndex={startIndex}
+                                        bigOnLeft={rowIdx % 2 === 0}
+                                        onClick={setSelectedAnimal}
+                                    />
+                                ))}
+                            </div>
+
+                            <div className="md:hidden grid grid-cols-2 border-l border-t border-[#212631]/10">
+                                {animals.map((animal, idx) => (
+                                    <MobileCell
+                                        key={animal.id}
+                                        animal={animal}
+                                        index={idx}
+                                        onClick={setSelectedAnimal}
+                                    />
+                                ))}
+                            </div>
+                        </>
+                    )}
+                </main>
+
+                <AnimatePresence>
+                    {selectedAnimal && (
+                        <DetailModal
+                            key={selectedAnimal.id}
+                            animal={selectedAnimal}
+                            onClose={() => setSelectedAnimal(null)}
+                        />
+                    )}
+                </AnimatePresence>
+                <AIFloatingButton />
+            </div>
         </ReactLenis>
     );
 };
