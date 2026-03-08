@@ -39,22 +39,21 @@ export const AuthProvider = ({ children }) => {
 
     useEffect(() => {
         const initAuth = () => {
-            // ensure this tab has a unique tab id stored in sessionStorage
+            // Ensure this tab has a unique tab ID stored in sessionStorage
+            // sessionStorage is tab-scoped: new tabs start empty, duplicated tabs inherit data
             let tabId = sessionStorage.getItem(TAB_ID_KEY);
             if (!tabId) {
                 tabId = generateUUID();
                 sessionStorage.setItem(TAB_ID_KEY, tabId);
             }
 
+            // Check sessionStorage ONLY for tab-scoped authentication
+            // This ensures new tabs don't inherit sessions from other tabs
             for (const [type, keys] of Object.entries(STORAGE_KEYS)) {
-                // Check localStorage first for persistent session, then sessionStorage for backward compatibility
-                const storedToken = localStorage.getItem(`${keys.token}_${tabId}`) 
-                    || localStorage.getItem(keys.token)
-                    || sessionStorage.getItem(`${keys.token}_${tabId}`) 
+                // Check tab-scoped storage first, then fall back to non-scoped for compatibility
+                const storedToken = sessionStorage.getItem(`${keys.token}_${tabId}`) 
                     || sessionStorage.getItem(keys.token);
-                const storedUser = localStorage.getItem(`${keys.user}_${tabId}`) 
-                    || localStorage.getItem(keys.user)
-                    || sessionStorage.getItem(`${keys.user}_${tabId}`) 
+                const storedUser = sessionStorage.getItem(`${keys.user}_${tabId}`) 
                     || sessionStorage.getItem(keys.user);
 
                 if (storedToken && storedUser) {
@@ -64,20 +63,18 @@ export const AuthProvider = ({ children }) => {
                         setUser(userData);
                         setSessionType(type);
                         
-                        // Migrate to localStorage if found in sessionStorage only
-                        if (!localStorage.getItem(keys.token)) {
-                            localStorage.setItem(keys.token, storedToken);
-                            localStorage.setItem(keys.user, storedUser);
+                        // Ensure data is stored with tab ID for proper isolation
+                        if (!sessionStorage.getItem(`${keys.token}_${tabId}`)) {
+                            sessionStorage.setItem(`${keys.token}_${tabId}`, storedToken);
+                            sessionStorage.setItem(`${keys.user}_${tabId}`, storedUser);
                         }
                         break;
                     } catch (e) {
-                        // Clean up invalid data
-                        localStorage.removeItem(`${keys.token}_${tabId}`);
-                        localStorage.removeItem(`${keys.user}_${tabId}`);
-                        localStorage.removeItem(keys.token);
-                        localStorage.removeItem(keys.user);
+                        // Clean up invalid data from sessionStorage only
                         sessionStorage.removeItem(`${keys.token}_${tabId}`);
                         sessionStorage.removeItem(`${keys.user}_${tabId}`);
+                        sessionStorage.removeItem(keys.token);
+                        sessionStorage.removeItem(keys.user);
                     }
                 }
             }
@@ -91,14 +88,15 @@ export const AuthProvider = ({ children }) => {
         const keys = getStorageKeys(userData.role);
         const tabId = sessionStorage.getItem(TAB_ID_KEY);
         
-        // Store in localStorage for persistence across browser sessions
-        localStorage.setItem(keys.token, authToken);
-        localStorage.setItem(keys.user, JSON.stringify(userData));
-        
-        // Also store per-tab in sessionStorage for multi-tab support
+        // Store ONLY in sessionStorage for tab-scoped authentication
+        // This ensures each tab has isolated session state
         if (tabId) {
             sessionStorage.setItem(`${keys.token}_${tabId}`, authToken);
             sessionStorage.setItem(`${keys.user}_${tabId}`, JSON.stringify(userData));
+        } else {
+            // Fallback for edge case where tabId is not set
+            sessionStorage.setItem(keys.token, authToken);
+            sessionStorage.setItem(keys.user, JSON.stringify(userData));
         }
         
         setToken(authToken);
@@ -111,13 +109,7 @@ export const AuthProvider = ({ children }) => {
         if (sessionType) {
             const keys = STORAGE_KEYS[sessionType] || STORAGE_KEYS.user;
             
-            // Clear from localStorage (persistent storage)
-            localStorage.removeItem(keys.token);
-            localStorage.removeItem(keys.user);
-            localStorage.removeItem(`${keys.token}_${tabId}`);
-            localStorage.removeItem(`${keys.user}_${tabId}`);
-            
-            // Clear from sessionStorage
+            // Clear from sessionStorage only (tab-scoped storage)
             if (tabId) {
                 sessionStorage.removeItem(`${keys.token}_${tabId}`);
                 sessionStorage.removeItem(`${keys.user}_${tabId}`);
@@ -136,12 +128,11 @@ export const AuthProvider = ({ children }) => {
         const tabId = sessionStorage.getItem(TAB_ID_KEY);
         const userDataStr = JSON.stringify(userData);
         
-        // Update in localStorage for persistence
-        localStorage.setItem(keys.user, userDataStr);
-        
-        // Update in sessionStorage for tab tracking
+        // Update ONLY in sessionStorage for tab-scoped storage
         if (tabId) {
             sessionStorage.setItem(`${keys.user}_${tabId}`, userDataStr);
+        } else {
+            sessionStorage.setItem(keys.user, userDataStr);
         }
         
         setUser(userData);
