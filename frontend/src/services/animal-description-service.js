@@ -89,11 +89,12 @@ const descriptionCache = new LRUCache(CONFIG.MAX_CACHE_SIZE);
 // ============================================
 // Logging
 // ============================================
+// Log utils - minimal
 const log = {
-    info: (...args) => console.log('[DescriptionService]', ...args),
+    info: () => {},
     warn: (...args) => console.warn('[DescriptionService]', ...args),
     error: (...args) => console.error('[DescriptionService]', ...args),
-    debug: (...args) => console.log('[DescriptionService][DEBUG]', ...args)
+    debug: () => {}
 };
 
 // ============================================

@@ -742,6 +742,7 @@ const AdminDashboard = () => {
                                                     src={getProfileImageUrl(u.profileImage)}
                                                     alt={u.fullName || 'User'}
                                                     className="w-10 h-10 rounded-full object-cover"
+                                                    referrerPolicy="no-referrer"
                                                     onError={(e) => {
                                                         e.target.onerror = null;
                                                         e.target.src = '';

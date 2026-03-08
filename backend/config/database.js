@@ -42,10 +42,10 @@ const promisePool = pool.promise();
 
 pool.getConnection((err, connection) => {
     if (err) {
-        console.error('\x1b[31mDatabase connection failed: ' + err.message + '\x1b[0m');
+        console.error('DB connection failed');
         return;
     }
-    console.log('\x1b[32mDatabase connected successfully\x1b[0m');
+    console.info('DB connected');
     connection.release();
 });
 

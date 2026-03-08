@@ -92,11 +92,16 @@ const Events = () => {
     const [filter, setFilter] = useState('all');
     const [calendarDate, setCalendarDate] = useState(new Date());
 
-    useEffect(() => { fetchEvents(); }, []);
+    const formatDateFromDB = (dateValue) => {
+        if (!dateValue) return '';
+        if (typeof dateValue === 'string' && dateValue.includes('T')) return dateValue.split('T')[0];
+        const d = new Date(dateValue);
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    };
 
-    const fetchEvents = async () => {
+    const fetchEvents = async (showLoading = true) => {
         try {
-            setLoading(true);
+            if (showLoading) setLoading(true);
             const response = await userAPI.getEvents(true);
             if (response.success && response.events) {
                 const todayMidnight = new Date();
@@ -132,19 +137,20 @@ const Events = () => {
             }
         } catch (err) {
             console.error(err);
-            setError('Failed to load events.');
+            if (showLoading) setError('Failed to load events.');
             setEvents([]);
         } finally {
-            setLoading(false);
+            if (showLoading) setLoading(false);
         }
     };
 
-    const formatDateFromDB = (dateValue) => {
-        if (!dateValue) return '';
-        if (typeof dateValue === 'string' && dateValue.includes('T')) return dateValue.split('T')[0];
-        const d = new Date(dateValue);
-        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-    };
+    // Fetch events on mount and poll for real-time updates
+    useEffect(() => { 
+        fetchEvents(); 
+        // Poll for new events every 60 seconds
+        const pollInterval = setInterval(() => fetchEvents(false), 60000);
+        return () => clearInterval(pollInterval);
+    }, []);
 
     const formatTime = (time) => {
         if (!time) return '';

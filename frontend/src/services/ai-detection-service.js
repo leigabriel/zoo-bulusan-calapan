@@ -24,23 +24,13 @@ import {
 } from '../config/ai-service-config';
 
 // ============================================
-// Logging System for Debugging
+// Logging - minimal output
 // ============================================
-const LOG_LEVELS = {
-    DEBUG: 0,
-    INFO: 1,
-    WARN: 2,
-    ERROR: 3
-};
-
-// Set to DEBUG for full logging, INFO for production
-const CURRENT_LOG_LEVEL = LOG_LEVELS.DEBUG;
-
 const log = {
-    debug: (...args) => CURRENT_LOG_LEVEL <= LOG_LEVELS.DEBUG && console.log('[AI-Detection][DEBUG]', ...args),
-    info: (...args) => CURRENT_LOG_LEVEL <= LOG_LEVELS.INFO && console.log('[AI-Detection][INFO]', ...args),
-    warn: (...args) => CURRENT_LOG_LEVEL <= LOG_LEVELS.WARN && console.warn('[AI-Detection][WARN]', ...args),
-    error: (...args) => CURRENT_LOG_LEVEL <= LOG_LEVELS.ERROR && console.error('[AI-Detection][ERROR]', ...args),
+    debug: () => {},
+    info: () => {},
+    warn: (...args) => console.warn('[AI-Detection]', ...args),
+    error: (...args) => console.error('[AI-Detection]', ...args),
 };
 
 // ============================================
@@ -110,7 +100,6 @@ export const loadLocalModel = async () => {
             cachedModel = model;
             return model;
         } catch (error) {
-            console.error('Failed to load local model:', error);
             throw error;
         } finally {
             modelLoading = false;

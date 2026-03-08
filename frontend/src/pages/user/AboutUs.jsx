@@ -150,7 +150,7 @@ const JournalHero = ({ entry }) => {
     const overlayO = useTransform(scrollYProgress, [0, 0.5, 1], [0.55, 0.35, 0.55]);
 
     return (
-        <article ref={ref} className={`${entry.grid} group`}>
+        <article ref={ref} className={`relative ${entry.grid} group`}>
             <div className={`relative overflow-hidden mb-6 md:mb-8 ${entry.aspect} bg-[#212631]/5 rounded-sm`}>
                 <motion.div className="absolute w-full h-[120%] -top-[10%]" style={{ y: imgY }}>
                     <img src={entry.image} alt={entry.title} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-[1400ms] ease-out" />
@@ -202,7 +202,7 @@ const JournalCard = ({ entry, index }) => {
     return (
         <motion.article
             ref={ref}
-            className={`${entry.grid} group`}
+            className={`relative ${entry.grid} group`}
             initial={{ opacity: 0, y: 40 }}
             animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 40 }}
             transition={{ duration: 0.85, delay: d, ease: E }}

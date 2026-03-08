@@ -95,7 +95,6 @@ const AdminAnimals = ({ globalSearch = '' }) => {
             if (res.success) setAnimals(res.animals || []);
             else throw new Error(res.message || 'Failed to fetch animals');
         } catch (err) {
-            console.error(err);
             setError(err.message || 'Error');
         } finally { setLoading(false); }
     };
@@ -176,7 +175,6 @@ const AdminAnimals = ({ globalSearch = '' }) => {
                 closeModal();
             } else throw new Error(res.message || 'Save failed');
         } catch (err) {
-            console.error(err);
             alert(err.message || 'Failed to save animal');
         } finally {
             setSaving(false);
@@ -191,7 +189,6 @@ const AdminAnimals = ({ globalSearch = '' }) => {
                 setDeleteConfirm(null);
             } else throw new Error(res.message || 'Delete failed');
         } catch (err) {
-            console.error(err);
             alert(err.message || 'Failed to delete animal');
         }
     };

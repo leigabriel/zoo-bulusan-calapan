@@ -156,7 +156,7 @@ const StaffLayout = ({ children }) => {
                 setActivitySummary(res.summary || null);
             }
         } catch (err) {
-            console.error('Error fetching notifications:', err);
+            // Error fetching notifications
         } finally {
             setNotificationsLoading(false);
         }
@@ -165,8 +165,8 @@ const StaffLayout = ({ children }) => {
     // Fetch notifications on mount and periodically
     useEffect(() => {
         fetchNotifications();
-        // Refresh notifications every 2 minutes
-        const interval = setInterval(fetchNotifications, 120000);
+        // Refresh notifications every 30 seconds for real-time updates
+        const interval = setInterval(fetchNotifications, 30000);
         return () => clearInterval(interval);
     }, []);
 
@@ -241,7 +241,6 @@ const StaffLayout = ({ children }) => {
                 });
             }
         } catch (err) {
-            console.error('Error loading profile', err);
             setProfileMessage({ type: 'error', text: 'Failed to load profile' });
         } finally {
             setProfileLoading(false);
@@ -263,7 +262,6 @@ const StaffLayout = ({ children }) => {
                 setProfileMessage({ type: 'error', text: res.message || 'Failed to update profile' });
             }
         } catch (err) {
-            console.error(err);
             setProfileMessage({ type: 'error', text: 'Error updating profile' });
         } finally {
             setProfileSaving(false);
@@ -674,7 +672,13 @@ const StaffLayout = ({ children }) => {
                                 <div className="flex justify-center">
                                     <div className="w-24 h-24 bg-gradient-to-br from-[#8cff65] to-[#4ade80] rounded-full flex items-center justify-center overflow-hidden">
                                         {previewImage ? (
-                                            <img src={previewImage} alt="Profile" className="w-full h-full object-cover" />
+                                            <img 
+                                                src={previewImage} 
+                                                alt="Profile" 
+                                                className="w-full h-full object-cover"
+                                                referrerPolicy="no-referrer"
+                                                onError={(e) => { e.target.onerror = null; e.target.style.display = 'none'; }}
+                                            />
                                         ) : (
                                             <span className="text-4xl font-bold text-[#0a0a0a]">
                                                 {profileForm.firstName?.charAt(0) || 'S'}

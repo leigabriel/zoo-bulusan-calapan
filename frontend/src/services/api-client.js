@@ -1393,13 +1393,41 @@ export const predictionAPI = {
 
 /**
  * Get the full URL for a profile image
- * Handles various formats: full URLs, relative paths, and filenames
+ * Handles various formats: full URLs, relative paths, filenames, and default avatar keys
  */
 export const getProfileImageUrl = (profileImg) => {
     if (!profileImg) return null;
     
+    // Import default avatar utilities lazily to avoid circular dependencies
+    const DEFAULT_AVATAR_KEYS = ['deer', 'owl', 'dove', 'eagle', 'horse', 'tiger', 'monkey', 'ostrich', 'parrot', 'rabbit'];
+    
+    // Check if it's a default avatar key
+    if (DEFAULT_AVATAR_KEYS.includes(profileImg)) {
+        // Generate inline SVG data URL for default avatars
+        const AVATARS = {
+            deer: { emoji: '🦌', bgColor: '#FFF8DC' },
+            owl: { emoji: '🦉', bgColor: '#F5F5DC' },
+            dove: { emoji: '🕊️', bgColor: '#F0F8FF' },
+            eagle: { emoji: '🦅', bgColor: '#FFF5EE' },
+            horse: { emoji: '🐴', bgColor: '#F5DEB3' },
+            tiger: { emoji: '🐯', bgColor: '#FFFACD' },
+            monkey: { emoji: '🐵', bgColor: '#FAEBD7' },
+            ostrich: { emoji: '🦩', bgColor: '#FFE4E1' },
+            parrot: { emoji: '🦜', bgColor: '#F0FFF0' },
+            rabbit: { emoji: '🐰', bgColor: '#FFF0F5' }
+        };
+        const avatar = AVATARS[profileImg];
+        const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="${avatar.bgColor}"/><text x="50" y="60" font-size="50" text-anchor="middle" dominant-baseline="middle">${avatar.emoji}</text></svg>`;
+        return `data:image/svg+xml,${encodeURIComponent(svg)}`;
+    }
+    
     // If it's already a full URL (http/https), use it directly
     if (profileImg.startsWith('http')) {
+        return profileImg;
+    }
+    
+    // If it's a data URL, use it directly
+    if (profileImg.startsWith('data:')) {
         return profileImg;
     }
     

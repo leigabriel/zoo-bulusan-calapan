@@ -1,5 +1,30 @@
 const Reservation = require('../models/reservation-model');
 const Event = require('../models/event-model');
+const Notification = require('../models/notification-model');
+
+// Helper function to create notifications for admin/staff
+const createAdminStaffNotification = async (title, message, type = 'event', link = null) => {
+    try {
+        const db = require('../config/database');
+        // Get all admin and staff users
+        const [adminStaff] = await db.query(
+            "SELECT id FROM users WHERE role IN ('admin', 'staff') AND is_active = TRUE"
+        );
+        
+        // Create notification for each admin/staff
+        for (const user of adminStaff) {
+            await Notification.create({
+                userId: user.id,
+                title,
+                message,
+                type,
+                link
+            });
+        }
+    } catch (error) {
+        console.error('Error creating admin/staff notification:', error);
+    }
+};
 
 const generateReservationReference = () => {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -175,6 +200,14 @@ exports.createEventReservation = async (req, res) => {
             venueEventTime,
             venueEventDescription
         });
+
+        // Create notification for admin/staff
+        await createAdminStaffNotification(
+            'New Event Reservation',
+            `${participantName} reserved ${venueEventName} for ${new Date(venueEventDate).toLocaleDateString()}`,
+            'event',
+            `/admin/reservations?event=${reservationId}`
+        );
 
         res.status(201).json({
             success: true,

@@ -82,7 +82,7 @@ const ReservationHistoryPanel = ({ isOpen, onClose }) => {
                 setArchivedReservations(prev => [...prev.filter(r => r.type !== 'event'), ...archived.map(r => ({ ...r, type: 'event' }))]);
             }
         } catch (err) {
-            console.error('Error fetching reservations:', err);
+            // Error fetching reservations
         } finally {
             setLoading(false);
         }
@@ -100,7 +100,7 @@ const ReservationHistoryPanel = ({ isOpen, onClose }) => {
                 setSelectedReservation(null);
             }
         } catch (err) {
-            console.error('Error archiving:', err);
+            // Error archiving
         } finally {
             setArchiving(false);
         }
@@ -118,7 +118,7 @@ const ReservationHistoryPanel = ({ isOpen, onClose }) => {
                 setSelectedReservation(null);
             }
         } catch (err) {
-            console.error('Error restoring:', err);
+            // Error restoring
         } finally {
             setArchiving(false);
         }

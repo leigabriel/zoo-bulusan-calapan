@@ -42,7 +42,6 @@ app.use(cors({
         );
         if (isAllowed) return callback(null, true);
         if (process.env.NODE_ENV !== 'production') return callback(null, true);
-        console.warn(`CORS blocked origin: ${origin}`);
         callback(new Error('Not allowed by CORS'));
     },
     credentials: true,
@@ -118,7 +117,7 @@ app.use((req, res) => {
 });
 
 app.use((err, req, res, next) => {
-    console.error('Error:', err);
+    console.error('Server error');
     res.status(err.status || 500).json({
         success: false,
         message: err.message || 'Internal server error',
@@ -127,11 +126,11 @@ app.use((err, req, res, next) => {
 });
 
 app.listen(PORT, HOST, () => {
-    console.log(`Server running on ${HOST}:${PORT}`);
+    console.info(`Server started on ${HOST}:${PORT}`);
 });
 
-process.on('unhandledRejection', (err) => {
-    console.error('Unhandled Promise Rejection:', err);
+process.on('unhandledRejection', () => {
+    console.error('Unhandled rejection');
     process.exit(1);
 });
 

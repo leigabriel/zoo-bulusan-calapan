@@ -3,7 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { authAPI, userAPI, getProfileImageUrl as resolveProfileImageUrl } from '../../services/api-client';
 import { sanitizeInput } from '../../utils/sanitize';
+import { isDefaultAvatar, getDefaultAvatarSvg, getInitials } from '../../utils/profile-avatars';
 import LogoutModal from '../../components/common/LogoutModal';
+import AvatarSelector from '../../components/common/AvatarSelector';
 
 const UserIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-16 h-16 text-gray-300">
@@ -61,7 +63,6 @@ const AnimalCollection = () => {
                     }
                 }
             } catch (error) {
-                console.error('Error loading collection from database:', error);
                 // Fallback to localStorage
                 const stored = localStorage.getItem('animalCollection');
                 if (stored) {
@@ -95,7 +96,6 @@ const AnimalCollection = () => {
             const updated = collection.filter(a => a.name !== animal.name);
             setCollection(updated);
         } catch (error) {
-            console.error('Error removing from collection:', error);
             // Still update UI
             const updated = collection.filter(a => a.name !== animal.name);
             setCollection(updated);
@@ -218,6 +218,9 @@ const UserProfile = () => {
     const [imagePreview, setImagePreview] = useState(null);
     const [selectedFile, setSelectedFile] = useState(null);
     const [uploadingImage, setUploadingImage] = useState(false);
+    const [imageLoadError, setImageLoadError] = useState(false);
+    const [showAvatarSelector, setShowAvatarSelector] = useState(false);
+    const [selectedDefaultAvatar, setSelectedDefaultAvatar] = useState(null);
     const fileInputRef = useRef(null);
 
     const [formData, setFormData] = useState({
@@ -360,8 +363,56 @@ const UserProfile = () => {
     };
 
     const getProfileImageUrl = () => {
+        // If there's a preview from file selection, use it
         if (imagePreview) return imagePreview;
-        return resolveProfileImageUrl(user?.profileImage || user?.profile_image);
+        
+        // If a default avatar is selected, use the SVG
+        if (selectedDefaultAvatar) {
+            return getDefaultAvatarSvg(selectedDefaultAvatar);
+        }
+        
+        const profileImg = user?.profileImage || user?.profile_image;
+        
+        // Check if the user has a default avatar set
+        if (profileImg && isDefaultAvatar(profileImg)) {
+            return getDefaultAvatarSvg(profileImg);
+        }
+        
+        return resolveProfileImageUrl(profileImg);
+    };
+
+    const handleAvatarSelect = async (avatarKey) => {
+        setSelectedDefaultAvatar(avatarKey);
+        setShowAvatarSelector(false);
+        
+        // Save the avatar selection to the server
+        try {
+            setUploadingImage(true);
+            const response = await authAPI.updateProfile({ 
+                profileImage: avatarKey,
+                firstName: user.firstName,
+                lastName: user.lastName
+            });
+            if (response.success) {
+                updateUser({
+                    ...user,
+                    profileImage: avatarKey,
+                    profile_image: avatarKey
+                });
+                setMessage({ text: 'Avatar updated!', type: 'success' });
+                setTimeout(() => setMessage({ text: '', type: '' }), 3000);
+            }
+        } catch (error) {
+            console.error('Error updating avatar:', error);
+            setMessage({ text: 'Failed to update avatar', type: 'error' });
+        } finally {
+            setUploadingImage(false);
+            setSelectedDefaultAvatar(null);
+        }
+    };
+
+    const handleImageError = () => {
+        setImageLoadError(true);
     };
 
     if (!user) return null;
@@ -392,18 +443,43 @@ const UserProfile = () => {
                         <div className="flex flex-col sm:flex-row items-center sm:items-end gap-6">
                             <div className="relative group">
                                 <div className="w-32 h-32 sm:w-40 sm:h-40 rounded-full border-[6px] border-white shadow-xl overflow-hidden bg-gray-100">
-                                    {getProfileImageUrl() ? (
-                                        <img src={getProfileImageUrl()} alt="Profile" className="w-full h-full object-cover" />
+                                    {getProfileImageUrl() && !imageLoadError ? (
+                                        <img 
+                                            src={getProfileImageUrl()} 
+                                            alt="Profile" 
+                                            className="w-full h-full object-cover"
+                                            onError={handleImageError}
+                                            referrerPolicy="no-referrer"
+                                        />
                                     ) : (
-                                        <div className="w-full h-full flex items-center justify-center bg-gray-50"><UserIcon /></div>
+                                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-emerald-400 to-teal-500">
+                                            <span className="text-4xl font-bold text-white">
+                                                {getInitials(user?.firstName, user?.lastName)}
+                                            </span>
+                                        </div>
                                     )}
                                 </div>
-                                <button
-                                    onClick={() => fileInputRef.current?.click()}
-                                    className="absolute bottom-2 right-2 p-2 bg-white border border-gray-100 rounded-full shadow-lg text-gray-700 hover:text-emerald-600 transition"
-                                >
-                                    <CameraIcon />
-                                </button>
+                                <div className="absolute bottom-2 right-2 flex gap-1">
+                                    <button
+                                        onClick={() => fileInputRef.current?.click()}
+                                        className="p-2 bg-white border border-gray-100 rounded-full shadow-lg text-gray-700 hover:text-emerald-600 transition"
+                                        title="Upload photo"
+                                    >
+                                        <CameraIcon />
+                                    </button>
+                                    <button
+                                        onClick={() => setShowAvatarSelector(true)}
+                                        className="p-2 bg-white border border-gray-100 rounded-full shadow-lg text-gray-700 hover:text-emerald-600 transition"
+                                        title="Choose avatar"
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4">
+                                            <circle cx="12" cy="12" r="10"/>
+                                            <path d="M8 14s1.5 2 4 2 4-2 4-2"/>
+                                            <line x1="9" y1="9" x2="9.01" y2="9"/>
+                                            <line x1="15" y1="9" x2="15.01" y2="9"/>
+                                        </svg>
+                                    </button>
+                                </div>
                                 <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileSelect} className="hidden" />
                             </div>
                             <div className="pb-2 text-center sm:text-left">
@@ -570,6 +646,15 @@ const UserProfile = () => {
                 <div className={`fixed bottom-6 left-1/2 -translate-x-1/2 px-6 py-3 rounded-full shadow-lg z-50 font-bold text-sm animate-in slide-in-from-bottom-4 ${message.type === 'success' ? 'bg-emerald-600 text-white' : 'bg-red-600 text-white'}`}>
                     {message.text}
                 </div>
+            )}
+
+            {/* Avatar Selector Modal */}
+            {showAvatarSelector && (
+                <AvatarSelector
+                    selectedAvatar={selectedDefaultAvatar || (isDefaultAvatar(user?.profileImage) ? user.profileImage : null)}
+                    onSelect={handleAvatarSelect}
+                    onClose={() => setShowAvatarSelector(false)}
+                />
             )}
         </div>
     );

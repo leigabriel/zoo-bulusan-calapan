@@ -170,7 +170,7 @@ const AdminLayout = ({ children }) => {
                 setActivitySummary(res.summary || null);
             }
         } catch (err) {
-            console.error('Error fetching notifications:', err);
+            // Error fetching notifications
         } finally {
             setNotificationsLoading(false);
         }
@@ -179,8 +179,8 @@ const AdminLayout = ({ children }) => {
     // Fetch notifications on mount and periodically
     useEffect(() => {
         fetchNotifications();
-        // Refresh notifications every 2 minutes
-        const interval = setInterval(fetchNotifications, 120000);
+        // Refresh notifications every 30 seconds for real-time updates
+        const interval = setInterval(fetchNotifications, 30000);
         return () => clearInterval(interval);
     }, []);
 
@@ -260,7 +260,6 @@ const AdminLayout = ({ children }) => {
                 });
             }
         } catch (err) {
-            console.error('Error loading profile', err);
             setProfileMessage({ type: 'error', text: 'Failed to load profile' });
         } finally {
             setProfileLoading(false);
@@ -282,7 +281,6 @@ const AdminLayout = ({ children }) => {
                 setProfileMessage({ type: 'error', text: res.message || 'Failed to update profile' });
             }
         } catch (err) {
-            console.error(err);
             setProfileMessage({ type: 'error', text: 'Error updating profile' });
         } finally {
             setProfileSaving(false);
@@ -627,7 +625,11 @@ const AdminLayout = ({ children }) => {
 
                 {/* Notifications List */}
                 <div className="flex-1 overflow-y-auto p-4 space-y-3" style={{ maxHeight: 'calc(100vh - 280px)' }}>
-                    {notifications.length === 0 ? (
+                    {notificationsLoading ? (
+                        <div className="flex items-center justify-center py-8">
+                            <div className="w-8 h-8 border-2 border-[#8cff65] border-t-transparent rounded-full animate-spin"></div>
+                        </div>
+                    ) : notifications.length === 0 ? (
                         <div className="text-center py-8 text-gray-500">
                             <BellIcon />
                             <p className="mt-2">No notifications</p>
@@ -636,6 +638,24 @@ const AdminLayout = ({ children }) => {
                         notifications.map((notification) => (
                             <div 
                                 key={notification.id}
+                                onClick={async () => {
+                                    // Mark as read
+                                    if (!notification.read) {
+                                        try {
+                                            await adminAPI.markNotificationRead(notification.id);
+                                            setNotifications(prev => 
+                                                prev.map(n => n.id === notification.id ? { ...n, read: true } : n)
+                                            );
+                                        } catch (err) {
+                                            // Handle error silently
+                                        }
+                                    }
+                                    // Navigate to link if available
+                                    if (notification.link) {
+                                        setNotificationPanelOpen(false);
+                                        navigate(notification.link);
+                                    }
+                                }}
                                 className={`p-4 rounded-xl border transition-all cursor-pointer hover:border-[#8cff65]/30 ${
                                     notification.read 
                                         ? 'bg-[#1e1e1e] border-[#2a2a2a]' 
@@ -647,11 +667,21 @@ const AdminLayout = ({ children }) => {
                                         notification.read ? 'bg-gray-500' : 'bg-[#8cff65]'
                                     }`}></div>
                                     <div className="flex-1 min-w-0">
-                                        <p className={`text-sm ${notification.read ? 'text-gray-400' : 'text-white'}`}>
+                                        {notification.title && (
+                                            <p className={`text-sm font-medium ${notification.read ? 'text-gray-300' : 'text-white'}`}>
+                                                {notification.title}
+                                            </p>
+                                        )}
+                                        <p className={`text-sm ${notification.read ? 'text-gray-400' : 'text-gray-200'}`}>
                                             {notification.message}
                                         </p>
                                         <p className="text-xs text-gray-500 mt-1">{notification.time}</p>
                                     </div>
+                                    {notification.link && (
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4 text-gray-500 flex-shrink-0">
+                                            <polyline points="9 18 15 12 9 6"/>
+                                        </svg>
+                                    )}
                                 </div>
                             </div>
                         ))
@@ -686,7 +716,18 @@ const AdminLayout = ({ children }) => {
 
                 {/* Mark All Read Button */}
                 <div className="border-t border-[#2a2a2a] p-4">
-                    <button className="w-full py-2.5 bg-[#1e1e1e] hover:bg-[#2a2a2a] text-gray-400 hover:text-white rounded-xl text-sm font-medium transition">
+                    <button 
+                        onClick={async () => {
+                            try {
+                                await adminAPI.markAllNotificationsRead();
+                                setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+                            } catch (err) {
+                                console.error('Error marking all as read:', err);
+                            }
+                        }}
+                        disabled={unreadCount === 0}
+                        className="w-full py-2.5 bg-[#1e1e1e] hover:bg-[#2a2a2a] text-gray-400 hover:text-white rounded-xl text-sm font-medium transition disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
                         Mark all as read
                     </button>
                 </div>
@@ -728,7 +769,13 @@ const AdminLayout = ({ children }) => {
                                 <div className="flex justify-center">
                                     <div className="w-24 h-24 bg-gradient-to-br from-[#8cff65] to-[#4ade80] rounded-full flex items-center justify-center overflow-hidden">
                                         {previewImage ? (
-                                            <img src={previewImage} alt="Profile" className="w-full h-full object-cover" />
+                                            <img 
+                                                src={previewImage} 
+                                                alt="Profile" 
+                                                className="w-full h-full object-cover"
+                                                referrerPolicy="no-referrer"
+                                                onError={(e) => { e.target.onerror = null; e.target.style.display = 'none'; }}
+                                            />
                                         ) : (
                                             <span className="text-4xl font-bold text-[#0a0a0a]">
                                                 {profileForm.firstName?.charAt(0) || 'A'}

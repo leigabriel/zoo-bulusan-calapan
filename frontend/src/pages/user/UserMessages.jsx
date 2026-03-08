@@ -67,10 +67,6 @@ const UserMessages = () => {
     const [sending, setSending] = useState(false);
     const [sendSuccess, setSendSuccess] = useState(false);
 
-    useEffect(() => {
-        fetchMessages();
-    }, []);
-
     const fetchMessages = async () => {
         setLoading(true);
         setError(null);
@@ -84,6 +80,20 @@ const UserMessages = () => {
             setLoading(false);
         }
     };
+
+    // Fetch messages on mount and poll for real-time updates
+    useEffect(() => {
+        fetchMessages();
+        // Poll for new messages every 30 seconds
+        const pollInterval = setInterval(() => {
+            // Fetch without showing loading state
+            messageAPI.getMyMessages()
+                .then(response => setMessages(response.messages || []))
+                .catch(() => {});
+        }, 30000);
+        
+        return () => clearInterval(pollInterval);
+    }, []);
 
     const handleSendMessage = async (e) => {
         e.preventDefault();

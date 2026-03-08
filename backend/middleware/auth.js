@@ -41,7 +41,7 @@ exports.protect = async (req, res, next) => {
         };
         next();
     } catch (error) {
-        console.error('\x1b[31mAuth middleware error: ' + error + '\x1b[0m');
+        console.error('Auth error');
         return res.status(401).json({ success: false, message: 'Not authorized to access this route' });
     }
 };
@@ -74,7 +74,7 @@ exports.optionalAuth = async (req, res, next) => {
                 req.user = { id: user.id, email: user.email, role: user.role };
             }
         } catch (error) {
-            console.log('\x1b[33mOptional auth: Invalid token\x1b[0m');
+            // invalid token
         }
     }
     next();

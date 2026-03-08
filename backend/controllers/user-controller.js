@@ -2,8 +2,33 @@ const Animal = require('../models/animal-model');
 const Ticket = require('../models/ticket-model');
 const Event = require('../models/event-model');
 const User = require('../models/user-model');
+const Notification = require('../models/notification-model');
 const crypto = require('crypto');
 const { saveBase64Image } = require('../middleware/upload-resident-id');
+
+// Helper function to create notifications for admin/staff
+const createAdminStaffNotification = async (title, message, type = 'ticket', link = null) => {
+    try {
+        const db = require('../config/database');
+        // Get all admin and staff users
+        const [adminStaff] = await db.query(
+            "SELECT id FROM users WHERE role IN ('admin', 'staff') AND is_active = TRUE"
+        );
+        
+        // Create notification for each admin/staff
+        for (const user of adminStaff) {
+            await Notification.create({
+                userId: user.id,
+                title,
+                message,
+                type,
+                link
+            });
+        }
+    } catch (error) {
+        console.error('Error creating admin/staff notification:', error);
+    }
+};
 
 exports.getProfile = async (req, res) => {
     try {
@@ -253,6 +278,14 @@ exports.purchaseTicket = async (req, res) => {
 
             const ticketId = result.insertId;
 
+            // Create notification for admin/staff
+            await createAdminStaffNotification(
+                'New Ticket Reservation',
+                `${buyerName} reserved ${totalQuantity} ticket(s) for ${new Date(visitDate).toLocaleDateString()}`,
+                'ticket',
+                `/admin/reservations?ticket=${ticketId}`
+            );
+
             let confirmationMessage = 'Tickets booked successfully! Your booking is pending approval.';
             if (hasResidentOrStudent) {
                 confirmationMessage = 'Tickets booked! Your ID will be verified by our staff before confirmation.';
@@ -333,6 +366,14 @@ exports.purchaseTicket = async (req, res) => {
         );
 
         const ticketId = result.insertId;
+
+        // Create notification for admin/staff
+        await createAdminStaffNotification(
+            'New Ticket Reservation',
+            `${buyerName} reserved ${quantity} ${ticketType} ticket(s) for ${new Date(visitDate).toLocaleDateString()}`,
+            'ticket',
+            `/admin/reservations?ticket=${ticketId}`
+        );
 
         let confirmationMessage = 'Ticket booked successfully! Your ticket is pending approval.';
         if (ticketType === 'resident') {

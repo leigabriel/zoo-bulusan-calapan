@@ -191,7 +191,7 @@ function ArticleGrid({ articles, images, label }) {
     const onTap = (key) => { if (window.matchMedia('(hover: none)').matches) setPopup(key); };
 
     return (
-        <div ref={sectionRef}>
+        <div ref={sectionRef} className="relative">
             <div className="max-w-[1600px] mx-auto px-6 md:px-12 lg:px-16">
                 <div className="relative mb-0 pt-8 md:pt-12">
                     <div className="h-[1px] bg-[#d1d1d1] w-full" />
@@ -366,7 +366,7 @@ function FaqSection() {
     const smoothLabelX = useSpring(labelX, springCfg);
 
     return (
-        <section ref={sectionRef} id="faq-section" className="py-16 sm:py-20 md:py-24 bg-[#ebebeb] w-full">
+        <section ref={sectionRef} id="faq-section" className="relative py-16 sm:py-20 md:py-24 bg-[#ebebeb] w-full">
             <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-[1500px]">
                 <motion.div style={{ x: smoothLabelX }} className="flex items-center gap-4 mb-6 md:mb-8">
                     <motion.div

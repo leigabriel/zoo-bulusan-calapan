@@ -11,7 +11,6 @@ import UserProfile from './pages/user/UserProfile';
 import Settings from './pages/user/Settings';
 import Help from './pages/user/Help';
 import UserMessages from './pages/user/UserMessages';
-import MiniZooGameLauncher from './pages/user/MiniZooGameLauncher';
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
 import GoogleAuthSuccess from './pages/auth/GoogleAuthSuccess';
@@ -131,7 +130,7 @@ function AppRoutes() {
                 </ProtectedRoute>
             } />
             <Route path="/help" element={<Help />} />
-            <Route path="/mini-zoo-game" element={<MiniZooGameLauncher />} />
+            <Route path="/mini-zoo-game" element={<Navigate to="/" replace />} />
 
             {/* Admin Routes */}
             <Route path="/admin/dashboard" element={

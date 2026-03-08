@@ -102,81 +102,134 @@ class Notification {
         };
     }
 
-    // Generate real-time notifications based on activity
-    static async generateDashboardNotifications() {
+    // Generate real-time notifications based on activity, combined with database notifications
+    static async generateDashboardNotifications(userId = null) {
         const summary = await this.getActivitySummary();
-        const notifications = [];
+        const systemNotifications = [];
 
         // New users today
         if (summary.users.today > 0) {
-            notifications.push({
+            systemNotifications.push({
                 id: 'users-today',
                 type: 'user',
+                title: 'New Users',
                 message: `${summary.users.today} new user${summary.users.today > 1 ? 's' : ''} registered today.`,
                 time: 'Today',
-                read: false
+                read: true,
+                link: '/admin/users'
             });
         }
 
         // New users this week
         if (summary.users.this_week > summary.users.today) {
-            notifications.push({
+            systemNotifications.push({
                 id: 'users-week',
                 type: 'user',
+                title: 'Weekly Users',
                 message: `${summary.users.this_week} new users this week.`,
                 time: 'This week',
-                read: true
+                read: true,
+                link: '/admin/users'
             });
         }
 
         // Tickets purchased today
         if (summary.tickets.today > 0) {
-            notifications.push({
+            systemNotifications.push({
                 id: 'tickets-today',
                 type: 'ticket',
+                title: 'Today\'s Tickets',
                 message: `${summary.tickets.today} ticket${summary.tickets.today > 1 ? 's' : ''} purchased today.`,
                 time: 'Today',
-                read: false
+                read: true,
+                link: '/admin/reservations'
             });
         }
 
         // Pending tickets
         if (summary.pendingTickets > 0) {
-            notifications.push({
+            systemNotifications.push({
                 id: 'pending-tickets',
                 type: 'alert',
+                title: 'Pending Confirmation',
                 message: `${summary.pendingTickets} ticket${summary.pendingTickets > 1 ? 's' : ''} pending confirmation.`,
                 time: 'Action required',
-                read: false
+                read: false,
+                link: '/admin/reservations'
             });
         }
 
         // Animals added today
         if (summary.animals.today > 0) {
-            notifications.push({
+            systemNotifications.push({
                 id: 'animals-today',
                 type: 'info',
+                title: 'New Animals',
                 message: `${summary.animals.today} new animal${summary.animals.today > 1 ? 's' : ''} added today.`,
                 time: 'Today',
-                read: true
+                read: true,
+                link: '/admin/animals'
             });
         }
 
         // Upcoming events
         if (summary.events.upcoming > 0) {
-            notifications.push({
+            systemNotifications.push({
                 id: 'upcoming-events',
                 type: 'event',
+                title: 'Upcoming Events',
                 message: `${summary.events.upcoming} upcoming event${summary.events.upcoming > 1 ? 's' : ''}.`,
                 time: 'Scheduled',
-                read: true
+                read: true,
+                link: '/admin/events'
             });
         }
 
+        // Fetch real notifications from database for the user
+        let dbNotifications = [];
+        if (userId) {
+            try {
+                const [rows] = await db.query(
+                    `SELECT id, title, message, type, is_read as \`read\`, link, created_at
+                     FROM notifications 
+                     WHERE user_id = ?
+                     ORDER BY created_at DESC
+                     LIMIT 20`,
+                    [userId]
+                );
+                dbNotifications = rows.map(n => ({
+                    ...n,
+                    time: this.formatTime(n.created_at)
+                }));
+            } catch (error) {
+                console.error('Error fetching database notifications:', error);
+            }
+        }
+
+        // Combine and return notifications (database notifications first, then system)
+        const allNotifications = [...dbNotifications, ...systemNotifications];
+
         return {
-            notifications,
+            notifications: allNotifications,
             summary
         };
+    }
+
+    // Format time for display
+    static formatTime(date) {
+        if (!date) return 'Recently';
+        const now = new Date();
+        const notifDate = new Date(date);
+        const diffMs = now - notifDate;
+        const diffMins = Math.floor(diffMs / 60000);
+        const diffHours = Math.floor(diffMs / 3600000);
+        const diffDays = Math.floor(diffMs / 86400000);
+
+        if (diffMins < 1) return 'Just now';
+        if (diffMins < 60) return `${diffMins} min${diffMins > 1 ? 's' : ''} ago`;
+        if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+        if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+        return notifDate.toLocaleDateString();
     }
 
     // Create a notification

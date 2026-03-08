@@ -109,7 +109,14 @@ export default function HeroSection3D() {
                     <TitleBlock scale={titleScale} opacity={backTextOpacity} zIndex={10} y={titleY} tracking={titleTracking} />
 
                     <motion.div style={{ opacity: canvasOpacity }} className="absolute inset-0 z-20">
-                        <Canvas gl={{ alpha: true, antialias: true }} camera={{ position: [0, 0, 7], fov: 45 }}>
+                        <Canvas 
+                            gl={{ 
+                                alpha: true, 
+                                antialias: true, 
+                                premultipliedAlpha: false  // Suppress alpha-premult deprecation warning
+                            }} 
+                            camera={{ position: [0, 0, 7], fov: 45 }}
+                        >
                             <Scene spinRotation={spinRotation} device={device} setTooltip={setTooltip} />
                         </Canvas>
                     </motion.div>

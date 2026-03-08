@@ -139,37 +139,20 @@ export const getAnimalInfo = (animalName) => {
  */
 export const normalizeResponse = (response, source) => {
     if (source === 'animaldetect') {
-        console.log('[normalizeResponse] Processing API response...');
-        console.log('[normalizeResponse] Response type:', typeof response);
-        
         if (!response) {
-            console.error('[normalizeResponse] Empty response received');
             return createFailedResult('Empty response from API', response);
         }
         
-        console.log('[normalizeResponse] Response keys:', Object.keys(response));
-        console.log('[normalizeResponse] Full response:', JSON.stringify(response, null, 2).substring(0, 500));
-        
-        // Extract detection from various API response structures
+        // Extract detection
         let detection = extractDetection(response);
         
         if (!detection) {
-            console.error('[normalizeResponse] Could not extract detection from response');
             return createFailedResult('Could not parse API response', response);
         }
         
-        console.log('[normalizeResponse] Extracted detection:', JSON.stringify(detection, null, 2));
-        
-        // Extract animal name using multiple possible field names
+        // Extract values
         const animalName = extractAnimalName(detection);
-        
-        // Extract confidence score
         const confidence = extractConfidence(detection);
-        
-        console.log('[normalizeResponse] Final extracted values:', { 
-            animal: animalName, 
-            confidence: confidence.toFixed(1) + '%' 
-        });
         
         // Get additional info from database (metadata only - no description)
         const info = getAnimalInfo(animalName);
@@ -199,24 +182,21 @@ export const normalizeResponse = (response, source) => {
  * @returns {Object|null} Detection object or null
  */
 const extractDetection = (response) => {
-    // Case 1: Direct array response [{ ... }]
+    // array response
     if (Array.isArray(response) && response.length > 0) {
-        console.log('[normalizeResponse] Response is array with', response.length, 'items');
         return response[0];
     }
     
-    // Case 2: Nested arrays - check various field names
+    // nested arrays
     const arrayFields = ['predictions', 'detections', 'results', 'animals', 'classifications', 'matches'];
     for (const field of arrayFields) {
         if (response?.[field] && Array.isArray(response[field]) && response[field].length > 0) {
-            console.log(`[normalizeResponse] Found ${field} array with`, response[field].length, 'items');
             return response[field][0];
         }
     }
     
-    // Case 3: Nested in 'data' field
+    // data field
     if (response?.data) {
-        console.log('[normalizeResponse] Found data field');
         if (Array.isArray(response.data) && response.data.length > 0) {
             return response.data[0];
         }
@@ -225,26 +205,22 @@ const extractDetection = (response) => {
         }
     }
     
-    // Case 4: Nested in 'result' (singular) field
+    // result field
     if (response?.result && typeof response.result === 'object') {
-        console.log('[normalizeResponse] Found result field');
         return response.result;
     }
     
-    // Case 5: Response has direct detection fields
+    // direct fields
     const directFields = ['animal', 'name', 'label', 'class', 'species', 'common_name', 'prediction'];
     for (const field of directFields) {
         if (response?.[field]) {
-            console.log(`[normalizeResponse] Response has direct field: ${field}`);
             return response;
         }
     }
     
-    // Case 6: Response object itself is the detection
+    // response with confidence
     if (response && typeof response === 'object' && Object.keys(response).length > 0) {
-        // Check if it has any confidence-related fields
         if (response.confidence !== undefined || response.score !== undefined || response.probability !== undefined) {
-            console.log('[normalizeResponse] Using response directly (has confidence field)');
             return response;
         }
     }
@@ -277,14 +253,12 @@ const extractAnimalName = (detection) => {
     for (const field of nameFields) {
         const value = detection[field];
         if (value && typeof value === 'string' && value.trim().length > 0) {
-            // Clean up the name (capitalize first letter, handle snake_case)
             const cleaned = cleanAnimalName(value);
-            console.log(`[normalizeResponse] Found animal name in field '${field}':`, cleaned);
             return cleaned;
         }
     }
     
-    // Check nested taxonomy/taxon fields
+    // nested taxonomy
     const nestedFields = ['taxonomy', 'taxon', 'classification', 'species_info'];
     for (const field of nestedFields) {
         if (detection[field] && typeof detection[field] === 'object') {
@@ -292,14 +266,12 @@ const extractAnimalName = (detection) => {
             for (const nameField of nameFields) {
                 if (nested[nameField]) {
                     const cleaned = cleanAnimalName(nested[nameField]);
-                    console.log(`[normalizeResponse] Found animal name in ${field}.${nameField}:`, cleaned);
                     return cleaned;
                 }
             }
         }
     }
     
-    console.log('[normalizeResponse] No animal name found in detection');
     return 'Unknown';
 };
 
@@ -358,13 +330,10 @@ const extractConfidence = (detection) => {
             
             // Clamp to valid range
             confidence = Math.max(0, Math.min(100, confidence));
-            
-            console.log(`[normalizeResponse] Found confidence in field '${field}':`, confidence.toFixed(1) + '%');
             return confidence;
         }
     }
     
-    console.log('[normalizeResponse] No confidence found, defaulting to 0');
     return 0;
 };
 

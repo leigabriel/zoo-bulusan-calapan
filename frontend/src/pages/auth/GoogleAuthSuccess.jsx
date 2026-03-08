@@ -47,7 +47,6 @@ const GoogleAuthSuccess = () => {
                     navigate('/', { replace: true });
                 }
             } catch (err) {
-                console.error('Google auth processing error:', err);
                 setError('Failed to complete authentication. Please try again.');
 
                 // Redirect to login after a delay

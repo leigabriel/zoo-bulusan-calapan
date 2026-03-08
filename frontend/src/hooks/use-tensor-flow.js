@@ -22,7 +22,6 @@ const useTensorFlow = () => {
                 const loadedModel = await tf.loadLayersModel('/models/model.json');
                 setModel(loadedModel);
             } catch (err) {
-                console.error('Error loading model:', err);
                 setError('Failed to load AI model');
             } finally {
                 setLoading(false);
@@ -74,7 +73,6 @@ const useTensorFlow = () => {
                 allPredictions: results
             };
         } catch (err) {
-            console.error('Prediction error:', err);
             throw new Error('Failed to classify image');
         }
     }, [model, preprocessImage]);

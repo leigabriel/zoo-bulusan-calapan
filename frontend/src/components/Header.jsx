@@ -5,7 +5,8 @@ import { getProfileImageUrl, messageAPI, userAPI, reservationAPI } from '../serv
 import LogoutModal from './common/LogoutModal';
 import AnimalClassifier from './features/ai-scanner/AnimalClassifier';
 import ReservationHistoryPanel from './features/ReservationHistoryPanel';
-import { MiniZooGameModal } from '../pages/user/MiniZooGameLauncher';
+
+const MINIZOO_GAME_URL = import.meta.env.VITE_MINIZOO_GAME_URL || 'http://localhost:5174';
 
 const ICONS = {
     home: 'https://cdn-icons-png.flaticon.com/128/3917/3917743.png',
@@ -94,6 +95,7 @@ const Header = () => {
     const [showLogoutModal, setShowLogoutModal] = useState(false);
     const [showSidePanel, setShowSidePanel] = useState(false);
     const [showAIScanner, setShowAIScanner] = useState(false);
+    const [showScannerConfirm, setShowScannerConfirm] = useState(false);
     const [showHistoryPanel, setShowHistoryPanel] = useState(false);
     const [showNotificationPanel, setShowNotificationPanel] = useState(false);
     const [showMiniZooGame, setShowMiniZooGame] = useState(false);
@@ -164,21 +166,22 @@ const Header = () => {
     };
 
     useOutsideClick(sidePanelRef, showSidePanel, setShowSidePanel);
-    useOutsideClick(aiScannerRef, showAIScanner, setShowAIScanner);
     useOutsideClick(notificationPanelRef, showNotificationPanel, setShowNotificationPanel);
 
     useEffect(() => {
         const onKey = (e) => {
             if (e.key === 'Escape') {
                 setShowSidePanel(false);
-                setShowAIScanner(false);
+                if (showAIScanner && !showScannerConfirm) {
+                    setShowScannerConfirm(true);
+                }
                 setShowNotificationPanel(false);
                 setIsMenuOpen(false);
             }
         };
         document.addEventListener('keydown', onKey);
         return () => document.removeEventListener('keydown', onKey);
-    }, []);
+    }, [showAIScanner, showScannerConfirm]);
 
     const fetchNotifications = useCallback(async (showLoading = true) => {
         if (!user) return;
@@ -225,13 +228,27 @@ const Header = () => {
             notifs.sort((a, b) => new Date(b.time) - new Date(a.time));
             setNotifications(notifs);
         } catch (err) {
-            console.error(err);
         } finally {
             setNotificationLoading(false);
         }
     }, [user]);
 
-    useEffect(() => { if (user) fetchNotifications(false); }, [user, fetchNotifications]);
+    // Fetch notifications on mount and set up polling for real-time updates
+    useEffect(() => { 
+        if (user) fetchNotifications(false); 
+        
+        // Set up polling interval for real-time updates (every 30 seconds)
+        let pollInterval = null;
+        if (user) {
+            pollInterval = setInterval(() => {
+                fetchNotifications(false);
+            }, 30000);
+        }
+        
+        return () => {
+            if (pollInterval) clearInterval(pollInterval);
+        };
+    }, [user, fetchNotifications]);
 
     useEffect(() => {
         localStorage.setItem('readNotificationIds', JSON.stringify(readNotificationIds));
@@ -260,21 +277,19 @@ const Header = () => {
         }
     };
 
-    const handleLogout = async () => { 
+    const handleLogout = async () => {
         setIsLoggingOut(true);
         try {
-            // Small delay for visual feedback
             await new Promise(resolve => setTimeout(resolve, 500));
-            logout(); 
-            setShowLogoutModal(false); 
-            // Redirect to login page for proper flow
-            navigate('/login'); 
+            logout();
+            setShowLogoutModal(false);
+            navigate('/login');
         } catch (error) {
-            console.error('Logout error:', error);
         } finally {
             setIsLoggingOut(false);
         }
     };
+
     const closeSidePanel = () => setShowSidePanel(false);
     const openNotifications = () => { setShowNotificationPanel(true); fetchNotifications(); };
     const openEmailModal = () => { closeSidePanel(); setShowEmailModal(true); setEmailSent(false); setEmailError(''); };
@@ -304,6 +319,10 @@ const Header = () => {
 
     const handleOpenReservationHistory = () => { closeSidePanel(); setShowHistoryPanel(true); };
     const handleOpenMiniZooGame = () => { closeSidePanel(); setShowMiniZooGame(true); };
+    const handleConfirmMiniZooGame = () => {
+        setShowMiniZooGame(false);
+        window.open(MINIZOO_GAME_URL, '_blank', 'noopener,noreferrer');
+    };
 
     const quickItems = [
         ...(user?.role === 'admin' ? [{ iconUrl: ICONS.setting, label: 'Admin Dashboard', path: '/admin/dashboard' }] : []),
@@ -327,7 +346,7 @@ const Header = () => {
     return (
         <>
             <header
-                className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ease-in-out ${scrolled ? '' : ''} ${isNavVisible ? 'translate-y-0' : '-translate-y-full'}`}
+                className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ease-in-out ${isNavVisible ? 'translate-y-0' : '-translate-y-full'}`}
                 style={{ paddingTop: 'env(safe-area-inset-top)' }}
             >
                 <div className="mx-auto px-4 sm:px-6 lg:px-10 max-w-[1800px]" style={{ height: '56px' }}>
@@ -381,6 +400,7 @@ const Header = () => {
                                         src={avatarSrc}
                                         alt="Profile"
                                         className="w-7 h-7 rounded-full object-cover flex-shrink-0"
+                                        referrerPolicy="no-referrer"
                                         onError={(e) => { e.target.onerror = null; e.target.src = '/profile-img/default-avatar.svg'; }}
                                     />
                                     <span className="text-[13px] font-medium text-gray-700 hidden lg:block max-w-[80px] truncate">
@@ -419,6 +439,7 @@ const Header = () => {
                                     src={avatarSrc}
                                     alt="Profile"
                                     className="w-9 h-9 rounded-full object-cover flex-shrink-0"
+                                    referrerPolicy="no-referrer"
                                     onError={(e) => { e.target.onerror = null; e.target.src = '/profile-img/default-avatar.svg'; }}
                                 />
                                 <div className="min-w-0">
@@ -498,6 +519,7 @@ const Header = () => {
                                     src={avatarSrc}
                                     alt="Profile"
                                     className="w-11 h-11 rounded-full object-cover border border-gray-100 flex-shrink-0"
+                                    referrerPolicy="no-referrer"
                                     onError={(e) => { e.target.onerror = null; e.target.src = '/profile-img/default-avatar.svg'; }}
                                 />
                                 <div className="min-w-0">
@@ -565,11 +587,11 @@ const Header = () => {
             <div className={`fixed inset-0 z-[100] flex justify-end transition-all duration-300 ${showAIScanner ? 'visible' : 'invisible'}`}>
                 <div
                     className={`absolute inset-0 bg-black/25 backdrop-blur-[2px] transition-opacity duration-300 ${showAIScanner ? 'opacity-100' : 'opacity-0'}`}
-                    onClick={() => setShowAIScanner(false)}
+                    onClick={() => { if (showAIScanner) setShowScannerConfirm(true); }}
                 />
                 <div
                     ref={aiScannerRef}
-                    className={`relative w-full max-w-lg h-full bg-white shadow-2xl flex flex-col transform transition-transform duration-300 ${showAIScanner ? 'translate-x-0' : 'translate-x-full'}`}
+                    className={`relative w-full md:w-1/2 h-full bg-white shadow-2xl flex flex-col transform transition-transform duration-300 ${showAIScanner ? 'translate-x-0' : 'translate-x-full'}`}
                     role="dialog"
                     aria-modal="true"
                 >
@@ -581,11 +603,24 @@ const Header = () => {
                             <p className="text-[13px] font-semibold text-gray-900">AI Animal Scanner</p>
                             <p className="text-[11px] text-gray-400">Identify animals with AI</p>
                         </div>
-                        <CloseBtn onClick={() => setShowAIScanner(false)} />
+                        <CloseBtn onClick={() => setShowScannerConfirm(true)} />
                     </div>
                     <div className="flex-1 overflow-y-auto">
                         {showAIScanner && <AnimalClassifier embedded={true} />}
                     </div>
+
+                    {showScannerConfirm && (
+                        <div className="absolute inset-0 z-[200] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+                            <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl">
+                                <h3 className="text-[15px] font-bold text-gray-900 mb-2">Close AI Scanner?</h3>
+                                <p className="text-[13px] text-gray-500 mb-6">Are you sure you want to close the scanner? Any unsaved captures will be lost.</p>
+                                <div className="flex gap-3">
+                                    <button onClick={() => setShowScannerConfirm(false)} className="flex-1 py-2.5 bg-gray-100 text-gray-700 text-[13px] font-semibold rounded-xl hover:bg-gray-200 transition-colors">Cancel</button>
+                                    <button onClick={() => { setShowScannerConfirm(false); setShowAIScanner(false); }} className="flex-1 py-2.5 bg-red-500 text-white text-[13px] font-semibold rounded-xl hover:bg-red-600 transition-colors">Close</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -752,10 +787,43 @@ const Header = () => {
                 onClose={() => setShowHistoryPanel(false)}
             />
 
-            <MiniZooGameModal
-                isOpen={showMiniZooGame}
-                onClose={() => setShowMiniZooGame(false)}
-            />
+            {/* Mini Zoo Game Confirmation Modal */}
+            {showMiniZooGame && (
+                <div className="fixed inset-0 z-[200] flex items-center justify-center">
+                    <div 
+                        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+                        onClick={() => setShowMiniZooGame(false)}
+                    />
+                    <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden">
+                        <div className="p-6 text-center">
+                            <div className="w-16 h-16 mx-auto mb-4 bg-emerald-100 rounded-full flex items-center justify-center">
+                                <svg className="w-8 h-8 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </div>
+                            <h3 className="text-xl font-bold text-gray-900 mb-2">Mini Zoo Game</h3>
+                            <p className="text-gray-600 text-sm mb-6">
+                                You are about to open the Mini Zoo Game in a new tab. Do you want to continue?
+                            </p>
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={() => setShowMiniZooGame(false)}
+                                    className="flex-1 py-2.5 px-4 border border-gray-200 rounded-xl font-medium text-gray-600 hover:bg-gray-50 transition-colors"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleConfirmMiniZooGame}
+                                    className="flex-1 py-2.5 px-4 bg-emerald-500 text-white rounded-xl font-medium hover:bg-emerald-600 transition-colors"
+                                >
+                                    Continue
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </>
     );
 };

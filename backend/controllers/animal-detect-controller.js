@@ -9,12 +9,12 @@
 
 const FormData = require('form-data');
 
-// Logging utility
+// Log utils - minimal output
 const log = {
-    info: (...args) => console.log('[AnimalDetect][INFO]', new Date().toISOString(), ...args),
-    warn: (...args) => console.warn('[AnimalDetect][WARN]', new Date().toISOString(), ...args),
-    error: (...args) => console.error('[AnimalDetect][ERROR]', new Date().toISOString(), ...args),
-    debug: (...args) => process.env.NODE_ENV !== 'production' && console.log('[AnimalDetect][DEBUG]', new Date().toISOString(), ...args),
+    info: (...args) => console.info('[AnimalDetect]', ...args),
+    warn: (...args) => console.warn('[AnimalDetect]', ...args),
+    error: (...args) => console.error('[AnimalDetect]', ...args),
+    debug: () => {},
 };
 
 // Configuration from environment
@@ -30,8 +30,6 @@ const ANIMAL_DETECT_CONFIG = {
  * Handles various response structures from different API providers
  */
 const normalizeApiResponse = (data) => {
-    log.debug('Normalizing API response:', JSON.stringify(data).substring(0, 500));
-    
     if (!data) {
         return { success: false, error: 'Empty response from API' };
     }

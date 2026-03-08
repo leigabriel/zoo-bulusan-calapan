@@ -407,12 +407,9 @@ Remember: Only share this general zoo information. Never share personal user dat
                 if (text && text.trim().length > 0) {
                     finalText = text;
                     chosen = candidate;
-                    console.log(`AI response generated successfully using model: ${candidate}`);
-                    break; // success, stop trying other models
+                    break;
                 }
             } catch (err) {
-                // If a model isn't available or fails, try the next one
-                console.warn(`AI model ${candidate} failed:`, err?.message || err);
                 continue;
             }
         }
@@ -427,8 +424,7 @@ Remember: Only share this general zoo information. Never share personal user dat
             return;
         }
 
-        // If no model succeeded, fall back to canned responses
-        console.warn('All AI models failed, using fallback response');
+        // Fallback response
         return res.json({
             success: true,
             response: getFallbackResponse(message, dynamicData),
@@ -437,10 +433,7 @@ Remember: Only share this general zoo information. Never share personal user dat
         });
 
     } catch (error) {
-        console.error('AI Chat Error:', error?.message || error);
-        console.error('Full error details:', JSON.stringify(error, null, 2));
-        // Fallback to basic responses if Gemini API fails
-        // Note: dynamicData may not be available in catch block, pass null
+        console.error('AI chat error');
         return res.json({
             success: true,
             response: getFallbackResponse(req.body.message || '', null),
