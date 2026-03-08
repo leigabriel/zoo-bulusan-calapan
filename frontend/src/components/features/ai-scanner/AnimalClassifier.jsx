@@ -44,7 +44,7 @@ const isMobileDevice = () => {
 
 const AnimalClassifier = ({ embedded = false, expanded: controlledExpanded = false, onExpandChange = () => { } }) => {
     const [messages, setMessages] = useState([
-        { id: 1, role: 'bot', type: 'text', content: `Hello! Upload a photo or use Camera to identify animals! (Using ${getSourceDisplayName()})` }
+        { id: 1, role: 'bot', type: 'text', content: `Hello! Upload a photo or use Camera to identify animals!` }
     ]);
     const [isModelLoading, setIsModelLoading] = useState(!isModelReady());
     const [isProcessing, setIsProcessing] = useState(false);
@@ -87,7 +87,7 @@ const AnimalClassifier = ({ embedded = false, expanded: controlledExpanded = fal
                 await loadLocalModel();
                 setIsModelLoading(false);
             } catch (err) {
-                addBotMessage("Error: Could not load the AI model.");
+                addBotMessage("🐵");
                 setIsModelLoading(false);
             }
         };
