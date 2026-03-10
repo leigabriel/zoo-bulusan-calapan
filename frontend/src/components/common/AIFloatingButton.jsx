@@ -27,14 +27,19 @@ const AIFloatingButton = () => {
     return (
         <>
             {!assistantOpen && (
-                <div className="fixed bottom-6 right-6 z-50">
+                <div className="fixed bottom-6 right-6 z-50 group flex items-center">
+                    <div className="absolute right-full mr-4 px-3 py-1.5 bg-gray-800 text-white text-sm font-medium rounded-lg shadow-lg whitespace-nowrap opacity-0 pointer-events-none transition-all duration-300 translate-x-2 group-hover:opacity-100 group-hover:translate-x-0">
+                        Need help?
+                        <div className="absolute top-1/2 -right-1 -translate-y-1/2 w-2 h-2 bg-gray-800 rotate-45"></div>
+                    </div>
+
                     <button
                         onClick={() => setAssistantOpen(true)}
-                        className="relative z-50 w-16 h-16 rounded-full text-white flex items-center justify-center shadow-2xl transition-all duration-500 transform active:scale-95 hover:shadow-emerald-600/30"
+                        className="relative z-50 w-12 h-12 rounded-full text-white flex items-center justify-center shadow-2xl transition-all duration-500 transform active:scale-95 hover:shadow-emerald-600/30"
                     >
                         <img
                             src="https://cdn-icons-png.flaticon.com/128/9068/9068693.png"
-                            className="w-16 h-16"
+                            className="w-12 h-12"
                             alt="Open Assistant"
                         />
                     </button>
