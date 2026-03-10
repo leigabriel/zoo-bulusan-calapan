@@ -129,8 +129,8 @@ const Help = () => {
         },
         {
             category: 'ai',
-            question: 'What is the AnimalDex?',
-            answer: 'The AnimalDex is your personal collection of animals you\'ve discovered at the zoo. Use the AI Scanner to identify animals and add them to your AnimalDex. Try to collect them all!'
+            question: 'What is the AI Scanner?',
+            answer: 'The AI Scanner uses image recognition to identify animals at the zoo. Simply take a photo of an animal and the AI will tell you what species it is along with interesting facts!'
         },
         {
             category: 'map',

@@ -2,12 +2,13 @@ const express = require('express');
 const router = express.Router();
 const reservationController = require('../controllers/reservation-controller');
 const { protect, authorize } = require('../middleware/auth');
+const { handleCloudinaryResidentIdUpload } = require('../middleware/cloudinary-upload');
 
 router.use(protect);
 
 router.get('/ticket/my', reservationController.getUserTicketReservations);
 router.get('/event/my', reservationController.getUserEventReservations);
-router.post('/ticket', reservationController.createTicketReservation);
+router.post('/ticket', handleCloudinaryResidentIdUpload, reservationController.createTicketReservation);
 router.post('/event', reservationController.createEventReservation);
 router.put('/ticket/:id/archive', reservationController.archiveTicketReservation);
 router.put('/ticket/:id/unarchive', reservationController.unarchiveTicketReservation);

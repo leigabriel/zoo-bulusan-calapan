@@ -17,6 +17,7 @@ const messageRoutes = require('./routes/message-routes');
 const plantRoutes = require('./routes/plant-routes');
 const reservationRoutes = require('./routes/reservation-routes');
 const animalDetectRoutes = require('./routes/animal-detect-routes');
+const uploadRoutes = require('./routes/upload-routes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -82,6 +83,7 @@ app.use('/api/messages', messageRoutes);
 app.use('/api/plants', plantRoutes);
 app.use('/api/reservations', reservationRoutes);
 app.use('/api/animal-detect', animalDetectRoutes);
+app.use('/api/upload', uploadRoutes);
 
 app.get('/api/health', async (req, res) => {
     const health = {

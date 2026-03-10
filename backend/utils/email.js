@@ -1,12 +1,9 @@
 const nodemailer = require('nodemailer');
 
-// Singleton transporter with connection pooling for better performance
+// cached transporter
 let cachedTransporter = null;
 
-/**
- * Get or create a cached SMTP transporter with connection pooling
- * @returns {nodemailer.Transporter}
- */
+// get or create smtp transporter
 const getTransporter = () => {
     if (cachedTransporter) {
         return cachedTransporter;

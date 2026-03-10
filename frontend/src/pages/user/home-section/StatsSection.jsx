@@ -1,35 +1,38 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, memo } from 'react';
 
-function CounterNumber({ value, suffix = '' }) {
+const CounterNumber = memo(function CounterNumber({ value, suffix = '' }) {
     const ref = useRef(null);
     const [display, setDisplay] = useState(0);
 
     useEffect(() => {
+        let animationId = null;
         const observer = new IntersectionObserver(
             ([entry]) => {
                 if (entry.isIntersecting) {
                     let start = null;
-                    let id;
                     const run = (ts) => {
                         if (!start) start = ts;
                         const p = Math.min((ts - start) / 1600, 1);
                         const eased = 1 - Math.pow(1 - p, 4);
                         setDisplay(Math.round(eased * value));
-                        if (p < 1) id = requestAnimationFrame(run);
+                        if (p < 1) animationId = requestAnimationFrame(run);
                     };
-                    id = requestAnimationFrame(run);
+                    animationId = requestAnimationFrame(run);
                 }
             },
             { threshold: 0.1 }
         );
         if (ref.current) observer.observe(ref.current);
-        return () => observer.disconnect();
+        return () => {
+            if (animationId) cancelAnimationFrame(animationId);
+            observer.disconnect();
+        };
     }, [value]);
 
     return <span ref={ref}>{display}{suffix}</span>;
-}
+});
 
-const StatsSection = () => {
+const StatsSection = memo(function StatsSection() {
     return (
         <section className="bg-[#007a55] py-8 md:py-12 pb-12 md:pb-16 overflow-hidden shrink-0 w-full">
             <div className="max-w-[1650px] mx-auto px-6 md:px-16 grid grid-cols-3 gap-4 md:gap-12">
@@ -44,6 +47,6 @@ const StatsSection = () => {
             </div>
         </section>
     );
-};
+});
 
 export default StatsSection;

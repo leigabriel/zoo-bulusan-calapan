@@ -7,7 +7,7 @@ exports.generateTicketCode = () => {
     return code;
 };
 
-// Format date to YYYY-MM-DD using local timezone (Philippines UTC+8)
+// format date to yyyy-mm-dd
 exports.formatDate = (date) => {
     const d = new Date(date);
     const year = d.getFullYear();

@@ -4,6 +4,38 @@ const staffController = require('../controllers/staff-controller');
 const adminController = require('../controllers/admin-controller');
 const messageController = require('../controllers/message-controller');
 const { protect, authorize } = require('../middleware/auth');
+const multer = require('multer');
+const path = require('path');
+const { handleCloudinaryImageUpload } = require('../middleware/cloudinary-upload');
+const { isConfigured: isCloudinaryConfigured } = require('../config/cloudinary');
+
+// multer for local image uploads
+const imageStorage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        const uploadsPath = path.join(__dirname, '../uploads');
+        cb(null, uploadsPath);
+    },
+    filename: function (req, file, cb) {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        const ext = path.extname(file.originalname).toLowerCase();
+        cb(null, `image-${uniqueSuffix}${ext}`);
+    }
+});
+
+const imageUpload = multer({
+    storage: imageStorage,
+    fileFilter: function (req, file, cb) {
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+        if (allowedTypes.includes(file.mimetype)) {
+            cb(null, true);
+        } else {
+            cb(new Error('Only JPEG, PNG, GIF and WebP images are allowed'), false);
+        }
+    },
+    limits: {
+        fileSize: 5 * 1024 * 1024 // 5MB limit
+    }
+});
 
 router.use(protect);
 router.use(authorize('admin', 'staff'));
@@ -65,5 +97,22 @@ router.put('/messages/read-all', messageController.markAllAsRead);
 router.put('/messages/:id/respond', messageController.respondToMessage);
 router.delete('/messages/:id', messageController.deleteMessage);
 router.get('/appeals', messageController.getAppeals);
+
+// dynamic middleware - checks cloudinary at request time
+const createDynamicUploadMiddleware = (type, fieldName) => {
+    return (req, res, next) => {
+        if (isCloudinaryConfigured()) {
+            handleCloudinaryImageUpload(type, fieldName)(req, res, next);
+        } else {
+            imageUpload.single(fieldName)(req, res, next);
+        }
+    };
+};
+
+// image upload routes
+router.post('/upload-image', createDynamicUploadMiddleware('general', 'image'), adminController.uploadImage);
+router.post('/upload-animal-image', createDynamicUploadMiddleware('animal', 'image'), adminController.uploadImage);
+router.post('/upload-plant-image', createDynamicUploadMiddleware('plant', 'image'), adminController.uploadImage);
+router.post('/upload-event-image', createDynamicUploadMiddleware('event', 'image'), adminController.uploadImage);
 
 module.exports = router;

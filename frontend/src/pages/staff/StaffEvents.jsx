@@ -186,6 +186,19 @@ const StaffEvents = ({ globalSearch = '' }) => {
     const executeSave = async () => {
         setSaving(true);
         try {
+            // Handle image upload if file mode selected
+            let imageUrl = form.imageUrl;
+            if (imageInputMode === 'upload' && imageFile) {
+                const uploadRes = await staffAPI.uploadEventImage(imageFile);
+                if (uploadRes.success) {
+                    imageUrl = uploadRes.imageUrl;
+                } else {
+                    alert(uploadRes.message || 'Failed to upload image');
+                    setSaving(false);
+                    return;
+                }
+            }
+
             const eventData = {
                 title: form.title,
                 description: form.description,
@@ -195,7 +208,7 @@ const StaffEvents = ({ globalSearch = '' }) => {
                 location: form.location,
                 capacity: form.capacity ? parseInt(form.capacity) : null,
                 status: form.status,
-                image_url: form.imageUrl,
+                image_url: imageUrl,
                 color: form.color
             };
             let res;

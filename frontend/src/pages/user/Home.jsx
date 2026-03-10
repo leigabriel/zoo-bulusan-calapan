@@ -1,4 +1,3 @@
-// src/pages/Home.jsx
 import React from 'react';
 import { ReactLenis } from 'lenis/react';
 import Header from '../../components/Header';
@@ -14,17 +13,16 @@ import FloraSection from './home-section/FloraSection';
 import EventsSection from './home-section/EventsSection';
 import FaqSection from './home-section/FaqSection';
 import PricingSection from './home-section/PricingSection';
+// import RoseSection from './home-section/RoseSection';
 import '../../App.css';
 
 const Home = () => {
     return (
-        <ReactLenis root options={{ lerp: 0.03, duration: 2, smoothWheel: true, smoothTouch: true, wheelMultiplier: 0.9, touchMultiplier: 2, infinite: false }}>
+        <ReactLenis root options={{ lerp: 0.05, duration: 1.5, smoothWheel: true, smoothTouch: false, wheelMultiplier: 1, touchMultiplier: 2, infinite: false }}>
             <div className="relative min-h-screen bg-[#ebebeb] selection:bg-[#007a55] selection:text-white">
                 <Header />
                 <AIFloatingButton />
-
                 <main className="relative w-full">
-
                     <div className="relative z-0">
                         <HeroSection />
                     </div>
@@ -35,17 +33,16 @@ const Home = () => {
                     <div className="sticky top-0 z-10 flex flex-col h-[100svh] w-full bg-[#1a1e26] shadow-[0_-15px_40px_rgba(0,0,0,0.15)]">
                         <BulusanSection />
                     </div>
-
                     <div className="relative z-20 w-full bg-[#ebebeb] shadow-[0_-15px_40px_rgba(0,0,0,0.15)]">
                         <IntroSection />
                         <WildlifeSection />
                         <FloraSection />
+                        {/* <RoseSection /> */}
                         <EventsSection />
                         <FaqSection />
                         <PricingSection />
                     </div>
                 </main>
-
                 <div className="relative z-20 bg-[#ebebeb] w-full">
                     <Footer />
                 </div>

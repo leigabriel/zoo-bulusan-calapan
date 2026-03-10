@@ -317,7 +317,7 @@ exports.deleteEvent = async (req, res) => {
     }
 };
 
-// ====== Plant CRUD ======
+// plant crud
 exports.getAllPlants = async (req, res) => {
     try {
         const plants = await Plant.getAll();
@@ -832,11 +832,22 @@ exports.getModelInfo = async (req, res) => {
 };
 
 // Upload image for animals/events
-// NOTE: On platforms with ephemeral filesystems (Render.com, Heroku, etc.),
-// uploaded files will be lost on redeploy. For production, consider using
-// cloud storage (AWS S3, Cloudinary, Azure Blob Storage, etc.)
+// Supports both Cloudinary (cloud storage) and local file storage
+// Cloudinary is used if configured, otherwise falls back to local storage
 exports.uploadImage = async (req, res) => {
     try {
+        // Check if Cloudinary upload was performed
+        if (req.cloudinaryResult) {
+            return res.json({
+                success: true,
+                message: 'Image uploaded to cloud storage successfully',
+                imageUrl: req.cloudinaryResult.secure_url,
+                publicId: req.cloudinaryResult.public_id,
+                storage: 'cloudinary'
+            });
+        }
+
+        // Fallback to local file storage
         if (!req.file) {
             return res.status(400).json({
                 success: false,
@@ -858,7 +869,8 @@ exports.uploadImage = async (req, res) => {
             success: true,
             message: 'Image uploaded successfully',
             imageUrl: imageUrl,
-            filename: req.file.filename
+            filename: req.file.filename,
+            storage: 'local'
         });
     } catch (error) {
         console.error('Error uploading image:', error);
@@ -910,11 +922,9 @@ exports.markAllNotificationsRead = async (req, res) => {
     }
 };
 
-// ==========================================
-// USER SUSPENSION / BAN ENDPOINTS
-// ==========================================
+// user suspension
 
-// Suspend user
+// suspend user
 exports.suspendUser = async (req, res) => {
     try {
         const { id } = req.params;
@@ -1025,11 +1035,9 @@ exports.reviewAppeal = async (req, res) => {
     }
 };
 
-// ==========================================
-// TICKET MANAGEMENT ENDPOINTS
-// ==========================================
+// ticket management
 
-// Mark ticket as paid
+// mark ticket as paid
 exports.markTicketAsPaid = async (req, res) => {
     try {
         const { id } = req.params;

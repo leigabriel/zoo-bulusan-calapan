@@ -1,4 +1,4 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, memo } from 'react';
 import * as THREE from 'three';
 
 const vertexShader = `
@@ -63,7 +63,7 @@ void main() {
   gl_FragColor = vec4(baseColor.rgb + noise, 1.0);
 }`;
 
-const GridDistortion = ({ grid = 15, mouse = 0.1, strength = 0.15, relaxation = 0.9, noiseStrength = 0.25, blur = 0.015, imageSrc, className = '' }) => {
+const GridDistortion = memo(({ grid = 15, mouse = 0.1, strength = 0.15, relaxation = 0.9, noiseStrength = 0.25, blur = 0.015, imageSrc, className = '' }) => {
     const containerRef = useRef(null);
     const sceneRef = useRef(null);
     const rendererRef = useRef(null);
@@ -71,6 +71,7 @@ const GridDistortion = ({ grid = 15, mouse = 0.1, strength = 0.15, relaxation = 
     const planeRef = useRef(null);
     const animationIdRef = useRef(null);
     const resizeObserverRef = useRef(null);
+    const isVisibleRef = useRef(true);
 
     useEffect(() => {
         if (!containerRef.current) return;
@@ -205,9 +206,23 @@ const GridDistortion = ({ grid = 15, mouse = 0.1, strength = 0.15, relaxation = 
 
         handleResize();
 
+        // visibility observer to pause animation when not in view
+        let intersectionObserver;
+        if (window.IntersectionObserver) {
+            intersectionObserver = new IntersectionObserver(
+                (entries) => {
+                    isVisibleRef.current = entries[0].isIntersecting;
+                },
+                { threshold: 0.1 }
+            );
+            intersectionObserver.observe(container);
+        }
+
         const animate = () => {
             animationIdRef.current = requestAnimationFrame(animate);
-            if (!renderer || !scene || !camera) return;
+            
+            // skip rendering when not visible
+            if (!isVisibleRef.current || !renderer || !scene || !camera) return;
 
             uniforms.time.value += 0.05;
             uniforms.uNoiseStrength.value = noiseStrength;
@@ -244,6 +259,7 @@ const GridDistortion = ({ grid = 15, mouse = 0.1, strength = 0.15, relaxation = 
         return () => {
             if (animationIdRef.current) cancelAnimationFrame(animationIdRef.current);
             if (resizeObserverRef.current) resizeObserverRef.current.disconnect();
+            if (intersectionObserver) intersectionObserver.disconnect();
             else window.removeEventListener('resize', handleResize);
 
             container.removeEventListener('mousemove', handlePointerMove);
@@ -269,6 +285,6 @@ const GridDistortion = ({ grid = 15, mouse = 0.1, strength = 0.15, relaxation = 
             style={{ width: '100%', height: '100%', minWidth: '0', minHeight: '0' }}
         />
     );
-};
+});
 
 export default GridDistortion;

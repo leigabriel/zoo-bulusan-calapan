@@ -4,13 +4,15 @@ const crypto = require('crypto');
 const User = require('../models/user-model');
 const StaffActivity = require('../models/staff-activity-model');
 const { deleteOldProfileImage, getProfileImagePath } = require('../middleware/upload-profile-image');
+const { deleteFromCloudinary, extractPublicId } = require('../middleware/cloudinary-upload');
+const { isConfigured: isCloudinaryConfigured } = require('../config/cloudinary');
 const { sendVerificationEmail } = require('../utils/email');
 
 const VALID_ROLES = ['admin', 'staff', 'user'];
 const VALID_GENDERS = ['male', 'female', 'other', 'prefer_not_to_say'];
 
 
-// Password validation helper
+// validate password
 const validatePassword = (password) => {
     const errors = [];
     
@@ -30,7 +32,7 @@ const validatePassword = (password) => {
     return errors;
 };
 
-// Input sanitization helper
+// sanitize input
 const sanitizeInput = (input) => {
     if (typeof input !== 'string') return input;
     return input.trim().replace(/[<>]/g, '');
@@ -521,7 +523,64 @@ exports.logout = async (req, res) => {
 
 exports.uploadProfileImage = async (req, res) => {
     try {
-        // File has been uploaded by multer middleware
+        // Check if Cloudinary upload was successful (from middleware)
+        if (req.cloudinaryResult) {
+            // Cloudinary upload path
+            const user = await User.findById(req.user.id);
+            if (!user) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'User not found'
+                });
+            }
+
+            // Delete old profile image from Cloudinary if it exists
+            if (user.profile_image && user.profile_image.includes('cloudinary.com')) {
+                const oldPublicId = extractPublicId(user.profile_image);
+                if (oldPublicId) {
+                    await deleteFromCloudinary(oldPublicId);
+                }
+            } else if (user.profile_image) {
+                // Delete old local file if exists
+                deleteOldProfileImage(user.profile_image);
+            }
+
+            // Get the secure URL from Cloudinary
+            const profileImageUrl = req.cloudinaryResult.secure_url;
+
+            // Update user profile with new image URL
+            await User.updateProfile(req.user.id, {
+                firstName: user.first_name,
+                lastName: user.last_name,
+                phoneNumber: user.phone_number,
+                gender: user.gender,
+                birthday: user.birthday,
+                profileImage: profileImageUrl
+            });
+
+            // Get updated user data
+            const updatedUser = await User.findById(req.user.id);
+
+            return res.json({
+                success: true,
+                message: 'Profile image uploaded successfully',
+                profileImage: profileImageUrl,
+                user: {
+                    id: updatedUser.id,
+                    firstName: updatedUser.first_name,
+                    lastName: updatedUser.last_name,
+                    username: updatedUser.username,
+                    email: updatedUser.email,
+                    phoneNumber: updatedUser.phone_number,
+                    gender: updatedUser.gender,
+                    birthday: updatedUser.birthday,
+                    role: updatedUser.role,
+                    profileImage: updatedUser.profile_image
+                }
+            });
+        }
+
+        // Fallback to local file upload (legacy support)
         if (!req.file) {
             return res.status(400).json({
                 success: false,
@@ -597,7 +656,16 @@ exports.deleteProfileImage = async (req, res) => {
 
         // Delete the profile image file if it exists
         if (user.profile_image) {
-            deleteOldProfileImage(user.profile_image);
+            // Check if it's a Cloudinary URL
+            if (user.profile_image.includes('cloudinary.com')) {
+                const publicId = extractPublicId(user.profile_image);
+                if (publicId) {
+                    await deleteFromCloudinary(publicId);
+                }
+            } else {
+                // Delete local file
+                deleteOldProfileImage(user.profile_image);
+            }
         }
 
         // Update user profile to remove image reference

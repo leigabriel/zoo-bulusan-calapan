@@ -55,7 +55,7 @@ function Scene({ spinRotation, device, setTooltip }) {
 
 const TitleBlock = ({ scale, opacity, zIndex, y }) => (
     <motion.div
-        style={{ scale, opacity, zIndex, y, willChange: 'transform, opacity' }}
+        style={{ scale, opacity, zIndex, y }}
         className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none origin-center"
     >
         <span className="text-[4vw] sm:text-[2rem] tracking-[0.3em] font-normal uppercase text-[#212631]/80 mb-2 sm:mb-4">
@@ -69,7 +69,7 @@ const TitleBlock = ({ scale, opacity, zIndex, y }) => (
 
 const HeroDecorations = ({ opacity }) => (
     <motion.div
-        style={{ opacity, willChange: 'opacity' }}
+        style={{ opacity }}
         className="absolute inset-0 pointer-events-none z-40 p-6 md:p-12 flex flex-col justify-between"
     >
         <div className="flex justify-between items-start mt-16 md:mt-20">
@@ -90,9 +90,7 @@ const HeroDecorations = ({ opacity }) => (
                 </span>
             </div>
         </div>
-
         <div className="flex justify-between items-end mb-4 md:mb-8">
-            {/* Removed the translate-y that was pushing the text down off the screen */}
             <div className="flex items-center gap-3 origin-bottom-left -rotate-90">
                 <span className="text-[9px] md:text-[10px] font-semibold tracking-[0.25em] text-[#212631]/70 uppercase whitespace-nowrap">
                     Scroll to Explore
@@ -151,14 +149,11 @@ export default function HeroSection() {
         <section ref={containerRef} className="relative block w-full h-[300vh] bg-[#ebebeb]">
             <div className="sticky top-0 left-0 w-full h-[100svh] overflow-hidden">
                 <div className="absolute inset-0 w-full h-full flex items-center justify-center">
-
                     <HeroDecorations opacity={decorOpacity} />
-
                     <TitleBlock scale={titleScale} opacity={backTextOpacity} zIndex={10} y={titleY} />
-
                     <motion.div style={{ opacity: canvasOpacity }} className="absolute inset-0 z-20">
                         <Canvas
-                            dpr={[1, 1.5]}
+                            dpr={device === 'mobile' ? 1 : [1, 1.5]}
                             gl={{
                                 alpha: true,
                                 antialias: true,
@@ -169,12 +164,9 @@ export default function HeroSection() {
                             <Scene spinRotation={spinRotation} device={device} setTooltip={setTooltip} />
                         </Canvas>
                     </motion.div>
-
                     <TitleBlock scale={titleScale} opacity={frontTextOpacity} zIndex={30} y={titleY} />
-
                 </div>
             </div>
-
             <AnimatePresence>
                 {tooltip.show && (
                     <motion.div

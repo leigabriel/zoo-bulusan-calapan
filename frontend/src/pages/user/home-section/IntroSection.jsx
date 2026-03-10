@@ -7,7 +7,7 @@ const IntroSection = () => {
     return (
         <section className="bg-[#ebebeb] flex items-center px-6 py-12 md:px-16 md:py-24 w-full overflow-hidden">
             <div className="max-w-[1450px] mx-auto w-full flex flex-col">
-                <h1 className="text-[#212631] text-6xl sm:text-5xl md:text-6xl lg:text-7xl font-medium leading-tight md:leading-[1.1] tracking-tight">
+                <h1 className="text-[#212631] text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-medium leading-tight md:leading-[1.1] tracking-tight">
                     <motion.span
                         initial="hidden"
                         whileInView="visible"
@@ -32,7 +32,6 @@ const IntroSection = () => {
                         ))}
                     </motion.span>
                 </h1>
-
                 <motion.p
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}

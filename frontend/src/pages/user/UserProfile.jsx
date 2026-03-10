@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { authAPI, userAPI, getProfileImageUrl as resolveProfileImageUrl } from '../../services/api-client';
+import { authAPI, getProfileImageUrl as resolveProfileImageUrl } from '../../services/api-client';
 import { sanitizeInput } from '../../utils/sanitize';
 import { isDefaultAvatar, getDefaultAvatarSvg, getInitials } from '../../utils/profile-avatars';
 import LogoutModal from '../../components/common/LogoutModal';
@@ -25,183 +25,6 @@ const VerifiedIcon = () => (
         <path d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.64.304 1.24.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" />
     </svg>
 );
-
-const PawIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
-        <path d="M12 10.5c-2.5 0-4.5 2.5-4.5 5.5 0 2 1.5 3.5 4.5 3.5s4.5-1.5 4.5-3.5c0-3-2-5.5-4.5-5.5zm-5.5-2c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm11 0c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm-8-1.5c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm5 0c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z"/>
-    </svg>
-);
-
-const AnimalCollection = () => {
-    const [collection, setCollection] = useState([]);
-    const [showRemoveModal, setShowRemoveModal] = useState(false);
-    const [animalToRemove, setAnimalToRemove] = useState(null);
-    const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        const loadCollection = async () => {
-            try {
-                // Try to load from database first
-                const response = await userAPI.getCollection();
-                if (response.success && response.collection) {
-                    // Transform database format to component format
-                    const dbCollection = response.collection.map(item => ({
-                        id: item.id,
-                        name: item.animal_name,
-                        description: item.description,
-                        category: item.category,
-                        confidence: item.confidence,
-                        image: item.captured_image,
-                        fromDatabase: true
-                    }));
-                    setCollection(dbCollection);
-                } else {
-                    // Fallback to localStorage
-                    const stored = localStorage.getItem('animalCollection');
-                    if (stored) {
-                        setCollection(JSON.parse(stored));
-                    }
-                }
-            } catch (error) {
-                // Fallback to localStorage
-                const stored = localStorage.getItem('animalCollection');
-                if (stored) {
-                    setCollection(JSON.parse(stored));
-                }
-            } finally {
-                setLoading(false);
-            }
-        };
-        loadCollection();
-    }, []);
-
-    const handleRemove = (animal) => {
-        setAnimalToRemove(animal);
-        setShowRemoveModal(true);
-    };
-
-    const confirmRemove = async () => {
-        const animal = animalToRemove;
-        
-        try {
-            if (animal.fromDatabase && animal.id) {
-                // Remove from database
-                await userAPI.removeFromCollection(animal.id);
-            } else {
-                // Remove from localStorage
-                const updated = collection.filter(a => a.name !== animal.name);
-                localStorage.setItem('animalCollection', JSON.stringify(updated));
-            }
-            
-            const updated = collection.filter(a => a.name !== animal.name);
-            setCollection(updated);
-        } catch (error) {
-            // Still update UI
-            const updated = collection.filter(a => a.name !== animal.name);
-            setCollection(updated);
-            localStorage.setItem('animalCollection', JSON.stringify(updated));
-        }
-        
-        setShowRemoveModal(false);
-        setAnimalToRemove(null);
-    };
-
-    if (loading) {
-        return (
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 pb-12">
-                <div className="lg:col-span-4">
-                    <h3 className="text-lg font-bold text-gray-900">Animal Collection</h3>
-                    <p className="text-sm text-gray-400 mt-2 leading-relaxed">
-                        Animals you've captured and verified using the AI Scanner.
-                    </p>
-                </div>
-                <div className="lg:col-span-8 flex justify-center py-8">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
-                </div>
-            </div>
-        );
-    }
-
-    if (collection.length === 0) {
-        return (
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 pb-12">
-                <div className="lg:col-span-4">
-                    <h3 className="text-lg font-bold text-gray-900">Animal Collection</h3>
-                    <p className="text-sm text-gray-400 mt-2 leading-relaxed">
-                        Animals you've captured and verified using the AI Scanner.
-                    </p>
-                </div>
-                <div className="lg:col-span-8">
-                    <div className="bg-gray-50 rounded-2xl p-8 text-center border-2 border-dashed border-gray-200">
-                        <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <PawIcon />
-                        </div>
-                        <h4 className="font-bold text-gray-700 mb-2">No Animals Yet</h4>
-                        <p className="text-sm text-gray-400">Use the AI Scanner to capture and add zoo animals to your collection!</p>
-                    </div>
-                </div>
-            </div>
-        );
-    }
-
-    return (
-        <>
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 pb-12">
-                <div className="lg:col-span-4">
-                    <h3 className="text-lg font-bold text-gray-900">Animal Collection</h3>
-                    <p className="text-sm text-gray-400 mt-2 leading-relaxed">
-                        Animals you've captured and verified using the AI Scanner.
-                    </p>
-                    <p className="text-xs text-emerald-600 font-bold mt-2">{collection.length} animal{collection.length !== 1 ? 's' : ''} collected</p>
-                </div>
-                <div className="lg:col-span-8">
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                        {collection.map((animal, index) => (
-                            <div key={index} className="group relative bg-white rounded-2xl overflow-hidden shadow-lg border border-gray-100 hover:shadow-xl transition-all">
-                                {animal.image && (
-                                    <div className="aspect-square overflow-hidden">
-                                        <img src={animal.image} alt={animal.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                                    </div>
-                                )}
-                                <div className="p-3">
-                                    <div className="flex items-center justify-between mb-1">
-                                        <h4 className="font-bold text-gray-900 text-sm">{animal.name}</h4>
-                                        <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-bold">{animal.confidence}%</span>
-                                    </div>
-                                    <p className="text-xs text-gray-400 line-clamp-2">{animal.description}</p>
-                                    <button 
-                                        onClick={() => handleRemove(animal)}
-                                        className="mt-2 text-xs text-red-500 hover:text-red-600 font-medium opacity-0 group-hover:opacity-100 transition-opacity"
-                                    >
-                                        Remove
-                                    </button>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </div>
-
-            {showRemoveModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-md p-4">
-                    <div className="bg-white rounded-[2rem] p-8 w-full max-w-sm shadow-2xl text-center">
-                        <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-8 h-8 text-red-600">
-                                <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" />
-                            </svg>
-                        </div>
-                        <h3 className="text-xl font-black text-gray-900 mb-2">Remove Animal?</h3>
-                        <p className="text-gray-500 text-sm mb-6">Remove {animalToRemove?.name} from your collection?</p>
-                        <div className="flex gap-3">
-                            <button onClick={() => setShowRemoveModal(false)} className="flex-1 py-3 border border-gray-200 rounded-xl font-bold text-gray-400 hover:bg-gray-50 transition">Cancel</button>
-                            <button onClick={confirmRemove} className="flex-1 py-3 bg-red-600 text-white rounded-xl font-bold shadow-lg hover:bg-red-700 transition">Remove</button>
-                        </div>
-                    </div>
-                </div>
-            )}
-        </>
-    );
-};
 
 const UserProfile = () => {
     const { user, logout, updateUser } = useAuth();
@@ -576,7 +399,6 @@ const UserProfile = () => {
 
                     <div className="h-px bg-gray-100 my-12 w-full"></div>
 
-                    <AnimalCollection />
                 </div>
             </div>
 

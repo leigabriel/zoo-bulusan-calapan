@@ -15,24 +15,11 @@ const PricingSection = () => {
                         </span>
                     </h2>
                 </div>
-
                 <div className="grid grid-cols-1 lg:grid-cols-3 border border-[#212631]/20 rounded-lg lg:rounded-none shadow-sm mb-8 sm:mb-10 md:mb-12">
                     {[
-                        {
-                            label: "ADULT",
-                            price: "₱40",
-                            desc: "Ages 18-59. Perfect for those who want the full experience."
-                        },
-                        {
-                            label: "CHILD",
-                            price: "₱20",
-                            desc: "Ages 5-17. Launch your first visit and start exploring within minutes."
-                        },
-                        {
-                            label: "RESIDENT",
-                            price: "FREE",
-                            desc: "Exclusive for local residents. End-to-end community access."
-                        }
+                        { label: "ADULT", price: "₱40", desc: "Ages 18-59. Perfect for those who want the full experience." },
+                        { label: "CHILD", price: "₱20", desc: "Ages 5-17. Launch your first visit and start exploring within minutes." },
+                        { label: "RESIDENT", price: "FREE", desc: "Exclusive for local residents. End-to-end community access." }
                     ].map((t, i) => (
                         <div
                             key={i}
@@ -53,7 +40,6 @@ const PricingSection = () => {
                         </div>
                     ))}
                 </div>
-
                 <div className="flex justify-center">
                     <Link to="/reservations">
                         <button className="px-8 py-3.5 sm:px-10 sm:py-4 md:px-12 md:py-4 bg-gray-900 text-white text-xs sm:text-sm font-bold tracking-wider sm:tracking-widest uppercase rounded-full hover:bg-gray-800 transition-all duration-300 shadow-lg shadow-gray-200 min-h-[44px]">

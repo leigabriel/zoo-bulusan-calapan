@@ -494,11 +494,9 @@ exports.markAllNotificationsRead = async (req, res) => {
     }
 };
 
-// ==========================================
-// USER SUSPENSION / BAN ENDPOINTS (Staff)
-// ==========================================
+// user suspension
 
-// Suspend user (staff can only suspend regular users)
+// suspend user
 exports.suspendUser = async (req, res) => {
     try {
         const { id } = req.params;
@@ -603,11 +601,9 @@ exports.reviewAppeal = async (req, res) => {
     }
 };
 
-// ==========================================
-// TICKET MANAGEMENT ENDPOINTS (Staff)
-// ==========================================
+// ticket management
 
-// Mark ticket as paid
+// mark ticket as paid
 exports.markTicketAsPaid = async (req, res) => {
     try {
         const { id } = req.params;

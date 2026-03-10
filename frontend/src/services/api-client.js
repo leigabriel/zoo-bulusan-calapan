@@ -403,6 +403,51 @@ export const adminAPI = {
         return handleResponse(response);
     },
 
+    uploadAnimalImage: async (file) => {
+        const formData = new FormData();
+        formData.append('image', file);
+        
+        const token = getToken('admin');
+        const response = await fetch(`${API_BASE_URL}/admin/upload-animal-image`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            },
+            body: formData
+        });
+        return handleResponse(response);
+    },
+
+    uploadPlantImage: async (file) => {
+        const formData = new FormData();
+        formData.append('image', file);
+        
+        const token = getToken('admin');
+        const response = await fetch(`${API_BASE_URL}/admin/upload-plant-image`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            },
+            body: formData
+        });
+        return handleResponse(response);
+    },
+
+    uploadEventImage: async (file) => {
+        const formData = new FormData();
+        formData.append('image', file);
+        
+        const token = getToken('admin');
+        const response = await fetch(`${API_BASE_URL}/admin/upload-event-image`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            },
+            body: formData
+        });
+        return handleResponse(response);
+    },
+
     // Notifications
     getNotifications: async () => {
         const response = await fetch(`${API_BASE_URL}/admin/notifications`, {
@@ -897,6 +942,67 @@ export const staffAPI = {
             headers: getAuthHeaders('staff')
         });
         return handleResponse(response);
+    },
+
+    // Image upload methods (uses Cloudinary when configured)
+    uploadImage: async (file) => {
+        const formData = new FormData();
+        formData.append('image', file);
+        
+        const token = getToken('staff');
+        const response = await fetch(`${API_BASE_URL}/staff/upload-image`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            },
+            body: formData
+        });
+        return handleResponse(response);
+    },
+
+    uploadAnimalImage: async (file) => {
+        const formData = new FormData();
+        formData.append('image', file);
+        
+        const token = getToken('staff');
+        const response = await fetch(`${API_BASE_URL}/staff/upload-animal-image`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            },
+            body: formData
+        });
+        return handleResponse(response);
+    },
+
+    uploadPlantImage: async (file) => {
+        const formData = new FormData();
+        formData.append('image', file);
+        
+        const token = getToken('staff');
+        const response = await fetch(`${API_BASE_URL}/staff/upload-plant-image`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            },
+            body: formData
+        });
+        return handleResponse(response);
+    },
+
+    uploadEventImage: async (file) => {
+        const formData = new FormData();
+        formData.append('image', file);
+        
+        const token = getToken('staff');
+        const response = await fetch(`${API_BASE_URL}/staff/upload-event-image`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            },
+            body: formData
+        });
+        return handleResponse(response);
     }
 };
 
@@ -1021,38 +1127,6 @@ export const userAPI = {
 
     getMyAppeals: async () => {
         const response = await fetch(`${API_BASE_URL}/users/appeals`, {
-            headers: getAuthHeaders('user')
-        });
-        return handleResponse(response);
-    },
-
-    // Collection API (AI Scanner)
-    getCollection: async () => {
-        const response = await fetch(`${API_BASE_URL}/users/collection`, {
-            headers: getAuthHeaders('user')
-        });
-        return handleResponse(response);
-    },
-
-    addToCollection: async (animalData) => {
-        const response = await fetch(`${API_BASE_URL}/users/collection`, {
-            method: 'POST',
-            headers: getAuthHeaders('user'),
-            body: JSON.stringify(animalData)
-        });
-        return handleResponse(response);
-    },
-
-    removeFromCollection: async (id) => {
-        const response = await fetch(`${API_BASE_URL}/users/collection/${id}`, {
-            method: 'DELETE',
-            headers: getAuthHeaders('user')
-        });
-        return handleResponse(response);
-    },
-
-    getCollectionStats: async () => {
-        const response = await fetch(`${API_BASE_URL}/users/collection/stats`, {
             headers: getAuthHeaders('user')
         });
         return handleResponse(response);
@@ -1213,10 +1287,25 @@ export const reservationAPI = {
     },
 
     createTicketReservation: async (reservationData) => {
+        const formData = new FormData();
+        formData.append('visitorName', reservationData.visitorName || '');
+        formData.append('visitorEmail', reservationData.visitorEmail || '');
+        formData.append('visitorPhone', reservationData.visitorPhone || '');
+        formData.append('reservationDate', reservationData.reservationDate || '');
+        formData.append('adultQuantity', reservationData.adultQuantity || 0);
+        formData.append('childQuantity', reservationData.childQuantity || 0);
+        formData.append('bulusanResidentQuantity', reservationData.bulusanResidentQuantity || 0);
+        formData.append('notes', reservationData.notes || '');
+        
+        // append resident id image file if provided
+        if (reservationData.residentIdImage instanceof File) {
+            formData.append('residentIdImage', reservationData.residentIdImage);
+        }
+
         const response = await fetch(`${API_BASE_URL}/reservations/ticket`, {
             method: 'POST',
-            headers: getAuthHeaders('user'),
-            body: JSON.stringify(reservationData)
+            headers: getAuthHeadersMultipart('user'),
+            body: formData
         });
         return handleResponse(response);
     },
@@ -1469,6 +1558,136 @@ export const getResidentIdImageUrl = (residentIdImg) => {
     
     // Default: assume it's in the backend resident-id-images folder
     return `${BACKEND_BASE_URL}/uploads/resident-id-images/${residentIdImg}`;
+};
+
+/**
+ * Upload API - Centralized image upload service using Cloudinary
+ */
+export const uploadAPI = {
+    /**
+     * Check cloud storage configuration status
+     */
+    checkStatus: async (type = 'user') => {
+        const response = await fetch(`${API_BASE_URL}/upload/status`, {
+            headers: getAuthHeaders(type)
+        });
+        return handleResponse(response);
+    },
+
+    /**
+     * Upload a generic image
+     * @param {File} file - Image file to upload
+     * @param {string} type - User type for auth (admin, staff, user)
+     */
+    uploadImage: async (file, type = 'admin') => {
+        const formData = new FormData();
+        formData.append('image', file);
+
+        const response = await fetch(`${API_BASE_URL}/upload/image`, {
+            method: 'POST',
+            headers: getAuthHeadersMultipart(type),
+            body: formData
+        });
+        return handleResponse(response);
+    },
+
+    /**
+     * Upload an animal image
+     * @param {File} file - Image file to upload
+     * @param {string} type - User type for auth (admin, staff)
+     */
+    uploadAnimalImage: async (file, type = 'admin') => {
+        const formData = new FormData();
+        formData.append('image', file);
+
+        const response = await fetch(`${API_BASE_URL}/upload/animal`, {
+            method: 'POST',
+            headers: getAuthHeadersMultipart(type),
+            body: formData
+        });
+        return handleResponse(response);
+    },
+
+    /**
+     * Upload a plant image
+     * @param {File} file - Image file to upload
+     * @param {string} type - User type for auth (admin, staff)
+     */
+    uploadPlantImage: async (file, type = 'admin') => {
+        const formData = new FormData();
+        formData.append('image', file);
+
+        const response = await fetch(`${API_BASE_URL}/upload/plant`, {
+            method: 'POST',
+            headers: getAuthHeadersMultipart(type),
+            body: formData
+        });
+        return handleResponse(response);
+    },
+
+    /**
+     * Upload an event image
+     * @param {File} file - Image file to upload
+     * @param {string} type - User type for auth (admin, staff)
+     */
+    uploadEventImage: async (file, type = 'admin') => {
+        const formData = new FormData();
+        formData.append('image', file);
+
+        const response = await fetch(`${API_BASE_URL}/upload/event`, {
+            method: 'POST',
+            headers: getAuthHeadersMultipart(type),
+            body: formData
+        });
+        return handleResponse(response);
+    },
+
+    /**
+     * Upload a resident ID image
+     * @param {File} file - Image file to upload
+     * @param {string} type - User type for auth
+     */
+    uploadResidentIdImage: async (file, type = 'user') => {
+        const formData = new FormData();
+        formData.append('residentIdImage', file);
+
+        const response = await fetch(`${API_BASE_URL}/upload/resident-id`, {
+            method: 'POST',
+            headers: getAuthHeadersMultipart(type),
+            body: formData
+        });
+        return handleResponse(response);
+    },
+
+    /**
+     * Upload a base64 encoded image
+     * @param {string} base64Data - Base64 encoded image data
+     * @param {string} imageType - Type of image (profile, animal, plant, event, general)
+     * @param {string} authType - User type for auth
+     */
+    uploadBase64Image: async (base64Data, imageType = 'general', authType = 'user') => {
+        const response = await fetch(`${API_BASE_URL}/upload/base64`, {
+            method: 'POST',
+            headers: getAuthHeaders(authType),
+            body: JSON.stringify({ image: base64Data, type: imageType })
+        });
+        return handleResponse(response);
+    },
+
+    /**
+     * Delete an image from cloud storage
+     * @param {string} url - Image URL or public ID
+     * @param {string} publicId - Optional public ID if URL not provided
+     * @param {string} type - User type for auth (admin, staff)
+     */
+    deleteImage: async (url, publicId = null, type = 'admin') => {
+        const response = await fetch(`${API_BASE_URL}/upload/image`, {
+            method: 'DELETE',
+            headers: getAuthHeaders(type),
+            body: JSON.stringify({ url, publicId })
+        });
+        return handleResponse(response);
+    }
 };
 
 export { getToken, getAuthHeaders, API_BASE_URL, BACKEND_BASE_URL };

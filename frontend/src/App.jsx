@@ -37,7 +37,6 @@ import StaffAnimals from './pages/staff/StaffAnimals';
 import StaffPlants from './pages/staff/StaffPlants';
 import StaffHelpCenter from './pages/staff/StaffHelpCenter';
 import StaffMessages from './pages/staff/StaffMessages';
-import TicketScanner from './pages/staff/TicketScanner';
 import AdminLayout from './components/layout/AdminLayout';
 import StaffLayout from './components/layout/StaffLayout';
 import AnimalClassifier from './components/features/ai-scanner/AnimalClassifier';
@@ -287,13 +286,6 @@ function AppRoutes() {
                 <ProtectedRoute allowedRoles={['admin', 'staff']}>
                     <StaffLayout>
                         <StaffMessages />
-                    </StaffLayout>
-                </ProtectedRoute>
-            } />
-            <Route path="/staff/scanner" element={
-                <ProtectedRoute allowedRoles={['admin', 'staff']}>
-                    <StaffLayout>
-                        <TicketScanner />
                     </StaffLayout>
                 </ProtectedRoute>
             } />

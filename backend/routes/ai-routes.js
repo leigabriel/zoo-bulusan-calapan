@@ -1,13 +1,12 @@
 const express = require('express');
 const router = express.Router();
 
-// Import models for database access
+// import models
 const Animal = require('../models/animal-model');
 const Event = require('../models/event-model');
 const Ticket = require('../models/ticket-model');
 
-// Try loading optional Google Generative AI client. If it's not installed,
-// keep the server running and fall back to canned responses.
+// load google ai client
 let GoogleGenerativeAI = null;
 try {
     const gg = require('@google/generative-ai');
@@ -16,7 +15,7 @@ try {
     console.warn('Optional package @google/generative-ai not installed. AI features will use fallback responses.');
 }
 
-// Function to fetch dynamic zoo data from the database
+// fetch dynamic zoo data
 const getDynamicZooData = async () => {
     try {
         // Fetch animals from database
@@ -74,7 +73,7 @@ const getDynamicZooData = async () => {
     }
 };
 
-// Fallback response function when AI service is not available
+// fallback response for ai
 const getFallbackResponse = (message, dynamicData = null) => {
     const lowerMsg = message.toLowerCase();
 
@@ -98,7 +97,7 @@ const getFallbackResponse = (message, dynamicData = null) => {
                 response += ` Some of our residents include: ${dynamicData.animalNames.slice(0, 5).join(', ')}.`;
             }
         }
-        response += " Visit our Animals page or use the AnimalDex feature to explore our complete collection. You can also use the AI Animal Scanner to identify animals during your visit!";
+        response += " Visit our Animals page to explore all our wildlife. You can also use the AI Animal Scanner to identify animals during your visit!";
         return response;
     }
 
@@ -336,7 +335,7 @@ Remember: Only share this general zoo information. Never share personal user dat
 
         // Check if API key is configured and not empty
         if (!apiKey || typeof apiKey !== 'string' || apiKey.trim().length === 0) {
-            // Provide fallback responses when API key is not configured
+            // fallback response
             return res.json({
                 success: true,
                 response: getFallbackResponse(message, dynamicData),
@@ -424,7 +423,7 @@ Remember: Only share this general zoo information. Never share personal user dat
             return;
         }
 
-        // Fallback response
+        // fallback
         return res.json({
             success: true,
             response: getFallbackResponse(message, dynamicData),

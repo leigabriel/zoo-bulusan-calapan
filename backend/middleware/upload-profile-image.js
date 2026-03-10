@@ -3,26 +3,21 @@ const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
 
-// Profile images are now stored in the backend's uploads directory
-// This allows the backend to serve them directly, which works better for split deployments
-// For cloud storage, replace storage configuration with multer-s3 or similar
+// profile image directory
 const PROFILE_IMAGE_DIR = path.join(__dirname, '../uploads/profile-images');
 
-// Ensure the upload directory exists
+// create directory if needed
 if (!fs.existsSync(PROFILE_IMAGE_DIR)) {
     fs.mkdirSync(PROFILE_IMAGE_DIR, { recursive: true });
 }
 
-// Allowed MIME types for profile images
+// allowed image types
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
-// Maximum file size (2MB for profile images)
+// max file size 2mb
 const MAX_FILE_SIZE = 2 * 1024 * 1024;
 
-/**
- * Generate a secure, unique filename to avoid collisions
- * Format: profile_{userId}_{timestamp}_{randomHash}.{ext}
- */
+// generate secure filename
 const generateSecureFilename = (userId, originalName) => {
     const ext = path.extname(originalName).toLowerCase();
     const timestamp = Date.now();

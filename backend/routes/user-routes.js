@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const userController = require('../controllers/user-controller');
-const collectionController = require('../controllers/collection-controller');
 const { protect } = require('../middleware/auth');
 
 router.get('/animals', userController.getAnimals);
@@ -24,14 +23,8 @@ router.post('/tickets/:id/archive', userController.archiveTicket);
 router.post('/tickets/:id/unarchive', userController.unarchiveTicket);
 router.post('/tickets/archive-multiple', userController.archiveMultipleTickets);
 
-// Appeal routes (for suspended users)
+// appeal routes
 router.post('/appeals', userController.submitAppeal);
 router.get('/appeals', userController.getMyAppeals);
-
-// Collection routes (AI Scanner)
-router.get('/collection', collectionController.getMyCollection);
-router.post('/collection', collectionController.addToCollection);
-router.delete('/collection/:id', collectionController.removeFromCollection);
-router.get('/collection/stats', collectionController.getCollectionStats);
 
 module.exports = router;

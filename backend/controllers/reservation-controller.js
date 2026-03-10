@@ -109,8 +109,14 @@ exports.createTicketReservation = async (req, res) => {
         const { 
             visitorName, visitorEmail, visitorPhone, reservationDate,
             adultQuantity, childQuantity, bulusanResidentQuantity,
-            residentIdImage, notes
+            notes
         } = req.body;
+
+        // get resident id image url from cloudinary upload
+        let residentIdImage = null;
+        if (req.cloudinaryResult && req.cloudinaryResult.secure_url) {
+            residentIdImage = req.cloudinaryResult.secure_url;
+        }
 
         if (!visitorName || !visitorEmail || !reservationDate) {
             return res.status(400).json({ 
@@ -119,7 +125,11 @@ exports.createTicketReservation = async (req, res) => {
             });
         }
 
-        const totalVisitors = (adultQuantity || 0) + (childQuantity || 0) + (bulusanResidentQuantity || 0);
+        // parse quantities from formdata strings
+        const adult = parseInt(adultQuantity) || 0;
+        const child = parseInt(childQuantity) || 0;
+        const bulusanResident = parseInt(bulusanResidentQuantity) || 0;
+        const totalVisitors = adult + child + bulusanResident;
         
         if (totalVisitors === 0) {
             return res.status(400).json({ 
@@ -138,9 +148,9 @@ exports.createTicketReservation = async (req, res) => {
             visitorEmail,
             visitorPhone,
             reservationDate,
-            adultQuantity: adultQuantity || 0,
-            childQuantity: childQuantity || 0,
-            bulusanResidentQuantity: bulusanResidentQuantity || 0,
+            adultQuantity: adult,
+            childQuantity: child,
+            bulusanResidentQuantity: bulusanResident,
             totalVisitors,
             residentIdImage,
             status: 'pending',

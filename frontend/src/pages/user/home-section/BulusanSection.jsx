@@ -33,19 +33,17 @@ const BulusanSection = () => {
             className="relative w-full h-full bg-[#1a1e26] m-0 p-0 overflow-hidden"
         >
             <motion.div
-                style={{ clipPath, willChange: 'clip-path' }}
+                style={{ clipPath }}
                 className="absolute inset-0 w-full h-full overflow-hidden"
             >
                 <motion.img
-                    style={{ scale: imageScale, willChange: 'transform' }}
+                    style={{ scale: imageScale }}
                     src="/bulusan.webp"
                     alt="Bulusan Park"
                     className="w-full h-full object-cover"
                     loading="lazy"
                 />
-
                 <div className="absolute top-0 left-0 w-full h-48 sm:h-64 bg-gradient-to-b from-[#1a1e26]/80 via-[#1a1e26]/40 to-transparent z-10 pointer-events-none" />
-
                 <div className="absolute top-2 sm:top-4 md:top-6 left-0 w-full flex justify-center z-20 pointer-events-none px-2 sm:px-6">
                     <motion.h2
                         initial="hidden"
@@ -72,7 +70,6 @@ const BulusanSection = () => {
                         ))}
                     </motion.h2>
                 </div>
-
                 <div className="absolute inset-0 z-30">
                     {hotspots.map((spot) => {
                         const isActive = activeSpot === spot.id;
@@ -114,7 +111,6 @@ const BulusanSection = () => {
                                         transition={{ duration: 0.2 }}
                                     />
                                 </motion.div>
-
                                 <AnimatePresence>
                                     {isActive && (
                                         <motion.div

@@ -6,8 +6,10 @@ const monitoringController = require('../controllers/monitoring-controller');
 const { protect, authorize } = require('../middleware/auth');
 const multer = require('multer');
 const path = require('path');
+const { handleCloudinaryImageUpload } = require('../middleware/cloudinary-upload');
+const { isConfigured: isCloudinaryConfigured } = require('../config/cloudinary');
 
-// Configure multer for model uploads
+// multer for model uploads
 const modelStorage = multer.diskStorage({
     destination: function (req, file, cb) {
         // Upload to frontend public/models directory
@@ -36,7 +38,7 @@ const modelUpload = multer({
     }
 });
 
-// Configure multer for general image uploads (animals, events)
+// multer for image uploads
 const imageStorage = multer.diskStorage({
     destination: function (req, file, cb) {
         const uploadsPath = path.join(__dirname, '../uploads');
@@ -96,13 +98,13 @@ router.get('/reports/data', adminController.getReportData);
 router.get('/reports/quick-stats', adminController.getQuickStats);
 router.get('/analytics', adminController.getAnalytics);
 
-// User management routes
+// user management
 router.get('/users/:id', adminController.getUserById);
 router.put('/users/:id/suspend', adminController.suspendUser);
 router.put('/users/:id/unsuspend', adminController.unsuspendUser);
 router.get('/users-suspended', adminController.getSuspendedUsers);
 
-// Appeal management routes
+// appeal management
 router.get('/appeals', adminController.getPendingAppeals);
 router.put('/appeals/:id/review', adminController.reviewAppeal);
 
@@ -111,7 +113,7 @@ router.get('/notifications', adminController.getNotifications);
 router.put('/notifications/:id/read', adminController.markNotificationRead);
 router.put('/notifications/read-all', adminController.markAllNotificationsRead);
 
-// Model management routes
+// model management
 router.post('/upload-model', modelUpload.fields([
     { name: 'modelJson', maxCount: 1 },
     { name: 'weights', maxCount: 50 }
@@ -119,8 +121,22 @@ router.post('/upload-model', modelUpload.fields([
 
 router.get('/model-info', adminController.getModelInfo);
 
-// Image upload route for animals and events
-router.post('/upload-image', imageUpload.single('image'), adminController.uploadImage);
+// dynamic middleware - checks cloudinary at request time
+const createDynamicUploadMiddleware = (type, fieldName) => {
+    return (req, res, next) => {
+        if (isCloudinaryConfigured()) {
+            handleCloudinaryImageUpload(type, fieldName)(req, res, next);
+        } else {
+            imageUpload.single(fieldName)(req, res, next);
+        }
+    };
+};
+
+// image upload routes
+router.post('/upload-image', createDynamicUploadMiddleware('general', 'image'), adminController.uploadImage);
+router.post('/upload-animal-image', createDynamicUploadMiddleware('animal', 'image'), adminController.uploadImage);
+router.post('/upload-plant-image', createDynamicUploadMiddleware('plant', 'image'), adminController.uploadImage);
+router.post('/upload-event-image', createDynamicUploadMiddleware('event', 'image'), adminController.uploadImage);
 
 router.get('/messages', messageController.getAllMessages);
 router.get('/messages/unread-count', messageController.getUnreadCount);
@@ -131,7 +147,7 @@ router.post('/messages/:id/respond', messageController.respondToMessage);
 router.delete('/messages/:id', messageController.deleteMessage);
 router.get('/appeals', messageController.getAppeals);
 
-// Staff Monitoring routes (admin only)
+// staff monitoring
 router.get('/monitoring/dashboard', monitoringController.getMonitoringDashboard);
 router.get('/monitoring/sessions', monitoringController.getActiveSessions);
 router.get('/monitoring/activities', monitoringController.getRecentActivities);

@@ -2,26 +2,22 @@ const mysql = require('mysql2');
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
 
-// Check if running in production (Render.com, etc.)
+// check environment
 const isProduction = process.env.NODE_ENV === 'production';
 
-// Build SSL configuration for production
-// Aiven and similar cloud databases require SSL but may use self-signed certificates
+// ssl config for production
 const getSSLConfig = () => {
     if (!isProduction) return false;
     
-    // For Aiven: they use self-signed certificates, so we need to disable strict verification
-    // This is safe because the connection is still encrypted
     const rejectUnauthorized = process.env.DB_SSL_REJECT_UNAUTHORIZED === 'true';
     
     return {
         rejectUnauthorized: rejectUnauthorized,
-        // minVersion is required for some cloud providers
         minVersion: 'TLSv1.2'
     };
 };
 
-// Database configuration with SSL support for production
+// database config
 const dbConfig = {
     host: process.env.DB_HOST || 'localhost',
     port: parseInt(process.env.DB_PORT) || 3306,

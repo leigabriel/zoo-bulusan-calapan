@@ -202,7 +202,7 @@ const Reservations = () => {
                     adultQuantity: ticketCounts.adult,
                     childQuantity: ticketCounts.child,
                     bulusanResidentQuantity: ticketCounts.bulusan_resident,
-                    residentIdImage: residentIdPreview,
+                    residentIdImage: residentIdImage,
                     notes: ticketForm.notes
                 });
                 if (res.success) {

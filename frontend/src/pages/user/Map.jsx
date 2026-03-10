@@ -87,14 +87,19 @@ const MapPage = () => {
     const [isMobileListOpen, setIsMobileListOpen] = useState(false);
 
     useEffect(() => {
+        let lenisRafId = null;
+        
         const loadLenis = () => {
             if (window.Lenis) return;
             const script = document.createElement('script');
             script.src = 'https://unpkg.com/@studio-freight/lenis@1.0.33/dist/lenis.min.js';
             script.onload = () => {
                 const lenis = new window.Lenis({ lerp: 0.1, duration: 1.2 });
-                const raf = (time) => { lenis.raf(time); requestAnimationFrame(raf); };
-                requestAnimationFrame(raf);
+                const raf = (time) => { 
+                    lenis.raf(time); 
+                    lenisRafId = requestAnimationFrame(raf); 
+                };
+                lenisRafId = requestAnimationFrame(raf);
             };
             document.head.appendChild(script);
         };
@@ -113,7 +118,10 @@ const MapPage = () => {
 
         loadLenis();
         loadLeaflet();
-        return () => { if (mapRef.current) mapRef.current.remove(); };
+        return () => { 
+            if (lenisRafId) cancelAnimationFrame(lenisRafId);
+            if (mapRef.current) mapRef.current.remove(); 
+        };
     }, []);
 
     const initializeMap = () => {

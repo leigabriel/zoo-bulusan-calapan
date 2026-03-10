@@ -442,11 +442,9 @@ exports.getTicketById = async (req, res) => {
     }
 };
 
-// ==========================================
-// TICKET ARCHIVE ENDPOINTS
-// ==========================================
+// ticket archive
 
-// Get active (non-archived) tickets
+// get active tickets
 exports.getActiveTickets = async (req, res) => {
     try {
         const tickets = await Ticket.getActiveByUserId(req.user.id);
@@ -555,11 +553,9 @@ exports.unarchiveTicket = async (req, res) => {
     }
 };
 
-// ==========================================
-// APPEAL ENDPOINTS (for suspended users)
-// ==========================================
+// appeal endpoints
 
-// Submit an appeal
+// submit an appeal
 exports.submitAppeal = async (req, res) => {
     try {
         const { appealMessage } = req.body;

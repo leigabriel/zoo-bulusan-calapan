@@ -14,17 +14,14 @@ function ArticleCard({ a, onMove, setHovered, onTap }) {
                     <span className="text-[#212631]/25 mr-2">•</span>{a.num}
                 </div>
             </div>
-
             <div className="overflow-hidden mb-4 lg:mb-6">
                 <h3 className="text-[1.75rem] md:text-3xl lg:text-4xl font-bold text-[#212631] tracking-tight">
                     {a.title}
                 </h3>
             </div>
-
             <p className="text-base md:text-lg lg:text-xl text-[#212631]/70 leading-relaxed mb-8 lg:mb-12">
                 {a.desc}
             </p>
-
             <span className="md:hidden text-[10px] tracking-widest text-[#212631]/40 uppercase">Tap to view image</span>
             {a.link && (
                 <div className="mt-auto pt-12">
@@ -55,14 +52,12 @@ const ArticleGrid = ({ articles, images, label }) => {
                         {label}
                     </span>
                 </div>
-
                 <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-[#d1d1d1]">
                     {articles.map((a) => (
                         <ArticleCard key={a.key} a={a} onMove={onMove} setHovered={setHovered} onTap={onTap} />
                     ))}
                 </div>
             </div>
-
             {hovered && (
                 <div
                     className="hidden md:block fixed z-50 pointer-events-none"
@@ -73,7 +68,6 @@ const ArticleGrid = ({ articles, images, label }) => {
                     </div>
                 </div>
             )}
-
             {popup && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#212631]/70 backdrop-blur-sm md:hidden" onClick={() => setPopup(null)}>
                     <div className="bg-[#ebebeb] mx-6 overflow-hidden shadow-2xl max-w-sm w-full" onClick={(e) => e.stopPropagation()}>
