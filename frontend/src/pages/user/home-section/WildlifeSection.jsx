@@ -1,75 +1,73 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 
 const WildlifeSection = () => {
-    const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
-    const [isHovered, setIsHovered] = useState(false);
-
-    const handleMouseMove = (e) => {
-        setMousePos({ x: e.clientX, y: e.clientY });
-    };
-
     return (
-        <section id="animal" className="w-full bg-[#ebebeb] text-[#212631] border-y border-[#212631] box-border">
-            <div className="flex flex-col lg:flex-row w-full min-h-[100svh]">
+        <section id="animal" className="relative w-full h-full box-border bg-transparent">
+            <img
+                src="/animal.png"
+                alt="Animal Folder Background"
+                className="absolute inset-0 w-full h-full object-fill z-0 pointer-events-none"
+            />
 
-                <div
-                    className="w-full lg:w-1/2 min-h-[50vh] lg:min-h-full overflow-hidden border-b lg:border-b-0 lg:border-r border-[#212631] relative cursor-none"
-                    onMouseMove={handleMouseMove}
-                    onMouseEnter={() => setIsHovered(true)}
-                    onMouseLeave={() => setIsHovered(false)}
-                >
-                    <img
-                        src="https://images.unsplash.com/photo-1540573133985-87b6da6d54a9?w=1200&h=1200&fit=crop"
-                        alt="Wildlife"
-                        className="w-full h-full object-cover absolute inset-0"
-                    />
-                    {isHovered && (
-                        <div
-                            className="fixed z-50 pointer-events-none bg-[#38d091] text-[#ebebeb] px-4 py-2 text-xs font-bold uppercase tracking-widest rounded-full whitespace-nowrap transform -translate-x-1/2 -translate-y-1/2"
-                            style={{ left: mousePos.x, top: mousePos.y }}
-                        >
-                            Explore Fauna
-                        </div>
-                    )}
-                </div>
-
-                <div className="w-full lg:w-1/2 flex relative flex-col justify-between">
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-[#212631] px-6 py-4 text-[10px] md:text-xs uppercase tracking-widest gap-2 sm:gap-0">
-                        <span>Announcing our new species</span>
-                        <span className="text-[#38d091]">{'>'.repeat(8)} Read More</span>
-                    </div>
-
-                    <div className="flex-1 flex flex-col justify-center p-8 md:p-16 lg:p-24 relative">
-                        <span className="border border-[#38d091] text-[#38d091] rounded-full px-4 py-1.5 text-[10px] uppercase tracking-widest w-max mb-8 font-bold">
-                            Wildlife Collection
-                        </span>
-
-                        <h2 className="text-5xl md:text-7xl lg:text-8xl font-bold tracking-tighter leading-[0.9] mb-8">
-                            Exotic<br />Fauna.
-                        </h2>
-
-                        <p className="text-sm md:text-base text-[#212631] leading-relaxed mb-10 max-w-md">
-                            Bulusan Zoo creates dedicated environments that adapt to natural instincts, amplifying wildlife preservation. Every effort compounds.
-                        </p>
-
-                        <div>
-                            <Link to="/animals" className="bg-[#38d091] text-[#ebebeb] text-xs font-bold tracking-widest uppercase px-8 py-4 hover:bg-[#212631] hover:text-[#38d091] transition-all duration-300 inline-block">
-                                Contact Us
-                            </Link>
-                        </div>
-                    </div>
-
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-t border-[#212631] px-6 py-4 text-[10px] md:text-xs uppercase tracking-widest gap-2 sm:gap-0">
-                        <span>Born from the spirit of Mindoro</span>
-                        <span className="text-[#38d091]">V. 1.3 &nbsp;&nbsp;&nbsp; Optimize / Adapt / Evolve</span>
-                    </div>
-                </div>
-
-                <div className="hidden lg:flex w-12 border-l border-[#212631] items-center justify-center relative shrink-0">
-                    <span className="absolute transform rotate-90 whitespace-nowrap text-[10px] tracking-widest uppercase text-[#38d091]">
-                        Building in Calapan City
+            <div className="relative z-10 w-full h-full flex flex-col overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] max-w-[1800px] mx-auto px-5 sm:px-8 md:px-12 lg:px-16 pt-28 sm:pt-32 md:pt-40 pb-16 text-[#2C3930]">
+                <div className="flex flex-row justify-between items-end pb-3 border-b border-dotted border-[#2C3930] w-full gap-4">
+                    <span className="text-[10px] md:text-xs uppercase tracking-widest font-bold">
+                        Featured Wildlife 01
                     </span>
+                    <Link to="/animals" className="text-[10px] md:text-xs uppercase tracking-widest font-bold hover:opacity-60 transition-opacity text-right">
+                        See All Animals &rarr;
+                    </Link>
+                </div>
+
+                <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end py-6 md:py-12 border-b border-dotted border-[#2C3930] gap-4 md:gap-8">
+                    <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl tracking-tight leading-[1.05] max-w-4xl font-normal">
+                        Graceful Fauna: The Philippine Deer
+                    </h2>
+                    <div className="flex flex-wrap lg:flex-col gap-2 text-[9px] sm:text-[10px] md:text-xs uppercase tracking-widest">
+                        <span>2025</span>
+                        <span>Bulusan Conservation</span>
+                        <span className="bg-[#2C3930]/10 px-2 py-1 md:px-3 md:py-1.5 mt-1 md:mt-2 font-bold whitespace-nowrap w-fit">
+                            Mammals, Endemic, Herbivore
+                        </span>
+                    </div>
+                </div>
+
+                <div className="flex flex-col lg:flex-row gap-6 md:gap-12 pt-6 md:pt-12">
+                    <div className="w-full lg:w-1/4 flex flex-col gap-6 lg:gap-8">
+                        <p className="text-xs sm:text-sm md:text-base leading-relaxed tracking-wide text-[#2C3930]/80">
+                            A detailed look into the habitat and behavior of the native deer species, showcasing its elegance, gentle nature, and vital role in balancing the local ecosystem.
+                        </p>
+                        <Link to="/animals" className="text-[10px] sm:text-xs uppercase tracking-widest font-bold hover:opacity-60 transition-opacity w-max border-b border-[#2C3930] pb-1">
+                            View Project &rarr;
+                        </Link>
+                    </div>
+
+                    <div className="w-full lg:w-3/4 flex flex-col md:flex-row gap-2 sm:gap-4 lg:gap-6">
+                        <div className="w-full md:w-2/3 h-[250px] sm:h-[350px] md:h-[500px] lg:h-[600px] bg-[#2C3930] overflow-hidden">
+                            <img
+                                src="https://images.unsplash.com/photo-1695293721056-f1f91f52b004?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+                                alt="Philippine Deer Feature"
+                                className="w-full h-full object-cover hover:scale-105 transition-transform duration-1000"
+                            />
+                        </div>
+                        <div className="w-full md:w-1/3 flex flex-row md:flex-col gap-2 sm:gap-4 lg:gap-6 h-[120px] sm:h-[180px] md:h-[500px] lg:h-[600px]">
+                            <div className="flex-1 bg-[#2C3930] overflow-hidden">
+                                <img
+                                    src="https://images.unsplash.com/photo-1695293721404-a944512e52c3?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mzl8fGRlZXIlMjB6b298ZW58MHx8MHx8fDA%3D"
+                                    alt="Deer Portrait"
+                                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-1000"
+                                />
+                            </div>
+                            <div className="flex-1 bg-[#2C3930] overflow-hidden">
+                                <img
+                                    src="https://images.unsplash.com/photo-1695293721360-c36e4e2abe26?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NDJ8fGRlZXIlMjB6b298ZW58MHx8MHx8fDA%3D"
+                                    alt="Deer in Forest"
+                                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-1000"
+                                />
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>

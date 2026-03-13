@@ -2,6 +2,7 @@ import React, { useRef, Suspense, useState, useEffect } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { useGLTF, Environment, Center } from '@react-three/drei';
 import { useScroll, useSpring, useTransform, motion, AnimatePresence } from 'framer-motion';
+import AboutSection from './AboutSection';
 
 const MODEL_URL = '/deer/scene.gltf';
 
@@ -40,7 +41,7 @@ function DeerModel({ spinRotation, scale, setTooltip }) {
 }
 
 function Scene({ spinRotation, device, setTooltip }) {
-    const scale = device === 'mobile' ? 0.7 : device === 'tablet' ? 0.9 : 1.2;
+    const scale = device === 'mobile' ? 0.7 : device === 'tablet' ? 1 : 1.2;
     return (
         <group>
             <ambientLight intensity={0.9} />
@@ -120,8 +121,8 @@ export default function HeroSection() {
 
     useEffect(() => {
         const checkDevice = () => {
-            if (window.innerWidth < 640) setDevice('mobile');
-            else if (window.innerWidth >= 640 && window.innerWidth < 1024) setDevice('tablet');
+            if (window.innerWidth < 768) setDevice('mobile');
+            else if (window.innerWidth >= 768 && window.innerWidth < 1024) setDevice('tablet');
             else setDevice('desktop');
         };
         checkDevice();
@@ -136,22 +137,43 @@ export default function HeroSection() {
 
     const smoothProgress = useSpring(scrollYProgress, { stiffness: 50, damping: 20, restDelta: 0.001 });
 
-    const spinRotation = useTransform(smoothProgress, [0, 1], [0, Math.PI * 2]);
-    const titleScale = useTransform(smoothProgress, [0, 0.85], [1, 3.5]);
-    const titleY = useTransform(smoothProgress, [0, 0.85], ['0%', '10%']);
-    const canvasOpacity = useTransform(smoothProgress, [0.8, 1], [1, 0]);
+    const titleScale = useTransform(smoothProgress, [0, 0.2], [1, 3.5]);
+    const titleY = useTransform(smoothProgress, [0, 0.2], ['0%', '10%']);
 
-    const frontTextOpacity = useTransform(smoothProgress, [0, 0.15, 0.4, 0.5, 0.8, 1], [1, 0, 0, 1, 1, 0]);
-    const backTextOpacity = useTransform(smoothProgress, [0, 0.15, 0.4, 0.5, 1], [0, 1, 1, 0, 0]);
-    const decorOpacity = useTransform(smoothProgress, [0, 0.15], [1, 0]);
+    const spinRotation = useTransform(smoothProgress, [0, 0.2, 0.3, 0.8], [0, Math.PI * 2, Math.PI * 2, 0]);
+
+    const frontTextOpacity = useTransform(smoothProgress, [0, 0.1, 0.15, 0.2], [1, 0, 0, 0]);
+    const backTextOpacity = useTransform(smoothProgress, [0, 0.1, 0.15, 0.2], [0, 1, 1, 0]);
+    const decorOpacity = useTransform(smoothProgress, [0, 0.1], [1, 0]);
+
+    const aboutOpacity = useTransform(smoothProgress, [0.2, 0.3], [0, 1]);
+    const aboutPointerEvents = useTransform(smoothProgress, (p) => p > 0.2 ? 'auto' : 'none');
+
+    const canvasX = useTransform(smoothProgress, [0.2, 0.3], ['0vw', device === 'mobile' ? '0vw' : '25vw']);
+    const canvasY = useTransform(smoothProgress, [0.2, 0.3], ['0vh', device === 'mobile' ? '25vh' : '0vh']);
+    const canvasScale = useTransform(smoothProgress, [0.2, 0.3], [1, device === 'mobile' ? 0.9 : 1]);
+    const canvasPointerEvents = useTransform(smoothProgress, (p) => p > 0.2 ? 'none' : 'auto');
+
+    const heroContentOpacity = useTransform(smoothProgress, [0.85, 0.95], [1, 0]);
 
     return (
-        <section ref={containerRef} className="relative block w-full h-[300vh] bg-[#ebebeb]">
+        <section ref={containerRef} className="relative block w-full h-[600vh] bg-[#ebebeb]">
             <div className="sticky top-0 left-0 w-full h-[100svh] overflow-hidden">
-                <div className="absolute inset-0 w-full h-full flex items-center justify-center">
+                <motion.div style={{ opacity: heroContentOpacity }} className="absolute inset-0 w-full h-full flex items-center justify-center">
                     <HeroDecorations opacity={decorOpacity} />
                     <TitleBlock scale={titleScale} opacity={backTextOpacity} zIndex={10} y={titleY} />
-                    <motion.div style={{ opacity: canvasOpacity }} className="absolute inset-0 z-20">
+
+                    <motion.div
+                        style={{ opacity: aboutOpacity, pointerEvents: aboutPointerEvents }}
+                        className="absolute inset-0 z-15 w-full h-full flex flex-col bg-[#ebebeb]"
+                    >
+                        <AboutSection />
+                    </motion.div>
+
+                    <motion.div
+                        style={{ x: canvasX, y: canvasY, scale: canvasScale, pointerEvents: canvasPointerEvents }}
+                        className="absolute inset-0 z-20"
+                    >
                         <Canvas
                             dpr={device === 'mobile' ? 1 : [1, 1.5]}
                             gl={{
@@ -164,8 +186,9 @@ export default function HeroSection() {
                             <Scene spinRotation={spinRotation} device={device} setTooltip={setTooltip} />
                         </Canvas>
                     </motion.div>
+
                     <TitleBlock scale={titleScale} opacity={frontTextOpacity} zIndex={30} y={titleY} />
-                </div>
+                </motion.div>
             </div>
             <AnimatePresence>
                 {tooltip.show && (

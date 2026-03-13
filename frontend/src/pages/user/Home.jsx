@@ -5,9 +5,6 @@ import Footer from '../../components/Footer';
 import AIFloatingButton from '../../components/common/AIFloatingButton';
 import HeroSection from './home-section/HeroSection';
 import BulusanSection from './home-section/BulusanSection';
-import AboutSection from './home-section/AboutSection';
-import StatsSection from './home-section/StatsSection';
-import IntroSection from './home-section/IntroSection';
 import WildlifeSection from './home-section/WildlifeSection';
 import FloraSection from './home-section/FloraSection';
 import EventsSection from './home-section/EventsSection';
@@ -26,24 +23,15 @@ const Home = () => {
                         <HeroSection />
                     </div>
 
-                    <div className="sticky top-0 z-0 flex flex-col h-[100svh] w-full bg-[#007a55]">
-                        <AboutSection />
-                        <StatsSection />
-                    </div>
-
                     <div className="sticky top-0 z-10 flex flex-col h-[100svh] w-full bg-[#1a1e26] shadow-[0_-15px_40px_rgba(0,0,0,0.15)]">
                         <BulusanSection />
                     </div>
 
-                    <div className="relative z-20 w-full bg-[#ebebeb] shadow-[0_-15px_40px_rgba(0,0,0,0.15)]">
-                        <IntroSection />
-                    </div>
-
-                    <div className="sticky top-0 z-30 flex flex-col h-[100svh] w-full bg-[#ebebeb] shadow-[0_-15px_40px_rgba(0,0,0,0.15)]">
+                    <div className="sticky top-0 z-30 flex flex-col h-[100svh] w-full">
                         <WildlifeSection />
                     </div>
 
-                    <div className="sticky top-0 z-40 flex flex-col h-[100svh] w-full bg-[#ebebeb] shadow-[0_-15px_40px_rgba(0,0,0,0.15)]">
+                    <div className="sticky top-0 z-40 flex flex-col h-[100svh] w-full">
                         <FloraSection />
                     </div>
 

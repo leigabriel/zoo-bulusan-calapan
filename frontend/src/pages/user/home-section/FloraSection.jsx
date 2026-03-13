@@ -1,79 +1,74 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 
 const FloraSection = () => {
-    const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
-    const [isHovered, setIsHovered] = useState(false);
-
-    const handleMouseMove = (e) => {
-        setMousePos({ x: e.clientX, y: e.clientY });
-    };
-
     return (
-        <section id="plant" className="w-full bg-[#ebebeb] text-[#212631] border-b border-[#212631] box-border">
-            <div className="flex flex-col lg:flex-row w-full min-h-[100svh]">
+        <section id="plant" className="relative w-full h-full box-border bg-transparent">
+            <img
+                src="/plant.png"
+                alt="Plant Folder Background"
+                className="absolute inset-0 w-full h-full object-fill z-0 pointer-events-none"
+            />
 
-                <div className="w-full lg:w-1/2 flex relative order-2 lg:order-1 border-r-0 lg:border-r border-[#212631]">
-                    <div className="hidden lg:flex w-12 border-r border-[#212631] items-center justify-center relative shrink-0">
-                        <span className="absolute transform -rotate-90 whitespace-nowrap text-[10px] tracking-widest uppercase text-[#38d091]">
-                            Building in Calapan City
+            <div className="relative z-10 w-full h-full flex flex-col overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] max-w-[1800px] mx-auto px-5 sm:px-8 md:px-12 lg:px-16 pt-28 sm:pt-32 md:pt-40 pb-16 text-[#EAE7DC]">
+                <div className="flex flex-row justify-between items-end pb-3 border-b border-dotted border-[#EAE7DC] w-full gap-4">
+                    <span className="text-[10px] md:text-xs uppercase tracking-widest font-bold">
+                        Featured Flora 01
+                    </span>
+                    <Link to="/plants" className="text-[10px] md:text-xs uppercase tracking-widest font-bold hover:opacity-60 transition-opacity text-right">
+                        See All Flora &rarr;
+                    </Link>
+                </div>
+
+                <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end py-6 md:py-12 border-b border-dotted border-[#EAE7DC] gap-4 md:gap-8">
+                    <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl tracking-tight leading-[1.05] max-w-4xl font-normal">
+                        Botanical Elegance: Papa Meilland Rose
+                    </h2>
+                    <div className="flex flex-wrap lg:flex-col gap-2 text-[9px] sm:text-[10px] md:text-xs uppercase tracking-widest">
+                        <span>2025</span>
+                        <span>Botanical Gardens</span>
+                        <span className="bg-[#EAE7DC]/20 px-2 py-1 md:px-3 md:py-1.5 mt-1 md:mt-2 font-bold whitespace-nowrap w-fit">
+                            Rosa, Perennial, Fragrant
                         </span>
                     </div>
+                </div>
 
-                    <div className="flex-1 flex flex-col justify-between">
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-[#212631] px-6 py-4 text-[10px] md:text-xs uppercase tracking-widest gap-2 sm:gap-0">
-                            <span>Explore botanical wonders</span>
-                            <span className="text-[#38d091]">{'>'.repeat(8)} Read More</span>
+                <div className="flex flex-col lg:flex-row gap-6 md:gap-12 pt-6 md:pt-12">
+                    <div className="w-full lg:w-1/4 flex flex-col gap-6 lg:gap-8">
+                        <p className="text-xs sm:text-sm md:text-base leading-relaxed tracking-wide text-[#EAE7DC]/90">
+                            An immersive exploration of the Papa Meilland rose, renowned worldwide for its deep velvet crimson petals and captivating, rich fragrance.
+                        </p>
+                        <Link to="/plants" className="text-[10px] sm:text-xs uppercase tracking-widest font-bold hover:opacity-60 transition-opacity w-max border-b border-[#EAE7DC] pb-1">
+                            View Project &rarr;
+                        </Link>
+                    </div>
+
+                    <div className="w-full lg:w-3/4 flex flex-col md:flex-row gap-2 sm:gap-4 lg:gap-6">
+                        <div className="w-full md:w-2/3 h-[250px] sm:h-[350px] md:h-[500px] lg:h-[600px] bg-[#1a1a1a] overflow-hidden">
+                            <img
+                                src="https://images.unsplash.com/photo-1531874824027-2a0d33bd6338?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8N3x8cm9zZXxlbnwwfHwwfHx8MA%3D%3D"
+                                alt="Papa Meilland Rose Feature"
+                                className="w-full h-full object-cover hover:scale-105 transition-transform duration-1000"
+                            />
                         </div>
-
-                        <div className="flex-1 flex flex-col justify-center p-8 md:p-16 lg:p-24 relative">
-                            <span className="border border-[#38d091] text-[#38d091] rounded-full px-4 py-1.5 text-[10px] uppercase tracking-widest w-max mb-8 font-bold">
-                                Botanical Gardens
-                            </span>
-
-                            <h2 className="text-5xl md:text-7xl lg:text-8xl font-bold tracking-tighter leading-[0.9] mb-8">
-                                Vibrant<br />Flora.
-                            </h2>
-
-                            <p className="text-sm md:text-base text-[#212631] leading-relaxed mb-10 max-w-md">
-                                Bulusan Zoo creates dedicated environments that adapt to natural ecosystems, amplifying botanical preservation. Every effort compounds.
-                            </p>
-
-                            <div>
-                                <Link to="/plants" className="bg-[#38d091] text-[#ebebeb] text-xs font-bold tracking-widest uppercase px-8 py-4 hover:bg-[#212631] hover:text-[#38d091] transition-all duration-300 inline-block">
-                                    Contact Us
-                                </Link>
+                        <div className="w-full md:w-1/3 flex flex-row md:flex-col gap-2 sm:gap-4 lg:gap-6 h-[120px] sm:h-[180px] md:h-[500px] lg:h-[600px]">
+                            <div className="flex-1 bg-[#1a1a1a] overflow-hidden">
+                                <img
+                                    src="https://images.unsplash.com/photo-1763048233745-84e9af322a68?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8cm9zZSUyMGdhcmRlbiUyMHNpbmdsZXxlbnwwfHwwfHx8MA%3D%3D"
+                                    alt="Rose Petal Details"
+                                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-1000"
+                                />
                             </div>
-                        </div>
-
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-t border-[#212631] px-6 py-4 text-[10px] md:text-xs uppercase tracking-widest gap-2 sm:gap-0">
-                            <span>Born from the spirit of Mindoro</span>
-                            <span className="text-[#38d091]">V. 1.3 &nbsp;&nbsp;&nbsp; Optimize / Adapt / Evolve</span>
+                            <div className="flex-1 bg-[#1a1a1a] overflow-hidden">
+                                <img
+                                    src="https://images.unsplash.com/photo-1770652487953-648a445bf2d9?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTZ8fHJvc2UlMjBnYXJkZW4lMjBzaW5nbGV8ZW58MHx8MHx8fDA%3D"
+                                    alt="Dark Moody Rose"
+                                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-1000"
+                                />
+                            </div>
                         </div>
                     </div>
                 </div>
-
-                <div
-                    className="w-full lg:w-1/2 min-h-[50vh] lg:min-h-full overflow-hidden order-1 lg:order-2 border-b lg:border-b-0 border-[#212631] relative cursor-none"
-                    onMouseMove={handleMouseMove}
-                    onMouseEnter={() => setIsHovered(true)}
-                    onMouseLeave={() => setIsHovered(false)}
-                >
-                    <img
-                        src="https://images.unsplash.com/photo-1591857177580-dc82b9ac4e1e?w=1200&h=1200&fit=crop"
-                        alt="Flora"
-                        className="w-full h-full object-cover absolute inset-0"
-                    />
-                    {isHovered && (
-                        <div
-                            className="fixed z-50 pointer-events-none bg-[#38d091] text-[#ebebeb] px-4 py-2 text-xs font-bold uppercase tracking-widest rounded-full whitespace-nowrap transform -translate-x-1/2 -translate-y-1/2"
-                            style={{ left: mousePos.x, top: mousePos.y }}
-                        >
-                            Explore Flora
-                        </div>
-                    )}
-                </div>
-
             </div>
         </section>
     );
