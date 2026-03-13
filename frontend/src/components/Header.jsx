@@ -233,18 +233,14 @@ const Header = () => {
         }
     }, [user]);
 
-    // Fetch notifications on mount and set up polling for real-time updates
-    useEffect(() => { 
-        if (user) fetchNotifications(false); 
-        
-        // Set up polling interval for real-time updates (every 30 seconds)
+    useEffect(() => {
+        if (user) fetchNotifications(false);
         let pollInterval = null;
         if (user) {
             pollInterval = setInterval(() => {
                 fetchNotifications(false);
             }, 30000);
         }
-        
         return () => {
             if (pollInterval) clearInterval(pollInterval);
         };
@@ -346,7 +342,7 @@ const Header = () => {
     return (
         <>
             <header
-                className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ease-in-out ${isNavVisible ? 'translate-y-0' : '-translate-y-full'}`}
+                className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-300 ease-in-out ${isNavVisible ? 'translate-y-0' : '-translate-y-full'}`}
                 style={{ paddingTop: 'env(safe-area-inset-top)' }}
             >
                 <div className="mx-auto px-4 sm:px-6 lg:px-10 max-w-[1800px]" style={{ height: '56px' }}>
@@ -584,7 +580,7 @@ const Header = () => {
                 </div>
             </div>
 
-            <div className={`fixed inset-0 z-[100] flex justify-end transition-all duration-300 ${showAIScanner ? 'visible' : 'invisible'}`}>
+            <div className={`fixed inset-0 z-[110] flex justify-end transition-all duration-300 ${showAIScanner ? 'visible' : 'invisible'}`}>
                 <div
                     className={`absolute inset-0 bg-black/25 backdrop-blur-[2px] transition-opacity duration-300 ${showAIScanner ? 'opacity-100' : 'opacity-0'}`}
                     onClick={() => { if (showAIScanner) setShowScannerConfirm(true); }}
@@ -787,10 +783,9 @@ const Header = () => {
                 onClose={() => setShowHistoryPanel(false)}
             />
 
-            {/* Mini Zoo Game Confirmation Modal */}
             {showMiniZooGame && (
                 <div className="fixed inset-0 z-[200] flex items-center justify-center">
-                    <div 
+                    <div
                         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
                         onClick={() => setShowMiniZooGame(false)}
                     />
