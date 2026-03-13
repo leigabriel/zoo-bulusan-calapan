@@ -3,9 +3,8 @@ const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const User = require('../models/user-model');
 const StaffActivity = require('../models/staff-activity-model');
-const { deleteOldProfileImage, getProfileImagePath } = require('../middleware/upload-profile-image');
+const { deleteOldProfileImage } = require('../middleware/upload-profile-image');
 const { deleteFromCloudinary, extractPublicId } = require('../middleware/cloudinary-upload');
-const { isConfigured: isCloudinaryConfigured } = require('../config/cloudinary');
 const { sendVerificationEmail } = require('../utils/email');
 
 const VALID_ROLES = ['admin', 'staff', 'user'];
@@ -523,65 +522,7 @@ exports.logout = async (req, res) => {
 
 exports.uploadProfileImage = async (req, res) => {
     try {
-        // Check if Cloudinary upload was successful (from middleware)
-        if (req.cloudinaryResult) {
-            // Cloudinary upload path
-            const user = await User.findById(req.user.id);
-            if (!user) {
-                return res.status(404).json({
-                    success: false,
-                    message: 'User not found'
-                });
-            }
-
-            // Delete old profile image from Cloudinary if it exists
-            if (user.profile_image && user.profile_image.includes('cloudinary.com')) {
-                const oldPublicId = extractPublicId(user.profile_image);
-                if (oldPublicId) {
-                    await deleteFromCloudinary(oldPublicId);
-                }
-            } else if (user.profile_image) {
-                // Delete old local file if exists
-                deleteOldProfileImage(user.profile_image);
-            }
-
-            // Get the secure URL from Cloudinary
-            const profileImageUrl = req.cloudinaryResult.secure_url;
-
-            // Update user profile with new image URL
-            await User.updateProfile(req.user.id, {
-                firstName: user.first_name,
-                lastName: user.last_name,
-                phoneNumber: user.phone_number,
-                gender: user.gender,
-                birthday: user.birthday,
-                profileImage: profileImageUrl
-            });
-
-            // Get updated user data
-            const updatedUser = await User.findById(req.user.id);
-
-            return res.json({
-                success: true,
-                message: 'Profile image uploaded successfully',
-                profileImage: profileImageUrl,
-                user: {
-                    id: updatedUser.id,
-                    firstName: updatedUser.first_name,
-                    lastName: updatedUser.last_name,
-                    username: updatedUser.username,
-                    email: updatedUser.email,
-                    phoneNumber: updatedUser.phone_number,
-                    gender: updatedUser.gender,
-                    birthday: updatedUser.birthday,
-                    role: updatedUser.role,
-                    profileImage: updatedUser.profile_image
-                }
-            });
-        }
-
-        // Fallback to local file upload (legacy support)
-        if (!req.file) {
+        if (!req.cloudinaryResult || !req.cloudinaryResult.secure_url) {
             return res.status(400).json({
                 success: false,
                 message: 'No image file provided'
@@ -599,11 +540,18 @@ exports.uploadProfileImage = async (req, res) => {
 
         // Delete old profile image if it exists and is not the default
         if (user.profile_image) {
-            deleteOldProfileImage(user.profile_image);
+            if (user.profile_image.includes('cloudinary.com')) {
+                const oldPublicId = extractPublicId(user.profile_image);
+                if (oldPublicId) {
+                    await deleteFromCloudinary(oldPublicId);
+                }
+            } else {
+                deleteOldProfileImage(user.profile_image);
+            }
         }
 
-        // Get the filename for storing in database
-        const profileImagePath = getProfileImagePath(req.file.filename);
+        // Get the secure URL from Cloudinary
+        const profileImagePath = req.cloudinaryResult.secure_url;
 
         // Update user profile with new image path
         await User.updateProfile(req.user.id, {
