@@ -1,141 +1,70 @@
 import { useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion, useInView } from "framer-motion";
-import GridDistortion from "./GridDistortion";
 
-const ArrowUp = () => (
-    <svg
-        xmlns="http://www.w3.org/2000/svg"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        className="w-4 h-4 md:w-5 md:h-5"
-    >
-        <line x1="12" y1="19" x2="12" y2="5" />
-        <polyline points="5 12 12 5 19 12" />
-    </svg>
+// Helper component for the pill-shaped badges (like "looking for a job?")
+const PillBadge = ({ text }) => (
+    <div className="bg-white text-black px-4 py-1.5 rounded-full text-xs md:text-sm font-bold inline-block mb-6 shadow-sm select-none">
+        {text}
+    </div>
 );
 
-const SplitText = ({ text, className = "", delay = 0, staggerDelay = 0.035 }) => {
+// Helper component for the social icons
+const SocialIcon = ({ children }) => (
+    <a href="#" className="w-8 h-8 md:w-10 md:h-10 border-2 border-white rounded-lg flex items-center justify-center hover:bg-white hover:text-[#38d091] transition-colors">
+        {children}
+    </a>
+);
+
+// The massive edge-to-edge title at the bottom
+const GiantTitle = () => {
     const ref = useRef(null);
-    const isInView = useInView(ref, { once: false, margin: "-5%" });
+    const isInView = useInView(ref, { once: false, margin: "0px" });
+    const word = "bulusan".split("");
 
     return (
-        <span ref={ref} className={`inline-flex overflow-hidden ${className}`} aria-label={text}>
-            {text.split("").map((char, i) => (
-                <motion.span
-                    key={i}
-                    className="inline-block"
-                    style={{ whiteSpace: char === " " ? "pre" : "normal", textShadow: "0px 2px 10px rgba(0,0,0,0.3)" }}
-                    initial={{ y: "110%", opacity: 0 }}
-                    animate={isInView ? { y: "0%", opacity: 1 } : { y: "110%", opacity: 0 }}
-                    transition={{
-                        duration: 0.65,
-                        delay: delay + i * staggerDelay,
-                        ease: [0.16, 1, 0.3, 1],
-                    }}
-                >
-                    {char}
-                </motion.span>
-            ))}
-        </span>
-    );
-};
+        <div ref={ref} className="relative w-full flex justify-center items-end mt-20 md:mt-32 pointer-events-none">
 
-const BulusanTitle = () => {
-    const ref = useRef(null);
-    const isInView = useInView(ref, { once: false, margin: "-5%" });
-    const letters = "bulusan zoo".split("");
-
-    return (
-        <div ref={ref} className="flex justify-start items-end overflow-hidden px-6 md:px-14">
-            {letters.map((char, i) => (
-                <motion.span
-                    key={i}
-                    className="inline-block select-none"
-                    style={{
-                        fontSize: "clamp(1.5rem, 17vw, 17vw)",
-                        fontFamily: "'Times New Roman', Georgia, serif",
-                        fontStyle: "italic",
-                        fontWeight: 900,
-                        lineHeight: 0.85,
-                        letterSpacing: "-0.02em",
-                        color: "#ffffff",
-                    }}
-                    initial={{ y: "100%", opacity: 0 }}
-                    animate={isInView ? { y: "0%", opacity: 1 } : { y: "100%", opacity: 0 }}
-                    transition={{
-                        duration: 0.8,
-                        delay: i * 0.06,
-                        ease: [0.16, 1, 0.3, 1],
-                    }}
-                >
-                    {char}
-                </motion.span>
-            ))}
-            <motion.span
-                className="inline-block select-none"
-                style={{
-                    fontSize: "clamp(1.8rem, 4.5vw, 4.5vw)",
-                    fontFamily: "'Times New Roman', Georgia, serif",
-                    fontWeight: 900,
-                    lineHeight: 0.85,
-                    color: "#ffffff",
-                    marginLeft: "0.15em",
-                    marginBottom: "0.5em",
-                }}
-                initial={{ opacity: 0, y: 16 }}
-                animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 16 }}
-                transition={{ duration: 0.5, delay: 0.5 }}
+            {/* Decorative Floating "Stickers" mimicking the image's playful vibe */}
+            <motion.div
+                className="absolute top-[-20%] left-[10%] md:left-[20%] bg-white text-[#38d091] font-black text-sm md:text-xl px-4 py-2 rounded-full rotate-[-12deg] shadow-lg"
+                initial={{ scale: 0, opacity: 0 }} animate={isInView ? { scale: 1, opacity: 1 } : {}} transition={{ delay: 0.8, type: "spring" }}
             >
-                ®
-            </motion.span>
+                100% WILD
+            </motion.div>
+            <motion.div
+                className="absolute top-[-10%] right-[15%] md:right-[25%] bg-yellow-300 text-black font-black text-xs md:text-lg px-3 py-3 rounded-full rotate-[15deg] shadow-lg"
+                initial={{ scale: 0, opacity: 0 }} animate={isInView ? { scale: 1, opacity: 1 } : {}} transition={{ delay: 1, type: "spring" }}
+            >
+                🌿 ZOO
+            </motion.div>
+
+            <div className="flex w-full justify-between items-end overflow-hidden px-4 md:px-10">
+                {word.map((char, i) => (
+                    <motion.span
+                        key={i}
+                        className="inline-block lowercase select-none"
+                        style={{
+                            fontFamily: "'Arial Rounded MT Bold', 'Nunito', 'Inter', sans-serif",
+                            fontSize: "clamp(4rem, 18vw, 22vw)",
+                            fontWeight: 900,
+                            lineHeight: 0.75,
+                            letterSpacing: "-0.04em",
+                            color: "#ffffff",
+                        }}
+                        initial={{ y: "100%", opacity: 0 }}
+                        animate={isInView ? { y: "0%", opacity: 1 } : { y: "100%", opacity: 0 }}
+                        transition={{
+                            duration: 0.8,
+                            delay: i * 0.08,
+                            ease: [0.16, 1, 0.3, 1],
+                        }}
+                    >
+                        {char}
+                    </motion.span>
+                ))}
+            </div>
         </div>
-    );
-};
-
-const AnimatedLink = ({ to, children, delay = 0, index }) => {
-    const ref = useRef(null);
-    const isInView = useInView(ref, { once: false, margin: "-5%" });
-    const [hovered, setHovered] = useState(false);
-
-    return (
-        <motion.div
-            ref={ref}
-            initial={{ opacity: 0, x: -8 }}
-            animate={isInView ? { opacity: 1, x: 0 } : { opacity: 0, x: -8 }}
-            transition={{ duration: 0.4, delay }}
-            className="relative flex items-center gap-4"
-            style={{ height: "1.7em" }}
-            onHoverStart={() => setHovered(true)}
-            onHoverEnd={() => setHovered(false)}
-        >
-            <span
-                className="select-none opacity-60"
-                style={{ fontSize: "clamp(9px, 1vw, 13px)", minWidth: "1.8rem", color: "#ffffff" }}
-            >
-                ({String.fromCharCode(73 + index)})
-            </span>
-            <Link
-                to={to}
-                className="relative uppercase tracking-[0.15em]"
-                style={{ fontSize: "clamp(10px, 1.1vw, 14px)", color: "#ffffff", fontWeight: 500 }}
-            >
-                <motion.span animate={{ opacity: hovered ? 0.6 : 1 }} transition={{ duration: 0.2 }} className="block">
-                    {children}
-                </motion.span>
-                <motion.span
-                    initial={{ scaleX: 0 }}
-                    animate={{ scaleX: hovered ? 1 : 0 }}
-                    transition={{ duration: 0.25 }}
-                    className="absolute bottom-0 left-0 w-full h-px origin-left"
-                    style={{ backgroundColor: "#ffffff", opacity: 0.6 }}
-                />
-            </Link>
-        </motion.div>
     );
 };
 
@@ -150,185 +79,107 @@ const Footer = () => {
         { path: "/plants", label: "Plants" },
         { path: "/events", label: "Events" },
         { path: "/reservations", label: "Reservation" },
-        { path: "/about", label: "About" },
-    ];
-
-    const contactInfo = [
-        "Bulusan, Calapan City",
-        "(043) 123-4567",
-        "info@bulusanwildlife.com",
     ];
 
     const scrollToTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
 
     return (
-        <footer
-            ref={footerRef}
-            className="min-h-screen relative overflow-hidden"
-            style={{ backgroundColor: "#38d091", color: "#ffffff" }}
-        >
-            <div className="absolute inset-0 z-0 pointer-events-auto opacity-45 mix-blend-overlay bg-black">
-                <GridDistortion
-                    imageSrc="bulusan.webp"
-                    grid={15}
-                    mouse={0.1}
-                    strength={0.15}
-                    relaxation={0.9}
-                    noiseStrength={0.12}
-                />
-            </div>
+        <div className="w-full bg-white"> {/* Assuming parent body is white for the rounded corners to show */}
+            <footer
+                ref={footerRef}
+                className="w-full relative overflow-x-hidden flex flex-col rounded-t-[2.5rem] md:rounded-t-[3.5rem] pt-16 md:pt-24 pb-6 min-h-[90svh]"
+                style={{ backgroundColor: "#38d091", color: "#ffffff", fontFamily: "'Inter', sans-serif" }}
+            >
+                <div className="relative z-10 flex flex-col flex-grow w-full px-6 md:px-14">
 
-            <div className="relative z-10 flex flex-col justify-between h-full px-6 md:px-14 py-10 pointer-events-none">
-                <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={isInView ? { opacity: 1 } : { opacity: 0 }}
-                    transition={{ duration: 0.6 }}
-                    className="flex justify-between items-start border-b pb-8 pointer-events-auto"
-                    style={{ borderColor: "rgba(255,255,255,0.2)" }}
-                >
-                    <div
-                        style={{
-                            fontFamily: "'Times New Roman', Georgia, serif",
-                            fontStyle: "italic",
-                            fontWeight: 900,
-                            fontSize: "clamp(1.8rem, 5vw, 5.5vw)",
-                            color: "#ffffff",
-                            lineHeight: 1.1,
-                        }}
-                    >
-                        <SplitText text="Wildlife" delay={0.05} staggerDelay={0.04} />
-                        <br />
-                        <SplitText text="Conservation" delay={0.3} staggerDelay={0.03} />
+                    {/* Top Section: 3 Columns matching the image layout */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-16 md:gap-10 pointer-events-auto">
+
+                        {/* Column 1: Navigation */}
+                        <motion.div initial={{ opacity: 0, y: 20 }} animate={isInView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.5 }}>
+                            <PillBadge text="explore" />
+                            <ul className="flex flex-col gap-1 md:gap-2">
+                                {quickLinks.map((link) => (
+                                    <li key={link.label}>
+                                        <Link
+                                            to={link.path}
+                                            className="text-3xl md:text-[2.5rem] font-bold tracking-tight hover:opacity-70 transition-opacity block lowercase"
+                                        >
+                                            {link.label}
+                                        </Link>
+                                    </li>
+                                ))}
+                            </ul>
+                        </motion.div>
+
+                        {/* Column 2: Office / Location */}
+                        <motion.div initial={{ opacity: 0, y: 20 }} animate={isInView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.5, delay: 0.1 }}>
+                            <PillBadge text="location" />
+                            <div className="text-3xl md:text-[2.5rem] font-bold tracking-tight leading-none lowercase">
+                                <p>bulusan,</p>
+                                <p>calapan city</p>
+                            </div>
+                            <a
+                                href="#"
+                                className="inline-block mt-6 text-lg md:text-xl font-medium border-b-[3px] border-white/40 pb-0.5 hover:border-white transition-colors"
+                            >
+                                Google Maps
+                            </a>
+                        </motion.div>
+
+                        {/* Column 3: Contact */}
+                        <motion.div initial={{ opacity: 0, y: 20 }} animate={isInView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.5, delay: 0.2 }}>
+                            <PillBadge text="contact" />
+                            <div className="text-3xl md:text-[2.5rem] font-bold tracking-tight leading-none lowercase">
+                                <a href="mailto:info@bulusanwildlife.com" className="hover:opacity-70 transition-opacity block truncate">
+                                    info@bulusan<br className="hidden md:block" />wildlife.com
+                                </a>
+                                <p className="mt-4 md:mt-2 text-2xl md:text-3xl">(043) 123-4567</p>
+                            </div>
+                            <p className="text-xs md:text-sm mt-4 opacity-90 font-medium">
+                                *we're nature lovers: please leave a message.
+                            </p>
+
+                            {/* Social Icons matching the image's layout */}
+                            <div className="flex gap-3 mt-6">
+                                <SocialIcon>
+                                    <span className="font-bold text-sm">in</span>
+                                </SocialIcon>
+                                <SocialIcon>
+                                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z" /></svg>
+                                </SocialIcon>
+                                <SocialIcon>
+                                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-5.2 1.74 2.89 2.89 0 012.31-4.64 2.93 2.93 0 01.88.13V9.4a6.84 6.84 0 00-1-.05A6.33 6.33 0 005 20.1a6.34 6.34 0 0010.86-4.43v-7a8.16 8.16 0 004.77 1.52v-3.4a4.85 4.85 0 01-1.04-.1z" /></svg>
+                                </SocialIcon>
+                            </div>
+                        </motion.div>
                     </div>
 
-                    <motion.button
-                        onClick={scrollToTop}
-                        initial={{ opacity: 0 }}
-                        animate={isInView ? { opacity: 1 } : {}}
-                        transition={{ duration: 0.5, delay: 0.5 }}
-                        whileHover={{ scale: 1.05, backgroundColor: "rgba(255,255,255,0.1)" }}
-                        whileTap={{ scale: 0.95 }}
-                        className="flex items-center gap-2 border px-3 py-2 uppercase tracking-widest transition-colors mt-2 md:mt-0"
-                        style={{
-                            borderColor: "rgba(255,255,255,0.4)",
-                            color: "#ffffff",
-                            fontSize: "clamp(9px, 0.9vw, 12px)",
-                        }}
-                    >
-                        <ArrowUp />
-                        <span className="hidden md:inline">Top</span>
-                    </motion.button>
-                </motion.div>
+                    {/* Giant Bottom Title */}
+                    <div className="mt-auto flex flex-col justify-end">
+                        <GiantTitle />
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-y-10 gap-x-6 mt-10 md:mt-14 pointer-events-auto font-medium">
-                    <div className="sm:col-span-2">
-                        <h4
-                            className="uppercase tracking-[0.2em] mb-4 md:mb-6 opacity-80"
-                            style={{ fontSize: "clamp(9px, 0.85vw, 12px)", color: "#ffffff" }}
+                        {/* Bottom Bar: Copyright & Back to Top mimicking the "credits" badge */}
+                        <motion.div
+                            initial={{ opacity: 0 }} animate={isInView ? { opacity: 1 } : {}} transition={{ duration: 0.5, delay: 0.8 }}
+                            className="mt-4 flex justify-between items-center pointer-events-auto"
                         >
-                            Navigation
-                        </h4>
-                        <ul className="space-y-1">
-                            {quickLinks.map((link, i) => (
-                                <li key={link.label}>
-                                    <AnimatedLink to={link.path} delay={0.1 + i * 0.05} index={i}>
-                                        {link.label}
-                                    </AnimatedLink>
-                                </li>
-                            ))}
-                        </ul>
+                            <span className="text-xs md:text-sm font-semibold opacity-80 lowercase">
+                                © {currentYear} bwci.
+                            </span>
+
+                            <button
+                                onClick={scrollToTop}
+                                className="bg-black text-white px-4 py-1.5 rounded-full text-xs md:text-sm font-bold shadow-md hover:bg-gray-800 transition-colors"
+                            >
+                                back to top
+                            </button>
+                        </motion.div>
                     </div>
 
-                    <div>
-                        <h4
-                            className="uppercase tracking-[0.2em] mb-4 md:mb-6 opacity-80"
-                            style={{ fontSize: "clamp(9px, 0.85vw, 16px)", color: "#ffffff" }}
-                        >
-                            Contact
-                        </h4>
-                        <ul className="space-y-2">
-                            {contactInfo.map((item, i) => (
-                                <motion.li
-                                    key={i}
-                                    initial={{ opacity: 0, y: 8 }}
-                                    animate={isInView ? { opacity: 0.9, y: 0 } : {}}
-                                    transition={{ duration: 0.4, delay: 0.2 + i * 0.07 }}
-                                    style={{ fontSize: "clamp(10px, 1vw, 14px)", color: "#ffffff" }}
-                                >
-                                    {item}
-                                </motion.li>
-                            ))}
-                        </ul>
-                    </div>
-
-                    <div>
-                        <h4
-                            className="uppercase tracking-[0.2em] mb-4 md:mb-6 opacity-80"
-                            style={{ fontSize: "clamp(9px, 0.85vw, 16px)", color: "#ffffff" }}
-                        >
-                            Organization
-                        </h4>
-                        <motion.p
-                            initial={{ opacity: 0 }}
-                            animate={isInView ? { opacity: 0.95 } : { opacity: 0 }}
-                            transition={{ duration: 0.6, delay: 0.3 }}
-                            className="leading-relaxed max-w-sm md:max-w-none"
-                            style={{ fontSize: "clamp(10px, 1vw, 14px)", color: "#ffffff" }}
-                        >
-                            Bulusan Wildlife Conservation Inc. is committed to habitat protection,
-                            biodiversity awareness, and sustainable conservation programs.
-                        </motion.p>
-                    </div>
                 </div>
-
-                <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={isInView ? { opacity: 1 } : { opacity: 0 }}
-                    transition={{ duration: 0.6, delay: 0.4 }}
-                    className="mt-12 md:mt-16 mb-4 pointer-events-auto"
-                >
-                    <p
-                        className="leading-relaxed max-w-lg"
-                        style={{ fontSize: "clamp(10px, 1vw, 13px)", color: "#ffffff", opacity: 0.95 }}
-                    >
-                        We are here when you want quiet nature for no particular reason.{" "}
-                        <Link
-                            to="/reservation"
-                            className="underline underline-offset-2 hover:opacity-70 transition-opacity"
-                            style={{ textDecorationColor: "rgba(255,255,255,0.6)" }}
-                        >
-                            Visit us
-                        </Link>{" "}
-                        and we will show you wildlife that matches your wonder.
-                    </p>
-                </motion.div>
-
-                <div className="mt-2 -mx-6 md:-mx-14 overflow-hidden pointer-events-none">
-                    <BulusanTitle />
-                </div>
-
-                <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={isInView ? { opacity: 1 } : { opacity: 0 }}
-                    transition={{ duration: 0.5, delay: 0.6 }}
-                    className="mt-6 border-t pt-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-2 md:gap-0 pointer-events-auto"
-                    style={{ borderColor: "rgba(255,255,255,0.2)" }}
-                >
-                    <span
-                        className="uppercase tracking-widest opacity-70"
-                        style={{ fontSize: "clamp(9px, 0.85vw, 11px)", color: "#ffffff" }}
-                    >
-                        © {currentYear} Bulusan Zoo
-                    </span>
-                    <span
-                        className="uppercase tracking-widest opacity-60"
-                        style={{ fontSize: "clamp(9px, 0.85vw, 11px)", color: "#ffffff" }}
-                    >
-                        Bulusan Wildlife Conservation Inc.
-                    </span>
-                </motion.div>
-            </div>
-        </footer>
+            </footer>
+        </div>
     );
 };
 

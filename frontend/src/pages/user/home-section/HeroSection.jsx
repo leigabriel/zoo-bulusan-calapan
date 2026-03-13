@@ -140,7 +140,7 @@ export default function HeroSection() {
     const titleScale = useTransform(smoothProgress, [0, 0.2], [1, 3.5]);
     const titleY = useTransform(smoothProgress, [0, 0.2], ['0%', '10%']);
 
-    const spinRotation = useTransform(smoothProgress, [0, 0.2, 0.3, 0.8], [0, Math.PI * 2, Math.PI * 2, 0]);
+    const spinRotation = useTransform(smoothProgress, [0, 0.2, 0.3, 0.8], [0, Math.PI, Math.PI, 0]);
 
     const frontTextOpacity = useTransform(smoothProgress, [0, 0.1, 0.15, 0.2], [1, 0, 0, 0]);
     const backTextOpacity = useTransform(smoothProgress, [0, 0.1, 0.15, 0.2], [0, 1, 1, 0]);
