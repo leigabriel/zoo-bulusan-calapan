@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { staffAPI } from '../../services/api-client';
 import { sanitizeInput } from '../../utils/sanitize';
+import { notify } from '../../utils/toast';
 
 // Icons
 const PawIcon = () => (
@@ -170,7 +171,7 @@ const StaffAnimals = ({ globalSearch = '' }) => {
                 closeModal();
             } else throw new Error(res.message || 'Save failed');
         } catch (err) {
-            alert(err.message || 'Failed to save animal');
+            notify.error(err.message || 'We could not save this animal right now.');
         } finally {
             setSaving(false);
         }
@@ -184,7 +185,7 @@ const StaffAnimals = ({ globalSearch = '' }) => {
                 setDeleteConfirm(null);
             } else throw new Error(res.message || 'Delete failed');
         } catch (err) {
-            alert(err.message || 'Failed to delete animal');
+            notify.error(err.message || 'We could not remove this animal right now.');
         }
     };
 

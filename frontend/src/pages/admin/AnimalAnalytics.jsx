@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { STORAGE_KEYS, predictionAPI } from '../../services/api-client';
 import Chart from 'react-apexcharts';
+import { notify } from '../../utils/toast';
 
 const Icons = {
     Chart: () => (
@@ -125,7 +126,7 @@ const AnimalAnalytics = () => {
 
     const handleDelete = async () => {
         if (selectedIds.length === 0) {
-            alert('Please select at least one record to delete');
+            notify.warning('Select at least one record to continue.');
             return;
         }
 
@@ -134,7 +135,7 @@ const AnimalAnalytics = () => {
         try {
             const data = await predictionAPI.delete(selectedIds);
             if (data && data.success) {
-                alert('Records deleted successfully');
+                notify.success('Selected records were removed successfully.');
                 setSelectedIds([]);
                 setSelectAll(false);
                 fetchPredictions();
@@ -143,7 +144,7 @@ const AnimalAnalytics = () => {
             }
         } catch (error) {
             console.error('Error deleting records:', error);
-            alert('Failed to delete records: ' + error.message);
+            notify.error('We could not delete those records. Please try again.');
         }
     };
 
@@ -154,7 +155,7 @@ const AnimalAnalytics = () => {
         try {
             const data = await predictionAPI.clearAll();
             if (data && data.success) {
-                alert('All records cleared successfully');
+                notify.success('All records were cleared successfully.');
                 setSelectedIds([]);
                 setSelectAll(false);
                 fetchPredictions();
@@ -163,7 +164,7 @@ const AnimalAnalytics = () => {
             }
         } catch (error) {
             console.error('Error clearing records:', error);
-            alert('Failed to clear records: ' + error.message);
+            notify.error('We could not clear records right now. Please try again.');
         }
     };
 

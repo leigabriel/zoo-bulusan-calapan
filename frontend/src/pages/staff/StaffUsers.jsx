@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { staffAPI, getProfileImageUrl } from '../../services/api-client';
 import { sanitizeInput } from '../../utils/sanitize';
+import { notify } from '../../utils/toast';
 
 // Icons
 const UsersIcon = () => (
@@ -176,7 +177,7 @@ const StaffUsers = ({ globalSearch = '' }) => {
                 await staffAPI.updateUser(editingUser.id, userData);
             } else {
                 if (!form.password) {
-                    alert('Password is required for new users');
+                    notify.warning('Please add a password for the new account.');
                     setSaving(false);
                     return;
                 }
@@ -186,7 +187,7 @@ const StaffUsers = ({ globalSearch = '' }) => {
             fetchUsers();
         } catch (err) {
             console.error('Error saving user:', err);
-            alert(err.message || 'Failed to save user');
+            notify.error(err.message || 'We could not save this user right now.');
         } finally {
             setSaving(false);
         }
@@ -194,7 +195,7 @@ const StaffUsers = ({ globalSearch = '' }) => {
 
     const handleSuspendUser = async () => {
         if (!suspendUser || !suspendReason.trim()) {
-            alert('Please provide a reason for suspension');
+            notify.warning('Please provide a reason before continuing.');
             return;
         }
         setSuspending(true);
@@ -205,7 +206,7 @@ const StaffUsers = ({ globalSearch = '' }) => {
             fetchUsers();
         } catch (err) {
             console.error('Error suspending user:', err);
-            alert(err.message || 'Failed to suspend user');
+            notify.error(err.message || 'We could not update this account right now.');
         } finally {
             setSuspending(false);
         }
@@ -218,7 +219,7 @@ const StaffUsers = ({ globalSearch = '' }) => {
             fetchUsers();
         } catch (err) {
             console.error('Error unsuspending user:', err);
-            alert(err.message || 'Failed to unsuspend user');
+            notify.error(err.message || 'We could not restore this account right now.');
         }
     };
 

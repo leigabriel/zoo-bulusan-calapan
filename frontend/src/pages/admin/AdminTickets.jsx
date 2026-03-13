@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { adminAPI, getResidentIdImageUrl } from '../../services/api-client';
+import { notify } from '../../utils/toast';
 
 // Icons
 const SearchIcon = () => (
@@ -185,7 +186,7 @@ const AdminTickets = ({ globalSearch = '' }) => {
             }
         } catch (err) {
             console.error(err);
-            alert('Failed to update ticket status');
+            notify.error('We could not update the ticket status. Please try again.');
         } finally {
             setActionLoading(false);
         }
@@ -230,7 +231,7 @@ const AdminTickets = ({ globalSearch = '' }) => {
                     }
                 } catch (err) {
                     console.error(err);
-                    alert('Failed to mark ticket as paid');
+                    notify.error('We could not mark this ticket as paid. Please try again.');
                 } finally {
                     setActionLoading(false);
                 }
@@ -256,7 +257,7 @@ const AdminTickets = ({ globalSearch = '' }) => {
                     }
                 } catch (err) {
                     console.error(err);
-                    alert('Failed to update verification status');
+                    notify.error('We could not update the verification status. Please try again.');
                 } finally {
                     setActionLoading(false);
                 }
@@ -307,7 +308,7 @@ const AdminTickets = ({ globalSearch = '' }) => {
             }
         } catch (err) {
             console.error(err);
-            alert('Failed to export tickets');
+            notify.error('We could not export tickets right now. Please try again.');
         } finally {
             setExportLoading(false);
         }

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { adminAPI, getProfileImageUrl } from '../../services/api-client';
 import { sanitizeInput, sanitizeEmail } from '../../utils/sanitize';
+import { notify } from '../../utils/toast';
 
 // Icons
 const SearchIcon = () => (
@@ -155,7 +156,7 @@ const AdminUsers = ({ globalSearch = '' }) => {
             } else throw new Error(res.message || 'Save failed');
         } catch (err) {
             console.error(err);
-            alert(err.message || 'Failed to save user');
+            notify.error(err.message || 'We could not save this user right now.');
         } finally {
             setSaving(false);
         }
@@ -174,7 +175,7 @@ const AdminUsers = ({ globalSearch = '' }) => {
             } else throw new Error(res.message || 'Suspend failed');
         } catch (err) {
             console.error(err);
-            alert(err.message || 'Failed to suspend user');
+            notify.error(err.message || 'We could not update this account right now.');
         } finally {
             setSuspending(false);
         }
@@ -189,7 +190,7 @@ const AdminUsers = ({ globalSearch = '' }) => {
             } else throw new Error(res.message || 'Unsuspend failed');
         } catch (err) {
             console.error(err);
-            alert(err.message || 'Failed to unsuspend user');
+            notify.error(err.message || 'We could not restore this account right now.');
         } finally {
             setSuspending(false);
         }

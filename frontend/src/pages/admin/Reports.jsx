@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import * as XLSX from 'xlsx';
 import { adminAPI } from '../../services/api-client';
+import { notify } from '../../utils/toast';
 
 // Icons
 const ChartIcon = () => (
@@ -259,7 +260,7 @@ const Reports = () => {
 
     const exportReport = (format) => {
         if (!reportData || !reportData.items?.length) {
-            alert('No data to export. Generate a report first.');
+            notify.info('Generate a report first before exporting.');
             return;
         }
 

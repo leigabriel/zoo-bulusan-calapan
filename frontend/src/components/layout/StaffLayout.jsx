@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { authAPI, staffAPI, getProfileImageUrl } from '../../services/api-client';
 import { sanitizeInput } from '../../utils/sanitize';
+import { notify } from '../../utils/toast';
 import LogoutModal from '../common/LogoutModal';
 
 // Icons matching Admin design system
@@ -138,7 +139,6 @@ const StaffLayout = ({ children }) => {
     const [profileForm, setProfileForm] = useState({ firstName: '', lastName: '', email: '' });
     const [profileLoading, setProfileLoading] = useState(false);
     const [profileSaving, setProfileSaving] = useState(false);
-    const [profileMessage, setProfileMessage] = useState({ type: '', text: '' });
     const [previewImage, setPreviewImage] = useState(null);
 
     // Real notifications state
@@ -241,7 +241,7 @@ const StaffLayout = ({ children }) => {
                 });
             }
         } catch (err) {
-            setProfileMessage({ type: 'error', text: 'Failed to load profile' });
+            notify.error('We could not load your profile right now.');
         } finally {
             setProfileLoading(false);
         }
@@ -250,19 +250,17 @@ const StaffLayout = ({ children }) => {
     // Save profile changes
     const saveProfile = async () => {
         setProfileSaving(true);
-        setProfileMessage({ type: '', text: '' });
         try {
             const payload = { firstName: profileForm.firstName, lastName: profileForm.lastName };
             const res = await authAPI.updateProfile(payload, 'staff');
             if (res && res.success) {
                 updateUser({ ...user, firstName: profileForm.firstName, lastName: profileForm.lastName });
-                setProfileMessage({ type: 'success', text: 'Profile updated successfully!' });
-                setTimeout(() => setProfileMessage({ type: '', text: '' }), 3000);
+                notify.success('Profile updated successfully.');
             } else {
-                setProfileMessage({ type: 'error', text: res.message || 'Failed to update profile' });
+                notify.error(res.message || 'We could not save your profile changes.');
             }
         } catch (err) {
-            setProfileMessage({ type: 'error', text: 'Error updating profile' });
+            notify.error('We could not save your profile changes.');
         } finally {
             setProfileSaving(false);
         }
@@ -657,17 +655,6 @@ const StaffLayout = ({ children }) => {
                             </div>
                         ) : (
                             <div className="p-5 space-y-5">
-                                {/* Success/Error Message */}
-                                {profileMessage.text && (
-                                    <div className={`flex items-center gap-3 p-3 rounded-xl border text-sm ${
-                                        profileMessage.type === 'success' 
-                                            ? 'bg-[#8cff65]/10 border-[#8cff65]/30 text-[#8cff65]' 
-                                            : 'bg-red-500/10 border-red-500/30 text-red-400'
-                                    }`}>
-                                        <span>{profileMessage.text}</span>
-                                    </div>
-                                )}
-
                                 {/* Avatar */}
                                 <div className="flex justify-center">
                                     <div className="w-24 h-24 bg-gradient-to-br from-[#8cff65] to-[#4ade80] rounded-full flex items-center justify-center overflow-hidden">

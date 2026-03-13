@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { messageAPI, getProfileImageUrl } from '../../services/api-client';
+import { notify } from '../../utils/toast';
 
 // Icons
 const SearchIcon = () => (
@@ -59,7 +60,6 @@ const AdminMessages = ({ globalSearch = '' }) => {
     const [searchQuery, setSearchQuery] = useState('');
     const [activeTab, setActiveTab] = useState('messages');
     const [typeFilter, setTypeFilter] = useState('all');
-    const [toastMessage, setToastMessage] = useState({ text: '', type: '' });
     
     // View message modal
     const [selectedMessage, setSelectedMessage] = useState(null);
@@ -137,12 +137,10 @@ const AdminMessages = ({ globalSearch = '' }) => {
             setShowReplyModal(false);
             setReplyContent('');
             setShowViewModal(false);
-            setToastMessage({ text: 'Reply sent successfully', type: 'success' });
-            setTimeout(() => setToastMessage({ text: '', type: '' }), 3000);
+            notify.success('Reply sent successfully.');
         } catch (err) {
             console.error('Error sending reply:', err);
-            setToastMessage({ text: 'Failed to send reply', type: 'error' });
-            setTimeout(() => setToastMessage({ text: '', type: '' }), 3000);
+            notify.error('We could not send your reply. Please try again.');
         } finally {
             setReplying(false);
         }
@@ -512,11 +510,6 @@ const AdminMessages = ({ globalSearch = '' }) => {
                 </div>
             )}
 
-            {toastMessage.text && (
-                <div className={`fixed bottom-6 left-1/2 -translate-x-1/2 px-6 py-3 rounded-full shadow-lg z-50 font-bold text-sm ${toastMessage.type === 'success' ? 'bg-[#8cff65] text-[#0a0a0a]' : 'bg-red-500 text-white'}`}>
-                    {toastMessage.text}
-                </div>
-            )}
         </div>
     );
 };

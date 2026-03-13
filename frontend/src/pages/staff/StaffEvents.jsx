@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { staffAPI } from '../../services/api-client';
 import { sanitizeInput } from '../../utils/sanitize';
+import { notify } from '../../utils/toast';
 
 // Icons
 const CalendarIcon = () => (
@@ -193,7 +194,7 @@ const StaffEvents = ({ globalSearch = '' }) => {
                 if (uploadRes.success) {
                     imageUrl = uploadRes.imageUrl;
                 } else {
-                    alert(uploadRes.message || 'Failed to upload image');
+                    notify.error(uploadRes.message || 'We could not upload the image. Please try again.');
                     setSaving(false);
                     return;
                 }
@@ -223,11 +224,11 @@ const StaffEvents = ({ globalSearch = '' }) => {
                 setShowSaveConfirm(false);
                 setConfirmData(null);
             } else {
-                alert(res.message || 'Failed to save event');
+                notify.error(res.message || 'We could not save this event right now.');
             }
         } catch (err) {
             console.error(err);
-            alert('Error saving event');
+            notify.error('We could not save this event right now.');
         } finally {
             setSaving(false);
         }
@@ -240,11 +241,11 @@ const StaffEvents = ({ globalSearch = '' }) => {
                 setEvents(events.filter(e => e.id !== id));
                 setDeleteConfirm(null);
             } else {
-                alert(res.message || 'Failed to delete event');
+                notify.error(res.message || 'We could not remove this event right now.');
             }
         } catch (err) {
             console.error(err);
-            alert('Error deleting event');
+            notify.error('We could not remove this event right now.');
         }
     };
 

@@ -34,7 +34,7 @@ const CounterNumber = memo(function CounterNumber({ value, suffix = '' }) {
 
 const StatsSection = memo(function StatsSection() {
     return (
-        <section className="bg-[#007a55] py-8 md:py-12 pb-12 md:pb-16 overflow-hidden shrink-0 w-full">
+        <section className="bg-[#38d091] py-8 md:py-12 pb-12 md:pb-16 overflow-hidden shrink-0 w-full">
             <div className="max-w-[1650px] mx-auto px-6 md:px-16 grid grid-cols-3 gap-4 md:gap-12">
                 {[{ value: 10, suffix: '+', label: 'Species' }, { value: 15, suffix: '+', label: 'Plants' }, { value: 100, suffix: '+', label: 'Visitors / Year' }].map((stat, i) => (
                     <div key={i} className="flex flex-col items-start">

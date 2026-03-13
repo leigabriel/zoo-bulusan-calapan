@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { authAPI, getProfileImageUrl } from '../../services/api-client';
 import { useAuth } from '../../context/AuthContext';
 import { sanitizeInput } from '../../utils/sanitize';
+import { notify } from '../../utils/toast';
 
 // Icons
 const CameraIcon = () => (
@@ -60,7 +61,6 @@ const AdminProfile = () => {
     const [form, setForm] = useState({ firstName: '', lastName: '', email: '' });
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
-    const [message, setMessage] = useState({ type: '', text: '' });
     const [profileImage, setProfileImage] = useState(null);
     const [previewImage, setPreviewImage] = useState(null);
 
@@ -88,7 +88,7 @@ const AdminProfile = () => {
                 }
             } catch (err) {
                 console.error('Error loading admin profile', err);
-                setMessage({ type: 'error', text: 'Failed to load profile' });
+                notify.error('We could not load your profile right now.');
             } finally {
                 setLoading(false);
             }
@@ -110,20 +110,26 @@ const AdminProfile = () => {
 
     const save = async () => {
         setSaving(true);
-        setMessage({ type: '', text: '' });
         try {
+            if (profileImage) {
+                const imageRes = await authAPI.uploadProfileImage(profileImage, 'admin');
+                if (!imageRes?.success) {
+                    throw new Error(imageRes?.message || 'We could not update your profile photo right now.');
+                }
+            }
+
             const payload = { firstName: form.firstName, lastName: form.lastName };
             const res = await authAPI.updateProfile(payload, 'admin');
             if (res && res.success) {
                 updateUser({ ...user, firstName: form.firstName, lastName: form.lastName });
-                setMessage({ type: 'success', text: 'Profile updated successfully!' });
-                setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+                setProfileImage(null);
+                notify.success('Profile updated successfully.');
             } else {
-                setMessage({ type: 'error', text: res.message || 'Failed to update profile' });
+                notify.error(res.message || 'We could not save your profile changes.');
             }
         } catch (err) {
             console.error(err);
-            setMessage({ type: 'error', text: 'Error updating profile' });
+            notify.error(err.message || 'We could not save your profile changes.');
         } finally {
             setSaving(false);
         }
@@ -142,17 +148,6 @@ const AdminProfile = () => {
 
     return (
         <div className="max-w-4xl mx-auto space-y-6">
-            {/* Success/Error Message */}
-            {message.text && (
-                <div className={`flex items-center gap-3 p-4 rounded-xl border ${message.type === 'success'
-                        ? 'bg-[#8cff65]/10 border-[#8cff65]/30 text-[#8cff65]'
-                        : 'bg-red-500/10 border-red-500/30 text-red-400'
-                    }`}>
-                    {message.type === 'success' ? <CheckIcon /> : null}
-                    <span>{message.text}</span>
-                </div>
-            )}
-
             {/* Profile Header Card */}
             <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl overflow-hidden">
                 {/* Banner */}

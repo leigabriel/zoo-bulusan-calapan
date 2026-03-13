@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { authAPI, messageAPI } from '../../services/api-client';
 import { sanitizeInput } from '../../utils/sanitize';
 import AuthSuccessModal from '../../components/common/AuthSuccessModal';
+import { notify } from '../../utils/toast';
 
 const EyeIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
@@ -23,13 +24,6 @@ const CloseIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
         <line x1="18" y1="6" x2="6" y2="18" />
         <line x1="6" y1="6" x2="18" y2="18" />
-    </svg>
-);
-
-const SuccessIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
-        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-        <polyline points="22,4 12,14.01 9,11.01" />
     </svg>
 );
 
@@ -247,7 +241,7 @@ const LoginPage = () => {
     const [loading, setLoading] = useState(false);
     const [googleLoading, setGoogleLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
-    const [message, setMessage] = useState({ text: '', type: '' });
+    const [showVerificationPrompt, setShowVerificationPrompt] = useState(false);
     const [showPrivacyModal, setShowPrivacyModal] = useState(false);
     const [showTermsModal, setShowTermsModal] = useState(false);
     const [showSuspendedModal, setShowSuspendedModal] = useState(false);
@@ -268,13 +262,13 @@ const LoginPage = () => {
 
     useEffect(() => {
         if (location.state?.message) {
-            setMessage({ text: location.state.message, type: 'success' });
+            notify.success(location.state.message);
         }
 
         // Check for verified parameter from email verification redirect
         const verifiedParam = searchParams.get('verified');
         if (verifiedParam === 'true') {
-            setMessage({ text: 'Email verified successfully! You can now log in.', type: 'success' });
+            notify.success('Email verified successfully. You can now sign in.');
             window.history.replaceState(null, '', '/login');
         }
 
@@ -282,7 +276,7 @@ const LoginPage = () => {
         if (errorParam) {
             const errorMessage = getErrorMessage(errorParam);
             const debugInfo = import.meta.env.DEV ? ` (Code: ${decodeURIComponent(errorParam)})` : '';
-            setMessage({ text: errorMessage + debugInfo, type: 'error' });
+            notify.error(errorMessage + debugInfo);
             window.history.replaceState(null, '', '/login');
         }
     }, [location, searchParams]);
@@ -294,13 +288,14 @@ const LoginPage = () => {
         try {
             const response = await authAPI.resendVerification({ email: verificationEmail });
             if (response.success) {
-                setMessage({ text: 'Verification email sent! Please check your inbox.', type: 'success' });
+                notify.success('Verification email sent. Please check your inbox.');
                 setVerificationEmail('');
+                setShowVerificationPrompt(false);
             } else {
-                setMessage({ text: response.message || 'Failed to resend verification email', type: 'error' });
+                notify.error(response.message || 'We could not resend the verification email right now.');
             }
         } catch (err) {
-            setMessage({ text: err.message || 'Failed to resend verification email', type: 'error' });
+            notify.error(err.message || 'We could not resend the verification email right now.');
         } finally {
             setResendingVerification(false);
         }
@@ -308,7 +303,7 @@ const LoginPage = () => {
 
     const handleGoogleSignIn = () => {
         setGoogleLoading(true);
-        setMessage({ text: '', type: '' });
+        setShowVerificationPrompt(false);
 
         const backendUrl = import.meta.env.VITE_BACKEND_URL ||
             import.meta.env.VITE_API_URL?.replace('/api', '') ||
@@ -319,7 +314,7 @@ const LoginPage = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
-        setMessage({ text: '', type: '' });
+        setShowVerificationPrompt(false);
 
         try {
             const response = await authAPI.login({
@@ -356,12 +351,10 @@ const LoginPage = () => {
                 setShowSuspendedModal(true);
             } else if (response.requiresVerification) {
                 setVerificationEmail(response.email || identifier);
-                setMessage({ 
-                    text: response.message || 'Please verify your email before logging in.', 
-                    type: 'warning' 
-                });
+                setShowVerificationPrompt(true);
+                notify.warning(response.message || 'Please verify your email before signing in.');
             } else {
-                setMessage({ text: response.message || 'Login failed', type: 'error' });
+                notify.error(response.message || 'We could not sign you in. Please try again.');
             }
         } catch (err) {
             if (err.suspended) {
@@ -374,12 +367,10 @@ const LoginPage = () => {
                 setShowSuspendedModal(true);
             } else if (err.requiresVerification) {
                 setVerificationEmail(err.email || identifier);
-                setMessage({ 
-                    text: err.message || 'Please verify your email before logging in.', 
-                    type: 'warning' 
-                });
+                setShowVerificationPrompt(true);
+                notify.warning(err.message || 'Please verify your email before signing in.');
             } else {
-                setMessage({ text: err.message || 'An error occurred during login', type: 'error' });
+                notify.error(err.message || 'We could not sign you in. Please try again.');
             }
         } finally {
             setLoading(false);
@@ -388,7 +379,7 @@ const LoginPage = () => {
 
     const handleSubmitAppeal = async () => {
         if (!appealMessage.trim()) {
-            setMessage({ text: 'Please enter your appeal message', type: 'error' });
+            notify.warning('Please enter your appeal message.');
             return;
         }
 
@@ -405,10 +396,10 @@ const LoginPage = () => {
                 setAppealSent(true);
                 setAppealMessage('');
             } else {
-                setMessage({ text: response.message || 'Failed to submit appeal', type: 'error' });
+                notify.error(response.message || 'We could not submit your appeal right now.');
             }
         } catch (err) {
-            setMessage({ text: err.message || 'Failed to submit appeal', type: 'error' });
+            notify.error(err.message || 'We could not submit your appeal right now.');
         } finally {
             setAppealLoading(false);
         }
@@ -588,30 +579,22 @@ const LoginPage = () => {
                         Log in to start exploring wildlife conservation with ease.
                     </p>
 
-                    {message.text && (
-                        <div className={`p-4 mb-6 rounded-lg border flex flex-col gap-3 ${
-                            message.type === 'success'
-                                ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
-                                : message.type === 'warning'
-                                    ? 'bg-amber-50 text-amber-800 border-amber-200'
-                                    : 'bg-red-50 text-red-800 border-red-200'
-                            }`}>
+                    {showVerificationPrompt && verificationEmail && (
+                        <div className="p-4 mb-6 rounded-lg border flex flex-col gap-3 bg-amber-50 text-amber-800 border-amber-200">
                             <div className="flex items-center gap-3">
                                 <span className="flex-shrink-0">
-                                    {message.type === 'success' ? <SuccessIcon /> : <ErrorIcon />}
+                                    <ErrorIcon />
                                 </span>
-                                <span className="text-sm font-medium break-words">{message.text}</span>
+                                <span className="text-sm font-medium break-words">Please verify your email before signing in.</span>
                             </div>
-                            {verificationEmail && message.type === 'warning' && (
-                                <button
-                                    type="button"
-                                    onClick={handleResendVerification}
-                                    disabled={resendingVerification}
-                                    className="w-full mt-2 bg-amber-600 text-white py-2.5 rounded-lg font-medium hover:bg-amber-700 disabled:bg-amber-300 disabled:cursor-not-allowed transition-colors text-sm"
-                                >
-                                    {resendingVerification ? 'Sending...' : 'Resend Verification Email'}
-                                </button>
-                            )}
+                            <button
+                                type="button"
+                                onClick={handleResendVerification}
+                                disabled={resendingVerification}
+                                className="w-full mt-2 bg-amber-600 text-white py-2.5 rounded-lg font-medium hover:bg-amber-700 disabled:bg-amber-300 disabled:cursor-not-allowed transition-colors text-sm"
+                            >
+                                {resendingVerification ? 'Sending...' : 'Resend Verification Email'}
+                            </button>
                         </div>
                     )}
 

@@ -8,6 +8,7 @@ import ReservationHistoryPanel from '../../components/features/ReservationHistor
 import { useAuth } from '../../hooks/use-auth';
 import { reservationAPI, userAPI } from '../../services/api-client';
 import { sanitizeInput, sanitizeEmail, sanitizePhone } from '../../utils/sanitize';
+import { notify } from '../../utils/toast';
 
 const Icons = {
     Ticket: () => (
@@ -87,7 +88,6 @@ const Reservations = () => {
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [reservationType, setReservationType] = useState('ticket');
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [message, setMessage] = useState({ text: '', type: '' });
     const [showConfirmation, setShowConfirmation] = useState(false);
     const [confirmationData, setConfirmationData] = useState(null);
     const [ticketCounts, setTicketCounts] = useState({ adult: 0, child: 0, bulusan_resident: 0 });
@@ -147,8 +147,7 @@ const Reservations = () => {
     const getTotalVisitors = () => Object.values(ticketCounts).reduce((a, b) => a + b, 0);
     const updateTicketCount = (type, delta) => {
         if (delta > 0 && getTotalVisitors() >= 20) {
-            setMessage({ text: 'Maximum 20 visitors per reservation', type: 'error' });
-            setTimeout(() => setMessage({ text: '', type: '' }), 3000);
+            notify.warning('You can add up to 20 visitors per reservation.');
             return;
         }
         setTicketCounts(prev => ({ ...prev, [type]: Math.max(0, prev[type] + delta) }));
@@ -181,17 +180,16 @@ const Reservations = () => {
     const getMinDate = () => new Date().toISOString().split('T')[0];
 
     const validateTicketForm = () => {
-        if (getTotalVisitors() === 0) { setMessage({ text: 'Please select at least one ticket', type: 'error' }); return false; }
-        if (!ticketForm.reservationDate) { setMessage({ text: 'Please select a reservation date', type: 'error' }); return false; }
-        if (!ticketForm.visitorName.trim()) { setMessage({ text: 'Please enter your name', type: 'error' }); return false; }
-        if (!ticketForm.visitorEmail.trim()) { setMessage({ text: 'Please enter your email', type: 'error' }); return false; }
-        if (ticketCounts.bulusan_resident > 0 && !residentIdImage) { setMessage({ text: 'Please upload your Bulusan resident ID for verification', type: 'error' }); return false; }
+        if (getTotalVisitors() === 0) { notify.warning('Please select at least one ticket.'); return false; }
+        if (!ticketForm.reservationDate) { notify.warning('Please select your visit date.'); return false; }
+        if (!ticketForm.visitorName.trim()) { notify.warning('Please enter your full name.'); return false; }
+        if (!ticketForm.visitorEmail.trim()) { notify.warning('Please enter your email address.'); return false; }
+        if (ticketCounts.bulusan_resident > 0 && !residentIdImage) { notify.warning('Please upload your Bulusan resident ID for verification.'); return false; }
         return true;
     };
 
     const handleCreateReservation = async () => {
         setIsSubmitting(true);
-        setMessage({ text: '', type: '' });
         try {
             if (reservationType === 'ticket') {
                 const res = await reservationAPI.createTicketReservation({
@@ -247,7 +245,7 @@ const Reservations = () => {
                 }
             }
         } catch (err) {
-            setMessage({ text: err.message || 'Failed to create reservation', type: 'error' });
+            notify.error(err.message || 'We could not complete your reservation. Please try again.');
         } finally {
             setIsSubmitting(false);
         }
@@ -261,7 +259,6 @@ const Reservations = () => {
         setResidentIdPreview(null);
         setIdUploadError('');
         setEventForm({ venueEventName: '', venueEventDate: '', venueEventTime: '', venueEventDescription: '', numberOfParticipants: 1, participantName: fullName, participantEmail: user?.email || '', participantPhone: '', notes: '' });
-        setMessage({ text: '', type: '' });
     };
 
     const hasFormData = () => {
@@ -291,12 +288,11 @@ const Reservations = () => {
 
     const handleSubmitAttempt = (e) => {
         e.preventDefault();
-        setMessage({ text: '', type: '' });
         if (reservationType === 'ticket') {
             if (!validateTicketForm()) return;
         } else {
             if (!eventForm.venueEventName || !eventForm.venueEventDate) {
-                setMessage({ text: 'Please provide event name and date', type: 'error' });
+                notify.warning('Please provide the event name and date.');
                 return;
             }
         }
@@ -403,12 +399,6 @@ const Reservations = () => {
                         </div>
 
                         <div className="flex-1 overflow-y-auto px-6 md:px-8 pb-8 overscroll-contain">
-                            {message.text && (
-                                <div className={`p-4 rounded-lg mb-6 text-sm ${message.type === 'success' ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'}`}>
-                                    {message.text}
-                                </div>
-                            )}
-
                             <form id="reservation-form" onSubmit={handleSubmitAttempt} className="space-y-6">
 
                                 {/* Minimalist Tabs Switcher */}

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { adminAPI } from '../../services/api-client';
 import { sanitizeInput } from '../../utils/sanitize';
+import { notify } from '../../utils/toast';
 
 // Icons
 const SearchIcon = () => (
@@ -175,7 +176,7 @@ const AdminAnimals = ({ globalSearch = '' }) => {
                 closeModal();
             } else throw new Error(res.message || 'Save failed');
         } catch (err) {
-            alert(err.message || 'Failed to save animal');
+            notify.error(err.message || 'We could not save this animal right now.');
         } finally {
             setSaving(false);
         }
@@ -189,7 +190,7 @@ const AdminAnimals = ({ globalSearch = '' }) => {
                 setDeleteConfirm(null);
             } else throw new Error(res.message || 'Delete failed');
         } catch (err) {
-            alert(err.message || 'Failed to delete animal');
+            notify.error(err.message || 'We could not remove this animal right now.');
         }
     };
 

@@ -165,7 +165,7 @@ const Footer = () => {
         <footer
             ref={footerRef}
             className="min-h-screen relative overflow-hidden"
-            style={{ backgroundColor: "#007a55", color: "#ffffff" }}
+            style={{ backgroundColor: "#38d091", color: "#ffffff" }}
         >
             <div className="absolute inset-0 z-0 pointer-events-auto opacity-45 mix-blend-overlay bg-black">
                 <GridDistortion

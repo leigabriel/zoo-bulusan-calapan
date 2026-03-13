@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { staffAPI, getResidentIdImageUrl } from '../../services/api-client';
+import { notify } from '../../utils/toast';
 
 // Icons
 const SearchIcon = () => (
@@ -163,7 +164,7 @@ const StaffTickets = () => {
             }
         } catch (err) {
             console.error('Error updating ticket:', err);
-            alert('Failed to update ticket status');
+            notify.error('We could not update the ticket status. Please try again.');
         } finally {
             setUpdating(false);
         }
@@ -202,7 +203,7 @@ const StaffTickets = () => {
                     }
                 } catch (err) {
                     console.error(err);
-                    alert('Failed to mark ticket as paid');
+                    notify.error('We could not mark this ticket as paid. Please try again.');
                 } finally {
                     setUpdating(false);
                 }
@@ -228,7 +229,7 @@ const StaffTickets = () => {
                     }
                 } catch (err) {
                     console.error(err);
-                    alert('Failed to update verification status');
+                    notify.error('We could not update the verification status. Please try again.');
                 } finally {
                     setUpdating(false);
                 }

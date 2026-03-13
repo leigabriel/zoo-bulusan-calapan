@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { notify } from '../../utils/toast';
 
 // Icons
 const Icons = {
@@ -76,7 +77,6 @@ const Settings = () => {
     const { user } = useAuth();
     const navigate = useNavigate();
     const [activeSection, setActiveSection] = useState('preferences');
-    const [message, setMessage] = useState({ text: '', type: '' });
 
     // Load settings from localStorage on mount
     const getDefaultSettings = () => ({
@@ -123,13 +123,11 @@ const Settings = () => {
                 [key]: value
             }
         }));
-        setMessage({ text: 'Settings saved!', type: 'success' });
-        setTimeout(() => setMessage({ text: '', type: '' }), 2000);
+        notify.success('Settings updated successfully.');
     };
 
     const showFeatureNotAvailable = (featureName) => {
-        setMessage({ text: `${featureName} feature coming soon!`, type: 'info' });
-        setTimeout(() => setMessage({ text: '', type: '' }), 3000);
+        notify.info(`${featureName} will be available soon.`);
     };
 
     const menuItems = [
@@ -444,18 +442,6 @@ const Settings = () => {
 
             {/* Main Content */}
             <div className="flex-grow container mx-auto px-4 py-8 max-w-6xl">
-                {message.text && (
-                    <div className={`mb-6 p-4 rounded-xl ${
-                        message.type === 'success'
-                            ? 'bg-green-100 text-green-700 border border-green-300'
-                            : message.type === 'info'
-                            ? 'bg-blue-100 text-blue-700 border border-blue-300'
-                            : 'bg-red-100 text-red-700 border border-red-300'
-                        }`}>
-                        {message.text}
-                    </div>
-                )}
-
                 <div className="flex flex-col lg:flex-row gap-6">
                     {/* Left Sidebar Menu - On mobile, show as horizontal scroll */}
                     <div className="lg:w-80 flex-shrink-0">

@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { authAPI, getProfileImageUrl as resolveProfileImageUrl } from '../../services/api-client';
 import { sanitizeInput } from '../../utils/sanitize';
 import { isDefaultAvatar, getDefaultAvatarSvg, getInitials } from '../../utils/profile-avatars';
+import { notify } from '../../utils/toast';
 import LogoutModal from '../../components/common/LogoutModal';
 import AvatarSelector from '../../components/common/AvatarSelector';
 
@@ -33,7 +34,6 @@ const UserProfile = () => {
     const [loading, setLoading] = useState(false);
     const [showPasswordModal, setShowPasswordModal] = useState(false);
     const [passwordData, setPasswordData] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
-    const [message, setMessage] = useState({ text: '', type: '' });
     const [passwordError, setPasswordError] = useState('');
     const [showSaveConfirm, setShowSaveConfirm] = useState(false);
     const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
@@ -90,9 +90,11 @@ const UserProfile = () => {
                 }
                 setSelectedFile(null);
                 setImagePreview(null);
+                notify.success('Profile photo updated successfully.');
             }
         } catch (error) {
             console.error(error);
+            notify.error('We could not update your photo. Please try again.');
         } finally {
             setUploadingImage(false);
         }
@@ -104,9 +106,11 @@ const UserProfile = () => {
             const response = await authAPI.deleteProfileImage();
             if (response.success) {
                 updateUser({ ...user, profileImage: null, profile_image: null });
+                notify.success('Profile photo removed successfully.');
             }
         } catch (error) {
             console.error(error);
+            notify.error('We could not remove your photo right now.');
         } finally {
             setUploadingImage(false);
         }
@@ -115,7 +119,6 @@ const UserProfile = () => {
     const handleSave = async () => {
         setShowSaveConfirm(false);
         setLoading(true);
-        setMessage({ text: '', type: '' });
         try {
             const response = await authAPI.updateProfile(formData);
             if (response.success) {
@@ -128,14 +131,13 @@ const UserProfile = () => {
                     });
                 }
                 setIsEditing(false);
-                setMessage({ text: 'Profile updated successfully!', type: 'success' });
-                setTimeout(() => setMessage({ text: '', type: '' }), 3000);
+                notify.success('Profile details updated successfully.');
             } else {
-                setMessage({ text: response.message || 'Failed to update profile', type: 'error' });
+                notify.error(response.message || 'We could not save your changes right now.');
             }
         } catch (error) {
             console.error(error);
-            setMessage({ text: 'An error occurred while updating profile', type: 'error' });
+            notify.error('We could not save your changes right now.');
         } finally {
             setLoading(false);
         }
@@ -166,8 +168,7 @@ const UserProfile = () => {
                 setShowPasswordModal(false);
                 setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
                 setPasswordError('');
-                setMessage({ text: 'Password changed successfully!', type: 'success' });
-                setTimeout(() => setMessage({ text: '', type: '' }), 3000);
+                notify.success('Password updated successfully.');
             } else {
                 setPasswordError(response.message || 'Failed to change password');
             }
@@ -222,12 +223,11 @@ const UserProfile = () => {
                     profileImage: avatarKey,
                     profile_image: avatarKey
                 });
-                setMessage({ text: 'Avatar updated!', type: 'success' });
-                setTimeout(() => setMessage({ text: '', type: '' }), 3000);
+                notify.success('Avatar updated successfully.');
             }
         } catch (error) {
             console.error('Error updating avatar:', error);
-            setMessage({ text: 'Failed to update avatar', type: 'error' });
+            notify.error('We could not update your avatar right now.');
         } finally {
             setUploadingImage(false);
             setSelectedDefaultAvatar(null);
@@ -460,13 +460,6 @@ const UserProfile = () => {
                             <button onClick={handleSave} disabled={loading} className="flex-1 py-3 bg-emerald-600 text-white rounded-xl font-bold shadow-lg hover:bg-emerald-700 transition disabled:opacity-50">{loading ? 'Saving...' : 'Save'}</button>
                         </div>
                     </div>
-                </div>
-            )}
-
-            {/* Success/Error Message Toast */}
-            {message.text && (
-                <div className={`fixed bottom-6 left-1/2 -translate-x-1/2 px-6 py-3 rounded-full shadow-lg z-50 font-bold text-sm animate-in slide-in-from-bottom-4 ${message.type === 'success' ? 'bg-emerald-600 text-white' : 'bg-red-600 text-white'}`}>
-                    {message.text}
                 </div>
             )}
 
