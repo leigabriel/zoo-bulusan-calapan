@@ -33,7 +33,11 @@ const AboutSection = () => {
                 </h2>
                 <div className="mb-8 md:mb-16">
                     {['Founded in 2015,', 'Bulusan Wildlife & Nature Park', 'began as a small conservation', 'initiative in Calapan City.'].map((line, i) => (
+<<<<<<< HEAD
                         <p key={i} className="text-[#ebebeb] text-2xl sm:text-7xl md:text-7xl lg:text-8xl leading-[1.15] md:leading-[1.1] tracking-tight">
+=======
+                        <p key={i} className="text-[#ebebeb] text-2xl sm:text-7xl md:text-7xl lg:text-7xl leading-[1.15] md:leading-[1.1] tracking-tight">
+>>>>>>> 9f70f1d587499f33f88929bea392da9c81096462
                             <span className="overflow-hidden inline-block w-full" style={{ verticalAlign: 'bottom' }}>
                                 <span style={{ display: 'block' }}>{line}</span>
                             </span>
