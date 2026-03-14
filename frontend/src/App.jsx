@@ -13,6 +13,8 @@ import UserProfile from './pages/user/UserProfile';
 import Settings from './pages/user/Settings';
 import Help from './pages/user/Help';
 import UserMessages from './pages/user/UserMessages';
+import CommunityPage from './pages/user/CommunityPage';
+import PublicUserProfile from './pages/user/PublicUserProfile';
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
 import GoogleAuthSuccess from './pages/auth/GoogleAuthSuccess';
@@ -31,6 +33,7 @@ import AdminHelpCenter from './pages/admin/AdminHelpCenter';
 import AdminTickets from './pages/admin/AdminTickets';
 import AdminMessages from './pages/admin/AdminMessages';
 import AdminStaffMonitoring from './pages/admin/AdminStaffMonitoring';
+import AdminCommunityModeration from './pages/admin/AdminCommunityModeration';
 import StaffDashboard from './pages/staff/StaffDashboard';
 import StaffEvents from './pages/staff/StaffEvents';
 import StaffTickets from './pages/staff/StaffTickets';
@@ -39,6 +42,7 @@ import StaffAnimals from './pages/staff/StaffAnimals';
 import StaffPlants from './pages/staff/StaffPlants';
 import StaffHelpCenter from './pages/staff/StaffHelpCenter';
 import StaffMessages from './pages/staff/StaffMessages';
+import StaffCommunityModeration from './pages/staff/StaffCommunityModeration';
 import AdminLayout from './components/layout/AdminLayout';
 import StaffLayout from './components/layout/StaffLayout';
 import AnimalClassifier from './components/features/ai-scanner/AnimalClassifier';
@@ -131,6 +135,16 @@ function AppRoutes() {
                 </ProtectedRoute>
             } />
             <Route path="/help" element={<Help />} />
+            <Route path="/community" element={
+                <ProtectedRoute allowedRoles={['user', 'staff', 'admin']}>
+                    <CommunityPage />
+                </ProtectedRoute>
+            } />
+            <Route path="/community/users/:userId" element={
+                <ProtectedRoute allowedRoles={['user', 'staff', 'admin']}>
+                    <PublicUserProfile />
+                </ProtectedRoute>
+            } />
             <Route path="/mini-zoo-game" element={<Navigate to="/" replace />} />
 
             {/* Admin Routes */}
@@ -233,6 +247,13 @@ function AppRoutes() {
                     </AdminLayout>
                 </ProtectedRoute>
             } />
+            <Route path="/admin/community-moderation" element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                    <AdminLayout>
+                        <AdminCommunityModeration />
+                    </AdminLayout>
+                </ProtectedRoute>
+            } />
 
             {/* Staff Routes */}
             <Route path="/staff/dashboard" element={
@@ -288,6 +309,13 @@ function AppRoutes() {
                 <ProtectedRoute allowedRoles={['admin', 'staff']}>
                     <StaffLayout>
                         <StaffMessages />
+                    </StaffLayout>
+                </ProtectedRoute>
+            } />
+            <Route path="/staff/community-moderation" element={
+                <ProtectedRoute allowedRoles={['admin', 'staff']}>
+                    <StaffLayout>
+                        <StaffCommunityModeration />
                     </StaffLayout>
                 </ProtectedRoute>
             } />

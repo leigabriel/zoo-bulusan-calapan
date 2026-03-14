@@ -3,14 +3,14 @@ import { Link } from 'react-router-dom';
 
 const FloraSection = () => {
     return (
-        <section id="plant" className="relative w-full h-full box-border bg-transparent">
+        <section id="plant" className="relative w-full h-auto min-h-screen box-border bg-transparent overflow-hidden">
             <img
                 src="/plant.png"
                 alt="Plant Folder Background"
                 className="absolute inset-0 w-full h-full object-fill z-0 pointer-events-none"
             />
 
-            <div className="relative z-10 w-full h-full flex flex-col overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] max-w-[1800px] mx-auto px-5 sm:px-8 md:px-12 lg:px-16 pt-28 sm:pt-32 md:pt-40 pb-16 text-[#EAE7DC]">
+            <div className="relative z-10 w-full h-auto flex flex-col max-w-[1800px] mx-auto px-5 sm:px-8 md:px-12 lg:px-16 pt-28 sm:pt-32 md:pt-40 pb-16 text-[#EAE7DC]">
                 <div className="flex flex-row justify-between items-end pb-3 border-b border-dotted border-[#EAE7DC] w-full gap-4">
                     <span className="text-[10px] md:text-xs uppercase tracking-widest font-bold">
                         Featured Flora 01

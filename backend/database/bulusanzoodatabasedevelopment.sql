@@ -9,6 +9,10 @@ USE bulusanzoocalapandatabase;
 DROP TABLE IF EXISTS user_collections;
 DROP TABLE IF EXISTS staff_sessions;
 DROP TABLE IF EXISTS staff_activity_logs;
+DROP TABLE IF EXISTS community_comment_reports;
+DROP TABLE IF EXISTS community_comment_hearts;
+DROP TABLE IF EXISTS community_comments;
+DROP TABLE IF EXISTS community_posts;
 DROP TABLE IF EXISTS user_appeals;
 DROP TABLE IF EXISTS user_messages;
 DROP TABLE IF EXISTS notifications;
@@ -56,6 +60,74 @@ CREATE TABLE users (
     INDEX idx_users_auth_provider (auth_provider),
     INDEX idx_users_is_suspended (is_suspended),
     INDEX idx_users_email_verification_token (email_verification_token)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- community posts
+CREATE TABLE community_posts (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    user_id INT NOT NULL,
+    content TEXT NOT NULL,
+    image_url VARCHAR(500) DEFAULT NULL,
+    image_public_id VARCHAR(255) DEFAULT NULL,
+    status ENUM('pending', 'approved', 'declined') DEFAULT 'pending',
+    moderation_note VARCHAR(255) DEFAULT NULL,
+    moderated_by INT DEFAULT NULL,
+    moderated_at TIMESTAMP NULL DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_community_posts_user (user_id),
+    INDEX idx_community_posts_status (status),
+    INDEX idx_community_posts_created_at (created_at),
+    CONSTRAINT fk_community_posts_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT fk_community_posts_moderated_by FOREIGN KEY (moderated_by) REFERENCES users(id) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- community comments
+CREATE TABLE community_comments (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    post_id INT NOT NULL,
+    user_id INT NOT NULL,
+    comment_text TEXT NOT NULL,
+    is_reported BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_community_comments_post (post_id),
+    INDEX idx_community_comments_user (user_id),
+    INDEX idx_community_comments_created_at (created_at),
+    CONSTRAINT fk_community_comments_post FOREIGN KEY (post_id) REFERENCES community_posts(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT fk_community_comments_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- community hearts
+CREATE TABLE community_comment_hearts (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    comment_id INT NOT NULL,
+    user_id INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_community_comment_hearts (comment_id, user_id),
+    INDEX idx_community_hearts_comment (comment_id),
+    INDEX idx_community_hearts_user (user_id),
+    CONSTRAINT fk_community_hearts_comment FOREIGN KEY (comment_id) REFERENCES community_comments(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT fk_community_hearts_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- community reports
+CREATE TABLE community_comment_reports (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    comment_id INT NOT NULL,
+    user_id INT NOT NULL,
+    reason VARCHAR(255) NOT NULL,
+    status ENUM('pending', 'reviewed', 'dismissed') DEFAULT 'pending',
+    reviewed_by INT DEFAULT NULL,
+    reviewed_at TIMESTAMP NULL DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_community_comment_reports (comment_id, user_id),
+    INDEX idx_community_reports_comment (comment_id),
+    INDEX idx_community_reports_status (status),
+    CONSTRAINT fk_community_reports_comment FOREIGN KEY (comment_id) REFERENCES community_comments(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT fk_community_reports_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT fk_community_reports_reviewed_by FOREIGN KEY (reviewed_by) REFERENCES users(id) ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- animals

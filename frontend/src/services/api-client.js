@@ -1214,6 +1214,143 @@ export const messageAPI = {
     }
 };
 
+export const communityAPI = {
+    getPosts: async (type = 'user') => {
+        const response = await fetch(`${API_BASE_URL}/community/posts`, {
+            headers: getAuthHeaders(type)
+        });
+        return handleResponse(response);
+    },
+
+    createPost: async ({ content, imageFile }, type = 'user') => {
+        const formData = new FormData();
+        formData.append('content', content);
+        if (imageFile) {
+            formData.append('postImage', imageFile);
+        }
+
+        const response = await fetch(`${API_BASE_URL}/community/posts`, {
+            method: 'POST',
+            headers: getAuthHeadersMultipart(type),
+            body: formData
+        });
+        return handleResponse(response);
+    },
+
+    updatePost: async (postId, { content, imageFile, removeImage = false }, type = 'user') => {
+        const formData = new FormData();
+        formData.append('content', content);
+        formData.append('removeImage', String(removeImage));
+        if (imageFile) {
+            formData.append('postImage', imageFile);
+        }
+
+        const response = await fetch(`${API_BASE_URL}/community/posts/${postId}`, {
+            method: 'PUT',
+            headers: getAuthHeadersMultipart(type),
+            body: formData
+        });
+        return handleResponse(response);
+    },
+
+    deletePost: async (postId, type = 'user') => {
+        const response = await fetch(`${API_BASE_URL}/community/posts/${postId}`, {
+            method: 'DELETE',
+            headers: getAuthHeaders(type)
+        });
+        return handleResponse(response);
+    },
+
+    getPendingPosts: async (type = 'admin') => {
+        const response = await fetch(`${API_BASE_URL}/community/posts/pending`, {
+            headers: getAuthHeaders(type)
+        });
+        return handleResponse(response);
+    },
+
+    reviewPost: async (postId, action, note = '', type = 'admin') => {
+        const response = await fetch(`${API_BASE_URL}/community/posts/${postId}/review`, {
+            method: 'PATCH',
+            headers: getAuthHeaders(type),
+            body: JSON.stringify({ action, note })
+        });
+        return handleResponse(response);
+    },
+
+    getComments: async (postId, type = 'user') => {
+        const response = await fetch(`${API_BASE_URL}/community/posts/${postId}/comments`, {
+            headers: getAuthHeaders(type)
+        });
+        return handleResponse(response);
+    },
+
+    createComment: async (postId, commentText, type = 'user') => {
+        const response = await fetch(`${API_BASE_URL}/community/posts/${postId}/comments`, {
+            method: 'POST',
+            headers: getAuthHeaders(type),
+            body: JSON.stringify({ commentText })
+        });
+        return handleResponse(response);
+    },
+
+    updateComment: async (commentId, commentText, type = 'user') => {
+        const response = await fetch(`${API_BASE_URL}/community/comments/${commentId}`, {
+            method: 'PUT',
+            headers: getAuthHeaders(type),
+            body: JSON.stringify({ commentText })
+        });
+        return handleResponse(response);
+    },
+
+    deleteComment: async (commentId, type = 'user') => {
+        const response = await fetch(`${API_BASE_URL}/community/comments/${commentId}`, {
+            method: 'DELETE',
+            headers: getAuthHeaders(type)
+        });
+        return handleResponse(response);
+    },
+
+    toggleCommentHeart: async (commentId, type = 'user') => {
+        const response = await fetch(`${API_BASE_URL}/community/comments/${commentId}/heart`, {
+            method: 'POST',
+            headers: getAuthHeaders(type)
+        });
+        return handleResponse(response);
+    },
+
+    reportComment: async (commentId, reason, type = 'user') => {
+        const response = await fetch(`${API_BASE_URL}/community/comments/${commentId}/report`, {
+            method: 'POST',
+            headers: getAuthHeaders(type),
+            body: JSON.stringify({ reason })
+        });
+        return handleResponse(response);
+    },
+
+    getReportedComments: async (type = 'admin') => {
+        const response = await fetch(`${API_BASE_URL}/community/comments/reported`, {
+            headers: getAuthHeaders(type)
+        });
+        return handleResponse(response);
+    },
+
+    reviewReport: async (reportId, action, type = 'admin') => {
+        const response = await fetch(`${API_BASE_URL}/community/reports/${reportId}/review`, {
+            method: 'PATCH',
+            headers: getAuthHeaders(type),
+            body: JSON.stringify({ action })
+        });
+        return handleResponse(response);
+    },
+
+    getUserProfile: async (userId, type = 'user') => {
+        const response = await fetch(`${API_BASE_URL}/community/users/${userId}/profile`, {
+            headers: getAuthHeaders(type)
+        });
+        return handleResponse(response);
+    }
+};
+
 export const plantAPI = {
     getAll: async () => {
         const response = await fetch(`${API_BASE_URL}/plants`);

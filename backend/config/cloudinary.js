@@ -91,6 +91,17 @@ const uploadConfig = {
         allowed_formats: ['jpg', 'jpeg', 'png', 'webp', 'gif'],
         resource_type: 'image'
     },
+    // Community post images configuration
+    community: {
+        folder: 'zoo-bulusan/community-posts',
+        transformation: [
+            { width: 1400, height: 1400, crop: 'limit' },
+            { quality: 'auto:good' },
+            { fetch_format: 'auto' }
+        ],
+        allowed_formats: ['jpg', 'jpeg', 'png', 'webp', 'gif'],
+        resource_type: 'image'
+    },
     // General images configuration (fallback)
     general: {
         folder: 'zoo-bulusan/uploads',

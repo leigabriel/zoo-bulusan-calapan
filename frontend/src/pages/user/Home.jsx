@@ -35,7 +35,7 @@ const Home = () => {
                         <FloraSection />
                     </div>
 
-                    <div className="relative z-50 w-full bg-[#ebebeb] shadow-[0_-15px_40px_rgba(0,0,0,0.15)]">
+                    <div className="relative z-50 w-full shadow-[0_-15px_40px_rgba(0,0,0,0.15)]">
                         <EventsSection />
                         <FaqSection />
                         <PricingSection />

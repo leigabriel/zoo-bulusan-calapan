@@ -3,14 +3,14 @@ import { Link } from 'react-router-dom';
 
 const WildlifeSection = () => {
     return (
-        <section id="animal" className="relative w-full h-full box-border bg-transparent">
+        <section id="animal" className="relative w-full h-auto min-h-screen box-border bg-transparent overflow-hidden">
             <img
                 src="/animal.png"
                 alt="Animal Folder Background"
                 className="absolute inset-0 w-full h-full object-fill z-0 pointer-events-none"
             />
 
-            <div className="relative z-10 w-full h-full flex flex-col overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] max-w-[1800px] mx-auto px-5 sm:px-8 md:px-12 lg:px-16 pt-28 sm:pt-32 md:pt-40 pb-16 text-[#2C3930]">
+            <div className="relative z-10 w-full h-auto flex flex-col max-w-[1800px] mx-auto px-5 sm:px-8 md:px-12 lg:px-16 pt-28 sm:pt-32 md:pt-40 pb-16 text-[#2C3930]">
                 <div className="flex flex-row justify-between items-end pb-3 border-b border-dotted border-[#2C3930] w-full gap-4">
                     <span className="text-[10px] md:text-xs uppercase tracking-widest font-bold">
                         Featured Wildlife 01

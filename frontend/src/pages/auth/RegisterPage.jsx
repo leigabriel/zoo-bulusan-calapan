@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-do
 import { useAuth } from '../../context/AuthContext';
 import { authAPI, messageAPI } from '../../services/api-client';
 import { sanitizeInput, sanitizeEmail } from '../../utils/sanitize';
+import { notify } from '../../utils/toast';
 import AuthSuccessModal from '../../components/common/AuthSuccessModal';
 
 const EyeIcon = () => (
@@ -430,6 +431,7 @@ const RegisterPage = () => {
 
         if (validationErrors.length > 0) {
             setErrors(validationErrors);
+            notify.warning(validationErrors[0] || 'Please check your form details.');
             return;
         }
 
@@ -448,6 +450,7 @@ const RegisterPage = () => {
                 if (response.requiresVerification) {
                     setRegisteredEmail(formData.email.trim().toLowerCase());
                     setShowVerificationModal(true);
+                    notify.success('Registration successful. Please verify your email.');
                     setFormData({
                         firstName: '',
                         lastName: '',
@@ -459,6 +462,7 @@ const RegisterPage = () => {
                 } else {
                     // Show success modal for immediate registration without email verification
                     setShowSuccessModal(true);
+                    notify.success('Account created successfully.');
                     setFormData({
                         firstName: '',
                         lastName: '',
@@ -469,10 +473,14 @@ const RegisterPage = () => {
                     });
                 }
             } else {
-                setErrors([response.message || 'Registration failed']);
+                const message = response.message || 'Registration failed';
+                setErrors([message]);
+                notify.error(message);
             }
         } catch (err) {
-            setErrors([err.message || 'An error occurred during registration']);
+            const message = err.message || 'An error occurred during registration';
+            setErrors([message]);
+            notify.error(message);
         } finally {
             setLoading(false);
         }

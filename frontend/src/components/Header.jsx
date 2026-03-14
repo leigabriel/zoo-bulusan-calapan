@@ -34,6 +34,7 @@ const NAV_LINKS = [
     { path: '/animals', label: 'Animals', iconUrl: ICONS.animals },
     { path: '/plants', label: 'Plants', iconUrl: ICONS.plants },
     { path: '/events', label: 'Events', iconUrl: ICONS.events },
+    { path: '/community', label: 'Community', iconUrl: ICONS.messages },
     { path: '/about', label: 'About', iconUrl: ICONS.about },
 ];
 
