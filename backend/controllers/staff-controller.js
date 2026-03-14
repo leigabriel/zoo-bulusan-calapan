@@ -457,7 +457,8 @@ exports.getTodayTickets = async (req, res) => {
 // Get dashboard notifications
 exports.getNotifications = async (req, res) => {
     try {
-        const result = await Notification.generateDashboardNotifications();
+        const userId = req.user?.id || null;
+        const result = await Notification.generateDashboardNotifications(userId);
         res.json({
             success: true,
             notifications: result.notifications,

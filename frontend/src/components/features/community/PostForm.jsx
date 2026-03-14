@@ -4,7 +4,7 @@ import { notify } from '../../../utils/toast';
 const MAX_SIZE = 5 * 1024 * 1024;
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 
-const PostForm = ({ onSubmit, loading, initialPost = null, onCancelEdit }) => {
+const PostForm = ({ onSubmit, loading, initialPost = null, onCancelEdit, onBeforeSubmit }) => {
     const [content, setContent] = useState('');
     const [imageFile, setImageFile] = useState(null);
     const [previewUrl, setPreviewUrl] = useState('');
@@ -56,6 +56,14 @@ const PostForm = ({ onSubmit, loading, initialPost = null, onCancelEdit }) => {
         if (!cleanContent) {
             notify.warning('Please write something before posting.');
             return;
+        }
+
+        if (onBeforeSubmit) {
+            const confirmed = await onBeforeSubmit({
+                action: initialPost ? 'update' : 'create',
+                content: cleanContent
+            });
+            if (!confirmed) return;
         }
 
         await onSubmit({ content: cleanContent, imageFile, removeImage });

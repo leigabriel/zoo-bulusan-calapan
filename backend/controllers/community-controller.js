@@ -1,4 +1,5 @@
 const Community = require('../models/community-model');
+const Notification = require('../models/notification-model');
 const { deleteFromCloudinary, extractPublicId } = require('../middleware/cloudinary-upload');
 
 const sanitizeText = (value, maxLength = 2000) => {
@@ -12,9 +13,12 @@ const normalizePost = (post) => ({
     content: post.content,
     imageUrl: post.image_url,
     status: post.status,
+    moderationNote: post.moderation_note || null,
     createdAt: post.created_at,
     updatedAt: post.updated_at,
     commentCount: Number(post.comment_count || 0),
+    likeCount: Number(post.like_count || 0),
+    likedByViewer: Boolean(post.liked_by_viewer),
     author: {
         id: post.user_id,
         firstName: post.first_name,
@@ -27,11 +31,13 @@ const normalizePost = (post) => ({
 const normalizeComment = (comment) => ({
     id: comment.id,
     postId: comment.post_id,
+    parentCommentId: comment.parent_comment_id || null,
     userId: comment.user_id,
     commentText: comment.comment_text,
     isReported: Boolean(comment.is_reported),
     heartCount: Number(comment.heart_count || 0),
     heartedByViewer: Boolean(comment.hearted_by_viewer),
+    isHearted: Boolean(comment.hearted_by_viewer),
     createdAt: comment.created_at,
     updatedAt: comment.updated_at,
     author: {
@@ -42,6 +48,25 @@ const normalizeComment = (comment) => ({
         profileImage: comment.profile_image
     }
 });
+
+const createAdminStaffNotifications = async ({ title, message, type = 'community', link = '/admin/community-moderation' }) => {
+    try {
+        const userIds = await Community.getAdminAndStaffUserIds();
+        await Promise.all(
+            userIds.map((userId) =>
+                Notification.create({
+                    userId,
+                    title,
+                    message,
+                    type,
+                    link
+                })
+            )
+        );
+    } catch (error) {
+        console.error('Error creating admin/staff community notifications:', error);
+    }
+};
 
 exports.getPublicPosts = async (req, res) => {
     try {
@@ -74,6 +99,12 @@ exports.createPost = async (req, res) => {
             content,
             imageUrl,
             imagePublicId
+        });
+
+        await createAdminStaffNotifications({
+            title: 'New Community Post',
+            message: 'A new community post was submitted and is awaiting review.',
+            link: '/admin/community-moderation'
         });
 
         return res.status(201).json({
@@ -135,6 +166,12 @@ exports.updatePost = async (req, res) => {
         if (!updated) {
             return res.status(404).json({ success: false, message: 'Post not found.' });
         }
+
+        await createAdminStaffNotifications({
+            title: 'Community Post Updated',
+            message: 'A community post was updated and returned to moderation review.',
+            link: '/admin/community-moderation'
+        });
 
         return res.json({
             success: true,
@@ -207,9 +244,32 @@ exports.reviewPost = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Invalid moderation request.' });
         }
 
+        if (action === 'declined' && !moderationNote) {
+            return res.status(400).json({ success: false, message: 'Please provide a reason for declining this post.' });
+        }
+
+        const post = await Community.getPostByIdWithAuthor(postId);
+        if (!post) {
+            return res.status(404).json({ success: false, message: 'Post not found.' });
+        }
+
         const updated = await Community.moderatePost(postId, req.user.id, action, moderationNote || null);
         if (!updated) {
             return res.status(404).json({ success: false, message: 'Post not found.' });
+        }
+
+        try {
+            await Notification.create({
+                userId: post.user_id,
+                title: action === 'approved' ? 'Post Approved' : 'Post Declined',
+                message: action === 'approved'
+                    ? 'Your community post has been approved and is now visible to others.'
+                    : `Your community post was declined. Reason: ${moderationNote}`,
+                type: 'community',
+                link: '/community'
+            });
+        } catch (error) {
+            console.error('Error notifying post owner after moderation:', error);
         }
 
         return res.json({
@@ -246,6 +306,7 @@ exports.createComment = async (req, res) => {
         await Community.initializeTables();
         const postId = Number(req.params.postId);
         const commentText = sanitizeText(req.body.commentText, 1200);
+        const parentCommentId = req.body.parentCommentId ? Number(req.body.parentCommentId) : null;
 
         if (!postId || !commentText) {
             return res.status(400).json({ success: false, message: 'Please write a comment before posting.' });
@@ -256,11 +317,71 @@ exports.createComment = async (req, res) => {
             return res.status(404).json({ success: false, message: 'This post is not available for comments.' });
         }
 
-        const commentId = await Community.createComment({ postId, userId: req.user.id, commentText });
+        if (parentCommentId) {
+            const parentComment = await Community.getCommentById(parentCommentId);
+            if (!parentComment || parentComment.post_id !== postId) {
+                return res.status(400).json({ success: false, message: 'Invalid reply target.' });
+            }
+        }
+
+        const postWithAuthor = await Community.getPostByIdWithAuthor(postId);
+
+        const commentId = await Community.createComment({ postId, parentCommentId, userId: req.user.id, commentText });
+
+        await createAdminStaffNotifications({
+            title: 'New Community Comment',
+            message: 'A new comment was posted in the community.',
+            link: '/admin/community-moderation'
+        });
+
+        if (postWithAuthor && postWithAuthor.user_id !== req.user.id) {
+            try {
+                await Notification.create({
+                    userId: postWithAuthor.user_id,
+                    title: 'New Comment on Your Post',
+                    message: `${req.user.firstName || req.user.username || 'A user'} commented on your post.`,
+                    type: 'community',
+                    link: '/community'
+                });
+            } catch (error) {
+                console.error('Error creating user comment notification:', error);
+            }
+        }
+
         return res.status(201).json({ success: true, message: 'Comment added successfully.', commentId });
     } catch (error) {
         console.error('Error creating comment:', error);
         return res.status(500).json({ success: false, message: 'Could not add your comment right now.' });
+    }
+};
+
+exports.togglePostLike = async (req, res) => {
+    try {
+        await Community.initializeTables();
+        const postId = Number(req.params.postId);
+        if (!postId) {
+            return res.status(400).json({ success: false, message: 'Invalid like request.' });
+        }
+
+        const post = await Community.getPostById(postId);
+        if (!post) {
+            return res.status(404).json({ success: false, message: 'Post not found.' });
+        }
+
+        if (post.status !== 'approved') {
+            return res.status(403).json({ success: false, message: 'You can only like approved posts.' });
+        }
+
+        const result = await Community.togglePostLike(postId, req.user.id);
+        return res.json({
+            success: true,
+            liked: result.liked,
+            likeCount: result.likeCount,
+            message: result.liked ? 'Post liked.' : 'Like removed.'
+        });
+    } catch (error) {
+        console.error('Error toggling post like:', error);
+        return res.status(500).json({ success: false, message: 'Could not update the post like right now.' });
     }
 };
 
@@ -348,6 +469,13 @@ exports.reportComment = async (req, res) => {
         }
 
         await Community.reportComment({ commentId, userId: req.user.id, reason });
+
+        await createAdminStaffNotifications({
+            title: 'Community Comment Reported',
+            message: 'A comment was reported and needs review.',
+            link: '/admin/community-moderation'
+        });
+
         return res.json({ success: true, message: 'Thanks for reporting. We will review this comment.' });
     } catch (error) {
         console.error('Error reporting comment:', error);

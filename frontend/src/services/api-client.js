@@ -1130,6 +1130,29 @@ export const userAPI = {
             headers: getAuthHeaders('user')
         });
         return handleResponse(response);
+    },
+
+    getNotifications: async () => {
+        const response = await fetch(`${API_BASE_URL}/users/notifications`, {
+            headers: getAuthHeaders('user')
+        });
+        return handleResponse(response);
+    },
+
+    markNotificationRead: async (id) => {
+        const response = await fetch(`${API_BASE_URL}/users/notifications/${id}/read`, {
+            method: 'PUT',
+            headers: getAuthHeaders('user')
+        });
+        return handleResponse(response);
+    },
+
+    markAllNotificationsRead: async () => {
+        const response = await fetch(`${API_BASE_URL}/users/notifications/read-all`, {
+            method: 'PUT',
+            headers: getAuthHeaders('user')
+        });
+        return handleResponse(response);
     }
 };
 
@@ -1261,6 +1284,14 @@ export const communityAPI = {
         return handleResponse(response);
     },
 
+    togglePostLike: async (postId, type = 'user') => {
+        const response = await fetch(`${API_BASE_URL}/community/posts/${postId}/like`, {
+            method: 'POST',
+            headers: getAuthHeaders(type)
+        });
+        return handleResponse(response);
+    },
+
     getPendingPosts: async (type = 'admin') => {
         const response = await fetch(`${API_BASE_URL}/community/posts/pending`, {
             headers: getAuthHeaders(type)
@@ -1284,11 +1315,11 @@ export const communityAPI = {
         return handleResponse(response);
     },
 
-    createComment: async (postId, commentText, type = 'user') => {
+    createComment: async (postId, commentText, parentCommentId = null, type = 'user') => {
         const response = await fetch(`${API_BASE_URL}/community/posts/${postId}/comments`, {
             method: 'POST',
             headers: getAuthHeaders(type),
-            body: JSON.stringify({ commentText })
+            body: JSON.stringify({ commentText, parentCommentId })
         });
         return handleResponse(response);
     },

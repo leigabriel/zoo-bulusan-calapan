@@ -10,6 +10,7 @@ DROP TABLE IF EXISTS user_collections;
 DROP TABLE IF EXISTS staff_sessions;
 DROP TABLE IF EXISTS staff_activity_logs;
 DROP TABLE IF EXISTS community_comment_reports;
+DROP TABLE IF EXISTS community_post_likes;
 DROP TABLE IF EXISTS community_comment_hearts;
 DROP TABLE IF EXISTS community_comments;
 DROP TABLE IF EXISTS community_posts;
@@ -86,19 +87,35 @@ CREATE TABLE community_posts (
 CREATE TABLE community_comments (
     id INT PRIMARY KEY AUTO_INCREMENT,
     post_id INT NOT NULL,
+    parent_comment_id INT DEFAULT NULL,
     user_id INT NOT NULL,
     comment_text TEXT NOT NULL,
     is_reported BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX idx_community_comments_post (post_id),
+    INDEX idx_community_comments_parent (parent_comment_id),
     INDEX idx_community_comments_user (user_id),
     INDEX idx_community_comments_created_at (created_at),
     CONSTRAINT fk_community_comments_post FOREIGN KEY (post_id) REFERENCES community_posts(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT fk_community_comments_parent FOREIGN KEY (parent_comment_id) REFERENCES community_comments(id) ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT fk_community_comments_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- community hearts
+-- community post likes
+CREATE TABLE community_post_likes (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    post_id INT NOT NULL,
+    user_id INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_community_post_likes (post_id, user_id),
+    INDEX idx_community_post_likes_post (post_id),
+    INDEX idx_community_post_likes_user (user_id),
+    CONSTRAINT fk_community_post_likes_post FOREIGN KEY (post_id) REFERENCES community_posts(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT fk_community_post_likes_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- community comment hearts
 CREATE TABLE community_comment_hearts (
     id INT PRIMARY KEY AUTO_INCREMENT,
     comment_id INT NOT NULL,

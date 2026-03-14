@@ -206,8 +206,12 @@ class Notification {
             }
         }
 
-        // Combine and return notifications (database notifications first, then system)
-        const allNotifications = [...dbNotifications, ...systemNotifications];
+        const allNotifications = [...dbNotifications, ...systemNotifications]
+            .sort((a, b) => {
+                const left = a.created_at ? new Date(a.created_at).getTime() : 0;
+                const right = b.created_at ? new Date(b.created_at).getTime() : 0;
+                return right - left;
+            });
 
         return {
             notifications: allNotifications,

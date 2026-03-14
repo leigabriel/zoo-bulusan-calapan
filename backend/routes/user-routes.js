@@ -12,6 +12,9 @@ router.use(protect);
 
 router.get('/profile', userController.getProfile);
 router.put('/profile', userController.updateProfile);
+router.get('/notifications', userController.getNotifications);
+router.put('/notifications/:id/read', userController.markNotificationRead);
+router.put('/notifications/read-all', userController.markAllNotificationsRead);
 
 // Ticket routes
 router.post('/tickets/purchase', userController.purchaseTicket);

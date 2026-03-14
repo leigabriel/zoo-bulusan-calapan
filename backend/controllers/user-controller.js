@@ -102,6 +102,49 @@ exports.updateProfile = async (req, res) => {
     }
 };
 
+exports.getNotifications = async (req, res) => {
+    try {
+        const notifications = await Notification.getByUserId(req.user.id, 50);
+        res.json({
+            success: true,
+            notifications: notifications.map((notification) => ({
+                id: notification.id,
+                title: notification.title,
+                message: notification.message,
+                type: notification.type,
+                read: Boolean(notification.is_read),
+                link: notification.link,
+                createdAt: notification.created_at,
+                time: Notification.formatTime(notification.created_at)
+            }))
+        });
+    } catch (error) {
+        console.error('Error getting user notifications:', error);
+        res.status(500).json({ success: false, message: 'Error fetching notifications' });
+    }
+};
+
+exports.markNotificationRead = async (req, res) => {
+    try {
+        const { id } = req.params;
+        await Notification.markAsRead(id, req.user.id);
+        res.json({ success: true, message: 'Notification marked as read' });
+    } catch (error) {
+        console.error('Error marking user notification as read:', error);
+        res.status(500).json({ success: false, message: 'Error updating notification' });
+    }
+};
+
+exports.markAllNotificationsRead = async (req, res) => {
+    try {
+        await Notification.markAllAsRead(req.user.id);
+        res.json({ success: true, message: 'All notifications marked as read' });
+    } catch (error) {
+        console.error('Error marking all user notifications as read:', error);
+        res.status(500).json({ success: false, message: 'Error updating notifications' });
+    }
+};
+
 exports.getAnimals = async (req, res) => {
     try {
         const animals = await Animal.getAll();

@@ -6,7 +6,8 @@ import PostForm from '../../components/features/community/PostForm';
 import PostFeed from '../../components/features/community/PostFeed';
 import PublicUserProfile from './PublicUserProfile';
 import CommentSection from '../../components/features/community/CommentSection';
-import { communityAPI } from '../../services/api-client';
+import ConfirmationModal from '../../components/common/ConfirmationModal';
+import { communityAPI, getProfileImageUrl } from '../../services/api-client';
 import { useAuth } from '../../context/AuthContext';
 import { notify } from '../../utils/toast';
 
@@ -18,6 +19,46 @@ const CommunityPage = () => {
     const [editingPost, setEditingPost] = useState(null);
     const [selectedUserId, setSelectedUserId] = useState(null);
     const [selectedPost, setSelectedPost] = useState(null);
+    const [confirmState, setConfirmState] = useState({
+        isOpen: false,
+        title: '',
+        message: '',
+        confirmLabel: 'Confirm',
+        cancelLabel: 'Cancel',
+        danger: false
+    });
+
+    const openConfirmation = ({
+        title,
+        message,
+        confirmLabel = 'Confirm',
+        cancelLabel = 'Cancel',
+        danger = false
+    }) => new Promise((resolve) => {
+        setConfirmState({
+            isOpen: true,
+            title,
+            message,
+            confirmLabel,
+            cancelLabel,
+            danger,
+            resolve
+        });
+    });
+
+    const closeConfirmation = (confirmed) => {
+        if (typeof confirmState.resolve === 'function') {
+            confirmState.resolve(Boolean(confirmed));
+        }
+        setConfirmState({
+            isOpen: false,
+            title: '',
+            message: '',
+            confirmLabel: 'Confirm',
+            cancelLabel: 'Cancel',
+            danger: false
+        });
+    };
 
     const loadPosts = async () => {
         setLoadingPosts(true);
@@ -34,6 +75,30 @@ const CommunityPage = () => {
     useEffect(() => {
         loadPosts();
     }, []);
+
+    const confirmPostSubmit = async ({ action }) => {
+        const isUpdate = action === 'update';
+        return openConfirmation({
+            title: isUpdate ? 'Update This Post?' : 'Publish This Post?',
+            message: isUpdate
+                ? 'Your post update will be submitted and returned to moderation review.'
+                : 'Your post will be submitted for moderation before it becomes visible to others.',
+            confirmLabel: isUpdate ? 'Update Post' : 'Publish Post'
+        });
+    };
+
+    const confirmPostDelete = async () => {
+        return openConfirmation({
+            title: 'Delete This Post?',
+            message: 'This action cannot be undone.',
+            confirmLabel: 'Delete Post',
+            danger: true
+        });
+    };
+
+    const confirmCommentAction = async ({ title, message, confirmLabel, danger = false }) => {
+        return openConfirmation({ title, message, confirmLabel, danger });
+    };
 
     const createOrUpdatePost = async ({ content, imageFile, removeImage }) => {
         setSavingPost(true);
@@ -111,6 +176,7 @@ const CommunityPage = () => {
                                     loading={savingPost}
                                     initialPost={editingPost}
                                     onCancelEdit={() => setEditingPost(null)}
+                                    onBeforeSubmit={confirmPostSubmit}
                                 />
                             </div>
                         </div>
@@ -133,6 +199,7 @@ const CommunityPage = () => {
                                         onEditPost={setEditingPost}
                                         onUserClick={setSelectedUserId}
                                         onPostClick={setSelectedPost}
+                                        onConfirmDelete={confirmPostDelete}
                                     />
                                 )}
                             </div>
@@ -218,7 +285,7 @@ const CommunityPage = () => {
                                             setSelectedPost(null);
                                         }}>
                                         <img
-                                            src={selectedPost.author.profileImage || 'https://via.placeholder.com/64x64?text=U'}
+                                            src={getProfileImageUrl(selectedPost.author.profileImage) || 'https://via.placeholder.com/64x64?text=U'}
                                             alt="author"
                                             className="w-12 h-12 rounded-none object-cover grayscale group-hover:grayscale-0 transition-all border border-white/30"
                                         />
@@ -248,6 +315,7 @@ const CommunityPage = () => {
                                             postId={selectedPost.id}
                                             currentUser={user}
                                             refreshTrigger={0}
+                                            onRequireConfirmation={confirmCommentAction}
                                         />
                                     </div>
                                 </div>
@@ -255,6 +323,17 @@ const CommunityPage = () => {
                         </div>
                     )}
                 </AnimatePresence>
+
+                <ConfirmationModal
+                    isOpen={confirmState.isOpen}
+                    title={confirmState.title}
+                    message={confirmState.message}
+                    confirmLabel={confirmState.confirmLabel}
+                    cancelLabel={confirmState.cancelLabel}
+                    danger={confirmState.danger}
+                    onConfirm={() => closeConfirmation(true)}
+                    onClose={() => closeConfirmation(false)}
+                />
             </div>
         </ReactLenis>
     );

@@ -189,11 +189,24 @@ const Header = () => {
         if (showLoading) setNotificationLoading(true);
         try {
             const notifs = [];
-            const [eventsRes, messagesRes, reservationsRes] = await Promise.all([
+            const [eventsRes, messagesRes, reservationsRes, dbNotificationsRes] = await Promise.all([
                 userAPI.getEvents(false).catch(() => ({ success: false })),
                 messageAPI.getMyMessages().catch(() => ({ success: false })),
                 reservationAPI.getMyTicketReservations().catch(() => ({ success: false })),
+                userAPI.getNotifications().catch(() => ({ success: false }))
             ]);
+
+            if (dbNotificationsRes?.success && Array.isArray(dbNotificationsRes.notifications)) {
+                dbNotificationsRes.notifications.forEach((notification) => notifs.push({
+                    id: notification.id,
+                    type: notification.type || 'message',
+                    title: notification.title || 'Notification',
+                    message: notification.message,
+                    time: notification.createdAt,
+                    path: notification.link || null,
+                    read: Boolean(notification.read)
+                }));
+            }
             if (eventsRes?.success && eventsRes.events) {
                 const today = new Date();
                 today.setHours(0, 0, 0, 0);
@@ -228,6 +241,12 @@ const Header = () => {
             }
             notifs.sort((a, b) => new Date(b.time) - new Date(a.time));
             setNotifications(notifs);
+            setReadNotificationIds((prev) => {
+                const serverReadIds = notifs
+                    .filter((notification) => notification.read)
+                    .map((notification) => notification.id);
+                return [...new Set([...prev, ...serverReadIds])];
+            });
         } catch (err) {
         } finally {
             setNotificationLoading(false);
@@ -253,19 +272,31 @@ const Header = () => {
 
     const unreadCount = notifications.filter(n => !readNotificationIds.includes(n.id)).length;
 
-    const markNotificationRead = (notificationId) => {
+    const markNotificationRead = async (notificationId) => {
         if (!readNotificationIds.includes(notificationId)) {
             setReadNotificationIds(prev => [...prev, notificationId]);
         }
+
+        if (typeof notificationId === 'number') {
+            try {
+                await userAPI.markNotificationRead(notificationId);
+            } catch {
+            }
+        }
     };
 
-    const markAllNotificationsRead = () => {
+    const markAllNotificationsRead = async () => {
         const allIds = notifications.map(n => n.id);
         setReadNotificationIds(prev => [...new Set([...prev, ...allIds])]);
+
+        try {
+            await userAPI.markAllNotificationsRead();
+        } catch {
+        }
     };
 
-    const handleNotificationClick = (notif) => {
-        markNotificationRead(notif.id);
+    const handleNotificationClick = async (notif) => {
+        await markNotificationRead(notif.id);
         setShowNotificationPanel(false);
         if (notif.action === 'openReservationHistory') {
             setShowHistoryPanel(true);

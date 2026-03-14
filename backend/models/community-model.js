@@ -3,6 +3,78 @@ const db = require('../config/database');
 class Community {
     static initialized = false;
 
+    static async hasColumn(tableName, columnName) {
+        const [rows] = await db.query(
+            `SELECT 1
+             FROM INFORMATION_SCHEMA.COLUMNS
+             WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ?
+             LIMIT 1`,
+            [tableName, columnName]
+        );
+        return rows.length > 0;
+    }
+
+    static async hasIndex(tableName, indexName) {
+        const [rows] = await db.query(
+            `SHOW INDEX FROM ${tableName} WHERE Key_name = ?`,
+            [indexName]
+        );
+        return rows.length > 0;
+    }
+
+    static async hasConstraint(tableName, constraintName) {
+        const [rows] = await db.query(
+            `SELECT 1
+             FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS
+             WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND CONSTRAINT_NAME = ?
+             LIMIT 1`,
+            [tableName, constraintName]
+        );
+        return rows.length > 0;
+    }
+
+    static async ensureSchemaUpgrades() {
+        const hasParentCommentId = await Community.hasColumn('community_comments', 'parent_comment_id');
+        if (!hasParentCommentId) {
+            await db.query(
+                `ALTER TABLE community_comments
+                 ADD COLUMN parent_comment_id INT DEFAULT NULL AFTER post_id`
+            );
+        }
+
+        const hasParentCommentFk = await Community.hasConstraint('community_comments', 'fk_community_comments_parent');
+        if (!hasParentCommentFk) {
+            await db.query(
+                `ALTER TABLE community_comments
+                 ADD CONSTRAINT fk_community_comments_parent
+                 FOREIGN KEY (parent_comment_id) REFERENCES community_comments(id)
+                 ON DELETE CASCADE ON UPDATE CASCADE`
+            );
+        }
+
+        const hasParentCommentIdx = await Community.hasIndex('community_comments', 'idx_community_comments_parent');
+        if (!hasParentCommentIdx) {
+            await db.query(
+                `ALTER TABLE community_comments
+                 ADD INDEX idx_community_comments_parent (parent_comment_id)`
+            );
+        }
+
+        await db.query(`
+            CREATE TABLE IF NOT EXISTS community_post_likes (
+                id INT PRIMARY KEY AUTO_INCREMENT,
+                post_id INT NOT NULL,
+                user_id INT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE KEY uq_community_post_likes (post_id, user_id),
+                INDEX idx_community_post_likes_post (post_id),
+                INDEX idx_community_post_likes_user (user_id),
+                CONSTRAINT fk_community_post_likes_post FOREIGN KEY (post_id) REFERENCES community_posts(id) ON DELETE CASCADE ON UPDATE CASCADE,
+                CONSTRAINT fk_community_post_likes_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        `);
+    }
+
     static async initializeTables() {
         if (Community.initialized) return;
 
@@ -31,16 +103,33 @@ class Community {
             CREATE TABLE IF NOT EXISTS community_comments (
                 id INT PRIMARY KEY AUTO_INCREMENT,
                 post_id INT NOT NULL,
+                parent_comment_id INT DEFAULT NULL,
                 user_id INT NOT NULL,
                 comment_text TEXT NOT NULL,
                 is_reported BOOLEAN DEFAULT FALSE,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                 INDEX idx_community_comments_post (post_id),
+                INDEX idx_community_comments_parent (parent_comment_id),
                 INDEX idx_community_comments_user (user_id),
                 INDEX idx_community_comments_created_at (created_at),
                 CONSTRAINT fk_community_comments_post FOREIGN KEY (post_id) REFERENCES community_posts(id) ON DELETE CASCADE ON UPDATE CASCADE,
+                CONSTRAINT fk_community_comments_parent FOREIGN KEY (parent_comment_id) REFERENCES community_comments(id) ON DELETE CASCADE ON UPDATE CASCADE,
                 CONSTRAINT fk_community_comments_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        `);
+
+        await db.query(`
+            CREATE TABLE IF NOT EXISTS community_post_likes (
+                id INT PRIMARY KEY AUTO_INCREMENT,
+                post_id INT NOT NULL,
+                user_id INT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE KEY uq_community_post_likes (post_id, user_id),
+                INDEX idx_community_post_likes_post (post_id),
+                INDEX idx_community_post_likes_user (user_id),
+                CONSTRAINT fk_community_post_likes_post FOREIGN KEY (post_id) REFERENCES community_posts(id) ON DELETE CASCADE ON UPDATE CASCADE,
+                CONSTRAINT fk_community_post_likes_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
         `);
 
@@ -78,6 +167,7 @@ class Community {
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
         `);
 
+        await Community.ensureSchemaUpgrades();
         Community.initialized = true;
     }
 
@@ -103,26 +193,31 @@ class Community {
 
     static async getPublicPosts(viewerId = null) {
         const [rows] = await db.query(
-            `SELECT p.id, p.user_id, p.content, p.image_url, p.status, p.created_at, p.updated_at,
+            `SELECT p.id, p.user_id, p.content, p.image_url, p.status, p.moderation_note, p.created_at, p.updated_at,
                     u.first_name, u.last_name, u.username, u.profile_image,
-                    (SELECT COUNT(*) FROM community_comments c WHERE c.post_id = p.id) AS comment_count
+                (SELECT COUNT(*) FROM community_comments c WHERE c.post_id = p.id) AS comment_count,
+                (SELECT COUNT(*) FROM community_post_likes pl WHERE pl.post_id = p.id) AS like_count,
+                (SELECT COUNT(*) FROM community_post_likes pl WHERE pl.post_id = p.id AND pl.user_id = ?) AS liked_by_viewer
              FROM community_posts p
              JOIN users u ON p.user_id = u.id
              WHERE p.status = 'approved'
-             ORDER BY p.created_at DESC`
+             ORDER BY p.created_at DESC`,
+            [viewerId || 0]
         );
 
         if (!viewerId) return rows;
 
         const [ownRows] = await db.query(
-            `SELECT p.id, p.user_id, p.content, p.image_url, p.status, p.created_at, p.updated_at,
+            `SELECT p.id, p.user_id, p.content, p.image_url, p.status, p.moderation_note, p.created_at, p.updated_at,
                     u.first_name, u.last_name, u.username, u.profile_image,
-                    (SELECT COUNT(*) FROM community_comments c WHERE c.post_id = p.id) AS comment_count
+                    (SELECT COUNT(*) FROM community_comments c WHERE c.post_id = p.id) AS comment_count,
+                    (SELECT COUNT(*) FROM community_post_likes pl WHERE pl.post_id = p.id) AS like_count,
+                    (SELECT COUNT(*) FROM community_post_likes pl WHERE pl.post_id = p.id AND pl.user_id = ?) AS liked_by_viewer
              FROM community_posts p
              JOIN users u ON p.user_id = u.id
              WHERE p.user_id = ? AND p.status IN ('pending', 'declined')
              ORDER BY p.created_at DESC`,
-            [viewerId]
+            [viewerId, viewerId]
         );
 
         return [...ownRows, ...rows];
@@ -175,18 +270,18 @@ class Community {
         return result.affectedRows > 0;
     }
 
-    static async createComment({ postId, userId, commentText }) {
+    static async createComment({ postId, parentCommentId = null, userId, commentText }) {
         const [result] = await db.query(
-            `INSERT INTO community_comments (post_id, user_id, comment_text)
-             VALUES (?, ?, ?)`,
-            [postId, userId, commentText]
+            `INSERT INTO community_comments (post_id, parent_comment_id, user_id, comment_text)
+             VALUES (?, ?, ?, ?)`,
+            [postId, parentCommentId || null, userId, commentText]
         );
         return result.insertId;
     }
 
     static async getCommentsByPost(postId, viewerId = null) {
         const [rows] = await db.query(
-            `SELECT c.id, c.post_id, c.user_id, c.comment_text, c.is_reported, c.created_at, c.updated_at,
+                `SELECT c.id, c.post_id, c.parent_comment_id, c.user_id, c.comment_text, c.is_reported, c.created_at, c.updated_at,
                     u.first_name, u.last_name, u.username, u.profile_image,
                     COUNT(ch.id) AS heart_count,
                     MAX(CASE WHEN ch.user_id = ? THEN 1 ELSE 0 END) AS hearted_by_viewer
@@ -199,6 +294,56 @@ class Community {
             [viewerId || 0, postId]
         );
         return rows;
+    }
+
+    static async togglePostLike(postId, userId) {
+        const [existing] = await db.query(
+            'SELECT id FROM community_post_likes WHERE post_id = ? AND user_id = ?',
+            [postId, userId]
+        );
+
+        let liked;
+        if (existing.length > 0) {
+            await db.query(
+                'DELETE FROM community_post_likes WHERE post_id = ? AND user_id = ?',
+                [postId, userId]
+            );
+            liked = false;
+        } else {
+            await db.query(
+                'INSERT INTO community_post_likes (post_id, user_id) VALUES (?, ?)',
+                [postId, userId]
+            );
+            liked = true;
+        }
+
+        const [countRows] = await db.query(
+            'SELECT COUNT(*) AS count FROM community_post_likes WHERE post_id = ?',
+            [postId]
+        );
+
+        return { liked, likeCount: countRows[0]?.count || 0 };
+    }
+
+    static async getPostByIdWithAuthor(postId) {
+        const [rows] = await db.query(
+            `SELECT p.id, p.user_id, p.status,
+                    u.first_name, u.last_name
+             FROM community_posts p
+             JOIN users u ON u.id = p.user_id
+             WHERE p.id = ?`,
+            [postId]
+        );
+
+        return rows[0] || null;
+    }
+
+    static async getAdminAndStaffUserIds() {
+        const [rows] = await db.query(
+            `SELECT id FROM users WHERE role IN ('admin', 'staff')`
+        );
+
+        return rows.map((row) => row.id);
     }
 
     static async getCommentById(commentId) {

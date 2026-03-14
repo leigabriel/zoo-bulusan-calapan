@@ -10,6 +10,7 @@ router.get('/posts', communityController.getPublicPosts);
 router.post('/posts', handleCloudinaryImageUpload('community', 'postImage'), communityController.createPost);
 router.put('/posts/:postId', handleCloudinaryImageUpload('community', 'postImage'), communityController.updatePost);
 router.delete('/posts/:postId', communityController.deletePost);
+router.post('/posts/:postId/like', communityController.togglePostLike);
 
 router.get('/posts/pending', authorize('admin', 'staff'), communityController.getPendingPosts);
 router.patch('/posts/:postId/review', authorize('admin', 'staff'), communityController.reviewPost);

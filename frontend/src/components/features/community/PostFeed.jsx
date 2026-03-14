@@ -1,10 +1,24 @@
 import { communityAPI, getProfileImageUrl } from '../../../services/api-client';
 import { notify } from '../../../utils/toast';
 
-const PostFeed = ({ posts, currentUser, onRefresh, onEditPost, onUserClick, onPostClick }) => {
+const PostFeed = ({ posts, currentUser, onRefresh, onEditPost, onUserClick, onPostClick, onConfirmDelete }) => {
+
+    const togglePostLike = async (postId, e) => {
+        e.stopPropagation();
+        try {
+            await communityAPI.togglePostLike(postId, currentUser?.role || 'user');
+            onRefresh();
+        } catch {
+            notify.error('Could not update post likes right now.');
+        }
+    };
 
     const deletePost = async (postId, e) => {
         e.stopPropagation();
+        if (onConfirmDelete) {
+            const confirmed = await onConfirmDelete(postId);
+            if (!confirmed) return;
+        }
         try {
             await communityAPI.deletePost(postId, currentUser?.role || 'user');
             notify.success('Post deleted.');
@@ -33,6 +47,7 @@ const PostFeed = ({ posts, currentUser, onRefresh, onEditPost, onUserClick, onPo
         <div className="flex flex-col gap-6 md:gap-8">
             {posts.map((post) => {
                 const isOwner = post.userId === currentUser?.id;
+                const isApproved = post.status === 'approved';
 
                 return (
                     <article
@@ -57,6 +72,11 @@ const PostFeed = ({ posts, currentUser, onRefresh, onEditPost, onUserClick, onPo
                                     <p className="text-[9px] tracking-[0.18em] uppercase font-bold text-white/60">
                                         {new Date(post.createdAt).toLocaleString()}
                                     </p>
+                                    {isOwner && (
+                                        <p className={`text-[9px] tracking-[0.14em] uppercase font-black mt-1 ${isApproved ? 'text-emerald-100' : 'text-amber-100'}`}>
+                                            {isApproved ? 'Approved' : 'Pending Review'}
+                                        </p>
+                                    )}
                                 </div>
                             </div>
 
@@ -85,18 +105,32 @@ const PostFeed = ({ posts, currentUser, onRefresh, onEditPost, onUserClick, onPo
                         )}
 
                         <div className="flex items-center justify-between p-4 md:p-5 bg-[#26bc61] border-t border-white/20 mt-auto">
-                            <button
-                                className="flex items-center gap-2 text-[10px] tracking-[0.18em] uppercase font-bold text-white/70 hover:text-white transition-colors"
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    if (onPostClick) onPostClick(post);
-                                }}
-                            >
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
-                                </svg>
-                                {post.commentCount || 0} Comments
-                            </button>
+                            <div className="flex items-center gap-5">
+                                <button
+                                    className="flex items-center gap-2 text-[10px] tracking-[0.18em] uppercase font-bold text-white/70 hover:text-white transition-colors"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        if (onPostClick) onPostClick(post);
+                                    }}
+                                >
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                                    </svg>
+                                    {post.commentCount || 0} Comments
+                                </button>
+
+                                {isApproved && (
+                                    <button
+                                        onClick={(e) => togglePostLike(post.id, e)}
+                                        className={`flex items-center gap-1.5 text-[10px] tracking-[0.18em] uppercase font-bold transition-colors ${post.likedByViewer ? 'text-red-300' : 'text-white/70 hover:text-white'}`}
+                                    >
+                                        <svg className={`w-4 h-4 ${post.likedByViewer ? 'fill-red-300' : 'fill-none'}`} stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                                        </svg>
+                                        {post.likeCount || 0} Likes
+                                    </button>
+                                )}
+                            </div>
 
                             {isOwner && (
                                 <div className="flex gap-4">
