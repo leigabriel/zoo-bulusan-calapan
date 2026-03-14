@@ -7,6 +7,7 @@ import HeroSection from './home-section/HeroSection';
 import BulusanSection from './home-section/BulusanSection';
 import WildlifeSection from './home-section/WildlifeSection';
 import FloraSection from './home-section/FloraSection';
+import GameSection from './home-section/GameSection';
 import EventsSection from './home-section/EventsSection';
 import FaqSection from './home-section/FaqSection';
 import PricingSection from './home-section/PricingSection';
@@ -33,6 +34,10 @@ const Home = () => {
 
                     <div className="sticky top-0 z-40 flex flex-col h-[100svh] w-full">
                         <FloraSection />
+                    </div>
+
+                    <div className="relative z-40 flex flex-col w-full shadow-[0_-15px_40px_rgba(0,0,0,0.15)]">
+                        <GameSection />
                     </div>
 
                     <div className="relative z-50 w-full shadow-[0_-15px_40px_rgba(0,0,0,0.15)]">
