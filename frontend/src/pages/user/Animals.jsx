@@ -319,6 +319,10 @@ const Animals = () => {
 
     useEffect(() => { fetchAnimals(); }, [fetchAnimals]);
 
+    const scrollToGrid = () => {
+        document.getElementById('animals-grid')?.scrollIntoView({ behavior: 'smooth' });
+    };
+
     const rows = [];
     for (let i = 0; i < animals.length; i += 5) {
         rows.push({ group: animals.slice(i, i + 5), startIndex: i });
@@ -326,30 +330,52 @@ const Animals = () => {
 
     return (
         <ReactLenis root>
-            <div className="min-h-screen bg-[#ebebeb] flex flex-col text-[#212631]">
+            <div className="bg-[#ebebeb] text-[#212631] relative min-h-screen">
                 <Header />
 
-                <section className="pt-14 md:pt-20 w-full">
-                    <div className="flex items-center justify-between px-4 md:px-5 py-2.5 border-b border-[#212631]/10">
-                        <span className="text-[9px] tracking-[0.18em] uppercase font-bold text-[#212631]/32">
-                            Animals
+                {/* Sticky Intro Section (Updated to 80vh and perfectly centered) */}
+                <div className="sticky top-0 w-full h-[80vh] flex flex-col items-center justify-center overflow-hidden z-0">
+                    <div className="absolute inset-0 bg-[#26bc61]" />
+
+                    <div className="relative z-10 flex flex-col items-center justify-center text-center px-4 w-full max-w-5xl h-full">
+                        <span className="text-[10px] tracking-[0.3em] uppercase font-bold text-[#212631]/40 mb-6 md:mb-10">
+                            Zoo Bulusan Wildlife
                         </span>
-                        <span className="text-[9px] tracking-[0.18em] uppercase font-bold text-[#212631]/32">
-                            {!loading && animals.length > 0 ? `${animals.length} animals` : ''}
-                        </span>
+                        <h1 className="font-normal uppercase text-[#212631] leading-[0.85] tracking-tighter"
+                            style={{ fontSize: 'clamp(40px, 11vw, 130px)' }}>
+                            Meet Our Animals
+                        </h1>
+                        <p className="mt-8 md:mt-10 text-xs md:text-sm tracking-[0.1em] text-[#212631]/60 max-w-2xl font-semibold uppercase leading-relaxed mb-10">
+                            Discover the diverse species that call Zoo Bulusan home. Learn about their habitats, diets, and unique characteristics.
+                            {!loading && animals.length > 0 && (
+                                <span className="block mt-4 text-[#212631]/80 font-black">
+                                    CURRENTLY CARING FOR {animals.length} ANIMALS
+                                </span>
+                            )}
+                        </p>
+
+                        <button
+                            onClick={scrollToGrid}
+                            className="px-8 py-4 bg-[#212631] text-[#ebebeb] border border-[#212631] text-[10px] tracking-[0.2em] uppercase font-black hover:bg-transparent hover:text-[#212631] transition-colors duration-300"
+                        >
+                            Explore The Grid
+                        </button>
                     </div>
 
-                    <h1 className="font-normal uppercase text-[#212631] leading-[0.88] tracking-tighter px-4 md:px-5 pt-1.5 pb-2"
-                        style={{ fontSize: 'clamp(38px, 8vw, 108px)' }}>
-                        Meet Our Animals
-                    </h1>
+                    <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-3 opacity-60 cursor-pointer hover:opacity-100 transition-opacity" onClick={scrollToGrid}>
+                        <span className="text-[9px] tracking-[0.2em] uppercase font-bold text-[#212631]">Scroll</span>
+                        <motion.div
+                            animate={{ y: [0, 8, 0] }}
+                            transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
+                            className="w-[1px] h-12 bg-gradient-to-b from-[#212631] to-transparent"
+                        />
+                    </div>
+                </div>
 
-                    <div className="h-px bg-[#212631]/10" />
-                </section>
-
-                <main className="flex-1">
+                {/* Main Animal Grid Section */}
+                <main id="animals-grid" className="relative z-10 w-full bg-[#ebebeb] border-t border-[#212631]/10 min-h-screen">
                     {loading && (
-                        <div className="flex items-center justify-center py-32">
+                        <div className="flex items-center justify-center py-40">
                             <motion.div
                                 className="w-5 h-5 rounded-full border-[1.5px] border-[#212631]/15 border-t-[#212631]"
                                 animate={{ rotate: 360 }}
@@ -359,7 +385,7 @@ const Animals = () => {
                     )}
 
                     {!loading && error && (
-                        <div className="flex flex-col items-center gap-3 py-24 px-6">
+                        <div className="flex flex-col items-center gap-3 py-32 px-6">
                             <p className="text-[10px] tracking-widest uppercase font-bold text-[#212631]/35">{error}</p>
                             <button
                                 onClick={fetchAnimals}
@@ -371,7 +397,7 @@ const Animals = () => {
                     )}
 
                     {!loading && !error && animals.length === 0 && (
-                        <p className="text-center py-28 font-black uppercase tracking-tighter text-[#212631]/6"
+                        <p className="text-center py-40 font-black uppercase tracking-tighter text-[#212631]/6"
                             style={{ fontSize: 'clamp(32px, 5vw, 56px)' }}>
                             No animals available
                         </p>
@@ -391,7 +417,7 @@ const Animals = () => {
                                 ))}
                             </div>
 
-                            <div className="md:hidden grid grid-cols-2 border-l border-t border-[#212631]/10">
+                            <div className="md:hidden grid grid-cols-2">
                                 {animals.map((animal, idx) => (
                                     <MobileCell
                                         key={animal.id}
@@ -403,6 +429,9 @@ const Animals = () => {
                             </div>
                         </>
                     )}
+
+                    {/* Added a bottom padding/footer spacer to match the clean design */}
+                    <div className="h-20 bg-[#ebebeb] border-t border-[#212631]/10"></div>
                 </main>
 
                 <AnimatePresence>
@@ -414,6 +443,7 @@ const Animals = () => {
                         />
                     )}
                 </AnimatePresence>
+
                 <AIFloatingButton />
             </div>
         </ReactLenis>

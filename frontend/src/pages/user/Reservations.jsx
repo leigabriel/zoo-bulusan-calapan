@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 import { ReactLenis } from 'lenis/react';
+import { motion, AnimatePresence } from 'framer-motion';
 import AIFloatingButton from '../../components/common/AIFloatingButton';
 import ReservationHistoryPanel from '../../components/features/ReservationHistoryPanel';
 import { useAuth } from '../../hooks/use-auth';
@@ -22,39 +23,23 @@ const Icons = {
         </svg>
     ),
     Close: () => (
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
             <path fillRule="evenodd" d="M5.47 5.47a.75.75 0 011.06 0L12 10.94l5.47-5.47a.75.75 0 111.06 1.06L13.06 12l5.47 5.47a.75.75 0 11-1.06 1.06L12 13.06l-5.47 5.47a.75.75 0 01-1.06-1.06L10.94 12 5.47 6.53a.75.75 0 010-1.06z" clipRule="evenodd" />
         </svg>
     ),
     Check: () => (
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-8 h-8">
             <path fillRule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clipRule="evenodd" />
         </svg>
     ),
     Plus: () => (
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
             <path fillRule="evenodd" d="M12 3.75a.75.75 0 01.75.75v6.75h6.75a.75.75 0 010 1.5h-6.75v6.75a.75.75 0 01-1.5 0v-6.75H4.5a.75.75 0 010-1.5h6.75V4.5a.75.75 0 01.75-.75z" clipRule="evenodd" />
         </svg>
     ),
     Minus: () => (
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
             <path fillRule="evenodd" d="M4.5 12a.75.75 0 01.75-.75h13.5a.75.75 0 010 1.5H5.25a.75.75 0 01-.75-.75z" clipRule="evenodd" />
-        </svg>
-    ),
-    User: () => (
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
-            <path fillRule="evenodd" d="M7.5 6a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM3.751 20.105a8.25 8.25 0 0116.498 0 .75.75 0 01-.437.695A18.683 18.683 0 0112 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 01-.437-.695z" clipRule="evenodd" />
-        </svg>
-    ),
-    Child: () => (
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
-            <path d="M11.645 20.91l-.007-.003-.022-.012a15.247 15.247 0 01-.383-.218 25.18 25.18 0 01-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0112 5.052 5.5 5.5 0 0116.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 01-4.244 3.17 15.247 15.247 0 01-.383.219l-.022.012-.007.004-.003.001a.752.752 0 01-.704 0l-.003-.001z" />
-        </svg>
-    ),
-    Home: () => (
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
-            <path d="M11.47 3.84a.75.75 0 011.06 0l8.69 8.69a.75.75 0 101.06-1.06l-8.689-8.69a2.25 2.25 0 00-3.182 0l-8.69 8.69a.75.75 0 001.061 1.06l8.69-8.69z" />
-            <path d="M12 5.432l8.159 8.159c.03.03.06.058.091.086v6.198c0 1.035-.84 1.875-1.875 1.875H15a.75.75 0 01-.75-.75v-4.5a.75.75 0 00-.75-.75h-3a.75.75 0 00-.75.75V21a.75.75 0 01-.75.75H5.625a1.875 1.875 0 01-1.875-1.875v-6.198a2.29 2.29 0 00.091-.086L12 5.43z" />
         </svg>
     ),
     Upload: () => (
@@ -63,7 +48,7 @@ const Icons = {
         </svg>
     ),
     History: () => (
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
             <path fillRule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25zM12.75 6a.75.75 0 00-1.5 0v6c0 .414.336.75.75.75h4.5a.75.75 0 000-1.5h-3.75V6z" clipRule="evenodd" />
         </svg>
     ),
@@ -71,13 +56,18 @@ const Icons = {
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
             <path fillRule="evenodd" d="M12.97 3.97a.75.75 0 011.06 0l7.5 7.5a.75.75 0 010 1.06l-7.5 7.5a.75.75 0 11-1.06-1.06l6.22-6.22H3a.75.75 0 010-1.5h16.19l-6.22-6.22a.75.75 0 010-1.06z" clipRule="evenodd" />
         </svg>
+    ),
+    Warning: () => (
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-8 h-8 text-[#212631]">
+            <path fillRule="evenodd" d="M9.401 3.003c1.155-2 4.043-2 5.197 0l7.355 12.748c1.154 2-.29 4.5-2.599 4.5H4.645c-2.309 0-3.752-2.5-2.598-4.5L9.4 3.003zM12 8.25a.75.75 0 01.75.75v3.75a.75.75 0 01-1.5 0V9a.75.75 0 01.75-.75zm0 8.25a.75.75 0 100-1.5.75.75 0 000 1.5z" clipRule="evenodd" />
+        </svg>
     )
 };
 
 const TICKET_TYPES = {
-    adult: { name: 'Adult Ticket', description: 'Ages 18 and above', price: 40, color: 'bg-emerald-500' },
-    child: { name: 'Child Ticket', description: 'Ages 4-17', price: 20, color: 'bg-blue-500' },
-    bulusan_resident: { name: 'Bulusan Resident', description: 'Free with valid ID', price: 0, color: 'bg-teal-500' }
+    adult: { name: 'Adult Ticket', description: 'Ages 18 and above', price: 40 },
+    child: { name: 'Child Ticket', description: 'Ages 4-17', price: 20 },
+    bulusan_resident: { name: 'Bulusan Resident', description: 'Free with valid ID', price: 0 }
 };
 
 const Reservations = () => {
@@ -97,6 +87,7 @@ const Reservations = () => {
     const [idUploadError, setIdUploadError] = useState('');
     const [eventForm, setEventForm] = useState({ venueEventName: '', venueEventDate: '', venueEventTime: '', venueEventDescription: '', numberOfParticipants: 1, participantName: '', participantEmail: '', participantPhone: '', notes: '' });
     const [showHistoryPanel, setShowHistoryPanel] = useState(false);
+
     // Confirmation modal states
     const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
     const [showCloseConfirm, setShowCloseConfirm] = useState(false);
@@ -120,13 +111,13 @@ const Reservations = () => {
     }, [user]);
 
     useEffect(() => {
-        if (showCreateModal || showConfirmation || showHistoryPanel) {
+        if (showCreateModal || showConfirmation || showHistoryPanel || showSubmitConfirm || showCloseConfirm) {
             document.body.style.overflow = 'hidden';
         } else {
             document.body.style.overflow = 'unset';
         }
         return () => { document.body.style.overflow = 'unset'; };
-    }, [showCreateModal, showConfirmation, showHistoryPanel]);
+    }, [showCreateModal, showConfirmation, showHistoryPanel, showSubmitConfirm, showCloseConfirm]);
 
     const fetchEvents = async () => {
         try {
@@ -263,9 +254,9 @@ const Reservations = () => {
 
     const hasFormData = () => {
         if (reservationType === 'ticket') {
-            return getTotalVisitors() > 0 || ticketForm.reservationDate || ticketForm.notes;
+            return getTotalVisitors() > 0 || ticketForm.reservationDate || ticketForm.notes || ticketForm.visitorPhone;
         } else {
-            return eventForm.venueEventName || eventForm.venueEventDate || eventForm.venueEventDescription;
+            return eventForm.venueEventName || eventForm.venueEventDate || eventForm.venueEventDescription || eventForm.participantPhone;
         }
     };
 
@@ -309,360 +300,450 @@ const Reservations = () => {
         return new Date(dateStr).toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' });
     };
 
+    const scrollToContent = () => {
+        document.getElementById('reservation-content')?.scrollIntoView({ behavior: 'smooth' });
+    };
+
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-white">
-                <div className="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+            <div className="min-h-screen flex items-center justify-center bg-[#ebebeb]">
+                <div className="w-12 h-12 border-[1.5px] border-[#212631]/15 border-t-[#212631] rounded-full animate-spin"></div>
             </div>
         );
     }
 
     return (
         <ReactLenis root>
-            <div className="min-h-screen bg-[#ebebeb] flex flex-col text-[#2A2A2A]">
+            <div className="bg-[#ebebeb] text-[#212631] relative min-h-screen">
                 <Header />
-                <section className="relative px-4 md:px-6 pt-24 pb-8 md:pt-40 md:pb-16 max-w-7xl mx-auto w-full">
-                    <div className="flex flex-col md:flex-row justify-between items-start gap-6">
-                        <div className="max-w-2xl text-left">
-                            <h1 className="text-3xl md:text-6xl lg:text-7xl font-bold uppercase leading-tight md:leading-[0.9] tracking-tighter mb-4 md:mb-6">Make a<br />Reservation</h1>
-                            <p className="text-sm md:text-lg font-medium opacity-80 max-w-md leading-relaxed">Book your zoo visit or reserve a spot at upcoming events.</p>
-                        </div>
-                    </div>
-                </section>
 
-                <div className="container mx-auto px-4 md:px-6 py-4 md:py-8 flex-grow">
-                    {!isAuthenticated ? (
-                        <div className="bg-white rounded-2xl p-8 md:p-12 text-center shadow-lg max-w-lg mx-auto">
-                            <div className="w-20 h-20 bg-emerald-100 rounded-2xl flex items-center justify-center mx-auto mb-6 text-emerald-600"><Icons.Ticket /></div>
-                            <h3 className="text-2xl font-bold mb-3">Sign in to make reservations</h3>
-                            <p className="text-gray-500 mb-8">You need to be logged in to create and manage your reservations.</p>
-                            <button onClick={() => navigate('/login')} className="inline-block px-10 py-4 bg-[#2A2A2A] text-white text-sm uppercase tracking-wider font-bold hover:bg-black transition-all rounded-xl">Sign In</button>
-                        </div>
-                    ) : (
-                        <div className="grid lg:grid-cols-2 gap-6 md:gap-8 max-w-6xl mx-auto">
-                            <div onClick={() => { setReservationType('ticket'); setShowCreateModal(true); }} className="group bg-white rounded-2xl p-6 md:p-8 shadow-sm hover:shadow-xl transition-all cursor-pointer border-2 border-transparent hover:border-emerald-500">
-                                <div className="flex items-start gap-4 mb-6">
-                                    <div className="w-14 h-14 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center text-white shrink-0"><Icons.Ticket /></div>
-                                    <div><h3 className="text-xl md:text-2xl font-bold mb-1">Zoo Visit Reservation</h3><p className="text-gray-500 text-sm">Book tickets for your zoo visit</p></div>
-                                </div>
-                                <div className="space-y-3 mb-6">
-                                    <div className="flex items-center gap-3 text-sm"><span className="w-3 h-3 bg-emerald-500 rounded-full"></span><span>Adult: ₱40</span></div>
-                                    <div className="flex items-center gap-3 text-sm"><span className="w-3 h-3 bg-blue-500 rounded-full"></span><span>Child (4-17): ₱20</span></div>
-                                    <div className="flex items-center gap-3 text-sm"><span className="w-3 h-3 bg-teal-500 rounded-full"></span><span>Bulusan Resident: FREE</span></div>
-                                </div>
-                                <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-                                    <span className="text-sm font-medium text-emerald-600">Create Reservation</span>
-                                    <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-600 group-hover:bg-emerald-500 group-hover:text-white transition-all"><Icons.ArrowRight /></div>
-                                </div>
-                            </div>
-                            <div onClick={() => { setReservationType('event'); setShowCreateModal(true); }} className="group bg-white rounded-2xl p-6 md:p-8 shadow-sm hover:shadow-xl transition-all cursor-pointer border-2 border-transparent hover:border-purple-500">
-                                <div className="flex items-start gap-4 mb-6">
-                                    <div className="w-14 h-14 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-2xl flex items-center justify-center text-white shrink-0"><Icons.Calendar /></div>
-                                    <div><h3 className="text-xl md:text-2xl font-bold mb-1">Event Reservation</h3><p className="text-gray-500 text-sm">Join upcoming zoo events</p></div>
-                                </div>
-                                <div className="space-y-3 mb-6">
-                                    <p className="text-sm text-gray-600">Reserve your spot for special events and programs.</p>
-                                    {events.length > 0 && <p className="text-sm font-medium text-purple-600">{events.length} upcoming event{events.length !== 1 ? 's' : ''} available</p>}
-                                </div>
-                                <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-                                    <span className="text-sm font-medium text-purple-600">Browse Events</span>
-                                    <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center text-purple-600 group-hover:bg-purple-500 group-hover:text-white transition-all"><Icons.ArrowRight /></div>
-                                </div>
-                            </div>
-                            <button onClick={() => setShowHistoryPanel(true)} className="lg:col-span-2 group bg-gradient-to-r from-gray-900 to-gray-800 rounded-2xl p-6 md:p-8 shadow-lg hover:shadow-2xl transition-all text-left">
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-4">
-                                        <div className="w-14 h-14 bg-white/10 rounded-2xl flex items-center justify-center text-white"><Icons.History /></div>
-                                        <div><h3 className="text-xl md:text-2xl font-bold text-white mb-1">Reservation History</h3><p className="text-gray-400 text-sm">View and manage your past reservations</p></div>
-                                    </div>
-                                    <div className="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center text-white group-hover:bg-white group-hover:text-gray-900 transition-all"><Icons.ArrowRight /></div>
-                                </div>
-                            </button>
-                        </div>
-                    )}
+                {/* Sticky Intro Section */}
+                <div className="sticky top-0 w-full h-[70vh] flex flex-col items-center justify-center overflow-hidden z-0 border-b border-[#212631]/10 bg-[#ebebeb]">
+                    <div className="relative z-10 flex flex-col items-center justify-center text-center px-4 w-full max-w-5xl h-full">
+                        <span className="text-[10px] tracking-[0.3em] uppercase font-bold text-[#212631]/40 mb-6 md:mb-10">
+                            Zoo Bulusan Admissions
+                        </span>
+                        <h1 className="font-normal uppercase text-[#212631] leading-[0.85] tracking-tighter"
+                            style={{ fontSize: 'clamp(40px, 10vw, 140px)' }}>
+                            Reservations
+                        </h1>
+                        <p className="mt-8 md:mt-10 text-xs md:text-sm tracking-[0.1em] text-[#212631]/60 max-w-2xl font-semibold uppercase leading-relaxed mb-10">
+                            Book your next adventure. Secure tickets for a daily visit or reserve a spot at our exclusive upcoming events.
+                        </p>
+
+                        <button
+                            onClick={scrollToContent}
+                            className="px-8 py-4 bg-[#212631] text-[#ebebeb] border border-[#212631] text-[10px] tracking-[0.2em] uppercase font-black hover:bg-transparent hover:text-[#212631] transition-colors duration-300 cursor-pointer"
+                        >
+                            Start Booking
+                        </button>
+                    </div>
                 </div>
 
-                {/* MODAL FORM REFACTORED */}
-                <div className={`fixed inset-0 z-[100] transition-all duration-300 flex items-center justify-center p-4 sm:p-6 ${showCreateModal ? 'bg-black/40 backdrop-blur-sm pointer-events-auto opacity-100' : 'bg-transparent pointer-events-none opacity-0'}`} onClick={handleCloseAttempt}>
-                    <div className={`w-full max-w-xl bg-[#F4F4F0] rounded-xl shadow-2xl flex flex-col max-h-full md:max-h-[90vh] transform transition-all duration-300 ease-out overflow-hidden ${showCreateModal ? 'scale-100 translate-y-0' : 'scale-95 translate-y-4'}`} onClick={(e) => e.stopPropagation()}>
-
-                        <div className="px-6 py-6 md:px-8 md:py-8 flex items-start justify-between shrink-0">
-                            <div>
-                                <h3 className="text-2xl font-normal text-gray-900 mb-2">
-                                    {reservationType === 'ticket' ? 'Schedule a visit' : 'Book an event'}
-                                </h3>
-                                <p className="text-sm text-gray-600 leading-relaxed max-w-[90%]">
-                                    Our team is here to answer your questions and arrange a {reservationType === 'ticket' ? 'tour of our spaces' : 'venue for your event'}.
-                                </p>
-                            </div>
-                            <button onClick={handleCloseAttempt} className="p-2 -mt-2 -mr-2 text-gray-400 hover:text-gray-900 transition-colors"><Icons.Close /></button>
+                <main id="reservation-content" className="relative z-10 w-full bg-[#26bc61] min-h-[80vh] flex flex-col items-center pt-20 pb-40 px-4 md:px-8 border-t border-white/20">
+                    {!isAuthenticated ? (
+                        <div className="w-full max-w-xl bg-transparent border border-white/20 p-12 md:p-16 flex flex-col items-center text-center">
+                            <span className="text-[10px] tracking-[0.18em] uppercase font-bold text-white/50 mb-6">Access Restricted</span>
+                            <h2 className="text-2xl md:text-4xl font-black uppercase tracking-tighter text-white mb-4">Account Required</h2>
+                            <p className="text-xs tracking-widest uppercase font-bold text-white/70 mb-10 leading-relaxed">
+                                Please authenticate to access the reservation system and manage your bookings.
+                            </p>
+                            <button onClick={() => navigate('/login')} className="px-10 py-4 bg-white text-[#26bc61] text-[10px] tracking-[0.18em] uppercase font-black hover:bg-transparent hover:text-white border border-white transition-colors w-full sm:w-auto cursor-pointer">
+                                Authenticate Now
+                            </button>
                         </div>
+                    ) : (
+                        <div className="w-full max-w-6xl grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
+                            {/* Ticket Reservation Card (Ticket Style) */}
+                            <div className="flex flex-col bg-[#ebebeb] text-[#212631] shadow-2xl cursor-pointer group hover:-translate-y-2 transition-transform duration-300 relative" onClick={() => { setReservationType('ticket'); setShowCreateModal(true); }}>
+                                {/* Decorative perforated edge effect */}
+                                <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-[#26bc61]"></div>
+                                <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-8 h-8 rounded-full bg-[#26bc61]"></div>
+                                <div className="absolute left-0 right-0 top-1/2 border-t-2 border-dashed border-[#212631]/20"></div>
 
-                        <div className="flex-1 overflow-y-auto px-6 md:px-8 pb-8 overscroll-contain">
-                            <form id="reservation-form" onSubmit={handleSubmitAttempt} className="space-y-6">
+                                <div className="p-8 md:p-10 flex flex-col items-center text-center z-10">
+                                    <div className="w-12 h-12 bg-[#212631] text-[#ebebeb] flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                                        <Icons.Ticket />
+                                    </div>
+                                    <span className="text-[10px] tracking-widest uppercase font-bold text-[#212631]/50 mb-2">Standard Pass</span>
+                                    <h3 className="text-2xl md:text-4xl font-black uppercase tracking-tighter text-[#212631] mb-2">Zoo Tickets</h3>
+                                    <p className="text-[9px] tracking-[0.18em] uppercase font-bold text-[#212631]/40">Admit One or More</p>
+                                </div>
+                                <div className="p-8 md:p-10 pt-4 flex-1 flex flex-col justify-between z-10">
+                                    <div className="flex flex-col gap-4 mb-8">
+                                        <div className="flex items-center justify-between border-b border-[#212631]/10 pb-2">
+                                            <span className="text-[10px] tracking-[0.18em] uppercase font-bold text-[#212631]">Adult</span>
+                                            <span className="text-sm font-black">₱40</span>
+                                        </div>
+                                        <div className="flex items-center justify-between border-b border-[#212631]/10 pb-2">
+                                            <span className="text-[10px] tracking-[0.18em] uppercase font-bold text-[#212631]">Child (4-17)</span>
+                                            <span className="text-sm font-black">₱20</span>
+                                        </div>
+                                        <div className="flex items-center justify-between border-b border-[#212631]/10 pb-2">
+                                            <span className="text-[10px] tracking-[0.18em] uppercase font-bold text-[#212631]">Resident</span>
+                                            <span className="text-sm font-black text-[#212631]/50">FREE</span>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center justify-center pt-6 mt-auto border-t border-[#212631]/10">
+                                        <span className="text-[10px] tracking-[0.18em] uppercase font-black text-[#212631] flex items-center gap-2 group-hover:tracking-[0.3em] transition-all">
+                                            Initiate Booking <Icons.ArrowRight />
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
 
-                                {/* Minimalist Tabs Switcher */}
-                                <div className="flex gap-6 border-b border-gray-200 mb-6">
-                                    <button type="button" onClick={() => setReservationType('ticket')} className={`pb-3 text-sm font-medium transition-colors relative ${reservationType === 'ticket' ? 'text-gray-900' : 'text-gray-400 hover:text-gray-600'}`}>
-                                        Tickets
-                                        {reservationType === 'ticket' && <span className="absolute bottom-0 left-0 w-full h-[2px] bg-gray-900"></span>}
-                                    </button>
-                                    <button type="button" onClick={() => setReservationType('event')} className={`pb-3 text-sm font-medium transition-colors relative ${reservationType === 'event' ? 'text-gray-900' : 'text-gray-400 hover:text-gray-600'}`}>
-                                        Venue
-                                        {reservationType === 'event' && <span className="absolute bottom-0 left-0 w-full h-[2px] bg-gray-900"></span>}
+                            {/* Event Reservation Card (Ticket Style) */}
+                            <div className="flex flex-col bg-[#ebebeb] text-[#212631] shadow-2xl cursor-pointer group hover:-translate-y-2 transition-transform duration-300 relative" onClick={() => { setReservationType('event'); setShowCreateModal(true); }}>
+                                {/* Decorative perforated edge effect */}
+                                <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-[#26bc61]"></div>
+                                <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-8 h-8 rounded-full bg-[#26bc61]"></div>
+                                <div className="absolute left-0 right-0 top-1/2 border-t-2 border-dashed border-[#212631]/20"></div>
+
+                                <div className="p-8 md:p-10 flex flex-col items-center text-center z-10">
+                                    <div className="w-12 h-12 bg-[#212631] text-[#ebebeb] flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                                        <Icons.Calendar />
+                                    </div>
+                                    <span className="text-[10px] tracking-widest uppercase font-bold text-[#212631]/50 mb-2">Exclusive Access</span>
+                                    <h3 className="text-2xl md:text-4xl font-black uppercase tracking-tighter text-[#212631] mb-2">Event Venue</h3>
+                                    <p className="text-[9px] tracking-[0.18em] uppercase font-bold text-[#212631]/40">Programs & Private Spots</p>
+                                </div>
+                                <div className="p-8 md:p-10 pt-4 flex-1 flex flex-col justify-between z-10">
+                                    <div className="flex flex-col gap-4 mb-8 text-center">
+                                        <p className="text-sm font-bold text-[#212631]/70 leading-relaxed px-4">
+                                            Reserve spaces for private events, educational tours, or participate in our seasonal programs.
+                                        </p>
+                                        <div className="mt-4 py-2 border-t border-b border-[#212631]/10 flex flex-col items-center justify-center">
+                                            <span className="text-[9px] tracking-[0.18em] uppercase font-bold text-[#212631]/40 mb-1">Status</span>
+                                            <span className="text-xs tracking-[0.2em] uppercase font-black text-green-600">Accepting Slots</span>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center justify-center pt-6 mt-auto border-t border-[#212631]/10">
+                                        <span className="text-[10px] tracking-[0.18em] uppercase font-black text-[#212631] flex items-center gap-2 group-hover:tracking-[0.3em] transition-all">
+                                            Select Schedule <Icons.ArrowRight />
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* History Banner */}
+                            <div onClick={() => setShowHistoryPanel(true)} className="md:col-span-2 border border-white/20 bg-transparent hover:bg-white text-white hover:text-[#26bc61] transition-colors duration-300 cursor-pointer flex items-center justify-between p-6 md:p-10 group">
+                                <div className="flex items-center gap-6">
+                                    <div className="w-12 h-12 border border-current flex items-center justify-center shrink-0">
+                                        <Icons.History />
+                                    </div>
+                                    <div className="flex flex-col">
+                                        <h3 className="text-xl md:text-2xl font-black uppercase tracking-tighter mb-1">Booking Ledger</h3>
+                                        <p className="text-[10px] tracking-widest uppercase font-bold opacity-70">View & Manage Past Reservations</p>
+                                    </div>
+                                </div>
+                                <div className="hidden sm:block opacity-50 group-hover:opacity-100 transition-opacity">
+                                    <Icons.ArrowRight />
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </main>
+
+                {/* Main Creation Modal */}
+                <AnimatePresence>
+                    {showCreateModal && (
+                        <div className="fixed inset-0 z-[200] flex items-center justify-center p-0 md:p-6" onClick={handleCloseAttempt}>
+                            <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                className="absolute inset-0 bg-[#212631]/80 backdrop-blur-md"
+                            />
+
+                            <motion.div
+                                initial={{ opacity: 0, y: 12 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: 12 }}
+                                transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
+                                className="relative z-10 flex flex-col bg-[#ebebeb] border border-[#212631]/10 w-full h-full md:h-auto md:max-w-3xl md:max-h-[85vh] overflow-hidden shadow-2xl"
+                                onClick={(e) => e.stopPropagation()}
+                            >
+                                <div className="flex items-center justify-between px-6 py-5 border-b border-[#212631]/10 shrink-0 bg-[#ebebeb]">
+                                    <span className="text-[10px] tracking-[0.2em] uppercase font-black text-[#212631]">
+                                        Reservation Form
+                                    </span>
+                                    <button
+                                        onClick={handleCloseAttempt}
+                                        className="w-8 h-8 flex items-center justify-center border border-[#212631]/20 text-[#212631] hover:bg-[#212631] hover:text-[#ebebeb] transition-colors cursor-pointer"
+                                        aria-label="Close form"
+                                    >
+                                        <Icons.Close />
                                     </button>
                                 </div>
 
-                                {reservationType === 'ticket' ? (
-                                    <div className="space-y-8">
-                                        <div className="space-y-2">
-                                            {Object.entries(TICKET_TYPES).map(([type, info]) => (
-                                                <div key={type} className="flex items-center justify-between py-3 border-b border-gray-200/60">
-                                                    <div>
-                                                        <p className="text-sm font-medium text-gray-900">{info.name}</p>
-                                                        <p className="text-xs text-gray-500 mt-0.5">{info.description}</p>
+                                <div className="grid grid-cols-2 border-b border-[#212631]/10 bg-[#ebebeb]">
+                                    <button
+                                        type="button"
+                                        onClick={() => setReservationType('ticket')}
+                                        className={`py-5 text-[10px] tracking-[0.2em] uppercase font-black border-r border-[#212631]/10 transition-colors ${reservationType === 'ticket' ? 'bg-[#212631] text-[#ebebeb]' : 'text-[#212631] hover:bg-[#212631]/5'}`}
+                                    >
+                                        Ticket Allocation
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setReservationType('event')}
+                                        className={`py-5 text-[10px] tracking-[0.2em] uppercase font-black transition-colors ${reservationType === 'event' ? 'bg-[#212631] text-[#ebebeb]' : 'text-[#212631] hover:bg-[#212631]/5'}`}
+                                    >
+                                        Venue Protocol
+                                    </button>
+                                </div>
+
+                                <div className="flex-1 overflow-y-auto p-6 md:p-10">
+                                    <form id="reservation-form" onSubmit={handleSubmitAttempt} className="flex flex-col w-full gap-10">
+                                        {reservationType === 'ticket' ? (
+                                            <>
+                                                {/* Ticket Counters Section */}
+                                                <div className="flex flex-col gap-0 border border-[#212631]/20 bg-[#ebebeb]">
+                                                    {Object.entries(TICKET_TYPES).map(([type, info], index) => (
+                                                        <div key={type} className={`flex flex-col sm:flex-row sm:items-center justify-between p-5 gap-4 ${index !== Object.keys(TICKET_TYPES).length - 1 ? 'border-b border-[#212631]/20' : ''}`}>
+                                                            <div className="flex flex-col">
+                                                                <span className="text-sm font-black uppercase tracking-tight text-[#212631]">{info.name}</span>
+                                                                <span className="text-[10px] tracking-[0.18em] uppercase font-bold text-[#212631]/50 mt-1">{info.description}</span>
+                                                            </div>
+                                                            <div className="flex items-center justify-between sm:justify-end gap-6 w-full sm:w-auto">
+                                                                <span className="text-sm font-black text-[#212631] w-12 text-left sm:text-right">{info.price === 0 ? 'FREE' : `₱${info.price}`}</span>
+                                                                <div className="flex items-center border border-[#212631]/20 bg-[#ebebeb]">
+                                                                    <button type="button" onClick={() => updateTicketCount(type, -1)} disabled={ticketCounts[type] === 0} className="w-10 h-10 flex items-center justify-center text-[#212631] hover:bg-[#212631]/10 disabled:opacity-30 disabled:hover:bg-transparent transition-colors cursor-pointer"><Icons.Minus /></button>
+                                                                    <span className="w-12 text-center text-sm font-bold border-l border-r border-[#212631]/20 leading-[40px]">{ticketCounts[type]}</span>
+                                                                    <button type="button" onClick={() => updateTicketCount(type, 1)} className="w-10 h-10 flex items-center justify-center text-[#212631] hover:bg-[#212631]/10 transition-colors cursor-pointer"><Icons.Plus /></button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+
+                                                {/* Bulusan Resident ID Upload */}
+                                                {ticketCounts.bulusan_resident > 0 && (
+                                                    <div className="flex flex-col gap-2">
+                                                        <label className="text-[9px] tracking-[0.2em] uppercase font-bold text-[#212631]">Proof of Residency Required *</label>
+                                                        <label className="flex flex-col items-center justify-center w-full min-h-[160px] border border-[#212631]/20 bg-[#ebebeb] cursor-pointer hover:bg-[#212631]/5 transition-colors relative overflow-hidden group">
+                                                            {residentIdPreview ? (
+                                                                <div className="w-full h-full relative flex items-center justify-center p-4">
+                                                                    <img src={residentIdPreview} alt="Preview" className="max-h-[200px] object-contain grayscale group-hover:grayscale-0 transition-all" />
+                                                                    <button type="button" onClick={(e) => { e.preventDefault(); setResidentIdImage(null); setResidentIdPreview(null); }} className="absolute top-3 right-3 bg-[#212631] text-[#ebebeb] w-8 h-8 flex items-center justify-center hover:bg-red-600 transition-colors z-10"><Icons.Close /></button>
+                                                                </div>
+                                                            ) : (
+                                                                <div className="flex flex-col items-center justify-center text-[#212631]/50 p-8 text-center">
+                                                                    <Icons.Upload />
+                                                                    <span className="text-[10px] tracking-widest uppercase font-black mt-3 text-[#212631]">Upload Valid ID</span>
+                                                                    <span className="text-[9px] tracking-[0.18em] uppercase font-bold mt-1 max-w-[200px]">JPG or PNG. Max 5MB.</span>
+                                                                </div>
+                                                            )}
+                                                            <input type="file" accept="image/*" className="hidden" onChange={handleResidentIdUpload} />
+                                                        </label>
+                                                        {idUploadError && <p className="text-[10px] tracking-widest uppercase font-bold text-red-600 mt-1">{idUploadError}</p>}
                                                     </div>
-                                                    <div className="flex items-center gap-6">
-                                                        <span className="text-sm text-gray-600">{info.price === 0 ? 'Free' : `₱${info.price}`}</span>
-                                                        <div className="flex items-center gap-4">
-                                                            <button type="button" onClick={() => updateTicketCount(type, -1)} disabled={ticketCounts[type] === 0} className="text-gray-400 hover:text-gray-900 disabled:opacity-30 transition-colors"><Icons.Minus /></button>
-                                                            <span className="w-5 text-center text-sm">{ticketCounts[type]}</span>
-                                                            <button type="button" onClick={() => updateTicketCount(type, 1)} className="text-gray-400 hover:text-gray-900 transition-colors"><Icons.Plus /></button>
+                                                )}
+
+                                                {/* Contact & Date Form */}
+                                                <div className="flex flex-col gap-5 border-t border-[#212631]/10 pt-8">
+                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                                                        <div className="flex flex-col gap-2">
+                                                            <label className="text-[9px] tracking-[0.2em] uppercase font-bold text-[#212631]">Primary Contact Name *</label>
+                                                            <input type="text" value={ticketForm.visitorName} onChange={e => setTicketForm({ ...ticketForm, visitorName: sanitizeInput(e.target.value) })} className="w-full bg-[#ebebeb] border border-[#212631]/20 p-4 text-sm font-semibold text-[#212631] focus:border-[#212631] outline-none transition-colors" required />
+                                                        </div>
+                                                        <div className="flex flex-col gap-2">
+                                                            <label className="text-[9px] tracking-[0.2em] uppercase font-bold text-[#212631]">Email Address *</label>
+                                                            <input type="email" value={ticketForm.visitorEmail} onChange={e => setTicketForm({ ...ticketForm, visitorEmail: sanitizeEmail(e.target.value) })} className="w-full bg-[#ebebeb] border border-[#212631]/20 p-4 text-sm font-semibold text-[#212631] focus:border-[#212631] outline-none transition-colors" required />
                                                         </div>
                                                     </div>
-                                                </div>
-                                            ))}
 
-                                            {ticketCounts.bulusan_resident > 0 && (
-                                                <div className="pt-4">
-                                                    <label className="flex flex-col items-center justify-center w-full h-24 border border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-black/5 transition-colors relative overflow-hidden">
-                                                        {residentIdPreview ? (
-                                                            <div className="w-full h-full relative flex items-center justify-center p-2 bg-white/50">
-                                                                <img src={residentIdPreview} alt="Preview" className="h-full object-contain" />
-                                                                <button type="button" onClick={(e) => { e.preventDefault(); setResidentIdImage(null); setResidentIdPreview(null); }} className="absolute top-2 right-2 bg-gray-900 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs">×</button>
-                                                            </div>
-                                                        ) : (
-                                                            <div className="flex flex-col items-center justify-center text-gray-500">
-                                                                <Icons.Upload />
-                                                                <span className="text-xs font-medium mt-2">Upload ID Proof</span>
-                                                            </div>
-                                                        )}
-                                                        <input type="file" accept="image/*" className="hidden" onChange={handleResidentIdUpload} />
-                                                    </label>
-                                                    {idUploadError && <p className="text-xs text-red-500 mt-2">{idUploadError}</p>}
+                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                                                        <div className="flex flex-col gap-2">
+                                                            <label className="text-[9px] tracking-[0.2em] uppercase font-bold text-[#212631]">Phone (Optional)</label>
+                                                            <input type="tel" value={ticketForm.visitorPhone} onChange={e => setTicketForm({ ...ticketForm, visitorPhone: sanitizePhone(e.target.value) })} className="w-full bg-[#ebebeb] border border-[#212631]/20 p-4 text-sm font-semibold text-[#212631] focus:border-[#212631] outline-none transition-colors" />
+                                                        </div>
+                                                        <div className="flex flex-col gap-2">
+                                                            <label className="text-[9px] tracking-[0.2em] uppercase font-bold text-[#212631]">Arrival Date *</label>
+                                                            <input type="date" value={ticketForm.reservationDate} onChange={e => setTicketForm({ ...ticketForm, reservationDate: e.target.value })} min={getMinDate()} max={getMaxDate()} className="w-full bg-[#ebebeb] border border-[#212631]/20 p-4 text-sm font-semibold text-[#212631] focus:border-[#212631] outline-none transition-colors uppercase tracking-wider h-[54px]" required />
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="flex flex-col gap-2">
+                                                        <label className="text-[9px] tracking-[0.2em] uppercase font-bold text-[#212631]">Special Requirements / Notes</label>
+                                                        <textarea value={ticketForm.notes} onChange={e => setTicketForm({ ...ticketForm, notes: sanitizeInput(e.target.value) })} className="w-full bg-[#ebebeb] border border-[#212631]/20 p-4 text-sm font-semibold text-[#212631] focus:border-[#212631] outline-none transition-colors resize-y min-h-[100px]" />
+                                                    </div>
+                                                </div>
+                                            </>
+                                        ) : (
+                                            <div className="flex flex-col gap-5 pt-2">
+                                                <div className="flex flex-col gap-2">
+                                                    <label className="text-[9px] tracking-[0.2em] uppercase font-bold text-[#212631]">Event Designation *</label>
+                                                    <input type="text" value={eventForm.venueEventName} onChange={e => setEventForm({ ...eventForm, venueEventName: sanitizeInput(e.target.value) })} className="w-full bg-[#ebebeb] border border-[#212631]/20 p-4 text-sm font-semibold text-[#212631] focus:border-[#212631] outline-none transition-colors" required />
+                                                </div>
+
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                                                    <div className="flex flex-col gap-2">
+                                                        <label className="text-[9px] tracking-[0.2em] uppercase font-bold text-[#212631]">Event Date *</label>
+                                                        <input type="date" value={eventForm.venueEventDate} onChange={e => setEventForm({ ...eventForm, venueEventDate: e.target.value })} min={getMinDate()} className="w-full bg-[#ebebeb] border border-[#212631]/20 p-4 text-sm font-semibold text-[#212631] focus:border-[#212631] outline-none transition-colors uppercase tracking-wider h-[54px]" required />
+                                                    </div>
+                                                    <div className="flex flex-col gap-2">
+                                                        <label className="text-[9px] tracking-[0.2em] uppercase font-bold text-[#212631]">Event Time</label>
+                                                        <input type="time" value={eventForm.venueEventTime} onChange={e => setEventForm({ ...eventForm, venueEventTime: e.target.value })} className="w-full bg-[#ebebeb] border border-[#212631]/20 p-4 text-sm font-semibold text-[#212631] focus:border-[#212631] outline-none transition-colors uppercase tracking-wider h-[54px]" />
+                                                    </div>
+                                                </div>
+
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                                                    <div className="flex flex-col gap-2">
+                                                        <label className="text-[9px] tracking-[0.2em] uppercase font-bold text-[#212631]">Headcount (Max 500) *</label>
+                                                        <input type="number" value={eventForm.numberOfParticipants} onChange={e => setEventForm({ ...eventForm, numberOfParticipants: e.target.value })} min="1" max="500" className="w-full bg-[#ebebeb] border border-[#212631]/20 p-4 text-sm font-semibold text-[#212631] focus:border-[#212631] outline-none transition-colors" required />
+                                                    </div>
+                                                    <div className="flex flex-col gap-2">
+                                                        <label className="text-[9px] tracking-[0.2em] uppercase font-bold text-[#212631]">Contact Phone</label>
+                                                        <input type="tel" value={eventForm.participantPhone} onChange={e => setEventForm({ ...eventForm, participantPhone: sanitizePhone(e.target.value) })} className="w-full bg-[#ebebeb] border border-[#212631]/20 p-4 text-sm font-semibold text-[#212631] focus:border-[#212631] outline-none transition-colors" />
+                                                    </div>
+                                                </div>
+
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                                                    <div className="flex flex-col gap-2">
+                                                        <label className="text-[9px] tracking-[0.2em] uppercase font-bold text-[#212631]">Organizer Name *</label>
+                                                        <input type="text" value={eventForm.participantName} onChange={e => setEventForm({ ...eventForm, participantName: sanitizeInput(e.target.value) })} className="w-full bg-[#ebebeb] border border-[#212631]/20 p-4 text-sm font-semibold text-[#212631] focus:border-[#212631] outline-none transition-colors" required />
+                                                    </div>
+                                                    <div className="flex flex-col gap-2">
+                                                        <label className="text-[9px] tracking-[0.2em] uppercase font-bold text-[#212631]">Organizer Email *</label>
+                                                        <input type="email" value={eventForm.participantEmail} onChange={e => setEventForm({ ...eventForm, participantEmail: sanitizeEmail(e.target.value) })} className="w-full bg-[#ebebeb] border border-[#212631]/20 p-4 text-sm font-semibold text-[#212631] focus:border-[#212631] outline-none transition-colors" required />
+                                                    </div>
+                                                </div>
+
+                                                <div className="flex flex-col gap-2">
+                                                    <label className="text-[9px] tracking-[0.2em] uppercase font-bold text-[#212631]">Event Details & Requirements</label>
+                                                    <textarea value={eventForm.venueEventDescription} onChange={e => setEventForm({ ...eventForm, venueEventDescription: sanitizeInput(e.target.value) })} className="w-full bg-[#ebebeb] border border-[#212631]/20 p-4 text-sm font-semibold text-[#212631] focus:border-[#212631] outline-none transition-colors resize-y min-h-[120px]" />
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        <div className="flex flex-col gap-6 pt-6 border-t border-[#212631]/10 mt-4">
+                                            <label className="flex items-start gap-4 cursor-pointer group">
+                                                <div className="mt-0.5 relative flex items-center justify-center">
+                                                    <input type="checkbox" required className="peer appearance-none w-5 h-5 border border-[#212631]/40 checked:bg-[#212631] checked:border-[#212631] transition-all cursor-pointer" />
+                                                    <svg className="absolute w-3 h-3 text-[#ebebeb] pointer-events-none opacity-0 peer-checked:opacity-100 transition-opacity" viewBox="0 0 14 10" fill="none"><path d="M1 5L5 9L13 1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                                                </div>
+                                                <p className="text-[10px] tracking-[0.18em] uppercase font-bold text-[#212631]/60 leading-relaxed pt-0.5">
+                                                    I acknowledge the <a href="#" className="text-[#212631] hover:underline">Terms of Service</a> & <a href="#" className="text-[#212631] hover:underline">Privacy Policy</a>.
+                                                </p>
+                                            </label>
+
+                                            {reservationType === 'ticket' && getTotalVisitors() > 0 && (
+                                                <div className="flex items-center justify-between border border-[#212631] bg-[#212631] text-[#ebebeb] p-5">
+                                                    <span className="text-[10px] tracking-[0.2em] uppercase font-black">Total Due</span>
+                                                    <span className="text-xl font-black tracking-tighter">{calculateTotal() === 0 ? 'FREE' : `₱${calculateTotal()}`}</span>
                                                 </div>
                                             )}
+
+                                            <button type="submit" disabled={isSubmitting} className="w-full py-5 bg-[#212631] text-[#ebebeb] border border-[#212631] text-[10px] tracking-[0.2em] uppercase font-black hover:bg-transparent hover:text-[#212631] disabled:opacity-50 disabled:pointer-events-none transition-colors cursor-pointer">
+                                                {isSubmitting ? 'Processing...' : 'Finalize Booking'}
+                                            </button>
                                         </div>
+                                    </form>
+                                </div>
+                            </motion.div>
+                        </div>
+                    )}
+                </AnimatePresence>
 
-                                        <div className="space-y-4">
-                                            <input type="text" value={ticketForm.visitorName} onChange={e => setTicketForm({ ...ticketForm, visitorName: sanitizeInput(e.target.value) })} placeholder="Full name*" className="w-full bg-transparent border-b border-gray-300 py-3 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:border-gray-900 transition-colors" required />
-                                            <input type="email" value={ticketForm.visitorEmail} onChange={e => setTicketForm({ ...ticketForm, visitorEmail: sanitizeEmail(e.target.value) })} placeholder="Email*" className="w-full bg-transparent border-b border-gray-300 py-3 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:border-gray-900 transition-colors" required />
-                                            <input type="tel" value={ticketForm.visitorPhone} onChange={e => setTicketForm({ ...ticketForm, visitorPhone: sanitizePhone(e.target.value) })} placeholder="Phone (Optional)" className="w-full bg-transparent border-b border-gray-300 py-3 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:border-gray-900 transition-colors" />
-
-                                            <div className="grid grid-cols-2 gap-6">
-                                                <div className="space-y-1">
-                                                    <label className="text-xs text-gray-500">Arrival date*</label>
-                                                    <input type="date" value={ticketForm.reservationDate} onChange={e => setTicketForm({ ...ticketForm, reservationDate: e.target.value })} min={getMinDate()} max={getMaxDate()} className="w-full bg-transparent border-b border-gray-300 py-2 text-sm text-gray-900 focus:outline-none focus:border-gray-900 transition-colors" required />
-                                                </div>
-                                            </div>
-
-                                            <input type="text" value={ticketForm.notes} onChange={e => setTicketForm({ ...ticketForm, notes: sanitizeInput(e.target.value) })} placeholder="Additional notes" className="w-full bg-transparent border-b border-gray-300 py-3 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:border-gray-900 transition-colors" />
-                                        </div>
+                {/* Final Submission Confirmation Modal */}
+                <AnimatePresence>
+                    {showSubmitConfirm && (
+                        <div className="fixed inset-0 z-[250] flex items-center justify-center p-4">
+                            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-[#212631]/80 backdrop-blur-md" />
+                            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="bg-[#ebebeb] border border-[#212631]/20 w-full max-w-md relative z-10 flex flex-col p-0 overflow-hidden shadow-2xl">
+                                <div className="p-8 border-b border-[#212631]/20 flex flex-col items-center text-center">
+                                    <div className="w-12 h-12 bg-[#212631] text-[#ebebeb] flex items-center justify-center mb-6">
+                                        <Icons.Ticket />
                                     </div>
-                                ) : (
-                                    <div className="space-y-4">
-                                        <input type="text" value={eventForm.venueEventName} onChange={e => setEventForm({ ...eventForm, venueEventName: sanitizeInput(e.target.value) })} placeholder="Event name*" className="w-full bg-transparent border-b border-gray-300 py-3 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:border-gray-900 transition-colors" required />
-
-                                        <div className="grid grid-cols-2 gap-6">
-                                            <div className="space-y-1">
-                                                <label className="text-xs text-gray-500">Event date*</label>
-                                                <input type="date" value={eventForm.venueEventDate} onChange={e => setEventForm({ ...eventForm, venueEventDate: e.target.value })} min={getMinDate()} className="w-full bg-transparent border-b border-gray-300 py-2 text-sm text-gray-900 focus:outline-none focus:border-gray-900 transition-colors" required />
-                                            </div>
-                                            <div className="space-y-1">
-                                                <label className="text-xs text-gray-500">Event time</label>
-                                                <input type="time" value={eventForm.venueEventTime} onChange={e => setEventForm({ ...eventForm, venueEventTime: e.target.value })} className="w-full bg-transparent border-b border-gray-300 py-2 text-sm text-gray-900 focus:outline-none focus:border-gray-900 transition-colors" />
-                                            </div>
-                                        </div>
-
-                                        <input type="number" value={eventForm.numberOfParticipants} onChange={e => setEventForm({ ...eventForm, numberOfParticipants: e.target.value })} placeholder="Number of participants*" min="1" max="500" className="w-full bg-transparent border-b border-gray-300 py-3 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:border-gray-900 transition-colors" required />
-                                        <input type="text" value={eventForm.participantName} onChange={e => setEventForm({ ...eventForm, participantName: sanitizeInput(e.target.value) })} placeholder="Organizer name*" className="w-full bg-transparent border-b border-gray-300 py-3 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:border-gray-900 transition-colors" required />
-                                        <input type="email" value={eventForm.participantEmail} onChange={e => setEventForm({ ...eventForm, participantEmail: sanitizeEmail(e.target.value) })} placeholder="Email*" className="w-full bg-transparent border-b border-gray-300 py-3 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:border-gray-900 transition-colors" required />
-                                        <input type="tel" value={eventForm.participantPhone} onChange={e => setEventForm({ ...eventForm, participantPhone: sanitizePhone(e.target.value) })} placeholder="Phone (Optional)" className="w-full bg-transparent border-b border-gray-300 py-3 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:border-gray-900 transition-colors" />
-                                        <input type="text" value={eventForm.venueEventDescription} onChange={e => setEventForm({ ...eventForm, venueEventDescription: sanitizeInput(e.target.value) })} placeholder="Event description" className="w-full bg-transparent border-b border-gray-300 py-3 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:border-gray-900 transition-colors" />
-                                    </div>
-                                )}
-
-                                <div className="flex items-start gap-3 pt-6">
-                                    <div className="mt-0.5">
-                                        <input type="checkbox" required className="w-4 h-4 rounded-sm border-gray-300 text-gray-900 focus:ring-gray-900 bg-transparent" />
-                                    </div>
-                                    <p className="text-sm text-gray-600 leading-relaxed">
-                                        I accept Zoo Bulusan's <a href="#" className="underline hover:text-gray-900">Terms of Service</a> and acknowledge that I have read the <a href="#" className="underline hover:text-gray-900">Privacy Policy</a>.
+                                    <h3 className="text-2xl font-black uppercase tracking-tighter text-[#212631] mb-2">Verify Details</h3>
+                                    <p className="text-[10px] tracking-[0.18em] uppercase font-bold text-[#212631]/50 leading-relaxed">
+                                        Ensure submitted information is accurate.
                                     </p>
                                 </div>
 
-                                {reservationType === 'ticket' && getTotalVisitors() > 0 && (
-                                    <div className="flex items-center justify-between pt-2">
-                                        <span className="text-sm text-gray-500">Total Due</span>
-                                        <span className="text-lg font-medium text-gray-900">{calculateTotal() === 0 ? 'Free' : `₱${calculateTotal()}`}</span>
-                                    </div>
-                                )}
+                                <div className="p-8 bg-[#212631]/5 flex flex-col gap-4">
+                                    {reservationType === 'ticket' ? (
+                                        <>
+                                            <div className="flex justify-between items-center"><span className="text-[9px] tracking-widest uppercase font-bold text-[#212631]/60">Type</span><span className="text-[10px] font-black uppercase text-[#212631]">Admission</span></div>
+                                            <div className="flex justify-between items-center"><span className="text-[9px] tracking-widest uppercase font-bold text-[#212631]/60">Date</span><span className="text-[10px] font-black uppercase text-[#212631]">{formatDate(ticketForm.reservationDate)}</span></div>
+                                            <div className="flex justify-between items-center"><span className="text-[9px] tracking-widest uppercase font-bold text-[#212631]/60">Pax</span><span className="text-[10px] font-black uppercase text-[#212631]">{getTotalVisitors()}</span></div>
+                                            <div className="flex justify-between items-center pt-4 border-t border-[#212631]/20 mt-1"><span className="text-[9px] tracking-widest uppercase font-black text-[#212631]">Total</span><span className="text-sm font-black text-emerald-600">₱{calculateTotal()}</span></div>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <div className="flex justify-between items-center"><span className="text-[9px] tracking-widest uppercase font-bold text-[#212631]/60">Type</span><span className="text-[10px] font-black uppercase text-[#212631]">Venue</span></div>
+                                            <div className="flex justify-between items-center"><span className="text-[9px] tracking-widest uppercase font-bold text-[#212631]/60">Event</span><span className="text-[10px] font-black uppercase text-[#212631] truncate max-w-[150px]">{eventForm.venueEventName}</span></div>
+                                            <div className="flex justify-between items-center"><span className="text-[9px] tracking-widest uppercase font-bold text-[#212631]/60">Date</span><span className="text-[10px] font-black uppercase text-[#212631]">{formatDate(eventForm.venueEventDate)}</span></div>
+                                            <div className="flex justify-between items-center"><span className="text-[9px] tracking-widest uppercase font-bold text-[#212631]/60">Pax</span><span className="text-[10px] font-black uppercase text-[#212631]">{eventForm.numberOfParticipants}</span></div>
+                                        </>
+                                    )}
+                                </div>
 
-                                <div className="pt-2">
-                                    <button type="submit" disabled={isSubmitting} className="w-full py-3.5 bg-[#C2C0B8] hover:bg-[#b0aeA5] text-gray-900 text-sm font-medium rounded-lg transition-colors disabled:opacity-50">
-                                        {isSubmitting ? 'Processing...' : (reservationType === 'ticket' ? 'Schedule a visit' : 'Book event')}
+                                <div className="p-8 border-t border-[#212631]/20 flex gap-4 bg-[#ebebeb]">
+                                    <button onClick={() => setShowSubmitConfirm(false)} className="flex-1 py-4 border border-[#212631]/20 text-[9px] tracking-[0.18em] uppercase font-black text-[#212631] hover:bg-[#212631]/5 transition-colors cursor-pointer">
+                                        Return
+                                    </button>
+                                    <button onClick={confirmSubmit} disabled={isSubmitting} className="flex-1 py-4 bg-[#212631] border border-[#212631] text-[9px] tracking-[0.18em] uppercase font-black text-[#ebebeb] hover:bg-transparent hover:text-[#212631] disabled:opacity-50 transition-colors cursor-pointer">
+                                        {isSubmitting ? 'Wait...' : 'Confirm'}
                                     </button>
                                 </div>
-                            </form>
+                            </motion.div>
                         </div>
-                    </div>
-                </div>
+                    )}
+                </AnimatePresence>
 
-                {/* Confirmation Modal */}
-                {showConfirmation && confirmationData && (
-                    <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
-                        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" onClick={closeModal} />
-                        <div className="bg-[#F4F4F0] rounded-2xl w-full max-w-sm p-8 relative z-10 text-center shadow-2xl animate-in zoom-in duration-300">
-                            <div className="w-16 h-16 bg-gray-200 text-gray-900 rounded-full flex items-center justify-center mx-auto mb-6"><Icons.Check /></div>
-                            <h3 className="text-2xl font-normal text-gray-900 mb-2">Reserved</h3>
-                            <p className="text-sm text-gray-500 mb-6">Your booking has been secured.</p>
+                {/* Success Confirmation Modal */}
+                <AnimatePresence>
+                    {showConfirmation && confirmationData && (
+                        <div className="fixed inset-0 z-[300] flex items-center justify-center p-4">
+                            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-[#212631]/80 backdrop-blur-md" />
+                            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }} className="bg-[#ebebeb] border border-[#212631]/20 w-full max-w-sm p-10 relative z-10 flex flex-col items-center text-center shadow-2xl">
+                                <div className="mb-6 text-[#212631]"><Icons.Check /></div>
+                                <h3 className="text-3xl font-black uppercase tracking-tighter text-[#212631] mb-2">Confirmed</h3>
+                                <p className="text-[10px] tracking-widest uppercase font-bold text-[#212631]/50 mb-8">Reservation securely logged.</p>
 
-                            <div className="bg-white/50 rounded-xl p-6 mb-6">
-                                <span className="text-xs text-gray-500 uppercase tracking-widest block mb-1">Ref Number</span>
-                                <span className="text-xl font-mono text-gray-900">{confirmationData.reference}</span>
-                            </div>
+                                <div className="w-full border border-[#212631]/20 bg-[#ebebeb] p-6 mb-8 flex flex-col items-center justify-center">
+                                    <span className="text-[8px] tracking-[0.3em] uppercase font-bold text-[#212631]/40 mb-2">Reference ID</span>
+                                    <span className="text-xl font-black tracking-widest uppercase text-[#212631]">{confirmationData.reference}</span>
+                                </div>
 
-                            <div className="space-y-3 mb-8 text-left text-sm">
-                                {confirmationData.type === 'ticket' ? (
-                                    <>
-                                        <div className="flex justify-between border-b border-gray-200 pb-2"><span className="text-gray-500">Date</span><span className="font-medium text-gray-900">{formatDate(confirmationData.date)}</span></div>
-                                        <div className="flex justify-between border-b border-gray-200 pb-2"><span className="text-gray-500">Visitors</span><span className="font-medium text-gray-900">{confirmationData.visitors}</span></div>
-                                        <div className="flex justify-between font-medium text-gray-900 text-base pt-1"><span>Total</span><span>{confirmationData.total === 0 ? 'Free' : `₱${confirmationData.total}`}</span></div>
-                                    </>
-                                ) : (
-                                    <>
-                                        <div className="flex justify-between border-b border-gray-200 pb-2"><span className="text-gray-500">Event</span><span className="font-medium text-gray-900 text-right">{confirmationData.eventName}</span></div>
-                                        <div className="flex justify-between pt-1"><span className="text-gray-500">Date</span><span className="font-medium text-gray-900">{formatDate(confirmationData.eventDate)}</span></div>
-                                    </>
-                                )}
-                            </div>
-
-                            <div className="flex gap-3">
-                                <button onClick={closeModal} className="flex-1 py-3 bg-white border border-gray-200 hover:bg-gray-50 text-gray-900 text-sm font-medium rounded-lg transition-colors">Close</button>
-                                <button onClick={() => { closeModal(); setShowHistoryPanel(true); }} className="flex-1 py-3 bg-gray-900 hover:bg-gray-800 text-white text-sm font-medium rounded-lg transition-colors">History</button>
-                            </div>
+                                <div className="w-full flex flex-col gap-3">
+                                    <button onClick={closeModal} className="w-full py-4 border border-[#212631]/20 text-[9px] tracking-[0.18em] uppercase font-black text-[#212631] hover:bg-[#212631]/5 transition-colors cursor-pointer">
+                                        Dismiss
+                                    </button>
+                                    <button onClick={() => { closeModal(); setShowHistoryPanel(true); }} className="w-full py-4 bg-[#212631] border border-[#212631] text-[9px] tracking-[0.18em] uppercase font-black text-[#ebebeb] hover:bg-transparent hover:text-[#212631] transition-colors cursor-pointer">
+                                        Open Ledger
+                                    </button>
+                                </div>
+                            </motion.div>
                         </div>
-                    </div>
-                )}
+                    )}
+                </AnimatePresence>
 
-                {/* Submit Confirmation Modal */}
-                {showSubmitConfirm && (
-                    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[110] flex items-center justify-center p-4">
-                        <div className="bg-white rounded-xl w-full max-w-md p-6 shadow-2xl">
-                            <div className="w-14 h-14 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <Icons.Ticket />
-                            </div>
-                            <h3 className="text-xl font-semibold text-gray-900 text-center mb-2">
-                                Confirm Reservation
-                            </h3>
-                            <p className="text-gray-500 text-center text-sm mb-6">
-                                Please review your reservation details before submitting.
-                            </p>
-                            
-                            <div className="bg-gray-50 rounded-lg p-4 mb-6 space-y-2 text-sm">
-                                {reservationType === 'ticket' ? (
-                                    <>
-                                        <div className="flex justify-between">
-                                            <span className="text-gray-500">Type</span>
-                                            <span className="font-medium text-gray-900">Ticket Reservation</span>
-                                        </div>
-                                        <div className="flex justify-between">
-                                            <span className="text-gray-500">Date</span>
-                                            <span className="font-medium text-gray-900">{formatDate(ticketForm.reservationDate)}</span>
-                                        </div>
-                                        <div className="flex justify-between">
-                                            <span className="text-gray-500">Visitors</span>
-                                            <span className="font-medium text-gray-900">{getTotalVisitors()} person(s)</span>
-                                        </div>
-                                        <div className="flex justify-between border-t border-gray-200 pt-2 mt-2">
-                                            <span className="text-gray-700 font-medium">Total</span>
-                                            <span className="font-bold text-emerald-600">₱{calculateTotal()}</span>
-                                        </div>
-                                    </>
-                                ) : (
-                                    <>
-                                        <div className="flex justify-between">
-                                            <span className="text-gray-500">Type</span>
-                                            <span className="font-medium text-gray-900">Event Reservation</span>
-                                        </div>
-                                        <div className="flex justify-between">
-                                            <span className="text-gray-500">Event</span>
-                                            <span className="font-medium text-gray-900">{eventForm.venueEventName}</span>
-                                        </div>
-                                        <div className="flex justify-between">
-                                            <span className="text-gray-500">Date</span>
-                                            <span className="font-medium text-gray-900">{formatDate(eventForm.venueEventDate)}</span>
-                                        </div>
-                                        <div className="flex justify-between">
-                                            <span className="text-gray-500">Participants</span>
-                                            <span className="font-medium text-gray-900">{eventForm.numberOfParticipants} person(s)</span>
-                                        </div>
-                                    </>
-                                )}
-                            </div>
-
-                            <div className="flex gap-3">
-                                <button
-                                    onClick={() => setShowSubmitConfirm(false)}
-                                    className="flex-1 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg transition-colors"
-                                >
-                                    Go Back
-                                </button>
-                                <button
-                                    onClick={confirmSubmit}
-                                    disabled={isSubmitting}
-                                    className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50"
-                                >
-                                    {isSubmitting ? 'Submitting...' : 'Confirm'}
-                                </button>
-                            </div>
+                {/* Unsaved Changes Discard Modal */}
+                <AnimatePresence>
+                    {showCloseConfirm && (
+                        <div className="fixed inset-0 z-[250] flex items-center justify-center p-4">
+                            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-[#212631]/80 backdrop-blur-md" />
+                            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="bg-[#ebebeb] border border-[#212631]/20 w-full max-w-sm p-8 relative z-10 flex flex-col text-center items-center shadow-2xl">
+                                <div className="mb-6"><Icons.Warning /></div>
+                                <h3 className="text-xl font-black uppercase tracking-tighter text-[#212631] mb-2">Discard Form?</h3>
+                                <p className="text-[10px] tracking-[0.18em] uppercase font-bold text-[#212631]/60 mb-8 leading-relaxed">
+                                    Active changes will be lost. This cannot be undone.
+                                </p>
+                                <div className="flex w-full gap-4">
+                                    <button onClick={() => setShowCloseConfirm(false)} className="flex-1 py-4 border border-[#212631]/20 text-[9px] tracking-[0.18em] uppercase font-black text-[#212631] hover:bg-[#212631]/5 transition-colors cursor-pointer">
+                                        Resume
+                                    </button>
+                                    <button onClick={closeModal} className="flex-1 py-4 bg-red-600 border border-red-600 text-[9px] tracking-[0.18em] uppercase font-black text-white hover:bg-transparent hover:text-red-600 transition-colors cursor-pointer">
+                                        Discard
+                                    </button>
+                                </div>
+                            </motion.div>
                         </div>
-                    </div>
-                )}
-
-                {/* Close Confirmation Modal */}
-                {showCloseConfirm && (
-                    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[110] flex items-center justify-center p-4">
-                        <div className="bg-white rounded-xl w-full max-w-md p-6 shadow-2xl">
-                            <div className="w-14 h-14 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-7 h-7 text-amber-600">
-                                    <path fillRule="evenodd" d="M9.401 3.003c1.155-2 4.043-2 5.197 0l7.355 12.748c1.154 2-.29 4.5-2.599 4.5H4.645c-2.309 0-3.752-2.5-2.598-4.5L9.4 3.003zM12 8.25a.75.75 0 01.75.75v3.75a.75.75 0 01-1.5 0V9a.75.75 0 01.75-.75zm0 8.25a.75.75 0 100-1.5.75.75 0 000 1.5z" clipRule="evenodd" />
-                                </svg>
-                            </div>
-                            <h3 className="text-xl font-semibold text-gray-900 text-center mb-2">
-                                Discard Changes?
-                            </h3>
-                            <p className="text-gray-500 text-center text-sm mb-6">
-                                You have unsaved changes. Are you sure you want to close without submitting?
-                            </p>
-
-                            <div className="flex gap-3">
-                                <button
-                                    onClick={() => setShowCloseConfirm(false)}
-                                    className="flex-1 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg transition-colors"
-                                >
-                                    Continue Editing
-                                </button>
-                                <button
-                                    onClick={closeModal}
-                                    className="flex-1 py-3 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors"
-                                >
-                                    Discard
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                )}
+                    )}
+                </AnimatePresence>
 
                 <ReservationHistoryPanel isOpen={showHistoryPanel} onClose={() => setShowHistoryPanel(false)} />
                 <Footer />

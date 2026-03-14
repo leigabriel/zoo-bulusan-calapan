@@ -286,6 +286,10 @@ const Plants = () => {
 
     useEffect(() => { fetchPlants(); }, [fetchPlants]);
 
+    const scrollToGrid = () => {
+        document.getElementById('plants-grid')?.scrollIntoView({ behavior: 'smooth' });
+    };
+
     const rows = [];
     for (let i = 0; i < plants.length; i += 5) {
         rows.push({ group: plants.slice(i, i + 5), startIndex: i });
@@ -293,32 +297,52 @@ const Plants = () => {
 
     return (
         <ReactLenis root>
-            <div className="min-h-screen bg-[#ebebeb] flex flex-col text-[#212631]">
+            <div className="bg-[#ebebeb] text-[#212631] relative min-h-screen">
                 <Header />
 
-                <section className="pt-14 md:pt-20 w-full">
-                    <div className="flex items-center justify-between px-4 md:px-5 py-2.5 border-b border-[#212631]/10">
-                        <span className="text-[9px] tracking-[0.18em] uppercase font-bold text-[#212631]/30">
-                            Plants
+                {/* Sticky Intro Section */}
+                <div className="sticky top-0 w-full h-[80vh] flex flex-col items-center justify-center overflow-hidden z-0">
+                    <div className="absolute inset-0 bg-[#e97383]" />
+
+                    <div className="relative z-10 flex flex-col items-center justify-center text-center px-4 w-full max-w-5xl h-full">
+                        <span className="text-[10px] tracking-[0.3em] uppercase font-bold text-[#212631]/40 mb-6 md:mb-10">
+                            Zoo Bulusan Botanical
                         </span>
-                        <span className="text-[9px] tracking-[0.18em] uppercase font-bold text-[#212631]/30">
-                            {!loading && plants.length > 0 ? `${plants.length} plants` : ''}
-                        </span>
+                        <h1 className="font-normal uppercase text-[#212631] leading-[0.85] tracking-tighter"
+                            style={{ fontSize: 'clamp(40px, 11vw, 120px)' }}>
+                            Discover Our Plants
+                        </h1>
+                        <p className="mt-8 md:mt-10 text-xs md:text-sm tracking-[0.1em] text-[#212631]/60 max-w-2xl font-semibold uppercase leading-relaxed mb-10">
+                            Explore the lush flora that makes up the Zoo Bulusan ecosystem. Learn about various plant categories and their unique beauty.
+                            {!loading && plants.length > 0 && (
+                                <span className="block mt-4 text-[#212631]/80 font-black">
+                                    CURRENTLY TENDING TO {plants.length} PLANT SPECIES
+                                </span>
+                            )}
+                        </p>
+
+                        <button
+                            onClick={scrollToGrid}
+                            className="px-8 py-4 bg-[#212631] text-[#ebebeb] border border-[#212631] text-[10px] tracking-[0.2em] uppercase font-black hover:bg-transparent hover:text-[#212631] transition-colors duration-300"
+                        >
+                            Explore The Garden
+                        </button>
                     </div>
 
-                    <h1
-                        className="font-normal uppercase text-[#212631] leading-[0.88] tracking-tighter px-4 md:px-5 pt-1.5 pb-2"
-                        style={{ fontSize: 'clamp(38px, 8vw, 108px)' }}
-                    >
-                        Discover Our Plants
-                    </h1>
+                    <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-3 opacity-60 cursor-pointer hover:opacity-100 transition-opacity" onClick={scrollToGrid}>
+                        <span className="text-[9px] tracking-[0.2em] uppercase font-bold text-[#212631]">Scroll</span>
+                        <motion.div
+                            animate={{ y: [0, 8, 0] }}
+                            transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
+                            className="w-[1px] h-12 bg-gradient-to-b from-[#212631] to-transparent"
+                        />
+                    </div>
+                </div>
 
-                    <div className="h-px bg-[#212631]/10" />
-                </section>
-
-                <main className="flex-1">
+                {/* Main Plant Grid Section */}
+                <main id="plants-grid" className="relative z-10 w-full bg-[#ebebeb] border-t border-[#212631]/10 min-h-screen">
                     {loading && (
-                        <div className="flex items-center justify-center py-32">
+                        <div className="flex items-center justify-center py-40">
                             <motion.div
                                 className="w-5 h-5 rounded-full border-[1.5px] border-[#212631]/15 border-t-[#212631]"
                                 animate={{ rotate: 360 }}
@@ -328,7 +352,7 @@ const Plants = () => {
                     )}
 
                     {!loading && error && (
-                        <div className="flex flex-col items-center gap-3 py-24 px-6">
+                        <div className="flex flex-col items-center gap-3 py-32 px-6">
                             <p className="text-[10px] tracking-widest uppercase font-bold text-[#212631]/35">{error}</p>
                             <button
                                 onClick={fetchPlants}
@@ -341,7 +365,7 @@ const Plants = () => {
 
                     {!loading && !error && plants.length === 0 && (
                         <p
-                            className="text-center py-28 font-black uppercase tracking-tighter text-[#212631]/10"
+                            className="text-center py-40 font-black uppercase tracking-tighter text-[#212631]/10"
                             style={{ fontSize: 'clamp(32px, 5vw, 56px)' }}
                         >
                             No plants available
@@ -374,6 +398,9 @@ const Plants = () => {
                             </div>
                         </>
                     )}
+
+                    {/* Bottom Padding/Footer Spacer */}
+                    <div className="h-20 bg-[#ebebeb] border-t border-[#212631]/10"></div>
                 </main>
 
                 <AnimatePresence>
@@ -385,6 +412,7 @@ const Plants = () => {
                         />
                     )}
                 </AnimatePresence>
+
                 <AIFloatingButton />
             </div>
         </ReactLenis>
