@@ -41,7 +41,6 @@ const PostForm = ({ onSubmit, loading, initialPost = null, onCancelEdit }) => {
         setImageFile(file);
         setRemoveImage(false);
         setPreviewUrl(URL.createObjectURL(file));
-        notify.success('Image upload success.');
     };
 
     const clearImage = () => {
@@ -70,59 +69,65 @@ const PostForm = ({ onSubmit, loading, initialPost = null, onCancelEdit }) => {
     };
 
     return (
-        <form onSubmit={submitForm} className="bg-white rounded-2xl border border-emerald-100 p-4 md:p-5 shadow-sm">
-            <h2 className="text-lg font-semibold text-gray-900 mb-3">
-                {initialPost ? 'Edit post' : 'Share with the community'}
+        <form onSubmit={submitForm} className="bg-[#ebebeb] flex flex-col">
+            <h2 className="text-xl md:text-2xl font-black uppercase text-[#212631] tracking-tighter mb-6 border-b border-[#212631]/10 pb-4">
+                {initialPost ? 'Edit Entry' : 'New Entry'}
             </h2>
 
             <textarea
                 value={content}
                 onChange={(event) => setContent(event.target.value)}
-                placeholder="Tell the community what is happening at Zoo Bulusan..."
-                className="w-full min-h-28 rounded-xl border border-emerald-200 px-4 py-3 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-300 resize-y"
+                placeholder="Share an update..."
+                className="w-full min-h-[140px] bg-transparent border border-[#212631]/20 p-4 text-sm md:text-base font-medium text-[#212631] focus:border-[#212631] focus:ring-0 transition-all resize-y outline-none placeholder:uppercase placeholder:tracking-widest placeholder:text-[10px] placeholder:font-bold placeholder:text-[#212631]/30"
                 maxLength={3000}
             />
 
-            <div className="mt-2 text-xs text-gray-500 text-right">{content.length}/3000</div>
-
             {previewUrl && (
-                <div className="mt-3 relative w-full rounded-xl overflow-hidden border border-emerald-100 bg-emerald-50">
-                    <img src={previewUrl} alt="Post preview" className="max-h-72 w-full object-cover" />
+                <div className="mt-4 relative w-full border border-[#212631]/20 bg-[#212631]/5">
+                    <img src={previewUrl} alt="Preview" className="max-h-64 w-full object-cover grayscale" />
                     <button
                         type="button"
                         onClick={clearImage}
-                        className="absolute top-2 right-2 px-3 py-1 text-xs font-semibold rounded-lg bg-white/90 text-red-600 border border-red-100"
+                        className="absolute top-3 right-3 w-8 h-8 flex items-center justify-center border border-[#ebebeb]/20 bg-[#212631] text-[#ebebeb] hover:bg-red-600 transition-colors cursor-pointer"
                     >
-                        Remove image
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
+                            <path fillRule="evenodd" d="M5.47 5.47a.75.75 0 011.06 0L12 10.94l5.47-5.47a.75.75 0 111.06 1.06L13.06 12l5.47 5.47a.75.75 0 11-1.06 1.06L12 13.06l-5.47 5.47a.75.75 0 01-1.06-1.06L10.94 12 5.47 6.53a.75.75 0 010-1.06z" clipRule="evenodd" />
+                        </svg>
                     </button>
                 </div>
             )}
 
-            {!previewUrl && (
-                <label className="mt-3 inline-flex items-center gap-2 px-4 py-2 text-sm rounded-xl border border-emerald-200 text-emerald-700 cursor-pointer hover:bg-emerald-50">
-                    <input type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
-                    Add image
-                </label>
-            )}
-
-            <div className="mt-4 flex flex-wrap items-center gap-2">
-                <button
-                    type="submit"
-                    disabled={loading}
-                    className="px-5 py-2.5 rounded-xl bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700 disabled:opacity-60"
-                >
-                    {loading ? 'Please wait...' : initialPost ? 'Update post' : 'Submit post'}
-                </button>
-
-                {initialPost && (
-                    <button
-                        type="button"
-                        onClick={onCancelEdit}
-                        className="px-5 py-2.5 rounded-xl bg-gray-100 text-gray-700 text-sm font-semibold hover:bg-gray-200"
-                    >
-                        Cancel
-                    </button>
+            <div className="mt-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                {!previewUrl ? (
+                    <label className="inline-flex items-center gap-2 px-4 py-3 border border-[#212631]/20 text-[#212631] cursor-pointer hover:bg-[#212631] hover:text-[#ebebeb] transition-colors text-[9px] tracking-[0.18em] uppercase font-black w-max">
+                        <input type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                        </svg>
+                        Attach Media
+                    </label>
+                ) : (
+                    <div></div>
                 )}
+
+                <div className="flex items-center gap-3 w-full sm:w-auto">
+                    {initialPost && (
+                        <button
+                            type="button"
+                            onClick={onCancelEdit}
+                            className="flex-1 sm:flex-none px-6 py-3 border border-[#212631]/20 text-[#212631] text-[9px] tracking-[0.18em] uppercase font-black hover:bg-[#212631]/5 transition-colors"
+                        >
+                            Cancel
+                        </button>
+                    )}
+                    <button
+                        type="submit"
+                        disabled={loading || !content.trim()}
+                        className="flex-1 sm:flex-none px-8 py-3 bg-[#212631] text-[#ebebeb] border border-[#212631] text-[9px] tracking-[0.18em] uppercase font-black hover:bg-transparent hover:text-[#212631] disabled:opacity-50 disabled:pointer-events-none transition-colors"
+                    >
+                        {loading ? 'Processing...' : initialPost ? 'Save' : 'Publish'}
+                    </button>
+                </div>
             </div>
         </form>
     );

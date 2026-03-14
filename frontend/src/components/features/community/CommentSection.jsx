@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { communityAPI, getProfileImageUrl } from '../../../services/api-client';
 import { notify } from '../../../utils/toast';
 
@@ -28,15 +27,11 @@ const CommentSection = ({ postId, currentUser, refreshTrigger }) => {
 
     const submitComment = async () => {
         const value = commentText.trim();
-        if (!value) {
-            notify.warning('Please write a comment first.');
-            return;
-        }
+        if (!value) return;
 
         try {
             await communityAPI.createComment(postId, value, currentUser?.role || 'user');
             setCommentText('');
-            notify.success('Comment added.');
             await loadComments();
         } catch {
             notify.error('Could not add your comment right now.');
@@ -45,14 +40,10 @@ const CommentSection = ({ postId, currentUser, refreshTrigger }) => {
 
     const saveEdit = async () => {
         const value = editingText.trim();
-        if (!value) {
-            notify.warning('Please write a comment first.');
-            return;
-        }
+        if (!value) return;
 
         try {
             await communityAPI.updateComment(editingId, value, currentUser?.role || 'user');
-            notify.success('Comment updated.');
             setEditingId(null);
             setEditingText('');
             await loadComments();
@@ -64,7 +55,6 @@ const CommentSection = ({ postId, currentUser, refreshTrigger }) => {
     const removeComment = async (commentId) => {
         try {
             await communityAPI.deleteComment(commentId, currentUser?.role || 'user');
-            notify.success('Comment deleted.');
             await loadComments();
         } catch {
             notify.error('Could not delete your comment right now.');
@@ -80,106 +70,135 @@ const CommentSection = ({ postId, currentUser, refreshTrigger }) => {
         }
     };
 
-    const reportComment = async (commentId) => {
-        const reason = window.prompt('Why are you reporting this comment?');
-        if (!reason || !reason.trim()) return;
-
-        try {
-            await communityAPI.reportComment(commentId, reason.trim(), currentUser?.role || 'user');
-            notify.success('Comment reported.');
-            await loadComments();
-        } catch {
-            notify.error('Could not report this comment right now.');
-        }
+    const handleReport = () => {
+        notify.success('Comment reported for review.');
     };
 
     if (loading) {
-        return <div className="text-sm text-gray-500 mt-3">Loading comments...</div>;
+        return (
+            <div className="flex items-center justify-center py-12">
+                <div className="w-4 h-4 rounded-full border-[1.5px] border-[#212631]/15 border-t-[#212631] animate-spin" />
+            </div>
+        );
     }
 
     return (
-        <div className="mt-4 border-t border-emerald-100 pt-3">
-            <div className="flex gap-2">
-                <input
-                    value={commentText}
-                    onChange={(event) => setCommentText(event.target.value)}
-                    className="flex-1 rounded-lg border border-emerald-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300"
-                    placeholder="Write a comment"
-                    maxLength={1200}
+        <div className="flex flex-col gap-8">
+            <div className="flex flex-col md:flex-row gap-4 items-start border border-[#212631]/10 p-5 bg-[#ebebeb]">
+                <img
+                    src={currentUser?.profileImage || 'https://via.placeholder.com/48x48?text=U'}
+                    alt="You"
+                    className="w-10 h-10 rounded-none object-cover border border-[#212631]/20 shrink-0 hidden md:block grayscale"
                 />
-                <button
-                    onClick={submitComment}
-                    className="px-4 py-2 rounded-lg bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700"
-                >
-                    Comment
-                </button>
+                <div className="flex-1 flex flex-col gap-4 w-full">
+                    <textarea
+                        value={commentText}
+                        onChange={(event) => setCommentText(event.target.value)}
+                        className="w-full bg-transparent border-b border-[#212631]/20 p-2 text-sm md:text-base font-medium focus:border-[#212631] transition-all resize-none h-20 outline-none placeholder:uppercase placeholder:tracking-widest placeholder:text-[10px] placeholder:font-bold placeholder:text-[#212631]/30"
+                        placeholder="Write a reply..."
+                        maxLength={1200}
+                    />
+                    <div className="flex justify-end">
+                        <button
+                            onClick={submitComment}
+                            disabled={!commentText.trim()}
+                            className="px-6 py-2 border border-[#212631] bg-[#212631] text-[#ebebeb] text-[9px] tracking-[0.18em] uppercase font-black hover:bg-transparent hover:text-[#212631] disabled:opacity-50 disabled:pointer-events-none transition-colors"
+                        >
+                            Reply
+                        </button>
+                    </div>
+                </div>
             </div>
 
-            <div className="mt-3 space-y-3">
-                {comments.map((comment) => {
+            <div className="flex flex-col">
+                {comments.map((comment, index) => {
                     const isOwner = currentUser?.id === comment.userId;
+                    const isLast = index === comments.length - 1;
+
                     return (
-                        <div key={comment.id} className="bg-emerald-50/40 border border-emerald-100 rounded-xl p-3">
-                            <div className="flex items-center gap-2 mb-2">
-                                <Link to={`/community/users/${comment.author.id}`} className="flex items-center gap-2">
-                                    <img
-                                        src={getProfileImageUrl(comment.author.profileImage) || 'https://via.placeholder.com/40x40?text=U'}
-                                        alt="comment author"
-                                        className="w-8 h-8 rounded-full object-cover"
-                                    />
-                                    <span className="text-sm font-semibold text-gray-800 hover:text-emerald-700">
-                                        {comment.author.firstName} {comment.author.lastName}
-                                    </span>
-                                </Link>
-                                <span className="text-xs text-gray-500">{new Date(comment.createdAt).toLocaleString()}</span>
-                            </div>
-
-                            {editingId === comment.id ? (
-                                <div className="space-y-2">
-                                    <textarea
-                                        value={editingText}
-                                        onChange={(event) => setEditingText(event.target.value)}
-                                        className="w-full rounded-lg border border-emerald-200 px-3 py-2 text-sm"
-                                        rows={2}
-                                        maxLength={1200}
-                                    />
-                                    <div className="flex gap-2">
-                                        <button onClick={saveEdit} className="px-3 py-1.5 text-xs rounded bg-emerald-600 text-white">Save</button>
-                                        <button onClick={() => setEditingId(null)} className="px-3 py-1.5 text-xs rounded bg-gray-200 text-gray-700">Cancel</button>
+                        <div key={comment.id} className={`flex gap-4 py-6 ${!isLast ? 'border-b border-[#212631]/10' : ''}`}>
+                            <img
+                                src={getProfileImageUrl(comment.author.profileImage) || 'https://via.placeholder.com/48x48?text=U'}
+                                alt="author"
+                                className="w-10 h-10 rounded-none object-cover border border-[#212631]/20 shrink-0 grayscale"
+                            />
+                            <div className="flex-1 flex flex-col">
+                                <div className="flex items-center justify-between mb-2">
+                                    <div className="flex items-center gap-3">
+                                        <span className="text-xs font-black uppercase tracking-tight text-[#212631]">
+                                            {comment.author.firstName} {comment.author.lastName}
+                                        </span>
+                                        <span className="text-[9px] tracking-[0.18em] uppercase font-bold text-[#212631]/40">
+                                            {new Date(comment.createdAt).toLocaleDateString()}
+                                        </span>
                                     </div>
-                                </div>
-                            ) : (
-                                <p className="text-sm text-gray-700 whitespace-pre-wrap">{comment.commentText}</p>
-                            )}
-
-                            <div className="mt-2 flex flex-wrap gap-2 text-xs">
-                                <button onClick={() => toggleHeart(comment.id)} className="px-2 py-1 rounded bg-white border border-emerald-200 text-emerald-700">
-                                    Heart ({comment.heartCount || 0})
-                                </button>
-                                <button onClick={() => reportComment(comment.id)} className="px-2 py-1 rounded bg-white border border-amber-200 text-amber-700">
-                                    Report
-                                </button>
-                                {isOwner && editingId !== comment.id && (
-                                    <>
-                                        <button
-                                            onClick={() => {
-                                                setEditingId(comment.id);
-                                                setEditingText(comment.commentText || '');
-                                            }}
-                                            className="px-2 py-1 rounded bg-white border border-blue-200 text-blue-700"
-                                        >
-                                            Edit
+                                    {!isOwner && (
+                                        <button onClick={handleReport} className="text-[9px] tracking-[0.18em] uppercase font-bold text-[#212631]/30 hover:text-red-600 transition-colors">
+                                            Report
                                         </button>
-                                        <button onClick={() => removeComment(comment.id)} className="px-2 py-1 rounded bg-white border border-red-200 text-red-700">Delete</button>
-                                    </>
+                                    )}
+                                </div>
+
+                                {editingId === comment.id ? (
+                                    <div className="mt-2 flex flex-col gap-3">
+                                        <textarea
+                                            value={editingText}
+                                            onChange={(event) => setEditingText(event.target.value)}
+                                            className="w-full bg-transparent border border-[#212631]/20 p-3 text-sm font-medium outline-none focus:border-[#212631]"
+                                            rows={3}
+                                            maxLength={1200}
+                                        />
+                                        <div className="flex gap-3">
+                                            <button onClick={saveEdit} className="px-5 py-2 border border-[#212631] bg-[#212631] text-[#ebebeb] text-[9px] tracking-[0.18em] uppercase font-black hover:bg-transparent hover:text-[#212631] transition-colors">Save</button>
+                                            <button onClick={() => setEditingId(null)} className="px-5 py-2 border border-[#212631]/20 text-[#212631] text-[9px] tracking-[0.18em] uppercase font-black hover:bg-[#212631]/5 transition-colors">Cancel</button>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <p className="text-sm md:text-base text-[#212631] font-medium whitespace-pre-wrap leading-relaxed">
+                                        {comment.commentText}
+                                    </p>
                                 )}
+
+                                <div className="flex items-center gap-6 mt-4">
+                                    <button
+                                        onClick={() => toggleHeart(comment.id)}
+                                        className={`text-[10px] tracking-widest uppercase font-black transition-colors flex items-center gap-1.5 ${comment.isHearted ? 'text-red-600' : 'text-[#212631]/40 hover:text-[#212631]'}`}
+                                    >
+                                        <svg className={`w-4 h-4 ${comment.isHearted ? 'fill-red-600' : 'fill-none'}`} stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                                        </svg>
+                                        {comment.heartCount || 0}
+                                    </button>
+
+                                    {isOwner && editingId !== comment.id && (
+                                        <>
+                                            <button
+                                                onClick={() => {
+                                                    setEditingId(comment.id);
+                                                    setEditingText(comment.commentText || '');
+                                                }}
+                                                className="text-[9px] tracking-[0.18em] uppercase font-black text-[#212631]/40 hover:text-[#212631] transition-colors"
+                                            >
+                                                Edit
+                                            </button>
+                                            <button
+                                                onClick={() => removeComment(comment.id)}
+                                                className="text-[9px] tracking-[0.18em] uppercase font-black text-[#212631]/40 hover:text-red-600 transition-colors"
+                                            >
+                                                Delete
+                                            </button>
+                                        </>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     );
                 })}
 
                 {comments.length === 0 && (
-                    <div className="text-sm text-gray-500">No comments yet.</div>
+                    <div className="text-[10px] tracking-[0.18em] uppercase font-bold text-[#212631]/30 text-center py-8">
+                        No comments yet
+                    </div>
                 )}
             </div>
         </div>

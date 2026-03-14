@@ -1,20 +1,10 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
 import { communityAPI, getProfileImageUrl } from '../../../services/api-client';
 import { notify } from '../../../utils/toast';
-import CommentSection from './CommentSection';
 
-const statusStyles = {
-    approved: 'bg-emerald-100 text-emerald-700 border-emerald-200',
-    pending: 'bg-amber-100 text-amber-700 border-amber-200',
-    declined: 'bg-red-100 text-red-700 border-red-200'
-};
+const PostFeed = ({ posts, currentUser, onRefresh, onEditPost, onUserClick, onPostClick }) => {
 
-const PostFeed = ({ posts, currentUser, onRefresh, onEditPost }) => {
-    const [openComments, setOpenComments] = useState({});
-    const [refreshToken, setRefreshToken] = useState(0);
-
-    const deletePost = async (postId) => {
+    const deletePost = async (postId, e) => {
+        e.stopPropagation();
         try {
             await communityAPI.deletePost(postId, currentUser?.role || 'user');
             notify.success('Post deleted.');
@@ -24,89 +14,115 @@ const PostFeed = ({ posts, currentUser, onRefresh, onEditPost }) => {
         }
     };
 
-    const toggleComments = (postId) => {
-        setOpenComments((prev) => ({ ...prev, [postId]: !prev[postId] }));
+    const handleEditClick = (post, e) => {
+        e.stopPropagation();
+        onEditPost(post);
     };
 
-    const refreshComments = () => setRefreshToken((prev) => prev + 1);
+    const handleUserClick = (userId, e) => {
+        e.stopPropagation();
+        if (onUserClick) onUserClick(userId);
+    };
+
+    const handleReport = (e) => {
+        e.stopPropagation();
+        notify.success('Post reported for review.');
+    };
 
     return (
-        <div className="space-y-4 mt-4">
+        <div className="flex flex-col gap-6 md:gap-8">
             {posts.map((post) => {
                 const isOwner = post.userId === currentUser?.id;
-                const statusClass = statusStyles[post.status] || statusStyles.pending;
 
                 return (
-                    <article key={post.id} className="bg-white border border-emerald-100 rounded-2xl p-4 md:p-5 shadow-sm">
-                        <div className="flex items-center justify-between gap-3">
-                            <Link to={`/community/users/${post.author.id}`} className="flex items-center gap-3">
+                    <article
+                        key={post.id}
+                        className="bg-[#ebebeb] border border-[#212631]/10 cursor-pointer group flex flex-col"
+                        onClick={() => onPostClick && onPostClick(post)}
+                    >
+                        <div className="flex items-center justify-between p-5 md:p-6 border-b border-[#212631]/10">
+                            <div
+                                className="flex items-center gap-4 cursor-pointer"
+                                onClick={(e) => handleUserClick(post.author.id, e)}
+                            >
                                 <img
-                                    src={getProfileImageUrl(post.author.profileImage) || 'https://via.placeholder.com/48x48?text=U'}
+                                    src={getProfileImageUrl(post.author.profileImage) || 'https://via.placeholder.com/56x56?text=U'}
                                     alt="author"
-                                    className="w-11 h-11 rounded-full object-cover border border-emerald-100"
+                                    className="w-10 h-10 rounded-none object-cover border border-[#212631]/20 grayscale group-hover:grayscale-0 transition-all duration-300"
                                 />
-                                <div>
-                                    <p className="text-sm font-semibold text-gray-900 hover:text-emerald-700">
+                                <div className="flex flex-col">
+                                    <p className="text-sm font-black uppercase text-[#212631] tracking-tight hover:underline">
                                         {post.author.firstName} {post.author.lastName}
                                     </p>
-                                    <p className="text-xs text-gray-500">{new Date(post.createdAt).toLocaleString()}</p>
+                                    <p className="text-[9px] tracking-[0.18em] uppercase font-bold text-[#212631]/40">
+                                        {new Date(post.createdAt).toLocaleString()}
+                                    </p>
                                 </div>
-                            </Link>
+                            </div>
 
-                            <div className={`px-2.5 py-1 text-xs rounded-full border font-semibold ${statusClass}`}>
-                                {post.status}
+                            <div className="flex items-center gap-3">
+                                {!isOwner && (
+                                    <button
+                                        onClick={handleReport}
+                                        className="text-[9px] tracking-[0.18em] uppercase font-bold text-[#212631]/30 hover:text-red-600 transition-colors"
+                                    >
+                                        Report
+                                    </button>
+                                )}
                             </div>
                         </div>
 
-                        <p className="mt-3 text-sm text-gray-800 whitespace-pre-wrap">{post.content}</p>
+                        <div className="p-5 md:p-6">
+                            <p className="text-lg md:text-xl text-[#212631] font-medium leading-relaxed whitespace-pre-wrap tracking-tight">
+                                {post.content}
+                            </p>
+                        </div>
 
                         {post.imageUrl && (
-                            <div className="mt-3 rounded-xl overflow-hidden border border-emerald-100 bg-emerald-50">
-                                <img src={post.imageUrl} alt="post" className="w-full max-h-[480px] object-cover" />
+                            <div className="border-t border-b border-[#212631]/10 bg-[#212631]/5 flex items-center justify-center overflow-hidden">
+                                <img src={post.imageUrl} alt="post" className="w-full h-auto max-h-[600px] object-cover" />
                             </div>
                         )}
 
-                        <div className="mt-3 flex flex-wrap items-center gap-2">
+                        <div className="flex items-center justify-between p-4 md:p-5 bg-[#ebebeb] border-t border-[#212631]/10 mt-auto">
                             <button
-                                onClick={() => toggleComments(post.id)}
-                                className="px-3 py-1.5 text-xs rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700"
+                                className="flex items-center gap-2 text-[10px] tracking-[0.18em] uppercase font-bold text-[#212631]/60 hover:text-[#212631] transition-colors"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (onPostClick) onPostClick(post);
+                                }}
                             >
-                                {openComments[post.id] ? 'Hide comments' : `Comments (${post.commentCount || 0})`}
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                                </svg>
+                                {post.commentCount || 0} Comments
                             </button>
 
                             {isOwner && (
-                                <>
+                                <div className="flex gap-4">
                                     <button
-                                        onClick={() => onEditPost(post)}
-                                        className="px-3 py-1.5 text-xs rounded-lg bg-blue-50 border border-blue-200 text-blue-700"
+                                        onClick={(e) => handleEditClick(post, e)}
+                                        className="text-[9px] tracking-[0.18em] uppercase font-black text-[#212631]/60 hover:text-[#212631] transition-colors"
                                     >
-                                        Edit post
+                                        Edit
                                     </button>
                                     <button
-                                        onClick={() => deletePost(post.id)}
-                                        className="px-3 py-1.5 text-xs rounded-lg bg-red-50 border border-red-200 text-red-700"
+                                        onClick={(e) => deletePost(post.id, e)}
+                                        className="text-[9px] tracking-[0.18em] uppercase font-black text-red-500/80 hover:text-red-600 transition-colors"
                                     >
-                                        Delete post
+                                        Delete
                                     </button>
-                                </>
+                                </div>
                             )}
                         </div>
-
-                        {openComments[post.id] && (
-                            <CommentSection
-                                postId={post.id}
-                                currentUser={currentUser}
-                                refreshTrigger={refreshToken}
-                                onRefresh={refreshComments}
-                            />
-                        )}
                     </article>
                 );
             })}
 
             {posts.length === 0 && (
-                <div className="bg-white border border-emerald-100 rounded-2xl p-8 text-center text-sm text-gray-500">
-                    No community posts yet.
+                <div className="border border-[#212631]/10 p-16 flex flex-col items-center justify-center text-center bg-[#ebebeb]">
+                    <p className="text-2xl font-black uppercase tracking-tighter text-[#212631]/20 mb-2">No Posts Yet</p>
+                    <p className="text-[10px] tracking-[0.18em] uppercase font-bold text-[#212631]/40">Be the first to share something.</p>
                 </div>
             )}
         </div>

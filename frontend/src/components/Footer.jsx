@@ -88,7 +88,7 @@ const Footer = () => {
         <div className="w-full bg-white"> {/* Assuming parent body is white for the rounded corners to show */}
             <footer
                 ref={footerRef}
-                className="w-full relative overflow-x-hidden flex flex-col rounded-t-[2.5rem] md:rounded-t-[3.5rem] pt-16 md:pt-24 pb-6 min-h-[90svh]"
+                className="w-full relative overflow-x-hidden flex flex-col pt-16 md:pt-24 pb-6 min-h-[90svh]"
                 style={{ backgroundColor: "#38d091", color: "#ffffff", fontFamily: "'Inter', sans-serif" }}
             >
                 <div className="relative z-10 flex flex-col flex-grow w-full px-6 md:px-14">

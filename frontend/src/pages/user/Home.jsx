@@ -41,7 +41,7 @@ const Home = () => {
                         <PricingSection />
                     </div>
                 </main>
-                <div className="relative z-50 bg-[#ebebeb] w-full">
+                <div className="relative z-50 w-full">
                     <Footer />
                 </div>
             </div>

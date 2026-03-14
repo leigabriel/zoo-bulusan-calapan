@@ -1,4 +1,5 @@
-import React, { useRef, Suspense, useState, useEffect } from 'react';
+import React, { useRef, Suspense, useState, useEffect, useMemo } from 'react';
+import * as THREE from 'three';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { useGLTF, Environment, Center } from '@react-three/drei';
 import { useScroll, useSpring, useTransform, motion, AnimatePresence } from 'framer-motion';
@@ -10,10 +11,17 @@ function DeerModel({ spinRotation, scale, setTooltip }) {
     const group = useRef(null);
     const { scene } = useGLTF(MODEL_URL);
 
-    useFrame((state) => {
+    const targetScale = scale * 0.7;
+    const targetVector = useMemo(() => new THREE.Vector3(), []);
+
+    useFrame((state, delta) => {
         if (!group.current) return;
+
         group.current.rotation.y = spinRotation.get();
-        group.current.position.y = (Math.sin(state.clock.elapsedTime) * 0.05);
+        group.current.position.y = Math.sin(state.clock.elapsedTime) * 0.05;
+
+        targetVector.set(targetScale, targetScale, targetScale);
+        group.current.scale.lerp(targetVector, delta * 8);
     });
 
     const handlePointerMove = (e) => {
@@ -34,7 +42,7 @@ function DeerModel({ spinRotation, scale, setTooltip }) {
             position={[0, 0, 0]}
         >
             <Center>
-                <primitive object={scene} scale={scale * 0.7} />
+                <primitive object={scene} />
             </Center>
         </group>
     );
@@ -135,25 +143,25 @@ export default function HeroSection() {
         offset: ['start start', 'end end']
     });
 
-    const smoothProgress = useSpring(scrollYProgress, { stiffness: 50, damping: 20, restDelta: 0.001 });
+    const smoothProgress = useSpring(scrollYProgress, {
+        stiffness: 70,
+        damping: 25,
+        mass: 0.4,
+        restDelta: 0.001
+    });
 
     const titleScale = useTransform(smoothProgress, [0, 0.2], [1, 3.5]);
     const titleY = useTransform(smoothProgress, [0, 0.2], ['0%', '10%']);
-
     const spinRotation = useTransform(smoothProgress, [0, 0.2, 0.3, 0.8], [0, Math.PI, Math.PI, 0]);
-
     const frontTextOpacity = useTransform(smoothProgress, [0, 0.1, 0.15, 0.2], [1, 0, 0, 0]);
     const backTextOpacity = useTransform(smoothProgress, [0, 0.1, 0.15, 0.2], [0, 1, 1, 0]);
     const decorOpacity = useTransform(smoothProgress, [0, 0.1], [1, 0]);
-
     const aboutOpacity = useTransform(smoothProgress, [0.2, 0.3], [0, 1]);
     const aboutPointerEvents = useTransform(smoothProgress, (p) => p > 0.2 ? 'auto' : 'none');
-
     const canvasX = useTransform(smoothProgress, [0.2, 0.3], ['0vw', device === 'mobile' ? '0vw' : '25vw']);
     const canvasY = useTransform(smoothProgress, [0.2, 0.3], ['0vh', device === 'mobile' ? '25vh' : '0vh']);
     const canvasScale = useTransform(smoothProgress, [0.2, 0.3], [1, device === 'mobile' ? 0.9 : 1]);
     const canvasPointerEvents = useTransform(smoothProgress, (p) => p > 0.2 ? 'none' : 'auto');
-
     const heroContentOpacity = useTransform(smoothProgress, [0.85, 0.95], [1, 0]);
 
     return (
@@ -171,7 +179,13 @@ export default function HeroSection() {
                     </motion.div>
 
                     <motion.div
-                        style={{ x: canvasX, y: canvasY, scale: canvasScale, pointerEvents: canvasPointerEvents }}
+                        style={{
+                            x: canvasX,
+                            y: canvasY,
+                            scale: canvasScale,
+                            pointerEvents: canvasPointerEvents,
+                            willChange: "transform"
+                        }}
                         className="absolute inset-0 z-20"
                     >
                         <Canvas
