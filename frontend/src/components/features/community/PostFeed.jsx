@@ -37,10 +37,10 @@ const PostFeed = ({ posts, currentUser, onRefresh, onEditPost, onUserClick, onPo
                 return (
                     <article
                         key={post.id}
-                        className="bg-[#ebebeb] border border-[#212631]/10 cursor-pointer group flex flex-col"
+                        className="bg-[#26bc61] border border-white/20 cursor-pointer group flex flex-col hover:border-white/40 transition-colors"
                         onClick={() => onPostClick && onPostClick(post)}
                     >
-                        <div className="flex items-center justify-between p-5 md:p-6 border-b border-[#212631]/10">
+                        <div className="flex items-center justify-between p-5 md:p-6 border-b border-white/20">
                             <div
                                 className="flex items-center gap-4 cursor-pointer"
                                 onClick={(e) => handleUserClick(post.author.id, e)}
@@ -48,13 +48,13 @@ const PostFeed = ({ posts, currentUser, onRefresh, onEditPost, onUserClick, onPo
                                 <img
                                     src={getProfileImageUrl(post.author.profileImage) || 'https://via.placeholder.com/56x56?text=U'}
                                     alt="author"
-                                    className="w-10 h-10 rounded-none object-cover border border-[#212631]/20 grayscale group-hover:grayscale-0 transition-all duration-300"
+                                    className="w-10 h-10 rounded-none object-cover border border-white/30 grayscale group-hover:grayscale-0 transition-all duration-300"
                                 />
                                 <div className="flex flex-col">
-                                    <p className="text-sm font-black uppercase text-[#212631] tracking-tight hover:underline">
+                                    <p className="text-sm font-black uppercase text-white tracking-tight hover:underline">
                                         {post.author.firstName} {post.author.lastName}
                                     </p>
-                                    <p className="text-[9px] tracking-[0.18em] uppercase font-bold text-[#212631]/40">
+                                    <p className="text-[9px] tracking-[0.18em] uppercase font-bold text-white/60">
                                         {new Date(post.createdAt).toLocaleString()}
                                     </p>
                                 </div>
@@ -64,7 +64,7 @@ const PostFeed = ({ posts, currentUser, onRefresh, onEditPost, onUserClick, onPo
                                 {!isOwner && (
                                     <button
                                         onClick={handleReport}
-                                        className="text-[9px] tracking-[0.18em] uppercase font-bold text-[#212631]/30 hover:text-red-600 transition-colors"
+                                        className="text-[9px] tracking-[0.18em] uppercase font-bold text-white/50 hover:text-red-300 transition-colors"
                                     >
                                         Report
                                     </button>
@@ -73,20 +73,20 @@ const PostFeed = ({ posts, currentUser, onRefresh, onEditPost, onUserClick, onPo
                         </div>
 
                         <div className="p-5 md:p-6">
-                            <p className="text-lg md:text-xl text-[#212631] font-medium leading-relaxed whitespace-pre-wrap tracking-tight">
+                            <p className="text-lg md:text-xl text-white font-medium leading-relaxed whitespace-pre-wrap tracking-tight">
                                 {post.content}
                             </p>
                         </div>
 
                         {post.imageUrl && (
-                            <div className="border-t border-b border-[#212631]/10 bg-[#212631]/5 flex items-center justify-center overflow-hidden">
+                            <div className="border-t border-b border-white/20 bg-white/10 flex items-center justify-center overflow-hidden">
                                 <img src={post.imageUrl} alt="post" className="w-full h-auto max-h-[600px] object-cover" />
                             </div>
                         )}
 
-                        <div className="flex items-center justify-between p-4 md:p-5 bg-[#ebebeb] border-t border-[#212631]/10 mt-auto">
+                        <div className="flex items-center justify-between p-4 md:p-5 bg-[#26bc61] border-t border-white/20 mt-auto">
                             <button
-                                className="flex items-center gap-2 text-[10px] tracking-[0.18em] uppercase font-bold text-[#212631]/60 hover:text-[#212631] transition-colors"
+                                className="flex items-center gap-2 text-[10px] tracking-[0.18em] uppercase font-bold text-white/70 hover:text-white transition-colors"
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     if (onPostClick) onPostClick(post);
@@ -102,13 +102,13 @@ const PostFeed = ({ posts, currentUser, onRefresh, onEditPost, onUserClick, onPo
                                 <div className="flex gap-4">
                                     <button
                                         onClick={(e) => handleEditClick(post, e)}
-                                        className="text-[9px] tracking-[0.18em] uppercase font-black text-[#212631]/60 hover:text-[#212631] transition-colors"
+                                        className="text-[9px] tracking-[0.18em] uppercase font-black text-white/70 hover:text-white transition-colors"
                                     >
                                         Edit
                                     </button>
                                     <button
                                         onClick={(e) => deletePost(post.id, e)}
-                                        className="text-[9px] tracking-[0.18em] uppercase font-black text-red-500/80 hover:text-red-600 transition-colors"
+                                        className="text-[9px] tracking-[0.18em] uppercase font-black text-red-300 hover:text-red-400 transition-colors"
                                     >
                                         Delete
                                     </button>
@@ -120,9 +120,9 @@ const PostFeed = ({ posts, currentUser, onRefresh, onEditPost, onUserClick, onPo
             })}
 
             {posts.length === 0 && (
-                <div className="border border-[#212631]/10 p-16 flex flex-col items-center justify-center text-center bg-[#ebebeb]">
-                    <p className="text-2xl font-black uppercase tracking-tighter text-[#212631]/20 mb-2">No Posts Yet</p>
-                    <p className="text-[10px] tracking-[0.18em] uppercase font-bold text-[#212631]/40">Be the first to share something.</p>
+                <div className="border border-white/20 p-16 flex flex-col items-center justify-center text-center bg-[#26bc61]">
+                    <p className="text-2xl font-black uppercase tracking-tighter text-white/50 mb-2">No Posts Yet</p>
+                    <p className="text-[10px] tracking-[0.18em] uppercase font-bold text-white/70">Be the first to share something.</p>
                 </div>
             )}
         </div>
