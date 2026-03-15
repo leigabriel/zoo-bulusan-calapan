@@ -297,12 +297,12 @@ const Plants = () => {
 
     return (
         <ReactLenis root>
-            <div className="bg-[#ebebeb] text-[#212631] relative min-h-screen">
+            <div className="bg-[#ffdd45] text-[#212631] relative min-h-screen">
                 <Header />
 
                 {/* Sticky Intro Section */}
                 <div className="sticky top-0 w-full h-[80vh] flex flex-col items-center justify-center overflow-hidden z-0">
-                    <div className="absolute inset-0 bg-[#e97383]" />
+                    <div className="absolute inset-0 bg-[#ffdd45]" />
 
                     <div className="relative z-10 flex flex-col items-center justify-center text-center px-4 w-full max-w-5xl h-full">
                         <span className="text-[10px] tracking-[0.3em] uppercase font-bold text-[#212631]/40 mb-6 md:mb-10">

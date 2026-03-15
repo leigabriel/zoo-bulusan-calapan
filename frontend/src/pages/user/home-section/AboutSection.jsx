@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 
 const AboutSection = () => {
     return (
-        <section className="bg-[#ebebeb] flex-1 flex flex-col justify-center px-6 py-10 md:px-16 w-full h-full overflow-hidden">
+        <section className="bg-[#26bc61] flex-1 flex flex-col justify-center px-6 py-10 md:px-16 w-full h-full overflow-hidden">
             <div className="max-w-[1500px] mx-auto w-full flex flex-col md:flex-row h-full">
                 <div className="w-full md:w-1/2 flex flex-col justify-center h-[55%] md:h-full pt-16 md:pt-0 z-10">
                     <h2 className="text-[#212631] text-xl md:text-3xl lg:text-4xl uppercase tracking-wide mb-6 md:mb-12">

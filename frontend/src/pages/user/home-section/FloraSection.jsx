@@ -10,24 +10,24 @@ const FloraSection = () => {
                 className="absolute inset-0 w-full h-full object-fill z-0 pointer-events-none"
             />
 
-            <div className="relative z-10 w-full h-auto flex flex-col max-w-[1800px] mx-auto px-5 sm:px-8 md:px-12 lg:px-16 pt-28 sm:pt-32 md:pt-40 pb-16 text-[#EAE7DC]">
-                <div className="flex flex-row justify-between items-end pb-3 border-b border-dotted border-[#EAE7DC] w-full gap-4">
+            <div className="relative z-10 w-full h-auto flex flex-col max-w-[1800px] mx-auto px-5 sm:px-8 md:px-12 lg:px-16 pt-28 sm:pt-32 md:pt-40 pb-16 text-[#212631]">
+                <div className="flex flex-row justify-between items-end pb-3 border-b border-dotted border-[#212631] w-full gap-4">
                     <span className="text-[10px] md:text-xs uppercase tracking-widest font-bold">
-                        Featured Flora 01
+                        Featured Plant 01
                     </span>
                     <Link to="/plants" className="text-[10px] md:text-xs uppercase tracking-widest font-bold hover:opacity-60 transition-opacity text-right">
-                        See All Flora &rarr;
+                        See All Plants &rarr;
                     </Link>
                 </div>
 
-                <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end py-6 md:py-12 border-b border-dotted border-[#EAE7DC] gap-4 md:gap-8">
+                <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end py-6 md:py-12 border-b border-dotted border-[#212631] gap-4 md:gap-8">
                     <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl tracking-tight leading-[1.05] max-w-4xl font-normal">
                         Botanical Elegance: Papa Meilland Rose
                     </h2>
                     <div className="flex flex-wrap lg:flex-col gap-2 text-[9px] sm:text-[10px] md:text-xs uppercase tracking-widest">
                         <span>2025</span>
                         <span>Botanical Gardens</span>
-                        <span className="bg-[#EAE7DC]/20 px-2 py-1 md:px-3 md:py-1.5 mt-1 md:mt-2 font-bold whitespace-nowrap w-fit">
+                        <span className="bg-[#212631]/20 px-2 py-1 md:px-3 md:py-1.5 mt-1 md:mt-2 font-bold whitespace-nowrap w-fit">
                             Rosa, Perennial, Fragrant
                         </span>
                     </div>
@@ -35,12 +35,9 @@ const FloraSection = () => {
 
                 <div className="flex flex-col lg:flex-row gap-6 md:gap-12 pt-6 md:pt-12">
                     <div className="w-full lg:w-1/4 flex flex-col gap-6 lg:gap-8">
-                        <p className="text-xs sm:text-sm md:text-base leading-relaxed tracking-wide text-[#EAE7DC]/90">
+                        <p className="text-xs sm:text-sm md:text-base leading-relaxed tracking-wide text-[#212631]/90">
                             An immersive exploration of the Papa Meilland rose, renowned worldwide for its deep velvet crimson petals and captivating, rich fragrance.
                         </p>
-                        <Link to="/plants" className="text-[10px] sm:text-xs uppercase tracking-widest font-bold hover:opacity-60 transition-opacity w-max border-b border-[#EAE7DC] pb-1">
-                            View Project &rarr;
-                        </Link>
                     </div>
 
                     <div className="w-full lg:w-3/4 flex flex-col md:flex-row gap-2 sm:gap-4 lg:gap-6">

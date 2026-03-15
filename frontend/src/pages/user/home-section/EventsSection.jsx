@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 const EventsSection = () => {
     return (
         <section id="events-section" className="bg-[#ebebeb] w-full flex items-center justify-center py-6 sm:py-8 md:py-12 px-4 sm:px-6 md:px-8 lg:px-12">
-            <div className="w-full max-w-[1600px] mx-auto bg-[#38d091] rounded-[1rem] md:rounded-[3rem] overflow-hidden relative flex flex-col min-h-[75vh] sm:min-h-[80vh] shadow-2xl">
+            <div className="w-full max-w-[1600px] mx-auto bg-[#38d091] rounded-[1rem] md:rounded-[3rem] overflow-hidden relative flex flex-col min-h-[75vh] sm:min-h-[80vh]">
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-12 lg:gap-8 relative z-30 px-6 pt-10 sm:px-12 sm:pt-16 md:px-16 md:pt-20 lg:px-20 lg:pt-24">
                     <div className="flex flex-col items-start gap-4">

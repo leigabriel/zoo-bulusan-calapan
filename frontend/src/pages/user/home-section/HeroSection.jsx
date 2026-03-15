@@ -173,7 +173,7 @@ export default function HeroSection() {
 
                     <motion.div
                         style={{ opacity: aboutOpacity, pointerEvents: aboutPointerEvents }}
-                        className="absolute inset-0 z-15 w-full h-full flex flex-col bg-[#ebebeb]"
+                        className="absolute inset-0 z-15 w-full h-full flex flex-col bg-[#26bc61]"
                     >
                         <AboutSection />
                     </motion.div>

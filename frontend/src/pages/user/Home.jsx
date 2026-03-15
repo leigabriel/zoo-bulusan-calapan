@@ -16,7 +16,7 @@ import '../../App.css';
 const Home = () => {
     return (
         <ReactLenis root options={{ lerp: 0.05, duration: 1, smoothWheel: true, smoothTouch: false, wheelMultiplier: 1, touchMultiplier: 2, infinite: false }}>
-            <div className="relative min-h-screen bg-[#ebebeb] selection:bg-[#007a55] selection:text-white">
+            <div className="relative min-h-screen bg-[#26bc61] selection:bg-[#007a55] selection:text-white">
                 <Header />
                 <AIFloatingButton />
                 <main className="relative w-full">
