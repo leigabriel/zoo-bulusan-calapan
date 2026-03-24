@@ -3,7 +3,7 @@ import { ReactLenis } from 'lenis/react';
 import { useNavigate } from 'react-router-dom';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { Draggable } from 'gsap/draggable';
+import { Draggable } from 'gsap/Draggable';
 
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';

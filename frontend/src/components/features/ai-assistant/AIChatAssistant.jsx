@@ -37,7 +37,7 @@ const Modal = ({ title, subtitle, cancelLabel, confirmLabel, onCancel, onConfirm
 
 const Avatar = () => (
     <div className="w-9 h-9 rounded-xl overflow-hidden flex-shrink-0" style={{ background: '#dcdcdc' }}>
-        <img src="https://cdn-icons-png.flaticon.com/128/1864/1864472.png" alt="Zooey" className="w-full h-full object-cover p-1" />
+        <img src="/zusan.webp" alt="Zusan" className="w-full h-full object-cover p-1" />
     </div>
 );
 
@@ -47,7 +47,7 @@ const SUGGESTIONS = [
     "Tell me about the conservation program."
 ];
 
-const GREETING = "Mabuhay! I'm Zooey. I'm here to guide you through the Calapan Bulusan Zoo. Ask me anything about our animals, exhibits, or how to get around.";
+const GREETING = "Mabuhay! I'm Zusan. I'm here to guide you through the Calapan Bulusan Zoo. Ask me anything about our animals, exhibits, or how to get around.";
 
 const AIChatAssistant = ({ onClose }) => {
     const [started, setStarted] = useState(false);
@@ -108,7 +108,7 @@ const AIChatAssistant = ({ onClose }) => {
         <>
             {showCloseConfirm && (
                 <Modal
-                    title="Close Zooey?"
+                    title="Close Zusan?"
                     subtitle="Your conversation will not be saved."
                     cancelLabel="Cancel"
                     confirmLabel="Close"
@@ -118,7 +118,7 @@ const AIChatAssistant = ({ onClose }) => {
             )}
             {showSidebarModal && (
                 <Modal
-                    title="Leave Zooey?"
+                    title="Leave Zusan?"
                     subtitle="You clicked outside the chat."
                     cancelLabel="Stay"
                     confirmLabel="Close"
@@ -133,12 +133,12 @@ const AIChatAssistant = ({ onClose }) => {
                     <div className="flex items-center gap-3">
                         <div className="relative">
                             <div className="w-10 h-10 rounded-xl overflow-hidden" style={{ background: '#dcdcdc' }}>
-                                <img src="https://cdn-icons-png.flaticon.com/128/1864/1864472.png" alt="Zooey" className="w-full h-full object-cover p-1" />
+                                <img src="/zusan.webp" alt="Zusan" className="w-full h-full object-cover p-1" />
                             </div>
                             <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2" style={{ background: '#4ade80', borderColor: '#ebebeb' }} />
                         </div>
                         <div>
-                            <p className="text-base font-bold" style={{ color: '#212631' }}>Zooey</p>
+                            <p className="text-base font-bold" style={{ color: '#212631' }}>Zusan</p>
                             <p className="text-sm" style={{ color: '#999' }}>Wildlife Guide · Online</p>
                         </div>
                     </div>
@@ -151,15 +151,15 @@ const AIChatAssistant = ({ onClose }) => {
                     <div className="flex-1 flex flex-col px-7 py-10 overflow-y-auto">
                         <div className="flex-1 flex flex-col gap-10">
                             <div className="w-16 h-16 rounded-2xl overflow-hidden" style={{ background: '#dcdcdc' }}>
-                                <img src="https://cdn-icons-png.flaticon.com/128/1864/1864472.png" alt="Zooey" className="w-full h-full object-cover p-2" />
+                                <img src="/zusan.webp" alt="Zusan" className="w-full h-full object-cover p-2" />
                             </div>
 
                             <div className="flex flex-col gap-3">
                                 <p className="text-3xl font-bold leading-tight" style={{ color: '#212631' }}>
-                                    Meet Zooey,<br />your zoo guide.
+                                    Meet Zusan,<br />your zoo guide.
                                 </p>
                                 <p className="text-lg leading-relaxed" style={{ color: '#777' }}>
-                                    Zooey is an AI assistant for Calapan Bulusan Zoo. Ask about animals, feeding schedules, exhibits, and conservation — or anything about your visit.
+                                    Zusan is an AI assistant for Calapan Bulusan Zoo. Ask about animals, feeding schedules, exhibits, and conservation — or anything about your visit.
                                 </p>
                             </div>
 
@@ -185,7 +185,7 @@ const AIChatAssistant = ({ onClose }) => {
                                 value={input}
                                 onChange={e => setInput(e.target.value)}
                                 onKeyPress={e => e.key === 'Enter' && handleSend()}
-                                placeholder="Ask Zooey anything…"
+                                placeholder="Ask Zusan anything..."
                                 className="flex-1 bg-transparent outline-none text-base font-medium py-1.5"
                                 style={{ color: '#212631' }}
                             />
@@ -240,7 +240,7 @@ const AIChatAssistant = ({ onClose }) => {
                                     value={input}
                                     onChange={e => setInput(e.target.value)}
                                     onKeyPress={e => e.key === 'Enter' && handleSend()}
-                                    placeholder="Ask Zooey anything…"
+                                    placeholder="Ask Zusan anything..."
                                     className="flex-1 bg-transparent outline-none text-base font-medium py-1.5"
                                     style={{ color: '#212631' }}
                                 />
