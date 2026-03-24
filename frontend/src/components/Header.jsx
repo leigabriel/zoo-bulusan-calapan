@@ -187,12 +187,28 @@ const Header = () => {
     const fetchNotifications = useCallback(async (showLoading = true) => {
         if (!user) return;
         if (showLoading) setNotificationLoading(true);
+
+        const formatSafeDate = (dateValue) => {
+            if (!dateValue) return 'date to be announced';
+            const parsed = new Date(dateValue);
+            return Number.isNaN(parsed.getTime()) ? 'date to be announced' : parsed.toLocaleDateString();
+        };
+
+        const getReservationDate = (reservation) => {
+            return reservation.reservation_date
+                || reservation.visit_date
+                || reservation.venue_event_date
+                || reservation.event_date
+                || null;
+        };
+
         try {
             const notifs = [];
-            const [eventsRes, messagesRes, reservationsRes, dbNotificationsRes] = await Promise.all([
+            const [eventsRes, messagesRes, ticketReservationsRes, eventReservationsRes, dbNotificationsRes] = await Promise.all([
                 userAPI.getEvents(false).catch(() => ({ success: false })),
                 messageAPI.getMyMessages().catch(() => ({ success: false })),
                 reservationAPI.getMyTicketReservations().catch(() => ({ success: false })),
+                reservationAPI.getMyEventReservations().catch(() => ({ success: false })),
                 userAPI.getNotifications().catch(() => ({ success: false }))
             ]);
 
@@ -226,17 +242,37 @@ const Header = () => {
                     time: m.responded_at || m.created_at, path: '/my-messages',
                 }));
             }
-            if (reservationsRes?.success && reservationsRes.reservations) {
-                reservationsRes.reservations
+            if (ticketReservationsRes?.success && ticketReservationsRes.reservations) {
+                ticketReservationsRes.reservations
                     .filter(r => r.status === 'confirmed' || r.status === 'pending')
                     .slice(0, 3)
                     .forEach(r => notifs.push({
-                        id: `reservation-${r.id}`, type: 'reservation',
-                        title: `Reservation #${r.booking_reference || r.id}`,
+                        id: `reservation-ticket-${r.id}`,
+                        type: 'reservation',
+                        title: `Reservation #${r.booking_reference || r.reservation_reference || r.id}`,
                         message: r.status === 'confirmed'
-                            ? `Confirmed for ${new Date(r.visit_date).toLocaleDateString()}`
+                            ? `Confirmed for ${formatSafeDate(getReservationDate(r))}`
                             : 'Pending confirmation',
-                        time: r.created_at, path: null, action: 'openReservationHistory',
+                        time: r.created_at,
+                        path: null,
+                        action: 'openReservationHistory',
+                    }));
+            }
+
+            if (eventReservationsRes?.success && eventReservationsRes.reservations) {
+                eventReservationsRes.reservations
+                    .filter(r => r.status === 'confirmed' || r.status === 'pending')
+                    .slice(0, 3)
+                    .forEach(r => notifs.push({
+                        id: `reservation-event-${r.id}`,
+                        type: 'reservation',
+                        title: `${r.venue_event_name || r.event_title || 'Event Reservation'} #${r.reservation_reference || r.id}`,
+                        message: r.status === 'confirmed'
+                            ? `Confirmed for ${formatSafeDate(getReservationDate(r))}`
+                            : 'Pending confirmation',
+                        time: r.created_at,
+                        path: null,
+                        action: 'openReservationHistory',
                     }));
             }
             notifs.sort((a, b) => new Date(b.time) - new Date(a.time));

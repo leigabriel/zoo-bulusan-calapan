@@ -5,9 +5,21 @@ import { notify } from '../../utils/toast';
 
 const StaffCommunityModeration = () => {
     const [pendingPosts, setPendingPosts] = useState([]);
+    const [allPosts, setAllPosts] = useState([]);
     const [reportedComments, setReportedComments] = useState([]);
     const [loading, setLoading] = useState(false);
     const [selectedPost, setSelectedPost] = useState(null);
+    const [removeModal, setRemoveModal] = useState({ isOpen: false, postId: null });
+    const [reportActionModal, setReportActionModal] = useState({
+        isOpen: false,
+        reportId: null,
+        action: null
+    });
+    const [removeCommentModal, setRemoveCommentModal] = useState({
+        isOpen: false,
+        reportId: null,
+        commentId: null
+    });
     const [moderationModal, setModerationModal] = useState({
         isOpen: false,
         postId: null,
@@ -18,11 +30,13 @@ const StaffCommunityModeration = () => {
     const loadData = async () => {
         setLoading(true);
         try {
-            const [postsRes, reportsRes] = await Promise.all([
+            const [postsRes, allPostsRes, reportsRes] = await Promise.all([
                 communityAPI.getPendingPosts('staff'),
+                communityAPI.getAllPostsForModeration('staff'),
                 communityAPI.getReportedComments('staff')
             ]);
             setPendingPosts(postsRes.posts || []);
+            setAllPosts(allPostsRes.posts || []);
             setReportedComments(reportsRes.reports || []);
         } catch {
             notify.error('Could not load moderation data right now.');
@@ -86,6 +100,69 @@ const StaffCommunityModeration = () => {
         }
     };
 
+    const openReportActionModal = (reportId, action) => {
+        setReportActionModal({ isOpen: true, reportId, action });
+    };
+
+    const closeReportActionModal = () => {
+        setReportActionModal({ isOpen: false, reportId: null, action: null });
+    };
+
+    const confirmReportAction = async () => {
+        if (!reportActionModal.reportId || !reportActionModal.action) return;
+        await reviewReport(reportActionModal.reportId, reportActionModal.action);
+        closeReportActionModal();
+    };
+
+    const openRemoveCommentModal = (reportId, commentId) => {
+        setRemoveCommentModal({ isOpen: true, reportId, commentId });
+    };
+
+    const closeRemoveCommentModal = () => {
+        setRemoveCommentModal({ isOpen: false, reportId: null, commentId: null });
+    };
+
+    const removeReportedComment = async () => {
+        if (!removeCommentModal.commentId || !removeCommentModal.reportId) return;
+
+        try {
+            await communityAPI.deleteComment(removeCommentModal.commentId, 'staff');
+            await communityAPI.reviewReport(removeCommentModal.reportId, 'reviewed', 'staff');
+            notify.success('Reported comment removed.');
+            closeRemoveCommentModal();
+            await loadData();
+        } catch {
+            notify.error('Could not remove this comment right now.');
+        }
+    };
+
+    const openRemoveModal = (postId) => {
+        setRemoveModal({ isOpen: true, postId });
+    };
+
+    const closeRemoveModal = () => {
+        setRemoveModal({ isOpen: false, postId: null });
+    };
+
+    const removePost = async () => {
+        if (!removeModal.postId) return;
+
+        try {
+            await communityAPI.deletePost(removeModal.postId, 'staff');
+            notify.success('Post removed.');
+            closeRemoveModal();
+            await loadData();
+        } catch {
+            notify.error('Could not remove this post right now.');
+        }
+    };
+
+    const getStatusBadgeClass = (status) => {
+        if (status === 'approved') return 'bg-emerald-700/30 text-emerald-200 border border-emerald-700/50';
+        if (status === 'declined') return 'bg-red-700/20 text-red-200 border border-red-700/50';
+        return 'bg-amber-700/20 text-amber-100 border border-amber-700/50';
+    };
+
     return (
         <div className="space-y-6">
             <section className="bg-[#141414] rounded-2xl border border-emerald-900/40 p-5">
@@ -118,15 +195,47 @@ const StaffCommunityModeration = () => {
             </section>
 
             <section className="bg-[#141414] rounded-2xl border border-emerald-900/40 p-5">
+                <h2 className="text-lg font-bold text-white mb-4">All User Posts ({allPosts.length})</h2>
+                <div className="space-y-4 max-h-[620px] overflow-auto pr-1">
+                    {allPosts.map((post) => (
+                        <article key={`all-${post.id}`} className="rounded-xl border border-emerald-900/40 p-4 bg-black/20">
+                            <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+                                <p className="text-sm text-emerald-200">
+                                    {post.author?.firstName} {post.author?.lastName} • {new Date(post.createdAt).toLocaleString()}
+                                </p>
+                                <span className={`px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-[0.15em] ${getStatusBadgeClass(post.status)}`}>
+                                    {post.status}
+                                </span>
+                            </div>
+                            <p className="text-xs text-emerald-300/80 mb-2">@{post.author?.username} • User ID #{post.userId}</p>
+                            <p className="text-sm text-white whitespace-pre-wrap line-clamp-3">{post.content}</p>
+                            <div className="mt-3 flex flex-wrap gap-2">
+                                <button onClick={() => setSelectedPost(post)} className="px-3 py-2 rounded-lg bg-slate-700 text-white text-xs font-semibold">View details</button>
+                                <button onClick={() => openRemoveModal(post.id)} className="px-3 py-2 rounded-lg bg-red-700 text-white text-xs font-semibold">Remove</button>
+                            </div>
+                        </article>
+                    ))}
+                    {!allPosts.length && <p className="text-sm text-gray-400">No posts found.</p>}
+                </div>
+            </section>
+
+            <section className="bg-[#141414] rounded-2xl border border-emerald-900/40 p-5">
                 <h2 className="text-lg font-bold text-white mb-4">Reported Comments ({reportedComments.length})</h2>
                 <div className="space-y-4">
                     {reportedComments.map((report) => (
-                        <article key={report.report_id} className="rounded-xl border border-amber-700/40 p-4 bg-black/20">
+                        <article key={report.reportId || report.report_id} className="rounded-xl border border-amber-700/40 p-4 bg-black/20">
+                            <p className="text-[11px] text-amber-200">
+                                Reported by: {report.reporter?.firstName || report.reporter_first_name} {report.reporter?.lastName || report.reporter_last_name} (@{report.reporter?.username || report.reporter_username})
+                            </p>
+                            <p className="text-[11px] text-amber-200 mt-1">
+                                Comment by: {report.commentAuthor?.firstName || report.comment_first_name} {report.commentAuthor?.lastName || report.comment_last_name} (@{report.commentAuthor?.username || report.comment_username})
+                            </p>
                             <p className="text-xs text-amber-300">Reason: {report.reason}</p>
-                            <p className="text-sm text-white mt-2">{report.comment_text}</p>
+                            <p className="text-sm text-white mt-2">{report.commentText || report.comment_text}</p>
                             <div className="mt-3 flex gap-2">
-                                <button onClick={() => reviewReport(report.report_id, 'reviewed')} className="px-3 py-2 rounded-lg bg-emerald-600 text-white text-xs font-semibold">Mark reviewed</button>
-                                <button onClick={() => reviewReport(report.report_id, 'dismissed')} className="px-3 py-2 rounded-lg bg-gray-600 text-white text-xs font-semibold">Dismiss</button>
+                                <button onClick={() => openReportActionModal(report.reportId || report.report_id, 'reviewed')} className="px-3 py-2 rounded-lg bg-emerald-600 text-white text-xs font-semibold">Mark reviewed</button>
+                                <button onClick={() => openReportActionModal(report.reportId || report.report_id, 'dismissed')} className="px-3 py-2 rounded-lg bg-gray-600 text-white text-xs font-semibold">Dismiss</button>
+                                <button onClick={() => openRemoveCommentModal(report.reportId || report.report_id, report.commentId || report.comment_id)} className="px-3 py-2 rounded-lg bg-red-700 text-white text-xs font-semibold">Remove comment</button>
                             </div>
                         </article>
                     ))}
@@ -174,8 +283,43 @@ const StaffCommunityModeration = () => {
                 inputValue={moderationModal.note}
                 onInputChange={(value) => setModerationModal((prev) => ({ ...prev, note: value }))}
                 confirmDisabled={moderationModal.action === 'declined' && !moderationModal.note.trim()}
+                variant="moderation"
                 onConfirm={confirmModeration}
                 onClose={closeModerationModal}
+            />
+
+            <ConfirmationModal
+                isOpen={removeModal.isOpen}
+                title="Remove This Post?"
+                message="This will permanently remove the post from the community feed. This action cannot be undone."
+                confirmLabel="Remove Post"
+                danger
+                variant="moderation"
+                onConfirm={removePost}
+                onClose={closeRemoveModal}
+            />
+
+            <ConfirmationModal
+                isOpen={reportActionModal.isOpen}
+                title={reportActionModal.action === 'dismissed' ? 'Dismiss This Report?' : 'Mark This Report Reviewed?'}
+                message={reportActionModal.action === 'dismissed'
+                    ? 'This report will be dismissed and removed from the moderation queue.'
+                    : 'This report will be marked as reviewed and removed from the moderation queue.'}
+                confirmLabel={reportActionModal.action === 'dismissed' ? 'Dismiss Report' : 'Mark Reviewed'}
+                variant="moderation"
+                onConfirm={confirmReportAction}
+                onClose={closeReportActionModal}
+            />
+
+            <ConfirmationModal
+                isOpen={removeCommentModal.isOpen}
+                title="Remove This Reported Comment?"
+                message="Use this when the comment violates policy. This action permanently deletes the comment."
+                confirmLabel="Remove Comment"
+                danger
+                variant="moderation"
+                onConfirm={removeReportedComment}
+                onClose={closeRemoveCommentModal}
             />
         </div>
     );

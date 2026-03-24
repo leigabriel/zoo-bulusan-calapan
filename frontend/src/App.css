@@ -1,5 +1,12 @@
 @import "tailwindcss";
 
+@font-face {
+    font-family: 'Mistral';
+    src: url('/mistral/mistral.TTF') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
 body {
     font-family: 'Inter', sans-serif;
     font-size: 16px;
@@ -7,6 +14,43 @@ body {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     background-color: #ebebeb;
+    cursor: url("https://cdn.prod.website-files.com/684433cbdb896cfecac10c42/685020772e431a751ff5fbef_Cursor_%20Pointer.svg") 2 0,
+        auto;
+}
+
+a,
+button,
+[role="button"],
+input,
+select,
+.cursor-pointer {
+    cursor: url("https://cdn.prod.website-files.com/684433cbdb896cfecac10c42/685020770b2138255626c49d_Cursor_%20Pointer%20Links.svg") 12 0, pointer !important;
+}
+
+p,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    cursor: url("https://cdn.prod.website-files.com/684433cbdb896cfecac10c42/6850207768efd1a9fc610efe_Cursor_%20Text.svg") 16 16, text;
+}
+
+[style*="cursor: grab"],
+.cursor-grab {
+    cursor: url("https://cdn.prod.website-files.com/684433cbdb896cfecac10c42/6850207766201db15b1120f7_Cursor_%20Grab.svg") 12 4, grab !important;
+}
+
+[style*="cursor: grabbing"],
+.cursor-grabbing,
+[style*="cursor: grab"]:active,
+.cursor-grab:active {
+    cursor: url("https://cdn.prod.website-files.com/684433cbdb896cfecac10c42/6850207745868ac1ee4bcf0d_Cursor_%20Dragging.svg") 12 0, grabbing !important;
+}
+
+div, span {
+    cursor: url("https://cdn.prod.website-files.com/684433cbdb896cfecac10c42/685020772e431a751ff5fbef_Cursor_%20Pointer.svg") 2 0, auto;
 }
 
 /* sticky and lenis support */

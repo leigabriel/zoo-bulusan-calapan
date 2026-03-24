@@ -49,6 +49,31 @@ const normalizeComment = (comment) => ({
     }
 });
 
+const normalizeReportedComment = (report) => ({
+    reportId: report.report_id,
+    commentId: report.comment_id,
+    reportedBy: report.reported_by,
+    reason: report.reason,
+    status: report.status,
+    reportedAt: report.reported_at,
+    commentText: report.comment_text,
+    commentUserId: report.comment_user_id,
+    isReported: Boolean(report.is_reported),
+    postId: report.post_id,
+    postContent: report.post_content,
+    commentAuthor: {
+        firstName: report.comment_first_name,
+        lastName: report.comment_last_name,
+        username: report.comment_username,
+        profileImage: report.comment_profile_image
+    },
+    reporter: {
+        firstName: report.reporter_first_name,
+        lastName: report.reporter_last_name,
+        username: report.reporter_username
+    }
+});
+
 const createAdminStaffNotifications = async ({ title, message, type = 'community', link = '/admin/community-moderation' }) => {
     try {
         const userIds = await Community.getAdminAndStaffUserIds();
@@ -196,7 +221,9 @@ exports.deletePost = async (req, res) => {
             return res.status(404).json({ success: false, message: 'Post not found.' });
         }
 
-        if (currentPost.user_id !== req.user.id) {
+        const isModerator = ['admin', 'staff'].includes(req.user?.role);
+
+        if (!isModerator && currentPost.user_id !== req.user.id) {
             return res.status(403).json({ success: false, message: 'You can only delete your own post.' });
         }
 
@@ -207,7 +234,9 @@ exports.deletePost = async (req, res) => {
             }
         }
 
-        const deleted = await Community.deletePostByOwner(postId, req.user.id);
+        const deleted = isModerator
+            ? await Community.deletePostById(postId)
+            : await Community.deletePostByOwner(postId, req.user.id);
         if (!deleted) {
             return res.status(404).json({ success: false, message: 'Post not found.' });
         }
@@ -216,6 +245,20 @@ exports.deletePost = async (req, res) => {
     } catch (error) {
         console.error('Error deleting community post:', error);
         return res.status(500).json({ success: false, message: 'Could not delete your post right now.' });
+    }
+};
+
+exports.getAllPostsForModeration = async (req, res) => {
+    try {
+        await Community.initializeTables();
+        const posts = await Community.getAllPostsForModeration();
+        return res.json({
+            success: true,
+            posts: posts.map(normalizePost)
+        });
+    } catch (error) {
+        console.error('Error getting all posts for moderation:', error);
+        return res.status(500).json({ success: false, message: 'Could not load posts right now.' });
     }
 };
 
@@ -415,9 +458,21 @@ exports.deleteComment = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Invalid comment request.' });
         }
 
-        const deleted = await Community.deleteCommentByOwner(commentId, req.user.id);
+        const comment = await Community.getCommentById(commentId);
+        if (!comment) {
+            return res.status(404).json({ success: false, message: 'Comment not found.' });
+        }
+
+        const isModerator = ['admin', 'staff'].includes(req.user?.role);
+        if (!isModerator && comment.user_id !== req.user.id) {
+            return res.status(403).json({ success: false, message: 'You can only delete your own comment.' });
+        }
+
+        const deleted = isModerator
+            ? await Community.deleteCommentById(commentId)
+            : await Community.deleteCommentByOwner(commentId, req.user.id);
         if (!deleted) {
-            return res.status(404).json({ success: false, message: 'Comment not found or access denied.' });
+            return res.status(404).json({ success: false, message: 'Comment not found.' });
         }
 
         return res.json({ success: true, message: 'Comment deleted successfully.' });
@@ -487,7 +542,7 @@ exports.getReportedComments = async (req, res) => {
     try {
         await Community.initializeTables();
         const reports = await Community.getReportedComments();
-        return res.json({ success: true, reports });
+        return res.json({ success: true, reports: reports.map(normalizeReportedComment) });
     } catch (error) {
         console.error('Error loading reports:', error);
         return res.status(500).json({ success: false, message: 'Could not load reported comments right now.' });

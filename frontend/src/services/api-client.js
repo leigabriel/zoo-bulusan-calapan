@@ -1299,6 +1299,13 @@ export const communityAPI = {
         return handleResponse(response);
     },
 
+    getAllPostsForModeration: async (type = 'admin') => {
+        const response = await fetch(`${API_BASE_URL}/community/posts/all`, {
+            headers: getAuthHeaders(type)
+        });
+        return handleResponse(response);
+    },
+
     reviewPost: async (postId, action, note = '', type = 'admin') => {
         const response = await fetch(`${API_BASE_URL}/community/posts/${postId}/review`, {
             method: 'PATCH',

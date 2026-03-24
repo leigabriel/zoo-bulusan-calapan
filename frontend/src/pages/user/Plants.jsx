@@ -1,10 +1,14 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 import { ReactLenis } from 'lenis/react';
 import AIFloatingButton from '../../components/common/AIFloatingButton';
 import { userAPI } from '../../services/api-client';
+
+gsap.registerPlugin(ScrollTrigger);
 
 const deduplicateById = (arr) => {
     const seen = new Set();
@@ -22,17 +26,17 @@ const CloseIcon = () => (
 );
 
 const PlantImage = ({ plant, big = false, hovered = false }) => (
-    <div className="relative w-full overflow-hidden" style={{ aspectRatio: '1 / 1' }}>
+    <div className="relative w-full overflow-hidden rounded-xl" style={{ aspectRatio: '1 / 1' }}>
         {plant.imageUrl ? (
             <motion.img
                 src={plant.imageUrl}
                 alt={plant.name}
-                className="absolute inset-0 w-full h-full object-cover block"
+                className="absolute inset-0 w-full h-full object-cover block rounded-xl"
                 animate={{ scale: hovered ? 1.04 : 1 }}
                 transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
             />
         ) : (
-            <div className="absolute inset-0 bg-[#212631]/5 flex items-center justify-center">
+            <div className="absolute inset-0 bg-[#212631]/5 flex items-center justify-center rounded-xl">
                 <span className={`font-black uppercase text-[#212631]/10 tracking-tighter ${big ? 'text-7xl' : 'text-4xl'}`}>
                     {plant.name[0]}
                 </span>
@@ -44,7 +48,7 @@ const PlantImage = ({ plant, big = false, hovered = false }) => (
 const CellMeta = ({ plant, index, big = false }) => {
     const num = String(index + 1).padStart(3, '0');
     return (
-        <div className={`flex items-center justify-between border-t border-[#212631]/10 ${big ? 'px-3.5 py-2.5' : 'px-2.5 py-1.5'}`}>
+        <div className={`flex items-center justify-between border-t border-[#212631]/10 mt-2 ${big ? 'px-3.5 py-2.5' : 'px-2.5 py-1.5'}`}>
             <div className="flex items-center gap-1.5 min-w-0 flex-1 overflow-hidden">
                 <span className="text-[8px] tracking-[0.16em] uppercase font-bold text-[#212631]/30 shrink-0">{num}</span>
                 <span className={`font-semibold text-[#212631] truncate ${big ? 'text-xs' : 'text-[10px]'}`}>
@@ -60,7 +64,7 @@ const BigCell = ({ plant, index, onClick }) => {
     const [hovered, setHovered] = useState(false);
     return (
         <div
-            className="cursor-pointer bg-[#ebebeb] overflow-hidden flex flex-col border-r border-[#212631]/10"
+            className="grid-cell cursor-pointer bg-[#ebebeb] overflow-hidden flex flex-col border-r border-[#212631]/10 p-2"
             onMouseEnter={() => setHovered(true)}
             onMouseLeave={() => setHovered(false)}
             onClick={() => onClick(plant)}
@@ -75,7 +79,7 @@ const SmallCell = ({ plant, index, onClick, borderRight = false, borderBottom = 
     const [hovered, setHovered] = useState(false);
     return (
         <div
-            className={`cursor-pointer bg-[#ebebeb] overflow-hidden flex flex-col ${borderRight ? 'border-r border-[#212631]/10' : ''} ${borderBottom ? 'border-b border-[#212631]/10' : ''}`}
+            className={`grid-cell cursor-pointer bg-[#ebebeb] overflow-hidden flex flex-col p-2 ${borderRight ? 'border-r border-[#212631]/10' : ''} ${borderBottom ? 'border-b border-[#212631]/10' : ''}`}
             onMouseEnter={() => setHovered(true)}
             onMouseLeave={() => setHovered(false)}
             onClick={() => onClick(plant)}
@@ -130,7 +134,7 @@ const MobileCell = ({ plant, index, onClick }) => {
     const [hovered, setHovered] = useState(false);
     return (
         <div
-            className="border-r border-b border-[#212631]/10 overflow-hidden bg-[#ebebeb] cursor-pointer flex flex-col"
+            className="grid-cell border-r border-b border-[#212631]/10 overflow-hidden bg-[#ebebeb] cursor-pointer flex flex-col p-2"
             onMouseEnter={() => setHovered(true)}
             onMouseLeave={() => setHovered(false)}
             onClick={() => onClick(plant)}
@@ -155,7 +159,7 @@ const DetailModal = ({ plant, onClose }) => {
 
     return (
         <motion.div
-            className="fixed inset-0 z-[300] flex items-center justify-center p-0 md:p-6"
+            className="fixed inset-0 z-[300] flex items-center justify-center p-4 md:p-6"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -167,7 +171,7 @@ const DetailModal = ({ plant, onClose }) => {
             />
 
             <motion.div
-                className="relative z-10 flex flex-col bg-[#ebebeb] border border-[#212631]/10 w-full h-full md:h-auto md:max-w-[760px] md:max-h-[85vh] overflow-hidden"
+                className="relative z-10 flex flex-col bg-[#ebebeb] border border-[#212631]/10 w-full h-full md:h-auto md:max-w-[760px] md:max-h-[85vh] overflow-hidden rounded-2xl"
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 12 }}
@@ -182,7 +186,7 @@ const DetailModal = ({ plant, onClose }) => {
                     </div>
                     <button
                         onClick={onClose}
-                        className="w-7 h-7 flex items-center justify-center text-[#212631] opacity-40 hover:opacity-100 transition-opacity cursor-pointer"
+                        className="w-7 h-7 flex items-center justify-center text-[#212631] opacity-40 hover:opacity-100 transition-opacity cursor-pointer rounded-full hover:bg-[#212631]/5"
                         aria-label="Close"
                     >
                         <CloseIcon />
@@ -191,15 +195,15 @@ const DetailModal = ({ plant, onClose }) => {
 
                 <div className="flex flex-col md:flex-row flex-1 overflow-y-auto md:overflow-hidden">
                     <div className="shrink-0 md:w-[320px] p-5 border-b md:border-b-0 md:border-r border-[#212631]/10 flex items-start justify-center">
-                        <div className="w-full overflow-hidden" style={{ aspectRatio: '1 / 1' }}>
+                        <div className="w-full overflow-hidden rounded-xl" style={{ aspectRatio: '1 / 1' }}>
                             {plant.imageUrl ? (
                                 <img
                                     src={plant.imageUrl}
                                     alt={plant.name}
-                                    className="w-full h-full object-cover block"
+                                    className="w-full h-full object-cover block rounded-xl"
                                 />
                             ) : (
-                                <div className="w-full h-full bg-[#212631]/5 flex items-center justify-center">
+                                <div className="w-full h-full bg-[#212631]/5 flex items-center justify-center rounded-xl">
                                     <span className="text-7xl font-black uppercase text-[#212631]/10 tracking-tighter">
                                         {plant.name[0]}
                                     </span>
@@ -241,7 +245,7 @@ const DetailModal = ({ plant, onClose }) => {
                             </span>
                             <button
                                 onClick={onClose}
-                                className="text-[9px] tracking-[0.18em] uppercase font-black text-[#212631] border border-[#212631]/20 px-4 py-2 hover:bg-[#212631] hover:text-[#ebebeb] transition-colors duration-150 cursor-pointer"
+                                className="text-[9px] tracking-[0.18em] uppercase font-black text-[#212631] border border-[#212631]/20 px-4 py-2 hover:bg-[#212631] hover:text-[#ebebeb] transition-colors duration-150 cursor-pointer rounded-full"
                             >
                                 Close
                             </button>
@@ -258,6 +262,7 @@ const Plants = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [selectedPlant, setSelectedPlant] = useState(null);
+    const containerRef = useRef(null);
 
     const fetchPlants = useCallback(async () => {
         try {
@@ -286,6 +291,34 @@ const Plants = () => {
 
     useEffect(() => { fetchPlants(); }, [fetchPlants]);
 
+    useEffect(() => {
+        if (!loading && plants.length > 0) {
+            const ctx = gsap.context(() => {
+                gsap.fromTo('.hero-anim',
+                    { y: 30, opacity: 0 },
+                    { y: 0, opacity: 1, duration: 1, stagger: 0.1, ease: 'power3.out' }
+                );
+
+                gsap.utils.toArray('.grid-cell').forEach((cell) => {
+                    gsap.fromTo(cell,
+                        { y: 40, opacity: 0 },
+                        {
+                            scrollTrigger: {
+                                trigger: cell,
+                                start: 'top 90%',
+                            },
+                            y: 0,
+                            opacity: 1,
+                            duration: 0.6,
+                            ease: 'power2.out'
+                        }
+                    );
+                });
+            }, containerRef);
+            return () => ctx.revert();
+        }
+    }, [loading, plants]);
+
     const scrollToGrid = () => {
         document.getElementById('plants-grid')?.scrollIntoView({ behavior: 'smooth' });
     };
@@ -297,22 +330,19 @@ const Plants = () => {
 
     return (
         <ReactLenis root>
-            <div className="bg-[#ffdd45] text-[#212631] relative min-h-screen">
+            <div ref={containerRef} className="bg-[#ffdd45] text-[#212631] relative min-h-screen">
                 <Header />
 
-                {/* Sticky Intro Section */}
                 <div className="sticky top-0 w-full h-[80vh] flex flex-col items-center justify-center overflow-hidden z-0">
-                    <div className="absolute inset-0 bg-[#ffdd45]" />
+                    <div className="absolute inset-0 bg-[url('/background/1003.webp')] bg-cover bg-center bg-no-repeat" />
 
                     <div className="relative z-10 flex flex-col items-center justify-center text-center px-4 w-full max-w-5xl h-full">
-                        <span className="text-[10px] tracking-[0.3em] uppercase font-bold text-[#212631]/40 mb-6 md:mb-10">
-                            Zoo Bulusan Botanical
-                        </span>
-                        <h1 className="font-normal uppercase text-[#212631] leading-[0.85] tracking-tighter"
+
+                        <h1 className="hero-anim font-extrabold uppercase text-[#212631] leading-[0.85] tracking-tighter"
                             style={{ fontSize: 'clamp(40px, 11vw, 120px)' }}>
                             Discover Our Plants
                         </h1>
-                        <p className="mt-8 md:mt-10 text-xs md:text-sm tracking-[0.1em] text-[#212631]/60 max-w-2xl font-semibold uppercase leading-relaxed mb-10">
+                        <p className="hero-anim mt-8 md:mt-10 text-xs md:text-sm tracking-[0.1em] text-[#212631]/60 max-w-2xl font-semibold uppercase leading-relaxed mb-10">
                             Explore the lush flora that makes up the Zoo Bulusan ecosystem. Learn about various plant categories and their unique beauty.
                             {!loading && plants.length > 0 && (
                                 <span className="block mt-4 text-[#212631]/80 font-black">
@@ -323,23 +353,22 @@ const Plants = () => {
 
                         <button
                             onClick={scrollToGrid}
-                            className="px-8 py-4 bg-[#212631] text-[#ebebeb] border border-[#212631] text-[10px] tracking-[0.2em] uppercase font-black hover:bg-transparent hover:text-[#212631] transition-colors duration-300"
+                            className="hero-anim px-8 py-4 bg-[#212631] text-[#ebebeb] border border-[#212631] text-[10px] tracking-[0.2em] uppercase font-black hover:bg-transparent hover:text-[#212631] transition-colors duration-300 rounded-full"
                         >
                             Explore The Garden
                         </button>
                     </div>
 
                     <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-3 opacity-60 cursor-pointer hover:opacity-100 transition-opacity" onClick={scrollToGrid}>
-                        <span className="text-[9px] tracking-[0.2em] uppercase font-bold text-[#212631]">Scroll</span>
+                        <span className="text-[9px] tracking-[0.2em] uppercase font-bold text-[#212631] rounded-full px-2 py-1 bg-[#212631]/5">Scroll</span>
                         <motion.div
                             animate={{ y: [0, 8, 0] }}
                             transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
-                            className="w-[1px] h-12 bg-gradient-to-b from-[#212631] to-transparent"
+                            className="w-[1px] h-12 bg-gradient-to-b from-[#212631] to-transparent rounded-full"
                         />
                     </div>
                 </div>
 
-                {/* Main Plant Grid Section */}
                 <main id="plants-grid" className="relative z-10 w-full bg-[#ebebeb] border-t border-[#212631]/10 min-h-screen">
                     {loading && (
                         <div className="flex items-center justify-center py-40">
@@ -356,7 +385,7 @@ const Plants = () => {
                             <p className="text-[10px] tracking-widest uppercase font-bold text-[#212631]/35">{error}</p>
                             <button
                                 onClick={fetchPlants}
-                                className="text-[9px] tracking-[0.18em] uppercase font-black text-[#212631] border border-[#212631]/20 px-4 py-2 hover:bg-[#212631] hover:text-[#ebebeb] transition-colors cursor-pointer"
+                                className="text-[9px] tracking-[0.18em] uppercase font-black text-[#212631] border border-[#212631]/20 px-4 py-2 hover:bg-[#212631] hover:text-[#ebebeb] transition-colors cursor-pointer rounded-full"
                             >
                                 Retry
                             </button>
@@ -399,7 +428,6 @@ const Plants = () => {
                         </>
                     )}
 
-                    {/* Bottom Padding/Footer Spacer */}
                     <div className="h-20 bg-[#ebebeb] border-t border-[#212631]/10"></div>
                 </main>
 
@@ -414,6 +442,7 @@ const Plants = () => {
                 </AnimatePresence>
 
                 <AIFloatingButton />
+                <Footer />
             </div>
         </ReactLenis>
     );

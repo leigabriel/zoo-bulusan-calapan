@@ -13,6 +13,7 @@ router.delete('/posts/:postId', communityController.deletePost);
 router.post('/posts/:postId/like', communityController.togglePostLike);
 
 router.get('/posts/pending', authorize('admin', 'staff'), communityController.getPendingPosts);
+router.get('/posts/all', authorize('admin', 'staff'), communityController.getAllPostsForModeration);
 router.patch('/posts/:postId/review', authorize('admin', 'staff'), communityController.reviewPost);
 
 router.get('/posts/:postId/comments', communityController.getCommentsByPost);

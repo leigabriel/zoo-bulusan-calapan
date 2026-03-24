@@ -248,6 +248,14 @@ class Community {
         return result.affectedRows > 0;
     }
 
+    static async deletePostById(postId) {
+        const [result] = await db.query(
+            'DELETE FROM community_posts WHERE id = ?',
+            [postId]
+        );
+        return result.affectedRows > 0;
+    }
+
     static async getPendingPosts() {
         const [rows] = await db.query(
             `SELECT p.id, p.user_id, p.content, p.image_url, p.status, p.created_at, p.updated_at,
@@ -256,6 +264,19 @@ class Community {
              JOIN users u ON p.user_id = u.id
              WHERE p.status = 'pending'
              ORDER BY p.created_at ASC`
+        );
+        return rows;
+    }
+
+    static async getAllPostsForModeration() {
+        const [rows] = await db.query(
+            `SELECT p.id, p.user_id, p.content, p.image_url, p.status, p.moderation_note, p.created_at, p.updated_at,
+                    u.first_name, u.last_name, u.username, u.profile_image,
+                    (SELECT COUNT(*) FROM community_comments c WHERE c.post_id = p.id) AS comment_count,
+                    (SELECT COUNT(*) FROM community_post_likes pl WHERE pl.post_id = p.id) AS like_count
+             FROM community_posts p
+             JOIN users u ON p.user_id = u.id
+             ORDER BY p.created_at DESC`
         );
         return rows;
     }
@@ -368,6 +389,14 @@ class Community {
         const [result] = await db.query(
             'DELETE FROM community_comments WHERE id = ? AND user_id = ?',
             [commentId, userId]
+        );
+        return result.affectedRows > 0;
+    }
+
+    static async deleteCommentById(commentId) {
+        const [result] = await db.query(
+            'DELETE FROM community_comments WHERE id = ?',
+            [commentId]
         );
         return result.affectedRows > 0;
     }

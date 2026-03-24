@@ -323,7 +323,7 @@ const Reservations = () => {
                         <span className="text-[10px] tracking-[0.3em] uppercase font-bold text-[#212631]/40 mb-6 md:mb-10">
                             Zoo Bulusan Admissions
                         </span>
-                        <h1 className="font-normal uppercase text-[#212631] leading-[0.85] tracking-tighter"
+                        <h1 className="font-extrabold uppercase text-[#212631] leading-[0.85] tracking-tighter"
                             style={{ fontSize: 'clamp(40px, 10vw, 140px)' }}>
                             Reservations
                         </h1>
