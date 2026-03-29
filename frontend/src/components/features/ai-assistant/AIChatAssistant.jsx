@@ -37,7 +37,7 @@ const Modal = ({ title, subtitle, cancelLabel, confirmLabel, onCancel, onConfirm
 
 const Avatar = () => (
     <div className="w-9 h-9 rounded-xl overflow-hidden flex-shrink-0" style={{ background: '#dcdcdc' }}>
-        <img src="/zusan.webp" alt="Zusan" className="w-full h-full object-cover p-1" />
+        <img src="/zusan.gif" alt="Zusan" className="w-full h-full object-cover p-1" />
     </div>
 );
 
@@ -133,7 +133,7 @@ const AIChatAssistant = ({ onClose }) => {
                     <div className="flex items-center gap-3">
                         <div className="relative">
                             <div className="w-10 h-10 rounded-xl overflow-hidden" style={{ background: '#dcdcdc' }}>
-                                <img src="/zusan.webp" alt="Zusan" className="w-full h-full object-cover p-1" />
+                                <img src="/zusan.gif" alt="Zusan" className="w-full h-full object-cover p-1" />
                             </div>
                             <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2" style={{ background: '#4ade80', borderColor: '#ebebeb' }} />
                         </div>
@@ -151,7 +151,7 @@ const AIChatAssistant = ({ onClose }) => {
                     <div className="flex-1 flex flex-col px-7 py-10 overflow-y-auto">
                         <div className="flex-1 flex flex-col gap-10">
                             <div className="w-16 h-16 rounded-2xl overflow-hidden" style={{ background: '#dcdcdc' }}>
-                                <img src="/zusan.webp" alt="Zusan" className="w-full h-full object-cover p-2" />
+                                <img src="/zusan.gif" alt="Zusan" className="w-full h-full object-cover p-2" />
                             </div>
 
                             <div className="flex flex-col gap-3">

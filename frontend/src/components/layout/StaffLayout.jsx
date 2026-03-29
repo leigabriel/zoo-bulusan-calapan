@@ -5,6 +5,7 @@ import { authAPI, staffAPI, reservationAPI, communityAPI, getProfileImageUrl } f
 import { sanitizeInput } from '../../utils/sanitize';
 import { notify } from '../../utils/toast';
 import LogoutModal from '../common/LogoutModal';
+import RoleCompanionFloatingButton from '../common/RoleCompanionFloatingButton';
 
 // Icons matching Admin design system
 const OverviewIcon = () => (
@@ -1036,6 +1037,8 @@ const StaffLayout = ({ children }) => {
                 onClose={() => setShowLogoutModal(false)}
                 onConfirm={handleLogout}
             />
+
+            <RoleCompanionFloatingButton role="staff" />
         </div>
     );
 };

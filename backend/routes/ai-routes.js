@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const { protect, authorize } = require('../middleware/auth');
 
 // import models
 const Animal = require('../models/animal-model');
@@ -128,6 +129,162 @@ const getFallbackResponse = (message, dynamicData = null) => {
     }
 
     return "Salamat for your question!\n\nI can help you with:\n- Ticket prices and booking\n- Operating hours (Tue-Sun, 8AM-5PM)\n- Information about any animal you ask about\n- Zoo zones and map\n- Events and activities\n- Current ticket availability\n\nFeel free to ask about any of these topics, or contact us at info@zoobulusan.com for more specific inquiries!";
+};
+
+const detectCompanionLanguage = (text = '') => {
+    const normalized = String(text || '').toLowerCase();
+    const tagalogSignals = [
+        'ang', 'mga', 'sa', 'ng', 'si', 'namin', 'natin', 'ako', 'ikaw', 'kayo',
+        'paki', 'pakisuyo', 'pwede', 'maaari', 'salamat', 'kamusta', 'kumusta',
+        'ano', 'saan', 'kailan', 'paano', 'bakit', 'gusto', 'kailangan', 'tulong',
+        'reserbasyon', 'pang-araw', 'mangyaring', 'opo', 'po'
+    ];
+
+    const hitCount = tagalogSignals.reduce((count, word) => {
+        const regex = new RegExp(`\\b${word}\\b`, 'i');
+        return regex.test(normalized) ? count + 1 : count;
+    }, 0);
+
+    return hitCount >= 2 ? 'tagalog' : 'english';
+};
+
+const sanitizeCompanionOutput = (text = '') => {
+    if (!text) return '';
+
+    let cleaned = String(text)
+        .replace(/```[\s\S]*?```/g, '')
+        .replace(/[`*_~>#]/g, '')
+        .replace(/[•●○■□▪▫◆◇★☆→✓✔✦✧✨]/g, '-')
+        .replace(/\p{Extended_Pictographic}/gu, '')
+        .replace(/\r\n/g, '\n')
+        .replace(/([.:])\s+(\d+\.\s+)/g, '$1\n$2')
+        .replace(/[ \t]+\n/g, '\n');
+
+    cleaned = cleaned
+        .split('\n')
+        .map(line => line
+            .replace(/^\s*[•●○■□▪▫◆◇★☆]+\s*/g, '- ')
+            .replace(/^\s*[-–—]{2,}\s*/g, '- ')
+            .replace(/\s{2,}/g, ' ')
+            .trimEnd()
+        )
+        .join('\n')
+        .replace(/\n{3,}/g, '\n\n')
+        .trim();
+
+    return cleaned;
+};
+
+const getCompanionFallbackResponse = (role, message, dynamicData = null, language = 'english') => {
+    const lowerMsg = String(message || '').toLowerCase();
+    const totalAnimals = dynamicData?.animalCount || 'the latest';
+    const ticketSoldToday = dynamicData?.ticketStats?.todayTickets ?? 'latest';
+    const availability = dynamicData?.ticketStats?.availableSlots || 'unknown';
+    const isTagalog = language === 'tagalog';
+
+    if (role === 'admin') {
+        if (lowerMsg.includes('priority') || lowerMsg.includes('today') || lowerMsg.includes('focus')) {
+            if (isTagalog) {
+                return `Mga prayoridad ng admin ngayong araw:\n1. Suriin ang demand sa ticket (${ticketSoldToday} sold, availability: ${availability}).\n2. I-check ang staffing at community moderation queues.\n3. I-validate ang event readiness at visitor flow.\n\nKung gusto mo, gagawan kita ng 3-step action plan.`;
+            }
+            return `Admin priorities for today:\n1. Review live ticket demand (${ticketSoldToday} sold, availability: ${availability}).\n2. Check staffing and community moderation queues.\n3. Validate event readiness and visitor flow.\n\nIf you want, I can prepare a concise 3-step action plan.`;
+        }
+
+        if (lowerMsg.includes('report') || lowerMsg.includes('analytics') || lowerMsg.includes('kpi')) {
+            if (isTagalog) {
+                return `Para sa admin reporting, tumuon sa reservations trend, attendance, event engagement, at moderation turnaround. Ang kasalukuyang animal registry count ay ${totalAnimals}. Maaari kitang bigyan ng maikling dashboard summary format.`;
+            }
+            return `For admin reporting, focus on reservations trend, attendance, event engagement, and moderation turnaround. The current animal registry count is ${totalAnimals}. I can provide a concise dashboard summary format.`;
+        }
+
+        if (isTagalog) {
+            return 'Handa ang Admin Companion. Makakatulong ako sa planning, analytics interpretation, operations strategy, at policy-aligned decisions para sa Zoo Bulusan. Humingi ka ng action plan, risk check, o reporting summary.';
+        }
+        return 'Admin companion ready. I can help with planning, analytics interpretation, operations strategy, and policy-aligned decisions for Zoo Bulusan. Ask for an action plan, risk check, or reporting summary.';
+    }
+
+    if (lowerMsg.includes('shift') || lowerMsg.includes('opening') || lowerMsg.includes('checklist')) {
+        if (isTagalog) {
+            return `Checklist para sa staff shift:\n1. I-verify ang status updates ng animal at plant areas.\n2. I-confirm ang reservation queues at ticket verification tasks.\n3. I-review ang bagong community reports na kailangan ng moderation.\n\nMaaari kong iayon ang checklist sa kasalukuyan mong page at task.`;
+        }
+        return `Staff shift checklist:\n1. Verify animal and plant area status updates.\n2. Confirm reservation queues and ticket verification tasks.\n3. Review new community reports that need moderation.\n\nI can tailor this checklist to your current page and task.`;
+    }
+
+    if (lowerMsg.includes('reservation') || lowerMsg.includes('ticket') || lowerMsg.includes('verify')) {
+        if (isTagalog) {
+            return `Para sa reservation handling, kumpirmahin ang visitor details, i-validate ang schedule at slot availability, at panatilihing malinaw ang notes para sa handoff. Sa system ngayon, ${ticketSoldToday} ang sold tickets at ${availability} ang availability.`;
+        }
+        return `For reservation handling, confirm visitor details, validate schedule and slot availability, and keep notes clear for handoff. Today's system shows ${ticketSoldToday} tickets sold with ${availability} availability.`;
+    }
+
+    if (isTagalog) {
+        return 'Handa ang Staff Companion. Makakatulong ako sa daily operations, reservation verification, moderation workflows, at mabilis na response templates para sa frontline tasks sa Zoo Bulusan.';
+    }
+    return 'Staff companion ready. I can help with daily operations, reservation verification, moderation workflows, and quick response templates for frontline tasks in Zoo Bulusan.';
+};
+
+const getCompanionSystemContext = (role, preferredLanguage = 'english') => {
+    const languageRule = preferredLanguage === 'tagalog'
+        ? 'Respond only in clear, professional Tagalog. Do not switch to English unless the user explicitly asks.'
+        : 'Respond only in clear, professional English. Do not switch to Tagalog unless the user explicitly asks.';
+
+    const sharedRules = `
+You are an internal AI companion for Zoo Bulusan Calapan.
+
+Core rules:
+- Give practical, factual, workflow-focused guidance.
+- Keep responses concise and actionable.
+- Never reveal personal data, payment records, private account details, tokens, or secrets.
+- If user asks for sensitive data, refuse and suggest the proper in-system workflow.
+- Do not fabricate database records, metrics, or unavailable facts.
+- Use plain text only.
+- ${languageRule}
+
+Output formatting rules:
+- No markdown.
+- No emojis.
+- No decorative symbols.
+- No asterisks, hashes, or code blocks.
+- Keep output clean and professional.
+- Use short paragraphs.
+- If a list is necessary, use simple numbered points (1., 2., 3.).
+`;
+
+    if (role === 'admin') {
+        return `${sharedRules}
+
+Role: ADMIN companion.
+
+What you should help with:
+- Executive priorities and operational planning.
+- Resource allocation and queue balancing.
+- Reporting and KPI interpretation.
+- Community moderation policy decisions.
+- Staff monitoring and escalation guidelines.
+
+Response style:
+- Prefer structured steps and decision checkpoints.
+- Mention risks, dependencies, and recommended next actions.
+- If useful, provide short templates for admin announcements and task delegation.
+`;
+    }
+
+    return `${sharedRules}
+
+Role: STAFF companion.
+
+What you should help with:
+- Daily shift workflows and task sequencing.
+- Ticket and reservation verification process.
+- Animal/plant records handling reminders.
+- Community moderation triage and response drafting.
+- Visitor support response phrasing.
+
+Response style:
+- Give quick checklist-like instructions.
+- Keep steps concrete, short, and operational.
+- Suggest escalation to admin when issue exceeds staff permissions.
+`;
 };
 
 const ZOO_BULUSAN_CONTEXT = `
@@ -438,6 +595,135 @@ Remember: Only share this general zoo information. Never share personal user dat
             response: getFallbackResponse(req.body.message || '', null),
             timestamp: new Date().toISOString(),
             source: 'fallback'
+        });
+    }
+});
+
+router.post('/companion/chat', protect, authorize('admin', 'staff'), async (req, res) => {
+    try {
+        const { message, history = [] } = req.body;
+        const role = req.user?.role;
+        const preferredLanguage = detectCompanionLanguage(message);
+
+        if (!message) {
+            return res.status(400).json({
+                success: false,
+                message: 'Message is required'
+            });
+        }
+
+        const dynamicData = await getDynamicZooData();
+
+        let dynamicContext = '';
+        if (dynamicData) {
+            dynamicContext = `
+
+CURRENT ZOO DATA (Live from database):
+- Total Animals: ${dynamicData.animalCount}
+- Animal Health Status: ${Object.entries(dynamicData.animalsByStatus).map(([status, count]) => `${count} ${status}`).join(', ') || 'Data not available'}
+- Sample Animal Records: ${dynamicData.animalNames.join(', ') || 'Various species'}
+- Today's Tickets Sold: ${dynamicData.ticketStats.todayTickets}
+- Today's Ticket Availability: ${dynamicData.ticketStats.availableSlots}
+${dynamicData.upcomingEvents.length > 0 ? `
+UPCOMING EVENTS:
+${dynamicData.upcomingEvents.map(e => `- ${e.title} on ${e.date}: ${e.description || 'Check system for details'}`).join('\n')}` : '- No upcoming events scheduled at this time'}
+
+Only provide operationally useful summaries. Never expose personal user records.
+`;
+        }
+
+        const apiKey = process.env.GEMINI_API_KEY;
+        if (!apiKey || typeof apiKey !== 'string' || apiKey.trim().length === 0 || !GoogleGenerativeAI) {
+            return res.json({
+                success: true,
+                response: sanitizeCompanionOutput(getCompanionFallbackResponse(role, message, dynamicData, preferredLanguage)),
+                timestamp: new Date().toISOString(),
+                source: 'fallback',
+                role,
+                language: preferredLanguage
+            });
+        }
+
+        const genAI = new GoogleGenerativeAI(apiKey);
+        const candidateModels = [
+            'gemini-2.0-flash',
+            'gemini-2.5-flash',
+            'gemini-1.5-flash-latest',
+            'gemini-1.5-pro-latest',
+            'gemini-pro',
+            'models/gemini-pro'
+        ];
+
+        let chosen = null;
+        let finalText = null;
+
+        for (const candidate of candidateModels) {
+            try {
+                const model = genAI.getGenerativeModel({ model: candidate });
+
+                const conversationHistory = history
+                    .filter(msg => msg.content && msg.content.trim())
+                    .map(msg => ({
+                        role: msg.role === 'user' ? 'user' : 'model',
+                        parts: [{ text: msg.content }]
+                    }));
+
+                const systemPrompt = `${getCompanionSystemContext(role, preferredLanguage)}${dynamicContext}\n\nUser request: ${message}`;
+
+                const result = await model.generateContent({
+                    contents: [
+                        ...conversationHistory,
+                        {
+                            role: 'user',
+                            parts: [{ text: systemPrompt }]
+                        }
+                    ],
+                    generationConfig: {
+                        maxOutputTokens: 1000,
+                        temperature: 0.6,
+                    }
+                });
+
+                const response = result.response;
+                const text = response.text();
+
+                if (text && text.trim().length > 0) {
+                    finalText = sanitizeCompanionOutput(text);
+                    chosen = candidate;
+                    break;
+                }
+            } catch (err) {
+                continue;
+            }
+        }
+
+        if (chosen && finalText) {
+            return res.json({
+                success: true,
+                response: sanitizeCompanionOutput(finalText),
+                timestamp: new Date().toISOString(),
+                source: chosen,
+                role,
+                language: preferredLanguage
+            });
+        }
+
+        return res.json({
+            success: true,
+            response: sanitizeCompanionOutput(getCompanionFallbackResponse(role, message, dynamicData, preferredLanguage)),
+            timestamp: new Date().toISOString(),
+            source: 'fallback',
+            role,
+            language: preferredLanguage
+        });
+    } catch (error) {
+        const preferredLanguage = detectCompanionLanguage(req.body.message || '');
+        return res.json({
+            success: true,
+            response: sanitizeCompanionOutput(getCompanionFallbackResponse(req.user?.role || 'staff', req.body.message || '', null, preferredLanguage)),
+            timestamp: new Date().toISOString(),
+            source: 'fallback',
+            language: preferredLanguage
         });
     }
 });
