@@ -845,6 +845,14 @@ export const staffAPI = {
         return handleResponse(response);
     },
 
+    sendHeartbeat: async () => {
+        const response = await fetch(`${API_BASE_URL}/staff/monitoring/heartbeat`, {
+            method: 'POST',
+            headers: getAuthHeaders('staff')
+        });
+        return handleResponse(response);
+    },
+
     markNotificationRead: async (id) => {
         const response = await fetch(`${API_BASE_URL}/staff/notifications/${id}/read`, {
             method: 'PUT',

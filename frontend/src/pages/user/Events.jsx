@@ -26,6 +26,9 @@ const DAYS_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 const FILTERS = ['all', 'upcoming', 'ongoing', 'past'];
 
+const BARCODE_WIDTHS = [2, 4, 1, 3, 2, 5, 1, 2, 4, 2, 1, 3, 4, 2, 1, 5, 2, 3, 1, 4, 2, 2, 1, 3, 4, 2, 5, 1, 2, 3];
+const BARCODE_HEIGHTS = ['80%', '100%', '60%', '90%', '100%', '70%', '100%', '80%', '50%', '90%', '100%', '60%', '80%', '100%', '70%', '90%', '100%', '60%', '80%', '100%', '50%', '90%', '70%', '100%', '80%', '60%', '100%', '90%', '80%', '100%'];
+
 const Icons = {
     Close: () => (
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
@@ -601,7 +604,7 @@ const Events = () => {
                 </div>
 
                 <section id="book-event" className="w-full bg-[#ffdd45] border-t border-[#212631]/10 pt-20 pb-40 px-4 md:px-8 relative z-10 rounded-t-3xl">
-                    <div className="max-w-4xl mx-auto flex flex-col items-center event-anim">
+                    <div className="max-w-5xl mx-auto flex flex-col items-center event-anim">
                         <div className="text-center mb-16">
                             <span className="text-[10px] tracking-[0.3em] uppercase font-normal text-[#212631]/40 mb-4 block bg-[#212631]/5 px-4 py-1.5 rounded-full w-fit mx-auto">Venue Protocol</span>
                             <h2 className="text-4xl md:text-6xl font-normal uppercase tracking-tighter text-[#212631] mb-6">Plan Your Own Event</h2>
@@ -610,127 +613,177 @@ const Events = () => {
                             </p>
                         </div>
 
-                        <div className="w-full border border-[#212631]/20 p-8 md:p-12 bg-[#ebebeb] shadow-2xl relative rounded-3xl">
-                            <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-[#26bc61]" />
-                            <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-8 h-8 rounded-full bg-[#26bc61]" />
+                        <div className="w-full relative rounded-[2rem] bg-[#ebebeb] shadow-2xl border border-[#212631]/20">
+                            <form onSubmit={handleSubmitAttempt} className="flex flex-col md:flex-row w-full h-full">
 
-                            <form onSubmit={handleSubmitAttempt} className="flex flex-col gap-8 w-full z-10 relative">
-                                <div className="flex flex-col gap-6">
-                                    <div className="flex flex-col gap-2">
-                                        <label className="text-[9px] tracking-[0.2em] uppercase font-normal text-[#212631]/60 px-2">Event Designation *</label>
-                                        <input
-                                            type="text"
-                                            value={eventForm.venueEventName}
-                                            onChange={e => setEventForm({ ...eventForm, venueEventName: sanitizeInput(e.target.value) })}
-                                            className="w-full bg-[#212631]/5 border border-[#212631]/20 p-4 rounded-2xl text-sm font-normal uppercase tracking-tight text-[#212631] focus:border-[#212631] outline-none transition-colors placeholder:text-[#212631]/30"
-                                            required
-                                        />
-                                    </div>
+                                <div className="w-full md:w-[70%] p-6 md:p-12 relative flex flex-col gap-8 rounded-t-[2rem] md:rounded-tr-none md:rounded-l-[2rem]">
 
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                                        <div className="flex flex-col gap-2">
-                                            <label className="text-[9px] tracking-[0.2em] uppercase font-normal text-[#212631]/60 px-2">Event Date *</label>
-                                            <input
-                                                type="date"
-                                                value={eventForm.venueEventDate}
-                                                onChange={e => setEventForm({ ...eventForm, venueEventDate: e.target.value })}
-                                                min={getMinDate()}
-                                                className="w-full bg-[#212631]/5 border border-[#212631]/20 p-4 rounded-2xl text-sm font-normal uppercase tracking-wider text-[#212631] focus:border-[#212631] outline-none transition-colors h-[54px]"
-                                                required
-                                            />
+                                    <div className="flex justify-between items-end border-b-2 border-[#212631] pb-4">
+                                        <div>
+                                            <h3 className="text-3xl md:text-4xl font-normal uppercase tracking-tighter text-[#212631] leading-none">Event Request</h3>
+                                            <p className="text-[9px] tracking-[0.2em] uppercase font-bold text-[#212631]/40 mt-2">Official Venue Registration Form</p>
                                         </div>
-                                        <div className="flex flex-col gap-2">
-                                            <label className="text-[9px] tracking-[0.2em] uppercase font-normal text-[#212631]/60 px-2">Event Time</label>
-                                            <input
-                                                type="time"
-                                                value={eventForm.venueEventTime}
-                                                onChange={e => setEventForm({ ...eventForm, venueEventTime: e.target.value })}
-                                                className="w-full bg-[#212631]/5 border border-[#212631]/20 p-4 rounded-2xl text-sm font-normal uppercase tracking-wider text-[#212631] focus:border-[#212631] outline-none transition-colors h-[54px]"
-                                            />
+                                        <div className="text-right">
+                                            <span className="text-[10px] tracking-[0.2em] font-mono font-bold uppercase border border-[#212631] px-3 py-1.5 rounded-full text-[#212631]">No. {Math.floor(Math.random() * 9000) + 1000}</span>
                                         </div>
                                     </div>
 
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                                        <div className="flex flex-col gap-2">
-                                            <label className="text-[9px] tracking-[0.2em] uppercase font-normal text-[#212631]/60 px-2">Headcount (Max 500) *</label>
-                                            <input
-                                                type="number"
-                                                value={eventForm.numberOfParticipants}
-                                                onChange={e => setEventForm({ ...eventForm, numberOfParticipants: e.target.value })}
-                                                min="1" max="500"
-                                                className="w-full bg-[#212631]/5 border border-[#212631]/20 p-4 rounded-2xl text-sm font-normal uppercase tracking-tight text-[#212631] focus:border-[#212631] outline-none transition-colors"
-                                                required
-                                            />
-                                        </div>
-                                        <div className="flex flex-col gap-2">
-                                            <label className="text-[9px] tracking-[0.2em] uppercase font-normal text-[#212631]/60 px-2">Contact Phone</label>
-                                            <input
-                                                type="tel"
-                                                value={eventForm.participantPhone}
-                                                onChange={e => setEventForm({ ...eventForm, participantPhone: sanitizePhone(e.target.value) })}
-                                                className="w-full bg-[#212631]/5 border border-[#212631]/20 p-4 rounded-2xl text-sm font-normal uppercase tracking-tight text-[#212631] focus:border-[#212631] outline-none transition-colors"
-                                            />
-                                        </div>
-                                    </div>
+                                    <div className="border border-[#212631]/30 rounded-2xl overflow-hidden flex flex-col bg-white/50 backdrop-blur-sm shadow-sm">
 
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                                        <div className="flex flex-col gap-2">
-                                            <label className="text-[9px] tracking-[0.2em] uppercase font-normal text-[#212631]/60 px-2">Organizer Name *</label>
+                                        <div className="border-b border-[#212631]/20 p-4 hover:bg-[#212631]/5 transition-colors focus-within:bg-[#212631]/5 group">
+                                            <label className="text-[8px] tracking-[0.2em] uppercase font-bold text-[#212631]/50 block mb-1">Event Designation *</label>
                                             <input
                                                 type="text"
-                                                value={eventForm.participantName}
-                                                onChange={e => setEventForm({ ...eventForm, participantName: sanitizeInput(e.target.value) })}
-                                                className="w-full bg-[#212631]/5 border border-[#212631]/20 p-4 rounded-2xl text-sm font-normal uppercase tracking-tight text-[#212631] focus:border-[#212631] outline-none transition-colors"
+                                                value={eventForm.venueEventName}
+                                                onChange={e => setEventForm({ ...eventForm, venueEventName: sanitizeInput(e.target.value) })}
+                                                className="w-full bg-transparent text-sm md:text-base font-normal font-mono uppercase tracking-tight text-[#212631] outline-none placeholder:text-[#212631]/20"
+                                                placeholder="E.g., Corporate Retreat"
                                                 required
                                             />
                                         </div>
-                                        <div className="flex flex-col gap-2">
-                                            <label className="text-[9px] tracking-[0.2em] uppercase font-normal text-[#212631]/60 px-2">Organizer Email *</label>
-                                            <input
-                                                type="email"
-                                                value={eventForm.participantEmail}
-                                                onChange={e => setEventForm({ ...eventForm, participantEmail: sanitizeEmail(e.target.value) })}
-                                                className="w-full bg-[#212631]/5 border border-[#212631]/20 p-4 rounded-2xl text-sm font-normal uppercase tracking-tight text-[#212631] focus:border-[#212631] outline-none transition-colors"
-                                                required
-                                            />
-                                        </div>
-                                    </div>
 
-                                    <div className="flex flex-col gap-2">
-                                        <label className="text-[9px] tracking-[0.2em] uppercase font-normal text-[#212631]/60 px-2">Event Details & Requirements</label>
-                                        <textarea
-                                            value={eventForm.venueEventDescription}
-                                            onChange={e => setEventForm({ ...eventForm, venueEventDescription: sanitizeInput(e.target.value) })}
-                                            className="w-full bg-[#212631]/5 border border-[#212631]/20 p-4 rounded-2xl text-sm font-normal text-[#212631] focus:border-[#212631] outline-none transition-colors resize-y min-h-[120px]"
-                                        />
+                                        <div className="flex flex-col sm:flex-row border-b border-[#212631]/20">
+                                            <div className="w-full sm:w-1/2 border-b sm:border-b-0 sm:border-r border-[#212631]/20 p-4 hover:bg-[#212631]/5 transition-colors focus-within:bg-[#212631]/5">
+                                                <label className="text-[8px] tracking-[0.2em] uppercase font-bold text-[#212631]/50 block mb-1">Event Date *</label>
+                                                <input
+                                                    type="date"
+                                                    value={eventForm.venueEventDate}
+                                                    onChange={e => setEventForm({ ...eventForm, venueEventDate: e.target.value })}
+                                                    min={getMinDate()}
+                                                    className="w-full bg-transparent text-sm md:text-base font-normal font-mono uppercase tracking-wider text-[#212631] outline-none"
+                                                    required
+                                                />
+                                            </div>
+                                            <div className="w-full sm:w-1/2 p-4 hover:bg-[#212631]/5 transition-colors focus-within:bg-[#212631]/5">
+                                                <label className="text-[8px] tracking-[0.2em] uppercase font-bold text-[#212631]/50 block mb-1">Event Time</label>
+                                                <input
+                                                    type="time"
+                                                    value={eventForm.venueEventTime}
+                                                    onChange={e => setEventForm({ ...eventForm, venueEventTime: e.target.value })}
+                                                    className="w-full bg-transparent text-sm md:text-base font-normal font-mono uppercase tracking-wider text-[#212631] outline-none"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div className="flex flex-col sm:flex-row border-b border-[#212631]/20">
+                                            <div className="w-full sm:w-1/2 border-b sm:border-b-0 sm:border-r border-[#212631]/20 p-4 hover:bg-[#212631]/5 transition-colors focus-within:bg-[#212631]/5">
+                                                <label className="text-[8px] tracking-[0.2em] uppercase font-bold text-[#212631]/50 block mb-1">Headcount (Max 500) *</label>
+                                                <input
+                                                    type="number"
+                                                    value={eventForm.numberOfParticipants}
+                                                    onChange={e => setEventForm({ ...eventForm, numberOfParticipants: e.target.value })}
+                                                    min="1" max="500"
+                                                    className="w-full bg-transparent text-sm md:text-base font-normal font-mono uppercase tracking-tight text-[#212631] outline-none"
+                                                    required
+                                                />
+                                            </div>
+                                            <div className="w-full sm:w-1/2 p-4 hover:bg-[#212631]/5 transition-colors focus-within:bg-[#212631]/5">
+                                                <label className="text-[8px] tracking-[0.2em] uppercase font-bold text-[#212631]/50 block mb-1">Contact Phone</label>
+                                                <input
+                                                    type="tel"
+                                                    value={eventForm.participantPhone}
+                                                    onChange={e => setEventForm({ ...eventForm, participantPhone: sanitizePhone(e.target.value) })}
+                                                    className="w-full bg-transparent text-sm md:text-base font-normal font-mono uppercase tracking-tight text-[#212631] outline-none placeholder:text-[#212631]/20"
+                                                    placeholder="+63 XXX XXX XXXX"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div className="flex flex-col sm:flex-row border-b border-[#212631]/20">
+                                            <div className="w-full sm:w-1/2 border-b sm:border-b-0 sm:border-r border-[#212631]/20 p-4 hover:bg-[#212631]/5 transition-colors focus-within:bg-[#212631]/5">
+                                                <label className="text-[8px] tracking-[0.2em] uppercase font-bold text-[#212631]/50 block mb-1">Organizer Name *</label>
+                                                <input
+                                                    type="text"
+                                                    value={eventForm.participantName}
+                                                    onChange={e => setEventForm({ ...eventForm, participantName: sanitizeInput(e.target.value) })}
+                                                    className="w-full bg-transparent text-sm md:text-base font-normal font-mono uppercase tracking-tight text-[#212631] outline-none placeholder:text-[#212631]/20"
+                                                    placeholder="Full Name"
+                                                    required
+                                                />
+                                            </div>
+                                            <div className="w-full sm:w-1/2 p-4 hover:bg-[#212631]/5 transition-colors focus-within:bg-[#212631]/5">
+                                                <label className="text-[8px] tracking-[0.2em] uppercase font-bold text-[#212631]/50 block mb-1">Organizer Email *</label>
+                                                <input
+                                                    type="email"
+                                                    value={eventForm.participantEmail}
+                                                    onChange={e => setEventForm({ ...eventForm, participantEmail: sanitizeEmail(e.target.value) })}
+                                                    className="w-full bg-transparent text-sm md:text-base font-normal font-mono uppercase tracking-tight text-[#212631] outline-none placeholder:text-[#212631]/20"
+                                                    placeholder="email@example.com"
+                                                    required
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div className="p-4 hover:bg-[#212631]/5 transition-colors focus-within:bg-[#212631]/5">
+                                            <label className="text-[8px] tracking-[0.2em] uppercase font-bold text-[#212631]/50 block mb-2">Event Details & Requirements</label>
+                                            <textarea
+                                                value={eventForm.venueEventDescription}
+                                                onChange={e => setEventForm({ ...eventForm, venueEventDescription: sanitizeInput(e.target.value) })}
+                                                className="w-full bg-transparent text-sm font-normal text-[#212631] outline-none resize-y min-h-[80px] placeholder:text-[#212631]/20"
+                                                placeholder="Please specify any particular setup, animal encounters, or catering requests..."
+                                            />
+                                        </div>
+
                                     </div>
                                 </div>
 
-                                <div className="flex flex-col gap-6 pt-6 border-t border-[#212631]/10">
-                                    <label className="flex items-start gap-4 cursor-pointer group px-2">
-                                        <div className="mt-0.5 relative flex items-center justify-center">
-                                            <input
-                                                type="checkbox"
-                                                required
-                                                className="peer appearance-none w-5 h-5 border rounded-md border-[#212631]/40 checked:bg-[#212631] checked:border-[#212631] transition-all cursor-pointer bg-transparent"
-                                            />
-                                            <svg className="absolute w-3 h-3 text-[#ebebeb] pointer-events-none opacity-0 peer-checked:opacity-100 transition-opacity" viewBox="0 0 14 10" fill="none">
-                                                <path d="M1 5L5 9L13 1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                                            </svg>
-                                        </div>
-                                        <p className="text-[10px] tracking-[0.18em] uppercase font-normal text-[#212631]/50 leading-relaxed pt-0.5">
-                                            I acknowledge the <a href="#" className="text-[#212631] hover:underline">Terms of Service</a> &amp; <a href="#" className="text-[#212631] hover:underline">Privacy Policy</a>.
-                                        </p>
-                                    </label>
+                                <div className="w-full md:w-[30%] bg-[#f4f4f4] rounded-b-[2rem] md:rounded-bl-none md:rounded-r-[2rem] p-8 md:p-10 relative flex flex-col justify-between">
 
-                                    <button
-                                        type="submit"
-                                        disabled={isSubmitting}
-                                        className="w-full py-5 bg-[#212631] text-[#ebebeb] rounded-full border border-[#212631] text-[10px] tracking-[0.2em] uppercase font-normal hover:bg-transparent hover:text-[#212631] disabled:opacity-50 disabled:pointer-events-none transition-colors cursor-pointer"
-                                    >
-                                        {isSubmitting ? 'Processing Request...' : 'Submit Event Request'}
-                                    </button>
+                                    <div className="hidden md:block absolute top-0 bottom-0 left-0 w-px border-l-2 border-dashed border-[#212631]/20" />
+                                    <div className="hidden md:block absolute top-[-1px] left-[-1px] -translate-x-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-[#ffdd45] border border-[#212631]/20 z-10" />
+                                    <div className="hidden md:block absolute bottom-[-1px] left-[-1px] -translate-x-1/2 translate-y-1/2 w-10 h-10 rounded-full bg-[#ffdd45] border border-[#212631]/20 z-10" />
+
+                                    <div className="md:hidden absolute left-0 right-0 top-0 h-px border-t-2 border-dashed border-[#212631]/20" />
+                                    <div className="md:hidden absolute left-[-1px] top-[-1px] -translate-x-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-[#ffdd45] border border-[#212631]/20 z-10" />
+                                    <div className="md:hidden absolute right-[-1px] top-[-1px] translate-x-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-[#ffdd45] border border-[#212631]/20 z-10" />
+
+                                    <div>
+                                        <h4 className="text-2xl font-normal uppercase tracking-tighter text-[#212631] border-b-2 border-[#212631] pb-4 mb-6 text-center">Pass Data</h4>
+                                        <div className="flex flex-col gap-4">
+                                            <div className="flex justify-between items-center bg-white border border-[#212631]/10 p-4 rounded-xl shadow-sm">
+                                                <span className="text-[9px] tracking-[0.2em] uppercase text-[#212631]/50 font-bold">Total Pax</span>
+                                                <span className="text-base font-bold text-[#212631] tabular-nums font-mono">{eventForm.numberOfParticipants || 1}</span>
+                                            </div>
+                                            <div className="flex justify-between items-center bg-white border border-[#212631]/10 p-4 rounded-xl shadow-sm">
+                                                <span className="text-[9px] tracking-[0.2em] uppercase text-[#212631]/50 font-bold">Date set</span>
+                                                <span className="text-xs font-bold text-[#212631] font-mono">{eventForm.venueEventDate ? formatDisplayDate(eventForm.venueEventDate) : '—'}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="mt-8 flex flex-col gap-4">
+                                        <label className="flex items-start gap-3 cursor-pointer group px-1">
+                                            <div className="mt-0.5 relative flex items-center justify-center shrink-0">
+                                                <input
+                                                    type="checkbox"
+                                                    required
+                                                    className="peer appearance-none w-5 h-5 border-2 rounded-[4px] border-[#212631]/40 checked:bg-[#212631] checked:border-[#212631] transition-all cursor-pointer bg-white"
+                                                />
+                                                <svg className="absolute w-3 h-3 text-[#ebebeb] pointer-events-none opacity-0 peer-checked:opacity-100 transition-opacity" viewBox="0 0 14 10" fill="none">
+                                                    <path d="M1 5L5 9L13 1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                                </svg>
+                                            </div>
+                                            <p className="text-[9px] tracking-[0.15em] uppercase font-normal text-[#212631]/60 leading-relaxed pt-0.5">
+                                                I acknowledge the <a href="#" className="text-[#212631] font-bold hover:underline">Terms of Service</a> &amp; <a href="#" className="text-[#212631] font-bold hover:underline">Privacy Policy</a>.
+                                            </p>
+                                        </label>
+
+                                        <button
+                                            type="submit"
+                                            disabled={isSubmitting}
+                                            className="w-full py-5 bg-[#212631] text-[#ebebeb] rounded-2xl border border-[#212631] text-[10px] tracking-[0.2em] uppercase font-bold hover:bg-transparent hover:text-[#212631] disabled:opacity-50 disabled:pointer-events-none transition-colors cursor-pointer flex items-center justify-center gap-2 shadow-xl"
+                                        >
+                                            {isSubmitting ? 'Processing...' : 'Reserve Event'}
+                                        </button>
+                                    </div>
+
+                                    <div className="w-full h-10 flex gap-[2px] justify-center items-end mt-8 opacity-20">
+                                        {BARCODE_WIDTHS.map((w, i) => (
+                                            <div key={i} className="bg-[#212631]" style={{ width: `${w}px`, height: BARCODE_HEIGHTS[i], minHeight: '30%' }} />
+                                        ))}
+                                    </div>
                                 </div>
+
                             </form>
                         </div>
                     </div>

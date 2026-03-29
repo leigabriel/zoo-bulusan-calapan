@@ -205,24 +205,24 @@ const StaffDashboard = () => {
 
     // Stat Card Component - matching admin design
     const StatCard = ({ title, value, icon, trend, trendValue }) => (
-        <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl p-5 hover:border-[#8cff65]/30 transition-all duration-300">
+        <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-emerald-500 via-emerald-700 to-emerald-900 p-5 shadow-lg shadow-emerald-900/30 transition-all duration-300 hover:scale-[1.01]">
             <div className="flex items-start justify-between mb-4">
-                <div className="w-12 h-12 rounded-xl bg-[#8cff65]/10 flex items-center justify-center text-[#8cff65]">
+                <div className="w-12 h-12 rounded-2xl bg-white/15 backdrop-blur-sm flex items-center justify-center text-white border border-white/20">
                     {icon}
                 </div>
-                <button className="text-gray-500 hover:text-white transition">
+                <button className="text-emerald-100/80 hover:text-white transition">
                     <MoreIcon />
                 </button>
             </div>
-            <p className="text-gray-400 text-sm mb-1">{title}</p>
-            <p className="text-3xl font-bold text-white mb-2">{value}</p>
+            <p className="text-emerald-50/85 text-sm mb-1">{title}</p>
+            <p className="text-3xl font-bold text-white mb-2 tracking-tight">{value}</p>
             {trend && (
                 <div className="flex items-center gap-2">
-                    <span className="flex items-center gap-1 text-sm font-medium text-[#8cff65]">
+                    <span className="flex items-center gap-1 text-sm font-semibold text-emerald-100">
                         <TrendUpIcon />
                         {trendValue}
                     </span>
-                    <span className="text-gray-500 text-sm">vs yesterday</span>
+                    <span className="text-emerald-50/80 text-sm">vs yesterday</span>
                 </div>
             )}
         </div>

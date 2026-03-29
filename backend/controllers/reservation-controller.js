@@ -1,6 +1,7 @@
 const Reservation = require('../models/reservation-model');
 const Event = require('../models/event-model');
 const Notification = require('../models/notification-model');
+const { logStaffActivity } = require('../middleware/track-activity');
 
 // Helper function to create notifications for admin/staff
 const createAdminStaffNotification = async (title, message, type = 'event', link = null) => {
@@ -241,6 +242,7 @@ exports.updateTicketReservationStatus = async (req, res) => {
         }
 
         const confirmedBy = status === 'confirmed' ? req.user?.id : null;
+        const existingReservation = await Reservation.findTicketReservationById(id);
         
         const updateData = { status };
         if (cancelledReason) updateData.cancelledReason = cancelledReason;
@@ -253,6 +255,17 @@ exports.updateTicketReservationStatus = async (req, res) => {
 
         if (status === 'confirmed' && confirmedBy) {
             await Reservation.updateTicketReservationStatus(id, status, confirmedBy);
+        }
+
+        if (req.user && ['staff', 'admin'].includes(req.user.role)) {
+            const ref = existingReservation?.reservation_reference || `#${id}`;
+            await logStaffActivity(
+                req,
+                'reservation_update',
+                `Updated ticket reservation ${ref} to ${status}`,
+                'reservation',
+                id
+            );
         }
 
         res.json({ success: true, message: 'Reservation status updated successfully' });
@@ -272,6 +285,7 @@ exports.updateEventReservationStatus = async (req, res) => {
         }
 
         const confirmedBy = status === 'confirmed' ? req.user?.id : null;
+        const existingReservation = await Reservation.findEventReservationById(id);
         
         const updateData = { status };
         if (cancelledReason) updateData.cancelledReason = cancelledReason;
@@ -284,6 +298,17 @@ exports.updateEventReservationStatus = async (req, res) => {
 
         if (status === 'confirmed' && confirmedBy) {
             await Reservation.updateEventReservationStatus(id, status, confirmedBy);
+        }
+
+        if (req.user && ['staff', 'admin'].includes(req.user.role)) {
+            const ref = existingReservation?.reservation_reference || `#${id}`;
+            await logStaffActivity(
+                req,
+                'reservation_update',
+                `Updated event reservation ${ref} to ${status}`,
+                'event',
+                id
+            );
         }
 
         res.json({ success: true, message: 'Reservation status updated successfully' });

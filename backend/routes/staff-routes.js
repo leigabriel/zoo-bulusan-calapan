@@ -3,7 +3,9 @@ const router = express.Router();
 const staffController = require('../controllers/staff-controller');
 const adminController = require('../controllers/admin-controller');
 const messageController = require('../controllers/message-controller');
+const monitoringController = require('../controllers/monitoring-controller');
 const { protect, authorize } = require('../middleware/auth');
+const { trackActivity } = require('../middleware/track-activity');
 const multer = require('multer');
 const path = require('path');
 const { handleCloudinaryImageUpload } = require('../middleware/cloudinary-upload');
@@ -44,21 +46,22 @@ router.use(authorize('admin', 'staff'));
 router.get('/dashboard', staffController.getDashboardStats);
 router.get('/recent-tickets', staffController.getRecentTickets);
 router.get('/my-activity-summary', staffController.getMyActivitySummary);
+router.post('/monitoring/heartbeat', monitoringController.heartbeat);
 
 // Animals - Full CRUD for staff
 router.get('/animals', staffController.getAnimals);
 router.get('/animals/:id', staffController.getAnimalById);
-router.post('/animals', adminController.createAnimal);
-router.put('/animals/:id', adminController.updateAnimal);
+router.post('/animals', trackActivity('animal_update', (req) => `Created animal record: ${req.body?.name || 'Unnamed animal'}`), adminController.createAnimal);
+router.put('/animals/:id', trackActivity('animal_update', (req) => `Updated animal record #${req.params.id}`), adminController.updateAnimal);
 router.put('/animals/:id/status', staffController.updateAnimalStatus);
-router.delete('/animals/:id', adminController.deleteAnimal);
+router.delete('/animals/:id', trackActivity('animal_update', (req) => `Deleted animal record #${req.params.id}`), adminController.deleteAnimal);
 
 // Plants - Full CRUD for staff
 router.get('/plants', staffController.getPlants);
 router.get('/plants/:id', staffController.getPlantById);
-router.post('/plants', adminController.createPlant);
-router.put('/plants/:id', adminController.updatePlant);
-router.delete('/plants/:id', adminController.deletePlant);
+router.post('/plants', trackActivity('plant_update', (req) => `Created plant record: ${req.body?.name || 'Unnamed plant'}`), adminController.createPlant);
+router.put('/plants/:id', trackActivity('plant_update', (req) => `Updated plant record #${req.params.id}`), adminController.updatePlant);
+router.delete('/plants/:id', trackActivity('plant_update', (req) => `Deleted plant record #${req.params.id}`), adminController.deletePlant);
 
 // Tickets
 router.get('/tickets', staffController.getAllTickets);
@@ -75,9 +78,9 @@ router.post('/tickets/mark-used', staffController.markTicketUsed);
 // Events - Full CRUD for staff
 router.get('/events', staffController.getAllEvents);
 router.get('/events/upcoming', staffController.getUpcomingEvents);
-router.post('/events', adminController.createEvent);
-router.put('/events/:id', adminController.updateEvent);
-router.delete('/events/:id', adminController.deleteEvent);
+router.post('/events', trackActivity('event_update', (req) => `Created event: ${req.body?.title || req.body?.venueEventName || 'Untitled event'}`), adminController.createEvent);
+router.put('/events/:id', trackActivity('event_update', (req) => `Updated event #${req.params.id}`), adminController.updateEvent);
+router.delete('/events/:id', trackActivity('event_update', (req) => `Deleted event #${req.params.id}`), adminController.deleteEvent);
 
 
 

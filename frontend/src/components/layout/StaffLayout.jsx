@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { authAPI, staffAPI, getProfileImageUrl } from '../../services/api-client';
+import { authAPI, staffAPI, reservationAPI, communityAPI, getProfileImageUrl } from '../../services/api-client';
 import { sanitizeInput } from '../../utils/sanitize';
 import { notify } from '../../utils/toast';
 import LogoutModal from '../common/LogoutModal';
@@ -113,6 +113,13 @@ const BellIcon = () => (
     </svg>
 );
 
+const ChecklistIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+        <path d="M9 11l3 3L22 4"/>
+        <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+    </svg>
+);
+
 const CloseIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
         <line x1="18" y1="6" x2="6" y2="18"/>
@@ -144,6 +151,7 @@ const StaffLayout = ({ children }) => {
     const [showLogoutModal, setShowLogoutModal] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [notificationPanelOpen, setNotificationPanelOpen] = useState(false);
+    const [dailyTaskPanelOpen, setDailyTaskPanelOpen] = useState(false);
     const [showProfileModal, setShowProfileModal] = useState(false);
     const [profileForm, setProfileForm] = useState({ firstName: '', lastName: '', email: '' });
     const [profileLoading, setProfileLoading] = useState(false);
@@ -154,6 +162,73 @@ const StaffLayout = ({ children }) => {
     const [notifications, setNotifications] = useState([]);
     const [notificationsLoading, setNotificationsLoading] = useState(false);
     const [activitySummary, setActivitySummary] = useState(null);
+    const [dailyTaskStats, setDailyTaskStats] = useState({
+        animals: 0,
+        plants: 0,
+        pendingTicketReservations: 0,
+        pendingEventReservations: 0,
+        pendingCommunityPosts: 0,
+        reportedComments: 0
+    });
+    const [dailyTaskLoading, setDailyTaskLoading] = useState(false);
+    const [dailyTaskDone, setDailyTaskDone] = useState({});
+    const [dailyTaskHydrated, setDailyTaskHydrated] = useState(false);
+
+    const getLocalDateKey = () => {
+        const now = new Date();
+        const y = now.getFullYear();
+        const m = String(now.getMonth() + 1).padStart(2, '0');
+        const d = String(now.getDate()).padStart(2, '0');
+        return `${y}-${m}-${d}`;
+    };
+
+    const todayKey = getLocalDateKey();
+    const dailyTaskStorageKey = `staff_daily_task_completion_v1_${user?.id || 'anon'}`;
+
+    const dailyTasks = useMemo(() => ([
+        {
+            id: 'animals',
+            title: 'Check animal records',
+            description: 'Review animal health and status updates.',
+            path: '/staff/animals',
+            count: dailyTaskStats.animals,
+            countLabel: 'records'
+        },
+        {
+            id: 'plants',
+            title: 'Check plant records',
+            description: 'Review plant condition and care updates.',
+            path: '/staff/plants',
+            count: dailyTaskStats.plants,
+            countLabel: 'records'
+        },
+        {
+            id: 'ticketReservations',
+            title: 'Check ticket reservations',
+            description: 'Handle pending ticket confirmations.',
+            path: '/staff/reservations',
+            count: dailyTaskStats.pendingTicketReservations,
+            countLabel: 'pending'
+        },
+        {
+            id: 'eventReservations',
+            title: 'Check event reservations',
+            description: 'Handle pending event confirmations.',
+            path: '/staff/reservations',
+            count: dailyTaskStats.pendingEventReservations,
+            countLabel: 'pending'
+        },
+        {
+            id: 'communityPosts',
+            title: 'Check community posts',
+            description: 'Moderate pending posts and reports.',
+            path: '/staff/community-moderation',
+            count: dailyTaskStats.pendingCommunityPosts + dailyTaskStats.reportedComments,
+            countLabel: 'for review'
+        }
+    ]), [dailyTaskStats]);
+
+    const completedTaskCount = dailyTasks.filter(task => dailyTaskDone[task.id]).length;
 
     // Fetch real notifications from API
     const fetchNotifications = async () => {
@@ -178,6 +253,96 @@ const StaffLayout = ({ children }) => {
         const interval = setInterval(fetchNotifications, 30000);
         return () => clearInterval(interval);
     }, []);
+
+    useEffect(() => {
+        if (!user) return;
+
+        const sendHeartbeat = async () => {
+            try {
+                await staffAPI.sendHeartbeat();
+            } catch {
+            }
+        };
+
+        sendHeartbeat();
+        const heartbeatInterval = setInterval(sendHeartbeat, 60000);
+
+        return () => clearInterval(heartbeatInterval);
+    }, [user]);
+
+    useEffect(() => {
+        try {
+            const raw = localStorage.getItem(dailyTaskStorageKey);
+            if (!raw) {
+                setDailyTaskDone({});
+                return;
+            }
+            const parsed = JSON.parse(raw);
+            if (parsed?.date === todayKey && parsed?.done && typeof parsed.done === 'object') {
+                setDailyTaskDone(parsed.done);
+            } else {
+                setDailyTaskDone({});
+            }
+        } catch {
+            setDailyTaskDone({});
+        } finally {
+            setDailyTaskHydrated(true);
+        }
+    }, [todayKey, dailyTaskStorageKey]);
+
+    useEffect(() => {
+        if (!dailyTaskHydrated) return;
+        localStorage.setItem(dailyTaskStorageKey, JSON.stringify({ date: todayKey, done: dailyTaskDone }));
+    }, [dailyTaskDone, todayKey, dailyTaskHydrated, dailyTaskStorageKey]);
+
+    const markTaskCompleted = (taskId) => {
+        setDailyTaskDone((prev) => {
+            if (prev[taskId]) return prev;
+            return { ...prev, [taskId]: true };
+        });
+    };
+
+    const fetchDailyTaskStats = async () => {
+        try {
+            setDailyTaskLoading(true);
+            const [animalsRes, plantsRes, ticketRes, eventRes, pendingPostsRes, reportsRes] = await Promise.all([
+                staffAPI.getAnimals().catch(() => null),
+                staffAPI.getPlants().catch(() => null),
+                reservationAPI.getAllTicketReservations('staff').catch(() => null),
+                reservationAPI.getAllEventReservations('staff').catch(() => null),
+                communityAPI.getPendingPosts('staff').catch(() => null),
+                communityAPI.getReportedComments('staff').catch(() => null)
+            ]);
+
+            const animals = animalsRes?.animals || animalsRes?.data || [];
+            const plants = plantsRes?.plants || plantsRes?.data || [];
+            const ticketReservations = ticketRes?.reservations || [];
+            const eventReservations = eventRes?.reservations || [];
+            const pendingPosts = pendingPostsRes?.posts || [];
+            const reportedComments = reportsRes?.reports || [];
+
+            setDailyTaskStats({
+                animals: Array.isArray(animals) ? animals.length : 0,
+                plants: Array.isArray(plants) ? plants.length : 0,
+                pendingTicketReservations: Array.isArray(ticketReservations)
+                    ? ticketReservations.filter((r) => r?.status === 'pending').length
+                    : 0,
+                pendingEventReservations: Array.isArray(eventReservations)
+                    ? eventReservations.filter((r) => r?.status === 'pending').length
+                    : 0,
+                pendingCommunityPosts: Array.isArray(pendingPosts) ? pendingPosts.length : 0,
+                reportedComments: Array.isArray(reportedComments) ? reportedComments.length : 0
+            });
+        } catch {
+        } finally {
+            setDailyTaskLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        if (!dailyTaskPanelOpen) return;
+        fetchDailyTaskStats();
+    }, [dailyTaskPanelOpen]);
 
     // Generate recent activities from summary
     const recentActivities = useMemo(() => {
@@ -314,6 +479,7 @@ const StaffLayout = ({ children }) => {
     useEffect(() => {
         setSidebarOpen(false);
         setNotificationPanelOpen(false);
+        setDailyTaskPanelOpen(false);
     }, [location.pathname]);
 
     // Close notification panel when clicking outside
@@ -322,10 +488,13 @@ const StaffLayout = ({ children }) => {
             if (notificationPanelOpen && !e.target.closest('.notification-panel') && !e.target.closest('.notification-bell')) {
                 setNotificationPanelOpen(false);
             }
+            if (dailyTaskPanelOpen && !e.target.closest('.daily-task-panel') && !e.target.closest('.daily-task-btn')) {
+                setDailyTaskPanelOpen(false);
+            }
         };
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, [notificationPanelOpen]);
+    }, [notificationPanelOpen, dailyTaskPanelOpen]);
 
     const unreadCount = notifications.filter(n => !n.read).length;
 
@@ -341,10 +510,13 @@ const StaffLayout = ({ children }) => {
             )}
 
             {/* Notification Panel Overlay */}
-            {notificationPanelOpen && (
+            {(notificationPanelOpen || dailyTaskPanelOpen) && (
                 <div 
                     className="fixed inset-0 bg-black/40 z-40 backdrop-blur-sm"
-                    onClick={() => setNotificationPanelOpen(false)}
+                    onClick={() => {
+                        setNotificationPanelOpen(false);
+                        setDailyTaskPanelOpen(false);
+                    }}
                     aria-hidden="true"
                 />
             )}
@@ -525,6 +697,17 @@ const StaffLayout = ({ children }) => {
                             )}
                         </button>
 
+                        <button
+                            onClick={() => setDailyTaskPanelOpen(!dailyTaskPanelOpen)}
+                            className="daily-task-btn relative p-2.5 hover:bg-[#1e1e1e] rounded-xl text-gray-400 hover:text-white transition"
+                            aria-label="Toggle daily tasks"
+                        >
+                            <ChecklistIcon />
+                            <span className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1 bg-emerald-500 rounded-full flex items-center justify-center text-[10px] font-bold text-black">
+                                {completedTaskCount}/{dailyTasks.length}
+                            </span>
+                        </button>
+
                         {/* Profile Button */}
                         <button
                             onClick={openProfileModal}
@@ -549,6 +732,86 @@ const StaffLayout = ({ children }) => {
                      )}
                 </main>
             </div>
+
+            <aside
+                className={`daily-task-panel fixed right-0 top-0 z-50 w-80 sm:w-96 h-full bg-[#141414] border-l border-[#2a2a2a] 
+                    transform transition-transform duration-300 ease-in-out ${
+                    dailyTaskPanelOpen ? 'translate-x-0' : 'translate-x-full'
+                }`}
+                aria-label="Daily tasks panel"
+            >
+                <div className="p-5 flex items-center justify-between border-b border-[#2a2a2a]">
+                    <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                        <ChecklistIcon />
+                        Daily Tasks
+                    </h3>
+                    <button
+                        onClick={() => setDailyTaskPanelOpen(false)}
+                        className="p-2 hover:bg-[#1e1e1e] rounded-lg text-gray-400 hover:text-white transition"
+                    >
+                        <CloseIcon />
+                    </button>
+                </div>
+
+                <div className="px-5 py-3 border-b border-[#2a2a2a]">
+                    <div className="flex items-center justify-between text-xs text-gray-400 mb-2">
+                        <span>Progress</span>
+                        <span>{completedTaskCount} of {dailyTasks.length} completed</span>
+                    </div>
+                    <div className="h-2 rounded-full bg-[#1e1e1e] overflow-hidden">
+                        <div
+                            className="h-full bg-gradient-to-r from-emerald-400 to-emerald-600 rounded-full transition-all duration-300"
+                            style={{ width: `${(completedTaskCount / dailyTasks.length) * 100}%` }}
+                        />
+                    </div>
+                </div>
+
+                <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                    {dailyTaskLoading && (
+                        <div className="text-sm text-gray-400 p-4 bg-[#1e1e1e] rounded-xl border border-[#2a2a2a]">
+                            Loading daily task data...
+                        </div>
+                    )}
+                    {dailyTasks.map((task) => (
+                        <div key={task.id} className="p-4 rounded-xl border border-[#2a2a2a] bg-[#1e1e1e]">
+                            <div className="flex items-start gap-3">
+                                <button
+                                    onClick={() => markTaskCompleted(task.id)}
+                                    className={`mt-0.5 w-5 h-5 rounded border flex items-center justify-center transition ${
+                                        dailyTaskDone[task.id]
+                                            ? 'bg-emerald-500 border-emerald-500 text-black'
+                                            : 'border-gray-500 text-transparent hover:border-emerald-400'
+                                    }`}
+                                    aria-label={`Mark ${task.title} complete`}
+                                >
+                                    ✓
+                                </button>
+                                <div className="flex-1 min-w-0">
+                                    <p className={`text-sm font-medium ${dailyTaskDone[task.id] ? 'text-emerald-300' : 'text-white'}`}>
+                                        {task.title}
+                                    </p>
+                                    <p className="text-xs text-gray-400 mt-1">{task.description}</p>
+                                    <div className="mt-2 flex items-center justify-between">
+                                        <span className="text-xs px-2 py-1 rounded-full bg-[#0f291c] text-emerald-300 border border-emerald-900/60">
+                                            {task.count} {task.countLabel}
+                                        </span>
+                                        <button
+                                            onClick={() => {
+                                                markTaskCompleted(task.id);
+                                                setDailyTaskPanelOpen(false);
+                                                navigate(task.path);
+                                            }}
+                                            className="text-xs font-semibold text-emerald-300 hover:text-emerald-200 transition"
+                                        >
+                                            Open page
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </aside>
 
             {/* Slide-in Notification Panel */}
             <aside
