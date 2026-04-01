@@ -4,6 +4,12 @@ import tailwindcss from '@tailwindcss/vite'
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  resolve: {
+    dedupe: ['gsap'],
+  },
+  optimizeDeps: {
+    exclude: ['gsap', 'gsap/Draggable', 'gsap/ScrollTrigger'],
+  },
   server: {
     host: '0.0.0.0',  // Listen on all network interfaces
     port: 5173,

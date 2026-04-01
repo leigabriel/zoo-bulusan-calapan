@@ -98,7 +98,7 @@ const AdminEvents = () => {
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState('');
     const [sidebarView, setSidebarView] = useState('upcoming'); // 'upcoming' or 'past'
-    const [imageInputMode, setImageInputMode] = useState('url'); // 'url' or 'upload'
+    const [imageInputMode, setImageInputMode] = useState('upload');
     const [imageFile, setImageFile] = useState(null);
     const [imagePreview, setImagePreview] = useState(null);
     
@@ -369,7 +369,7 @@ const AdminEvents = () => {
             status: 'upcoming'
         });
         setError('');
-        setImageInputMode('url');
+        setImageInputMode('upload');
         setImageFile(null);
         setImagePreview(null);
     };
@@ -1012,80 +1012,35 @@ const AdminEvents = () => {
                                         </span>
                                     </label>
 
-                                    {/* Toggle between URL and Upload */}
-                                    <div className="flex gap-2 mb-3">
-                                        <button
-                                            type="button"
-                                            onClick={() => setImageInputMode('url')}
-                                            className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition ${imageInputMode === 'url'
-                                                    ? 'bg-[#8cff65] text-black'
-                                                    : 'bg-[#1e1e1e] text-gray-400 hover:text-white border border-[#2a2a2a]'
-                                                }`}
-                                        >
-                                            Image URL
-                                        </button>
-                                        <button
-                                            type="button"
-                                            onClick={() => setImageInputMode('upload')}
-                                            className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition ${imageInputMode === 'upload'
-                                                    ? 'bg-[#8cff65] text-black'
-                                                    : 'bg-[#1e1e1e] text-gray-400 hover:text-white border border-[#2a2a2a]'
-                                                }`}
-                                        >
-                                            Upload Image
-                                        </button>
-                                    </div>
-
-                                    {imageInputMode === 'url' ? (
-                                        <>
-                                            <input
-                                                type="url"
-                                                value={formData.imageUrl}
-                                                onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
-                                                placeholder="https://example.com/image.jpg"
-                                                className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-[#8cff65] transition"
-                                            />
-                                            {formData.imageUrl && (
-                                                <div className="mt-2 rounded-lg overflow-hidden h-24">
-                                                    <img
-                                                        src={formData.imageUrl}
-                                                        alt="Preview"
-                                                        className="w-full h-full object-cover"
-                                                        onError={(e) => { e.target.style.display = 'none'; }}
-                                                    />
-                                                </div>
-                                            )}
-                                        </>
-                                    ) : (
-                                        <>
-                                            <input
-                                                type="file"
-                                                accept="image/*"
-                                                onChange={handleImageFileChange}
-                                                className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-[#8cff65] file:text-black file:font-medium file:cursor-pointer hover:file:bg-[#7de857] transition"
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={handleImageFileChange}
+                                        className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-[#8cff65] file:text-black file:font-medium file:cursor-pointer hover:file:bg-[#7de857] transition"
+                                    />
+                                    {(imagePreview || formData.imageUrl) && (
+                                        <div className="mt-2 rounded-lg overflow-hidden h-24 relative">
+                                            <img
+                                                src={imagePreview || formData.imageUrl}
+                                                alt="Preview"
+                                                className="w-full h-full object-cover"
+                                                onError={(e) => { e.target.style.display = 'none'; }}
                                             />
                                             {imagePreview && (
-                                                <div className="mt-2 rounded-lg overflow-hidden h-24 relative">
-                                                    <img
-                                                        src={imagePreview}
-                                                        alt="Preview"
-                                                        className="w-full h-full object-cover"
-                                                    />
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => {
-                                                            setImageFile(null);
-                                                            setImagePreview(null);
-                                                        }}
-                                                        className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition"
-                                                    >
-                                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                                        </svg>
-                                                    </button>
-                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setImageFile(null);
+                                                        setImagePreview(null);
+                                                    }}
+                                                    className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition"
+                                                >
+                                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                                    </svg>
+                                                </button>
                                             )}
-                                        </>
+                                        </div>
                                     )}
                                 </div>
 

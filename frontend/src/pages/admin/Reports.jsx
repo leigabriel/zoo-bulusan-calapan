@@ -126,8 +126,59 @@ const Reports = () => {
     ];
 
     function formatDate(date) {
-        return date.toISOString().split('T')[0];
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
     }
+
+    const normalizeReportDate = (value) => {
+        if (!value) return '';
+
+        if (typeof value === 'string') {
+            const trimmed = value.trim();
+            const isoDateMatch = trimmed.match(/^(\d{4}-\d{2}-\d{2})/);
+            if (isoDateMatch) return isoDateMatch[1];
+
+            const parsed = new Date(trimmed);
+            if (!Number.isNaN(parsed.getTime())) {
+                return formatDate(parsed);
+            }
+
+            return trimmed;
+        }
+
+        if (value instanceof Date && !Number.isNaN(value.getTime())) {
+            return formatDate(value);
+        }
+
+        return String(value);
+    };
+
+    const toExportNumber = (value) => {
+        const num = Number(value);
+        return Number.isFinite(num) ? num : 0;
+    };
+
+    const normalizeStatus = (value) => {
+        const status = String(value || '').toLowerCase();
+        if (status === 'completed' || status === 'confirmed') return 'Completed';
+        if (status === 'cancelled' || status === 'canceled') return 'Cancelled';
+        if (status === 'pending') return 'Pending';
+        if (!status) return 'N/A';
+        return status.charAt(0).toUpperCase() + status.slice(1);
+    };
+
+    const escapeCsvCell = (value) => {
+        const safeValue = String(value ?? '').replace(/"/g, '""');
+        return `"${safeValue}"`;
+    };
+
+    const formatCsvDateCell = (value) => {
+        const safeDate = normalizeReportDate(value).replace(/"/g, '""');
+        // Keep date as explicit text in Excel to prevent locale/time parsing issues.
+        return `"=\"${safeDate}\""`;
+    };
 
     // Fetch quick stats on mount
     useEffect(() => {
@@ -226,7 +277,7 @@ const Reports = () => {
         if (searchTerm) {
             const term = searchTerm.toLowerCase();
             items = items.filter(item => 
-                item.date?.toLowerCase().includes(term) ||
+                normalizeReportDate(item.date).toLowerCase().includes(term) ||
                 item.type?.toLowerCase().includes(term) ||
                 item.status?.toLowerCase().includes(term) ||
                 item.reference?.toLowerCase().includes(term)
@@ -241,6 +292,11 @@ const Reports = () => {
             if (sortConfig.key === 'amount' || sortConfig.key === 'quantity') {
                 aVal = Number(aVal) || 0;
                 bVal = Number(bVal) || 0;
+            }
+
+            if (sortConfig.key === 'date') {
+                aVal = normalizeReportDate(aVal);
+                bVal = normalizeReportDate(bVal);
             }
             
             if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1;
@@ -267,12 +323,12 @@ const Reports = () => {
         if (format === 'excel') {
             // Prepare data for Excel with more details
             const excelData = processedItems.map(item => ({
-                'Date': item.date,
+                'Date': normalizeReportDate(item.date),
                 'Reference': item.reference || 'N/A',
-                'Type': item.type,
-                'Quantity': item.quantity,
-                'Amount (₱)': item.amount,
-                'Status': item.status
+                'Type': item.type || 'N/A',
+                'Quantity': toExportNumber(item.quantity),
+                'Amount (₱)': toExportNumber(item.amount),
+                'Status': normalizeStatus(item.status)
             }));
 
             // Add summary rows
@@ -289,7 +345,7 @@ const Reports = () => {
                 'Date': 'Total Quantity',
                 'Reference': '',
                 'Type': '',
-                'Quantity': processedItems.reduce((sum, item) => sum + (item.quantity || 0), 0),
+                'Quantity': processedItems.reduce((sum, item) => sum + toExportNumber(item.quantity), 0),
                 'Amount (₱)': '',
                 'Status': ''
             });
@@ -298,7 +354,7 @@ const Reports = () => {
                 'Reference': '',
                 'Type': '',
                 'Quantity': '',
-                'Amount (₱)': reportData.totalRevenue,
+                'Amount (₱)': toExportNumber(reportData.totalRevenue),
                 'Status': ''
             });
             excelData.push({
@@ -328,7 +384,7 @@ const Reports = () => {
             // Generate filename with date
             const dateStr = dateRange.start && dateRange.end 
                 ? `${dateRange.start}_to_${dateRange.end}` 
-                : new Date().toISOString().split('T')[0];
+                : formatDate(new Date());
             const filename = `Zoo_${reportType}_Report_${dateStr}.xlsx`;
 
             // Download file
@@ -337,16 +393,21 @@ const Reports = () => {
             // CSV export
             const headers = ['Date', 'Reference', 'Type', 'Quantity', 'Amount', 'Status'];
             const csvContent = [
-                headers.join(','),
-                ...processedItems.map(item => 
-                    [item.date, item.reference || 'N/A', item.type, item.quantity, item.amount, item.status].join(',')
-                )
-            ].join('\n');
+                headers.map(escapeCsvCell).join(','),
+                ...processedItems.map(item => [
+                    formatCsvDateCell(item.date),
+                    escapeCsvCell(item.reference || 'N/A'),
+                    escapeCsvCell(item.type || 'N/A'),
+                    escapeCsvCell(toExportNumber(item.quantity)),
+                    escapeCsvCell(toExportNumber(item.amount)),
+                    escapeCsvCell(normalizeStatus(item.status))
+                ].join(','))
+            ].join('\r\n');
 
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const blob = new Blob(['\uFEFF', csvContent], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement('a');
             link.href = URL.createObjectURL(blob);
-            link.download = `Zoo_${reportType}_Report_${new Date().toISOString().split('T')[0]}.csv`;
+            link.download = `Zoo_${reportType}_Report_${formatDate(new Date())}.csv`;
             link.click();
         }
     };
@@ -609,7 +670,7 @@ const Reports = () => {
                                     <tbody className="divide-y divide-[#2a2a2a]">
                                         {processedItems.map((item, index) => (
                                             <tr key={index} className="hover:bg-[#1e1e1e]/50 transition-colors">
-                                                <td className="px-4 py-4 text-gray-300 whitespace-nowrap">{item.date}</td>
+                                                <td className="px-4 py-4 text-gray-300 whitespace-nowrap">{normalizeReportDate(item.date)}</td>
                                                 <td className="px-4 py-4 text-gray-500 text-xs font-mono hidden md:table-cell">{item.reference?.substring(0, 12) || '-'}</td>
                                                 <td className="px-4 py-4 text-white font-medium">{item.type}</td>
                                                 <td className="px-4 py-4 text-gray-300">{item.quantity}</td>

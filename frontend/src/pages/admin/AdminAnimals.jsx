@@ -83,7 +83,7 @@ const AdminAnimals = ({ globalSearch = '' }) => {
     });
     const [saving, setSaving] = useState(false);
     const [deleteConfirm, setDeleteConfirm] = useState(null);
-    const [imageInputMode, setImageInputMode] = useState('url'); // 'url' or 'upload'
+    const [imageInputMode, setImageInputMode] = useState('upload');
     const [imageFile, setImageFile] = useState(null);
     const [imagePreview, setImagePreview] = useState(null);
 
@@ -103,6 +103,9 @@ const AdminAnimals = ({ globalSearch = '' }) => {
     const openCreateModal = () => {
         setEditingAnimal(null);
         setForm({ name: '', species: '', exhibit: '', description: '', imageUrl: '', status: 'healthy', lifespan: '', weight: '', length: '', habitat: '', diet: '', animalInformation: '' });
+        setImageInputMode('upload');
+        setImageFile(null);
+        setImagePreview(null);
         setShowModal(true);
     };
 
@@ -122,6 +125,9 @@ const AdminAnimals = ({ globalSearch = '' }) => {
             diet: animal.diet || '',
             animalInformation: animal.animalInformation || animal.animal_information || ''
         });
+        setImageInputMode('upload');
+        setImageFile(null);
+        setImagePreview(null);
         setShowModal(true);
     };
 
@@ -129,7 +135,7 @@ const AdminAnimals = ({ globalSearch = '' }) => {
         setShowModal(false);
         setEditingAnimal(null);
         setForm({ name: '', species: '', exhibit: '', description: '', imageUrl: '', status: 'healthy', lifespan: '', weight: '', length: '', habitat: '', diet: '', animalInformation: '' });
-        setImageInputMode('url');
+        setImageInputMode('upload');
         setImageFile(null);
         setImagePreview(null);
     };
@@ -631,53 +637,23 @@ const AdminAnimals = ({ globalSearch = '' }) => {
                             <div>
                                 <label className="block text-sm font-medium text-gray-400 mb-2">Image</label>
 
-                                {/* Toggle between URL and Upload */}
-                                <div className="flex gap-2 mb-3">
-                                    <button
-                                        type="button"
-                                        onClick={() => setImageInputMode('url')}
-                                        className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition ${imageInputMode === 'url'
-                                                ? 'bg-[#8cff65] text-black'
-                                                : 'bg-[#1e1e1e] border border-[#2a2a2a] text-gray-400 hover:text-white'
-                                            }`}
-                                    >
-                                        URL
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => setImageInputMode('upload')}
-                                        className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition ${imageInputMode === 'upload'
-                                                ? 'bg-[#8cff65] text-black'
-                                                : 'bg-[#1e1e1e] border border-[#2a2a2a] text-gray-400 hover:text-white'
-                                            }`}
-                                    >
-                                        Upload
-                                    </button>
-                                </div>
-
-                                {imageInputMode === 'url' ? (
+                                <div className="space-y-3">
                                     <input
-                                        type="url"
-                                        value={form.imageUrl}
-                                        onChange={e => setForm({ ...form, imageUrl: e.target.value })}
-                                        className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-[#8cff65] transition-all"
-                                        placeholder="https://example.com/image.jpg"
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={handleImageFileChange}
+                                        className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-[#8cff65] file:text-black file:font-medium file:cursor-pointer hover:file:bg-[#7ae857]"
                                     />
-                                ) : (
-                                    <div className="space-y-3">
-                                        <input
-                                            type="file"
-                                            accept="image/*"
-                                            onChange={handleImageFileChange}
-                                            className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-[#8cff65] file:text-black file:font-medium file:cursor-pointer hover:file:bg-[#7ae857]"
-                                        />
-                                        {imagePreview && (
-                                            <div className="relative">
-                                                <img
-                                                    src={imagePreview}
-                                                    alt="Preview"
-                                                    className="w-full h-40 object-cover rounded-xl"
-                                                />
+                                    {(imagePreview || form.imageUrl) && (
+                                        <div className="relative">
+                                            <img
+                                                src={imagePreview || form.imageUrl}
+                                                alt="Preview"
+                                                className="w-full h-40 object-cover rounded-xl"
+                                                onError={(e) => e.target.style.display = 'none'}
+                                                onLoad={(e) => e.target.style.display = 'block'}
+                                            />
+                                            {imagePreview && (
                                                 <button
                                                     type="button"
                                                     onClick={() => {
@@ -691,23 +667,10 @@ const AdminAnimals = ({ globalSearch = '' }) => {
                                                         <line x1="6" y1="6" x2="18" y2="18" />
                                                     </svg>
                                                 </button>
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
-
-                                {/* URL Preview */}
-                                {imageInputMode === 'url' && form.imageUrl && (
-                                    <div className="mt-3">
-                                        <img
-                                            src={form.imageUrl}
-                                            alt="Preview"
-                                            className="w-full h-40 object-cover rounded-xl"
-                                            onError={(e) => e.target.style.display = 'none'}
-                                            onLoad={(e) => e.target.style.display = 'block'}
-                                        />
-                                    </div>
-                                )}
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
                             </div>
 
                             <div>

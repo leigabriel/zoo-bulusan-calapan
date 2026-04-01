@@ -565,7 +565,7 @@ exports.getReportData = async (req, res) => {
             // Get detailed ticket data for the date range
             const [rows] = await db.query(
                 `SELECT 
-                    DATE(tr.created_at) as date,
+                    DATE_FORMAT(tr.created_at, '%Y-%m-%d') as date,
                     tr.reservation_reference,
                     tr.visitor_name,
                     tr.adult_quantity,
@@ -585,7 +585,7 @@ exports.getReportData = async (req, res) => {
             for (const row of rows) {
                 if (row.adult_quantity > 0) {
                     items.push({
-                        date: formatLocalDate(new Date(row.date)),
+                        date: row.date,
                         type: 'Adult Ticket',
                         quantity: row.adult_quantity,
                         amount: row.adult_quantity * 40,
@@ -596,7 +596,7 @@ exports.getReportData = async (req, res) => {
                 }
                 if (row.child_quantity > 0) {
                     items.push({
-                        date: formatLocalDate(new Date(row.date)),
+                        date: row.date,
                         type: 'Child Ticket',
                         quantity: row.child_quantity,
                         amount: row.child_quantity * 20,
@@ -607,7 +607,7 @@ exports.getReportData = async (req, res) => {
                 }
                 if (row.bulusan_resident_quantity > 0) {
                     items.push({
-                        date: formatLocalDate(new Date(row.date)),
+                        date: row.date,
                         type: 'Bulusan Resident',
                         quantity: row.bulusan_resident_quantity,
                         amount: 0,
@@ -638,7 +638,7 @@ exports.getReportData = async (req, res) => {
             // Get visitor data grouped by date
             const [rows] = await db.query(
                 `SELECT 
-                    DATE(reservation_date) as date,
+                    DATE_FORMAT(reservation_date, '%Y-%m-%d') as date,
                     SUM(total_visitors) as visitors,
                     SUM(adult_quantity) as adults,
                     SUM(child_quantity) as children,
@@ -653,7 +653,7 @@ exports.getReportData = async (req, res) => {
             );
 
             items = rows.map(row => ({
-                date: formatLocalDate(new Date(row.date)),
+                date: row.date,
                 type: 'Daily Visitors',
                 quantity: parseInt(row.visitors) || 0,
                 amount: 0,
@@ -680,7 +680,7 @@ exports.getReportData = async (req, res) => {
                 `SELECT 
                     id,
                     title,
-                    DATE(event_date) as date,
+                    DATE_FORMAT(event_date, '%Y-%m-%d') as date,
                     status,
                     created_at
                  FROM events
@@ -690,7 +690,7 @@ exports.getReportData = async (req, res) => {
             );
 
             items = rows.map(row => ({
-                date: formatLocalDate(new Date(row.date)),
+                date: row.date,
                 type: 'Event',
                 quantity: 1,
                 amount: 0,
