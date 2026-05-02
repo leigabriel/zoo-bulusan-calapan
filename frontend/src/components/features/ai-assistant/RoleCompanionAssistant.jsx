@@ -52,26 +52,26 @@ const ROLE_CONFIG = {
     admin: {
         name: 'Zusan AdminOps',
         status: 'Admin Companion · Online',
-        introTitle: 'Admin Companion is ready.',
-        introText: 'I help with operations planning, KPI interpretation, team alignment, and moderation policy decisions for Zoo Bulusan.',
-        greeting: "Magandang araw. I am your Admin Companion. I can help with priorities, reporting, escalations, and strategic actions for the admin panel.",
+        introTitle: 'Admin Companion ready.',
+        introText: 'I help prioritize admin tasks, interpret KPI trends, align staffing, and guide moderation escalations for Zoo Bulusan.',
+        greeting: "Magandang araw. I am your Admin Companion. Share the goal, time range, and report type so I can draft a focused action plan.",
         suggestions: [
-            'Give me today\'s admin priorities.',
-            'Draft a short action plan for reservations and staffing.',
-            'How should I triage community moderation issues?'
+            'Summarize today\'s admin priorities.',
+            'Draft a 3-step plan for reservations and staffing.',
+            'Create a moderation escalation checklist.'
         ],
         placeholder: 'Ask your admin companion...'
     },
     staff: {
         name: 'Zusan StaffMate',
         status: 'Staff Companion · Online',
-        introTitle: 'Staff Companion is ready.',
-        introText: 'I help with daily shift tasks, reservation verification, moderation workflows, and quick operational checklists.',
-        greeting: "Mabuhay. I am your Staff Companion. I can help you with shift tasks, reservation checks, and moderation workflows in the staff portal.",
+        introTitle: 'Staff Companion ready.',
+        introText: 'I help with shift checklists, reservation verification, ticket check-in, and moderation triage.',
+        greeting: "Mabuhay. I am your Staff Companion. Tell me the task and I will give step-by-step actions for the staff portal.",
         suggestions: [
-            'What should I check first this shift?',
-            'Give me a checklist for reservation verification.',
-            'How do I handle a reported community comment?'
+            'Give me my shift checklist.',
+            'How do I verify a reservation quickly?',
+            'What is the standard response for a reported comment?'
         ],
         placeholder: 'Ask your staff companion...'
     }

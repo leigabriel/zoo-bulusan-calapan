@@ -38,6 +38,15 @@ const DownloadIcon = () => (
     </svg>
 );
 
+const PrintIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+        <path d="M6 9V2h12v7" />
+        <path d="M6 18h12v4H6z" />
+        <path d="M6 14h12" />
+        <path d="M4 9h16a2 2 0 0 1 2 2v3H2v-3a2 2 0 0 1 2-2z" />
+    </svg>
+);
+
 const RefreshIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
         <path d="M23 4v6h-6" />
@@ -169,16 +178,12 @@ const Reports = () => {
         return status.charAt(0).toUpperCase() + status.slice(1);
     };
 
-    const escapeCsvCell = (value) => {
-        const safeValue = String(value ?? '').replace(/"/g, '""');
-        return `"${safeValue}"`;
-    };
-
-    const formatCsvDateCell = (value) => {
-        const safeDate = normalizeReportDate(value).replace(/"/g, '""');
-        // Keep date as explicit text in Excel to prevent locale/time parsing issues.
-        return `"=\"${safeDate}\""`;
-    };
+    const escapeHtml = (value) => String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
 
     // Fetch quick stats on mount
     useEffect(() => {
@@ -211,23 +216,19 @@ const Reports = () => {
     ];
 
     const generateReport = async () => {
+        const effectiveEnd = dateRange.end || formatDate(new Date());
+        const effectiveStart = dateRange.start || formatDate(new Date(Date.now() - 30 * 24 * 60 * 60 * 1000));
+
         if (!dateRange.start || !dateRange.end) {
-            // Default to last 30 days
-            const endDate = new Date();
-            const startDate = new Date(endDate - 30 * 24 * 60 * 60 * 1000);
             setDateRange({
-                start: formatDate(startDate),
-                end: formatDate(endDate)
+                start: effectiveStart,
+                end: effectiveEnd
             });
         }
         
         setLoading(true);
         try {
-            const response = await adminAPI.getReportData(
-                dateRange.start || formatDate(new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)),
-                dateRange.end || formatDate(new Date()),
-                reportType
-            );
+            const response = await adminAPI.getReportData(effectiveStart, effectiveEnd, reportType);
             
             if (response.success && response.data) {
                 setReportData({
@@ -236,7 +237,7 @@ const Reports = () => {
                     visitors: response.data.visitors || 0,
                     items: response.data.items || [],
                     generatedAt: new Date().toLocaleString(),
-                    dateRange: { start: dateRange.start, end: dateRange.end },
+                    dateRange: { start: effectiveStart, end: effectiveEnd },
                     reportType: reportTypes.find(t => t.value === reportType)?.label || 'Report',
                 });
             } else {
@@ -247,7 +248,7 @@ const Reports = () => {
                     visitors: 0,
                     items: [],
                     generatedAt: new Date().toLocaleString(),
-                    dateRange: { start: dateRange.start, end: dateRange.end },
+                    dateRange: { start: effectiveStart, end: effectiveEnd },
                     reportType: reportTypes.find(t => t.value === reportType)?.label || 'Report',
                 });
             }
@@ -259,7 +260,7 @@ const Reports = () => {
                 visitors: 0,
                 items: [],
                 generatedAt: new Date().toLocaleString(),
-                dateRange: { start: dateRange.start, end: dateRange.end },
+                dateRange: { start: effectiveStart, end: effectiveEnd },
                 reportType: reportTypes.find(t => t.value === reportType)?.label || 'Report',
             });
         } finally {
@@ -314,102 +315,176 @@ const Reports = () => {
         }));
     };
 
-    const exportReport = (format) => {
-        if (!reportData || !reportData.items?.length) {
+    const reportRows = useMemo(() => processedItems.map(item => ({
+        date: normalizeReportDate(item.date),
+        reference: item.reference || 'N/A',
+        type: item.type || 'N/A',
+        quantity: toExportNumber(item.quantity),
+        amount: toExportNumber(item.amount),
+        status: normalizeStatus(item.status)
+    })), [processedItems]);
+
+    const reportTotals = useMemo(() => processedItems.reduce((acc, item) => ({
+        totalQuantity: acc.totalQuantity + toExportNumber(item.quantity),
+        totalAmount: acc.totalAmount + toExportNumber(item.amount)
+    }), { totalQuantity: 0, totalAmount: 0 }), [processedItems]);
+
+    const getReportMeta = () => {
+        const start = reportData?.dateRange?.start
+            || dateRange.start
+            || formatDate(new Date(Date.now() - 30 * 24 * 60 * 60 * 1000));
+        const end = reportData?.dateRange?.end || dateRange.end || formatDate(new Date());
+        const title = reportData?.reportType
+            || reportTypes.find(t => t.value === reportType)?.label
+            || 'Report';
+        const generatedAt = reportData?.generatedAt || new Date().toLocaleString();
+        return { start, end, title, generatedAt };
+    };
+
+    const exportReport = () => {
+        if (!reportData || reportRows.length === 0) {
             notify.info('Generate a report first before exporting.');
             return;
         }
 
-        if (format === 'excel') {
-            // Prepare data for Excel with more details
-            const excelData = processedItems.map(item => ({
-                'Date': normalizeReportDate(item.date),
-                'Reference': item.reference || 'N/A',
-                'Type': item.type || 'N/A',
-                'Quantity': toExportNumber(item.quantity),
-                'Amount (₱)': toExportNumber(item.amount),
-                'Status': normalizeStatus(item.status)
-            }));
+        const { start, end, title, generatedAt } = getReportMeta();
+        const headers = ['Date', 'Reference', 'Type', 'Quantity', 'Amount (PHP)', 'Status'];
+        const rows = reportRows.map(row => [
+            row.date,
+            row.reference,
+            row.type,
+            row.quantity,
+            row.amount,
+            row.status
+        ]);
 
-            // Add summary rows
-            excelData.push({});
-            excelData.push({
-                'Date': 'REPORT SUMMARY',
-                'Reference': '',
-                'Type': '',
-                'Quantity': '',
-                'Amount (₱)': '',
-                'Status': ''
+        const sheetRows = [
+            ['Zoo Bulusan Calapan'],
+            [title],
+            ['Date Range', `${start} to ${end}`],
+            ['Generated At', generatedAt],
+            [],
+            headers,
+            ...rows,
+            ['', '', 'Summary', reportTotals.totalQuantity, reportTotals.totalAmount, '']
+        ];
+
+        const ws = XLSX.utils.aoa_to_sheet(sheetRows);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, title);
+
+        ws['!merges'] = [
+            { s: { r: 0, c: 0 }, e: { r: 0, c: headers.length - 1 } },
+            { s: { r: 1, c: 0 }, e: { r: 1, c: headers.length - 1 } }
+        ];
+
+        ws['!cols'] = headers.map((_, colIndex) => {
+            let maxLength = 10;
+            sheetRows.forEach(row => {
+                const cell = row[colIndex];
+                if (cell === null || cell === undefined) return;
+                const length = String(cell).length + 2;
+                if (length > maxLength) maxLength = length;
             });
-            excelData.push({
-                'Date': 'Total Quantity',
-                'Reference': '',
-                'Type': '',
-                'Quantity': processedItems.reduce((sum, item) => sum + toExportNumber(item.quantity), 0),
-                'Amount (₱)': '',
-                'Status': ''
-            });
-            excelData.push({
-                'Date': 'Total Revenue',
-                'Reference': '',
-                'Type': '',
-                'Quantity': '',
-                'Amount (₱)': toExportNumber(reportData.totalRevenue),
-                'Status': ''
-            });
-            excelData.push({
-                'Date': 'Generated At',
-                'Reference': reportData.generatedAt,
-                'Type': '',
-                'Quantity': '',
-                'Amount (₱)': '',
-                'Status': ''
-            });
+            return { wch: Math.min(maxLength, 34) };
+        });
 
-            // Create workbook and worksheet
-            const ws = XLSX.utils.json_to_sheet(excelData);
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, reportData.reportType || 'Report');
+        const dateStr = start && end ? `${start}_to_${end}` : formatDate(new Date());
+        const filename = `Zoo_${reportType}_Report_${dateStr}.xlsx`;
 
-            // Auto-size columns
-            const maxWidths = {};
-            excelData.forEach(row => {
-                Object.keys(row).forEach(key => {
-                    const value = String(row[key] || '');
-                    maxWidths[key] = Math.max(maxWidths[key] || 10, value.length + 2);
-                });
-            });
-            ws['!cols'] = Object.values(maxWidths).map(w => ({ wch: Math.min(w, 30) }));
+        XLSX.writeFile(wb, filename);
+    };
 
-            // Generate filename with date
-            const dateStr = dateRange.start && dateRange.end 
-                ? `${dateRange.start}_to_${dateRange.end}` 
-                : formatDate(new Date());
-            const filename = `Zoo_${reportType}_Report_${dateStr}.xlsx`;
-
-            // Download file
-            XLSX.writeFile(wb, filename);
-        } else if (format === 'csv') {
-            // CSV export
-            const headers = ['Date', 'Reference', 'Type', 'Quantity', 'Amount', 'Status'];
-            const csvContent = [
-                headers.map(escapeCsvCell).join(','),
-                ...processedItems.map(item => [
-                    formatCsvDateCell(item.date),
-                    escapeCsvCell(item.reference || 'N/A'),
-                    escapeCsvCell(item.type || 'N/A'),
-                    escapeCsvCell(toExportNumber(item.quantity)),
-                    escapeCsvCell(toExportNumber(item.amount)),
-                    escapeCsvCell(normalizeStatus(item.status))
-                ].join(','))
-            ].join('\r\n');
-
-            const blob = new Blob(['\uFEFF', csvContent], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = `Zoo_${reportType}_Report_${formatDate(new Date())}.csv`;
-            link.click();
+    const handlePrint = () => {
+        if (!reportData || reportRows.length === 0) {
+            notify.info('Generate a report first before printing.');
+            return;
         }
+
+        const { start, end, title, generatedAt } = getReportMeta();
+        const totalAmount = reportTotals.totalAmount.toLocaleString();
+        const totalQuantity = reportTotals.totalQuantity.toLocaleString();
+
+        const rowsHtml = reportRows.map((row) => (
+            `<tr>
+                <td>${escapeHtml(row.date)}</td>
+                <td>${escapeHtml(row.reference)}</td>
+                <td>${escapeHtml(row.type)}</td>
+                <td class="num">${escapeHtml(row.quantity.toLocaleString())}</td>
+                <td class="num">₱${escapeHtml(row.amount.toLocaleString())}</td>
+                <td>${escapeHtml(row.status)}</td>
+            </tr>`
+        )).join('');
+
+        const html = `<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>${escapeHtml(title)} - Print</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; color: #111; margin: 24px; }
+        h1 { font-size: 20px; margin: 0 0 6px; }
+        h2 { font-size: 16px; margin: 0 0 16px; font-weight: 600; }
+        .meta { font-size: 12px; margin-bottom: 16px; color: #444; }
+        .meta span { display: inline-block; margin-right: 18px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+        th, td { border: 1px solid #ddd; padding: 10px 12px; font-size: 12px; text-align: left; }
+        th { background: #f3f3f3; text-transform: uppercase; letter-spacing: 0.04em; font-size: 11px; }
+        td.num { text-align: right; }
+        tfoot td { font-weight: 700; background: #fafafa; }
+        .summary { margin-top: 12px; font-size: 12px; color: #333; }
+        @page { size: landscape; margin: 12mm; }
+    </style>
+</head>
+<body>
+    <h1>Zoo Bulusan Calapan</h1>
+    <h2>${escapeHtml(title)} Report</h2>
+    <div class="meta">
+        <span>Date Range: ${escapeHtml(start)} to ${escapeHtml(end)}</span>
+        <span>Generated: ${escapeHtml(generatedAt)}</span>
+        <span>Records: ${reportRows.length}</span>
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Reference</th>
+                <th>Type</th>
+                <th>Quantity</th>
+                <th>Amount</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            ${rowsHtml}
+        </tbody>
+        <tfoot>
+            <tr>
+                <td colspan="3">Summary</td>
+                <td class="num">${escapeHtml(totalQuantity)}</td>
+                <td class="num">₱${escapeHtml(totalAmount)}</td>
+                <td></td>
+            </tr>
+        </tfoot>
+    </table>
+    <div class="summary">Prepared by the Admin Reports module.</div>
+</body>
+</html>`;
+
+        const printWindow = window.open('', '_blank', 'width=1200,height=800');
+        if (!printWindow) {
+            notify.error('Please allow pop-ups to print this report.');
+            return;
+        }
+
+        printWindow.document.open();
+        printWindow.document.write(html);
+        printWindow.document.close();
+        printWindow.focus();
+        printWindow.onload = () => {
+            printWindow.print();
+        };
     };
 
     const getStatusBadge = (status) => {
@@ -606,23 +681,23 @@ const Reports = () => {
                                 className="w-full lg:w-56 pl-10 pr-4 py-2 bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl text-white text-sm focus:outline-none focus:border-[#8cff65]/50"
                             />
                         </div>
-                        {/* Export buttons */}
-                        <div className="flex gap-2">
+                        {/* Export + Print */}
+                        <div className="flex flex-wrap gap-2">
                             <button
-                                onClick={() => exportReport('csv')}
-                                disabled={!reportData?.items?.length}
-                                className="flex items-center gap-2 px-4 py-2 bg-blue-500/10 border border-blue-500/30 text-blue-400 rounded-xl hover:bg-blue-500/20 transition disabled:opacity-50 disabled:cursor-not-allowed text-sm"
-                            >
-                                <DownloadIcon />
-                                CSV
-                            </button>
-                            <button
-                                onClick={() => exportReport('excel')}
-                                disabled={!reportData?.items?.length}
+                                onClick={exportReport}
+                                disabled={reportRows.length === 0}
                                 className="flex items-center gap-2 px-4 py-2 bg-[#8cff65]/10 border border-[#8cff65]/30 text-[#8cff65] rounded-xl hover:bg-[#8cff65]/20 transition disabled:opacity-50 disabled:cursor-not-allowed text-sm"
                             >
                                 <DownloadIcon />
-                                Excel
+                                Export
+                            </button>
+                            <button
+                                onClick={handlePrint}
+                                disabled={reportRows.length === 0}
+                                className="flex items-center gap-2 px-4 py-2 bg-gray-500/10 border border-gray-500/30 text-gray-300 rounded-xl hover:bg-gray-500/20 transition disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                            >
+                                <PrintIcon />
+                                Print
                             </button>
                         </div>
                     </div>

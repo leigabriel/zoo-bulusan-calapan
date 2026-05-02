@@ -4,18 +4,18 @@ import RoleCompanionAssistant from '../features/ai-assistant/RoleCompanionAssist
 
 const ROLE_MESSAGES = {
     admin: [
-        'Need a strategy check?',
-        'Review priorities with me.',
-        'I can help with admin planning.',
         'Need a quick KPI summary?',
-        'Ask for an action plan.'
+        'Review admin priorities with me.',
+        'Draft a short action plan.',
+        'Need an escalation checklist?',
+        'Align staffing in minutes.'
     ],
     staff: [
-        'Need shift guidance?',
-        'Ask for a task checklist.',
-        'I can help with reservations.',
+        'Need a shift checklist?',
+        'Verify reservations faster.',
         'Need moderation steps?',
-        'Let us solve it quickly.'
+        'Quick response templates here.',
+        'Resolve tickets with me.'
     ]
 };
 

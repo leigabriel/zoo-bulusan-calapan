@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import Chart from 'react-apexcharts';
 import { useAuth } from '../../context/AuthContext';
@@ -90,7 +90,191 @@ const AdminDashboard = () => {
         { day: 'Sun', visitors: 0, revenue: 0 },
     ]);
 
-    const maxVisitors = Math.max(...weeklyData.map(d => d.visitors), 1);
+    const maxVisitors = useMemo(() => Math.max(...weeklyData.map(d => d.visitors), 1), [weeklyData]);
+
+    const weeklyCategories = useMemo(() => weeklyData.map(d => d.day), [weeklyData]);
+    const weeklyVisitors = useMemo(() => weeklyData.map(d => d.visitors), [weeklyData]);
+    const weeklyRevenue = useMemo(() => weeklyData.map(d => d.revenue), [weeklyData]);
+
+    const weeklyTotals = useMemo(() => {
+        if (!weeklyData.length) {
+            return {
+                totalVisitors: 0,
+                avgVisitors: 0,
+                peakDay: { day: 'N/A', visitors: 0 },
+                totalRevenue: 0
+            };
+        }
+
+        const totalVisitors = weeklyData.reduce((sum, d) => sum + d.visitors, 0);
+        const totalRevenue = weeklyData.reduce((sum, d) => sum + d.revenue, 0);
+        const avgVisitors = Math.round(totalVisitors / 7);
+        const peakDay = weeklyData.reduce((max, d) => d.visitors > max.visitors ? d : max, weeklyData[0]);
+
+        return { totalVisitors, avgVisitors, peakDay, totalRevenue };
+    }, [weeklyData]);
+
+    const weeklyChartOptions = useMemo(() => ({
+        chart: {
+            type: 'bar',
+            toolbar: { show: false },
+            background: 'transparent',
+            animations: {
+                enabled: true,
+                easing: 'easeinout',
+                speed: 800,
+            },
+        },
+        plotOptions: {
+            bar: {
+                borderRadius: 6,
+                columnWidth: '55%',
+                distributed: false,
+                dataLabels: { position: 'top' },
+            }
+        },
+        colors: ['#8cff65', '#4ade80'],
+        dataLabels: {
+            enabled: false,
+        },
+        stroke: {
+            show: true,
+            width: 2,
+            colors: ['transparent']
+        },
+        xaxis: {
+            categories: weeklyCategories,
+            labels: {
+                style: { colors: '#6b7280', fontSize: '12px' }
+            },
+            axisBorder: { show: false },
+            axisTicks: { show: false },
+        },
+        yaxis: {
+            labels: {
+                style: { colors: '#6b7280', fontSize: '12px' },
+                formatter: (val) => Math.round(val)
+            }
+        },
+        fill: {
+            type: 'gradient',
+            gradient: {
+                shade: 'dark',
+                type: 'vertical',
+                shadeIntensity: 0.3,
+                gradientToColors: ['#4ade80'],
+                inverseColors: false,
+                opacityFrom: 1,
+                opacityTo: 0.85,
+                stops: [0, 100]
+            }
+        },
+        tooltip: {
+            theme: 'dark',
+            y: {
+                formatter: (val, { seriesIndex }) => 
+                    seriesIndex === 0 ? `${val} visitors` : `₱${val.toLocaleString()}`
+            }
+        },
+        legend: {
+            show: true,
+            position: 'top',
+            horizontalAlign: 'right',
+            labels: { colors: '#9ca3af' },
+            markers: {
+                width: 10,
+                height: 10,
+                radius: 12
+            }
+        },
+        grid: {
+            borderColor: '#2a2a2a',
+            strokeDashArray: 4,
+            xaxis: { lines: { show: false } },
+            yaxis: { lines: { show: true } }
+        },
+        theme: { mode: 'dark' }
+    }), [weeklyCategories]);
+
+    const weeklyChartSeries = useMemo(() => ([
+        { name: 'Visitors', data: weeklyVisitors },
+        { name: 'Revenue (₱)', data: weeklyRevenue }
+    ]), [weeklyVisitors, weeklyRevenue]);
+
+    const donutSeries = useMemo(() => [45, 25, 20, 10], []);
+
+    const donutOptions = useMemo(() => ({
+        chart: {
+            type: 'donut',
+            background: 'transparent',
+        },
+        labels: ['Adult', 'Children', 'Senior', 'Student'],
+        colors: ['#8cff65', '#22c55e', '#4ade80', '#86efac'],
+        legend: { show: false },
+        dataLabels: { enabled: false },
+        plotOptions: {
+            pie: {
+                donut: {
+                    size: '70%',
+                    labels: {
+                        show: true,
+                        total: {
+                            show: true,
+                            label: 'Total',
+                            color: '#9ca3af',
+                            fontSize: '14px',
+                            formatter: () => stats.totalTickets.toLocaleString()
+                        },
+                        value: {
+                            color: '#fff',
+                            fontSize: '24px',
+                            fontWeight: 'bold'
+                        }
+                    }
+                }
+            }
+        },
+        stroke: { show: false },
+        tooltip: {
+            theme: 'dark',
+            y: { formatter: (val) => `${val} tickets` }
+        },
+        theme: { mode: 'dark' }
+    }), [stats.totalTickets]);
+
+    const revenueAreaOptions = useMemo(() => ({
+        chart: {
+            type: 'area',
+            toolbar: { show: false },
+            sparkline: { enabled: true },
+            background: 'transparent'
+        },
+        colors: ['#8cff65'],
+        fill: {
+            type: 'gradient',
+            gradient: {
+                shadeIntensity: 1,
+                opacityFrom: 0.4,
+                opacityTo: 0,
+                stops: [0, 100]
+            }
+        },
+        stroke: {
+            curve: 'smooth',
+            width: 2
+        },
+        tooltip: { 
+            enabled: true,
+            theme: 'dark',
+            y: { formatter: (val) => `₱${val.toLocaleString()}` }
+        },
+        xaxis: { categories: weeklyCategories },
+        theme: { mode: 'dark' }
+    }), [weeklyCategories]);
+
+    const revenueAreaSeries = useMemo(() => ([
+        { name: 'Revenue', data: weeklyRevenue }
+    ]), [weeklyRevenue]);
 
     useEffect(() => {
         fetchDashboardData();
@@ -402,91 +586,8 @@ const AdminDashboard = () => {
                     {/* ApexCharts Weekly Bar Chart */}
                     <div className="h-72">
                         <Chart
-                            options={{
-                                chart: {
-                                    type: 'bar',
-                                    toolbar: { show: false },
-                                    background: 'transparent',
-                                    animations: {
-                                        enabled: true,
-                                        easing: 'easeinout',
-                                        speed: 800,
-                                    },
-                                },
-                                plotOptions: {
-                                    bar: {
-                                        borderRadius: 6,
-                                        columnWidth: '55%',
-                                        distributed: false,
-                                        dataLabels: { position: 'top' },
-                                    }
-                                },
-                                colors: ['#8cff65', '#4ade80'],
-                                dataLabels: {
-                                    enabled: false,
-                                },
-                                stroke: {
-                                    show: true,
-                                    width: 2,
-                                    colors: ['transparent']
-                                },
-                                xaxis: {
-                                    categories: weeklyData.map(d => d.day),
-                                    labels: {
-                                        style: { colors: '#6b7280', fontSize: '12px' }
-                                    },
-                                    axisBorder: { show: false },
-                                    axisTicks: { show: false },
-                                },
-                                yaxis: {
-                                    labels: {
-                                        style: { colors: '#6b7280', fontSize: '12px' },
-                                        formatter: (val) => Math.round(val)
-                                    }
-                                },
-                                fill: {
-                                    type: 'gradient',
-                                    gradient: {
-                                        shade: 'dark',
-                                        type: 'vertical',
-                                        shadeIntensity: 0.3,
-                                        gradientToColors: ['#4ade80'],
-                                        inverseColors: false,
-                                        opacityFrom: 1,
-                                        opacityTo: 0.85,
-                                        stops: [0, 100]
-                                    }
-                                },
-                                tooltip: {
-                                    theme: 'dark',
-                                    y: {
-                                        formatter: (val, { seriesIndex }) => 
-                                            seriesIndex === 0 ? `${val} visitors` : `₱${val.toLocaleString()}`
-                                    }
-                                },
-                                legend: {
-                                    show: true,
-                                    position: 'top',
-                                    horizontalAlign: 'right',
-                                    labels: { colors: '#9ca3af' },
-                                    markers: {
-                                        width: 10,
-                                        height: 10,
-                                        radius: 12
-                                    }
-                                },
-                                grid: {
-                                    borderColor: '#2a2a2a',
-                                    strokeDashArray: 4,
-                                    xaxis: { lines: { show: false } },
-                                    yaxis: { lines: { show: true } }
-                                },
-                                theme: { mode: 'dark' }
-                            }}
-                            series={[
-                                { name: 'Visitors', data: weeklyData.map(d => d.visitors) },
-                                { name: 'Revenue (₱)', data: weeklyData.map(d => d.revenue) }
-                            ]}
+                            options={weeklyChartOptions}
+                            series={weeklyChartSeries}
                             type="bar"
                             height="100%"
                         />
@@ -496,15 +597,15 @@ const AdminDashboard = () => {
                     <div className="grid grid-cols-3 gap-4 pt-4 border-t border-[#2a2a2a]">
                         <div>
                             <p className="text-gray-400 text-sm">Total Visitors</p>
-                            <p className="text-xl font-bold text-white">{weeklyData.reduce((sum, d) => sum + d.visitors, 0).toLocaleString()}</p>
+                            <p className="text-xl font-bold text-white">{weeklyTotals.totalVisitors.toLocaleString()}</p>
                         </div>
                         <div>
                             <p className="text-gray-400 text-sm">Avg. per day</p>
-                            <p className="text-xl font-bold text-white">{Math.round(weeklyData.reduce((sum, d) => sum + d.visitors, 0) / 7).toLocaleString()}</p>
+                            <p className="text-xl font-bold text-white">{weeklyTotals.avgVisitors.toLocaleString()}</p>
                         </div>
                         <div>
                             <p className="text-gray-400 text-sm">Peak Day</p>
-                            <p className="text-xl font-bold text-[#8cff65]">{weeklyData.reduce((max, d) => d.visitors > max.visitors ? d : max, weeklyData[0]).day}</p>
+                            <p className="text-xl font-bold text-[#8cff65]">{weeklyTotals.peakDay.day}</p>
                         </div>
                     </div>
                 </div>
@@ -521,45 +622,8 @@ const AdminDashboard = () => {
                     {/* ApexCharts Donut */}
                     <div className="flex justify-center">
                         <Chart
-                            options={{
-                                chart: {
-                                    type: 'donut',
-                                    background: 'transparent',
-                                },
-                                labels: ['Adult', 'Children', 'Senior', 'Student'],
-                                colors: ['#8cff65', '#22c55e', '#4ade80', '#86efac'],
-                                legend: { show: false },
-                                dataLabels: { enabled: false },
-                                plotOptions: {
-                                    pie: {
-                                        donut: {
-                                            size: '70%',
-                                            labels: {
-                                                show: true,
-                                                total: {
-                                                    show: true,
-                                                    label: 'Total',
-                                                    color: '#9ca3af',
-                                                    fontSize: '14px',
-                                                    formatter: () => stats.totalTickets.toLocaleString()
-                                                },
-                                                value: {
-                                                    color: '#fff',
-                                                    fontSize: '24px',
-                                                    fontWeight: 'bold'
-                                                }
-                                            }
-                                        }
-                                    }
-                                },
-                                stroke: { show: false },
-                                tooltip: {
-                                    theme: 'dark',
-                                    y: { formatter: (val) => `${val} tickets` }
-                                },
-                                theme: { mode: 'dark' }
-                            }}
-                            series={[45, 25, 20, 10]}
+                            options={donutOptions}
+                            series={donutSeries}
                             type="donut"
                             width="180"
                         />
@@ -624,39 +688,11 @@ const AdminDashboard = () => {
                             <TrendUpIcon /> +42%
                         </span>
                     </div>
-                    <p className="text-3xl font-bold text-white mb-2">₱{weeklyData.reduce((sum, d) => sum + d.revenue, 0).toLocaleString()}</p>
+                    <p className="text-3xl font-bold text-white mb-2">₱{weeklyTotals.totalRevenue.toLocaleString()}</p>
                     <p className="text-gray-500 text-sm mb-2">Weekly Revenue</p>
                     <Chart
-                        options={{
-                            chart: {
-                                type: 'area',
-                                toolbar: { show: false },
-                                sparkline: { enabled: true },
-                                background: 'transparent'
-                            },
-                            colors: ['#8cff65'],
-                            fill: {
-                                type: 'gradient',
-                                gradient: {
-                                    shadeIntensity: 1,
-                                    opacityFrom: 0.4,
-                                    opacityTo: 0,
-                                    stops: [0, 100]
-                                }
-                            },
-                            stroke: {
-                                curve: 'smooth',
-                                width: 2
-                            },
-                            tooltip: { 
-                                enabled: true,
-                                theme: 'dark',
-                                y: { formatter: (val) => `₱${val.toLocaleString()}` }
-                            },
-                            xaxis: { categories: weeklyData.map(d => d.day) },
-                            theme: { mode: 'dark' }
-                        }}
-                        series={[{ name: 'Revenue', data: weeklyData.map(d => d.revenue) }]}
+                        options={revenueAreaOptions}
+                        series={revenueAreaSeries}
                         type="area"
                         height={80}
                     />

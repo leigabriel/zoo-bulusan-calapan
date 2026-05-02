@@ -638,16 +638,16 @@ exports.getReportData = async (req, res) => {
             // Get visitor data grouped by date
             const [rows] = await db.query(
                 `SELECT 
-                    DATE_FORMAT(reservation_date, '%Y-%m-%d') as date,
+                    DATE_FORMAT(COALESCE(reservation_date, created_at), '%Y-%m-%d') as date,
                     SUM(total_visitors) as visitors,
                     SUM(adult_quantity) as adults,
                     SUM(child_quantity) as children,
                     SUM(bulusan_resident_quantity) as residents,
                     COUNT(*) as reservations
                  FROM ticket_reservations
-                 WHERE DATE(reservation_date) BETWEEN ? AND ?
-                 AND status IN ('confirmed', 'completed')
-                 GROUP BY DATE(reservation_date)
+                 WHERE DATE(COALESCE(reservation_date, created_at)) BETWEEN ? AND ?
+                 AND status NOT IN ('cancelled', 'no_show')
+                 GROUP BY DATE(COALESCE(reservation_date, created_at))
                  ORDER BY date DESC`,
                 [start, end]
             );
@@ -666,8 +666,8 @@ exports.getReportData = async (req, res) => {
                     COALESCE(SUM(total_visitors), 0) as visitors,
                     COUNT(*) as ticketsSold
                  FROM ticket_reservations
-                 WHERE DATE(reservation_date) BETWEEN ? AND ?
-                 AND status IN ('confirmed', 'completed')`,
+                 WHERE DATE(COALESCE(reservation_date, created_at)) BETWEEN ? AND ?
+                 AND status NOT IN ('cancelled', 'no_show')`,
                 [start, end]
             );
 

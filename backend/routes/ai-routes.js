@@ -192,15 +192,15 @@ const getCompanionFallbackResponse = (role, message, dynamicData = null, languag
 
         if (lowerMsg.includes('report') || lowerMsg.includes('analytics') || lowerMsg.includes('kpi')) {
             if (isTagalog) {
-                return `Para sa admin reporting, tumuon sa reservations trend, attendance, event engagement, at moderation turnaround. Ang kasalukuyang animal registry count ay ${totalAnimals}. Maaari kitang bigyan ng maikling dashboard summary format.`;
+                return `Para sa admin reporting, tumuon sa reservations trend, attendance, event engagement, at moderation turnaround. Ang kasalukuyang animal registry count ay ${totalAnimals}. Sabihin ang time range at report type para mabigyan kita ng maikling KPI summary.`;
             }
-            return `For admin reporting, focus on reservations trend, attendance, event engagement, and moderation turnaround. The current animal registry count is ${totalAnimals}. I can provide a concise dashboard summary format.`;
+            return `For admin reporting, focus on reservations trend, attendance, event engagement, and moderation turnaround. The current animal registry count is ${totalAnimals}. Share the time range and report type so I can draft a concise KPI summary.`;
         }
 
         if (isTagalog) {
-            return 'Handa ang Admin Companion. Makakatulong ako sa planning, analytics interpretation, operations strategy, at policy-aligned decisions para sa Zoo Bulusan. Humingi ka ng action plan, risk check, o reporting summary.';
+            return 'Handa ang Admin Companion. Makakatulong ako sa priorities, staffing alignment, analytics interpretation, at escalation decisions. Sabihin ang goal at time range para makagawa ako ng action plan.';
         }
-        return 'Admin companion ready. I can help with planning, analytics interpretation, operations strategy, and policy-aligned decisions for Zoo Bulusan. Ask for an action plan, risk check, or reporting summary.';
+        return 'Admin companion ready. I can help with priorities, staffing alignment, analytics interpretation, and escalation decisions. Share your goal and time range for a focused action plan.';
     }
 
     if (lowerMsg.includes('shift') || lowerMsg.includes('opening') || lowerMsg.includes('checklist')) {
@@ -212,15 +212,15 @@ const getCompanionFallbackResponse = (role, message, dynamicData = null, languag
 
     if (lowerMsg.includes('reservation') || lowerMsg.includes('ticket') || lowerMsg.includes('verify')) {
         if (isTagalog) {
-            return `Para sa reservation handling, kumpirmahin ang visitor details, i-validate ang schedule at slot availability, at panatilihing malinaw ang notes para sa handoff. Sa system ngayon, ${ticketSoldToday} ang sold tickets at ${availability} ang availability.`;
+            return `Para sa reservation handling, i-verify ang booking reference, i-validate ang schedule at slot availability, at panatilihing malinaw ang notes para sa handoff. Sa system ngayon, ${ticketSoldToday} ang sold tickets at ${availability} ang availability.`;
         }
-        return `For reservation handling, confirm visitor details, validate schedule and slot availability, and keep notes clear for handoff. Today's system shows ${ticketSoldToday} tickets sold with ${availability} availability.`;
+        return `For reservation handling, verify the booking reference, validate schedule and slot availability, and keep notes clear for handoff. Today's system shows ${ticketSoldToday} tickets sold with ${availability} availability.`;
     }
 
     if (isTagalog) {
-        return 'Handa ang Staff Companion. Makakatulong ako sa daily operations, reservation verification, moderation workflows, at mabilis na response templates para sa frontline tasks sa Zoo Bulusan.';
+        return 'Handa ang Staff Companion. Makakatulong ako sa shift checklist, reservation verification, moderation triage, at quick response templates. Sabihin ang task para maibigay ko ang tamang steps.';
     }
-    return 'Staff companion ready. I can help with daily operations, reservation verification, moderation workflows, and quick response templates for frontline tasks in Zoo Bulusan.';
+    return 'Staff companion ready. I can help with shift checklists, reservation verification, moderation triage, and quick response templates. Tell me the task so I can give the exact steps.';
 };
 
 const getCompanionSystemContext = (role, preferredLanguage = 'english') => {
@@ -232,11 +232,12 @@ const getCompanionSystemContext = (role, preferredLanguage = 'english') => {
 You are an internal AI companion for Zoo Bulusan Calapan.
 
 Core rules:
-- Give practical, factual, workflow-focused guidance.
-- Keep responses concise and actionable.
-- Never reveal personal data, payment records, private account details, tokens, or secrets.
-- If user asks for sensitive data, refuse and suggest the proper in-system workflow.
-- Do not fabricate database records, metrics, or unavailable facts.
+- Provide role-appropriate, workflow-focused guidance only.
+- Keep responses concise, actionable, and task-oriented.
+- Never reveal or request personal data, payment records, private account details, tokens, or secrets.
+- If the request requires restricted data, refuse and suggest the proper in-system workflow.
+- Do not fabricate database records, metrics, or unavailable facts. If unknown, say it is unavailable.
+- Ask up to two clarifying questions when the request is missing key context (time range, report type, status, or priority).
 - Use plain text only.
 - ${languageRule}
 
@@ -265,7 +266,8 @@ What you should help with:
 Response style:
 - Prefer structured steps and decision checkpoints.
 - Mention risks, dependencies, and recommended next actions.
-- If useful, provide short templates for admin announcements and task delegation.
+- Offer brief templates for delegation notes, escalation summaries, or KPI highlights.
+- If the request is staff-only, respond with admin guidance and note where staff should execute.
 `;
     }
 
@@ -283,7 +285,8 @@ What you should help with:
 Response style:
 - Give quick checklist-like instructions.
 - Keep steps concrete, short, and operational.
-- Suggest escalation to admin when issue exceeds staff permissions.
+- Suggest escalation to admin when the issue exceeds staff permissions or needs approval.
+- If the request is admin-only, state the limitation and advise escalation.
 `;
 };
 
