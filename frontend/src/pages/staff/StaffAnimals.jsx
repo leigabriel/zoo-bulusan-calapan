@@ -191,11 +191,11 @@ const StaffAnimals = ({ globalSearch = '' }) => {
 
     const getStatusBadgeColor = (status) => {
         switch (status?.toLowerCase()) {
-            case 'healthy': return 'bg-[#8cff65]/20 text-[#8cff65] border-[#8cff65]/30';
+            case 'healthy': return 'bg-green-500/20 text-green-600 border-green-500/30';
             case 'sick': return 'bg-red-500/20 text-red-400 border-red-500/30';
             case 'recovering': return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
             case 'quarantine': return 'bg-purple-500/20 text-purple-400 border-purple-500/30';
-            default: return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
+            default: return 'bg-gray-500/20 text-gray-500 border-gray-500/30';
         }
     };
 
@@ -245,8 +245,8 @@ const StaffAnimals = ({ globalSearch = '' }) => {
         return (
             <div className="flex items-center justify-center h-64">
                 <div className="flex flex-col items-center gap-3">
-                    <div className="w-10 h-10 border-4 border-[#8cff65] border-t-transparent rounded-full animate-spin"></div>
-                    <span className="text-gray-400">Loading animals...</span>
+                    <div className="w-10 h-10 border-4 border-green-500 border-t-transparent rounded-full animate-spin"></div>
+                    <span className="text-gray-500">Loading animals...</span>
                 </div>
             </div>
         );
@@ -264,46 +264,46 @@ const StaffAnimals = ({ globalSearch = '' }) => {
         <div className="space-y-6">
             {/* Header Stats */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="bg-[#141414] border border-[#2a2a2a] rounded-xl p-4">
+                <div className="bg-white border border-green-200 rounded-xl p-4">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-[#8cff65]/10 rounded-xl flex items-center justify-center text-[#8cff65]">
+                        <div className="w-10 h-10 bg-green-500/10 rounded-xl flex items-center justify-center text-green-600">
                             <AnimalsHeaderIcon />
                         </div>
                         <div>
-                            <p className="text-2xl font-bold text-white">{animalCounts.total}</p>
+                            <p className="text-2xl font-bold text-gray-900">{animalCounts.total}</p>
                             <p className="text-xs text-gray-500">Total Animals</p>
                         </div>
                     </div>
                 </div>
-                <div className="bg-[#141414] border border-[#2a2a2a] rounded-xl p-4">
+                <div className="bg-white border border-green-200 rounded-xl p-4">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-[#8cff65]/10 rounded-xl flex items-center justify-center text-[#8cff65]">
+                        <div className="w-10 h-10 bg-green-500/10 rounded-xl flex items-center justify-center text-green-600">
                             <span className="text-lg font-bold">H</span>
                         </div>
                         <div>
-                            <p className="text-2xl font-bold text-white">{animalCounts.healthy}</p>
+                            <p className="text-2xl font-bold text-gray-900">{animalCounts.healthy}</p>
                             <p className="text-xs text-gray-500">Healthy</p>
                         </div>
                     </div>
                 </div>
-                <div className="bg-[#141414] border border-[#2a2a2a] rounded-xl p-4">
+                <div className="bg-white border border-green-200 rounded-xl p-4">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-red-500/10 rounded-xl flex items-center justify-center text-red-400">
                             <span className="text-lg font-bold">S</span>
                         </div>
                         <div>
-                            <p className="text-2xl font-bold text-white">{animalCounts.sick}</p>
+                            <p className="text-2xl font-bold text-gray-900">{animalCounts.sick}</p>
                             <p className="text-xs text-gray-500">Sick</p>
                         </div>
                     </div>
                 </div>
-                <div className="bg-[#141414] border border-[#2a2a2a] rounded-xl p-4">
+                <div className="bg-white border border-green-200 rounded-xl p-4">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-yellow-500/10 rounded-xl flex items-center justify-center text-yellow-400">
                             <span className="text-lg font-bold">O</span>
                         </div>
                         <div>
-                            <p className="text-2xl font-bold text-white">{animalCounts.other}</p>
+                            <p className="text-2xl font-bold text-gray-900">{animalCounts.other}</p>
                             <p className="text-xs text-gray-500">Other Status</p>
                         </div>
                     </div>
@@ -311,9 +311,9 @@ const StaffAnimals = ({ globalSearch = '' }) => {
             </div>
 
             {/* Main Content Card */}
-            <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl overflow-hidden">
+            <div className="bg-white border border-green-200 rounded-2xl overflow-hidden">
                 {/* Toolbar */}
-                <div className="p-4 border-b border-[#2a2a2a] flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+                <div className="p-4 border-b border-green-200 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
                     <div className="flex items-center gap-3 flex-1 flex-wrap">
                         {/* Search */}
                         <div className="relative flex-1 min-w-[200px] max-w-sm">
@@ -325,7 +325,7 @@ const StaffAnimals = ({ globalSearch = '' }) => {
                                 placeholder="Search animals..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl py-2.5 pl-10 pr-4 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#8cff65] focus:ring-1 focus:ring-[#8cff65]/20 transition-all"
+                                className="w-full bg-green-50 border border-green-200 rounded-xl py-2.5 pl-10 pr-4 text-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-200 transition-all"
                             />
                         </div>
 
@@ -334,7 +334,7 @@ const StaffAnimals = ({ globalSearch = '' }) => {
                             <select
                                 value={speciesFilter}
                                 onChange={(e) => setSpeciesFilter(e.target.value)}
-                                className="appearance-none bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl py-2.5 px-4 pr-8 text-sm text-white focus:outline-none focus:border-[#8cff65] cursor-pointer"
+                                className="appearance-none bg-green-50 border border-green-200 rounded-xl py-2.5 px-4 pr-8 text-sm text-gray-900 focus:outline-none focus:border-green-500 cursor-pointer"
                             >
                                 <option value="all">All Species</option>
                                 {uniqueSpecies.map(species => (
@@ -352,7 +352,7 @@ const StaffAnimals = ({ globalSearch = '' }) => {
                                     setSortField(field);
                                     setSortOrder(order);
                                 }}
-                                className="appearance-none bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl py-2.5 pl-10 pr-8 text-sm text-white focus:outline-none focus:border-[#8cff65] cursor-pointer"
+                                className="appearance-none bg-green-50 border border-green-200 rounded-xl py-2.5 pl-10 pr-8 text-sm text-gray-900 focus:outline-none focus:border-green-500 cursor-pointer"
                             >
                                 <option value="name-asc">Name (A-Z)</option>
                                 <option value="name-desc">Name (Z-A)</option>
@@ -370,7 +370,7 @@ const StaffAnimals = ({ globalSearch = '' }) => {
                     {/* Add Animal Button */}
                     <button
                         onClick={openCreateModal}
-                        className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-[#8cff65] to-[#4ade80] text-[#0a0a0a] font-semibold rounded-xl hover:from-[#9dff7a] hover:to-[#5ceb91] transition-all shadow-lg shadow-[#8cff65]/20"
+                        className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-green-500 to-green-400 text-white font-semibold rounded-xl hover:from-green-400 hover:to-green-500 transition-all shadow-lg shadow-green-300/50"
                     >
                         <PlusIcon />
                         Add Animal
@@ -380,47 +380,47 @@ const StaffAnimals = ({ globalSearch = '' }) => {
                 {/* Animals Table */}
                 <div className="overflow-x-auto">
                     <table className="w-full">
-                        <thead className="bg-[#1e1e1e]">
+                        <thead className="bg-green-50">
                             <tr>
                                 <th
-                                    className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider cursor-pointer hover:text-white"
+                                    className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-900"
                                     onClick={() => toggleSort('name')}
                                 >
                                     <div className="flex items-center gap-2">
                                         Name
                                         {sortField === 'name' && (
-                                            <span className="text-[#8cff65]">{sortOrder === 'asc' ? '↑' : '↓'}</span>
+                                            <span className="text-green-600">{sortOrder === 'asc' ? '↑' : '↓'}</span>
                                         )}
                                     </div>
                                 </th>
                                 <th
-                                    className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider cursor-pointer hover:text-white"
+                                    className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-900"
                                     onClick={() => toggleSort('species')}
                                 >
                                     <div className="flex items-center gap-2">
                                         Species
                                         {sortField === 'species' && (
-                                            <span className="text-[#8cff65]">{sortOrder === 'asc' ? '↑' : '↓'}</span>
+                                            <span className="text-green-600">{sortOrder === 'asc' ? '↑' : '↓'}</span>
                                         )}
                                     </div>
                                 </th>
                                 <th
-                                    className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider cursor-pointer hover:text-white"
+                                    className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-900"
                                     onClick={() => toggleSort('exhibit')}
                                 >
                                     <div className="flex items-center gap-2">
                                         Exhibit/Habitat
                                         {sortField === 'exhibit' && (
-                                            <span className="text-[#8cff65]">{sortOrder === 'asc' ? '↑' : '↓'}</span>
+                                            <span className="text-green-600">{sortOrder === 'asc' ? '↑' : '↓'}</span>
                                         )}
                                     </div>
                                 </th>
-                                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Description</th>
-                                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Status</th>
-                                <th className="px-6 py-4 text-right text-xs font-semibold text-gray-400 uppercase tracking-wider">Actions</th>
+                                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Description</th>
+                                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                                <th className="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-[#2a2a2a]">
+                        <tbody className="divide-y divide-green-200">
                             {filteredAnimals.length === 0 ? (
                                 <tr>
                                     <td colSpan="6" className="px-6 py-12 text-center text-gray-500">
@@ -429,22 +429,22 @@ const StaffAnimals = ({ globalSearch = '' }) => {
                                 </tr>
                             ) : (
                                 filteredAnimals.map(animal => (
-                                    <tr key={animal.id} className="hover:bg-[#1e1e1e]/50 transition-colors">
+                                    <tr key={animal.id} className="hover:bg-green-50/50 transition-colors">
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#8cff65] to-[#4ade80] flex items-center justify-center text-[#0a0a0a] font-bold overflow-hidden">
+                                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-500 to-green-400 flex items-center justify-center text-white font-bold overflow-hidden">
                                                     {animal.image_url ? (
                                                         <img src={animal.image_url} alt={animal.name} className="w-full h-full object-cover" />
                                                     ) : (
                                                         (animal.name || 'A').charAt(0).toUpperCase()
                                                     )}
                                                 </div>
-                                                <p className="font-medium text-white">{animal.name}</p>
+                                                <p className="font-medium text-gray-900">{animal.name}</p>
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4 text-gray-300">{animal.species}</td>
-                                        <td className="px-6 py-4 text-gray-300">{animal.habitat || animal.exhibit}</td>
-                                        <td className="px-6 py-4 text-gray-400 max-w-xs truncate">{animal.description}</td>
+                                        <td className="px-6 py-4 text-gray-700">{animal.species}</td>
+                                        <td className="px-6 py-4 text-gray-700">{animal.habitat || animal.exhibit}</td>
+                                        <td className="px-6 py-4 text-gray-500 max-w-xs truncate">{animal.description}</td>
                                         <td className="px-6 py-4">
                                             <span className={`inline-flex px-3 py-1 text-xs font-medium rounded-full border capitalize ${getStatusBadgeColor(animal.status)}`}>
                                                 {animal.status}
@@ -454,14 +454,14 @@ const StaffAnimals = ({ globalSearch = '' }) => {
                                             <div className="flex items-center justify-end gap-2">
                                                 <button
                                                     onClick={() => openEditModal(animal)}
-                                                    className="p-2 bg-[#1e1e1e] hover:bg-[#2a2a2a] border border-[#2a2a2a] hover:border-[#8cff65]/50 text-gray-400 hover:text-[#8cff65] rounded-lg transition-all"
+                                                    className="p-2 bg-green-50 hover:bg-green-50 border border-green-200 hover:border-green-500/50 text-gray-500 hover:text-green-600 rounded-lg transition-all"
                                                     title="Edit animal"
                                                 >
                                                     <EditIcon />
                                                 </button>
                                                 <button
                                                     onClick={() => setDeleteConfirm(animal)}
-                                                    className="p-2 bg-[#1e1e1e] hover:bg-red-500/10 border border-[#2a2a2a] hover:border-red-500/50 text-gray-400 hover:text-red-400 rounded-lg transition-all"
+                                                    className="p-2 bg-green-50 hover:bg-red-500/10 border border-green-200 hover:border-red-500/50 text-gray-500 hover:text-red-400 rounded-lg transition-all"
                                                     title="Delete animal"
                                                 >
                                                     <TrashIcon />
@@ -476,7 +476,7 @@ const StaffAnimals = ({ globalSearch = '' }) => {
                 </div>
 
                 {/* Table Footer */}
-                <div className="px-6 py-4 border-t border-[#2a2a2a] flex items-center justify-between">
+                <div className="px-6 py-4 border-t border-green-200 flex items-center justify-between">
                     <p className="text-sm text-gray-500">
                         Showing {filteredAnimals.length} of {animals.length} animals
                     </p>
@@ -485,16 +485,16 @@ const StaffAnimals = ({ globalSearch = '' }) => {
 
             {/* Create/Edit Modal */}
             {showModal && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+                <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-white border border-green-200 rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
                         {/* Modal Header */}
-                        <div className="p-6 border-b border-[#2a2a2a] flex items-center justify-between sticky top-0 bg-[#141414]">
-                            <h3 className="text-xl font-bold text-white">
+                        <div className="p-6 border-b border-green-200 flex items-center justify-between sticky top-0 bg-white">
+                            <h3 className="text-xl font-bold text-gray-900">
                                 {editingAnimal ? 'Edit Animal' : 'Add New Animal'}
                             </h3>
                             <button
                                 onClick={closeModal}
-                                className="p-2 hover:bg-[#1e1e1e] rounded-lg text-gray-400 hover:text-white transition"
+                                className="p-2 hover:bg-green-50 rounded-lg text-gray-500 hover:text-gray-900 transition"
                             >
                                 <CloseIcon />
                             </button>
@@ -504,13 +504,13 @@ const StaffAnimals = ({ globalSearch = '' }) => {
                         <form onSubmit={saveAnimal} className="p-6 space-y-5">
                             {/* Name */}
                             <div>
-                                <label className="block text-sm font-medium text-gray-400 mb-2">Name *</label>
+                                <label className="block text-sm font-medium text-gray-500 mb-2">Name *</label>
                                 <input
                                     type="text"
                                     value={form.name}
                                     onChange={(e) => setForm({ ...form, name: sanitizeInput(e.target.value) })}
                                     required
-                                    className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-[#8cff65] focus:ring-1 focus:ring-[#8cff65]/20 transition-all"
+                                    className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-200 transition-all"
                                     placeholder="Animal name"
                                 />
                             </div>
@@ -518,23 +518,23 @@ const StaffAnimals = ({ globalSearch = '' }) => {
                             {/* Species & Exhibit */}
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-400 mb-2">Species *</label>
+                                    <label className="block text-sm font-medium text-gray-500 mb-2">Species *</label>
                                     <input
                                         type="text"
                                         value={form.species}
                                         onChange={(e) => setForm({ ...form, species: sanitizeInput(e.target.value) })}
                                         required
-                                        className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-[#8cff65] focus:ring-1 focus:ring-[#8cff65]/20 transition-all"
+                                        className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-200 transition-all"
                                         placeholder="e.g. Lion"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-400 mb-2">Exhibit/Habitat</label>
+                                    <label className="block text-sm font-medium text-gray-500 mb-2">Exhibit/Habitat</label>
                                     <input
                                         type="text"
                                         value={form.exhibit}
                                         onChange={(e) => setForm({ ...form, exhibit: sanitizeInput(e.target.value) })}
-                                        className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-[#8cff65] focus:ring-1 focus:ring-[#8cff65]/20 transition-all"
+                                        className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-200 transition-all"
                                         placeholder="e.g. Savanna"
                                     />
                                 </div>
@@ -542,11 +542,11 @@ const StaffAnimals = ({ globalSearch = '' }) => {
 
                             {/* Status */}
                             <div>
-                                <label className="block text-sm font-medium text-gray-400 mb-2">Status</label>
+                                <label className="block text-sm font-medium text-gray-500 mb-2">Status</label>
                                 <select
                                     value={form.status}
                                     onChange={(e) => setForm({ ...form, status: e.target.value })}
-                                    className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#8cff65] cursor-pointer"
+                                    className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:border-green-500 cursor-pointer"
                                 >
                                     <option value="healthy">Healthy</option>
                                     <option value="sick">Sick</option>
@@ -557,12 +557,12 @@ const StaffAnimals = ({ globalSearch = '' }) => {
 
                             {/* Description */}
                             <div>
-                                <label className="block text-sm font-medium text-gray-400 mb-2">Description</label>
+                                <label className="block text-sm font-medium text-gray-500 mb-2">Description</label>
                                 <textarea
                                     value={form.description}
                                     onChange={(e) => setForm({ ...form, description: sanitizeInput(e.target.value) })}
                                     rows="3"
-                                    className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-[#8cff65] focus:ring-1 focus:ring-[#8cff65]/20 transition-all resize-none"
+                                    className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-200 transition-all resize-none"
                                     placeholder="Brief description of the animal..."
                                 />
                             </div>
@@ -570,32 +570,32 @@ const StaffAnimals = ({ globalSearch = '' }) => {
                             {/* Lifespan, Weight, Length */}
                             <div className="grid grid-cols-3 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-400 mb-2">Lifespan</label>
+                                    <label className="block text-sm font-medium text-gray-500 mb-2">Lifespan</label>
                                     <input
                                         type="text"
                                         value={form.lifespan}
                                         onChange={(e) => setForm({ ...form, lifespan: sanitizeInput(e.target.value) })}
-                                        className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-[#8cff65] transition-all"
+                                        className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-500 transition-all"
                                         placeholder="e.g., 10-15 years"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-400 mb-2">Weight</label>
+                                    <label className="block text-sm font-medium text-gray-500 mb-2">Weight</label>
                                     <input
                                         type="text"
                                         value={form.weight}
                                         onChange={(e) => setForm({ ...form, weight: sanitizeInput(e.target.value) })}
-                                        className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-[#8cff65] transition-all"
+                                        className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-500 transition-all"
                                         placeholder="e.g., 200 kg"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-400 mb-2">Length</label>
+                                    <label className="block text-sm font-medium text-gray-500 mb-2">Length</label>
                                     <input
                                         type="text"
                                         value={form.length}
                                         onChange={(e) => setForm({ ...form, length: sanitizeInput(e.target.value) })}
-                                        className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-[#8cff65] transition-all"
+                                        className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-500 transition-all"
                                         placeholder="e.g., 2.5 m"
                                     />
                                 </div>
@@ -604,22 +604,22 @@ const StaffAnimals = ({ globalSearch = '' }) => {
                             {/* Habitat & Diet */}
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-400 mb-2">Natural Habitat</label>
+                                    <label className="block text-sm font-medium text-gray-500 mb-2">Natural Habitat</label>
                                     <input
                                         type="text"
                                         value={form.habitat}
                                         onChange={(e) => setForm({ ...form, habitat: sanitizeInput(e.target.value) })}
-                                        className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-[#8cff65] transition-all"
+                                        className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-500 transition-all"
                                         placeholder="e.g., African Savanna"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-400 mb-2">Diet</label>
+                                    <label className="block text-sm font-medium text-gray-500 mb-2">Diet</label>
                                     <input
                                         type="text"
                                         value={form.diet}
                                         onChange={(e) => setForm({ ...form, diet: sanitizeInput(e.target.value) })}
-                                        className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-[#8cff65] transition-all"
+                                        className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-500 transition-all"
                                         placeholder="e.g., Carnivore"
                                     />
                                 </div>
@@ -627,25 +627,25 @@ const StaffAnimals = ({ globalSearch = '' }) => {
 
                             {/* Additional Information */}
                             <div>
-                                <label className="block text-sm font-medium text-gray-400 mb-2">Additional Information</label>
+                                <label className="block text-sm font-medium text-gray-500 mb-2">Additional Information</label>
                                 <textarea
                                     value={form.animalInformation}
                                     onChange={(e) => setForm({ ...form, animalInformation: sanitizeInput(e.target.value) })}
                                     rows="3"
-                                    className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-[#8cff65] transition-all resize-none"
+                                    className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-500 transition-all resize-none"
                                     placeholder="Enter additional details about the animal..."
                                 />
                             </div>
 
                             {/* Image Upload */}
                             <div>
-                                <label className="block text-sm font-medium text-gray-400 mb-2">Image</label>
+                                <label className="block text-sm font-medium text-gray-500 mb-2">Image</label>
 
                                 <input
                                     type="file"
                                     accept="image/*"
                                     onChange={handleImageFileChange}
-                                    className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-[#8cff65]/20 file:text-[#8cff65] hover:file:bg-[#8cff65]/30"
+                                    className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-green-500/20 file:text-green-600 hover:file:bg-green-500/30"
                                 />
 
                                 {/* Image Preview */}
@@ -654,7 +654,7 @@ const StaffAnimals = ({ globalSearch = '' }) => {
                                         <img
                                             src={imagePreview || form.imageUrl}
                                             alt="Preview"
-                                            className="w-24 h-24 rounded-xl object-cover border border-[#2a2a2a]"
+                                            className="w-24 h-24 rounded-xl object-cover border border-green-200"
                                         />
                                     </div>
                                 )}
@@ -665,14 +665,14 @@ const StaffAnimals = ({ globalSearch = '' }) => {
                                 <button
                                     type="button"
                                     onClick={closeModal}
-                                    className="flex-1 px-4 py-3 bg-[#2a2a2a] hover:bg-[#3a3a3a] text-white rounded-xl font-medium transition"
+                                    className="flex-1 px-4 py-3 bg-green-50 hover:bg-green-50 text-gray-900 rounded-xl font-medium transition"
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     type="submit"
                                     disabled={saving}
-                                    className="flex-1 px-4 py-3 bg-[#8cff65] hover:bg-[#7ae857] text-[#0a0a0a] rounded-xl font-medium transition disabled:opacity-50"
+                                    className="flex-1 px-4 py-3 bg-green-500 hover:bg-green-600 text-white rounded-xl font-medium transition disabled:opacity-50"
                                 >
                                     {saving ? 'Saving...' : (editingAnimal ? 'Update Animal' : 'Add Animal')}
                                 </button>
@@ -684,22 +684,22 @@ const StaffAnimals = ({ globalSearch = '' }) => {
 
             {/* Delete Confirmation Modal */}
             {deleteConfirm && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl w-full max-w-md p-6">
-                        <h3 className="text-xl font-bold text-white mb-2">Delete Animal</h3>
-                        <p className="text-gray-400 mb-6">
-                            Are you sure you want to delete <span className="text-white font-medium">{deleteConfirm.name}</span>? This action cannot be undone.
+                <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-white border border-green-200 rounded-2xl w-full max-w-md p-6">
+                        <h3 className="text-xl font-bold text-gray-900 mb-2">Delete Animal</h3>
+                        <p className="text-gray-500 mb-6">
+                            Are you sure you want to delete <span className="text-gray-900 font-medium">{deleteConfirm.name}</span>? This action cannot be undone.
                         </p>
                         <div className="flex gap-3">
                             <button
                                 onClick={() => setDeleteConfirm(null)}
-                                className="flex-1 px-4 py-3 bg-[#2a2a2a] hover:bg-[#3a3a3a] text-white rounded-xl font-medium transition"
+                                className="flex-1 px-4 py-3 bg-green-50 hover:bg-green-50 text-gray-900 rounded-xl font-medium transition"
                             >
                                 Cancel
                             </button>
                             <button
                                 onClick={() => removeAnimal(deleteConfirm.id)}
-                                className="flex-1 px-4 py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl font-medium transition"
+                                className="flex-1 px-4 py-3 bg-red-500 hover:bg-red-600 text-gray-900 rounded-xl font-medium transition"
                             >
                                 Delete
                             </button>

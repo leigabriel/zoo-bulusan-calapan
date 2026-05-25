@@ -205,24 +205,24 @@ const StaffDashboard = () => {
 
     // Stat Card Component - matching admin design
     const StatCard = ({ title, value, icon, trend, trendValue }) => (
-        <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-emerald-500 via-emerald-700 to-emerald-900 p-5 shadow-lg shadow-emerald-900/30 transition-all duration-300 hover:scale-[1.01]">
+        <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-green-500 via-green-600 to-green-700 p-5 shadow-lg shadow-green-500/30 transition-all duration-300 hover:scale-[1.01]">
             <div className="flex items-start justify-between mb-4">
-                <div className="w-12 h-12 rounded-2xl bg-white/15 backdrop-blur-sm flex items-center justify-center text-white border border-white/20">
+                <div className="w-12 h-12 rounded-2xl bg-white/30 backdrop-blur-sm flex items-center justify-center text-gray-900 border border-white/20">
                     {icon}
                 </div>
-                <button className="text-emerald-100/80 hover:text-white transition">
+                <button className="text-green-700/80 hover:text-gray-900 transition">
                     <MoreIcon />
                 </button>
             </div>
-            <p className="text-emerald-50/85 text-sm mb-1">{title}</p>
-            <p className="text-3xl font-bold text-white mb-2 tracking-tight">{value}</p>
+            <p className="text-green-800/85 text-sm mb-1">{title}</p>
+            <p className="text-3xl font-bold text-gray-900 mb-2 tracking-tight">{value}</p>
             {trend && (
                 <div className="flex items-center gap-2">
-                    <span className="flex items-center gap-1 text-sm font-semibold text-emerald-100">
+                    <span className="flex items-center gap-1 text-sm font-semibold text-green-700">
                         <TrendUpIcon />
                         {trendValue}
                     </span>
-                    <span className="text-emerald-50/80 text-sm">vs yesterday</span>
+                    <span className="text-green-800/80 text-sm">vs yesterday</span>
                 </div>
             )}
         </div>
@@ -232,8 +232,8 @@ const StaffDashboard = () => {
         return (
             <div className="flex items-center justify-center h-64">
                 <div className="relative w-16 h-16">
-                    <div className="absolute inset-0 rounded-full border-4 border-[#2a2a2a]"></div>
-                    <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-[#8cff65] animate-spin"></div>
+                    <div className="absolute inset-0 rounded-full border-4 border-green-200"></div>
+                    <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-green-500 animate-spin"></div>
                 </div>
             </div>
         );
@@ -244,8 +244,8 @@ const StaffDashboard = () => {
             {/* Welcome Section */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-white">Welcome back, {user?.firstName || user?.fullName || 'Staff'}!</h1>
-                    <p className="text-gray-400">Here's what's happening at the zoo today</p>
+                    <h1 className="text-2xl font-bold text-gray-900">Welcome back, {user?.firstName || user?.fullName || 'Staff'}!</h1>
+                    <p className="text-gray-500">Here's what's happening at the zoo today</p>
                 </div>
             </div>
 
@@ -275,23 +275,23 @@ const StaffDashboard = () => {
             </div>
 
             {/* Activity Summary Card */}
-            <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl p-6">
+            <div className="bg-white border border-green-200 rounded-2xl p-6">
                 <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-lg font-semibold text-white">Your Activity Summary</h2>
+                    <h2 className="text-lg font-semibold text-gray-900">Your Activity Summary</h2>
                     <span className="text-xs text-gray-500">Last 7 days</span>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div className="bg-[#1a1a1a] rounded-xl p-4">
-                        <p className="text-gray-400 text-sm">Today's Actions</p>
-                        <p className="text-2xl font-bold text-[#8cff65]">{activitySummary.todayActions}</p>
+                    <div className="bg-green-50 rounded-xl p-4">
+                        <p className="text-gray-500 text-sm">Today's Actions</p>
+                        <p className="text-2xl font-bold text-green-600">{activitySummary.todayActions}</p>
                     </div>
-                    <div className="bg-[#1a1a1a] rounded-xl p-4">
-                        <p className="text-gray-400 text-sm">This Week</p>
-                        <p className="text-2xl font-bold text-white">{activitySummary.weekActions}</p>
+                    <div className="bg-green-50 rounded-xl p-4">
+                        <p className="text-gray-500 text-sm">This Week</p>
+                        <p className="text-2xl font-bold text-gray-900">{activitySummary.weekActions}</p>
                     </div>
-                    <div className="bg-[#1a1a1a] rounded-xl p-4">
-                        <p className="text-gray-400 text-sm">Last Activity</p>
-                        <p className="text-sm font-medium text-white truncate">
+                    <div className="bg-green-50 rounded-xl p-4">
+                        <p className="text-gray-500 text-sm">Last Activity</p>
+                        <p className="text-sm font-medium text-gray-900 truncate">
                             {activitySummary.lastActivity || 'No recent activity'}
                         </p>
                     </div>
@@ -301,15 +301,15 @@ const StaffDashboard = () => {
             {/* Animals & Plants Tables */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Animals Table */}
-                <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl overflow-hidden">
-                    <div className="flex items-center justify-between p-4 border-b border-[#2a2a2a]">
-                        <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+                <div className="bg-white border border-green-200 rounded-2xl overflow-hidden">
+                    <div className="flex items-center justify-between p-4 border-b border-green-200">
+                        <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
                             <AnimalIcon />
                             Animals Overview
                         </h2>
                         <Link 
                             to="/staff/animals" 
-                            className="text-sm text-[#8cff65] hover:underline flex items-center gap-1"
+                            className="text-sm text-green-600 hover:underline flex items-center gap-1"
                         >
                             View All
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -320,19 +320,19 @@ const StaffDashboard = () => {
                     {recentAnimals.length > 0 ? (
                         <div className="overflow-x-auto">
                             <table className="w-full">
-                                <thead className="bg-[#1a1a1a]">
+                                <thead className="bg-green-50">
                                     <tr>
-                                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Animal</th>
-                                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider hidden sm:table-cell">Species</th>
-                                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider hidden md:table-cell">Status</th>
+                                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Animal</th>
+                                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider hidden sm:table-cell">Species</th>
+                                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider hidden md:table-cell">Status</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-[#2a2a2a]">
+                                <tbody className="divide-y divide-green-200">
                                     {recentAnimals.map((animal, idx) => (
-                                        <tr key={animal.id || idx} className="hover:bg-[#1e1e1e]/50 transition-colors">
+                                        <tr key={animal.id || idx} className="hover:bg-green-50/50 transition-colors">
                                             <td className="px-4 py-3">
                                                 <div className="flex items-center gap-3">
-                                                    <div className="w-10 h-10 rounded-lg bg-[#2a2a2a] overflow-hidden flex-shrink-0">
+                                                    <div className="w-10 h-10 rounded-lg bg-green-50 overflow-hidden flex-shrink-0">
                                                         {animal.image_url ? (
                                                             <img src={animal.image_url} alt={animal.name} className="w-full h-full object-cover" />
                                                         ) : (
@@ -342,19 +342,19 @@ const StaffDashboard = () => {
                                                         )}
                                                     </div>
                                                     <div className="min-w-0">
-                                                        <p className="text-white text-sm font-medium truncate">{animal.name}</p>
+                                                        <p className="text-gray-900 text-sm font-medium truncate">{animal.name}</p>
                                                         <p className="text-gray-500 text-xs truncate sm:hidden">{animal.species || animal.category || 'Unknown'}</p>
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td className="px-4 py-3 text-gray-400 text-sm hidden sm:table-cell">{animal.species || animal.category || 'Unknown'}</td>
+                                            <td className="px-4 py-3 text-gray-500 text-sm hidden sm:table-cell">{animal.species || animal.category || 'Unknown'}</td>
                                             <td className="px-4 py-3 hidden md:table-cell">
                                                 <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
                                                     animal.status === 'active' || animal.status === 'healthy' 
-                                                        ? 'bg-[#8cff65]/20 text-[#8cff65]' 
+                                                        ? 'bg-green-500/20 text-green-600' 
                                                         : animal.status === 'sick' || animal.status === 'treatment'
                                                         ? 'bg-yellow-500/20 text-yellow-400'
-                                                        : 'bg-gray-500/20 text-gray-400'
+                                                        : 'bg-gray-500/20 text-gray-500'
                                                 }`}>
                                                     {animal.status || 'Active'}
                                                 </span>
@@ -370,15 +370,15 @@ const StaffDashboard = () => {
                 </div>
 
                 {/* Plants Table */}
-                <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl overflow-hidden">
-                    <div className="flex items-center justify-between p-4 border-b border-[#2a2a2a]">
-                        <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+                <div className="bg-white border border-green-200 rounded-2xl overflow-hidden">
+                    <div className="flex items-center justify-between p-4 border-b border-green-200">
+                        <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
                             <PlantIcon />
                             Plants Overview
                         </h2>
                         <Link 
                             to="/staff/plants" 
-                            className="text-sm text-[#8cff65] hover:underline flex items-center gap-1"
+                            className="text-sm text-green-600 hover:underline flex items-center gap-1"
                         >
                             View All
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -389,19 +389,19 @@ const StaffDashboard = () => {
                     {recentPlants.length > 0 ? (
                         <div className="overflow-x-auto">
                             <table className="w-full">
-                                <thead className="bg-[#1a1a1a]">
+                                <thead className="bg-green-50">
                                     <tr>
-                                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Plant</th>
-                                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider hidden sm:table-cell">Category</th>
-                                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider hidden md:table-cell">Status</th>
+                                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Plant</th>
+                                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider hidden sm:table-cell">Category</th>
+                                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider hidden md:table-cell">Status</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-[#2a2a2a]">
+                                <tbody className="divide-y divide-green-200">
                                     {recentPlants.map((plant, idx) => (
-                                        <tr key={plant.id || idx} className="hover:bg-[#1e1e1e]/50 transition-colors">
+                                        <tr key={plant.id || idx} className="hover:bg-green-50/50 transition-colors">
                                             <td className="px-4 py-3">
                                                 <div className="flex items-center gap-3">
-                                                    <div className="w-10 h-10 rounded-lg bg-[#2a2a2a] overflow-hidden flex-shrink-0">
+                                                    <div className="w-10 h-10 rounded-lg bg-green-50 overflow-hidden flex-shrink-0">
                                                         {plant.image_url ? (
                                                             <img src={plant.image_url} alt={plant.name} className="w-full h-full object-cover" />
                                                         ) : (
@@ -411,19 +411,19 @@ const StaffDashboard = () => {
                                                         )}
                                                     </div>
                                                     <div className="min-w-0">
-                                                        <p className="text-white text-sm font-medium truncate">{plant.name}</p>
+                                                        <p className="text-gray-900 text-sm font-medium truncate">{plant.name}</p>
                                                         <p className="text-gray-500 text-xs truncate sm:hidden">{plant.species || plant.category || 'Unknown'}</p>
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td className="px-4 py-3 text-gray-400 text-sm hidden sm:table-cell">{plant.species || plant.category || 'Unknown'}</td>
+                                            <td className="px-4 py-3 text-gray-500 text-sm hidden sm:table-cell">{plant.species || plant.category || 'Unknown'}</td>
                                             <td className="px-4 py-3 hidden md:table-cell">
                                                 <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
                                                     plant.status === 'healthy' || plant.status === 'active'
-                                                        ? 'bg-[#8cff65]/20 text-[#8cff65]' 
+                                                        ? 'bg-green-500/20 text-green-600' 
                                                         : plant.status === 'wilting' || plant.status === 'needs_care'
                                                         ? 'bg-yellow-500/20 text-yellow-400'
-                                                        : 'bg-gray-500/20 text-gray-400'
+                                                        : 'bg-gray-500/20 text-gray-500'
                                                 }`}>
                                                     {plant.status || 'Healthy'}
                                                 </span>

@@ -157,33 +157,33 @@ const Analytics = () => {
             }
         },
         dataLabels: { enabled: false },
-        colors: ['#8cff65'],
+        colors: ['#22c55e'],
         xaxis: {
             categories: weeklyData.map(d => d.day),
-            labels: { style: { colors: '#9ca3af', fontSize: '12px' } },
+            labels: { style: { colors: '#374151', fontSize: '12px' } },
             axisBorder: { show: false },
             axisTicks: { show: false },
         },
         yaxis: {
-            labels: { style: { colors: '#9ca3af', fontSize: '12px' } },
+            labels: { style: { colors: '#374151', fontSize: '12px' } },
         },
         grid: {
-            borderColor: '#2a2a2a',
+            borderColor: '#e5e7eb',
             strokeDashArray: 4,
         },
         tooltip: {
             enabled: true,
-            theme: 'dark',
+            theme: 'light',
             y: {
                 formatter: (val) => `${val} tickets`,
             },
             custom: function({ series, seriesIndex, dataPointIndex, w }) {
                 const data = weeklyData[dataPointIndex];
                 return `
-                    <div style="background: #1e1e1e; border: 1px solid #3a3a3a; border-radius: 8px; padding: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.3);">
-                        <div style="color: #8cff65; font-weight: bold; font-size: 14px;">${data?.day || 'N/A'}</div>
-                        <div style="color: white; margin-top: 4px;">Tickets: <span style="font-weight: 600;">${data?.tickets || 0}</span></div>
-                        <div style="color: #9ca3af;">Revenue: <span style="color: #8cff65;">₱${data?.revenue?.toLocaleString() || 0}</span></div>
+                    <div style="background: #ffffff; border: 1px solid #d1fae5; border-radius: 8px; padding: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.3);">
+                        <div style="color: #22c55e; font-weight: bold; font-size: 14px;">${data?.day || 'N/A'}</div>
+                        <div style="color: #111827; margin-top: 4px;">Tickets: <span style="font-weight: 600;">${data?.tickets || 0}</span></div>
+                        <div style="color: #6b7280;">Revenue: <span style="color: #22c55e;">₱${data?.revenue?.toLocaleString() || 0}</span></div>
                     </div>
                 `;
             }
@@ -233,33 +233,33 @@ const Analytics = () => {
         dataLabels: { enabled: false },
         xaxis: {
             categories: monthlyData.map(d => d.month?.substring(0, 3) || 'N/A'),
-            labels: { style: { colors: '#9ca3af', fontSize: '12px' } },
+            labels: { style: { colors: '#374151', fontSize: '12px' } },
             axisBorder: { show: false },
             axisTicks: { show: false },
         },
         yaxis: {
             labels: {
-                style: { colors: '#9ca3af', fontSize: '12px' },
+                style: { colors: '#374151', fontSize: '12px' },
                 formatter: (val) => `₱${(val / 1000).toFixed(0)}K`
             },
         },
         grid: {
-            borderColor: '#2a2a2a',
+            borderColor: '#e5e7eb',
             strokeDashArray: 4,
         },
         tooltip: {
             enabled: true,
-            theme: 'dark',
+            theme: 'light',
             y: {
                 formatter: (val) => `₱${val?.toLocaleString() || 0}`,
             },
             custom: function({ series, seriesIndex, dataPointIndex, w }) {
                 const data = monthlyData[dataPointIndex];
                 return `
-                    <div style="background: #1e1e1e; border: 1px solid #3a3a3a; border-radius: 8px; padding: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.3);">
+                    <div style="background: #ffffff; border: 1px solid #d1fae5; border-radius: 8px; padding: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.3);">
                         <div style="color: #a855f7; font-weight: bold; font-size: 14px;">${data?.month || 'N/A'}</div>
-                        <div style="color: white; margin-top: 4px;">Revenue: <span style="color: #a855f7; font-weight: 600;">₱${data?.revenue?.toLocaleString() || 0}</span></div>
-                        <div style="color: #9ca3af;">Tickets: ${data?.tickets || 0}</div>
+                        <div style="color: #111827; margin-top: 4px;">Revenue: <span style="color: #a855f7; font-weight: 600;">₱${data?.revenue?.toLocaleString() || 0}</span></div>
+                        <div style="color: #6b7280;">Tickets: ${data?.tickets || 0}</div>
                     </div>
                 `;
             }
@@ -267,7 +267,7 @@ const Analytics = () => {
         markers: {
             size: 5,
             colors: ['#a855f7'],
-            strokeColors: '#1e1e1e',
+            strokeColors: '#ffffff',
             strokeWidth: 2,
             hover: {
                 size: 8,
@@ -292,10 +292,10 @@ const Analytics = () => {
             },
         },
         labels: ticketDistribution.map(d => d.type || 'Unknown'),
-        colors: ['#8cff65', '#60a5fa', '#a855f7', '#fbbf24', '#f87171'],
+        colors: ['#22c55e', '#60a5fa', '#a855f7', '#fbbf24', '#f87171'],
         legend: {
             position: 'bottom',
-            labels: { colors: '#9ca3af' },
+            labels: { colors: '#374151' },
             markers: { strokeWidth: 0 }
         },
         dataLabels: {
@@ -314,18 +314,18 @@ const Analytics = () => {
                         show: true,
                         name: {
                             show: true,
-                            color: '#9ca3af',
+                            color: '#374151',
                         },
                         value: {
                             show: true,
-                            color: '#ffffff',
+                            color: '#111827',
                             fontSize: '20px',
                             fontWeight: 'bold',
                         },
                         total: {
                             show: true,
                             label: 'Total',
-                            color: '#9ca3af',
+                            color: '#374151',
                             formatter: function (w) {
                                 return w.globals.seriesTotals.reduce((a, b) => a + b, 0);
                             }
@@ -336,7 +336,7 @@ const Analytics = () => {
         },
         tooltip: {
             enabled: true,
-            theme: 'dark',
+            theme: 'light',
             y: {
                 formatter: (val) => `${val} tickets`,
             }
@@ -418,8 +418,8 @@ const Analytics = () => {
         return (
             <div className="flex items-center justify-center h-64">
                 <div className="flex flex-col items-center gap-3">
-                    <div className="w-10 h-10 border-4 border-[#8cff65] border-t-transparent rounded-full animate-spin"></div>
-                    <span className="text-gray-400">Loading analytics...</span>
+                    <div className="w-10 h-10 border-4 border-green-500 border-t-transparent rounded-full animate-spin"></div>
+                    <span className="text-gray-500">Loading analytics...</span>
                 </div>
             </div>
         );
@@ -430,7 +430,7 @@ const Analytics = () => {
             {/* Time Range Selector */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+                    <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
                         <ChartIcon />
                         Analytics Overview
                     </h1>
@@ -439,19 +439,19 @@ const Analytics = () => {
                 <div className="flex items-center gap-3">
                     <button
                         onClick={exportToExcel}
-                        className="flex items-center gap-2 px-4 py-2 bg-[#8cff65]/10 border border-[#8cff65]/30 text-[#8cff65] rounded-xl hover:bg-[#8cff65]/20 transition"
+                        className="flex items-center gap-2 px-4 py-2 bg-green-500/10 border border-green-500/30 text-green-600 rounded-xl hover:bg-green-500/20 transition"
                     >
                         <DownloadIcon />
                         Export Excel
                     </button>
-                    <div className="flex items-center gap-2 bg-[#141414] border border-[#2a2a2a] rounded-xl p-1">
+                    <div className="flex items-center gap-2 bg-white border border-green-200 rounded-xl p-1">
                         {['week', 'month', 'year'].map((range) => (
                             <button
                                 key={range}
                                 onClick={() => setTimeRange(range)}
                                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${timeRange === range
-                                        ? 'bg-[#8cff65] text-[#0a0a0a]'
-                                        : 'text-gray-400 hover:text-white'
+                                        ? 'bg-green-500 text-white'
+                                        : 'text-gray-500 hover:text-gray-900'
                                     }`}
                             >
                                 {range.charAt(0).toUpperCase() + range.slice(1)}
@@ -464,56 +464,56 @@ const Analytics = () => {
             {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {/* Total Users */}
-                <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl p-5 hover:border-[#3a3a3a] transition-all cursor-pointer group">
+                <div className="bg-white border border-green-200 rounded-2xl p-5 hover:border-green-300 transition-all cursor-pointer group">
                     <div className="flex items-center justify-between mb-4">
                         <div className="w-12 h-12 bg-blue-500/10 rounded-xl flex items-center justify-center text-blue-400 group-hover:scale-110 transition-transform">
                             <UsersIcon />
                         </div>
                     </div>
-                    <h3 className="text-3xl font-bold text-white">{stats.totalUsers.toLocaleString()}</h3>
+                    <h3 className="text-3xl font-bold text-gray-900">{stats.totalUsers.toLocaleString()}</h3>
                     <p className="text-gray-500 text-sm mt-1">Total Users</p>
                 </div>
 
                 {/* Tickets Sold */}
-                <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl p-5 hover:border-[#3a3a3a] transition-all cursor-pointer group">
+                <div className="bg-white border border-green-200 rounded-2xl p-5 hover:border-green-300 transition-all cursor-pointer group">
                     <div className="flex items-center justify-between mb-4">
-                        <div className="w-12 h-12 bg-[#8cff65]/10 rounded-xl flex items-center justify-center text-[#8cff65] group-hover:scale-110 transition-transform">
+                        <div className="w-12 h-12 bg-green-500/10 rounded-xl flex items-center justify-center text-green-600 group-hover:scale-110 transition-transform">
                             <TicketIcon />
                         </div>
-                        <span className={`flex items-center gap-1 text-sm font-medium ${stats.ticketGrowth >= 0 ? 'text-[#8cff65]' : 'text-red-400'}`}>
+                        <span className={`flex items-center gap-1 text-sm font-medium ${stats.ticketGrowth >= 0 ? 'text-green-600' : 'text-red-400'}`}>
                             {stats.ticketGrowth >= 0 ? <TrendUpIcon /> : <TrendDownIcon />}
                             {Math.abs(stats.ticketGrowth)}%
                         </span>
                     </div>
-                    <h3 className="text-3xl font-bold text-white">{stats.totalTickets.toLocaleString()}</h3>
+                    <h3 className="text-3xl font-bold text-gray-900">{stats.totalTickets.toLocaleString()}</h3>
                     <p className="text-gray-500 text-sm mt-1">Tickets Sold</p>
-                    <p className="text-gray-400 text-xs mt-2">{stats.todayTickets} today</p>
+                    <p className="text-gray-500 text-xs mt-2">{stats.todayTickets} today</p>
                 </div>
 
                 {/* Revenue */}
-                <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl p-5 hover:border-[#3a3a3a] transition-all cursor-pointer group">
+                <div className="bg-white border border-green-200 rounded-2xl p-5 hover:border-green-300 transition-all cursor-pointer group">
                     <div className="flex items-center justify-between mb-4">
                         <div className="w-12 h-12 bg-purple-500/10 rounded-xl flex items-center justify-center text-purple-400 group-hover:scale-110 transition-transform">
                             <RevenueIcon />
                         </div>
-                        <span className={`flex items-center gap-1 text-sm font-medium ${stats.revenueGrowth >= 0 ? 'text-[#8cff65]' : 'text-red-400'}`}>
+                        <span className={`flex items-center gap-1 text-sm font-medium ${stats.revenueGrowth >= 0 ? 'text-green-600' : 'text-red-400'}`}>
                             {stats.revenueGrowth >= 0 ? <TrendUpIcon /> : <TrendDownIcon />}
                             {Math.abs(stats.revenueGrowth)}%
                         </span>
                     </div>
-                    <h3 className="text-3xl font-bold text-white">₱{stats.totalRevenue.toLocaleString()}</h3>
+                    <h3 className="text-3xl font-bold text-gray-900">₱{stats.totalRevenue.toLocaleString()}</h3>
                     <p className="text-gray-500 text-sm mt-1">Total Revenue</p>
-                    <p className="text-gray-400 text-xs mt-2">₱{stats.todayRevenue.toLocaleString()} today</p>
+                    <p className="text-gray-500 text-xs mt-2">₱{stats.todayRevenue.toLocaleString()} today</p>
                 </div>
 
                 {/* Upcoming Events */}
-                <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl p-5 hover:border-[#3a3a3a] transition-all cursor-pointer group">
+                <div className="bg-white border border-green-200 rounded-2xl p-5 hover:border-green-300 transition-all cursor-pointer group">
                     <div className="flex items-center justify-between mb-4">
                         <div className="w-12 h-12 bg-yellow-500/10 rounded-xl flex items-center justify-center text-yellow-400 group-hover:scale-110 transition-transform">
                             <EventsIcon />
                         </div>
                     </div>
-                    <h3 className="text-3xl font-bold text-white">{stats.upcomingEvents}</h3>
+                    <h3 className="text-3xl font-bold text-gray-900">{stats.upcomingEvents}</h3>
                     <p className="text-gray-500 text-sm mt-1">Upcoming Events</p>
                 </div>
             </div>
@@ -521,10 +521,10 @@ const Analytics = () => {
             {/* Charts Row */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Weekly Ticket Sales Chart */}
-                <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl p-6 hover:border-[#3a3a3a] transition-all">
+                <div className="bg-white border border-green-200 rounded-2xl p-6 hover:border-green-300 transition-all">
                     <div className="flex items-center justify-between mb-4">
                         <div>
-                            <h3 className="text-lg font-bold text-white">Weekly Ticket Sales</h3>
+                            <h3 className="text-lg font-bold text-gray-900">Weekly Ticket Sales</h3>
                             <p className="text-sm text-gray-500">Tickets sold per day this week</p>
                         </div>
                     </div>
@@ -539,10 +539,10 @@ const Analytics = () => {
                 </div>
 
                 {/* Revenue Trend Chart */}
-                <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl p-6 hover:border-[#3a3a3a] transition-all">
+                <div className="bg-white border border-green-200 rounded-2xl p-6 hover:border-green-300 transition-all">
                     <div className="flex items-center justify-between mb-4">
                         <div>
-                            <h3 className="text-lg font-bold text-white">Revenue Trend</h3>
+                            <h3 className="text-lg font-bold text-gray-900">Revenue Trend</h3>
                             <p className="text-sm text-gray-500">Monthly revenue overview</p>
                         </div>
                     </div>
@@ -566,8 +566,8 @@ const Analytics = () => {
             {/* Bottom Row */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Ticket Types Distribution - Donut Chart */}
-                <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl p-6 hover:border-[#3a3a3a] transition-all">
-                    <h3 className="text-lg font-bold text-white mb-4">Ticket Distribution</h3>
+                <div className="bg-white border border-green-200 rounded-2xl p-6 hover:border-green-300 transition-all">
+                    <h3 className="text-lg font-bold text-gray-900 mb-4">Ticket Distribution</h3>
                     {ticketDistribution.length > 0 ? (
                         <div className="h-64">
                             <Chart
@@ -586,45 +586,45 @@ const Analytics = () => {
                 </div>
 
                 {/* Ticket Types List */}
-                <div className="lg:col-span-2 bg-[#141414] border border-[#2a2a2a] rounded-2xl p-6 hover:border-[#3a3a3a] transition-all">
-                    <h3 className="text-lg font-bold text-white mb-6">Ticket Types Breakdown</h3>
+                <div className="lg:col-span-2 bg-white border border-green-200 rounded-2xl p-6 hover:border-green-300 transition-all">
+                    <h3 className="text-lg font-bold text-gray-900 mb-6">Ticket Types Breakdown</h3>
                     {ticketDistribution.length > 0 ? (
                         <div className="overflow-x-auto">
                             <table className="w-full">
                                 <thead>
-                                    <tr className="text-left text-xs text-gray-500 uppercase tracking-wider border-b border-[#2a2a2a]">
+                                    <tr className="text-left text-xs text-gray-500 uppercase tracking-wider border-b border-green-200">
                                         <th className="pb-3">Type</th>
                                         <th className="pb-3 text-right">Count</th>
                                         <th className="pb-3 text-right">Revenue</th>
                                         <th className="pb-3 text-right">Share</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-[#2a2a2a]">
+                                <tbody className="divide-y divide-green-200">
                                     {ticketDistribution.map((ticket, index) => {
-                                        const colors = ['#8cff65', '#60a5fa', '#a855f7', '#fbbf24', '#f87171'];
+                                        const colors = ['#22c55e', '#60a5fa', '#a855f7', '#fbbf24', '#f87171'];
                                         const percentage = totalDistribution > 0 
                                             ? ((ticket.count / totalDistribution) * 100).toFixed(1) 
                                             : 0;
                                         return (
-                                            <tr key={index} className="hover:bg-[#1e1e1e]/50 transition-colors">
+                                            <tr key={index} className="hover:bg-green-50/50 transition-colors">
                                                 <td className="py-4">
                                                     <div className="flex items-center gap-3">
                                                         <div 
                                                             className="w-3 h-3 rounded-full"
                                                             style={{ backgroundColor: colors[index % colors.length] }}
                                                         />
-                                                        <span className="text-white font-medium capitalize">
+                                                        <span className="text-gray-900 font-medium capitalize">
                                                             {ticket.type || 'Unknown'}
                                                         </span>
                                                     </div>
                                                 </td>
-                                                <td className="py-4 text-right text-gray-300">{ticket.count}</td>
-                                                <td className="py-4 text-right text-white font-medium">
+                                                <td className="py-4 text-right text-gray-700">{ticket.count}</td>
+                                                <td className="py-4 text-right text-gray-900 font-medium">
                                                     ₱{(ticket.revenue || 0).toLocaleString()}
                                                 </td>
                                                 <td className="py-4 text-right">
                                                     <div className="flex items-center justify-end gap-2">
-                                                        <div className="w-16 bg-[#1e1e1e] rounded-full h-2">
+                                                        <div className="w-16 bg-green-50 rounded-full h-2">
                                                             <div
                                                                 className="h-full rounded-full transition-all duration-500"
                                                                 style={{ 
@@ -633,7 +633,7 @@ const Analytics = () => {
                                                                 }}
                                                             />
                                                         </div>
-                                                        <span className="text-gray-400 text-sm w-12 text-right">
+                                                        <span className="text-gray-500 text-sm w-12 text-right">
                                                             {percentage}%
                                                         </span>
                                                     </div>

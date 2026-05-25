@@ -198,9 +198,9 @@ const AdminUsers = ({ globalSearch = '' }) => {
 
     const getRoleBadgeColor = (role) => {
         switch (role?.toLowerCase()) {
-            case 'admin': return 'bg-[#8cff65]/20 text-[#8cff65] border-[#8cff65]/30';
+            case 'admin': return 'bg-green-500/20 text-green-600 border-green-500/30';
             case 'staff': return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
-            default: return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
+            default: return 'bg-gray-500/20 text-gray-500 border-gray-500/30';
         }
     };
 
@@ -225,8 +225,8 @@ const AdminUsers = ({ globalSearch = '' }) => {
         return (
             <div className="flex items-center justify-center h-64">
                 <div className="flex flex-col items-center gap-3">
-                    <div className="w-10 h-10 border-4 border-[#8cff65] border-t-transparent rounded-full animate-spin"></div>
-                    <span className="text-gray-400">Loading users...</span>
+                    <div className="w-10 h-10 border-4 border-green-500 border-t-transparent rounded-full animate-spin"></div>
+                    <span className="text-gray-500">Loading users...</span>
                 </div>
             </div>
         );
@@ -244,35 +244,35 @@ const AdminUsers = ({ globalSearch = '' }) => {
         <div className="space-y-6">
             {/* Header Stats */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="bg-[#141414] border border-[#2a2a2a] rounded-xl p-4">
+                <div className="bg-white border border-green-200 rounded-xl p-4">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-[#8cff65]/10 rounded-xl flex items-center justify-center text-[#8cff65]">
+                        <div className="w-10 h-10 bg-green-500/10 rounded-xl flex items-center justify-center text-green-600">
                             <UsersHeaderIcon />
                         </div>
                         <div>
-                            <p className="text-2xl font-bold text-white">{userCounts.total}</p>
+                            <p className="text-2xl font-bold text-gray-900">{userCounts.total}</p>
                             <p className="text-xs text-gray-500">Total Users</p>
                         </div>
                     </div>
                 </div>
-                <div className="bg-[#141414] border border-[#2a2a2a] rounded-xl p-4">
+                <div className="bg-white border border-green-200 rounded-xl p-4">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-blue-500/10 rounded-xl flex items-center justify-center text-blue-400">
                             <span className="text-lg font-bold">S</span>
                         </div>
                         <div>
-                            <p className="text-2xl font-bold text-white">{userCounts.staff}</p>
+                            <p className="text-2xl font-bold text-gray-900">{userCounts.staff}</p>
                             <p className="text-xs text-gray-500">Staff</p>
                         </div>
                     </div>
                 </div>
-                <div className="bg-[#141414] border border-[#2a2a2a] rounded-xl p-4">
+                <div className="bg-white border border-green-200 rounded-xl p-4">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-gray-500/10 rounded-xl flex items-center justify-center text-gray-400">
+                        <div className="w-10 h-10 bg-gray-500/10 rounded-xl flex items-center justify-center text-gray-500">
                             <span className="text-lg font-bold">U</span>
                         </div>
                         <div>
-                            <p className="text-2xl font-bold text-white">{userCounts.user}</p>
+                            <p className="text-2xl font-bold text-gray-900">{userCounts.user}</p>
                             <p className="text-xs text-gray-500">Regular Users</p>
                         </div>
                     </div>
@@ -280,9 +280,9 @@ const AdminUsers = ({ globalSearch = '' }) => {
             </div>
 
             {/* Main Content Card */}
-            <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl overflow-hidden">
+            <div className="bg-white border border-green-200 rounded-2xl overflow-hidden">
                 {/* Toolbar */}
-                <div className="p-4 border-b border-[#2a2a2a] flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+                <div className="p-4 border-b border-green-200 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
                     <div className="flex items-center gap-3 flex-1">
                         {/* Search */}
                         <div className="relative flex-1 max-w-sm">
@@ -294,7 +294,7 @@ const AdminUsers = ({ globalSearch = '' }) => {
                                 placeholder="Search users..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl py-2.5 pl-10 pr-4 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#8cff65] focus:ring-1 focus:ring-[#8cff65]/20 transition-all"
+                                className="w-full bg-green-50 border border-green-200 rounded-xl py-2.5 pl-10 pr-4 text-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-200 transition-all"
                             />
                         </div>
 
@@ -303,7 +303,7 @@ const AdminUsers = ({ globalSearch = '' }) => {
                             <select
                                 value={roleFilter}
                                 onChange={(e) => setRoleFilter(e.target.value)}
-                                className="appearance-none bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl py-2.5 pl-10 pr-8 text-sm text-white focus:outline-none focus:border-[#8cff65] cursor-pointer"
+                                className="appearance-none bg-green-50 border border-green-200 rounded-xl py-2.5 pl-10 pr-8 text-sm text-gray-900 focus:outline-none focus:border-green-500 cursor-pointer"
                             >
                                 <option value="all">All Roles</option>
                                 <option value="staff">Staff</option>
@@ -318,7 +318,7 @@ const AdminUsers = ({ globalSearch = '' }) => {
                     {/* Add User Button */}
                     <button
                         onClick={openCreateModal}
-                        className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-[#8cff65] to-[#4ade80] text-[#0a0a0a] font-semibold rounded-xl hover:from-[#9dff7a] hover:to-[#5ceb91] transition-all shadow-lg shadow-[#8cff65]/20"
+                        className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-green-500 to-green-400 text-white font-semibold rounded-xl hover:from-green-400 hover:to-green-500 transition-all shadow-lg shadow-green-300/50"
                     >
                         <PlusIcon />
                         Add User
@@ -328,16 +328,16 @@ const AdminUsers = ({ globalSearch = '' }) => {
                 {/* Users Table */}
                 <div className="overflow-x-auto">
                     <table className="w-full">
-                        <thead className="bg-[#1e1e1e]">
+                        <thead className="bg-green-50">
                             <tr>
-                                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">User</th>
-                                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Email</th>
-                                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Role</th>
-                                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Status</th>
-                                <th className="px-6 py-4 text-right text-xs font-semibold text-gray-400 uppercase tracking-wider">Actions</th>
+                                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">User</th>
+                                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Email</th>
+                                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Role</th>
+                                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                                <th className="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-[#2a2a2a]">
+                        <tbody className="divide-y divide-green-200">
                             {filteredUsers.length === 0 ? (
                                 <tr>
                                     <td colSpan="5" className="px-6 py-12 text-center text-gray-500">
@@ -346,10 +346,10 @@ const AdminUsers = ({ globalSearch = '' }) => {
                                 </tr>
                             ) : (
                                 filteredUsers.map(user => (
-                                    <tr key={user.id} className="hover:bg-[#1e1e1e]/50 transition-colors">
+                                    <tr key={user.id} className="hover:bg-green-50/50 transition-colors">
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 rounded-full overflow-hidden bg-[#0a0a0a] flex items-center justify-center border border-[#2a2a2a]">
+                                                <div className="w-10 h-10 rounded-full overflow-hidden bg-white flex items-center justify-center border border-green-200">
                                                     {(user.profileImage || user.profile_image) ? (
                                                         <img
                                                             src={getProfileImageUrl(user.profileImage || user.profile_image)}
@@ -361,19 +361,19 @@ const AdminUsers = ({ globalSearch = '' }) => {
                                                             }}
                                                         />
                                                     ) : null}
-                                                    <span className={`text-[#8cff65] font-medium ${(user.profileImage || user.profile_image) ? 'hidden' : 'flex'}`}>
+                                                    <span className={`text-green-600 font-medium ${(user.profileImage || user.profile_image) ? 'hidden' : 'flex'}`}>
                                                         {(user.firstName || user.first_name || 'U').charAt(0).toUpperCase()}{(user.lastName || user.last_name || '').charAt(0).toUpperCase()}
                                                     </span>
                                                 </div>
                                                 <div>
-                                                    <p className="font-medium text-white">
+                                                    <p className="font-medium text-gray-900">
                                                         {user.firstName || user.first_name} {user.lastName || user.last_name}
                                                     </p>
                                                     <p className="text-gray-500 text-sm">@{user.username}</p>
                                                 </div>
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4 text-gray-300">{user.email}</td>
+                                        <td className="px-6 py-4 text-gray-700">{user.email}</td>
                                         <td className="px-6 py-4">
                                             <span className={`inline-flex px-3 py-1 text-xs font-medium rounded-full border capitalize ${getRoleBadgeColor(user.role)}`}>
                                                 {user.role}
@@ -386,8 +386,8 @@ const AdminUsers = ({ globalSearch = '' }) => {
                                                     Suspended
                                                 </span>
                                             ) : (
-                                                <span className="inline-flex items-center gap-1.5 text-[#8cff65] text-sm">
-                                                    <div className="w-2 h-2 bg-[#8cff65] rounded-full"></div>
+                                                <span className="inline-flex items-center gap-1.5 text-green-600 text-sm">
+                                                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                                                     Active
                                                 </span>
                                             )}
@@ -396,14 +396,14 @@ const AdminUsers = ({ globalSearch = '' }) => {
                                             <div className="flex items-center justify-end gap-2">
                                                 <button
                                                     onClick={() => setViewUser(user)}
-                                                    className="p-2 bg-[#1e1e1e] hover:bg-[#2a2a2a] border border-[#2a2a2a] hover:border-blue-500/50 text-gray-400 hover:text-blue-400 rounded-lg transition-all"
+                                                    className="p-2 bg-green-50 hover:bg-green-50 border border-green-200 hover:border-blue-500/50 text-gray-500 hover:text-blue-400 rounded-lg transition-all"
                                                     title="View user"
                                                 >
                                                     <EyeIcon />
                                                 </button>
                                                 <button
                                                     onClick={() => openEditModal(user)}
-                                                    className="p-2 bg-[#1e1e1e] hover:bg-[#2a2a2a] border border-[#2a2a2a] hover:border-[#8cff65]/50 text-gray-400 hover:text-[#8cff65] rounded-lg transition-all"
+                                                    className="p-2 bg-green-50 hover:bg-green-50 border border-green-200 hover:border-green-500/50 text-gray-500 hover:text-green-600 rounded-lg transition-all"
                                                     title="Edit user"
                                                 >
                                                     <EditIcon />
@@ -412,7 +412,7 @@ const AdminUsers = ({ globalSearch = '' }) => {
                                                     <button
                                                         onClick={() => handleUnsuspendUser(user.id)}
                                                         disabled={suspending}
-                                                        className="p-2 bg-[#1e1e1e] hover:bg-[#8cff65]/10 border border-[#2a2a2a] hover:border-[#8cff65]/50 text-gray-400 hover:text-[#8cff65] rounded-lg transition-all disabled:opacity-50"
+                                                        className="p-2 bg-green-50 hover:bg-green-500/10 border border-green-200 hover:border-green-500/50 text-gray-500 hover:text-green-600 rounded-lg transition-all disabled:opacity-50"
                                                         title="Unsuspend user"
                                                     >
                                                         <UnbanIcon />
@@ -420,7 +420,7 @@ const AdminUsers = ({ globalSearch = '' }) => {
                                                 ) : (
                                                     <button
                                                         onClick={() => setSuspendUser(user)}
-                                                        className="p-2 bg-[#1e1e1e] hover:bg-red-500/10 border border-[#2a2a2a] hover:border-red-500/50 text-gray-400 hover:text-red-400 rounded-lg transition-all"
+                                                        className="p-2 bg-green-50 hover:bg-red-500/10 border border-green-200 hover:border-red-500/50 text-gray-500 hover:text-red-400 rounded-lg transition-all"
                                                         title="Suspend user"
                                                     >
                                                         <BanIcon />
@@ -436,7 +436,7 @@ const AdminUsers = ({ globalSearch = '' }) => {
                 </div>
 
                 {/* Table Footer */}
-                <div className="px-6 py-4 border-t border-[#2a2a2a] flex items-center justify-between">
+                <div className="px-6 py-4 border-t border-green-200 flex items-center justify-between">
                     <p className="text-sm text-gray-500">
                         Showing {filteredUsers.length} of {users.length} users
                     </p>
@@ -445,16 +445,16 @@ const AdminUsers = ({ globalSearch = '' }) => {
 
             {/* Create/Edit Modal */}
             {showModal && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl w-full max-w-md">
+                <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-white border border-green-200 rounded-2xl w-full max-w-md">
                         {/* Modal Header */}
-                        <div className="p-6 border-b border-[#2a2a2a] flex items-center justify-between">
-                            <h3 className="text-xl font-bold text-white">
+                        <div className="p-6 border-b border-green-200 flex items-center justify-between">
+                            <h3 className="text-xl font-bold text-gray-900">
                                 {editingUser ? 'Edit User' : 'Create New User'}
                             </h3>
                             <button
                                 onClick={closeModal}
-                                className="p-2 hover:bg-[#1e1e1e] rounded-lg text-gray-400 hover:text-white transition"
+                                className="p-2 hover:bg-green-50 rounded-lg text-gray-500 hover:text-gray-900 transition"
                             >
                                 <CloseIcon />
                             </button>
@@ -464,23 +464,23 @@ const AdminUsers = ({ globalSearch = '' }) => {
                         <form onSubmit={saveUser} className="p-6 space-y-4">
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-400 mb-2">First Name</label>
+                                    <label className="block text-sm font-medium text-gray-500 mb-2">First Name</label>
                                     <input
                                         type="text"
                                         value={form.firstName}
                                         onChange={e => setForm({ ...form, firstName: sanitizeInput(e.target.value) })}
-                                        className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-[#8cff65] transition-all"
+                                        className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-500 transition-all"
                                         placeholder="John"
                                         required
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-400 mb-2">Last Name</label>
+                                    <label className="block text-sm font-medium text-gray-500 mb-2">Last Name</label>
                                     <input
                                         type="text"
                                         value={form.lastName}
                                         onChange={e => setForm({ ...form, lastName: sanitizeInput(e.target.value) })}
-                                        className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-[#8cff65] transition-all"
+                                        className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-500 transition-all"
                                         placeholder="Doe"
                                         required
                                     />
@@ -488,12 +488,12 @@ const AdminUsers = ({ globalSearch = '' }) => {
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-400 mb-2">Username</label>
+                                <label className="block text-sm font-medium text-gray-500 mb-2">Username</label>
                                 <input
                                     type="text"
                                     value={form.username}
                                     onChange={e => setForm({ ...form, username: sanitizeInput(e.target.value) })}
-                                    className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-[#8cff65] transition-all"
+                                    className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-500 transition-all"
                                     placeholder="johndoe123"
                                     required
                                     disabled={!!editingUser}
@@ -501,12 +501,12 @@ const AdminUsers = ({ globalSearch = '' }) => {
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-400 mb-2">Email</label>
+                                <label className="block text-sm font-medium text-gray-500 mb-2">Email</label>
                                 <input
                                     type="email"
                                     value={form.email}
                                     onChange={e => setForm({ ...form, email: sanitizeEmail(e.target.value) })}
-                                    className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-[#8cff65] transition-all"
+                                    className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-500 transition-all"
                                     placeholder="john@example.com"
                                     required
                                     disabled={!!editingUser}
@@ -514,11 +514,11 @@ const AdminUsers = ({ globalSearch = '' }) => {
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-400 mb-2">Role</label>
+                                <label className="block text-sm font-medium text-gray-500 mb-2">Role</label>
                                 <select
                                     value={form.role}
                                     onChange={e => setForm({ ...form, role: e.target.value })}
-                                    className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#8cff65] transition-all cursor-pointer"
+                                    className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:border-green-500 transition-all cursor-pointer"
                                 >
                                     <option value="user">User</option>
                                     <option value="staff">Staff</option>
@@ -528,12 +528,12 @@ const AdminUsers = ({ globalSearch = '' }) => {
 
                             {!editingUser && (
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-400 mb-2">Password</label>
+                                    <label className="block text-sm font-medium text-gray-500 mb-2">Password</label>
                                     <input
                                         type="password"
                                         value={form.password}
                                         onChange={e => setForm({ ...form, password: e.target.value })}
-                                        className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-[#8cff65] transition-all"
+                                        className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-500 transition-all"
                                         placeholder="••••••••"
                                         required={!editingUser}
                                     />
@@ -544,14 +544,14 @@ const AdminUsers = ({ globalSearch = '' }) => {
                                 <button
                                     type="button"
                                     onClick={closeModal}
-                                    className="flex-1 py-3 bg-[#1e1e1e] hover:bg-[#2a2a2a] text-gray-300 font-medium rounded-xl transition-all"
+                                    className="flex-1 py-3 bg-green-50 hover:bg-green-50 text-gray-700 font-medium rounded-xl transition-all"
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     type="submit"
                                     disabled={saving}
-                                    className="flex-1 py-3 bg-gradient-to-r from-[#8cff65] to-[#4ade80] text-[#0a0a0a] font-semibold rounded-xl hover:from-[#9dff7a] hover:to-[#5ceb91] transition-all disabled:opacity-50"
+                                    className="flex-1 py-3 bg-gradient-to-r from-green-500 to-green-400 text-white font-semibold rounded-xl hover:from-green-400 hover:to-green-500 transition-all disabled:opacity-50"
                                 >
                                     {saving ? 'Saving...' : (editingUser ? 'Update' : 'Create')}
                                 </button>
@@ -563,23 +563,23 @@ const AdminUsers = ({ globalSearch = '' }) => {
 
             {/* Suspend User Modal */}
             {suspendUser && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl w-full max-w-md">
-                        <div className="p-6 border-b border-[#2a2a2a]">
-                            <h3 className="text-xl font-bold text-white">Suspend User</h3>
-                            <p className="text-gray-400 text-sm mt-1">
-                                Suspend <span className="text-white font-medium">{suspendUser.firstName || suspendUser.first_name} {suspendUser.lastName || suspendUser.last_name}</span>
+                <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-white border border-green-200 rounded-2xl w-full max-w-md">
+                        <div className="p-6 border-b border-green-200">
+                            <h3 className="text-xl font-bold text-gray-900">Suspend User</h3>
+                            <p className="text-gray-500 text-sm mt-1">
+                                Suspend <span className="text-gray-900 font-medium">{suspendUser.firstName || suspendUser.first_name} {suspendUser.lastName || suspendUser.last_name}</span>
                             </p>
                         </div>
                         <div className="p-6 space-y-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-400 mb-2">Reason for Suspension *</label>
+                                <label className="block text-sm font-medium text-gray-500 mb-2">Reason for Suspension *</label>
                                 <textarea
                                     value={suspendReason}
                                     onChange={(e) => setSuspendReason(e.target.value)}
                                     placeholder="Enter the reason for suspending this user..."
                                     rows={4}
-                                    className="w-full px-4 py-3 bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl text-white placeholder:text-gray-500 focus:outline-none focus:border-red-500/50 resize-none"
+                                    className="w-full px-4 py-3 bg-green-50 border border-green-200 rounded-xl text-gray-900 placeholder:text-gray-500 focus:outline-none focus:border-red-500/50 resize-none"
                                 />
                             </div>
                             <div className="p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-xl">
@@ -593,7 +593,7 @@ const AdminUsers = ({ globalSearch = '' }) => {
                                         setSuspendUser(null);
                                         setSuspendReason('');
                                     }}
-                                    className="flex-1 py-3 bg-[#1e1e1e] hover:bg-[#2a2a2a] text-gray-300 font-medium rounded-xl transition-all"
+                                    className="flex-1 py-3 bg-green-50 hover:bg-green-50 text-gray-700 font-medium rounded-xl transition-all"
                                 >
                                     Cancel
                                 </button>
@@ -612,13 +612,13 @@ const AdminUsers = ({ globalSearch = '' }) => {
 
             {/* View User Modal */}
             {viewUser && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
-                        <div className="p-6 border-b border-[#2a2a2a] flex items-center justify-between">
-                            <h3 className="text-xl font-bold text-white">User Details</h3>
+                <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-white border border-green-200 rounded-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+                        <div className="p-6 border-b border-green-200 flex items-center justify-between">
+                            <h3 className="text-xl font-bold text-gray-900">User Details</h3>
                             <button
                                 onClick={() => setViewUser(null)}
-                                className="p-2 hover:bg-[#1e1e1e] rounded-lg text-gray-400 hover:text-white transition"
+                                className="p-2 hover:bg-green-50 rounded-lg text-gray-500 hover:text-gray-900 transition"
                             >
                                 <CloseIcon />
                             </button>
@@ -626,7 +626,7 @@ const AdminUsers = ({ globalSearch = '' }) => {
                         <div className="p-6 space-y-4">
                             {/* Profile Header */}
                             <div className="flex items-center gap-4">
-                                <div className="w-16 h-16 rounded-full overflow-hidden bg-[#0a0a0a] flex items-center justify-center border border-[#2a2a2a]">
+                                <div className="w-16 h-16 rounded-full overflow-hidden bg-white flex items-center justify-center border border-green-200">
                                     {(viewUser.profileImage || viewUser.profile_image) ? (
                                         <img
                                             src={getProfileImageUrl(viewUser.profileImage || viewUser.profile_image)}
@@ -634,25 +634,25 @@ const AdminUsers = ({ globalSearch = '' }) => {
                                             className="w-full h-full object-cover"
                                         />
                                     ) : (
-                                        <span className="text-[#8cff65] font-medium text-xl">
+                                        <span className="text-green-600 font-medium text-xl">
                                             {(viewUser.firstName || viewUser.first_name || 'U').charAt(0).toUpperCase()}{(viewUser.lastName || viewUser.last_name || '').charAt(0).toUpperCase()}
                                         </span>
                                     )}
                                 </div>
                                 <div>
-                                    <h4 className="text-lg font-semibold text-white">
+                                    <h4 className="text-lg font-semibold text-gray-900">
                                         {viewUser.firstName || viewUser.first_name} {viewUser.lastName || viewUser.last_name}
                                     </h4>
-                                    <p className="text-gray-400">@{viewUser.username}</p>
+                                    <p className="text-gray-500">@{viewUser.username}</p>
                                 </div>
                             </div>
 
                             {/* User Info */}
-                            <div className="p-4 bg-[#1e1e1e] rounded-xl space-y-3">
+                            <div className="p-4 bg-green-50 rounded-xl space-y-3">
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
                                         <p className="text-xs text-gray-500">Email</p>
-                                        <p className="text-white">{viewUser.email}</p>
+                                        <p className="text-gray-900">{viewUser.email}</p>
                                     </div>
                                     <div>
                                         <p className="text-xs text-gray-500">Role</p>
@@ -665,12 +665,12 @@ const AdminUsers = ({ globalSearch = '' }) => {
                                         {viewUser.is_suspended ? (
                                             <span className="text-red-400">Suspended</span>
                                         ) : (
-                                            <span className="text-[#8cff65]">Active</span>
+                                            <span className="text-green-600">Active</span>
                                         )}
                                     </div>
                                     <div>
                                         <p className="text-xs text-gray-500">Created</p>
-                                        <p className="text-white">{viewUser.created_at?.split('T')[0] || '-'}</p>
+                                        <p className="text-gray-900">{viewUser.created_at?.split('T')[0] || '-'}</p>
                                     </div>
                                 </div>
                             </div>
@@ -679,7 +679,7 @@ const AdminUsers = ({ globalSearch = '' }) => {
                             {viewUser.is_suspended && (
                                 <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-xl space-y-2">
                                     <h5 className="text-sm font-semibold text-red-400 uppercase tracking-wider">Suspension Details</h5>
-                                    <p className="text-gray-300">{viewUser.suspension_reason || 'No reason provided'}</p>
+                                    <p className="text-gray-700">{viewUser.suspension_reason || 'No reason provided'}</p>
                                     {viewUser.suspended_at && (
                                         <p className="text-xs text-gray-500">Suspended on: {viewUser.suspended_at.split('T')[0]}</p>
                                     )}
@@ -693,7 +693,7 @@ const AdminUsers = ({ globalSearch = '' }) => {
                                         setViewUser(null);
                                         openEditModal(viewUser);
                                     }}
-                                    className="flex-1 py-3 bg-[#8cff65]/10 border border-[#8cff65]/30 text-[#8cff65] font-medium rounded-xl hover:bg-[#8cff65]/20 transition-all"
+                                    className="flex-1 py-3 bg-green-500/10 border border-green-500/30 text-green-600 font-medium rounded-xl hover:bg-green-500/20 transition-all"
                                 >
                                     Edit User
                                 </button>

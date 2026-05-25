@@ -148,23 +148,23 @@ const AdminTickets = ({ globalSearch = '' }) => {
     const getStatusBadge = (status) => {
         switch (status?.toLowerCase()) {
             case 'confirmed':
-            case 'active': return 'bg-[#8cff65]/20 text-[#8cff65] border-[#8cff65]/30';
+            case 'active': return 'bg-green-500/20 text-green-600 border-green-500/30';
             case 'pending': return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
             case 'used': return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
-            case 'expired': return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
+            case 'expired': return 'bg-gray-500/20 text-gray-500 border-gray-500/30';
             case 'cancelled': return 'bg-red-500/20 text-red-400 border-red-500/30';
-            default: return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
+            default: return 'bg-gray-500/20 text-gray-500 border-gray-500/30';
         }
     };
 
     const getPaymentBadge = (status) => {
         switch (status?.toLowerCase()) {
-            case 'paid': return 'bg-[#8cff65]/20 text-[#8cff65] border-[#8cff65]/30';
+            case 'paid': return 'bg-green-500/20 text-green-600 border-green-500/30';
             case 'pending': return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
             case 'not paid': return 'bg-orange-500/20 text-orange-400 border-orange-500/30';
             case 'free': return 'bg-teal-500/20 text-teal-400 border-teal-500/30';
             case 'refunded': return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
-            default: return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
+            default: return 'bg-gray-500/20 text-gray-500 border-gray-500/30';
         }
     };
 
@@ -360,8 +360,8 @@ const AdminTickets = ({ globalSearch = '' }) => {
         return (
             <div className="flex items-center justify-center h-64">
                 <div className="flex flex-col items-center gap-3">
-                    <div className="w-10 h-10 border-4 border-[#8cff65] border-t-transparent rounded-full animate-spin"></div>
-                    <span className="text-gray-400">Loading tickets...</span>
+                    <div className="w-10 h-10 border-4 border-green-500 border-t-transparent rounded-full animate-spin"></div>
+                    <span className="text-gray-500">Loading tickets...</span>
                 </div>
             </div>
         );
@@ -379,18 +379,18 @@ const AdminTickets = ({ globalSearch = '' }) => {
         <div className="space-y-6">
             {/* Stats Cards */}
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                <div className="bg-[#141414] border border-[#2a2a2a] rounded-xl p-4">
+                <div className="bg-white border border-green-200 rounded-xl p-4">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-[#8cff65]/10 rounded-xl flex items-center justify-center text-[#8cff65]">
+                        <div className="w-10 h-10 bg-green-500/10 rounded-xl flex items-center justify-center text-green-600">
                             <TicketIcon />
                         </div>
                         <div>
-                            <p className="text-2xl font-bold text-white">{ticketStats.total}</p>
+                            <p className="text-2xl font-bold text-gray-900">{ticketStats.total}</p>
                             <p className="text-xs text-gray-500">Total Tickets</p>
                         </div>
                     </div>
                 </div>
-                <div className="bg-[#141414] border border-[#2a2a2a] rounded-xl p-4">
+                <div className="bg-white border border-green-200 rounded-xl p-4">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-yellow-500/10 rounded-xl flex items-center justify-center text-yellow-400">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4">
@@ -398,40 +398,40 @@ const AdminTickets = ({ globalSearch = '' }) => {
                             </svg>
                         </div>
                         <div>
-                            <p className="text-2xl font-bold text-white">{ticketStats.pending}</p>
+                            <p className="text-2xl font-bold text-gray-900">{ticketStats.pending}</p>
                             <p className="text-xs text-gray-500">Pending</p>
                         </div>
                     </div>
                 </div>
-                <div className="bg-[#141414] border border-[#2a2a2a] rounded-xl p-4">
+                <div className="bg-white border border-green-200 rounded-xl p-4">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-[#8cff65]/10 rounded-xl flex items-center justify-center text-[#8cff65]">
+                        <div className="w-10 h-10 bg-green-500/10 rounded-xl flex items-center justify-center text-green-600">
                             <CheckCircleIcon />
                         </div>
                         <div>
-                            <p className="text-2xl font-bold text-white">{ticketStats.confirmed}</p>
+                            <p className="text-2xl font-bold text-gray-900">{ticketStats.confirmed}</p>
                             <p className="text-xs text-gray-500">Confirmed</p>
                         </div>
                     </div>
                 </div>
-                <div className="bg-[#141414] border border-[#2a2a2a] rounded-xl p-4">
+                <div className="bg-white border border-green-200 rounded-xl p-4">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-blue-500/10 rounded-xl flex items-center justify-center text-blue-400">
                             <EyeIcon />
                         </div>
                         <div>
-                            <p className="text-2xl font-bold text-white">{ticketStats.used}</p>
+                            <p className="text-2xl font-bold text-gray-900">{ticketStats.used}</p>
                             <p className="text-xs text-gray-500">Used</p>
                         </div>
                     </div>
                 </div>
-                <div className="bg-[#141414] border border-[#2a2a2a] rounded-xl p-4">
+                <div className="bg-white border border-green-200 rounded-xl p-4">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-red-500/10 rounded-xl flex items-center justify-center text-red-400">
                             <CloseIcon />
                         </div>
                         <div>
-                            <p className="text-2xl font-bold text-white">{ticketStats.cancelled}</p>
+                            <p className="text-2xl font-bold text-gray-900">{ticketStats.cancelled}</p>
                             <p className="text-xs text-gray-500">Cancelled</p>
                         </div>
                     </div>
@@ -439,9 +439,9 @@ const AdminTickets = ({ globalSearch = '' }) => {
             </div>
 
             {/* Main Content Card */}
-            <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl overflow-hidden">
+            <div className="bg-white border border-green-200 rounded-2xl overflow-hidden">
                 {/* Toolbar */}
-                <div className="p-4 border-b border-[#2a2a2a]">
+                <div className="p-4 border-b border-green-200">
                     <div className="flex flex-col lg:flex-row gap-4">
                         {/* Search */}
                         <div className="relative flex-1">
@@ -453,7 +453,7 @@ const AdminTickets = ({ globalSearch = '' }) => {
                                 placeholder="Search by code, name, or email..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl py-2.5 pl-10 pr-4 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#8cff65] transition-all"
+                                className="w-full bg-green-50 border border-green-200 rounded-xl py-2.5 pl-10 pr-4 text-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-500 transition-all"
                             />
                         </div>
 
@@ -464,7 +464,7 @@ const AdminTickets = ({ globalSearch = '' }) => {
                                 <select
                                     value={statusFilter}
                                     onChange={(e) => setStatusFilter(e.target.value)}
-                                    className="appearance-none bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl py-2.5 pl-10 pr-8 text-sm text-white focus:outline-none focus:border-[#8cff65] cursor-pointer"
+                                    className="appearance-none bg-green-50 border border-green-200 rounded-xl py-2.5 pl-10 pr-8 text-sm text-gray-900 focus:outline-none focus:border-green-500 cursor-pointer"
                                 >
                                     <option value="all">All Status</option>
                                     <option value="pending">Pending</option>
@@ -483,7 +483,7 @@ const AdminTickets = ({ globalSearch = '' }) => {
                                 <select
                                     value={paymentFilter}
                                     onChange={(e) => setPaymentFilter(e.target.value)}
-                                    className="appearance-none bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl py-2.5 pl-10 pr-8 text-sm text-white focus:outline-none focus:border-[#8cff65] cursor-pointer"
+                                    className="appearance-none bg-green-50 border border-green-200 rounded-xl py-2.5 pl-10 pr-8 text-sm text-gray-900 focus:outline-none focus:border-green-500 cursor-pointer"
                                 >
                                     <option value="all">All Payments</option>
                                     <option value="pending">Payment Pending</option>
@@ -500,13 +500,13 @@ const AdminTickets = ({ globalSearch = '' }) => {
                                 type="date"
                                 value={dateFilter}
                                 onChange={(e) => setDateFilter(e.target.value)}
-                                className="bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl py-2.5 px-4 text-sm text-white focus:outline-none focus:border-[#8cff65] cursor-pointer"
+                                className="bg-green-50 border border-green-200 rounded-xl py-2.5 px-4 text-sm text-gray-900 focus:outline-none focus:border-green-500 cursor-pointer"
                             />
 
                             {/* Refresh Button */}
                             <button
                                 onClick={fetchTickets}
-                                className="p-2.5 bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl text-gray-400 hover:text-white hover:border-[#8cff65]/50 transition-all"
+                                className="p-2.5 bg-green-50 border border-green-200 rounded-xl text-gray-500 hover:text-gray-900 hover:border-green-500/50 transition-all"
                                 title="Refresh"
                             >
                                 <RefreshIcon />
@@ -516,7 +516,7 @@ const AdminTickets = ({ globalSearch = '' }) => {
                             <button
                                 onClick={handleExport}
                                 disabled={exportLoading}
-                                className="flex items-center gap-2 px-4 py-2.5 bg-[#8cff65]/10 border border-[#8cff65]/30 text-[#8cff65] rounded-xl hover:bg-[#8cff65]/20 transition-all disabled:opacity-50"
+                                className="flex items-center gap-2 px-4 py-2.5 bg-green-500/10 border border-green-500/30 text-green-600 rounded-xl hover:bg-green-500/20 transition-all disabled:opacity-50"
                             >
                                 <DownloadIcon />
                                 {exportLoading ? 'Exporting...' : 'Export'}
@@ -528,19 +528,19 @@ const AdminTickets = ({ globalSearch = '' }) => {
                 {/* Tickets Table */}
                 <div className="overflow-x-auto">
                     <table className="w-full">
-                        <thead className="bg-[#1e1e1e]">
+                        <thead className="bg-green-50">
                             <tr>
-                                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Ticket Code</th>
-                                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Customer</th>
-                                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Type</th>
-                                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Visit Date</th>
-                                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Price</th>
-                                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Payment</th>
-                                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Status</th>
-                                <th className="px-6 py-4 text-right text-xs font-semibold text-gray-400 uppercase tracking-wider">Actions</th>
+                                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Ticket Code</th>
+                                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Customer</th>
+                                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Type</th>
+                                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Visit Date</th>
+                                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Price</th>
+                                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Payment</th>
+                                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                                <th className="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-[#2a2a2a]">
+                        <tbody className="divide-y divide-green-200">
                             {filteredTickets.length === 0 ? (
                                 <tr>
                                     <td colSpan="8" className="px-6 py-12 text-center text-gray-500">
@@ -549,31 +549,31 @@ const AdminTickets = ({ globalSearch = '' }) => {
                                 </tr>
                             ) : (
                                 filteredTickets.map(ticket => (
-                                    <tr key={ticket.id} className="hover:bg-[#1e1e1e]/50 transition-colors">
+                                    <tr key={ticket.id} className="hover:bg-green-50/50 transition-colors">
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-2">
                                                 <QRCodeIcon className="text-gray-500" />
-                                                <span className="font-mono text-[#8cff65] font-medium">{ticket.code}</span>
+                                                <span className="font-mono text-green-600 font-medium">{ticket.code}</span>
                                             </div>
                                         </td>
                                         <td className="px-6 py-4">
                                             <div>
-                                                <p className="text-white font-medium">{ticket.purchasedBy}</p>
+                                                <p className="text-gray-900 font-medium">{ticket.purchasedBy}</p>
                                                 <p className="text-gray-500 text-xs">{ticket.email}</p>
                                             </div>
                                         </td>
                                         <td className="px-6 py-4">
-                                            <span className="px-2 py-1 bg-[#1e1e1e] border border-[#2a2a2a] text-gray-300 text-xs rounded-lg capitalize">
+                                            <span className="px-2 py-1 bg-green-50 border border-green-200 text-gray-700 text-xs rounded-lg capitalize">
                                                 {ticket.type} × {ticket.quantity}
                                             </span>
                                         </td>
-                                        <td className="px-6 py-4 text-gray-300">{ticket.visitDate?.split('T')[0]}</td>
-                                        <td className="px-6 py-4 text-white font-medium">
+                                        <td className="px-6 py-4 text-gray-700">{ticket.visitDate?.split('T')[0]}</td>
+                                        <td className="px-6 py-4 text-gray-900 font-medium">
                                             {ticket.price === 0 ? 'FREE' : `₱${ticket.price?.toLocaleString()}`}
                                         </td>
                                         <td className="px-6 py-4">
                                             <div className="flex flex-col gap-1">
-                                                <span className="text-white capitalize text-sm">{ticket.paymentMethod || 'cash'}</span>
+                                                <span className="text-gray-900 capitalize text-sm">{ticket.paymentMethod || 'cash'}</span>
                                                 <span className={`inline-flex w-fit px-2 py-0.5 text-xs font-medium rounded-full border capitalize ${getPaymentBadge(ticket.paymentStatus)}`}>
                                                     {ticket.paymentStatus}
                                                 </span>
@@ -588,7 +588,7 @@ const AdminTickets = ({ globalSearch = '' }) => {
                                             <div className="flex items-center justify-end gap-2">
                                                 <button
                                                     onClick={() => openTicketDetails(ticket)}
-                                                    className="p-2 bg-[#1e1e1e] hover:bg-[#2a2a2a] border border-[#2a2a2a] hover:border-[#8cff65]/50 text-gray-400 hover:text-[#8cff65] rounded-lg transition-all"
+                                                    className="p-2 bg-green-50 hover:bg-green-50 border border-green-200 hover:border-green-500/50 text-gray-500 hover:text-green-600 rounded-lg transition-all"
                                                     title="View details"
                                                 >
                                                     <EyeIcon />
@@ -596,7 +596,7 @@ const AdminTickets = ({ globalSearch = '' }) => {
                                                 {(ticket.paymentStatus === 'pending' || ticket.paymentStatus === 'not_paid' || ticket.paymentStatus === 'not paid') && (
                                                     <button
                                                         onClick={() => handleMarkAsPaid(ticket.id)}
-                                                        className="p-2 bg-[#1e1e1e] hover:bg-teal-500/10 border border-[#2a2a2a] hover:border-teal-500/50 text-gray-400 hover:text-teal-400 rounded-lg transition-all"
+                                                        className="p-2 bg-green-50 hover:bg-teal-500/10 border border-green-200 hover:border-teal-500/50 text-gray-500 hover:text-teal-400 rounded-lg transition-all"
                                                         title="Mark as paid"
                                                     >
                                                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
@@ -608,7 +608,7 @@ const AdminTickets = ({ globalSearch = '' }) => {
                                                 {ticket.status === 'pending' && (
                                                     <button
                                                         onClick={() => handleStatusChange(ticket.id, 'confirmed')}
-                                                        className="p-2 bg-[#1e1e1e] hover:bg-[#8cff65]/10 border border-[#2a2a2a] hover:border-[#8cff65]/50 text-gray-400 hover:text-[#8cff65] rounded-lg transition-all"
+                                                        className="p-2 bg-green-50 hover:bg-green-500/10 border border-green-200 hover:border-green-500/50 text-gray-500 hover:text-green-600 rounded-lg transition-all"
                                                         title="Confirm ticket"
                                                     >
                                                         <CheckCircleIcon />
@@ -617,7 +617,7 @@ const AdminTickets = ({ globalSearch = '' }) => {
                                                 {(ticket.status === 'confirmed' || ticket.status === 'active') && (
                                                     <button
                                                         onClick={() => handleStatusChange(ticket.id, 'used')}
-                                                        className="p-2 bg-[#1e1e1e] hover:bg-blue-500/10 border border-[#2a2a2a] hover:border-blue-500/50 text-gray-400 hover:text-blue-400 rounded-lg transition-all"
+                                                        className="p-2 bg-green-50 hover:bg-blue-500/10 border border-green-200 hover:border-blue-500/50 text-gray-500 hover:text-blue-400 rounded-lg transition-all"
                                                         title="Mark as used"
                                                     >
                                                         <CheckCircleIcon />
@@ -633,7 +633,7 @@ const AdminTickets = ({ globalSearch = '' }) => {
                 </div>
 
                 {/* Table Footer */}
-                <div className="px-6 py-4 border-t border-[#2a2a2a] flex items-center justify-between">
+                <div className="px-6 py-4 border-t border-green-200 flex items-center justify-between">
                     <p className="text-sm text-gray-500">
                         Showing {filteredTickets.length} of {tickets.length} tickets
                     </p>
@@ -642,22 +642,22 @@ const AdminTickets = ({ globalSearch = '' }) => {
 
             {/* Ticket Detail Modal */}
             {showModal && selectedTicket && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+                <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-white border border-green-200 rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
                         {/* Modal Header */}
-                        <div className="p-6 border-b border-[#2a2a2a] flex items-center justify-between">
+                        <div className="p-6 border-b border-green-200 flex items-center justify-between">
                             <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 bg-[#8cff65]/10 rounded-xl flex items-center justify-center text-[#8cff65]">
+                                <div className="w-10 h-10 bg-green-500/10 rounded-xl flex items-center justify-center text-green-600">
                                     <TicketIcon />
                                 </div>
                                 <div>
-                                    <h3 className="text-xl font-bold text-white">Ticket Details</h3>
+                                    <h3 className="text-xl font-bold text-gray-900">Ticket Details</h3>
                                     <p className="text-sm text-gray-500 font-mono">{selectedTicket.code}</p>
                                 </div>
                             </div>
                             <button
                                 onClick={() => setShowModal(false)}
-                                className="p-2 hover:bg-[#1e1e1e] rounded-lg text-gray-400 hover:text-white transition"
+                                className="p-2 hover:bg-green-50 rounded-lg text-gray-500 hover:text-gray-900 transition"
                             >
                                 <CloseIcon />
                             </button>
@@ -668,13 +668,13 @@ const AdminTickets = ({ globalSearch = '' }) => {
                             {/* Status Badges */}
                             <div className="flex items-center justify-between gap-4">
                                 <div>
-                                    <span className="text-gray-400 text-sm">Status</span>
+                                    <span className="text-gray-500 text-sm">Status</span>
                                     <span className={`ml-2 inline-flex px-3 py-1 text-sm font-medium rounded-full border capitalize ${getStatusBadge(selectedTicket.status)}`}>
                                         {selectedTicket.status}
                                     </span>
                                 </div>
                                 <div>
-                                    <span className="text-gray-400 text-sm">Payment</span>
+                                    <span className="text-gray-500 text-sm">Payment</span>
                                     <span className={`ml-2 inline-flex px-3 py-1 text-sm font-medium rounded-full border capitalize ${getPaymentBadge(selectedTicket.paymentStatus)}`}>
                                         {selectedTicket.paymentStatus}
                                     </span>
@@ -693,49 +693,49 @@ const AdminTickets = ({ globalSearch = '' }) => {
                             )}
 
                             {/* Customer Info */}
-                            <div className="p-4 bg-[#1e1e1e] rounded-xl space-y-3">
-                                <h4 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">Customer Information</h4>
+                            <div className="p-4 bg-green-50 rounded-xl space-y-3">
+                                <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Customer Information</h4>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
                                         <p className="text-xs text-gray-500">Name</p>
-                                        <p className="text-white">{selectedTicket.purchasedBy}</p>
+                                        <p className="text-gray-900">{selectedTicket.purchasedBy}</p>
                                     </div>
                                     <div>
                                         <p className="text-xs text-gray-500">Email</p>
-                                        <p className="text-white">{selectedTicket.email}</p>
+                                        <p className="text-gray-900">{selectedTicket.email}</p>
                                     </div>
                                 </div>
                             </div>
 
                             {/* Ticket Info */}
-                            <div className="p-4 bg-[#1e1e1e] rounded-xl space-y-3">
-                                <h4 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">Ticket Information</h4>
+                            <div className="p-4 bg-green-50 rounded-xl space-y-3">
+                                <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Ticket Information</h4>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
                                         <p className="text-xs text-gray-500">Type</p>
-                                        <p className="text-white capitalize">{selectedTicket.type}</p>
+                                        <p className="text-gray-900 capitalize">{selectedTicket.type}</p>
                                     </div>
                                     <div>
                                         <p className="text-xs text-gray-500">Quantity</p>
-                                        <p className="text-white">{selectedTicket.quantity}</p>
+                                        <p className="text-gray-900">{selectedTicket.quantity}</p>
                                     </div>
                                     <div>
                                         <p className="text-xs text-gray-500">Total Price</p>
-                                        <p className="text-[#8cff65] font-medium">
+                                        <p className="text-green-600 font-medium">
                                             {selectedTicket.price === 0 ? 'FREE' : `₱${selectedTicket.price?.toLocaleString()}`}
                                         </p>
                                     </div>
                                     <div>
                                         <p className="text-xs text-gray-500">Payment Method</p>
-                                        <p className="text-white capitalize">{selectedTicket.paymentMethod}</p>
+                                        <p className="text-gray-900 capitalize">{selectedTicket.paymentMethod}</p>
                                     </div>
                                     <div>
                                         <p className="text-xs text-gray-500">Purchase Date</p>
-                                        <p className="text-white">{selectedTicket.purchaseDate?.split('T')[0]}</p>
+                                        <p className="text-gray-900">{selectedTicket.purchaseDate?.split('T')[0]}</p>
                                     </div>
                                     <div>
                                         <p className="text-xs text-gray-500">Visit Date</p>
-                                        <p className="text-white">{selectedTicket.visitDate?.split('T')[0]}</p>
+                                        <p className="text-gray-900">{selectedTicket.visitDate?.split('T')[0]}</p>
                                     </div>
                                 </div>
                             </div>
@@ -770,10 +770,10 @@ const AdminTickets = ({ globalSearch = '' }) => {
                                             </div>
                                             <p className="text-xs text-teal-400">Click image to view in full size</p>
                                             <div className="flex items-center gap-2 text-sm">
-                                                <span className="text-gray-400">Verification Status:</span>
+                                                <span className="text-gray-500">Verification Status:</span>
                                                 <span className={`px-2 py-1 rounded-full text-xs font-medium border ${
                                                     selectedTicket.verificationStatus === 'approved' 
-                                                        ? 'bg-[#8cff65]/20 text-[#8cff65] border-[#8cff65]/30' 
+                                                        ? 'bg-green-500/20 text-green-600 border-green-500/30' 
                                                         : selectedTicket.verificationStatus === 'rejected'
                                                             ? 'bg-red-500/20 text-red-400 border-red-500/30'
                                                             : 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30'
@@ -787,7 +787,7 @@ const AdminTickets = ({ globalSearch = '' }) => {
                                                     <button
                                                         onClick={() => handleUpdateVerificationStatus(selectedTicket.id, 'approved')}
                                                         disabled={actionLoading}
-                                                        className="flex-1 py-2 bg-[#8cff65]/20 border border-[#8cff65]/30 text-[#8cff65] text-sm font-medium rounded-lg hover:bg-[#8cff65]/30 transition-all disabled:opacity-50"
+                                                        className="flex-1 py-2 bg-green-500/20 border border-green-500/30 text-green-600 text-sm font-medium rounded-lg hover:bg-green-500/30 transition-all disabled:opacity-50"
                                                     >
                                                         Approve ID
                                                     </button>
@@ -802,7 +802,7 @@ const AdminTickets = ({ globalSearch = '' }) => {
                                             )}
                                         </div>
                                     ) : (
-                                        <div className="p-4 bg-[#1e1e1e] rounded-xl text-center">
+                                        <div className="p-4 bg-green-50 rounded-xl text-center">
                                             <p className="text-yellow-400 text-sm">
                                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-5 h-5 inline mr-2">
                                                     <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
@@ -837,7 +837,7 @@ const AdminTickets = ({ globalSearch = '' }) => {
                                     <button
                                         onClick={() => handleStatusChange(selectedTicket.id, 'confirmed')}
                                         disabled={actionLoading}
-                                        className="flex-1 py-3 bg-gradient-to-r from-[#8cff65] to-[#4ade80] text-[#0a0a0a] font-semibold rounded-xl hover:from-[#9dff7a] hover:to-[#5ceb91] transition-all disabled:opacity-50"
+                                        className="flex-1 py-3 bg-gradient-to-r from-green-500 to-green-400 text-white font-semibold rounded-xl hover:from-green-400 hover:to-green-500 transition-all disabled:opacity-50"
                                     >
                                         Confirm Ticket
                                     </button>
@@ -864,7 +864,7 @@ const AdminTickets = ({ globalSearch = '' }) => {
                                     <button
                                         onClick={() => handleStatusChange(selectedTicket.id, 'expired')}
                                         disabled={actionLoading}
-                                        className="flex-1 py-3 bg-gray-500/10 border border-gray-500/30 text-gray-400 font-semibold rounded-xl hover:bg-gray-500/20 transition-all disabled:opacity-50"
+                                        className="flex-1 py-3 bg-gray-500/10 border border-gray-500/30 text-gray-500 font-semibold rounded-xl hover:bg-gray-500/20 transition-all disabled:opacity-50"
                                     >
                                         Mark Expired
                                     </button>
@@ -872,7 +872,7 @@ const AdminTickets = ({ globalSearch = '' }) => {
                             </div>
                             <button
                                 onClick={() => setShowModal(false)}
-                                className="w-full py-3 bg-[#1e1e1e] hover:bg-[#2a2a2a] text-gray-300 font-medium rounded-xl transition-all"
+                                className="w-full py-3 bg-green-50 hover:bg-green-50 text-gray-700 font-medium rounded-xl transition-all"
                             >
                                 Close
                             </button>
@@ -883,11 +883,11 @@ const AdminTickets = ({ globalSearch = '' }) => {
 
             {/* Cancel Ticket Modal */}
             {showCancelModal && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
-                    <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl w-full max-w-md">
-                        <div className="p-6 border-b border-[#2a2a2a]">
-                            <h3 className="text-xl font-bold text-white">Cancel Ticket</h3>
-                            <p className="text-gray-400 text-sm mt-1">Please provide a reason for cancellation</p>
+                <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
+                    <div className="bg-white border border-green-200 rounded-2xl w-full max-w-md">
+                        <div className="p-6 border-b border-green-200">
+                            <h3 className="text-xl font-bold text-gray-900">Cancel Ticket</h3>
+                            <p className="text-gray-500 text-sm mt-1">Please provide a reason for cancellation</p>
                         </div>
                         <div className="p-6 space-y-4">
                             <textarea
@@ -895,7 +895,7 @@ const AdminTickets = ({ globalSearch = '' }) => {
                                 onChange={(e) => setCancelReason(e.target.value)}
                                 placeholder="Enter cancellation reason..."
                                 rows={4}
-                                className="w-full px-4 py-3 bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl text-white placeholder:text-gray-500 focus:outline-none focus:border-[#8cff65]/50 resize-none"
+                                className="w-full px-4 py-3 bg-green-50 border border-green-200 rounded-xl text-gray-900 placeholder:text-gray-500 focus:outline-none focus:border-green-500/50 resize-none"
                             />
                             <div className="flex gap-3">
                                 <button
@@ -903,7 +903,7 @@ const AdminTickets = ({ globalSearch = '' }) => {
                                         setShowCancelModal(false);
                                         setCancelReason('');
                                     }}
-                                    className="flex-1 py-3 bg-[#1e1e1e] hover:bg-[#2a2a2a] text-gray-300 font-medium rounded-xl transition-all"
+                                    className="flex-1 py-3 bg-green-50 hover:bg-green-50 text-gray-700 font-medium rounded-xl transition-all"
                                 >
                                     Go Back
                                 </button>
@@ -926,27 +926,27 @@ const AdminTickets = ({ globalSearch = '' }) => {
 
             {/* Confirmation Modal */}
             {showConfirmModal && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
-                    <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl w-full max-w-md">
-                        <div className="p-6 border-b border-[#2a2a2a]">
-                            <h3 className="text-xl font-bold text-white">{confirmTitle}</h3>
+                <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
+                    <div className="bg-white border border-green-200 rounded-2xl w-full max-w-md">
+                        <div className="p-6 border-b border-green-200">
+                            <h3 className="text-xl font-bold text-gray-900">{confirmTitle}</h3>
                         </div>
                         <div className="p-6 space-y-4">
-                            <p className="text-gray-300">{confirmMessage}</p>
+                            <p className="text-gray-700">{confirmMessage}</p>
                             <div className="flex gap-3">
                                 <button
                                     onClick={() => {
                                         setShowConfirmModal(false);
                                         setConfirmAction(null);
                                     }}
-                                    className="flex-1 py-3 bg-[#1e1e1e] hover:bg-[#2a2a2a] text-gray-300 font-medium rounded-xl transition-all"
+                                    className="flex-1 py-3 bg-green-50 hover:bg-green-50 text-gray-700 font-medium rounded-xl transition-all"
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     onClick={handleConfirmAction}
                                     disabled={actionLoading}
-                                    className="flex-1 py-3 bg-gradient-to-r from-[#8cff65] to-[#4ade80] text-[#0a0a0a] font-semibold rounded-xl hover:from-[#9dff7a] hover:to-[#5ceb91] transition-all disabled:opacity-50"
+                                    className="flex-1 py-3 bg-gradient-to-r from-green-500 to-green-400 text-white font-semibold rounded-xl hover:from-green-400 hover:to-green-500 transition-all disabled:opacity-50"
                                 >
                                     {actionLoading ? 'Processing...' : 'Confirm'}
                                 </button>
@@ -959,7 +959,7 @@ const AdminTickets = ({ globalSearch = '' }) => {
             {/* Image Preview Modal */}
             {showImageModal && previewImageUrl && (
                 <div 
-                    className="fixed inset-0 bg-black/90 backdrop-blur-sm z-[70] flex items-center justify-center p-4"
+                    className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[70] flex items-center justify-center p-4"
                     onClick={() => setShowImageModal(false)}
                 >
                     <div 
@@ -968,7 +968,7 @@ const AdminTickets = ({ globalSearch = '' }) => {
                     >
                         <button
                             onClick={() => setShowImageModal(false)}
-                            className="absolute -top-12 right-0 p-2 bg-white/10 hover:bg-white/20 rounded-full text-white transition-all"
+                            className="absolute -top-12 right-0 p-2 bg-white/10 hover:bg-white/40 rounded-full text-gray-900 transition-all"
                         >
                             <CloseIcon />
                         </button>

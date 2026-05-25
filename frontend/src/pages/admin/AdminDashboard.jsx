@@ -133,7 +133,7 @@ const AdminDashboard = () => {
                 dataLabels: { position: 'top' },
             }
         },
-        colors: ['#8cff65', '#4ade80'],
+        colors: ['#22c55e', '#4ade80'],
         dataLabels: {
             enabled: false,
         },
@@ -145,14 +145,14 @@ const AdminDashboard = () => {
         xaxis: {
             categories: weeklyCategories,
             labels: {
-                style: { colors: '#6b7280', fontSize: '12px' }
+                style: { colors: '#374151', fontSize: '12px' }
             },
             axisBorder: { show: false },
             axisTicks: { show: false },
         },
         yaxis: {
             labels: {
-                style: { colors: '#6b7280', fontSize: '12px' },
+                style: { colors: '#374151', fontSize: '12px' },
                 formatter: (val) => Math.round(val)
             }
         },
@@ -170,7 +170,7 @@ const AdminDashboard = () => {
             }
         },
         tooltip: {
-            theme: 'dark',
+            theme: 'light',
             y: {
                 formatter: (val, { seriesIndex }) => 
                     seriesIndex === 0 ? `${val} visitors` : `₱${val.toLocaleString()}`
@@ -180,7 +180,7 @@ const AdminDashboard = () => {
             show: true,
             position: 'top',
             horizontalAlign: 'right',
-            labels: { colors: '#9ca3af' },
+            labels: { colors: '#374151' },
             markers: {
                 width: 10,
                 height: 10,
@@ -188,12 +188,12 @@ const AdminDashboard = () => {
             }
         },
         grid: {
-            borderColor: '#2a2a2a',
+            borderColor: '#e5e7eb',
             strokeDashArray: 4,
             xaxis: { lines: { show: false } },
             yaxis: { lines: { show: true } }
         },
-        theme: { mode: 'dark' }
+        theme: { mode: 'light' }
     }), [weeklyCategories]);
 
     const weeklyChartSeries = useMemo(() => ([
@@ -209,7 +209,7 @@ const AdminDashboard = () => {
             background: 'transparent',
         },
         labels: ['Adult', 'Children', 'Senior', 'Student'],
-        colors: ['#8cff65', '#22c55e', '#4ade80', '#86efac'],
+        colors: ['#22c55e', '#22c55e', '#4ade80', '#86efac'],
         legend: { show: false },
         dataLabels: { enabled: false },
         plotOptions: {
@@ -221,12 +221,12 @@ const AdminDashboard = () => {
                         total: {
                             show: true,
                             label: 'Total',
-                            color: '#9ca3af',
+                            color: '#374151',
                             fontSize: '14px',
                             formatter: () => stats.totalTickets.toLocaleString()
                         },
                         value: {
-                            color: '#fff',
+                            color: '#111827',
                             fontSize: '24px',
                             fontWeight: 'bold'
                         }
@@ -236,10 +236,10 @@ const AdminDashboard = () => {
         },
         stroke: { show: false },
         tooltip: {
-            theme: 'dark',
+            theme: 'light',
             y: { formatter: (val) => `${val} tickets` }
         },
-        theme: { mode: 'dark' }
+        theme: { mode: 'light' }
     }), [stats.totalTickets]);
 
     const revenueAreaOptions = useMemo(() => ({
@@ -249,7 +249,7 @@ const AdminDashboard = () => {
             sparkline: { enabled: true },
             background: 'transparent'
         },
-        colors: ['#8cff65'],
+        colors: ['#22c55e'],
         fill: {
             type: 'gradient',
             gradient: {
@@ -265,11 +265,11 @@ const AdminDashboard = () => {
         },
         tooltip: { 
             enabled: true,
-            theme: 'dark',
+            theme: 'light',
             y: { formatter: (val) => `₱${val.toLocaleString()}` }
         },
         xaxis: { categories: weeklyCategories },
-        theme: { mode: 'dark' }
+        theme: { mode: 'light' }
     }), [weeklyCategories]);
 
     const revenueAreaSeries = useMemo(() => ([
@@ -376,24 +376,24 @@ const AdminDashboard = () => {
 
     // Stat Card Component
     const StatCard = ({ title, value, icon, trend, trendValue, trendLabel }) => (
-        <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-emerald-500 via-emerald-700 to-emerald-900 p-5 shadow-lg shadow-emerald-900/30 transition-all duration-300 hover:scale-[1.01]">
+        <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-green-500 via-green-600 to-green-700 p-5 shadow-lg shadow-green-500/30 transition-all duration-300 hover:scale-[1.01]">
             <div className="flex items-start justify-between mb-4">
-                <div className="w-12 h-12 rounded-2xl bg-white/15 backdrop-blur-sm flex items-center justify-center text-white border border-white/20">
+                <div className="w-12 h-12 rounded-2xl bg-white/30 backdrop-blur-sm flex items-center justify-center text-gray-900 border border-white/20">
                     {icon}
                 </div>
-                <button className="text-emerald-100/80 hover:text-white transition">
+                <button className="text-green-700/80 hover:text-gray-900 transition">
                     <MoreIcon />
                 </button>
             </div>
-            <p className="text-emerald-50/85 text-sm mb-1">{title}</p>
-            <p className="text-3xl font-bold text-white mb-2 tracking-tight">{value}</p>
+            <p className="text-green-800/85 text-sm mb-1">{title}</p>
+            <p className="text-3xl font-bold text-gray-900 mb-2 tracking-tight">{value}</p>
             <div className="flex items-center gap-2">
-                <span className={`flex items-center gap-1 text-sm font-semibold ${trend === 'up' ? 'text-emerald-100' : 'text-rose-200'
+                <span className={`flex items-center gap-1 text-sm font-semibold ${trend === 'up' ? 'text-green-700' : 'text-rose-100'
                     }`}>
                     {trend === 'up' ? <TrendUpIcon /> : <TrendDownIcon />}
                     {trendValue}
                 </span>
-                <span className="text-emerald-50/80 text-sm">{trendLabel}</span>
+                <span className="text-green-800/80 text-sm">{trendLabel}</span>
             </div>
         </div>
     );
@@ -401,7 +401,7 @@ const AdminDashboard = () => {
     // Donut Chart Component
     const DonutChart = ({ data, total, label }) => {
         const segments = [
-            { color: '#8cff65', value: 45 },
+            { color: '#22c55e', value: 45 },
             { color: '#22c55e', value: 25 },
             { color: '#4ade80', value: 20 },
             { color: '#86efac', value: 10 },
@@ -434,8 +434,8 @@ const AdminDashboard = () => {
                     })}
                 </svg>
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <span className="text-2xl font-bold text-white">{total}</span>
-                    <span className="text-xs text-gray-400">{label}</span>
+                    <span className="text-2xl font-bold text-gray-900">{total}</span>
+                    <span className="text-xs text-gray-500">{label}</span>
                 </div>
             </div>
         );
@@ -447,7 +447,7 @@ const AdminDashboard = () => {
             {data.map((item, index) => (
                 <div
                     key={index}
-                    className="flex-1 bg-gradient-to-t from-[#8cff65] to-[#4ade80] rounded-t opacity-60 hover:opacity-100 transition-opacity cursor-pointer"
+                    className="flex-1 bg-gradient-to-t from-green-500 to-green-400 rounded-t opacity-60 hover:opacity-100 transition-opacity cursor-pointer"
                     style={{ height: `${(item.visitors / maxVisitors) * 100}%` }}
                     title={`${item.day}: ${item.visitors} visitors`}
                 />
@@ -472,14 +472,14 @@ const AdminDashboard = () => {
             <svg viewBox="0 0 100 100" className="w-full h-24" preserveAspectRatio="none">
                 <defs>
                     <linearGradient id="areaGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                        <stop offset="0%" stopColor="#8cff65" stopOpacity="0.3" />
-                        <stop offset="100%" stopColor="#8cff65" stopOpacity="0" />
+                        <stop offset="0%" stopColor="#22c55e" stopOpacity="0.3" />
+                        <stop offset="100%" stopColor="#22c55e" stopOpacity="0" />
                     </linearGradient>
                 </defs>
                 <path d={areaD} fill="url(#areaGradient)" />
-                <path d={pathD} fill="none" stroke="#8cff65" strokeWidth="2" vectorEffect="non-scaling-stroke" />
+                <path d={pathD} fill="none" stroke="#22c55e" strokeWidth="2" vectorEffect="non-scaling-stroke" />
                 {points.map((p, i) => (
-                    <circle key={i} cx={p.x} cy={p.y} r="2" fill="#8cff65" className="hover:r-3 transition-all" />
+                    <circle key={i} cx={p.x} cy={p.y} r="2" fill="#22c55e" className="hover:r-3 transition-all" />
                 ))}
             </svg>
         );
@@ -489,8 +489,8 @@ const AdminDashboard = () => {
         return (
             <div className="flex items-center justify-center h-64">
                 <div className="relative w-16 h-16">
-                    <div className="absolute inset-0 rounded-full border-4 border-[#2a2a2a]"></div>
-                    <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-[#8cff65] animate-spin"></div>
+                    <div className="absolute inset-0 rounded-full border-4 border-green-200"></div>
+                    <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-green-500 animate-spin"></div>
                 </div>
             </div>
         );
@@ -501,14 +501,14 @@ const AdminDashboard = () => {
             {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-white">Welcome back, {user?.fullName?.split(' ')[0] || 'Admin'} 👋</h1>
-                    <p className="text-gray-400">Here&apos;s what&apos;s happening with your zoo today.</p>
+                    <h1 className="text-2xl font-bold text-gray-900">Welcome back, {user?.fullName?.split(' ')[0] || 'Admin'} 👋</h1>
+                    <p className="text-gray-500">Here&apos;s what&apos;s happening with your zoo today.</p>
                 </div>
                 <div className="flex items-center gap-2">
                     <select 
                         value={timeFilter}
                         onChange={(e) => setTimeFilter(e.target.value)}
-                        className="bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-[#8cff65]"
+                        className="bg-green-50 border border-green-200 rounded-xl px-4 py-2 text-sm text-gray-900 focus:outline-none focus:border-green-500"
                     >
                         <option value="today">Today</option>
                         <option value="week">This Week</option>
@@ -565,20 +565,20 @@ const AdminDashboard = () => {
             {/* Middle Section - Charts */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Weekly Visitors Chart */}
-                <div className="lg:col-span-2 bg-[#141414] border border-[#2a2a2a] rounded-2xl p-6">
+                <div className="lg:col-span-2 bg-white border border-green-200 rounded-2xl p-6">
                     <div className="flex items-center justify-between mb-6">
                         <div>
-                            <h3 className="text-lg font-bold text-white">Weekly Overview</h3>
-                            <p className="text-sm text-gray-400">Visitor statistics for this week</p>
+                            <h3 className="text-lg font-bold text-gray-900">Weekly Overview</h3>
+                            <p className="text-sm text-gray-500">Visitor statistics for this week</p>
                         </div>
                         <div className="flex items-center gap-4 text-sm">
                             <div className="flex items-center gap-2">
-                                <div className="w-3 h-3 rounded-full bg-[#8cff65]"></div>
-                                <span className="text-gray-400">Visitors</span>
+                                <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                                <span className="text-gray-500">Visitors</span>
                             </div>
                             <div className="flex items-center gap-2">
-                                <div className="w-3 h-3 rounded-full bg-[#4ade80]"></div>
-                                <span className="text-gray-400">Revenue</span>
+                                <div className="w-3 h-3 rounded-full bg-green-400"></div>
+                                <span className="text-gray-500">Revenue</span>
                             </div>
                         </div>
                     </div>
@@ -594,27 +594,27 @@ const AdminDashboard = () => {
                     </div>
 
                     {/* Summary Stats */}
-                    <div className="grid grid-cols-3 gap-4 pt-4 border-t border-[#2a2a2a]">
+                    <div className="grid grid-cols-3 gap-4 pt-4 border-t border-green-200">
                         <div>
-                            <p className="text-gray-400 text-sm">Total Visitors</p>
-                            <p className="text-xl font-bold text-white">{weeklyTotals.totalVisitors.toLocaleString()}</p>
+                            <p className="text-gray-500 text-sm">Total Visitors</p>
+                            <p className="text-xl font-bold text-gray-900">{weeklyTotals.totalVisitors.toLocaleString()}</p>
                         </div>
                         <div>
-                            <p className="text-gray-400 text-sm">Avg. per day</p>
-                            <p className="text-xl font-bold text-white">{weeklyTotals.avgVisitors.toLocaleString()}</p>
+                            <p className="text-gray-500 text-sm">Avg. per day</p>
+                            <p className="text-xl font-bold text-gray-900">{weeklyTotals.avgVisitors.toLocaleString()}</p>
                         </div>
                         <div>
-                            <p className="text-gray-400 text-sm">Peak Day</p>
-                            <p className="text-xl font-bold text-[#8cff65]">{weeklyTotals.peakDay.day}</p>
+                            <p className="text-gray-500 text-sm">Peak Day</p>
+                            <p className="text-xl font-bold text-green-600">{weeklyTotals.peakDay.day}</p>
                         </div>
                     </div>
                 </div>
 
                 {/* Ticket Distribution */}
-                <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl p-6">
+                <div className="bg-white border border-green-200 rounded-2xl p-6">
                     <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-lg font-bold text-white">Ticket Types</h3>
-                        <button className="text-gray-500 hover:text-white transition">
+                        <h3 className="text-lg font-bold text-gray-900">Ticket Types</h3>
+                        <button className="text-gray-500 hover:text-gray-900 transition">
                             <MoreIcon />
                         </button>
                     </div>
@@ -633,31 +633,31 @@ const AdminDashboard = () => {
                     <div className="mt-4 space-y-3">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
-                                <div className="w-3 h-3 rounded-full bg-[#8cff65]"></div>
-                                <span className="text-sm text-gray-300">Adult</span>
+                                <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                                <span className="text-sm text-gray-700">Adult</span>
                             </div>
-                            <span className="text-sm font-medium text-white">45%</span>
+                            <span className="text-sm font-medium text-gray-900">45%</span>
                         </div>
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
                                 <div className="w-3 h-3 rounded-full bg-[#22c55e]"></div>
-                                <span className="text-sm text-gray-300">Children</span>
+                                <span className="text-sm text-gray-700">Children</span>
                             </div>
-                            <span className="text-sm font-medium text-white">25%</span>
+                            <span className="text-sm font-medium text-gray-900">25%</span>
                         </div>
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
-                                <div className="w-3 h-3 rounded-full bg-[#4ade80]"></div>
-                                <span className="text-sm text-gray-300">Senior</span>
+                                <div className="w-3 h-3 rounded-full bg-green-400"></div>
+                                <span className="text-sm text-gray-700">Senior</span>
                             </div>
-                            <span className="text-sm font-medium text-white">20%</span>
+                            <span className="text-sm font-medium text-gray-900">20%</span>
                         </div>
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
                                 <div className="w-3 h-3 rounded-full bg-[#86efac]"></div>
-                                <span className="text-sm text-gray-300">Student</span>
+                                <span className="text-sm text-gray-700">Student</span>
                             </div>
-                            <span className="text-sm font-medium text-white">10%</span>
+                            <span className="text-sm font-medium text-gray-900">10%</span>
                         </div>
                     </div>
                 </div>
@@ -666,29 +666,29 @@ const AdminDashboard = () => {
             {/* Revenue & New Customers Row */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {/* New Customers Card */}
-                <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl p-6">
+                <div className="bg-white border border-green-200 rounded-2xl p-6">
                     <div className="flex items-center justify-between mb-4">
                         <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center">
                             <UsersIcon />
                         </div>
-                        <span className="text-[#8cff65] text-sm font-medium flex items-center gap-1">
+                        <span className="text-green-600 text-sm font-medium flex items-center gap-1">
                             <TrendUpIcon /> +12%
                         </span>
                     </div>
-                    <p className="text-gray-400 text-sm">New Visitors</p>
-                    <p className="text-3xl font-bold text-white mb-1">862</p>
+                    <p className="text-gray-500 text-sm">New Visitors</p>
+                    <p className="text-3xl font-bold text-gray-900 mb-1">862</p>
                     <p className="text-gray-500 text-sm">Last Week</p>
                 </div>
 
                 {/* Total Profit Card */}
-                <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl p-6">
+                <div className="bg-white border border-green-200 rounded-2xl p-6">
                     <div className="flex items-center justify-between mb-4">
-                        <p className="text-gray-400 text-sm">Total Profit</p>
-                        <span className="text-[#8cff65] text-sm font-medium flex items-center gap-1">
+                        <p className="text-gray-500 text-sm">Total Profit</p>
+                        <span className="text-green-600 text-sm font-medium flex items-center gap-1">
                             <TrendUpIcon /> +42%
                         </span>
                     </div>
-                    <p className="text-3xl font-bold text-white mb-2">₱{weeklyTotals.totalRevenue.toLocaleString()}</p>
+                    <p className="text-3xl font-bold text-gray-900 mb-2">₱{weeklyTotals.totalRevenue.toLocaleString()}</p>
                     <p className="text-gray-500 text-sm mb-2">Weekly Revenue</p>
                     <Chart
                         options={revenueAreaOptions}
@@ -699,42 +699,42 @@ const AdminDashboard = () => {
                 </div>
 
                 {/* Revenue Breakdown */}
-                <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl p-6">
-                    <h3 className="text-lg font-bold text-white mb-4">Revenue Breakdown</h3>
+                <div className="bg-white border border-green-200 rounded-2xl p-6">
+                    <h3 className="text-lg font-bold text-gray-900 mb-4">Revenue Breakdown</h3>
                     <div className="space-y-4">
                         <div>
                             <div className="flex justify-between text-sm mb-1">
-                                <span className="text-gray-400">Ticket Sales</span>
-                                <span className="text-white font-medium">₱55,640</span>
+                                <span className="text-gray-500">Ticket Sales</span>
+                                <span className="text-gray-900 font-medium">₱55,640</span>
                             </div>
-                            <div className="h-2 bg-[#2a2a2a] rounded-full overflow-hidden">
-                                <div className="h-full w-[65%] bg-[#8cff65] rounded-full"></div>
-                            </div>
-                        </div>
-                        <div>
-                            <div className="flex justify-between text-sm mb-1">
-                                <span className="text-gray-400">Merchandise</span>
-                                <span className="text-white font-medium">₱11,420</span>
-                            </div>
-                            <div className="h-2 bg-[#2a2a2a] rounded-full overflow-hidden">
-                                <div className="h-full w-[25%] bg-[#4ade80] rounded-full"></div>
+                            <div className="h-2 bg-green-50 rounded-full overflow-hidden">
+                                <div className="h-full w-[65%] bg-green-500 rounded-full"></div>
                             </div>
                         </div>
                         <div>
                             <div className="flex justify-between text-sm mb-1">
-                                <span className="text-gray-400">Food & Beverages</span>
-                                <span className="text-white font-medium">₱8,540</span>
+                                <span className="text-gray-500">Merchandise</span>
+                                <span className="text-gray-900 font-medium">₱11,420</span>
                             </div>
-                            <div className="h-2 bg-[#2a2a2a] rounded-full overflow-hidden">
+                            <div className="h-2 bg-green-50 rounded-full overflow-hidden">
+                                <div className="h-full w-[25%] bg-green-400 rounded-full"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div className="flex justify-between text-sm mb-1">
+                                <span className="text-gray-500">Food & Beverages</span>
+                                <span className="text-gray-900 font-medium">₱8,540</span>
+                            </div>
+                            <div className="h-2 bg-green-50 rounded-full overflow-hidden">
                                 <div className="h-full w-[18%] bg-[#22c55e] rounded-full"></div>
                             </div>
                         </div>
                         <div>
                             <div className="flex justify-between text-sm mb-1">
-                                <span className="text-gray-400">Special Events</span>
-                                <span className="text-white font-medium">₱2,120</span>
+                                <span className="text-gray-500">Special Events</span>
+                                <span className="text-gray-900 font-medium">₱2,120</span>
                             </div>
-                            <div className="h-2 bg-[#2a2a2a] rounded-full overflow-hidden">
+                            <div className="h-2 bg-green-50 rounded-full overflow-hidden">
                                 <div className="h-full w-[8%] bg-[#86efac] rounded-full"></div>
                             </div>
                         </div>
@@ -743,15 +743,15 @@ const AdminDashboard = () => {
             </div>
 
             {/* Recently Registered Users */}
-            <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl p-6">
+            <div className="bg-white border border-green-200 rounded-2xl p-6">
                 <div className="flex items-center justify-between mb-6">
                     <div>
-                        <h3 className="text-lg font-bold text-white">Recently Registered Users</h3>
-                        <p className="text-sm text-gray-400">New users who joined this week</p>
+                        <h3 className="text-lg font-bold text-gray-900">Recently Registered Users</h3>
+                        <p className="text-sm text-gray-500">New users who joined this week</p>
                     </div>
                     <Link
                         to="/admin/users"
-                        className="px-4 py-2 bg-[#8cff65] hover:bg-[#7ae857] text-black font-medium rounded-xl transition-colors"
+                        className="px-4 py-2 bg-green-500 hover:bg-green-600 text-black font-medium rounded-xl transition-colors"
                     >
                         View All
                     </Link>
@@ -760,17 +760,17 @@ const AdminDashboard = () => {
                 <div className="overflow-x-auto">
                     <table className="w-full">
                         <thead>
-                            <tr className="text-left border-b border-[#2a2a2a]">
-                                <th className="pb-4 text-sm font-semibold text-gray-400">User</th>
-                                <th className="pb-4 text-sm font-semibold text-gray-400">Email</th>
-                                <th className="pb-4 text-sm font-semibold text-gray-400">Role</th>
-                                <th className="pb-4 text-sm font-semibold text-gray-400">Joined</th>
-                                <th className="pb-4 text-sm font-semibold text-gray-400">Status</th>
+                            <tr className="text-left border-b border-green-200">
+                                <th className="pb-4 text-sm font-semibold text-gray-500">User</th>
+                                <th className="pb-4 text-sm font-semibold text-gray-500">Email</th>
+                                <th className="pb-4 text-sm font-semibold text-gray-500">Role</th>
+                                <th className="pb-4 text-sm font-semibold text-gray-500">Joined</th>
+                                <th className="pb-4 text-sm font-semibold text-gray-500">Status</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-[#2a2a2a]">
+                        <tbody className="divide-y divide-green-200">
                             {recentUsers.map((u) => (
-                                <tr key={u.id} className="hover:bg-[#1e1e1e] transition-colors">
+                                <tr key={u.id} className="hover:bg-green-50 transition-colors">
                                     <td className="py-4">
                                         <div className="flex items-center gap-3">
                                             {getProfileImageUrl(u.profileImage) ? (
@@ -790,28 +790,28 @@ const AdminDashboard = () => {
                                                 />
                                             ) : null}
                                             <div 
-                                                className="w-10 h-10 rounded-full bg-[#8cff65] flex items-center justify-center text-gray-900 font-bold"
+                                                className="w-10 h-10 rounded-full bg-green-500 flex items-center justify-center text-gray-900 font-bold"
                                                 style={{ display: getProfileImageUrl(u.profileImage) ? 'none' : 'flex' }}
                                             >
                                                 {(u.fullName || u.firstName || 'U').charAt(0).toUpperCase()}
                                             </div>
                                             <div>
-                                                <p className="font-medium text-white">{u.fullName || `${u.firstName} ${u.lastName}`.trim() || 'Unknown'}</p>
+                                                <p className="font-medium text-gray-900">{u.fullName || `${u.firstName} ${u.lastName}`.trim() || 'Unknown'}</p>
                                             </div>
                                         </div>
                                     </td>
-                                    <td className="py-4 text-gray-300">{u.email || '-'}</td>
+                                    <td className="py-4 text-gray-700">{u.email || '-'}</td>
                                     <td className="py-4">
                                         <span className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${u.role === 'admin'
                                                 ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
                                                 : u.role === 'staff'
                                                     ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
-                                                    : 'bg-gray-500/20 text-gray-400 border border-gray-500/30'
+                                                    : 'bg-gray-500/20 text-gray-500 border border-gray-500/30'
                                             }`}>
                                             {u.role}
                                         </span>
                                     </td>
-                                    <td className="py-4 text-gray-400 text-sm">
+                                    <td className="py-4 text-gray-500 text-sm">
                                         {new Date(u.createdAt).toLocaleDateString('en-US', {
                                             month: 'short',
                                             day: 'numeric',
@@ -820,8 +820,8 @@ const AdminDashboard = () => {
                                     </td>
                                     <td className="py-4">
                                         <span className="flex items-center gap-2">
-                                            <span className="w-2 h-2 rounded-full bg-[#8cff65]"></span>
-                                            <span className="text-sm text-gray-400">Active</span>
+                                            <span className="w-2 h-2 rounded-full bg-green-500"></span>
+                                            <span className="text-sm text-gray-500">Active</span>
                                         </span>
                                     </td>
                                 </tr>

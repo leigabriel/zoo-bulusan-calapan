@@ -69,7 +69,7 @@ const CloseIcon = () => (
 
 // Tag colors for events
 const TAG_COLORS = [
-    { name: 'Green', value: '#8cff65', bg: 'bg-[#8cff65]' },
+    { name: 'Green', value: '#22c55e', bg: 'bg-green-500' },
     { name: 'Blue', value: '#60a5fa', bg: 'bg-blue-400' },
     { name: 'Purple', value: '#a78bfa', bg: 'bg-purple-400' },
     { name: 'Pink', value: '#f472b6', bg: 'bg-pink-400' },
@@ -95,7 +95,7 @@ const StaffEvents = ({ globalSearch = '' }) => {
     const [imagePreview, setImagePreview] = useState(null);
     const [form, setForm] = useState({
         title: '', description: '', eventDate: '', startTime: '', endTime: '',
-        location: '', capacity: '', status: 'upcoming', imageUrl: '', color: '#8cff65'
+        location: '', capacity: '', status: 'upcoming', imageUrl: '', color: '#22c55e'
     });
 
     useEffect(() => {
@@ -120,7 +120,7 @@ const StaffEvents = ({ globalSearch = '' }) => {
         setEditingEvent(null);
         setForm({
             title: '', description: '', eventDate: '', startTime: '', endTime: '',
-            location: '', capacity: '', status: 'upcoming', imageUrl: '', color: '#8cff65'
+            location: '', capacity: '', status: 'upcoming', imageUrl: '', color: '#22c55e'
         });
         setImageInputMode('upload');
         setImageFile(null);
@@ -141,7 +141,7 @@ const StaffEvents = ({ globalSearch = '' }) => {
             capacity: event.capacity || '',
             status: event.status || 'upcoming',
             imageUrl: event.image_url || '',
-            color: event.color || '#8cff65'
+            color: event.color || '#22c55e'
         });
         setImageInputMode('upload');
         setImageFile(null);
@@ -157,7 +157,7 @@ const StaffEvents = ({ globalSearch = '' }) => {
         setImagePreview(null);
         setForm({
             title: '', description: '', eventDate: '', startTime: '', endTime: '',
-            location: '', capacity: '', status: 'upcoming', imageUrl: '', color: '#8cff65'
+            location: '', capacity: '', status: 'upcoming', imageUrl: '', color: '#22c55e'
         });
     };
 
@@ -253,10 +253,10 @@ const StaffEvents = ({ globalSearch = '' }) => {
     const getStatusBadge = (status) => {
         switch (status?.toLowerCase()) {
             case 'upcoming': return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
-            case 'ongoing': return 'bg-[#8cff65]/20 text-[#8cff65] border-[#8cff65]/30';
-            case 'completed': return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
+            case 'ongoing': return 'bg-green-500/20 text-green-600 border-green-500/30';
+            case 'completed': return 'bg-gray-500/20 text-gray-500 border-gray-500/30';
             case 'cancelled': return 'bg-red-500/20 text-red-400 border-red-500/30';
-            default: return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
+            default: return 'bg-gray-500/20 text-gray-500 border-gray-500/30';
         }
     };
 
@@ -300,8 +300,8 @@ const StaffEvents = ({ globalSearch = '' }) => {
         return (
             <div className="flex items-center justify-center h-64">
                 <div className="flex flex-col items-center gap-3">
-                    <div className="w-10 h-10 border-4 border-[#8cff65] border-t-transparent rounded-full animate-spin"></div>
-                    <span className="text-gray-400">Loading events...</span>
+                    <div className="w-10 h-10 border-4 border-green-500 border-t-transparent rounded-full animate-spin"></div>
+                    <span className="text-gray-500">Loading events...</span>
                 </div>
             </div>
         );
@@ -311,49 +311,49 @@ const StaffEvents = ({ globalSearch = '' }) => {
         <div className="space-y-6">
             {/* Stats Cards */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-2xl p-4">
+                <div className="bg-green-50 border border-green-200 rounded-2xl p-4">
                     <div className="flex items-center justify-between">
                         <div>
-                            <p className="text-gray-400 text-sm">Total Events</p>
-                            <p className="text-2xl font-bold text-white">{eventStats.total}</p>
+                            <p className="text-gray-500 text-sm">Total Events</p>
+                            <p className="text-2xl font-bold text-gray-900">{eventStats.total}</p>
                         </div>
-                        <div className="w-10 h-10 bg-[#8cff65]/10 rounded-xl flex items-center justify-center text-[#8cff65]">
+                        <div className="w-10 h-10 bg-green-500/10 rounded-xl flex items-center justify-center text-green-600">
                             <CalendarIcon />
                         </div>
                     </div>
                 </div>
-                <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-2xl p-4">
-                    <p className="text-gray-400 text-sm">Upcoming</p>
+                <div className="bg-green-50 border border-green-200 rounded-2xl p-4">
+                    <p className="text-gray-500 text-sm">Upcoming</p>
                     <p className="text-2xl font-bold text-blue-400">{eventStats.upcoming}</p>
                 </div>
-                <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-2xl p-4">
-                    <p className="text-gray-400 text-sm">Ongoing</p>
-                    <p className="text-2xl font-bold text-[#8cff65]">{eventStats.ongoing}</p>
+                <div className="bg-green-50 border border-green-200 rounded-2xl p-4">
+                    <p className="text-gray-500 text-sm">Ongoing</p>
+                    <p className="text-2xl font-bold text-green-600">{eventStats.ongoing}</p>
                 </div>
-                <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-2xl p-4">
-                    <p className="text-gray-400 text-sm">Completed</p>
-                    <p className="text-2xl font-bold text-gray-400">{eventStats.completed}</p>
+                <div className="bg-green-50 border border-green-200 rounded-2xl p-4">
+                    <p className="text-gray-500 text-sm">Completed</p>
+                    <p className="text-2xl font-bold text-gray-500">{eventStats.completed}</p>
                 </div>
             </div>
 
             {/* Filters */}
-            <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl p-4">
+            <div className="bg-white border border-green-200 rounded-2xl p-4">
                 <div className="flex flex-wrap gap-4 items-center justify-between">
                     <div className="flex flex-wrap gap-4 items-center flex-1">
-                        <div className="flex items-center bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-2 flex-1 min-w-[200px] max-w-sm">
+                        <div className="flex items-center bg-green-50 border border-green-200 rounded-xl px-4 py-2 flex-1 min-w-[200px] max-w-sm">
                             <SearchIcon />
                             <input
                                 type="text"
                                 placeholder="Search events..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="ml-2 bg-transparent border-none outline-none text-white placeholder-gray-500 w-full"
+                                className="ml-2 bg-transparent border-none outline-none text-gray-900 placeholder-gray-500 w-full"
                             />
                         </div>
                         <select
                             value={statusFilter}
                             onChange={(e) => setStatusFilter(e.target.value)}
-                            className="bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-2 text-white outline-none"
+                            className="bg-green-50 border border-green-200 rounded-xl px-4 py-2 text-gray-900 outline-none"
                         >
                             <option value="all">All Status</option>
                             <option value="upcoming">Upcoming</option>
@@ -364,7 +364,7 @@ const StaffEvents = ({ globalSearch = '' }) => {
                     </div>
                     <button
                         onClick={openCreateModal}
-                        className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-[#8cff65] to-[#4ade80] text-[#0a0a0a] font-semibold rounded-xl hover:from-[#9dff7a] hover:to-[#5ceb91] transition-all shadow-lg shadow-[#8cff65]/20"
+                        className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-green-500 to-green-400 text-white font-semibold rounded-xl hover:from-green-400 hover:to-green-500 transition-all shadow-lg shadow-green-300/50"
                     >
                         <PlusIcon /> Add Event
                     </button>
@@ -375,9 +375,9 @@ const StaffEvents = ({ globalSearch = '' }) => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredEvents.length > 0 ? (
                     filteredEvents.map(event => (
-                        <div key={event.id} className="bg-[#141414] border border-[#2a2a2a] rounded-2xl overflow-hidden hover:border-[#8cff65]/30 transition group">
+                        <div key={event.id} className="bg-white border border-green-200 rounded-2xl overflow-hidden hover:border-green-500/30 transition group">
                             {event.image_url && (
-                                <div className="h-40 bg-[#0a0a0a] overflow-hidden">
+                                <div className="h-40 bg-white overflow-hidden">
                                     <img
                                         src={event.image_url}
                                         alt={event.title}
@@ -387,45 +387,45 @@ const StaffEvents = ({ globalSearch = '' }) => {
                             )}
                             <div className="p-5">
                                 <div className="flex items-start justify-between mb-3">
-                                    <h3 className="text-lg font-bold text-white">{event.title}</h3>
+                                    <h3 className="text-lg font-bold text-gray-900">{event.title}</h3>
                                     <span className={`px-2 py-1 rounded-lg text-xs font-medium border ${getStatusBadge(event.status)}`}>
                                         {event.status}
                                     </span>
                                 </div>
-                                <p className="text-gray-400 text-sm mb-4 line-clamp-2">{event.description}</p>
+                                <p className="text-gray-500 text-sm mb-4 line-clamp-2">{event.description}</p>
                                 <div className="space-y-2 text-sm">
-                                    <div className="flex items-center gap-2 text-gray-400">
+                                    <div className="flex items-center gap-2 text-gray-500">
                                         <CalendarIcon />
                                         <span>{formatDate(event.event_date)}</span>
                                     </div>
                                     {event.start_time && (
-                                        <div className="flex items-center gap-2 text-gray-400">
+                                        <div className="flex items-center gap-2 text-gray-500">
                                             <ClockIcon />
                                             <span>{formatTime(event.start_time)} - {formatTime(event.end_time)}</span>
                                         </div>
                                     )}
                                     {event.location && (
-                                        <div className="flex items-center gap-2 text-gray-400">
+                                        <div className="flex items-center gap-2 text-gray-500">
                                             <MapPinIcon />
                                             <span>{event.location}</span>
                                         </div>
                                     )}
-                                    <div className="flex items-center gap-2 text-gray-400">
+                                    <div className="flex items-center gap-2 text-gray-500">
                                         <UsersIcon />
                                         <span>{event.registered_count || 0} / {event.capacity || '∞'} registered</span>
                                     </div>
                                 </div>
                                 {/* Action Buttons */}
-                                <div className="flex items-center gap-2 mt-4 pt-4 border-t border-[#2a2a2a]">
+                                <div className="flex items-center gap-2 mt-4 pt-4 border-t border-green-200">
                                     <button
                                         onClick={() => openEditModal(event)}
-                                        className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-[#1e1e1e] hover:bg-[#2a2a2a] border border-[#2a2a2a] hover:border-[#8cff65]/50 text-gray-400 hover:text-[#8cff65] rounded-lg transition-all text-sm"
+                                        className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-green-50 hover:bg-green-50 border border-green-200 hover:border-green-500/50 text-gray-500 hover:text-green-600 rounded-lg transition-all text-sm"
                                     >
                                         <EditIcon /> Edit
                                     </button>
                                     <button
                                         onClick={() => setDeleteConfirm(event)}
-                                        className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-[#1e1e1e] hover:bg-red-500/10 border border-[#2a2a2a] hover:border-red-500/50 text-gray-400 hover:text-red-400 rounded-lg transition-all text-sm"
+                                        className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-green-50 hover:bg-red-500/10 border border-green-200 hover:border-red-500/50 text-gray-500 hover:text-red-400 rounded-lg transition-all text-sm"
                                     >
                                         <TrashIcon /> Delete
                                     </button>
@@ -442,45 +442,45 @@ const StaffEvents = ({ globalSearch = '' }) => {
 
             {/* Create/Edit Modal */}
             {showModal && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-                        <div className="p-6 border-b border-[#2a2a2a] flex items-center justify-between sticky top-0 bg-[#141414]">
-                            <h3 className="text-xl font-bold text-white">
+                <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-white border border-green-200 rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+                        <div className="p-6 border-b border-green-200 flex items-center justify-between sticky top-0 bg-white">
+                            <h3 className="text-xl font-bold text-gray-900">
                                 {editingEvent ? 'Edit Event' : 'Add New Event'}
                             </h3>
-                            <button onClick={closeModal} className="p-2 hover:bg-[#1e1e1e] rounded-lg text-gray-400 hover:text-white transition">
+                            <button onClick={closeModal} className="p-2 hover:bg-green-50 rounded-lg text-gray-500 hover:text-gray-900 transition">
                                 <CloseIcon />
                             </button>
                         </div>
                         <form onSubmit={saveEvent} className="p-6 space-y-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-400 mb-2">Title *</label>
+                                <label className="block text-sm font-medium text-gray-500 mb-2">Title *</label>
                                 <input
                                     type="text"
                                     value={form.title}
                                     onChange={(e) => setForm({ ...form, title: sanitizeInput(e.target.value) })}
                                     required
-                                    className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-[#8cff65]"
+                                    className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-500"
                                     placeholder="Event title"
                                 />
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-400 mb-2">Date *</label>
+                                    <label className="block text-sm font-medium text-gray-500 mb-2">Date *</label>
                                     <input
                                         type="date"
                                         value={form.eventDate}
                                         onChange={(e) => setForm({ ...form, eventDate: e.target.value })}
                                         required
-                                        className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#8cff65]"
+                                        className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:border-green-500"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-400 mb-2">Status</label>
+                                    <label className="block text-sm font-medium text-gray-500 mb-2">Status</label>
                                     <select
                                         value={form.status}
                                         onChange={(e) => setForm({ ...form, status: e.target.value })}
-                                        className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#8cff65]"
+                                        className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:border-green-500"
                                     >
                                         <option value="upcoming">Upcoming</option>
                                         <option value="ongoing">Ongoing</option>
@@ -491,55 +491,55 @@ const StaffEvents = ({ globalSearch = '' }) => {
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-400 mb-2">Start Time</label>
+                                    <label className="block text-sm font-medium text-gray-500 mb-2">Start Time</label>
                                     <input
                                         type="time"
                                         value={form.startTime}
                                         onChange={(e) => setForm({ ...form, startTime: e.target.value })}
-                                        className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#8cff65]"
+                                        className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:border-green-500"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-400 mb-2">End Time</label>
+                                    <label className="block text-sm font-medium text-gray-500 mb-2">End Time</label>
                                     <input
                                         type="time"
                                         value={form.endTime}
                                         onChange={(e) => setForm({ ...form, endTime: e.target.value })}
-                                        className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#8cff65]"
+                                        className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:border-green-500"
                                     />
                                 </div>
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-400 mb-2">Location</label>
+                                    <label className="block text-sm font-medium text-gray-500 mb-2">Location</label>
                                     <input
                                         type="text"
                                         value={form.location}
                                         onChange={(e) => setForm({ ...form, location: sanitizeInput(e.target.value) })}
-                                        className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-[#8cff65]"
+                                        className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-500"
                                         placeholder="Event location"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-400 mb-2">Capacity</label>
+                                    <label className="block text-sm font-medium text-gray-500 mb-2">Capacity</label>
                                     <input
                                         type="number"
                                         value={form.capacity}
                                         onChange={(e) => setForm({ ...form, capacity: e.target.value })}
-                                        className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-[#8cff65]"
+                                        className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-500"
                                         placeholder="Max attendees"
                                     />
                                 </div>
                             </div>
                             {/* Event Image Upload */}
                             <div>
-                                <label className="block text-sm font-medium text-gray-400 mb-2">Event Image</label>
+                                <label className="block text-sm font-medium text-gray-500 mb-2">Event Image</label>
 
                                 <input
                                     type="file"
                                     accept="image/*"
                                     onChange={handleImageFileChange}
-                                    className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-[#8cff65] file:text-black file:font-medium file:cursor-pointer hover:file:bg-[#7de857] transition"
+                                    className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-green-500 file:text-white file:font-medium file:cursor-pointer hover:file:bg-green-600 transition"
                                 />
                                 {(imagePreview || form.imageUrl) && (
                                     <div className="mt-2 rounded-lg overflow-hidden h-24 relative">
@@ -556,7 +556,7 @@ const StaffEvents = ({ globalSearch = '' }) => {
                                                     setImageFile(null);
                                                     setImagePreview(null);
                                                 }}
-                                                className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition"
+                                                className="absolute top-1 right-1 bg-red-500 text-gray-900 rounded-full p-1 hover:bg-red-600 transition"
                                             >
                                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -568,7 +568,7 @@ const StaffEvents = ({ globalSearch = '' }) => {
                             </div>
                             {/* Tag Color */}
                             <div>
-                                <label className="block text-sm font-medium text-gray-400 mb-2">Tag Color</label>
+                                <label className="block text-sm font-medium text-gray-500 mb-2">Tag Color</label>
                                 <div className="flex gap-2 flex-wrap">
                                     {TAG_COLORS.map((color) => (
                                         <button
@@ -576,7 +576,7 @@ const StaffEvents = ({ globalSearch = '' }) => {
                                             type="button"
                                             onClick={() => setForm({ ...form, color: color.value })}
                                             className={`w-8 h-8 rounded-lg ${color.bg} transition-all ${form.color === color.value
-                                                    ? 'ring-2 ring-white ring-offset-2 ring-offset-[#141414]'
+                                                    ? 'ring-2 ring-white ring-offset-2 ring-offset-white'
                                                     : 'hover:scale-110'
                                                 }`}
                                             title={color.name}
@@ -585,20 +585,20 @@ const StaffEvents = ({ globalSearch = '' }) => {
                                 </div>
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-400 mb-2">Description</label>
+                                <label className="block text-sm font-medium text-gray-500 mb-2">Description</label>
                                 <textarea
                                     value={form.description}
                                     onChange={(e) => setForm({ ...form, description: sanitizeInput(e.target.value) })}
                                     rows="3"
-                                    className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-[#8cff65] resize-none"
+                                    className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-500 resize-none"
                                     placeholder="Event description..."
                                 />
                             </div>
                             <div className="flex gap-3 pt-4">
-                                <button type="button" onClick={closeModal} className="flex-1 px-4 py-3 bg-[#2a2a2a] hover:bg-[#3a3a3a] text-white rounded-xl font-medium transition">
+                                <button type="button" onClick={closeModal} className="flex-1 px-4 py-3 bg-green-50 hover:bg-green-50 text-gray-900 rounded-xl font-medium transition">
                                     Cancel
                                 </button>
-                                <button type="submit" disabled={saving} className="flex-1 px-4 py-3 bg-[#8cff65] hover:bg-[#7ae857] text-[#0a0a0a] rounded-xl font-medium transition disabled:opacity-50">
+                                <button type="submit" disabled={saving} className="flex-1 px-4 py-3 bg-green-500 hover:bg-green-600 text-white rounded-xl font-medium transition disabled:opacity-50">
                                     {saving ? 'Saving...' : (editingEvent ? 'Update Event' : 'Add Event')}
                                 </button>
                             </div>
@@ -609,17 +609,17 @@ const StaffEvents = ({ globalSearch = '' }) => {
 
             {/* Delete Confirmation Modal */}
             {deleteConfirm && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl w-full max-w-md p-6">
-                        <h3 className="text-xl font-bold text-white mb-2">Delete Event</h3>
-                        <p className="text-gray-400 mb-6">
-                            Are you sure you want to delete <span className="text-white font-medium">{deleteConfirm.title}</span>? This action cannot be undone.
+                <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-white border border-green-200 rounded-2xl w-full max-w-md p-6">
+                        <h3 className="text-xl font-bold text-gray-900 mb-2">Delete Event</h3>
+                        <p className="text-gray-500 mb-6">
+                            Are you sure you want to delete <span className="text-gray-900 font-medium">{deleteConfirm.title}</span>? This action cannot be undone.
                         </p>
                         <div className="flex gap-3">
-                            <button onClick={() => setDeleteConfirm(null)} className="flex-1 px-4 py-3 bg-[#2a2a2a] hover:bg-[#3a3a3a] text-white rounded-xl font-medium transition">
+                            <button onClick={() => setDeleteConfirm(null)} className="flex-1 px-4 py-3 bg-green-50 hover:bg-green-50 text-gray-900 rounded-xl font-medium transition">
                                 Cancel
                             </button>
-                            <button onClick={() => removeEvent(deleteConfirm.id)} className="flex-1 px-4 py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl font-medium transition">
+                            <button onClick={() => removeEvent(deleteConfirm.id)} className="flex-1 px-4 py-3 bg-red-500 hover:bg-red-600 text-gray-900 rounded-xl font-medium transition">
                                 Delete
                             </button>
                         </div>
@@ -629,28 +629,28 @@ const StaffEvents = ({ globalSearch = '' }) => {
 
             {/* Save Confirmation Modal */}
             {showSaveConfirm && confirmData && (
-                <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
-                    <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl w-full max-w-md p-6">
-                        <div className={`w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 bg-[#8cff65]/20`}>
+                <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
+                    <div className="bg-white border border-green-200 rounded-2xl w-full max-w-md p-6">
+                        <div className={`w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 bg-green-500/20`}>
                             {confirmData.isUpdate ? <EditIcon /> : <PlusIcon />}
                         </div>
-                        <h3 className="text-xl font-bold text-white text-center mb-2">
+                        <h3 className="text-xl font-bold text-gray-900 text-center mb-2">
                             {confirmData.isUpdate ? 'Update Event' : 'Create Event'}
                         </h3>
-                        <p className="text-gray-400 text-center mb-4">
+                        <p className="text-gray-500 text-center mb-4">
                             {confirmData.isUpdate 
                                 ? 'Are you sure you want to update this event?'
                                 : 'Are you sure you want to create this event?'}
                         </p>
                         
-                        <div className="bg-[#1e1e1e] rounded-xl p-4 mb-6 space-y-2">
+                        <div className="bg-green-50 rounded-xl p-4 mb-6 space-y-2">
                             <div className="flex justify-between text-sm">
                                 <span className="text-gray-500">Title</span>
-                                <span className="text-white font-medium">{confirmData.title}</span>
+                                <span className="text-gray-900 font-medium">{confirmData.title}</span>
                             </div>
                             <div className="flex justify-between text-sm">
                                 <span className="text-gray-500">Date</span>
-                                <span className="text-white font-medium">
+                                <span className="text-gray-900 font-medium">
                                     {confirmData.eventDate ? new Date(confirmData.eventDate + 'T00:00:00').toLocaleDateString('en-US', {
                                         month: 'short', day: 'numeric', year: 'numeric'
                                     }) : '-'}
@@ -659,7 +659,7 @@ const StaffEvents = ({ globalSearch = '' }) => {
                             {confirmData.status && (
                                 <div className="flex justify-between text-sm">
                                     <span className="text-gray-500">Status</span>
-                                    <span className="text-white font-medium capitalize">{confirmData.status}</span>
+                                    <span className="text-gray-900 font-medium capitalize">{confirmData.status}</span>
                                 </div>
                             )}
                         </div>
@@ -670,14 +670,14 @@ const StaffEvents = ({ globalSearch = '' }) => {
                                     setShowSaveConfirm(false);
                                     setConfirmData(null);
                                 }}
-                                className="flex-1 px-4 py-3 bg-[#2a2a2a] hover:bg-[#3a3a3a] text-white rounded-xl font-medium transition"
+                                className="flex-1 px-4 py-3 bg-green-50 hover:bg-green-50 text-gray-900 rounded-xl font-medium transition"
                             >
                                 Cancel
                             </button>
                             <button
                                 onClick={executeSave}
                                 disabled={saving}
-                                className="flex-1 px-4 py-3 bg-[#8cff65] hover:bg-[#7ae857] text-black rounded-xl font-medium transition disabled:opacity-50"
+                                className="flex-1 px-4 py-3 bg-green-500 hover:bg-green-600 text-black rounded-xl font-medium transition disabled:opacity-50"
                             >
                                 {saving ? 'Processing...' : 'Confirm'}
                             </button>

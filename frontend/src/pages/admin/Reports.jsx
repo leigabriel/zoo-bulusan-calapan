@@ -75,7 +75,7 @@ const FileTextIcon = () => (
 );
 
 const ClipboardIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-12 h-12 text-gray-600">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-12 h-12 text-gray-500">
         <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
         <rect x="8" y="2" width="8" height="4" rx="1" ry="1" />
     </svg>
@@ -210,7 +210,7 @@ const Reports = () => {
 
     const reportTypes = [
         { value: 'sales', label: 'Sales Report', icon: ChartIcon, description: 'Revenue and earnings breakdown' },
-        { value: 'visitors', label: 'Visitor Report', icon: UsersIcon, description: 'Attendance and visitor data' },
+        // { value: 'visitors', label: 'Visitor Report', icon: UsersIcon, description: 'Attendance and visitor data' },
         { value: 'events', label: 'Event Report', icon: CalendarIcon, description: 'Event attendance and bookings' },
         { value: 'tickets', label: 'Ticket Report', icon: TicketIcon, description: 'Ticket sales and validations' },
     ];
@@ -492,14 +492,14 @@ const Reports = () => {
         switch (statusLower) {
             case 'completed':
             case 'confirmed':
-                return 'bg-[#8cff65]/20 text-[#8cff65] border-[#8cff65]/30';
+                return 'bg-green-500/20 text-green-600 border-green-500/30';
             case 'pending':
                 return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
             case 'cancelled':
             case 'refunded':
                 return 'bg-red-500/20 text-red-400 border-red-500/30';
             default:
-                return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
+                return 'bg-gray-500/20 text-gray-500 border-gray-500/30';
         }
     };
 
@@ -513,7 +513,7 @@ const Reports = () => {
             {/* Header */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+                    <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
                         <FileTextIcon />
                         Reports
                     </h1>
@@ -521,15 +521,15 @@ const Reports = () => {
                 </div>
                 {reportData && (
                     <div className="flex items-center gap-2 text-xs text-gray-500">
-                        <span className="w-2 h-2 bg-[#8cff65] rounded-full animate-pulse"></span>
+                        <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
                         Last generated: {reportData.generatedAt}
                     </div>
                 )}
             </div>
 
             {/* Report Generator Card */}
-            <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl p-6">
-                <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+            <div className="bg-white border border-green-200 rounded-2xl p-6">
+                <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                     <RefreshIcon />
                     Generate Report
                 </h3>
@@ -540,7 +540,7 @@ const Reports = () => {
                         <button
                             key={idx}
                             onClick={() => applyPreset(preset)}
-                            className="px-3 py-1.5 text-xs font-medium bg-[#1e1e1e] border border-[#2a2a2a] text-gray-400 rounded-lg hover:border-[#8cff65]/50 hover:text-white transition-all"
+                            className="px-3 py-1.5 text-xs font-medium bg-green-50 border border-green-200 text-gray-500 rounded-lg hover:border-green-500/50 hover:text-gray-900 transition-all"
                         >
                             {preset.label}
                         </button>
@@ -550,11 +550,11 @@ const Reports = () => {
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                     {/* Report Type */}
                     <div>
-                        <label className="block text-sm font-medium text-gray-400 mb-2">Report Type</label>
+                        <label className="block text-sm font-medium text-gray-500 mb-2">Report Type</label>
                         <select
                             value={reportType}
                             onChange={(e) => setReportType(e.target.value)}
-                            className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#8cff65] focus:ring-1 focus:ring-[#8cff65]/20 transition-all cursor-pointer"
+                            className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-200 transition-all cursor-pointer"
                         >
                             {reportTypes.map((type) => (
                                 <option key={type.value} value={type.value}>{type.label}</option>
@@ -565,23 +565,23 @@ const Reports = () => {
 
                     {/* Start Date */}
                     <div>
-                        <label className="block text-sm font-medium text-gray-400 mb-2">Start Date</label>
+                        <label className="block text-sm font-medium text-gray-500 mb-2">Start Date</label>
                         <input
                             type="date"
                             value={dateRange.start}
                             onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
-                            className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#8cff65] focus:ring-1 focus:ring-[#8cff65]/20 transition-all"
+                            className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-200 transition-all"
                         />
                     </div>
 
                     {/* End Date */}
                     <div>
-                        <label className="block text-sm font-medium text-gray-400 mb-2">End Date</label>
+                        <label className="block text-sm font-medium text-gray-500 mb-2">End Date</label>
                         <input
                             type="date"
                             value={dateRange.end}
                             onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
-                            className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#8cff65] focus:ring-1 focus:ring-[#8cff65]/20 transition-all"
+                            className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-200 transition-all"
                         />
                     </div>
 
@@ -590,7 +590,7 @@ const Reports = () => {
                         <button
                             onClick={generateReport}
                             disabled={loading}
-                            className="w-full py-3 bg-gradient-to-r from-[#8cff65] to-[#4ade80] text-[#0a0a0a] font-semibold rounded-xl hover:from-[#9dff7a] hover:to-[#5ceb91] transition-all disabled:opacity-50 shadow-lg shadow-[#8cff65]/20 flex items-center justify-center gap-2"
+                            className="w-full py-3 bg-gradient-to-r from-green-500 to-green-400 text-white font-semibold rounded-xl hover:from-green-400 hover:to-green-500 transition-all disabled:opacity-50 shadow-lg shadow-green-300/50 flex items-center justify-center gap-2"
                         >
                             {loading ? (
                                 <>
@@ -610,18 +610,18 @@ const Reports = () => {
 
             {/* Quick Stats - Now with 4 columns */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl p-5">
+                <div className="bg-white border border-green-200 rounded-2xl p-5">
                     <div className="flex items-center justify-between mb-3">
-                        <div className="w-10 h-10 bg-[#8cff65]/10 rounded-xl flex items-center justify-center text-[#8cff65]">
+                        <div className="w-10 h-10 bg-green-500/10 rounded-xl flex items-center justify-center text-green-600">
                             <ChartIcon />
                         </div>
-                        <TrendIcon className="text-[#8cff65]" />
+                        <TrendIcon className="text-green-600" />
                     </div>
                     <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wider">Total Revenue</h4>
-                    <p className="text-2xl font-bold text-[#8cff65] mt-1">₱{(reportData?.totalRevenue || quickStats.totalRevenue).toLocaleString()}</p>
+                    <p className="text-2xl font-bold text-green-600 mt-1">₱{(reportData?.totalRevenue || quickStats.totalRevenue).toLocaleString()}</p>
                     <p className="text-xs text-gray-500 mt-1">{dateRange.start && dateRange.end ? `${dateRange.start} - ${dateRange.end}` : 'All time'}</p>
                 </div>
-                <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl p-5">
+                <div className="bg-white border border-green-200 rounded-2xl p-5">
                     <div className="flex items-center justify-between mb-3">
                         <div className="w-10 h-10 bg-blue-500/10 rounded-xl flex items-center justify-center text-blue-400">
                             <TicketIcon />
@@ -631,7 +631,7 @@ const Reports = () => {
                     <p className="text-2xl font-bold text-blue-400 mt-1">{(reportData?.ticketsSold || quickStats.ticketsSold).toLocaleString()}</p>
                     <p className="text-xs text-gray-500 mt-1">{reportData?.items?.length || 0} transactions</p>
                 </div>
-                <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl p-5">
+                <div className="bg-white border border-green-200 rounded-2xl p-5">
                     <div className="flex items-center justify-between mb-3">
                         <div className="w-10 h-10 bg-purple-500/10 rounded-xl flex items-center justify-center text-purple-400">
                             <UsersIcon />
@@ -641,7 +641,7 @@ const Reports = () => {
                     <p className="text-2xl font-bold text-purple-400 mt-1">{(reportData?.visitors || quickStats.visitors).toLocaleString()}</p>
                     <p className="text-xs text-gray-500 mt-1">Unique visitors</p>
                 </div>
-                <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl p-5">
+                <div className="bg-white border border-green-200 rounded-2xl p-5">
                     <div className="flex items-center justify-between mb-3">
                         <div className="w-10 h-10 bg-amber-500/10 rounded-xl flex items-center justify-center text-amber-400">
                             <CalendarIcon />
@@ -659,10 +659,10 @@ const Reports = () => {
             </div>
 
             {/* Report Preview */}
-            <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl overflow-hidden">
-                <div className="p-4 md:p-6 border-b border-[#2a2a2a] flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+            <div className="bg-white border border-green-200 rounded-2xl overflow-hidden">
+                <div className="p-4 md:p-6 border-b border-green-200 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
                     <div className="flex-1">
-                        <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                        <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
                             {reportData?.reportType || 'Report'} Preview
                         </h3>
                         <p className="text-xs text-gray-500 mt-1">
@@ -678,7 +678,7 @@ const Reports = () => {
                                 placeholder="Search records..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full lg:w-56 pl-10 pr-4 py-2 bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl text-white text-sm focus:outline-none focus:border-[#8cff65]/50"
+                                className="w-full lg:w-56 pl-10 pr-4 py-2 bg-green-50 border border-green-200 rounded-xl text-gray-900 text-sm focus:outline-none focus:border-green-500/50"
                             />
                         </div>
                         {/* Export + Print */}
@@ -686,7 +686,7 @@ const Reports = () => {
                             <button
                                 onClick={exportReport}
                                 disabled={reportRows.length === 0}
-                                className="flex items-center gap-2 px-4 py-2 bg-[#8cff65]/10 border border-[#8cff65]/30 text-[#8cff65] rounded-xl hover:bg-[#8cff65]/20 transition disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                                className="flex items-center gap-2 px-4 py-2 bg-green-500/10 border border-green-500/30 text-green-600 rounded-xl hover:bg-green-500/20 transition disabled:opacity-50 disabled:cursor-not-allowed text-sm"
                             >
                                 <DownloadIcon />
                                 Export
@@ -694,7 +694,7 @@ const Reports = () => {
                             <button
                                 onClick={handlePrint}
                                 disabled={reportRows.length === 0}
-                                className="flex items-center gap-2 px-4 py-2 bg-gray-500/10 border border-gray-500/30 text-gray-300 rounded-xl hover:bg-gray-500/20 transition disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                                className="flex items-center gap-2 px-4 py-2 bg-gray-500/10 border border-gray-500/30 text-gray-700 rounded-xl hover:bg-gray-500/20 transition disabled:opacity-50 disabled:cursor-not-allowed text-sm"
                             >
                                 <PrintIcon />
                                 Print
@@ -708,48 +708,48 @@ const Reports = () => {
                         processedItems.length > 0 ? (
                             <div className="overflow-x-auto">
                                 <table className="w-full">
-                                    <thead className="bg-[#1e1e1e]">
+                                    <thead className="bg-green-50">
                                         <tr>
                                             <th 
                                                 onClick={() => handleSort('date')}
-                                                className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider rounded-l-lg cursor-pointer hover:text-white transition"
+                                                className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider rounded-l-lg cursor-pointer hover:text-gray-900 transition"
                                             >
                                                 Date
                                                 <SortIcon direction={sortConfig.key === 'date' ? sortConfig.direction : null} />
                                             </th>
-                                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider hidden md:table-cell">Ref</th>
+                                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider hidden md:table-cell">Ref</th>
                                             <th 
                                                 onClick={() => handleSort('type')}
-                                                className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider cursor-pointer hover:text-white transition"
+                                                className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-900 transition"
                                             >
                                                 Type
                                                 <SortIcon direction={sortConfig.key === 'type' ? sortConfig.direction : null} />
                                             </th>
                                             <th 
                                                 onClick={() => handleSort('quantity')}
-                                                className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider cursor-pointer hover:text-white transition"
+                                                className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-900 transition"
                                             >
                                                 Qty
                                                 <SortIcon direction={sortConfig.key === 'quantity' ? sortConfig.direction : null} />
                                             </th>
                                             <th 
                                                 onClick={() => handleSort('amount')}
-                                                className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider cursor-pointer hover:text-white transition"
+                                                className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-900 transition"
                                             >
                                                 Amount
                                                 <SortIcon direction={sortConfig.key === 'amount' ? sortConfig.direction : null} />
                                             </th>
-                                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider rounded-r-lg">Status</th>
+                                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider rounded-r-lg">Status</th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-[#2a2a2a]">
+                                    <tbody className="divide-y divide-green-200">
                                         {processedItems.map((item, index) => (
-                                            <tr key={index} className="hover:bg-[#1e1e1e]/50 transition-colors">
-                                                <td className="px-4 py-4 text-gray-300 whitespace-nowrap">{normalizeReportDate(item.date)}</td>
+                                            <tr key={index} className="hover:bg-green-50/50 transition-colors">
+                                                <td className="px-4 py-4 text-gray-700 whitespace-nowrap">{normalizeReportDate(item.date)}</td>
                                                 <td className="px-4 py-4 text-gray-500 text-xs font-mono hidden md:table-cell">{item.reference?.substring(0, 12) || '-'}</td>
-                                                <td className="px-4 py-4 text-white font-medium">{item.type}</td>
-                                                <td className="px-4 py-4 text-gray-300">{item.quantity}</td>
-                                                <td className="px-4 py-4 text-[#8cff65] font-medium">₱{(item.amount || 0).toLocaleString()}</td>
+                                                <td className="px-4 py-4 text-gray-900 font-medium">{item.type}</td>
+                                                <td className="px-4 py-4 text-gray-700">{item.quantity}</td>
+                                                <td className="px-4 py-4 text-green-600 font-medium">₱{(item.amount || 0).toLocaleString()}</td>
                                                 <td className="px-4 py-4">
                                                     <span className={`inline-flex px-3 py-1 text-xs font-medium rounded-full border ${getStatusBadge(item.status)}`}>
                                                         {item.status}
@@ -758,13 +758,13 @@ const Reports = () => {
                                             </tr>
                                         ))}
                                     </tbody>
-                                    <tfoot className="bg-[#1a1a1a] border-t border-[#2a2a2a]">
+                                    <tfoot className="bg-green-50 border-t border-green-200">
                                         <tr>
-                                            <td colSpan="3" className="px-4 py-3 text-sm font-bold text-white">Summary</td>
-                                            <td className="px-4 py-3 text-sm font-bold text-white">
+                                            <td colSpan="3" className="px-4 py-3 text-sm font-bold text-gray-900">Summary</td>
+                                            <td className="px-4 py-3 text-sm font-bold text-gray-900">
                                                 {processedItems.reduce((sum, item) => sum + (item.quantity || 0), 0)}
                                             </td>
-                                            <td className="px-4 py-3 text-sm font-bold text-[#8cff65]">
+                                            <td className="px-4 py-3 text-sm font-bold text-green-600">
                                                 ₱{processedItems.reduce((sum, item) => sum + (item.amount || 0), 0).toLocaleString()}
                                             </td>
                                             <td className="px-4 py-3"></td>
@@ -782,7 +782,7 @@ const Reports = () => {
                         <div className="flex flex-col items-center py-12 text-gray-500">
                             <ClipboardIcon />
                             <p className="mt-4 text-center">Select report type and date range, then click Generate to preview report</p>
-                            <p className="text-xs text-gray-600 mt-2">Use quick date presets above for faster selection</p>
+                            <p className="text-xs text-gray-500 mt-2">Use quick date presets above for faster selection</p>
                         </div>
                     )}
                 </div>

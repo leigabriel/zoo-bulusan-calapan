@@ -1,12 +1,13 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { gsap } from 'gsap';
 import { useAuth } from '../context/AuthContext';
 import { getProfileImageUrl, messageAPI, userAPI, reservationAPI } from '../services/api-client';
 import LogoutModal from './common/LogoutModal';
 import AnimalClassifier from './features/ai-scanner/AnimalClassifier';
 import ReservationHistoryPanel from './features/ReservationHistoryPanel';
 
-const MINIZOO_GAME_URL = import.meta.env.VITE_MINIZOO_GAME_URL || 'http://localhost:5174';
+const MINIZOO_GAME_URL = (typeof process !== 'undefined' && process.env && process.env.VITE_MINIZOO_GAME_URL) ? process.env.VITE_MINIZOO_GAME_URL : 'http://localhost:5174';
 
 const ICONS = {
     home: 'https://cdn-icons-png.flaticon.com/128/3917/3917743.png',
@@ -65,7 +66,7 @@ const SectionLabel = ({ label }) => (
     <p className="px-1 pt-5 pb-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-widest">{label}</p>
 );
 
-const MenuItem = ({ iconUrl, label, badge, danger, to, onClick, onClose, isLast }) => {
+const MenuItem = ({ iconUrl, label, badge, danger, to, onClick, onClose, isLast, onNavigate }) => {
     const inner = (
         <span className={`flex items-center gap-3 px-4 py-3 transition-colors group ${danger ? 'hover:bg-red-50/60' : 'hover:bg-gray-50'} ${!isLast ? 'border-b border-gray-50' : ''}`}>
             <span className={`w-8 h-8 flex items-center justify-center rounded-xl flex-shrink-0 ${danger ? 'bg-red-50' : 'bg-gray-50'}`}>
@@ -86,7 +87,11 @@ const MenuItem = ({ iconUrl, label, badge, danger, to, onClick, onClose, isLast 
             )}
         </span>
     );
-    if (to) return <Link to={to} onClick={onClose} className="block">{inner}</Link>;
+    if (to) return (
+        <Link to={to} onClick={(e) => { e.preventDefault(); onClose(); onNavigate(e, to); }} className="block">
+            {inner}
+        </Link>
+    );
     return <button onClick={onClick} className="w-full">{inner}</button>;
 };
 
@@ -126,6 +131,131 @@ const Header = () => {
     const aiScannerRef = useRef(null);
     const notificationPanelRef = useRef(null);
     const lastScrollY = useRef(0);
+    const isTransitioningRef = useRef(false);
+
+    // ===== SVG Transition Logic =====
+    const TRANSITION_ROUTES = ['/', '/animals', '/plants', '/events', '/about', '/reservations', '/community'];
+
+    useEffect(() => {
+        const paths = document.querySelectorAll(".transition-path");
+        if (!paths.length) return;
+
+        // Si aterriza en una ruta que no debe tener transición, ocultar el SVG instantáneamente
+        if (!TRANSITION_ROUTES.includes(location.pathname)) {
+            paths.forEach((path) => {
+                const length = path.getTotalLength();
+                gsap.set(path, { strokeDasharray: length, strokeDashoffset: length });
+            });
+            return;
+        }
+
+        // Start fully covered to hide any unstyled flash on load
+        paths.forEach((path) => {
+            const length = path.getTotalLength();
+            gsap.set(path, {
+                strokeDasharray: length,
+                strokeDashoffset: 0,
+                attr: { "stroke-width": 700 }
+            });
+        });
+
+        // Wipe out to reveal the page
+        const tween = gsap.timeline();
+        paths.forEach((path) => {
+            const length = path.getTotalLength();
+            tween.to(
+                path,
+                {
+                    strokeDashoffset: -length,
+                    attr: { "stroke-width": 200 },
+                    duration: 1,
+                    ease: "power1.inOut",
+                    onComplete: () => {
+                        // Reset back to completely hidden and ready for next swipe
+                        gsap.set(path, { strokeDashoffset: length });
+                    }
+                },
+                0
+            );
+        });
+    }, []); // Empty dependency ensures it fires when the component mounts
+
+    const handleTransitionNavigate = (e, path) => {
+        if (e) e.preventDefault();
+        if (location.pathname === path || isTransitioningRef.current) return;
+
+        // Solo aplicar la transición si la ruta de destino está en nuestra lista
+        if (!TRANSITION_ROUTES.includes(path)) {
+            navigate(path);
+            window.scrollTo(0, 0);
+            return;
+        }
+
+        isTransitioningRef.current = true;
+        const paths = document.querySelectorAll(".transition-path");
+
+        if (!paths.length) {
+            isTransitioningRef.current = false;
+            navigate(path);
+            window.scrollTo(0, 0);
+            return;
+        }
+
+        // Fase 1: Cubrir la pantalla
+        const coverTween = gsap.timeline({
+            onComplete: () => {
+                // Navegar mientras la pantalla está completamente cubierta por el SVG
+                navigate(path);
+                window.scrollTo(0, 0);
+
+                // FIX PARA EL PARPADEO (Flickering): 
+                // Darle tiempo a React para actualizar el DOM con la nueva ruta usando requestAnimationFrame
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(() => {
+                        // Fase 2: Revelar la nueva página
+                        const revealTween = gsap.timeline({
+                            onComplete: () => {
+                                isTransitioningRef.current = false;
+                                paths.forEach(p => gsap.set(p, { strokeDashoffset: p.getTotalLength() }));
+                            }
+                        });
+
+                        paths.forEach((path) => {
+                            const length = path.getTotalLength();
+                            revealTween.to(
+                                path,
+                                {
+                                    strokeDashoffset: -length,
+                                    attr: { "stroke-width": 200 },
+                                    duration: 1,
+                                    ease: "power1.inOut",
+                                },
+                                0
+                            );
+                        });
+                    });
+                });
+            }
+        });
+
+        paths.forEach((path) => {
+            const length = path.getTotalLength();
+            // Start the wipe from the far end
+            gsap.set(path, { strokeDashoffset: length, strokeDasharray: length });
+
+            coverTween.to(
+                path,
+                {
+                    strokeDashoffset: 0,
+                    attr: { "stroke-width": 700 },
+                    duration: 1,
+                    ease: "power1.inOut",
+                },
+                0
+            );
+        });
+    };
+    // =================================
 
     useEffect(() => {
         const onScroll = () => {
@@ -337,7 +467,7 @@ const Header = () => {
         if (notif.action === 'openReservationHistory') {
             setShowHistoryPanel(true);
         } else if (notif.path) {
-            navigate(notif.path);
+            handleTransitionNavigate(null, notif.path);
         }
     };
 
@@ -347,7 +477,7 @@ const Header = () => {
             await new Promise(resolve => setTimeout(resolve, 500));
             logout();
             setShowLogoutModal(false);
-            navigate('/login');
+            handleTransitionNavigate(null, '/login');
         } catch (error) {
         } finally {
             setIsLoggingOut(false);
@@ -416,7 +546,7 @@ const Header = () => {
                 <div className="mx-auto px-4 sm:px-6 lg:px-10 max-w-[1800px]" style={{ height: '56px' }}>
                     <div className="flex items-center h-full">
                         <div className="flex items-center flex-shrink-0 w-[180px]">
-                            <Link to="/" className="flex items-center" onClick={() => setIsMenuOpen(false)}>
+                            <Link to="/" className="flex items-center" onClick={(e) => { e.preventDefault(); setIsMenuOpen(false); handleTransitionNavigate(e, '/'); }}>
                                 <img src="https://cdn-icons-png.flaticon.com/128/12801/12801273.png" alt="Logo" className="w-6 h-6 object-contain mr-2" />
                                 <span className="text-[18px] font-bold text-[#212631] tracking-tight">
                                     BULUSAN ZOO
@@ -430,7 +560,7 @@ const Header = () => {
                                     <Link
                                         key={link.path}
                                         to={link.path}
-                                        onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                                        onClick={(e) => { e.preventDefault(); handleTransitionNavigate(e, link.path); }}
                                         className={`px-4 py-1.5 rounded-full text-[13px] font-medium transition-all duration-150 whitespace-nowrap ${location.pathname === link.path
                                             ? 'bg-[#ebebeb] text-gray-900 shadow-sm'
                                             : 'text-[#ebebeb]/80 hover:text-gray-200'
@@ -443,7 +573,7 @@ const Header = () => {
                         </nav>
 
                         <div className="hidden md:flex items-center justify-end gap-2 flex-shrink-0 w-[180px]">
-                            <Link to="/reservations">
+                            <Link to="/reservations" onClick={(e) => { e.preventDefault(); handleTransitionNavigate(e, '/reservations'); }}>
                                 <button className="px-4 py-1.5 rounded-full bg-gray-900 text-white text-[13px] font-medium hover:bg-gray-700 transition-colors whitespace-nowrap">
                                     Reserve
                                 </button>
@@ -472,7 +602,7 @@ const Header = () => {
                                     </span>
                                 </button>
                             ) : (
-                                <Link to="/login">
+                                <Link to="/login" onClick={(e) => { e.preventDefault(); handleTransitionNavigate(e, '/login'); }}>
                                     <button className="px-4 py-1.5 rounded-full text-[13px] font-medium text-gray-700 border border-gray-200 bg-white hover:bg-gray-50 transition-colors">
                                         Login
                                     </button>
@@ -481,7 +611,7 @@ const Header = () => {
                         </div>
 
                         <div className="flex md:hidden items-center gap-1 ml-auto">
-                            <Link to="/reservations" className="flex items-center justify-center w-9 h-9 rounded-full hover:bg-gray-100 transition-colors flex-shrink-0">
+                            <Link to="/reservations" onClick={(e) => { e.preventDefault(); handleTransitionNavigate(e, '/reservations'); }} className="flex items-center justify-center w-9 h-9 rounded-full hover:bg-gray-100 transition-colors flex-shrink-0">
                                 <img src={ICONS.ticket} alt="Reserve" className="w-[18px] h-[18px] object-contain opacity-55" />
                             </Link>
                             <IconBtn src={ICONS.notification} alt="Notifications" onClick={openNotifications} badge={unreadCount} />
@@ -518,7 +648,7 @@ const Header = () => {
                                 <Link
                                     key={link.path}
                                     to={link.path}
-                                    onClick={() => { setIsMenuOpen(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                                    onClick={(e) => { e.preventDefault(); setIsMenuOpen(false); handleTransitionNavigate(e, link.path); }}
                                     className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${active ? 'bg-gray-900' : 'hover:bg-gray-50'}`}
                                 >
                                     <img
@@ -538,7 +668,7 @@ const Header = () => {
                                 <div className="w-5 h-5 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin" />
                             </div>
                         ) : !user ? (
-                            <Link to="/login" onClick={() => setIsMenuOpen(false)} className="mt-2">
+                            <Link to="/login" onClick={(e) => { e.preventDefault(); setIsMenuOpen(false); handleTransitionNavigate(e, '/login'); }} className="mt-2">
                                 <button className="w-full py-3 rounded-xl bg-gray-900 text-white text-[13px] font-medium">
                                     Login / Sign Up
                                 </button>
@@ -600,7 +730,7 @@ const Header = () => {
                                 <SectionLabel label="Quick Access" />
                                 <div className="rounded-xl overflow-hidden border border-gray-100 bg-white">
                                     {quickItems.map((item, i) => (
-                                        <MenuItem key={i} iconUrl={item.iconUrl} label={item.label} to={item.path} onClose={closeSidePanel} isLast={i === quickItems.length - 1} />
+                                        <MenuItem key={i} iconUrl={item.iconUrl} label={item.label} to={item.path} onClose={closeSidePanel} onNavigate={handleTransitionNavigate} isLast={i === quickItems.length - 1} />
                                     ))}
                                 </div>
                             </>
@@ -609,20 +739,20 @@ const Header = () => {
                         <SectionLabel label="Account" />
                         <div className="rounded-xl overflow-hidden border border-gray-100 bg-white">
                             {accountItems.map((item, i) => (
-                                <MenuItem key={i} iconUrl={item.iconUrl} label={item.label} to={item.path} onClick={item.action} onClose={closeSidePanel} isLast={i === accountItems.length - 1} />
+                                <MenuItem key={i} iconUrl={item.iconUrl} label={item.label} to={item.path} onClick={item.action} onClose={closeSidePanel} onNavigate={handleTransitionNavigate} isLast={i === accountItems.length - 1} />
                             ))}
                         </div>
 
                         <SectionLabel label="Explore" />
                         <div className="rounded-xl overflow-hidden border border-gray-100 bg-white">
                             {exploreItems.map((item, i) => (
-                                <MenuItem key={i} iconUrl={item.iconUrl} label={item.label} to={item.path} onClick={item.action} onClose={closeSidePanel} isLast={i === exploreItems.length - 1} />
+                                <MenuItem key={i} iconUrl={item.iconUrl} label={item.label} to={item.path} onClick={item.action} onClose={closeSidePanel} onNavigate={handleTransitionNavigate} isLast={i === exploreItems.length - 1} />
                             ))}
                         </div>
 
                         <SectionLabel label="Preferences & AI" />
                         <div className="rounded-xl overflow-hidden border border-gray-100 bg-white">
-                            <MenuItem iconUrl={ICONS.setting} label="Settings" to="/settings" onClose={closeSidePanel} isLast={false} />
+                            <MenuItem iconUrl={ICONS.setting} label="Settings" to="/settings" onClose={closeSidePanel} onNavigate={handleTransitionNavigate} isLast={false} />
                             <MenuItem
                                 iconUrl={ICONS.camera}
                                 label="AI Animal Scanner"
@@ -634,7 +764,7 @@ const Header = () => {
 
                         <SectionLabel label="Help" />
                         <div className="rounded-xl overflow-hidden border border-gray-100 bg-white">
-                            <MenuItem iconUrl={ICONS.help} label="Help Center" to="/help" onClose={closeSidePanel} isLast={false} />
+                            <MenuItem iconUrl={ICONS.help} label="Help Center" to="/help" onClose={closeSidePanel} onNavigate={handleTransitionNavigate} isLast={false} />
                             <MenuItem iconUrl={ICONS.support} label="Contact Support" onClick={openEmailModal} isLast={false} />
                             <MenuItem
                                 iconUrl={ICONS.logout}
@@ -887,6 +1017,34 @@ const Header = () => {
                     </div>
                 </div>
             )}
+
+            {/* Transition SVG overlay */}
+            <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 scale-[1.5] w-full h-full pointer-events-none z-[99999]" aria-hidden="true">
+                <svg
+                    viewBox="0 0 2453 2535"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    preserveAspectRatio="none"
+                    className="w-full h-full transition-svg-el"
+                >
+                    <path
+                        className="transition-path"
+                        d="M227.549 1818.76C227.549 1818.76 406.016 2207.75 569.049 2130.26C843.431 1999.85 -264.104 1002.3 227.549 876.262C552.918 792.849 773.647 2456.11 1342.05 2130.26C1885.43 1818.76 14.9644 455.772 760.548 137.262C1342.05 -111.152 1663.5 2266.35 2209.55 1972.76C2755.6 1679.18 1536.63 384.467 1826.55 137.262C2013.5 -22.1463 2209.55 381.262 2209.55 381.262"
+                        stroke="#3db53d"
+                        strokeWidth="200"
+                        strokeLinecap="round"
+                        style={{ strokeDashoffset: 99999, strokeDasharray: 99999 }}
+                    />
+                    <path
+                        className="transition-path"
+                        d="M1661.28 2255.51C1661.28 2255.51 2311.09 1960.37 2111.78 1817.01C1944.47 1696.67 718.456 2870.17 499.781 2255.51C308.969 1719.17 2457.51 1613.83 2111.78 963.512C1766.05 313.198 427.949 2195.17 132.281 1455.51C-155.219 736.292 2014.78 891.514 1708.78 252.012C1437.81 -314.29 369.471 909.169 132.281 566.512C18.1772 401.672 244.781 193.012 244.781 193.012"
+                        stroke="#26bc61"
+                        strokeWidth="200"
+                        strokeLinecap="round"
+                        style={{ strokeDashoffset: 99999, strokeDasharray: 99999 }}
+                    />
+                </svg>
+            </div>
         </>
     );
 };

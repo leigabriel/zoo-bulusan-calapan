@@ -220,12 +220,12 @@ const StaffPlants = ({ globalSearch = '' }) => {
 
     const getStatusBadgeColor = (status) => {
         switch (status?.toLowerCase()) {
-            case 'healthy': return 'bg-[#8cff65]/20 text-[#8cff65] border-[#8cff65]/30';
+            case 'healthy': return 'bg-green-500/20 text-green-600 border-green-500/30';
             case 'growing': return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
-            case 'dormant': return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
+            case 'dormant': return 'bg-gray-500/20 text-gray-500 border-gray-500/30';
             case 'sick': return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
             case 'treatment': return 'bg-red-500/20 text-red-400 border-red-500/30';
-            default: return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
+            default: return 'bg-gray-500/20 text-gray-500 border-gray-500/30';
         }
     };
 
@@ -272,8 +272,8 @@ const StaffPlants = ({ globalSearch = '' }) => {
         return (
             <div className="flex items-center justify-center h-64">
                 <div className="flex flex-col items-center gap-3">
-                    <div className="w-10 h-10 border-4 border-[#8cff65] border-t-transparent rounded-full animate-spin"></div>
-                    <span className="text-gray-400">Loading plants...</span>
+                    <div className="w-10 h-10 border-4 border-green-500 border-t-transparent rounded-full animate-spin"></div>
+                    <span className="text-gray-500">Loading plants...</span>
                 </div>
             </div>
         );
@@ -290,54 +290,54 @@ const StaffPlants = ({ globalSearch = '' }) => {
     return (
         <div className="space-y-6">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="bg-[#141414] border border-[#2a2a2a] rounded-xl p-4">
+                <div className="bg-white border border-green-200 rounded-xl p-4">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-[#8cff65]/10 rounded-xl flex items-center justify-center text-[#8cff65]">
+                        <div className="w-10 h-10 bg-green-500/10 rounded-xl flex items-center justify-center text-green-600">
                             <PlantIcon />
                         </div>
                         <div>
-                            <p className="text-2xl font-bold text-white">{plantCounts.total}</p>
+                            <p className="text-2xl font-bold text-gray-900">{plantCounts.total}</p>
                             <p className="text-xs text-gray-500">Total Plants</p>
                         </div>
                     </div>
                 </div>
-                <div className="bg-[#141414] border border-[#2a2a2a] rounded-xl p-4">
+                <div className="bg-white border border-green-200 rounded-xl p-4">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-[#8cff65]/10 rounded-xl flex items-center justify-center text-[#8cff65]">
+                        <div className="w-10 h-10 bg-green-500/10 rounded-xl flex items-center justify-center text-green-600">
                             <span className="text-lg font-bold">H</span>
                         </div>
                         <div>
-                            <p className="text-2xl font-bold text-white">{plantCounts.healthy}</p>
+                            <p className="text-2xl font-bold text-gray-900">{plantCounts.healthy}</p>
                             <p className="text-xs text-gray-500">Healthy</p>
                         </div>
                     </div>
                 </div>
-                <div className="bg-[#141414] border border-[#2a2a2a] rounded-xl p-4">
+                <div className="bg-white border border-green-200 rounded-xl p-4">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-yellow-500/10 rounded-xl flex items-center justify-center text-yellow-400">
                             <span className="text-lg font-bold">!</span>
                         </div>
                         <div>
-                            <p className="text-2xl font-bold text-white">{plantCounts.needsAttention}</p>
+                            <p className="text-2xl font-bold text-gray-900">{plantCounts.needsAttention}</p>
                             <p className="text-xs text-gray-500">Needs Attention</p>
                         </div>
                     </div>
                 </div>
-                <div className="bg-[#141414] border border-[#2a2a2a] rounded-xl p-4">
+                <div className="bg-white border border-green-200 rounded-xl p-4">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-red-500/10 rounded-xl flex items-center justify-center text-red-400">
                             <span className="text-lg font-bold">E</span>
                         </div>
                         <div>
-                            <p className="text-2xl font-bold text-white">{plantCounts.endangered}</p>
+                            <p className="text-2xl font-bold text-gray-900">{plantCounts.endangered}</p>
                             <p className="text-xs text-gray-500">Endangered</p>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl overflow-hidden">
-                <div className="p-4 border-b border-[#2a2a2a] flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+            <div className="bg-white border border-green-200 rounded-2xl overflow-hidden">
+                <div className="p-4 border-b border-green-200 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
                     <div className="flex items-center gap-3 flex-1 flex-wrap">
                         <div className="relative flex-1 min-w-[200px] max-w-sm">
                             <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
@@ -348,7 +348,7 @@ const StaffPlants = ({ globalSearch = '' }) => {
                                 placeholder="Search plants..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl py-2.5 pl-10 pr-4 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#8cff65] focus:ring-1 focus:ring-[#8cff65]/20 transition-all"
+                                className="w-full bg-green-50 border border-green-200 rounded-xl py-2.5 pl-10 pr-4 text-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-200 transition-all"
                             />
                         </div>
 
@@ -356,7 +356,7 @@ const StaffPlants = ({ globalSearch = '' }) => {
                             <select
                                 value={categoryFilter}
                                 onChange={(e) => setCategoryFilter(e.target.value)}
-                                className="appearance-none bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl py-2.5 px-4 pr-8 text-sm text-white focus:outline-none focus:border-[#8cff65] cursor-pointer"
+                                className="appearance-none bg-green-50 border border-green-200 rounded-xl py-2.5 px-4 pr-8 text-sm text-gray-900 focus:outline-none focus:border-green-500 cursor-pointer"
                             >
                                 <option value="all">All Categories</option>
                                 {uniqueCategories.map(category => (
@@ -373,7 +373,7 @@ const StaffPlants = ({ globalSearch = '' }) => {
                                     setSortField(field);
                                     setSortOrder(order);
                                 }}
-                                className="appearance-none bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl py-2.5 pl-10 pr-8 text-sm text-white focus:outline-none focus:border-[#8cff65] cursor-pointer"
+                                className="appearance-none bg-green-50 border border-green-200 rounded-xl py-2.5 pl-10 pr-8 text-sm text-gray-900 focus:outline-none focus:border-green-500 cursor-pointer"
                             >
                                 <option value="name-asc">Name (A-Z)</option>
                                 <option value="name-desc">Name (Z-A)</option>
@@ -390,7 +390,7 @@ const StaffPlants = ({ globalSearch = '' }) => {
 
                     <button
                         onClick={openCreateModal}
-                        className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-[#8cff65] to-[#4ade80] text-[#0a0a0a] font-semibold rounded-xl hover:from-[#9dff7a] hover:to-[#5ceb91] transition-all shadow-lg shadow-[#8cff65]/20"
+                        className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-green-500 to-green-400 text-white font-semibold rounded-xl hover:from-green-400 hover:to-green-500 transition-all shadow-lg shadow-green-300/50"
                     >
                         <PlusIcon />
                         Add Plant
@@ -399,32 +399,32 @@ const StaffPlants = ({ globalSearch = '' }) => {
 
                 <div className="overflow-x-auto">
                     <table className="w-full">
-                        <thead className="bg-[#1e1e1e]">
+                        <thead className="bg-green-50">
                             <tr>
-                                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider cursor-pointer hover:text-white" onClick={() => toggleSort('name')}>
+                                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-900" onClick={() => toggleSort('name')}>
                                     <div className="flex items-center gap-2">
                                         Name
-                                        {sortField === 'name' && <span className="text-[#8cff65]">{sortOrder === 'asc' ? '↑' : '↓'}</span>}
+                                        {sortField === 'name' && <span className="text-green-600">{sortOrder === 'asc' ? '↑' : '↓'}</span>}
                                     </div>
                                 </th>
-                                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Scientific Name</th>
-                                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider cursor-pointer hover:text-white" onClick={() => toggleSort('category')}>
+                                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Scientific Name</th>
+                                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-900" onClick={() => toggleSort('category')}>
                                     <div className="flex items-center gap-2">
                                         Category
-                                        {sortField === 'category' && <span className="text-[#8cff65]">{sortOrder === 'asc' ? '↑' : '↓'}</span>}
+                                        {sortField === 'category' && <span className="text-green-600">{sortOrder === 'asc' ? '↑' : '↓'}</span>}
                                     </div>
                                 </th>
-                                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider cursor-pointer hover:text-white" onClick={() => toggleSort('location')}>
+                                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-900" onClick={() => toggleSort('location')}>
                                     <div className="flex items-center gap-2">
                                         Location
-                                        {sortField === 'location' && <span className="text-[#8cff65]">{sortOrder === 'asc' ? '↑' : '↓'}</span>}
+                                        {sortField === 'location' && <span className="text-green-600">{sortOrder === 'asc' ? '↑' : '↓'}</span>}
                                     </div>
                                 </th>
-                                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Status</th>
-                                <th className="px-6 py-4 text-right text-xs font-semibold text-gray-400 uppercase tracking-wider">Actions</th>
+                                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                                <th className="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-[#2a2a2a]">
+                        <tbody className="divide-y divide-green-200">
                             {filteredPlants.length === 0 ? (
                                 <tr>
                                     <td colSpan="6" className="px-6 py-12 text-center text-gray-500">
@@ -433,10 +433,10 @@ const StaffPlants = ({ globalSearch = '' }) => {
                                 </tr>
                             ) : (
                                 filteredPlants.map(plant => (
-                                    <tr key={plant.id} className="hover:bg-[#1e1e1e]/50 transition-colors">
+                                    <tr key={plant.id} className="hover:bg-green-50/50 transition-colors">
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#8cff65] to-[#4ade80] flex items-center justify-center text-[#0a0a0a] font-bold overflow-hidden">
+                                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-500 to-green-400 flex items-center justify-center text-white font-bold overflow-hidden">
                                                     {plant.image_url ? (
                                                         <img src={plant.image_url} alt={plant.name} className="w-full h-full object-cover" />
                                                     ) : (
@@ -444,16 +444,16 @@ const StaffPlants = ({ globalSearch = '' }) => {
                                                     )}
                                                 </div>
                                                 <div>
-                                                    <p className="font-medium text-white">{plant.name}</p>
+                                                    <p className="font-medium text-gray-900">{plant.name}</p>
                                                     {plant.is_endangered && (
                                                         <span className="text-[10px] text-red-400 font-medium">Endangered</span>
                                                     )}
                                                 </div>
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4 text-gray-400 italic">{plant.scientific_name || '-'}</td>
-                                        <td className="px-6 py-4 text-gray-300">{plant.category || '-'}</td>
-                                        <td className="px-6 py-4 text-gray-300">{plant.location || '-'}</td>
+                                        <td className="px-6 py-4 text-gray-500 italic">{plant.scientific_name || '-'}</td>
+                                        <td className="px-6 py-4 text-gray-700">{plant.category || '-'}</td>
+                                        <td className="px-6 py-4 text-gray-700">{plant.location || '-'}</td>
                                         <td className="px-6 py-4">
                                             <span className={`inline-flex px-3 py-1 text-xs font-medium rounded-full border capitalize ${getStatusBadgeColor(plant.status)}`}>
                                                 {plant.status?.replace('_', ' ') || 'unknown'}
@@ -463,14 +463,14 @@ const StaffPlants = ({ globalSearch = '' }) => {
                                             <div className="flex items-center justify-end gap-2">
                                                 <button
                                                     onClick={() => openEditModal(plant)}
-                                                    className="p-2 bg-[#1e1e1e] hover:bg-[#2a2a2a] border border-[#2a2a2a] hover:border-[#8cff65]/50 text-gray-400 hover:text-[#8cff65] rounded-lg transition-all"
+                                                    className="p-2 bg-green-50 hover:bg-green-50 border border-green-200 hover:border-green-500/50 text-gray-500 hover:text-green-600 rounded-lg transition-all"
                                                     title="Edit plant"
                                                 >
                                                     <EditIcon />
                                                 </button>
                                                 <button
                                                     onClick={() => setDeleteConfirm(plant)}
-                                                    className="p-2 bg-[#1e1e1e] hover:bg-red-500/10 border border-[#2a2a2a] hover:border-red-500/50 text-gray-400 hover:text-red-400 rounded-lg transition-all"
+                                                    className="p-2 bg-green-50 hover:bg-red-500/10 border border-green-200 hover:border-red-500/50 text-gray-500 hover:text-red-400 rounded-lg transition-all"
                                                     title="Delete plant"
                                                 >
                                                     <TrashIcon />
@@ -484,7 +484,7 @@ const StaffPlants = ({ globalSearch = '' }) => {
                     </table>
                 </div>
 
-                <div className="px-6 py-4 border-t border-[#2a2a2a] flex items-center justify-between">
+                <div className="px-6 py-4 border-t border-green-200 flex items-center justify-between">
                     <p className="text-sm text-gray-500">
                         Showing {filteredPlants.length} of {plants.length} plants
                     </p>
@@ -492,13 +492,13 @@ const StaffPlants = ({ globalSearch = '' }) => {
             </div>
 
             {showModal && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-                        <div className="p-6 border-b border-[#2a2a2a] flex items-center justify-between sticky top-0 bg-[#141414]">
-                            <h3 className="text-xl font-bold text-white">
+                <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-white border border-green-200 rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+                        <div className="p-6 border-b border-green-200 flex items-center justify-between sticky top-0 bg-white">
+                            <h3 className="text-xl font-bold text-gray-900">
                                 {editingPlant ? 'Edit Plant' : 'Add New Plant'}
                             </h3>
-                            <button onClick={closeModal} className="p-2 hover:bg-[#1e1e1e] rounded-lg text-gray-400 hover:text-white transition">
+                            <button onClick={closeModal} className="p-2 hover:bg-green-50 rounded-lg text-gray-500 hover:text-gray-900 transition">
                                 <CloseIcon />
                             </button>
                         </div>
@@ -506,23 +506,23 @@ const StaffPlants = ({ globalSearch = '' }) => {
                         <form onSubmit={savePlant} className="p-6 space-y-4">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-400 mb-2">Name *</label>
+                                    <label className="block text-sm font-medium text-gray-500 mb-2">Name *</label>
                                     <input
                                         type="text"
                                         value={form.name}
                                         onChange={e => setForm({ ...form, name: sanitizeInput(e.target.value) })}
-                                        className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-[#8cff65] transition-all"
+                                        className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-500 transition-all"
                                         placeholder="e.g., Narra Tree"
                                         required
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-400 mb-2">Scientific Name</label>
+                                    <label className="block text-sm font-medium text-gray-500 mb-2">Scientific Name</label>
                                     <input
                                         type="text"
                                         value={form.scientificName}
                                         onChange={e => setForm({ ...form, scientificName: sanitizeInput(e.target.value) })}
-                                        className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-[#8cff65] transition-all italic"
+                                        className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-500 transition-all italic"
                                         placeholder="e.g., Pterocarpus indicus"
                                     />
                                 </div>
@@ -530,11 +530,11 @@ const StaffPlants = ({ globalSearch = '' }) => {
 
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-400 mb-2">Category</label>
+                                    <label className="block text-sm font-medium text-gray-500 mb-2">Category</label>
                                     <select
                                         value={form.category}
                                         onChange={e => setForm({ ...form, category: e.target.value })}
-                                        className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#8cff65] transition-all capitalize"
+                                        className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:border-green-500 transition-all capitalize"
                                     >
                                         {categoryOptions.map(cat => (
                                             <option key={cat} value={cat} className="capitalize">{cat}</option>
@@ -542,11 +542,11 @@ const StaffPlants = ({ globalSearch = '' }) => {
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-400 mb-2">Status</label>
+                                    <label className="block text-sm font-medium text-gray-500 mb-2">Status</label>
                                     <select
                                         value={form.status}
                                         onChange={e => setForm({ ...form, status: e.target.value })}
-                                        className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#8cff65] transition-all capitalize"
+                                        className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:border-green-500 transition-all capitalize"
                                     >
                                         {statusOptions.map(s => (
                                             <option key={s} value={s} className="capitalize">{s}</option>
@@ -554,37 +554,37 @@ const StaffPlants = ({ globalSearch = '' }) => {
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-400 mb-2">Location</label>
+                                    <label className="block text-sm font-medium text-gray-500 mb-2">Location</label>
                                     <input
                                         type="text"
                                         value={form.location}
                                         onChange={e => setForm({ ...form, location: sanitizeInput(e.target.value) })}
-                                        className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-[#8cff65] transition-all"
+                                        className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-500 transition-all"
                                         placeholder="e.g., Garden Area A"
                                     />
                                 </div>
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-400 mb-2">Description</label>
+                                <label className="block text-sm font-medium text-gray-500 mb-2">Description</label>
                                 <textarea
                                     value={form.description}
                                     onChange={e => setForm({ ...form, description: sanitizeInput(e.target.value) })}
-                                    className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-[#8cff65] transition-all resize-none"
+                                    className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-500 transition-all resize-none"
                                     placeholder="Enter plant description..."
                                     rows={3}
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-400 mb-2">Image</label>
+                                <label className="block text-sm font-medium text-gray-500 mb-2">Image</label>
 
                                 <div className="space-y-3">
                                     <input
                                         type="file"
                                         accept="image/*"
                                         onChange={handleImageFileChange}
-                                        className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-[#8cff65] file:text-black file:font-medium file:cursor-pointer hover:file:bg-[#7ae857]"
+                                        className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-green-500 file:text-white file:font-medium file:cursor-pointer hover:file:bg-green-600"
                                     />
                                     {(imagePreview || form.imageUrl) && (
                                         <div className="relative">
@@ -602,7 +602,7 @@ const StaffPlants = ({ globalSearch = '' }) => {
                                                         setImageFile(null);
                                                         setImagePreview(null);
                                                     }}
-                                                    className="absolute top-2 right-2 p-1.5 bg-red-500 rounded-lg text-white hover:bg-red-600"
+                                                    className="absolute top-2 right-2 p-1.5 bg-red-500 rounded-lg text-gray-900 hover:bg-red-600"
                                                 >
                                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4">
                                                         <line x1="18" y1="6" x2="6" y2="18" />
@@ -619,14 +619,14 @@ const StaffPlants = ({ globalSearch = '' }) => {
                                 <button
                                     type="button"
                                     onClick={closeModal}
-                                    className="flex-1 py-3 bg-[#1e1e1e] hover:bg-[#2a2a2a] text-gray-300 font-medium rounded-xl transition-all"
+                                    className="flex-1 py-3 bg-green-50 hover:bg-green-50 text-gray-700 font-medium rounded-xl transition-all"
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     type="submit"
                                     disabled={saving}
-                                    className="flex-1 py-3 bg-gradient-to-r from-[#8cff65] to-[#4ade80] text-[#0a0a0a] font-semibold rounded-xl hover:from-[#9dff7a] hover:to-[#5ceb91] transition-all disabled:opacity-50"
+                                    className="flex-1 py-3 bg-gradient-to-r from-green-500 to-green-400 text-white font-semibold rounded-xl hover:from-green-400 hover:to-green-500 transition-all disabled:opacity-50"
                                 >
                                     {saving ? 'Saving...' : (editingPlant ? 'Update' : 'Add Plant')}
                                 </button>
@@ -637,25 +637,25 @@ const StaffPlants = ({ globalSearch = '' }) => {
             )}
 
             {deleteConfirm && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl w-full max-w-sm p-6 text-center">
+                <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-white border border-green-200 rounded-2xl w-full max-w-sm p-6 text-center">
                         <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4 text-red-400">
                             <TrashIcon />
                         </div>
-                        <h3 className="text-xl font-bold text-white mb-2">Delete Plant?</h3>
-                        <p className="text-gray-400 mb-6">
-                            Are you sure you want to delete <span className="text-white font-medium">{deleteConfirm.name}</span>? This action cannot be undone.
+                        <h3 className="text-xl font-bold text-gray-900 mb-2">Delete Plant?</h3>
+                        <p className="text-gray-500 mb-6">
+                            Are you sure you want to delete <span className="text-gray-900 font-medium">{deleteConfirm.name}</span>? This action cannot be undone.
                         </p>
                         <div className="flex gap-3">
                             <button
                                 onClick={() => setDeleteConfirm(null)}
-                                className="flex-1 py-3 bg-[#1e1e1e] hover:bg-[#2a2a2a] text-gray-300 font-medium rounded-xl transition-all"
+                                className="flex-1 py-3 bg-green-50 hover:bg-green-50 text-gray-700 font-medium rounded-xl transition-all"
                             >
                                 Cancel
                             </button>
                             <button
                                 onClick={() => removePlant(deleteConfirm.id)}
-                                className="flex-1 py-3 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white font-semibold rounded-xl transition-all"
+                                className="flex-1 py-3 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-gray-900 font-semibold rounded-xl transition-all"
                             >
                                 Delete
                             </button>

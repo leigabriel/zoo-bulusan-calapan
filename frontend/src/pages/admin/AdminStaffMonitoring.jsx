@@ -63,16 +63,16 @@ const getActionPresentation = (actionType) => {
         case 'login':
             return {
                 icon: <LoginIcon />,
-                chip: 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/30',
-                iconWrap: 'bg-emerald-500/15 text-emerald-300',
+                chip: 'bg-emerald-500/10 text-green-600 border border-emerald-500/30',
+                iconWrap: 'bg-emerald-500/15 text-green-600',
                 label: 'Login',
                 responsibility: 'Access Control'
             };
         case 'logout':
             return {
                 icon: <LoginIcon />,
-                chip: 'bg-slate-500/10 text-slate-300 border border-slate-500/30',
-                iconWrap: 'bg-slate-500/15 text-slate-300',
+                chip: 'bg-slate-500/10 text-gray-700 border border-slate-500/30',
+                iconWrap: 'bg-slate-500/15 text-gray-700',
                 label: 'Logout',
                 responsibility: 'Access Control'
             };
@@ -96,8 +96,8 @@ const getActionPresentation = (actionType) => {
         case 'animal_update':
             return {
                 icon: <ActivityIcon />,
-                chip: 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/30',
-                iconWrap: 'bg-emerald-500/15 text-emerald-300',
+                chip: 'bg-emerald-500/10 text-green-600 border border-emerald-500/30',
+                iconWrap: 'bg-emerald-500/15 text-green-600',
                 label: 'Animal Update',
                 responsibility: 'Animal Records'
             };
@@ -112,8 +112,8 @@ const getActionPresentation = (actionType) => {
         default:
             return {
                 icon: <ActivityIcon />,
-                chip: 'bg-gray-500/10 text-gray-300 border border-gray-500/30',
-                iconWrap: 'bg-gray-500/15 text-gray-300',
+                chip: 'bg-gray-500/10 text-gray-700 border border-gray-500/30',
+                iconWrap: 'bg-gray-500/15 text-gray-700',
                 label: 'Staff Action',
                 responsibility: 'Operations'
             };
@@ -312,8 +312,8 @@ const AdminStaffMonitoring = () => {
         return (
             <div className="flex items-center justify-center h-64">
                 <div className="relative w-16 h-16">
-                    <div className="absolute inset-0 rounded-full border-4 border-[#2a2a2a]"></div>
-                    <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-[#8cff65] animate-spin"></div>
+                    <div className="absolute inset-0 rounded-full border-4 border-green-200"></div>
+                    <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-green-500 animate-spin"></div>
                 </div>
             </div>
         );
@@ -323,33 +323,33 @@ const AdminStaffMonitoring = () => {
         <div className="space-y-6">
             <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4">
                 <div className="flex items-center gap-3">
-                    <div className="w-11 h-11 rounded-xl bg-[#8cff65]/15 text-[#8cff65] flex items-center justify-center">
+                    <div className="w-11 h-11 rounded-xl bg-green-500/15 text-green-600 flex items-center justify-center">
                         <ShieldIcon />
                     </div>
                     <div>
-                        <h1 className="text-2xl font-bold text-white">Staff Monitoring</h1>
-                        <p className="text-sm text-gray-400">Track responsibility, accountability, and real-time staff execution.</p>
+                        <h1 className="text-2xl font-bold text-gray-900">Staff Monitoring</h1>
+                        <p className="text-sm text-gray-500">Track responsibility, accountability, and real-time staff execution.</p>
                     </div>
                 </div>
 
                 <div className="flex flex-wrap items-center gap-3">
-                    <div className="flex items-center gap-2 text-xs text-gray-400 px-3 py-2 bg-[#141414] border border-[#2a2a2a] rounded-xl">
+                    <div className="flex items-center gap-2 text-xs text-gray-500 px-3 py-2 bg-white border border-green-200 rounded-xl">
                         <ClockIcon />
                         Updated {formatTimeAgo(lastRefresh)}
                     </div>
-                    <label className="flex items-center gap-2 text-sm text-gray-400 cursor-pointer px-3 py-2 bg-[#141414] border border-[#2a2a2a] rounded-xl">
+                    <label className="flex items-center gap-2 text-sm text-gray-500 cursor-pointer px-3 py-2 bg-white border border-green-200 rounded-xl">
                         <input
                             type="checkbox"
                             checked={autoRefresh}
                             onChange={(e) => setAutoRefresh(e.target.checked)}
-                            className="w-4 h-4 rounded border-gray-600 bg-[#1e1e1e] text-[#8cff65] focus:ring-[#8cff65]/50"
+                            className="w-4 h-4 rounded border-gray-600 bg-green-50 text-green-600 focus:ring-green-300"
                         />
                         Auto-refresh
                     </label>
                     <button
                         onClick={() => fetchDashboardData(true)}
                         disabled={refreshing}
-                        className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#8cff65] text-black font-semibold hover:bg-[#9dff7a] disabled:bg-gray-600 disabled:text-gray-300 transition"
+                        className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-green-500 text-black font-semibold hover:bg-green-400 disabled:bg-gray-600 disabled:text-gray-700 transition"
                     >
                         <RefreshIcon className={refreshing ? 'animate-spin' : ''} />
                         Refresh
@@ -364,35 +364,35 @@ const AdminStaffMonitoring = () => {
             )}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-                <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl p-5">
-                    <div className="flex items-center gap-2 text-gray-400 text-sm mb-3"><UsersIcon /> Total Staff</div>
-                    <p className="text-3xl font-bold text-white">{dashboardData.overview?.totalStaff || 0}</p>
+                <div className="bg-white border border-green-200 rounded-2xl p-5">
+                    <div className="flex items-center gap-2 text-gray-500 text-sm mb-3"><UsersIcon /> Total Staff</div>
+                    <p className="text-3xl font-bold text-gray-900">{dashboardData.overview?.totalStaff || 0}</p>
                 </div>
-                <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl p-5">
-                    <div className="flex items-center gap-2 text-gray-400 text-sm mb-3"><ActivityIcon /> Online Now</div>
-                    <p className="text-3xl font-bold text-white">{dashboardData.overview?.onlineNow || 0}</p>
+                <div className="bg-white border border-green-200 rounded-2xl p-5">
+                    <div className="flex items-center gap-2 text-gray-500 text-sm mb-3"><ActivityIcon /> Online Now</div>
+                    <p className="text-3xl font-bold text-gray-900">{dashboardData.overview?.onlineNow || 0}</p>
                 </div>
-                <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl p-5">
-                    <div className="flex items-center gap-2 text-gray-400 text-sm mb-3"><ActivityIcon /> Logged Activities</div>
-                    <p className="text-3xl font-bold text-white">{dashboardData.overview?.totalActivities || 0}</p>
+                <div className="bg-white border border-green-200 rounded-2xl p-5">
+                    <div className="flex items-center gap-2 text-gray-500 text-sm mb-3"><ActivityIcon /> Logged Activities</div>
+                    <p className="text-3xl font-bold text-gray-900">{dashboardData.overview?.totalActivities || 0}</p>
                 </div>
-                <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl p-5">
-                    <div className="flex items-center gap-2 text-gray-400 text-sm mb-3"><TicketIcon /> Reservation Actions</div>
-                    <p className="text-3xl font-bold text-white">{reservationActions}</p>
+                <div className="bg-white border border-green-200 rounded-2xl p-5">
+                    <div className="flex items-center gap-2 text-gray-500 text-sm mb-3"><TicketIcon /> Reservation Actions</div>
+                    <p className="text-3xl font-bold text-gray-900">{reservationActions}</p>
                 </div>
             </div>
 
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-                <div className="xl:col-span-2 bg-[#141414] border border-[#2a2a2a] rounded-2xl p-6">
+                <div className="xl:col-span-2 bg-white border border-green-200 rounded-2xl p-6">
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
                         <div>
-                            <h3 className="text-lg font-bold text-white">Connected Activity Feed</h3>
-                            <p className="text-sm text-gray-400">See who performed each task and which responsibility area it belongs to.</p>
+                            <h3 className="text-lg font-bold text-gray-900">Connected Activity Feed</h3>
+                            <p className="text-sm text-gray-500">See who performed each task and which responsibility area it belongs to.</p>
                         </div>
                         <select
                             value={filterActionType}
                             onChange={(e) => setFilterActionType(e.target.value)}
-                            className="bg-[#1e1e1e] border border-[#2a2a2a] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#8cff65]"
+                            className="bg-green-50 border border-green-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:border-green-500"
                         >
                             {actionTypeOptions.map((opt) => (
                                 <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -407,33 +407,33 @@ const AdminStaffMonitoring = () => {
                             filteredActivities.map((activity) => {
                                 const style = getActionPresentation(activity.action_type);
                                 return (
-                                    <div key={activity.id} className="p-4 rounded-xl bg-[#1b1b1b] border border-[#2a2a2a] hover:border-[#8cff65]/30 transition">
+                                    <div key={activity.id} className="p-4 rounded-xl bg-green-50 border border-green-200 hover:border-green-500/30 transition">
                                         <div className="flex items-start gap-3">
                                             <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${style.iconWrap}`}>
                                                 {style.icon}
                                             </div>
                                             <div className="flex-1 min-w-0">
-                                                <p className="text-sm text-white">
+                                                <p className="text-sm text-gray-900">
                                                     <span className="font-semibold">{activity.first_name} {activity.last_name}</span>
-                                                    <span className="text-gray-300"> {activity.action_description || style.label}</span>
+                                                    <span className="text-gray-700"> {activity.action_description || style.label}</span>
                                                 </p>
                                                 <div className="mt-2 flex flex-wrap gap-2 text-xs">
                                                     <span className={`px-2 py-1 rounded-full ${style.chip}`}>{style.label}</span>
-                                                    <span className="px-2 py-1 rounded-full bg-[#242424] text-gray-300 border border-[#2f2f2f]">
+                                                    <span className="px-2 py-1 rounded-full bg-green-50 text-gray-700 border border-gray-300">
                                                         Responsibility: {style.responsibility}
                                                     </span>
                                                     {activity.entity_type && (
-                                                        <span className="px-2 py-1 rounded-full bg-[#242424] text-gray-300 border border-[#2f2f2f]">
+                                                        <span className="px-2 py-1 rounded-full bg-green-50 text-gray-700 border border-gray-300">
                                                             {activity.entity_type}{activity.entity_id ? ` #${activity.entity_id}` : ''}
                                                         </span>
                                                     )}
                                                     {getReservationContext(activity) && (
-                                                        <span className="px-2 py-1 rounded-full bg-[#2a2134] text-violet-200 border border-violet-700/50">
+                                                        <span className="px-2 py-1 rounded-full bg-violet-100 text-violet-800 border border-violet-300">
                                                             {getReservationContext(activity).type === 'ticket' ? 'Ticket' : 'Event'} {getReservationContext(activity).reference}
                                                         </span>
                                                     )}
                                                     {getReservationContext(activity) && (
-                                                        <span className="px-2 py-1 rounded-full bg-[#253021] text-emerald-200 border border-emerald-700/40">
+                                                        <span className="px-2 py-1 rounded-full bg-[#253021] text-green-700 border border-emerald-700/40">
                                                             Responsible: {getReservationContext(activity).responsible}
                                                         </span>
                                                     )}
@@ -448,9 +448,9 @@ const AdminStaffMonitoring = () => {
                     </div>
                 </div>
 
-                <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl p-6">
-                    <h3 className="text-lg font-bold text-white mb-1">Daily Activity Trend</h3>
-                    <p className="text-sm text-gray-400 mb-4">Staff activity count and participating staff by day.</p>
+                <div className="bg-white border border-green-200 rounded-2xl p-6">
+                    <h3 className="text-lg font-bold text-gray-900 mb-1">Daily Activity Trend</h3>
+                    <p className="text-sm text-gray-500 mb-4">Staff activity count and participating staff by day.</p>
                     <div className="space-y-3">
                         {(dashboardData.dailyActivity || []).length === 0 ? (
                             <p className="text-sm text-gray-500 py-6 text-center">No daily data available.</p>
@@ -461,11 +461,11 @@ const AdminStaffMonitoring = () => {
                                 return (
                                     <div key={day.date}>
                                         <div className="flex items-center justify-between text-xs mb-1">
-                                            <span className="text-gray-300">{new Date(day.date).toLocaleDateString()}</span>
-                                            <span className="text-gray-400">{day.count} actions • {day.active_staff} staff</span>
+                                            <span className="text-gray-700">{new Date(day.date).toLocaleDateString()}</span>
+                                            <span className="text-gray-500">{day.count} actions • {day.active_staff} staff</span>
                                         </div>
-                                        <div className="h-2 rounded-full bg-[#1e1e1e] overflow-hidden">
-                                            <div className="h-full rounded-full bg-gradient-to-r from-[#8cff65] to-emerald-500" style={{ width }} />
+                                        <div className="h-2 rounded-full bg-green-50 overflow-hidden">
+                                            <div className="h-full rounded-full bg-gradient-to-r from-green-500 to-emerald-500" style={{ width }} />
                                         </div>
                                     </div>
                                 );
@@ -476,39 +476,39 @@ const AdminStaffMonitoring = () => {
             </div>
 
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-                <div className="xl:col-span-2 bg-[#141414] border border-[#2a2a2a] rounded-2xl p-6">
-                    <h3 className="text-lg font-bold text-white mb-4">Staff Accountability Board</h3>
+                <div className="xl:col-span-2 bg-white border border-green-200 rounded-2xl p-6">
+                    <h3 className="text-lg font-bold text-gray-900 mb-4">Staff Accountability Board</h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-[430px] overflow-y-auto pr-1">
                         {(dashboardData.staffMembers || []).map((staff) => (
                             <button
                                 key={staff.id}
                                 type="button"
                                 onClick={() => handleStaffClick(staff)}
-                                className="text-left p-4 rounded-xl border border-[#2a2a2a] bg-[#1b1b1b] hover:border-[#8cff65]/35 transition"
+                                className="text-left p-4 rounded-xl border border-green-200 bg-green-50 hover:border-green-500/35 transition"
                             >
                                 <div className="flex items-center gap-3 mb-3">
                                     <div className="relative">
-                                        <div className="w-11 h-11 rounded-full bg-[#2a2a2a] flex items-center justify-center text-gray-300 font-semibold">
+                                        <div className="w-11 h-11 rounded-full bg-green-50 flex items-center justify-center text-gray-700 font-semibold">
                                             {staff.firstName?.[0]}{staff.lastName?.[0]}
                                         </div>
-                                        <span className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-[#1b1b1b] ${onlineStaffIds.has(Number(staff.id)) ? 'bg-emerald-400' : 'bg-gray-500'}`}></span>
+                                        <span className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white ${onlineStaffIds.has(Number(staff.id)) ? 'bg-emerald-400' : 'bg-gray-500'}`}></span>
                                     </div>
                                     <div className="min-w-0">
-                                        <p className="text-sm font-semibold text-white truncate">{staff.firstName} {staff.lastName}</p>
+                                        <p className="text-sm font-semibold text-gray-900 truncate">{staff.firstName} {staff.lastName}</p>
                                         <p className="text-xs text-gray-500 capitalize truncate">{staff.role}</p>
                                     </div>
                                 </div>
                                 <div className="flex items-center justify-between text-xs">
-                                    <span className="text-gray-400">Actions this week</span>
-                                    <span className="text-[#8cff65] font-semibold">{staff.actionsThisWeek || 0}</span>
+                                    <span className="text-gray-500">Actions this week</span>
+                                    <span className="text-green-600 font-semibold">{staff.actionsThisWeek || 0}</span>
                                 </div>
                             </button>
                         ))}
                     </div>
                 </div>
 
-                <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl p-6">
-                    <h3 className="text-lg font-bold text-white mb-4">Live Sessions</h3>
+                <div className="bg-white border border-green-200 rounded-2xl p-6">
+                    <h3 className="text-lg font-bold text-gray-900 mb-4">Live Sessions</h3>
                     <div className="space-y-3 max-h-[430px] overflow-y-auto pr-1">
                         {(dashboardData.activeSessions || []).length === 0 ? (
                             <p className="text-sm text-gray-500 text-center py-8">No active sessions.</p>
@@ -518,20 +518,20 @@ const AdminStaffMonitoring = () => {
                                     key={session.id}
                                     type="button"
                                     onClick={() => handleStaffClick({ id: session.staff_id, ...session })}
-                                    className="w-full text-left p-3 rounded-xl bg-[#1b1b1b] border border-[#2a2a2a] hover:border-[#8cff65]/35 transition"
+                                    className="w-full text-left p-3 rounded-xl bg-green-50 border border-green-200 hover:border-green-500/35 transition"
                                 >
                                     <div className="flex items-center gap-3">
                                         <div className="relative">
-                                            <div className="w-10 h-10 rounded-full bg-[#2a2a2a] flex items-center justify-center text-gray-300 text-sm font-semibold">
+                                            <div className="w-10 h-10 rounded-full bg-green-50 flex items-center justify-center text-gray-700 text-sm font-semibold">
                                                 {session.first_name?.[0]}{session.last_name?.[0]}
                                             </div>
-                                            <span className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-[#1b1b1b] ${getPresenceDot(session.status)}`}></span>
+                                            <span className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white ${getPresenceDot(session.status)}`}></span>
                                         </div>
                                         <div className="min-w-0 flex-1">
-                                            <p className="text-sm text-white font-medium truncate">{session.first_name} {session.last_name}</p>
+                                            <p className="text-sm text-gray-900 font-medium truncate">{session.first_name} {session.last_name}</p>
                                             <p className="text-xs text-gray-500 capitalize">{session.role}</p>
                                         </div>
-                                        <span className="text-xs text-gray-400 capitalize">{session.status}</span>
+                                        <span className="text-xs text-gray-500 capitalize">{session.status}</span>
                                     </div>
                                 </button>
                             ))
@@ -541,16 +541,16 @@ const AdminStaffMonitoring = () => {
             </div>
 
             {selectedStaff && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={() => setSelectedStaff(null)}>
-                    <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl p-6 w-full max-w-2xl max-h-[85vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => setSelectedStaff(null)}>
+                    <div className="bg-white border border-green-200 rounded-2xl p-6 w-full max-w-2xl max-h-[85vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center justify-between mb-4">
                             <div className="flex items-center gap-3">
-                                <div className="w-12 h-12 rounded-full bg-[#2a2a2a] flex items-center justify-center text-gray-300 font-semibold">
+                                <div className="w-12 h-12 rounded-full bg-green-50 flex items-center justify-center text-gray-700 font-semibold">
                                     {(selectedStaff.firstName || selectedStaff.first_name || '')?.[0]}
                                     {(selectedStaff.lastName || selectedStaff.last_name || '')?.[0]}
                                 </div>
                                 <div>
-                                    <h3 className="text-lg font-bold text-white">
+                                    <h3 className="text-lg font-bold text-gray-900">
                                         {selectedStaff.firstName || selectedStaff.first_name} {selectedStaff.lastName || selectedStaff.last_name}
                                     </h3>
                                     <p className="text-sm text-gray-500">{selectedStaff.email}</p>
@@ -558,7 +558,7 @@ const AdminStaffMonitoring = () => {
                             </div>
                             <button
                                 onClick={() => setSelectedStaff(null)}
-                                className="text-gray-500 hover:text-white transition"
+                                className="text-gray-500 hover:text-gray-900 transition"
                             >
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-6 h-6">
                                     <line x1="18" y1="6" x2="6" y2="18" />
@@ -567,11 +567,11 @@ const AdminStaffMonitoring = () => {
                             </button>
                         </div>
 
-                        <h4 className="text-white font-semibold mb-3">Activity Timeline</h4>
+                        <h4 className="text-gray-900 font-semibold mb-3">Activity Timeline</h4>
                         <div className="space-y-3 max-h-[58vh] overflow-y-auto pr-1">
                             {loadingTimeline ? (
                                 <div className="flex justify-center py-8">
-                                    <div className="w-8 h-8 border-2 border-[#8cff65] border-t-transparent rounded-full animate-spin" />
+                                    <div className="w-8 h-8 border-2 border-green-500 border-t-transparent rounded-full animate-spin" />
                                 </div>
                             ) : staffTimeline.length === 0 ? (
                                 <p className="text-sm text-gray-500 text-center py-8">No activity recorded.</p>
@@ -579,30 +579,30 @@ const AdminStaffMonitoring = () => {
                                 staffTimeline.map((activity) => {
                                     const style = getActionPresentation(activity.action_type);
                                     return (
-                                        <div key={activity.id} className="p-4 rounded-xl border border-[#2a2a2a] bg-[#1b1b1b]">
+                                        <div key={activity.id} className="p-4 rounded-xl border border-green-200 bg-green-50">
                                             <div className="flex items-start gap-3">
                                                 <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${style.iconWrap}`}>
                                                     {style.icon}
                                                 </div>
                                                 <div className="flex-1">
-                                                    <p className="text-sm text-white">{activity.action_description || style.label}</p>
+                                                    <p className="text-sm text-gray-900">{activity.action_description || style.label}</p>
                                                     <div className="mt-2 flex flex-wrap gap-2">
                                                         <span className={`text-xs px-2 py-1 rounded-full ${style.chip}`}>{style.label}</span>
-                                                        <span className="text-xs px-2 py-1 rounded-full bg-[#242424] text-gray-300 border border-[#2f2f2f]">
+                                                        <span className="text-xs px-2 py-1 rounded-full bg-green-50 text-gray-700 border border-gray-300">
                                                             Responsibility: {style.responsibility}
                                                         </span>
                                                         {activity.entity_type && (
-                                                            <span className="text-xs px-2 py-1 rounded-full bg-[#242424] text-gray-300 border border-[#2f2f2f]">
+                                                            <span className="text-xs px-2 py-1 rounded-full bg-green-50 text-gray-700 border border-gray-300">
                                                                 {activity.entity_type}{activity.entity_id ? ` #${activity.entity_id}` : ''}
                                                             </span>
                                                         )}
                                                         {getReservationContext(activity) && (
-                                                            <span className="text-xs px-2 py-1 rounded-full bg-[#2a2134] text-violet-200 border border-violet-700/50">
+                                                            <span className="text-xs px-2 py-1 rounded-full bg-violet-100 text-violet-800 border border-violet-300">
                                                                 {getReservationContext(activity).type === 'ticket' ? 'Ticket' : 'Event'} {getReservationContext(activity).reference}
                                                             </span>
                                                         )}
                                                         {getReservationContext(activity) && (
-                                                            <span className="text-xs px-2 py-1 rounded-full bg-[#253021] text-emerald-200 border border-emerald-700/40">
+                                                            <span className="text-xs px-2 py-1 rounded-full bg-[#253021] text-green-700 border border-emerald-700/40">
                                                                 Responsible: {getReservationContext(activity).responsible}
                                                             </span>
                                                         )}

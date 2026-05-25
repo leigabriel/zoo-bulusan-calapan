@@ -128,22 +128,22 @@ const StaffTickets = () => {
     const getStatusBadge = (status) => {
         switch (status?.toLowerCase()) {
             case 'pending': return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
-            case 'confirmed': return 'bg-[#8cff65]/20 text-[#8cff65] border-[#8cff65]/30';
+            case 'confirmed': return 'bg-green-500/20 text-green-600 border-green-500/30';
             case 'used': return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
-            case 'expired': return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
+            case 'expired': return 'bg-gray-500/20 text-gray-500 border-gray-500/30';
             case 'cancelled': return 'bg-red-500/20 text-red-400 border-red-500/30';
-            default: return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
+            default: return 'bg-gray-500/20 text-gray-500 border-gray-500/30';
         }
     };
 
     const getPaymentBadge = (paymentStatus) => {
         switch (paymentStatus?.toLowerCase()) {
-            case 'paid': return 'bg-[#8cff65]/20 text-[#8cff65] border-[#8cff65]/30';
+            case 'paid': return 'bg-green-500/20 text-green-600 border-green-500/30';
             case 'pending': return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
             case 'not paid': return 'bg-orange-500/20 text-orange-400 border-orange-500/30';
             case 'free': return 'bg-teal-500/20 text-teal-400 border-teal-500/30';
             case 'refunded': return 'bg-purple-500/20 text-purple-400 border-purple-500/30';
-            default: return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
+            default: return 'bg-gray-500/20 text-gray-500 border-gray-500/30';
         }
     };
 
@@ -293,8 +293,8 @@ const StaffTickets = () => {
         return (
             <div className="flex items-center justify-center h-64">
                 <div className="flex flex-col items-center gap-3">
-                    <div className="w-10 h-10 border-4 border-[#8cff65] border-t-transparent rounded-full animate-spin"></div>
-                    <span className="text-gray-400">Loading tickets...</span>
+                    <div className="w-10 h-10 border-4 border-green-500 border-t-transparent rounded-full animate-spin"></div>
+                    <span className="text-gray-500">Loading tickets...</span>
                 </div>
             </div>
         );
@@ -315,52 +315,52 @@ const StaffTickets = () => {
         <div className="space-y-6">
             {/* Stats Cards */}
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-2xl p-4">
+                <div className="bg-green-50 border border-green-200 rounded-2xl p-4">
                     <div className="flex items-center justify-between">
                         <div>
-                            <p className="text-gray-400 text-sm">Total</p>
-                            <p className="text-2xl font-bold text-white">{ticketStats.total}</p>
+                            <p className="text-gray-500 text-sm">Total</p>
+                            <p className="text-2xl font-bold text-gray-900">{ticketStats.total}</p>
                         </div>
-                        <div className="w-10 h-10 bg-[#8cff65]/10 rounded-xl flex items-center justify-center text-[#8cff65]">
+                        <div className="w-10 h-10 bg-green-500/10 rounded-xl flex items-center justify-center text-green-600">
                             <TicketIcon />
                         </div>
                     </div>
                 </div>
-                <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-2xl p-4">
-                    <p className="text-gray-400 text-sm">Pending</p>
+                <div className="bg-green-50 border border-green-200 rounded-2xl p-4">
+                    <p className="text-gray-500 text-sm">Pending</p>
                     <p className="text-2xl font-bold text-yellow-400">{ticketStats.pending}</p>
                 </div>
-                <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-2xl p-4">
-                    <p className="text-gray-400 text-sm">Confirmed</p>
-                    <p className="text-2xl font-bold text-[#8cff65]">{ticketStats.confirmed}</p>
+                <div className="bg-green-50 border border-green-200 rounded-2xl p-4">
+                    <p className="text-gray-500 text-sm">Confirmed</p>
+                    <p className="text-2xl font-bold text-green-600">{ticketStats.confirmed}</p>
                 </div>
-                <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-2xl p-4">
-                    <p className="text-gray-400 text-sm">Used</p>
+                <div className="bg-green-50 border border-green-200 rounded-2xl p-4">
+                    <p className="text-gray-500 text-sm">Used</p>
                     <p className="text-2xl font-bold text-blue-400">{ticketStats.used}</p>
                 </div>
-                <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-2xl p-4">
-                    <p className="text-gray-400 text-sm">Cancelled</p>
+                <div className="bg-green-50 border border-green-200 rounded-2xl p-4">
+                    <p className="text-gray-500 text-sm">Cancelled</p>
                     <p className="text-2xl font-bold text-red-400">{ticketStats.cancelled}</p>
                 </div>
             </div>
 
             {/* Filters */}
-            <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-2xl p-4">
+            <div className="bg-green-50 border border-green-200 rounded-2xl p-4">
                 <div className="flex flex-wrap gap-4 items-center">
-                    <div className="flex items-center bg-[#0a0a0a] border border-[#2a2a2a] rounded-xl px-4 py-2 flex-1 min-w-[200px]">
+                    <div className="flex items-center bg-white border border-green-200 rounded-xl px-4 py-2 flex-1 min-w-[200px]">
                         <SearchIcon />
                         <input
                             type="text"
                             placeholder="Search by code, name, or email..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="ml-2 bg-transparent border-none outline-none text-white placeholder-gray-500 w-full"
+                            className="ml-2 bg-transparent border-none outline-none text-gray-900 placeholder-gray-500 w-full"
                         />
                     </div>
                     <select
                         value={statusFilter}
                         onChange={(e) => setStatusFilter(e.target.value)}
-                        className="bg-[#0a0a0a] border border-[#2a2a2a] rounded-xl px-4 py-2 text-white outline-none"
+                        className="bg-white border border-green-200 rounded-xl px-4 py-2 text-gray-900 outline-none"
                     >
                         <option value="all">All Status</option>
                         <option value="pending">Pending</option>
@@ -372,7 +372,7 @@ const StaffTickets = () => {
                     <select
                         value={paymentFilter}
                         onChange={(e) => setPaymentFilter(e.target.value)}
-                        className="bg-[#0a0a0a] border border-[#2a2a2a] rounded-xl px-4 py-2 text-white outline-none"
+                        className="bg-white border border-green-200 rounded-xl px-4 py-2 text-gray-900 outline-none"
                     >
                         <option value="all">All Payments</option>
                         <option value="pending">Payment Pending</option>
@@ -381,7 +381,7 @@ const StaffTickets = () => {
                     </select>
                     <button
                         onClick={fetchTickets}
-                        className="flex items-center gap-2 px-4 py-2 bg-[#8cff65]/10 border border-[#8cff65]/30 rounded-xl text-[#8cff65] hover:bg-[#8cff65]/20 transition"
+                        className="flex items-center gap-2 px-4 py-2 bg-green-500/10 border border-green-500/30 rounded-xl text-green-600 hover:bg-green-500/20 transition"
                     >
                         <RefreshIcon />
                         Refresh
@@ -390,46 +390,46 @@ const StaffTickets = () => {
             </div>
 
             {/* Tickets Table */}
-            <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-2xl overflow-hidden">
+            <div className="bg-green-50 border border-green-200 rounded-2xl overflow-hidden">
                 <div className="overflow-x-auto">
                     <table className="w-full">
-                        <thead className="bg-[#0f0f0f] border-b border-[#2a2a2a]">
+                        <thead className="bg-green-50 border-b border-green-200">
                             <tr>
-                                <th className="text-left p-4 text-gray-400 font-medium">Booking Ref</th>
-                                <th className="text-left p-4 text-gray-400 font-medium">Visitor</th>
-                                <th className="text-left p-4 text-gray-400 font-medium">Type</th>
-                                <th className="text-left p-4 text-gray-400 font-medium">Visit Date</th>
-                                <th className="text-left p-4 text-gray-400 font-medium">Amount</th>
-                                <th className="text-left p-4 text-gray-400 font-medium">Payment</th>
-                                <th className="text-left p-4 text-gray-400 font-medium">Status</th>
-                                <th className="text-left p-4 text-gray-400 font-medium">Actions</th>
+                                <th className="text-left p-4 text-gray-500 font-medium">Booking Ref</th>
+                                <th className="text-left p-4 text-gray-500 font-medium">Visitor</th>
+                                <th className="text-left p-4 text-gray-500 font-medium">Type</th>
+                                <th className="text-left p-4 text-gray-500 font-medium">Visit Date</th>
+                                <th className="text-left p-4 text-gray-500 font-medium">Amount</th>
+                                <th className="text-left p-4 text-gray-500 font-medium">Payment</th>
+                                <th className="text-left p-4 text-gray-500 font-medium">Status</th>
+                                <th className="text-left p-4 text-gray-500 font-medium">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             {filteredTickets.length > 0 ? (
                                 filteredTickets.map(ticket => (
-                                    <tr key={ticket.id} className="border-b border-[#2a2a2a] hover:bg-white/5">
+                                    <tr key={ticket.id} className="border-b border-green-200 hover:bg-white/5">
                                         <td className="p-4">
-                                            <span className="font-mono text-[#8cff65]">{ticket.booking_reference}</span>
+                                            <span className="font-mono text-green-600">{ticket.booking_reference}</span>
                                         </td>
                                         <td className="p-4">
                                             <div>
-                                                <p className="text-white font-medium">{ticket.user_name || ticket.visitor_name || '-'}</p>
+                                                <p className="text-gray-900 font-medium">{ticket.user_name || ticket.visitor_name || '-'}</p>
                                                 <p className="text-gray-500 text-sm">{ticket.user_email || ticket.visitor_email || '-'}</p>
                                             </div>
                                         </td>
-                                        <td className="p-4 text-white capitalize">{ticket.ticket_type}</td>
-                                        <td className="p-4 text-gray-300">{formatDate(ticket.visit_date)}</td>
-                                        <td className="p-4 text-white font-medium">
+                                        <td className="p-4 text-gray-900 capitalize">{ticket.ticket_type}</td>
+                                        <td className="p-4 text-gray-700">{formatDate(ticket.visit_date)}</td>
+                                        <td className="p-4 text-gray-900 font-medium">
                                             {ticket.total_amount === 0 ? (
-                                                <span className="text-[#8cff65]">FREE</span>
+                                                <span className="text-green-600">FREE</span>
                                             ) : (
                                                 formatCurrency(ticket.total_amount)
                                             )}
                                         </td>
                                         <td className="p-4">
                                             <div className="flex flex-col gap-1">
-                                                <span className="text-white capitalize text-sm">{ticket.payment_method || 'cash'}</span>
+                                                <span className="text-gray-900 capitalize text-sm">{ticket.payment_method || 'cash'}</span>
                                                 <span className={`w-fit px-2 py-0.5 rounded-lg text-xs font-medium border ${getPaymentBadge(ticket.payment_status)}`}>
                                                     {ticket.payment_status || 'pending'}
                                                 </span>
@@ -444,7 +444,7 @@ const StaffTickets = () => {
                                             <div className="flex gap-2">
                                                 <button
                                                     onClick={() => openTicketDetails(ticket)}
-                                                    className="p-2 hover:bg-white/10 rounded-lg text-gray-400 hover:text-white transition"
+                                                    className="p-2 hover:bg-white/10 rounded-lg text-gray-500 hover:text-gray-900 transition"
                                                     title="View Details"
                                                 >
                                                     <EyeIcon />
@@ -464,7 +464,7 @@ const StaffTickets = () => {
                                                 {ticket.status === 'pending' && (
                                                     <button
                                                         onClick={() => handleStatusChange(ticket.id, 'confirmed')}
-                                                        className="p-2 hover:bg-[#8cff65]/10 rounded-lg text-[#8cff65] transition"
+                                                        className="p-2 hover:bg-green-500/10 rounded-lg text-green-600 transition"
                                                         title="Confirm Ticket"
                                                     >
                                                         <CheckCircleIcon />
@@ -488,21 +488,21 @@ const StaffTickets = () => {
 
             {/* Ticket Detail Modal */}
             {showModal && selectedTicket && (
-                <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-                    <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-                        <div className="p-6 border-b border-[#2a2a2a] flex items-center justify-between">
-                            <h3 className="text-xl font-bold text-white">Ticket Details</h3>
-                            <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-white">
+                <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+                    <div className="bg-green-50 border border-green-200 rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+                        <div className="p-6 border-b border-green-200 flex items-center justify-between">
+                            <h3 className="text-xl font-bold text-gray-900">Ticket Details</h3>
+                            <button onClick={() => setShowModal(false)} className="text-gray-500 hover:text-gray-900">
                                 <CloseIcon />
                             </button>
                         </div>
                         <div className="p-6 space-y-4">
                             <div className="flex items-center justify-center mb-6">
-                                <div className="p-4 bg-[#0a0a0a] rounded-xl border border-[#2a2a2a]">
+                                <div className="p-4 bg-white rounded-xl border border-green-200">
                                     <div className="w-32 h-32 bg-white rounded-lg flex items-center justify-center">
-                                        <QRCodeIcon className="w-16 h-16 text-gray-400" />
+                                        <QRCodeIcon className="w-16 h-16 text-gray-500" />
                                     </div>
-                                    <p className="text-center text-[#8cff65] font-mono mt-2 text-sm">
+                                    <p className="text-center text-green-600 font-mono mt-2 text-sm">
                                         {selectedTicket.qr_code || selectedTicket.booking_reference}
                                     </p>
                                 </div>
@@ -510,47 +510,47 @@ const StaffTickets = () => {
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <p className="text-gray-400 text-sm">Booking Reference</p>
-                                    <p className="text-white font-mono">{selectedTicket.booking_reference}</p>
+                                    <p className="text-gray-500 text-sm">Booking Reference</p>
+                                    <p className="text-gray-900 font-mono">{selectedTicket.booking_reference}</p>
                                 </div>
                                 <div>
-                                    <p className="text-gray-400 text-sm">Ticket Type</p>
-                                    <p className="text-white capitalize">{selectedTicket.ticket_type}</p>
+                                    <p className="text-gray-500 text-sm">Ticket Type</p>
+                                    <p className="text-gray-900 capitalize">{selectedTicket.ticket_type}</p>
                                 </div>
                                 <div>
-                                    <p className="text-gray-400 text-sm">Visitor Name</p>
-                                    <p className="text-white">{selectedTicket.user_name || selectedTicket.visitor_name || '-'}</p>
+                                    <p className="text-gray-500 text-sm">Visitor Name</p>
+                                    <p className="text-gray-900">{selectedTicket.user_name || selectedTicket.visitor_name || '-'}</p>
                                 </div>
                                 <div>
-                                    <p className="text-gray-400 text-sm">Email</p>
-                                    <p className="text-white">{selectedTicket.user_email || selectedTicket.visitor_email || '-'}</p>
+                                    <p className="text-gray-500 text-sm">Email</p>
+                                    <p className="text-gray-900">{selectedTicket.user_email || selectedTicket.visitor_email || '-'}</p>
                                 </div>
                                 <div>
-                                    <p className="text-gray-400 text-sm">Visit Date</p>
-                                    <p className="text-white">{formatDate(selectedTicket.visit_date)}</p>
+                                    <p className="text-gray-500 text-sm">Visit Date</p>
+                                    <p className="text-gray-900">{formatDate(selectedTicket.visit_date)}</p>
                                 </div>
                                 <div>
-                                    <p className="text-gray-400 text-sm">Quantity</p>
-                                    <p className="text-white">{selectedTicket.quantity}</p>
+                                    <p className="text-gray-500 text-sm">Quantity</p>
+                                    <p className="text-gray-900">{selectedTicket.quantity}</p>
                                 </div>
                                 <div>
-                                    <p className="text-gray-400 text-sm">Total Amount</p>
-                                    <p className="text-white font-bold">
+                                    <p className="text-gray-500 text-sm">Total Amount</p>
+                                    <p className="text-gray-900 font-bold">
                                         {selectedTicket.total_amount === 0 ? 'FREE' : formatCurrency(selectedTicket.total_amount)}
                                     </p>
                                 </div>
                                 <div>
-                                    <p className="text-gray-400 text-sm">Payment Method</p>
-                                    <p className="text-white capitalize">{selectedTicket.payment_method || 'cash'}</p>
+                                    <p className="text-gray-500 text-sm">Payment Method</p>
+                                    <p className="text-gray-900 capitalize">{selectedTicket.payment_method || 'cash'}</p>
                                 </div>
                                 <div>
-                                    <p className="text-gray-400 text-sm">Payment Status</p>
+                                    <p className="text-gray-500 text-sm">Payment Status</p>
                                     <span className={`px-2 py-1 rounded-lg text-xs font-medium border ${getPaymentBadge(selectedTicket.payment_status)}`}>
                                         {selectedTicket.payment_status || 'pending'}
                                     </span>
                                 </div>
                                 <div>
-                                    <p className="text-gray-400 text-sm">Ticket Status</p>
+                                    <p className="text-gray-500 text-sm">Ticket Status</p>
                                     <span className={`px-2 py-1 rounded-lg text-xs font-medium border ${getStatusBadge(selectedTicket.status)}`}>
                                         {selectedTicket.status}
                                     </span>
@@ -587,10 +587,10 @@ const StaffTickets = () => {
                                             </div>
                                             <p className="text-xs text-teal-400">Click image to view in full size</p>
                                             <div className="flex items-center gap-2 text-sm">
-                                                <span className="text-gray-400">Verification Status:</span>
+                                                <span className="text-gray-500">Verification Status:</span>
                                                 <span className={`px-2 py-1 rounded-full text-xs font-medium border ${
                                                     selectedTicket.verificationStatus === 'approved' 
-                                                        ? 'bg-[#8cff65]/20 text-[#8cff65] border-[#8cff65]/30' 
+                                                        ? 'bg-green-500/20 text-green-600 border-green-500/30' 
                                                         : selectedTicket.verificationStatus === 'rejected'
                                                             ? 'bg-red-500/20 text-red-400 border-red-500/30'
                                                             : 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30'
@@ -604,7 +604,7 @@ const StaffTickets = () => {
                                                     <button
                                                         onClick={() => handleUpdateVerificationStatus(selectedTicket.id, 'approved')}
                                                         disabled={updating}
-                                                        className="flex-1 py-2 bg-[#8cff65]/20 border border-[#8cff65]/30 text-[#8cff65] text-sm font-medium rounded-lg hover:bg-[#8cff65]/30 transition disabled:opacity-50"
+                                                        className="flex-1 py-2 bg-green-500/20 border border-green-500/30 text-green-600 text-sm font-medium rounded-lg hover:bg-green-500/30 transition disabled:opacity-50"
                                                     >
                                                         Approve ID
                                                     </button>
@@ -619,7 +619,7 @@ const StaffTickets = () => {
                                             )}
                                         </div>
                                     ) : (
-                                        <div className="p-4 bg-[#1e1e1e] rounded-xl text-center">
+                                        <div className="p-4 bg-green-50 rounded-xl text-center">
                                             <p className="text-yellow-400 text-sm">
                                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-5 h-5 inline mr-2">
                                                     <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
@@ -649,14 +649,14 @@ const StaffTickets = () => {
                             )}
 
                             {/* Status Update Actions */}
-                            <div className="pt-4 border-t border-[#2a2a2a] space-y-3">
-                                <p className="text-gray-400 text-sm font-medium">Update Status</p>
+                            <div className="pt-4 border-t border-green-200 space-y-3">
+                                <p className="text-gray-500 text-sm font-medium">Update Status</p>
                                 <div className="flex flex-wrap gap-2">
                                     {selectedTicket.status !== 'confirmed' && selectedTicket.status !== 'used' && selectedTicket.status !== 'cancelled' && (
                                         <button
                                             onClick={() => handleStatusChange(selectedTicket.id, 'confirmed')}
                                             disabled={updating}
-                                            className="px-4 py-2 bg-[#8cff65]/20 border border-[#8cff65]/30 rounded-xl text-[#8cff65] hover:bg-[#8cff65]/30 transition disabled:opacity-50"
+                                            className="px-4 py-2 bg-green-500/20 border border-green-500/30 rounded-xl text-green-600 hover:bg-green-500/30 transition disabled:opacity-50"
                                         >
                                             Confirm
                                         </button>
@@ -674,7 +674,7 @@ const StaffTickets = () => {
                                         <button
                                             onClick={() => handleStatusChange(selectedTicket.id, 'expired')}
                                             disabled={updating}
-                                            className="px-4 py-2 bg-gray-500/20 border border-gray-500/30 rounded-xl text-gray-400 hover:bg-gray-500/30 transition disabled:opacity-50"
+                                            className="px-4 py-2 bg-gray-500/20 border border-gray-500/30 rounded-xl text-gray-500 hover:bg-gray-500/30 transition disabled:opacity-50"
                                         >
                                             Mark Expired
                                         </button>
@@ -688,18 +688,18 @@ const StaffTickets = () => {
 
             {/* Cancel Modal */}
             {showCancelModal && (
-                <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-                    <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-2xl w-full max-w-md">
-                        <div className="p-6 border-b border-[#2a2a2a]">
-                            <h3 className="text-xl font-bold text-white">Cancel Ticket</h3>
+                <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+                    <div className="bg-green-50 border border-green-200 rounded-2xl w-full max-w-md">
+                        <div className="p-6 border-b border-green-200">
+                            <h3 className="text-xl font-bold text-gray-900">Cancel Ticket</h3>
                         </div>
                         <div className="p-6 space-y-4">
-                            <p className="text-gray-400">Please provide a reason for cancellation:</p>
+                            <p className="text-gray-500">Please provide a reason for cancellation:</p>
                             <textarea
                                 value={cancellationReason}
                                 onChange={(e) => setCancellationReason(e.target.value)}
                                 placeholder="Enter cancellation reason..."
-                                className="w-full p-3 bg-[#0a0a0a] border border-[#2a2a2a] rounded-xl text-white placeholder-gray-500 outline-none resize-none"
+                                className="w-full p-3 bg-white border border-green-200 rounded-xl text-gray-900 placeholder-gray-500 outline-none resize-none"
                                 rows={3}
                             />
                             <div className="flex gap-3 justify-end">
@@ -708,7 +708,7 @@ const StaffTickets = () => {
                                         setShowCancelModal(false);
                                         setCancellationReason('');
                                     }}
-                                    className="px-4 py-2 border border-[#2a2a2a] rounded-xl text-gray-400 hover:bg-white/5 transition"
+                                    className="px-4 py-2 border border-green-200 rounded-xl text-gray-500 hover:bg-white/5 transition"
                                 >
                                     Cancel
                                 </button>
@@ -727,27 +727,27 @@ const StaffTickets = () => {
 
             {/* Confirmation Modal */}
             {showConfirmModal && (
-                <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[60] p-4">
-                    <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-2xl w-full max-w-md">
-                        <div className="p-6 border-b border-[#2a2a2a]">
-                            <h3 className="text-xl font-bold text-white">{confirmTitle}</h3>
+                <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-[60] p-4">
+                    <div className="bg-green-50 border border-green-200 rounded-2xl w-full max-w-md">
+                        <div className="p-6 border-b border-green-200">
+                            <h3 className="text-xl font-bold text-gray-900">{confirmTitle}</h3>
                         </div>
                         <div className="p-6 space-y-4">
-                            <p className="text-gray-300">{confirmMessage}</p>
+                            <p className="text-gray-700">{confirmMessage}</p>
                             <div className="flex gap-3 justify-end">
                                 <button
                                     onClick={() => {
                                         setShowConfirmModal(false);
                                         setConfirmAction(null);
                                     }}
-                                    className="px-4 py-2 border border-[#2a2a2a] rounded-xl text-gray-400 hover:bg-white/5 transition"
+                                    className="px-4 py-2 border border-green-200 rounded-xl text-gray-500 hover:bg-white/5 transition"
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     onClick={handleConfirmAction}
                                     disabled={updating}
-                                    className="px-4 py-2 bg-[#8cff65]/20 border border-[#8cff65]/30 rounded-xl text-[#8cff65] hover:bg-[#8cff65]/30 transition disabled:opacity-50"
+                                    className="px-4 py-2 bg-green-500/20 border border-green-500/30 rounded-xl text-green-600 hover:bg-green-500/30 transition disabled:opacity-50"
                                 >
                                     {updating ? 'Processing...' : 'Confirm'}
                                 </button>
@@ -760,7 +760,7 @@ const StaffTickets = () => {
             {/* Image Preview Modal */}
             {showImageModal && previewImageUrl && (
                 <div 
-                    className="fixed inset-0 bg-black/90 backdrop-blur-sm z-[70] flex items-center justify-center p-4"
+                    className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[70] flex items-center justify-center p-4"
                     onClick={() => setShowImageModal(false)}
                 >
                     <div 
@@ -769,7 +769,7 @@ const StaffTickets = () => {
                     >
                         <button
                             onClick={() => setShowImageModal(false)}
-                            className="absolute -top-12 right-0 p-2 bg-white/10 hover:bg-white/20 rounded-full text-white transition-all"
+                            className="absolute -top-12 right-0 p-2 bg-white/10 hover:bg-white/40 rounded-full text-gray-900 transition-all"
                         >
                             <CloseIcon />
                         </button>

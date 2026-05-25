@@ -139,8 +139,8 @@ const AdminProfile = () => {
         return (
             <div className="flex items-center justify-center h-64">
                 <div className="flex flex-col items-center gap-3">
-                    <div className="w-10 h-10 border-4 border-[#8cff65] border-t-transparent rounded-full animate-spin"></div>
-                    <span className="text-gray-400">Loading profile...</span>
+                    <div className="w-10 h-10 border-4 border-green-500 border-t-transparent rounded-full animate-spin"></div>
+                    <span className="text-gray-500">Loading profile...</span>
                 </div>
             </div>
         );
@@ -149,10 +149,10 @@ const AdminProfile = () => {
     return (
         <div className="max-w-4xl mx-auto space-y-6">
             {/* Profile Header Card */}
-            <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl overflow-hidden">
+            <div className="bg-white border border-green-200 rounded-2xl overflow-hidden">
                 {/* Banner */}
-                <div className="h-32 bg-gradient-to-r from-[#8cff65]/20 via-[#4ade80]/10 to-[#141414] relative">
-                    <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxjaXJjbGUgY3g9IjIwIiBjeT0iMjAiIHI9IjEiIGZpbGw9IiM4Y2ZmNjUiIGZpbGwtb3BhY2l0eT0iMC4xIi8+PC9nPjwvc3ZnPg==')] opacity-50"></div>
+                <div className="h-32 bg-gradient-to-r from-green-500/20 via-green-300/10 to-white relative">
+                    <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxjaXJjbGUgY3g9IjIwIiBjeT0iMjAiIHI9IjEiIGZpbGw9IiM4Y2ZmNjUiIGZpbGwtb3BhY2l0eT0iMC4xIi8+PC9nPjwvc3ZnPg==')] opacity-20"></div>
                 </div>
 
                 {/* Profile Info */}
@@ -160,18 +160,18 @@ const AdminProfile = () => {
                     <div className="flex flex-col sm:flex-row items-center sm:items-end gap-4">
                         {/* Avatar */}
                         <div className="relative group">
-                            <div className="w-28 h-28 rounded-full border-4 border-[#141414] bg-gradient-to-br from-[#8cff65] to-[#4ade80] flex items-center justify-center overflow-hidden">
+                            <div className="w-28 h-28 rounded-full border-4 border-white bg-gradient-to-br from-green-500 to-green-400 flex items-center justify-center overflow-hidden">
                                 {previewImage ? (
                                     <img src={previewImage} alt="Profile" className="w-full h-full object-cover" />
                                 ) : (
-                                    <span className="text-4xl font-bold text-[#0a0a0a]">
+                                    <span className="text-4xl font-bold text-white">
                                         {form.firstName?.charAt(0) || 'A'}
                                     </span>
                                 )}
                             </div>
                             <button
                                 onClick={() => fileInputRef.current?.click()}
-                                className="absolute bottom-0 right-0 w-9 h-9 bg-[#1e1e1e] border border-[#2a2a2a] rounded-full flex items-center justify-center text-gray-400 hover:text-[#8cff65] hover:border-[#8cff65] transition-all group-hover:scale-110"
+                                className="absolute bottom-0 right-0 w-9 h-9 bg-green-50 border border-green-200 rounded-full flex items-center justify-center text-gray-500 hover:text-green-600 hover:border-green-500 transition-all group-hover:scale-110"
                             >
                                 <CameraIcon />
                             </button>
@@ -186,11 +186,11 @@ const AdminProfile = () => {
 
                         {/* Name & Role */}
                         <div className="text-center sm:text-left flex-1">
-                            <h2 className="text-2xl font-bold text-white">
+                            <h2 className="text-2xl font-bold text-gray-900">
                                 {form.firstName} {form.lastName}
                             </h2>
                             <div className="flex items-center justify-center sm:justify-start gap-2 mt-1">
-                                <span className="px-3 py-1 bg-[#8cff65]/10 text-[#8cff65] text-sm font-medium rounded-full flex items-center gap-1.5">
+                                <span className="px-3 py-1 bg-green-500/10 text-green-600 text-sm font-medium rounded-full flex items-center gap-1.5">
                                     <ShieldIcon />
                                     Administrator
                                 </span>
@@ -199,12 +199,12 @@ const AdminProfile = () => {
 
                         {/* Quick Stats */}
                         <div className="flex gap-4 text-center">
-                            <div className="px-4 py-2 bg-[#1e1e1e] rounded-xl border border-[#2a2a2a]">
-                                <p className="text-2xl font-bold text-white">12</p>
+                            <div className="px-4 py-2 bg-green-50 rounded-xl border border-green-200">
+                                <p className="text-2xl font-bold text-gray-900">12</p>
                                 <p className="text-xs text-gray-500">Events</p>
                             </div>
-                            <div className="px-4 py-2 bg-[#1e1e1e] rounded-xl border border-[#2a2a2a]">
-                                <p className="text-2xl font-bold text-white">48</p>
+                            <div className="px-4 py-2 bg-green-50 rounded-xl border border-green-200">
+                                <p className="text-2xl font-bold text-gray-900">48</p>
                                 <p className="text-xs text-gray-500">Actions</p>
                             </div>
                         </div>
@@ -215,8 +215,8 @@ const AdminProfile = () => {
             {/* Profile Form */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Personal Information */}
-                <div className="lg:col-span-2 bg-[#141414] border border-[#2a2a2a] rounded-2xl p-6">
-                    <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
+                <div className="lg:col-span-2 bg-white border border-green-200 rounded-2xl p-6">
+                    <h3 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
                         <UserIcon />
                         Personal Information
                     </h3>
@@ -224,31 +224,31 @@ const AdminProfile = () => {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         {/* First Name */}
                         <div>
-                            <label className="block text-sm font-medium text-gray-400 mb-2">First Name</label>
+                            <label className="block text-sm font-medium text-gray-500 mb-2">First Name</label>
                             <input
                                 type="text"
                                 value={form.firstName}
                                 onChange={(e) => setForm({ ...form, firstName: sanitizeInput(e.target.value) })}
-                                className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-[#8cff65] focus:ring-1 focus:ring-[#8cff65]/20 transition-all"
+                                className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-200 transition-all"
                                 placeholder="Enter first name"
                             />
                         </div>
 
                         {/* Last Name */}
                         <div>
-                            <label className="block text-sm font-medium text-gray-400 mb-2">Last Name</label>
+                            <label className="block text-sm font-medium text-gray-500 mb-2">Last Name</label>
                             <input
                                 type="text"
                                 value={form.lastName}
                                 onChange={(e) => setForm({ ...form, lastName: sanitizeInput(e.target.value) })}
-                                className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-[#8cff65] focus:ring-1 focus:ring-[#8cff65]/20 transition-all"
+                                className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-200 transition-all"
                                 placeholder="Enter last name"
                             />
                         </div>
 
                         {/* Email */}
                         <div className="sm:col-span-2">
-                            <label className="block text-sm font-medium text-gray-400 mb-2">Email Address</label>
+                            <label className="block text-sm font-medium text-gray-500 mb-2">Email Address</label>
                             <div className="relative">
                                 <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">
                                     <MailIcon />
@@ -257,7 +257,7 @@ const AdminProfile = () => {
                                     type="email"
                                     value={form.email}
                                     readOnly
-                                    className="w-full bg-[#1e1e1e]/50 border border-[#2a2a2a] rounded-xl pl-12 pr-4 py-3 text-gray-400 cursor-not-allowed"
+                                    className="w-full bg-green-50/50 border border-green-200 rounded-xl pl-12 pr-4 py-3 text-gray-500 cursor-not-allowed"
                                 />
                             </div>
                             <p className="text-xs text-gray-500 mt-2">Email cannot be changed</p>
@@ -269,7 +269,7 @@ const AdminProfile = () => {
                         <button
                             onClick={save}
                             disabled={saving}
-                            className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#8cff65] to-[#4ade80] hover:from-[#9dff7a] hover:to-[#5ceb91] text-[#0a0a0a] font-semibold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-[#8cff65]/20"
+                            className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-green-500 to-green-400 hover:from-green-400 hover:to-green-500 text-white font-semibold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-green-300/50"
                         >
                             <SaveIcon />
                             {saving ? 'Saving...' : 'Save Changes'}
@@ -280,52 +280,52 @@ const AdminProfile = () => {
                 {/* Account Info Sidebar */}
                 <div className="space-y-6">
                     {/* Account Status */}
-                    <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl p-6">
-                        <h3 className="text-lg font-bold text-white mb-4">Account Status</h3>
+                    <div className="bg-white border border-green-200 rounded-2xl p-6">
+                        <h3 className="text-lg font-bold text-gray-900 mb-4">Account Status</h3>
                         <div className="space-y-4">
                             <div className="flex items-center justify-between">
-                                <span className="text-gray-400">Status</span>
-                                <span className="flex items-center gap-1.5 text-[#8cff65]">
-                                    <div className="w-2 h-2 bg-[#8cff65] rounded-full animate-pulse"></div>
+                                <span className="text-gray-500">Status</span>
+                                <span className="flex items-center gap-1.5 text-green-600">
+                                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
                                     Active
                                 </span>
                             </div>
                             <div className="flex items-center justify-between">
-                                <span className="text-gray-400">Role</span>
-                                <span className="text-white capitalize">{user?.role || 'Admin'}</span>
+                                <span className="text-gray-500">Role</span>
+                                <span className="text-gray-900 capitalize">{user?.role || 'Admin'}</span>
                             </div>
                             <div className="flex items-center justify-between">
-                                <span className="text-gray-400">Verified</span>
-                                <span className="text-[#8cff65]">Yes</span>
+                                <span className="text-gray-500">Verified</span>
+                                <span className="text-green-600">Yes</span>
                             </div>
                         </div>
                     </div>
 
                     {/* Activity Log */}
-                    <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl p-6">
-                        <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                    <div className="bg-white border border-green-200 rounded-2xl p-6">
+                        <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                             <CalendarIcon />
                             Recent Activity
                         </h3>
                         <div className="space-y-3">
                             <div className="flex items-start gap-3 text-sm">
-                                <div className="w-2 h-2 bg-[#8cff65] rounded-full mt-1.5 flex-shrink-0"></div>
+                                <div className="w-2 h-2 bg-green-500 rounded-full mt-1.5 flex-shrink-0"></div>
                                 <div>
-                                    <p className="text-gray-300">Logged in</p>
+                                    <p className="text-gray-700">Logged in</p>
                                     <p className="text-gray-500 text-xs">Today, 10:30 AM</p>
                                 </div>
                             </div>
                             <div className="flex items-start gap-3 text-sm">
                                 <div className="w-2 h-2 bg-blue-400 rounded-full mt-1.5 flex-shrink-0"></div>
                                 <div>
-                                    <p className="text-gray-300">Updated event</p>
+                                    <p className="text-gray-700">Updated event</p>
                                     <p className="text-gray-500 text-xs">Yesterday, 3:45 PM</p>
                                 </div>
                             </div>
                             <div className="flex items-start gap-3 text-sm">
                                 <div className="w-2 h-2 bg-yellow-400 rounded-full mt-1.5 flex-shrink-0"></div>
                                 <div>
-                                    <p className="text-gray-300">Created new user</p>
+                                    <p className="text-gray-700">Created new user</p>
                                     <p className="text-gray-500 text-xs">2 days ago</p>
                                 </div>
                             </div>

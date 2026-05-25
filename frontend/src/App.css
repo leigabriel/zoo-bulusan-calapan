@@ -15,11 +15,10 @@ body {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     background-color: #ebebeb;
-    cursor: url("https://cdn.prod.website-files.com/684433cbdb896cfecac10c42/685020772e431a751ff5fbef_Cursor_%20Pointer.svg") 2 0,
-        auto;
+    /* cursor: url("https://cdn.prod.website-files.com/684433cbdb896cfecac10c42/685020772e431a751ff5fbef_Cursor_%20Pointer.svg") 2 0, auto; */
 }
 
-a,
+/* a,
 button,
 [role="button"],
 input,
@@ -52,7 +51,7 @@ h6 {
 
 div, span {
     cursor: url("https://cdn.prod.website-files.com/684433cbdb896cfecac10c42/685020772e431a751ff5fbef_Cursor_%20Pointer.svg") 2 0, auto;
-}
+} */
 
 /* sticky and lenis support */
 html,

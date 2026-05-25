@@ -325,7 +325,7 @@ const AnimalAnalytics = () => {
                 <p className="text-red-600 mb-6">{error}</p>
                 <button
                     onClick={fetchPredictions}
-                    className="px-6 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-medium flex items-center gap-2 mx-auto">
+                    className="px-6 py-2.5 bg-red-600 text-gray-900 rounded-lg hover:bg-red-700 transition font-medium flex items-center gap-2 mx-auto">
                     <Icons.Refresh />
                     Retry Connection
                 </button>
@@ -340,7 +340,7 @@ const AnimalAnalytics = () => {
                 {/* Line Chart with ApexCharts */}
                 <div className="lg:col-span-2 relative flex flex-col rounded-xl bg-white bg-clip-border text-gray-700 shadow-md">
                     <div className="relative mx-4 mt-4 flex flex-col gap-4 overflow-hidden rounded-none bg-transparent bg-clip-border text-gray-700 shadow-none md:flex-row md:items-center">
-                        <div className="w-max rounded-lg bg-gradient-to-br from-green-600 to-teal-600 p-5 text-white">
+                        <div className="w-max rounded-lg bg-gradient-to-br from-green-600 to-teal-600 p-5 text-gray-900">
                             <svg
                                 xmlns="http://www.w3.org/2000/svg"
                                 fill="none"
@@ -451,7 +451,7 @@ const AnimalAnalytics = () => {
                                     }
                                 },
                                 tooltip: {
-                                    theme: 'dark',
+                                    theme: 'light',
                                     y: {
                                         formatter: (val) => `${val} detections`
                                     }
@@ -469,7 +469,7 @@ const AnimalAnalytics = () => {
                     </div>
                 </div>
 
-                <div className="bg-gradient-to-br from-green-600 to-teal-600 rounded-3xl p-8 shadow-xl text-white flex flex-col justify-between relative overflow-hidden">
+                <div className="bg-gradient-to-br from-green-600 to-teal-600 rounded-3xl p-8 shadow-xl text-gray-900 flex flex-col justify-between relative overflow-hidden">
                     <div className="absolute top-0 right-0 p-8 opacity-10 transform translate-x-1/4 -translate-y-1/4">
                         <svg viewBox="0 0 24 24" fill="currentColor" className="w-64 h-64">
                             <path d="M19 5c-1.1 0-2 .9-2 2v.5c-.85-.18-1.78-.17-2.5 0V7c0-1.1-.9-2-2-2s-2 .9-2 2v1.07c-1.07.6-2.06 1.34-3 2.18V9c0-1.1-.9-2-2-2s-2 .9-2 2v5.18c0 3.2 3.52 5.82 8.5 5.82s8.5-2.62 8.5-5.82V7c0-1.1-.9-2-2-2z" />
@@ -477,7 +477,7 @@ const AnimalAnalytics = () => {
                     </div>
 
                     <div className="relative z-10">
-                        <div className="bg-white/20 w-fit p-3 rounded-2xl mb-6 backdrop-blur-sm">
+                        <div className="bg-white/40 w-fit p-3 rounded-2xl mb-6 backdrop-blur-sm">
                             <Icons.Paw />
                         </div>
                         <h3 className="text-lg font-medium text-green-50 mb-1">Total Classifications</h3>
@@ -516,14 +516,14 @@ const AnimalAnalytics = () => {
 
                         <button
                             onClick={handleClearAll}
-                            className="flex-1 sm:flex-none px-4 py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 bg-gray-100 text-gray-600 hover:bg-red-600 hover:text-white transition shadow-sm group">
+                            className="flex-1 sm:flex-none px-4 py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 bg-gray-100 text-gray-500 hover:bg-red-600 hover:text-gray-900 transition shadow-sm group">
                             <Icons.Warning />
                             Clear Database
                         </button>
 
                         <button
                             onClick={() => setShowModelManager(true)}
-                            className="flex-1 sm:flex-none px-4 py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 bg-gradient-to-r from-purple-500 to-indigo-600 text-white hover:from-purple-600 hover:to-indigo-700 transition shadow-sm">
+                            className="flex-1 sm:flex-none px-4 py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 bg-gradient-to-r from-purple-500 to-indigo-600 text-gray-900 hover:from-purple-600 hover:to-indigo-700 transition shadow-sm">
                             <Icons.Settings />
                             AI Model
                         </button>
@@ -561,7 +561,7 @@ const AnimalAnalytics = () => {
                                                 className="w-4 h-4 rounded border-gray-300 text-green-600 focus:ring-green-500 cursor-pointer"
                                             />
                                         </td>
-                                        <td className="p-5 text-gray-400 font-mono text-xs">#{record.id}</td>
+                                        <td className="p-5 text-gray-500 font-mono text-xs">#{record.id}</td>
                                         <td className="p-5">
                                             <span className="text-gray-700 font-medium block max-w-[200px] truncate" title={record.filename}>
                                                 {record.filename}
@@ -590,7 +590,7 @@ const AnimalAnalytics = () => {
                             ) : (
                                 <tr>
                                     <td colSpan="6" className="p-16 text-center">
-                                        <div className="flex flex-col items-center justify-center text-gray-400 gap-3">
+                                        <div className="flex flex-col items-center justify-center text-gray-500 gap-3">
                                             <Icons.Filter />
                                             <p className="text-lg font-medium">No records found</p>
                                             <p className="text-sm">Start classifying images to see data here.</p>
@@ -616,7 +616,7 @@ const AnimalAnalytics = () => {
                         <button
                             onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                             disabled={page >= totalPages}
-                            className="px-5 py-2.5 rounded-xl text-sm font-bold bg-green-600 text-white hover:bg-green-700 shadow-md hover:shadow-lg transition disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none">
+                            className="px-5 py-2.5 rounded-xl text-sm font-bold bg-green-600 text-gray-900 hover:bg-green-700 shadow-md hover:shadow-lg transition disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none">
                             Next
                         </button>
                     </div>
@@ -628,10 +628,10 @@ const AnimalAnalytics = () => {
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
                     <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
                         {/* Header */}
-                        <div className="bg-gradient-to-r from-purple-600 to-indigo-600 p-6 text-white">
+                        <div className="bg-gradient-to-r from-purple-600 to-indigo-600 p-6 text-gray-900">
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-3">
-                                    <div className="bg-white/20 p-2 rounded-xl">
+                                    <div className="bg-white/40 p-2 rounded-xl">
                                         <Icons.Settings />
                                     </div>
                                     <div>
@@ -644,7 +644,7 @@ const AnimalAnalytics = () => {
                                         setShowModelManager(false);
                                         resetModelUpload();
                                     }}
-                                    className="p-2 hover:bg-white/20 rounded-xl transition"
+                                    className="p-2 hover:bg-white/40 rounded-xl transition"
                                 >
                                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -665,9 +665,9 @@ const AnimalAnalytics = () => {
                                     <div className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-medium">
                                         Active
                                     </div>
-                                    <span className="text-gray-600 text-sm">/models/model.json</span>
+                                    <span className="text-gray-500 text-sm">/models/model.json</span>
                                 </div>
-                                <p className="text-xs text-gray-400 mt-2">15 animal classes • 19 weight shards</p>
+                                <p className="text-xs text-gray-500 mt-2">15 animal classes • 19 weight shards</p>
                             </div>
 
                             {/* Upload Success State */}
@@ -690,7 +690,7 @@ const AnimalAnalytics = () => {
 
                                     {/* Model.json Upload */}
                                     <div className="mb-4">
-                                        <label className="block text-sm font-medium text-gray-600 mb-2">
+                                        <label className="block text-sm font-medium text-gray-500 mb-2">
                                             Model Architecture (model.json)
                                         </label>
                                         <input
@@ -714,7 +714,7 @@ const AnimalAnalytics = () => {
 
                                     {/* Weights Upload */}
                                     <div className="mb-4">
-                                        <label className="block text-sm font-medium text-gray-600 mb-2">
+                                        <label className="block text-sm font-medium text-gray-500 mb-2">
                                             Weight Files (.bin shards)
                                         </label>
                                         <input
@@ -738,11 +738,11 @@ const AnimalAnalytics = () => {
                                     {/* Selected Files List */}
                                     {modelFiles.length > 0 && (
                                         <div className="bg-gray-50 rounded-xl p-4 mb-4">
-                                            <h4 className="text-sm font-medium text-gray-600 mb-2">Selected Files ({modelFiles.length})</h4>
+                                            <h4 className="text-sm font-medium text-gray-500 mb-2">Selected Files ({modelFiles.length})</h4>
                                             <div className="max-h-32 overflow-y-auto space-y-1">
                                                 {modelFiles.map(file => (
                                                     <div key={file.name} className="flex items-center justify-between bg-white px-3 py-2 rounded-lg text-sm">
-                                                        <span className="truncate text-gray-600">{file.name}</span>
+                                                        <span className="truncate text-gray-500">{file.name}</span>
                                                         <button
                                                             onClick={() => removeModelFile(file.name)}
                                                             disabled={isUploading}
@@ -759,7 +759,7 @@ const AnimalAnalytics = () => {
                                     {/* Progress Bar */}
                                     {isUploading && (
                                         <div className="mb-4">
-                                            <div className="flex justify-between text-sm text-gray-600 mb-1">
+                                            <div className="flex justify-between text-sm text-gray-500 mb-1">
                                                 <span>Uploading...</span>
                                                 <span>{uploadProgress}%</span>
                                             </div>
@@ -790,7 +790,7 @@ const AnimalAnalytics = () => {
                                     setShowModelManager(false);
                                     resetModelUpload();
                                 }}
-                                className="px-5 py-2.5 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-200 transition"
+                                className="px-5 py-2.5 rounded-xl text-sm font-medium text-gray-500 hover:bg-gray-200 transition"
                             >
                                 Cancel
                             </button>
@@ -798,7 +798,7 @@ const AnimalAnalytics = () => {
                                 <button
                                     onClick={handleModelUpload}
                                     disabled={modelFiles.length === 0 || isUploading}
-                                    className="px-5 py-2.5 rounded-xl text-sm font-bold bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:from-purple-700 hover:to-indigo-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                    className="px-5 py-2.5 rounded-xl text-sm font-bold bg-gradient-to-r from-purple-600 to-indigo-600 text-gray-900 hover:from-purple-700 hover:to-indigo-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                                 >
                                     {isUploading ? (
                                         <>

@@ -105,17 +105,17 @@ const AdminHelpCenter = () => {
 
     return (
         <div className="space-y-6">
-            <div className="bg-[#141414] border border-[#2a2a2a] rounded-3xl p-6 md:p-8">
-                <div className="w-14 h-14 bg-[#8cff65]/10 rounded-2xl flex items-center justify-center text-[#8cff65] mb-5">
+            <div className="bg-white border border-green-200 rounded-3xl p-6 md:p-8">
+                <div className="w-14 h-14 bg-green-500/10 rounded-2xl flex items-center justify-center text-green-600 mb-5">
                     <HelpCircleIcon />
                 </div>
-                <h1 className="text-3xl font-bold text-white mb-2">Admin Dashboard Help</h1>
-                <p className="text-gray-400 max-w-3xl">
+                <h1 className="text-3xl font-bold text-gray-900 mb-2">Admin Dashboard Help</h1>
+                <p className="text-gray-500 max-w-3xl">
                     Dashboard-only help center with "How do I" answers for metrics, charts, user insights, and quick troubleshooting.
                 </p>
             </div>
 
-            <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl p-5 md:p-6">
+            <div className="bg-white border border-green-200 rounded-2xl p-5 md:p-6">
                 <div className="relative mb-4">
                     <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">
                         <SearchIcon />
@@ -125,7 +125,7 @@ const AdminHelpCenter = () => {
                         placeholder="Search dashboard how-to questions"
                         value={searchQuery}
                         onChange={(event) => setSearchQuery(event.target.value)}
-                        className="w-full bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl py-3.5 pl-12 pr-4 text-white placeholder-gray-500 focus:outline-none focus:border-[#8cff65]"
+                        className="w-full bg-green-50 border border-green-200 rounded-xl py-3.5 pl-12 pr-4 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-500"
                     />
                 </div>
 
@@ -139,8 +139,8 @@ const AdminHelpCenter = () => {
                                 onClick={() => setActiveCategory(category)}
                                 className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-colors ${
                                     isActive
-                                        ? 'bg-[#8cff65]/15 text-[#8cff65] border-[#8cff65]/40'
-                                        : 'bg-[#1a1a1a] text-gray-300 border-[#2a2a2a] hover:border-[#8cff65]/25'
+                                        ? 'bg-green-500/15 text-green-600 border-green-500/40'
+                                        : 'bg-green-50 text-gray-700 border-green-200 hover:border-green-500/25'
                                 }`}
                             >
                                 {category}
@@ -150,14 +150,14 @@ const AdminHelpCenter = () => {
                 </div>
             </div>
 
-            <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl p-5 md:p-6">
+            <div className="bg-white border border-green-200 rounded-2xl p-5 md:p-6">
                 <div className="flex items-center justify-between mb-5">
-                    <h2 className="text-xl font-bold text-white">How-To Questions</h2>
-                    <span className="text-sm text-gray-400">{filteredFaqs.length} results</span>
+                    <h2 className="text-xl font-bold text-gray-900">How-To Questions</h2>
+                    <span className="text-sm text-gray-500">{filteredFaqs.length} results</span>
                 </div>
 
                 {filteredFaqs.length === 0 ? (
-                    <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-6 text-center text-gray-400">
+                    <div className="bg-green-50 border border-green-200 rounded-xl p-6 text-center text-gray-500">
                         No dashboard help questions matched your search.
                     </div>
                 ) : (
@@ -166,19 +166,19 @@ const AdminHelpCenter = () => {
                             const isExpanded = expandedFaq === faq.id;
 
                             return (
-                                <div key={faq.id} className="border border-[#2a2a2a] rounded-xl overflow-hidden">
+                                <div key={faq.id} className="border border-green-200 rounded-xl overflow-hidden">
                                     <button
                                         onClick={() => setExpandedFaq(isExpanded ? null : faq.id)}
-                                        className="w-full px-4 py-4 text-left hover:bg-[#1a1a1a] transition-colors"
+                                        className="w-full px-4 py-4 text-left hover:bg-green-50 transition-colors"
                                     >
                                         <div className="flex items-center justify-between gap-4">
                                             <div>
-                                                <span className="inline-flex px-2 py-0.5 mb-2 rounded text-xs font-medium bg-[#8cff65]/10 text-[#8cff65]">
+                                                <span className="inline-flex px-2 py-0.5 mb-2 rounded text-xs font-medium bg-green-500/10 text-green-600">
                                                     {faq.category}
                                                 </span>
-                                                <p className="text-white font-medium">{faq.question}</p>
+                                                <p className="text-gray-900 font-medium">{faq.question}</p>
                                             </div>
-                                            <span className={`text-gray-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`}>
+                                            <span className={`text-gray-500 transition-transform ${isExpanded ? 'rotate-180' : ''}`}>
                                                 <ChevronDownIcon />
                                             </span>
                                         </div>
@@ -186,7 +186,7 @@ const AdminHelpCenter = () => {
 
                                     {isExpanded && (
                                         <div className="px-4 pb-4">
-                                            <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-4 text-sm text-gray-300 leading-relaxed">
+                                            <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-sm text-gray-700 leading-relaxed">
                                                 {faq.answer}
                                             </div>
                                         </div>

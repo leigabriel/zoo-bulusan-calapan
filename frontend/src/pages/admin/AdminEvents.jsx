@@ -429,7 +429,7 @@ const AdminEvents = () => {
             case 'upcoming':
                 return 'bg-green-500/20 text-green-400 border-green-500/30';
             case 'completed':
-                return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
+                return 'bg-gray-500/20 text-gray-500 border-gray-500/30';
             case 'cancelled':
                 return 'bg-red-500/20 text-red-400 border-red-500/30';
             default:
@@ -441,8 +441,8 @@ const AdminEvents = () => {
         return (
             <div className="flex items-center justify-center h-64">
                 <div className="relative w-16 h-16">
-                    <div className="absolute inset-0 rounded-full border-4 border-[#2a2a2a]"></div>
-                    <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-[#8cff65] animate-spin"></div>
+                    <div className="absolute inset-0 rounded-full border-4 border-green-200"></div>
+                    <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-green-500 animate-spin"></div>
                 </div>
             </div>
         );
@@ -453,12 +453,12 @@ const AdminEvents = () => {
             {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-white">Events Management</h1>
-                    <p className="text-gray-400">Create and manage zoo events</p>
+                    <h1 className="text-2xl font-bold text-gray-900">Events Management</h1>
+                    <p className="text-gray-500">Create and manage zoo events</p>
                 </div>
                 <div className="flex items-center gap-3">
                     {/* View Switcher */}
-                    <div className="flex bg-[#1e1e1e] rounded-xl p-1 border border-[#2a2a2a]">
+                    <div className="flex bg-green-50 rounded-xl p-1 border border-green-200">
                         {[
                             { value: 'dayGridMonth', label: 'Month' },
                             { value: 'timeGridWeek', label: 'Week' },
@@ -469,8 +469,8 @@ const AdminEvents = () => {
                                 key={view.value}
                                 onClick={() => handleViewChange(view.value)}
                                 className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-all ${currentView === view.value
-                                        ? 'bg-[#8cff65] text-black'
-                                        : 'text-gray-400 hover:text-white'
+                                        ? 'bg-green-500 text-black'
+                                        : 'text-gray-500 hover:text-gray-900'
                                     }`}
                             >
                                 {view.label}
@@ -492,7 +492,7 @@ const AdminEvents = () => {
                             setModalMode('create');
                             setShowModal(true);
                         }}
-                        className="flex items-center gap-2 px-4 py-2 bg-[#8cff65] hover:bg-[#7ae857] text-black font-medium rounded-xl transition-colors"
+                        className="flex items-center gap-2 px-4 py-2 bg-green-500 hover:bg-green-600 text-black font-medium rounded-xl transition-colors"
                     >
                         <PlusIcon />
                         <span>New Event</span>
@@ -503,22 +503,22 @@ const AdminEvents = () => {
             {/* Main Content Grid */}
             <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
                 {/* Calendar */}
-                <div className="xl:col-span-3 bg-[#141414] border border-[#2a2a2a] rounded-2xl p-4 sm:p-6">
+                <div className="xl:col-span-3 bg-white border border-green-200 rounded-2xl p-4 sm:p-6">
                     <style>{`
                         .fc {
-                            --fc-border-color: #2a2a2a;
-                            --fc-button-bg-color: #1e1e1e;
-                            --fc-button-border-color: #2a2a2a;
-                            --fc-button-text-color: #fff;
-                            --fc-button-hover-bg-color: #2a2a2a;
-                            --fc-button-hover-border-color: #3a3a3a;
-                            --fc-button-active-bg-color: #8cff65;
-                            --fc-button-active-border-color: #8cff65;
-                            --fc-today-bg-color: rgba(140, 255, 101, 0.1);
-                            --fc-page-bg-color: #141414;
-                            --fc-neutral-bg-color: #1e1e1e;
-                            --fc-list-event-hover-bg-color: #1e1e1e;
-                            --fc-highlight-color: rgba(140, 255, 101, 0.2);
+                            --fc-border-color: #bbf7d0;
+                            --fc-button-bg-color: #f0fdf4;
+                            --fc-button-border-color: #86efac;
+                            --fc-button-text-color: #166534;
+                            --fc-button-hover-bg-color: #dcfce7;
+                            --fc-button-hover-border-color: #4ade80;
+                            --fc-button-active-bg-color: #22c55e;
+                            --fc-button-active-border-color: #16a34a;
+                            --fc-today-bg-color: rgba(34, 197, 94, 0.12);
+                            --fc-page-bg-color: #ffffff;
+                            --fc-neutral-bg-color: #f0fdf4;
+                            --fc-list-event-hover-bg-color: #f0fdf4;
+                            --fc-highlight-color: rgba(34, 197, 94, 0.15);
                         }
                         .fc .fc-toolbar-title {
                             color: #fff;
@@ -526,23 +526,23 @@ const AdminEvents = () => {
                             font-weight: 600;
                         }
                         .fc .fc-col-header-cell-cushion {
-                            color: #9ca3af;
+                            color: #6b7280;
                             font-weight: 500;
                             padding: 12px 4px;
                         }
                         .fc .fc-daygrid-day-number {
-                            color: #9ca3af;
+                            color: #6b7280;
                             padding: 8px;
                         }
                         .fc .fc-daygrid-day.fc-day-today .fc-daygrid-day-number {
-                            color: #8cff65;
+                            color: #22c55e;
                             font-weight: 600;
                         }
                         .fc .fc-daygrid-day-frame {
                             min-height: 100px;
                         }
                         .fc .fc-daygrid-day:hover {
-                            background-color: rgba(140, 255, 101, 0.05);
+                            background-color: rgba(34,197,94,0.06);
                             cursor: pointer;
                         }
                         .fc .fc-event {
@@ -573,34 +573,34 @@ const AdminEvents = () => {
                             text-transform: capitalize !important;
                         }
                         .fc .fc-button-primary:not(:disabled).fc-button-active {
-                            color: #000 !important;
+                            color: #fff !important;
                         }
                         .fc .fc-timegrid-slot-label-cushion {
-                            color: #9ca3af;
+                            color: #6b7280;
                         }
                         .fc .fc-timegrid-axis-cushion {
-                            color: #9ca3af;
+                            color: #6b7280;
                         }
                         .fc .fc-list-day-cushion {
-                            background-color: #1e1e1e !important;
+                            background-color: #f0fdf4 !important;
                         }
                         .fc .fc-list-day-text, .fc .fc-list-day-side-text {
                             color: #fff !important;
                         }
                         .fc .fc-list-event-time {
-                            color: #9ca3af;
+                            color: #6b7280;
                         }
                         .fc .fc-list-event-title {
                             color: #fff;
                         }
                         .fc-theme-standard td, .fc-theme-standard th {
-                            border-color: #2a2a2a;
+                            border-color: #bbf7d0;
                         }
                         .fc-scrollgrid {
-                            border-color: #2a2a2a !important;
+                            border-color: #bbf7d0 !important;
                         }
                         .fc .fc-scrollgrid-section > * {
-                            border-color: #2a2a2a;
+                            border-color: #bbf7d0;
                         }
                         .fc-day-other .fc-daygrid-day-number {
                             color: #4a4a4a !important;
@@ -651,14 +651,14 @@ const AdminEvents = () => {
                 {/* Sidebar - Event History */}
                 <div className="xl:col-span-1 space-y-6">
                     {/* Events Panel with Tabs */}
-                    <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl p-5">
+                    <div className="bg-white border border-green-200 rounded-2xl p-5">
                         {/* Tab Switcher */}
                         <div className="flex items-center gap-2 mb-4">
                             <button
                                 onClick={() => setSidebarView('upcoming')}
                                 className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition ${sidebarView === 'upcoming'
-                                        ? 'bg-[#8cff65] text-black'
-                                        : 'bg-[#1e1e1e] text-gray-400 hover:text-white'
+                                        ? 'bg-green-500 text-black'
+                                        : 'bg-green-50 text-gray-500 hover:text-gray-900'
                                     }`}
                             >
                                 Upcoming ({upcomingOngoingEvents.length})
@@ -666,8 +666,8 @@ const AdminEvents = () => {
                             <button
                                 onClick={() => setSidebarView('past')}
                                 className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition ${sidebarView === 'past'
-                                        ? 'bg-[#8cff65] text-black'
-                                        : 'bg-[#1e1e1e] text-gray-400 hover:text-white'
+                                        ? 'bg-green-500 text-black'
+                                        : 'bg-green-50 text-gray-500 hover:text-gray-900'
                                     }`}
                             >
                                 Past ({pastEvents.length})
@@ -703,11 +703,11 @@ const AdminEvents = () => {
                                                 setModalMode('view');
                                                 setShowModal(true);
                                             }}
-                                            className="p-3 bg-[#1e1e1e] rounded-xl hover:bg-[#252525] transition cursor-pointer border-l-4 group"
+                                            className="p-3 bg-green-50 rounded-xl hover:bg-green-50 transition cursor-pointer border-l-4 group"
                                             style={{ borderColor: event.backgroundColor }}
                                         >
                                             <div className="flex items-start justify-between gap-2">
-                                                <p className="font-medium text-white text-sm group-hover:text-[#8cff65] transition line-clamp-1">
+                                                <p className="font-medium text-gray-900 text-sm group-hover:text-green-600 transition line-clamp-1">
                                                     {event.title}
                                                 </p>
                                                 <span className={`px-2 py-0.5 text-[10px] font-medium rounded-full border capitalize whitespace-nowrap ${getStatusStyle(event.extendedProps.status)}`}>
@@ -759,11 +759,11 @@ const AdminEvents = () => {
                                                 setModalMode('view');
                                                 setShowModal(true);
                                             }}
-                                            className="p-3 bg-[#1e1e1e] rounded-xl hover:bg-[#252525] transition cursor-pointer border-l-4 group opacity-75"
+                                            className="p-3 bg-green-50 rounded-xl hover:bg-green-50 transition cursor-pointer border-l-4 group opacity-75"
                                             style={{ borderColor: event.backgroundColor }}
                                         >
                                             <div className="flex items-start justify-between gap-2">
-                                                <p className="font-medium text-white text-sm group-hover:text-[#8cff65] transition line-clamp-1">
+                                                <p className="font-medium text-gray-900 text-sm group-hover:text-green-600 transition line-clamp-1">
                                                     {event.title}
                                                 </p>
                                                 <span className={`px-2 py-0.5 text-[10px] font-medium rounded-full border capitalize whitespace-nowrap ${getStatusStyle(event.extendedProps.status)}`}>
@@ -790,12 +790,12 @@ const AdminEvents = () => {
                     </div>
 
                     {/* Quick Stats */}
-                    <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl p-5">
-                        <h3 className="text-lg font-semibold text-white mb-4">Event Stats</h3>
+                    <div className="bg-white border border-green-200 rounded-2xl p-5">
+                        <h3 className="text-lg font-semibold text-gray-900 mb-4">Event Stats</h3>
                         <div className="space-y-3">
-                            <div className="flex items-center justify-between p-3 bg-[#1e1e1e] rounded-xl">
-                                <span className="text-gray-400 text-sm">Total Events</span>
-                                <span className="text-white font-bold">{events.length}</span>
+                            <div className="flex items-center justify-between p-3 bg-green-50 rounded-xl">
+                                <span className="text-gray-500 text-sm">Total Events</span>
+                                <span className="text-gray-900 font-bold">{events.length}</span>
                             </div>
                             <div className="flex items-center justify-between p-3 bg-green-500/10 rounded-xl border border-green-500/20">
                                 <span className="text-green-400 text-sm">Upcoming</span>
@@ -816,11 +816,11 @@ const AdminEvents = () => {
 
             {/* Event Modal */}
             {showModal && (
-                <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+                <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-white border border-green-200 rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
                         {/* Modal Header */}
-                        <div className="flex items-center justify-between p-5 border-b border-[#2a2a2a]">
-                            <h2 className="text-xl font-bold text-white">
+                        <div className="flex items-center justify-between p-5 border-b border-green-200">
+                            <h2 className="text-xl font-bold text-gray-900">
                                 {modalMode === 'view' ? 'Event Details' : modalMode === 'edit' ? 'Edit Event' : 'New Event'}
                             </h2>
                             <button
@@ -828,7 +828,7 @@ const AdminEvents = () => {
                                     setShowModal(false);
                                     resetForm();
                                 }}
-                                className="text-gray-400 hover:text-white transition"
+                                className="text-gray-500 hover:text-gray-900 transition"
                             >
                                 <CloseIcon />
                             </button>
@@ -846,20 +846,20 @@ const AdminEvents = () => {
 
                                 {/* Title */}
                                 <div className="mt-4">
-                                    <h3 className="text-2xl font-bold text-white">{formData.title}</h3>
+                                    <h3 className="text-2xl font-bold text-gray-900">{formData.title}</h3>
                                     <span className={`inline-block mt-2 px-3 py-1 text-xs font-medium rounded-full border capitalize ${getStatusStyle(formData.status)}`}>
                                         {formData.status}
                                     </span>
                                 </div>
 
                                 {/* Date & Time */}
-                                <div className="flex items-center gap-3 text-gray-300">
+                                <div className="flex items-center gap-3 text-gray-700">
                                     <CalendarIcon />
                                     <span>{formatDisplayDate(formData.eventDate)}</span>
                                 </div>
 
                                 {formData.startTime && (
-                                    <div className="flex items-center gap-3 text-gray-300">
+                                    <div className="flex items-center gap-3 text-gray-700">
                                         <ClockIcon />
                                         <span>
                                             {formatTime(formData.startTime)}
@@ -880,8 +880,8 @@ const AdminEvents = () => {
                                 )}
 
                                 {formData.description && (
-                                    <div className="pt-4 border-t border-[#2a2a2a]">
-                                        <p className="text-gray-400 text-sm leading-relaxed whitespace-pre-line">
+                                    <div className="pt-4 border-t border-green-200">
+                                        <p className="text-gray-500 text-sm leading-relaxed whitespace-pre-line">
                                             {formData.description}
                                         </p>
                                     </div>
@@ -904,14 +904,14 @@ const AdminEvents = () => {
                                             setShowModal(false);
                                             resetForm();
                                         }}
-                                        className="flex-1 px-4 py-3 bg-[#2a2a2a] hover:bg-[#3a3a3a] text-white rounded-xl font-medium transition"
+                                        className="flex-1 px-4 py-3 bg-green-50 hover:bg-green-50 text-gray-900 rounded-xl font-medium transition"
                                     >
                                         Close
                                     </button>
                                     <button
                                         type="button"
                                         onClick={handleEditMode}
-                                        className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-[#8cff65] hover:bg-[#7ae857] text-black rounded-xl font-medium transition"
+                                        className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-green-500 hover:bg-green-600 text-black rounded-xl font-medium transition"
                                     >
                                         <EditIcon />
                                         Edit
@@ -929,7 +929,7 @@ const AdminEvents = () => {
 
                                 {/* Title */}
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
                                         Title <span className="text-red-400">*</span>
                                     </label>
                                     <input
@@ -937,14 +937,14 @@ const AdminEvents = () => {
                                         value={formData.title}
                                         onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                                         placeholder="Add title here"
-                                        className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-[#8cff65] transition"
+                                        className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-500 transition"
                                         required
                                     />
                                 </div>
 
                                 {/* Description */}
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
                                         Description
                                     </label>
                                     <textarea
@@ -952,13 +952,13 @@ const AdminEvents = () => {
                                         onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                                         placeholder="Enter event description here"
                                         rows={3}
-                                        className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-[#8cff65] transition resize-none"
+                                        className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-500 transition resize-none"
                                     />
                                 </div>
 
                                 {/* Date */}
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
                                         <span className="flex items-center gap-2">
                                             <CalendarIcon />
                                             Date <span className="text-red-400">*</span>
@@ -968,7 +968,7 @@ const AdminEvents = () => {
                                         type="date"
                                         value={formData.eventDate}
                                         onChange={(e) => setFormData({ ...formData, eventDate: e.target.value })}
-                                        className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#8cff65] transition"
+                                        className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:border-green-500 transition"
                                         required
                                     />
                                 </div>
@@ -976,32 +976,32 @@ const AdminEvents = () => {
                                 {/* Time */}
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-300 mb-2">
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">
                                             Start Time
                                         </label>
                                         <input
                                             type="time"
                                             value={formData.startTime}
                                             onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
-                                            className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#8cff65] transition"
+                                            className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:border-green-500 transition"
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-300 mb-2">
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">
                                             End Time
                                         </label>
                                         <input
                                             type="time"
                                             value={formData.endTime}
                                             onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
-                                            className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#8cff65] transition"
+                                            className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:border-green-500 transition"
                                         />
                                     </div>
                                 </div>
 
                                 {/* Event Image - URL or Upload */}
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
                                         <span className="flex items-center gap-2">
                                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
                                                 <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
@@ -1016,7 +1016,7 @@ const AdminEvents = () => {
                                         type="file"
                                         accept="image/*"
                                         onChange={handleImageFileChange}
-                                        className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-[#8cff65] file:text-black file:font-medium file:cursor-pointer hover:file:bg-[#7de857] transition"
+                                        className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-green-500 file:text-white file:font-medium file:cursor-pointer hover:file:bg-green-600 transition"
                                     />
                                     {(imagePreview || formData.imageUrl) && (
                                         <div className="mt-2 rounded-lg overflow-hidden h-24 relative">
@@ -1033,7 +1033,7 @@ const AdminEvents = () => {
                                                         setImageFile(null);
                                                         setImagePreview(null);
                                                     }}
-                                                    className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition"
+                                                    className="absolute top-1 right-1 bg-red-500 text-gray-900 rounded-full p-1 hover:bg-red-600 transition"
                                                 >
                                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -1046,7 +1046,7 @@ const AdminEvents = () => {
 
                                 {/* Tag Color */}
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
                                         Tag Color
                                     </label>
                                     <div className="flex gap-2 flex-wrap">
@@ -1056,7 +1056,7 @@ const AdminEvents = () => {
                                                 type="button"
                                                 onClick={() => setFormData({ ...formData, color: color.value })}
                                                 className={`w-8 h-8 rounded-lg ${color.bg} transition-all ${formData.color === color.value
-                                                        ? 'ring-2 ring-white ring-offset-2 ring-offset-[#141414]'
+                                                        ? 'ring-2 ring-white ring-offset-2 ring-offset-white'
                                                         : 'hover:scale-110'
                                                     }`}
                                                 title={color.name}
@@ -1067,13 +1067,13 @@ const AdminEvents = () => {
 
                                 {/* Status */}
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
                                         Status
                                     </label>
                                     <select
                                         value={formData.status}
                                         onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                                        className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#8cff65] transition"
+                                        className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:border-green-500 transition"
                                     >
                                         <option value="upcoming">Upcoming</option>
                                         <option value="ongoing">Ongoing</option>
@@ -1101,14 +1101,14 @@ const AdminEvents = () => {
                                             setShowModal(false);
                                             resetForm();
                                         }}
-                                        className="flex-1 px-4 py-3 bg-[#2a2a2a] hover:bg-[#3a3a3a] text-white rounded-xl font-medium transition"
+                                        className="flex-1 px-4 py-3 bg-green-50 hover:bg-green-50 text-gray-900 rounded-xl font-medium transition"
                                     >
                                         Cancel
                                     </button>
                                     <button
                                         type="submit"
                                         disabled={saving}
-                                        className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-[#8cff65] hover:bg-[#7ae857] text-black rounded-xl font-medium transition disabled:opacity-50"
+                                        className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-green-500 hover:bg-green-600 text-black rounded-xl font-medium transition disabled:opacity-50"
                                     >
                                         {saving ? (
                                             <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin"></div>
@@ -1133,10 +1133,10 @@ const AdminEvents = () => {
 
             {/* Confirmation Modal */}
             {showConfirmModal && (
-                <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
-                    <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl w-full max-w-md p-6">
+                <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
+                    <div className="bg-white border border-green-200 rounded-2xl w-full max-w-md p-6">
                         <div className={`w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 ${
-                            confirmAction === 'delete' ? 'bg-red-500/20' : 'bg-[#8cff65]/20'
+                            confirmAction === 'delete' ? 'bg-red-500/20' : 'bg-green-500/20'
                         }`}>
                             {confirmAction === 'delete' ? (
                                 <TrashIcon />
@@ -1146,11 +1146,11 @@ const AdminEvents = () => {
                                 <PlusIcon />
                             )}
                         </div>
-                        <h3 className="text-xl font-bold text-white text-center mb-2">
+                        <h3 className="text-xl font-bold text-gray-900 text-center mb-2">
                             {confirmAction === 'delete' ? 'Delete Event' : 
                              confirmAction === 'update' ? 'Update Event' : 'Create Event'}
                         </h3>
-                        <p className="text-gray-400 text-center mb-4">
+                        <p className="text-gray-500 text-center mb-4">
                             {confirmAction === 'delete' 
                                 ? 'Are you sure you want to delete this event? This action cannot be undone.'
                                 : confirmAction === 'update'
@@ -1159,14 +1159,14 @@ const AdminEvents = () => {
                         </p>
                         
                         {confirmData && (
-                            <div className="bg-[#1e1e1e] rounded-xl p-4 mb-6 space-y-2">
+                            <div className="bg-green-50 rounded-xl p-4 mb-6 space-y-2">
                                 <div className="flex justify-between text-sm">
                                     <span className="text-gray-500">Title</span>
-                                    <span className="text-white font-medium">{confirmData.title}</span>
+                                    <span className="text-gray-900 font-medium">{confirmData.title}</span>
                                 </div>
                                 <div className="flex justify-between text-sm">
                                     <span className="text-gray-500">Date</span>
-                                    <span className="text-white font-medium">
+                                    <span className="text-gray-900 font-medium">
                                         {confirmData.eventDate ? new Date(confirmData.eventDate + 'T00:00:00').toLocaleDateString('en-US', {
                                             month: 'short', day: 'numeric', year: 'numeric'
                                         }) : '-'}
@@ -1175,7 +1175,7 @@ const AdminEvents = () => {
                                 {confirmData.status && (
                                     <div className="flex justify-between text-sm">
                                         <span className="text-gray-500">Status</span>
-                                        <span className="text-white font-medium capitalize">{confirmData.status}</span>
+                                        <span className="text-gray-900 font-medium capitalize">{confirmData.status}</span>
                                     </div>
                                 )}
                             </div>
@@ -1188,7 +1188,7 @@ const AdminEvents = () => {
                                     setConfirmAction(null);
                                     setConfirmData(null);
                                 }}
-                                className="flex-1 px-4 py-3 bg-[#2a2a2a] hover:bg-[#3a3a3a] text-white rounded-xl font-medium transition"
+                                className="flex-1 px-4 py-3 bg-green-50 hover:bg-green-50 text-gray-900 rounded-xl font-medium transition"
                             >
                                 Cancel
                             </button>
@@ -1197,8 +1197,8 @@ const AdminEvents = () => {
                                 disabled={saving}
                                 className={`flex-1 px-4 py-3 rounded-xl font-medium transition disabled:opacity-50 ${
                                     confirmAction === 'delete'
-                                        ? 'bg-red-500 hover:bg-red-600 text-white'
-                                        : 'bg-[#8cff65] hover:bg-[#7ae857] text-black'
+                                        ? 'bg-red-500 hover:bg-red-600 text-gray-900'
+                                        : 'bg-green-500 hover:bg-green-600 text-black'
                                 }`}
                             >
                                 {saving ? 'Processing...' : 'Confirm'}
