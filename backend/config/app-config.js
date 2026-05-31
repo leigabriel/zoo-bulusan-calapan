@@ -1,6 +1,7 @@
 module.exports = {
     jwtSecret: process.env.JWT_SECRET || 'your-secret-key',
     jwtExpire: process.env.JWT_EXPIRE || '7d',
+    reservationQrSecret: process.env.RESERVATION_QR_SECRET || 'zoo-bulusan-reservation-secret',
     roles: {
         ADMIN: 'admin',
         STAFF: 'staff',

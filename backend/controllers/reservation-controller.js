@@ -2,6 +2,8 @@ const Reservation = require('../models/reservation-model');
 const Event = require('../models/event-model');
 const Notification = require('../models/notification-model');
 const { logStaffActivity } = require('../middleware/track-activity');
+const crypto = require('crypto');
+const { reservationQrSecret } = require('../config/app-config');
 
 // Helper function to create notifications for admin/staff
 const createAdminStaffNotification = async (title, message, type = 'event', link = null) => {
@@ -34,6 +36,65 @@ const generateReservationReference = () => {
         code += chars.charAt(Math.floor(Math.random() * chars.length));
     }
     return code;
+};
+
+const TICKET_DAILY_CAPACITY = 100;
+const EVENT_SLOT_CAPACITY = 100;
+
+const TICKET_TIME_SLOTS = [
+    { id: '09:00', label: '09:00 AM', start: '09:00', end: '10:30' },
+    { id: '11:00', label: '11:00 AM', start: '11:00', end: '12:30' },
+    { id: '13:00', label: '01:00 PM', start: '13:00', end: '14:30' },
+    { id: '15:00', label: '03:00 PM', start: '15:00', end: '16:30' }
+];
+
+const EVENT_TIME_SLOTS = [
+    { id: '09:00', label: '09:00 AM', start: '09:00', end: '10:30' },
+    { id: '11:00', label: '11:00 AM', start: '11:00', end: '12:30' },
+    { id: '13:00', label: '01:00 PM', start: '13:00', end: '14:30' },
+    { id: '15:00', label: '03:00 PM', start: '15:00', end: '16:30' }
+];
+
+const buildDateRange = (startDate, days) => {
+    const start = new Date(startDate);
+    const range = [];
+    for (let i = 0; i < days; i++) {
+        const d = new Date(start);
+        d.setDate(start.getDate() + i);
+        range.push(d.toISOString().split('T')[0]);
+    }
+    return range;
+};
+
+const signQrPayload = (payloadJson) => {
+    return crypto.createHmac('sha256', reservationQrSecret).update(payloadJson).digest('hex');
+};
+
+const buildQrData = (payload) => {
+    const payloadJson = JSON.stringify(payload);
+    const signature = signQrPayload(payloadJson);
+    const encoded = Buffer.from(payloadJson).toString('base64');
+    return `ZBCZ|${encoded}|${signature}`;
+};
+
+const parseQrData = (qrData) => {
+    if (!qrData || typeof qrData !== 'string') return null;
+    const parts = qrData.split('|');
+    if (parts.length !== 3 || parts[0] !== 'ZBCZ') return null;
+
+    const payloadJson = Buffer.from(parts[1], 'base64').toString('utf8');
+    const signature = parts[2];
+    const expected = signQrPayload(payloadJson);
+    const sigBuffer = Buffer.from(signature);
+    const expectedBuffer = Buffer.from(expected);
+    if (sigBuffer.length !== expectedBuffer.length) return null;
+    if (!crypto.timingSafeEqual(sigBuffer, expectedBuffer)) return null;
+
+    try {
+        return JSON.parse(payloadJson);
+    } catch {
+        return null;
+    }
 };
 
 exports.getAllTicketReservations = async (req, res) => {
@@ -109,7 +170,7 @@ exports.createTicketReservation = async (req, res) => {
     try {
         const { 
             visitorName, visitorEmail, visitorPhone, reservationDate,
-            adultQuantity, childQuantity, bulusanResidentQuantity,
+            reservationTime, adultQuantity, childQuantity, bulusanResidentQuantity,
             notes
         } = req.body;
 
@@ -126,6 +187,21 @@ exports.createTicketReservation = async (req, res) => {
             });
         }
 
+        if (!reservationTime) {
+            return res.status(400).json({
+                success: false,
+                message: 'Please select a visit time.'
+            });
+        }
+
+        const validTime = TICKET_TIME_SLOTS.some(slot => slot.id === reservationTime);
+        if (!validTime) {
+            return res.status(400).json({
+                success: false,
+                message: 'Selected time slot is invalid.'
+            });
+        }
+
         // parse quantities from formdata strings
         const adult = parseInt(adultQuantity) || 0;
         const child = parseInt(childQuantity) || 0;
@@ -139,8 +215,28 @@ exports.createTicketReservation = async (req, res) => {
             });
         }
 
+        const dailyTotals = await Reservation.getTicketTotalsByDate(reservationDate);
+        const projectedTotal = (dailyTotals?.total_visitors || 0) + totalVisitors;
+        if (projectedTotal > TICKET_DAILY_CAPACITY) {
+            return res.status(400).json({
+                success: false,
+                message: `Daily capacity reached. Only ${Math.max(0, TICKET_DAILY_CAPACITY - (dailyTotals?.total_visitors || 0))} slots remaining for this date.`
+            });
+        }
+
         const reservationReference = generateReservationReference();
         const userId = req.user?.id || null;
+
+        const qrData = buildQrData({
+            type: 'ticket',
+            ref: reservationReference,
+            date: reservationDate,
+            time: reservationTime,
+            name: visitorName,
+            email: visitorEmail,
+            visitors: totalVisitors,
+            createdAt: new Date().toISOString()
+        });
 
         const reservationId = await Reservation.createTicketReservation({
             reservationReference,
@@ -149,20 +245,23 @@ exports.createTicketReservation = async (req, res) => {
             visitorEmail,
             visitorPhone,
             reservationDate,
+            reservationTime,
             adultQuantity: adult,
             childQuantity: child,
             bulusanResidentQuantity: bulusanResident,
             totalVisitors,
             residentIdImage,
             status: 'pending',
-            notes
+            notes,
+            qrData
         });
 
         res.status(201).json({
             success: true,
             message: 'Ticket reservation created successfully',
             reservationId,
-            reservationReference
+            reservationReference,
+            qrData
         });
     } catch (error) {
         console.error('Error creating ticket reservation:', error);
@@ -192,8 +291,52 @@ exports.createEventReservation = async (req, res) => {
             });
         }
 
+        if (!venueEventTime) {
+            return res.status(400).json({
+                success: false,
+                message: 'Please select an event time.'
+            });
+        }
+
+        const validTime = EVENT_TIME_SLOTS.some(slot => slot.id === venueEventTime);
+        if (!validTime) {
+            return res.status(400).json({
+                success: false,
+                message: 'Selected event time is invalid.'
+            });
+        }
+
+        const participants = parseInt(numberOfParticipants, 10) || 1;
+        if (participants > EVENT_SLOT_CAPACITY) {
+            return res.status(400).json({
+                success: false,
+                message: `Maximum headcount is ${EVENT_SLOT_CAPACITY} participants.`
+            });
+        }
+
+        const eventTotals = await Reservation.getEventTotalsByDateTime(venueEventDate, venueEventTime);
+        const projectedTotal = (eventTotals?.total_participants || 0) + participants;
+        if (projectedTotal > EVENT_SLOT_CAPACITY) {
+            return res.status(400).json({
+                success: false,
+                message: `This time slot only has ${Math.max(0, EVENT_SLOT_CAPACITY - (eventTotals?.total_participants || 0))} spots remaining.`
+            });
+        }
+
         const reservationReference = generateReservationReference();
         const userId = req.user?.id || null;
+
+        const qrData = buildQrData({
+            type: 'event',
+            ref: reservationReference,
+            date: venueEventDate,
+            time: venueEventTime,
+            name: participantName,
+            email: participantEmail,
+            participants,
+            eventName: venueEventName,
+            createdAt: new Date().toISOString()
+        });
 
         const reservationId = await Reservation.createEventReservation({
             reservationReference,
@@ -202,14 +345,15 @@ exports.createEventReservation = async (req, res) => {
             participantName,
             participantEmail,
             participantPhone,
-            numberOfParticipants: numberOfParticipants || 1,
+            numberOfParticipants: participants,
             participantDetails,
             status: 'pending',
             notes,
             venueEventName,
             venueEventDate,
             venueEventTime,
-            venueEventDescription
+            venueEventDescription,
+            qrData
         });
 
         // Create notification for admin/staff
@@ -224,7 +368,8 @@ exports.createEventReservation = async (req, res) => {
             success: true,
             message: 'Event reservation created successfully',
             reservationId,
-            reservationReference
+            reservationReference,
+            qrData
         });
     } catch (error) {
         console.error('Error creating event reservation:', error);
@@ -517,5 +662,176 @@ exports.unarchiveEventReservation = async (req, res) => {
     } catch (error) {
         console.error('Error restoring event reservation:', error);
         res.status(500).json({ success: false, message: 'Error restoring reservation' });
+    }
+};
+
+exports.getTicketAvailability = async (req, res) => {
+    try {
+        const startDate = req.query.start || new Date().toISOString().split('T')[0];
+        const days = Math.min(parseInt(req.query.days, 10) || 30, 60);
+        const endDate = buildDateRange(startDate, days).slice(-1)[0];
+
+        const totals = await Reservation.getTicketTotalsByDateRange(startDate, endDate);
+        const totalsByDate = new Map();
+        const totalsBySlot = new Map();
+
+        totals.forEach((row) => {
+            const dateKey = row.reservation_date instanceof Date
+                ? row.reservation_date.toISOString().split('T')[0]
+                : row.reservation_date;
+            const timeKey = row.reservation_time || 'unspecified';
+            const total = Number(row.total_visitors || 0);
+
+            totalsByDate.set(dateKey, (totalsByDate.get(dateKey) || 0) + total);
+            totalsBySlot.set(`${dateKey}|${timeKey}`, total);
+        });
+
+        const dates = buildDateRange(startDate, days).map((date) => {
+            const dailyTotal = totalsByDate.get(date) || 0;
+            const dailyRemaining = Math.max(0, TICKET_DAILY_CAPACITY - dailyTotal);
+            const slots = TICKET_TIME_SLOTS.map((slot) => {
+                const slotTotal = totalsBySlot.get(`${date}|${slot.id}`) || 0;
+                const remaining = Math.max(0, Math.min(TICKET_DAILY_CAPACITY - slotTotal, dailyRemaining));
+                return {
+                    time: slot.id,
+                    label: slot.label,
+                    totalVisitors: slotTotal,
+                    remaining,
+                    isFull: remaining <= 0 || dailyRemaining <= 0
+                };
+            });
+
+            return {
+                date,
+                totalVisitors: dailyTotal,
+                remaining: dailyRemaining,
+                isFull: dailyRemaining <= 0,
+                slots
+            };
+        });
+
+        res.json({
+            success: true,
+            schedule: { dailyCapacity: TICKET_DAILY_CAPACITY },
+            timeSlots: TICKET_TIME_SLOTS,
+            dates
+        });
+    } catch (error) {
+        console.error('Error getting ticket availability:', error);
+        res.status(500).json({ success: false, message: 'Error fetching availability' });
+    }
+};
+
+exports.getEventAvailability = async (req, res) => {
+    try {
+        const startDate = req.query.start || new Date().toISOString().split('T')[0];
+        const days = Math.min(parseInt(req.query.days, 10) || 30, 60);
+        const endDate = buildDateRange(startDate, days).slice(-1)[0];
+
+        const totals = await Reservation.getEventTotalsByDateRange(startDate, endDate);
+        const totalsBySlot = new Map();
+
+        totals.forEach((row) => {
+            const dateKey = row.venue_event_date instanceof Date
+                ? row.venue_event_date.toISOString().split('T')[0]
+                : row.venue_event_date;
+            const timeKey = row.venue_event_time || 'unspecified';
+            const total = Number(row.total_participants || 0);
+            totalsBySlot.set(`${dateKey}|${timeKey}`, total);
+        });
+
+        const dates = buildDateRange(startDate, days).map((date) => {
+            const slots = EVENT_TIME_SLOTS.map((slot) => {
+                const slotTotal = totalsBySlot.get(`${date}|${slot.id}`) || 0;
+                const remaining = Math.max(0, EVENT_SLOT_CAPACITY - slotTotal);
+                return {
+                    time: slot.id,
+                    label: slot.label,
+                    totalParticipants: slotTotal,
+                    remaining,
+                    isFull: remaining <= 0
+                };
+            });
+
+            return {
+                date,
+                isFull: slots.every((slot) => slot.isFull),
+                slots
+            };
+        });
+
+        res.json({
+            success: true,
+            schedule: { slotCapacity: EVENT_SLOT_CAPACITY },
+            timeSlots: EVENT_TIME_SLOTS,
+            dates
+        });
+    } catch (error) {
+        console.error('Error getting event availability:', error);
+        res.status(500).json({ success: false, message: 'Error fetching availability' });
+    }
+};
+
+exports.scanReservation = async (req, res) => {
+    try {
+        const { qrData, markUsed } = req.body;
+        const payload = parseQrData(qrData);
+
+        if (!payload || !payload.ref || !payload.type) {
+            return res.json({ success: true, status: 'fake', message: 'Invalid QR code.' });
+        }
+
+        const isTicket = payload.type === 'ticket';
+        const reservation = isTicket
+            ? await Reservation.findTicketReservationByReference(payload.ref)
+            : await Reservation.findEventReservationByReference(payload.ref);
+
+        if (!reservation) {
+            return res.json({ success: true, status: 'fake', message: 'Reservation not found.' });
+        }
+
+        const reservationDate = isTicket
+            ? reservation.reservation_date
+            : reservation.venue_event_date || reservation.event_date;
+        const reservationTime = isTicket
+            ? reservation.reservation_time
+            : reservation.venue_event_time;
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const resDate = reservationDate ? new Date(reservationDate) : null;
+        const isExpired = resDate ? resDate < today : false;
+        const isUsed = Boolean(reservation.checked_in_at) || reservation.status === 'completed';
+
+        let status = 'valid';
+        if (isUsed) status = 'used';
+        else if (isExpired) status = 'expired';
+
+        if (markUsed && status === 'valid') {
+            if (isTicket) {
+                await Reservation.markTicketReservationUsed(payload.ref, req.user?.id || null);
+            } else {
+                await Reservation.markEventReservationUsed(payload.ref, req.user?.id || null);
+            }
+            status = 'used';
+        }
+
+        res.json({
+            success: true,
+            status,
+            reservation: {
+                type: payload.type,
+                reference: reservation.reservation_reference,
+                name: isTicket ? reservation.visitor_name : reservation.participant_name,
+                email: isTicket ? reservation.visitor_email : reservation.participant_email,
+                date: reservationDate,
+                time: reservationTime,
+                totalVisitors: isTicket ? reservation.total_visitors : reservation.number_of_participants,
+                status: reservation.status
+            }
+        });
+    } catch (error) {
+        console.error('Error scanning reservation:', error);
+        res.status(500).json({ success: false, message: 'Error scanning reservation' });
     }
 };

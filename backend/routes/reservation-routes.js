@@ -8,6 +8,8 @@ router.use(protect);
 
 router.get('/ticket/my', reservationController.getUserTicketReservations);
 router.get('/event/my', reservationController.getUserEventReservations);
+router.get('/availability/ticket', reservationController.getTicketAvailability);
+router.get('/availability/event', reservationController.getEventAvailability);
 router.post('/ticket', handleCloudinaryResidentIdUpload, reservationController.createTicketReservation);
 router.post('/event', reservationController.createEventReservation);
 router.put('/ticket/:id/archive', reservationController.archiveTicketReservation);
@@ -18,6 +20,7 @@ router.put('/event/:id/unarchive', reservationController.unarchiveEventReservati
 router.use(authorize('admin', 'staff'));
 
 router.get('/', reservationController.getAllReservations);
+router.post('/scan', reservationController.scanReservation);
 router.get('/stats', reservationController.getReservationStats);
 router.get('/today', reservationController.getTodayReservations);
 router.get('/upcoming', reservationController.getUpcomingReservations);

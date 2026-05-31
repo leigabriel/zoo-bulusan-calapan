@@ -25,56 +25,56 @@ const faqs = [
     {
         id: 1,
         category: 'Overview',
-        question: 'How do I understand the three top dashboard cards?',
-        answer: 'The first row summarizes Total Animals, Total Plants, and Total Reservations. Use these cards for a quick daily snapshot of overall operations.'
+        question: 'What should I check at the start of my shift?',
+        answer: 'Review the staff dashboard summary, daily task list, and latest notifications to see pending animals, plants, reservations, and moderation items.'
     },
     {
         id: 2,
-        category: 'Overview',
-        question: 'How do I estimate reservations from the dashboard?',
-        answer: 'Total Reservations is computed from ticket-related and upcoming event counts. Use it as a quick indicator, then open reservation or event pages for detailed records.'
+        category: 'Tasks',
+        question: 'How do I use the Daily Tasks panel?',
+        answer: 'Open the Daily Tasks panel, click a task to jump to the related module, and mark it done after completing the checklist.'
     },
     {
         id: 3,
-        category: 'Activity',
-        question: 'How do I read the Activity Summary card?',
-        answer: 'Use Today\'s Actions for current progress, This Week for total workload trend, and Last Activity to confirm your latest logged operation.'
+        category: 'Animals',
+        question: 'How do I update animal status or details?',
+        answer: 'Go to Staff Animals, select a record, update health status or notes, and save. The changes appear instantly across staff views.'
     },
     {
         id: 4,
-        category: 'Animals',
-        question: 'How do I use the Animals Overview table?',
-        answer: 'Scan recent rows for animal name, species, and health/status tags. This table is a preview. Select View All to open the complete animals management page.'
+        category: 'Plants',
+        question: 'How do I update plant care notes?',
+        answer: 'Open Staff Plants, edit the plant entry, update care notes or category, and save to keep records current.'
     },
     {
         id: 5,
-        category: 'Plants',
-        question: 'How do I use the Plants Overview table?',
-        answer: 'Check latest plant entries and status badges to detect items needing care. For edits and full records, use View All in the Plants Overview header.'
+        category: 'Reservations',
+        question: 'How do I verify ticket reservations?',
+        answer: 'Open Staff Reservations, review the ticket request, and update the status to confirm or decline.'
     },
     {
         id: 6,
-        category: 'Status',
-        question: 'How do I interpret status badge colors in tables?',
-        answer: 'Green badges represent active or healthy entries, yellow indicates attention is needed, and gray indicates neutral or uncategorized states.'
+        category: 'Reservations',
+        question: 'How do I handle event reservations?',
+        answer: 'In Staff Reservations, switch to event requests, review details, and update the confirmation status after verification.'
     },
     {
         id: 7,
-        category: 'Navigation',
-        question: 'How do I jump from dashboard previews to full modules?',
-        answer: 'Use the View All links in Animals Overview and Plants Overview. These links take you straight to full management pages without searching in the sidebar.'
+        category: 'Community',
+        question: 'How do I moderate community posts?',
+        answer: 'Use Community Moderation to review posts and reports. Approve or remove content and leave a note for the review log.'
     },
     {
         id: 8,
-        category: 'Troubleshooting',
-        question: 'How do I refresh staff dashboard values?',
-        answer: 'Refresh the page to request fresh stats, activity summary, and preview tables. If values remain unchanged, check network connectivity and backend API availability.'
+        category: 'Community',
+        question: 'How do I respond to reported comments?',
+        answer: 'Open the reported comment, review context, and choose the correct action. If needed, add a brief reason for audit trail.'
     },
     {
         id: 9,
         category: 'Troubleshooting',
-        question: 'How do I handle "No animals to display" or "No plants to display"?',
-        answer: 'These messages appear when no records are returned. Open the full module using View All and confirm whether records exist or if filters/data sources need updating.'
+        question: 'Why are records missing from the dashboard?',
+        answer: 'Refresh the page and confirm the filters are set correctly. If data remains missing, verify the backend connection is active.'
     }
 ];
 
@@ -105,27 +105,27 @@ const StaffHelpCenter = () => {
 
     return (
         <div className="space-y-6">
-            <div className="bg-white border border-green-200 rounded-3xl p-6 md:p-8">
-                <div className="w-14 h-14 bg-green-500/10 rounded-2xl flex items-center justify-center text-green-600 mb-5">
+            <div className="bg-[#f6fdf8] border border-emerald-200 rounded-3xl p-6 md:p-8">
+                <div className="w-14 h-14 bg-emerald-100 rounded-2xl flex items-center justify-center text-emerald-700 mb-5">
                     <HelpCircleIcon />
                 </div>
-                <h1 className="text-3xl font-bold text-gray-900 mb-2">Staff Dashboard Help</h1>
-                <p className="text-gray-500 max-w-3xl">
-                    Dashboard-focused "How do I" help for daily tracking, activity monitoring, and quick use of preview tables.
+                <h1 className="text-3xl font-bold text-emerald-900 mb-2">Staff Help Center</h1>
+                <p className="text-emerald-900/70 max-w-3xl">
+                    Staff help center for daily operations, reservations, moderation, and record updates.
                 </p>
             </div>
 
-            <div className="bg-white border border-green-200 rounded-2xl p-5 md:p-6">
+            <div className="bg-white border border-emerald-200 rounded-2xl p-5 md:p-6">
                 <div className="relative mb-4">
-                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">
+                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-emerald-600">
                         <SearchIcon />
                     </div>
                     <input
                         type="text"
-                        placeholder="Search dashboard how-to questions"
+                        placeholder="Search staff help topics"
                         value={searchQuery}
                         onChange={(event) => setSearchQuery(event.target.value)}
-                        className="w-full bg-green-50 border border-green-200 rounded-xl py-3.5 pl-12 pr-4 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-500"
+                        className="w-full bg-[#f6fdf8] border border-emerald-200 rounded-xl py-3.5 pl-12 pr-4 text-emerald-900 placeholder-emerald-700/50 focus:outline-none focus:border-emerald-500"
                     />
                 </div>
 
@@ -139,8 +139,8 @@ const StaffHelpCenter = () => {
                                 onClick={() => setActiveCategory(category)}
                                 className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-colors ${
                                     isActive
-                                        ? 'bg-green-500/15 text-green-600 border-green-500/40'
-                                        : 'bg-green-50 text-gray-700 border-green-200 hover:border-green-500/25'
+                                        ? 'bg-emerald-100 text-emerald-700 border-emerald-300'
+                                        : 'bg-emerald-50 text-emerald-900/70 border-emerald-200 hover:border-emerald-300'
                                 }`}
                             >
                                 {category}
@@ -150,14 +150,14 @@ const StaffHelpCenter = () => {
                 </div>
             </div>
 
-            <div className="bg-white border border-green-200 rounded-2xl p-5 md:p-6">
+            <div className="bg-white border border-emerald-200 rounded-2xl p-5 md:p-6">
                 <div className="flex items-center justify-between mb-5">
-                    <h2 className="text-xl font-bold text-gray-900">How-To Questions</h2>
-                    <span className="text-sm text-gray-500">{filteredFaqs.length} results</span>
+                    <h2 className="text-xl font-bold text-emerald-900">How-To Questions</h2>
+                    <span className="text-sm text-emerald-900/60">{filteredFaqs.length} results</span>
                 </div>
 
                 {filteredFaqs.length === 0 ? (
-                    <div className="bg-green-50 border border-green-200 rounded-xl p-6 text-center text-gray-500">
+                    <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-6 text-center text-emerald-900/60">
                         No dashboard help questions matched your search.
                     </div>
                 ) : (
@@ -166,19 +166,19 @@ const StaffHelpCenter = () => {
                             const isExpanded = expandedFaq === faq.id;
 
                             return (
-                                <div key={faq.id} className="border border-green-200 rounded-xl overflow-hidden">
+                                <div key={faq.id} className="border border-emerald-200 rounded-xl overflow-hidden">
                                     <button
                                         onClick={() => setExpandedFaq(isExpanded ? null : faq.id)}
-                                        className="w-full px-4 py-4 text-left hover:bg-green-50 transition-colors"
+                                        className="w-full px-4 py-4 text-left hover:bg-emerald-50 transition-colors"
                                     >
                                         <div className="flex items-center justify-between gap-4">
                                             <div>
-                                                <span className="inline-flex px-2 py-0.5 mb-2 rounded text-xs font-medium bg-green-500/10 text-green-600">
+                                                <span className="inline-flex px-2 py-0.5 mb-2 rounded text-xs font-medium bg-emerald-100 text-emerald-700">
                                                     {faq.category}
                                                 </span>
-                                                <p className="text-gray-900 font-medium">{faq.question}</p>
+                                                <p className="text-emerald-900 font-medium">{faq.question}</p>
                                             </div>
-                                            <span className={`text-gray-500 transition-transform ${isExpanded ? 'rotate-180' : ''}`}>
+                                            <span className={`text-emerald-700/60 transition-transform ${isExpanded ? 'rotate-180' : ''}`}>
                                                 <ChevronDownIcon />
                                             </span>
                                         </div>
@@ -186,7 +186,7 @@ const StaffHelpCenter = () => {
 
                                     {isExpanded && (
                                         <div className="px-4 pb-4">
-                                            <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-sm text-gray-700 leading-relaxed">
+                                            <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4 text-sm text-emerald-900/70 leading-relaxed">
                                                 {faq.answer}
                                             </div>
                                         </div>

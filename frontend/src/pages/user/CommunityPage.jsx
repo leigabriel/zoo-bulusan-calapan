@@ -129,40 +129,14 @@ const CommunityPage = () => {
 
     return (
         <ReactLenis root>
-            <div className="bg-[#ebebeb] text-[#212631] relative min-h-screen">
+            <div className="bg-[#00ff00] text-[#212631] relative min-h-screen">
                 <Header />
 
-                {/* Intro Section */}
-                <div className="sticky top-0 w-full h-[80vh] flex flex-col items-center justify-center overflow-hidden z-0">
-                    <div className="absolute inset-0 bg-[#ffdd45]" />
-                    <div className="relative z-10 flex flex-col items-center text-center px-4 w-full max-w-5xl">
-                        <span className="text-[10px] tracking-[0.3em] uppercase font-bold text-[#212631]/40 mb-6 md:mb-10">
-                            Zoo Bulusan Network
-                        </span>
-                        <h1 className="font-extrabold uppercase text-[#212631] leading-[0.85] tracking-tighter"
-                            style={{ fontSize: 'clamp(50px, 12vw, 160px)' }}>
-                            Community
-                        </h1>
-                        <p className="mt-8 md:mt-12 text-xs md:text-sm tracking-[0.1em] text-[#212631]/60 max-w-2xl font-semibold uppercase leading-relaxed mb-12">
-                            Connect with fellow wildlife enthusiasts, share your experiences, and stay updated with the latest from the zoo.
-                        </p>
-
-                        <button
-                            onClick={scrollToFeed}
-                            className="px-8 py-4 bg-[#212631] text-[#ebebeb] border border-[#212631] text-[10px] tracking-[0.2em] uppercase font-black hover:bg-transparent hover:text-[#212631] transition-colors duration-300"
-                        >
-                            Share an Update
-                        </button>
-                    </div>
-
-                    <div className="absolute bottom-12 left-1/2 -translate-x-1/2 flex flex-col items-center gap-3 opacity-60 cursor-pointer hover:opacity-100 transition-opacity" onClick={scrollToFeed}>
-                        <span className="text-[9px] tracking-[0.2em] uppercase font-bold text-[#212631]">Scroll</span>
-                        <motion.div
-                            animate={{ y: [0, 8, 0] }}
-                            transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
-                            className="w-[1px] h-16 bg-gradient-to-b from-[#212631] to-transparent"
-                        />
-                    </div>
+                {/* Intro Section - Clean Style */}
+                <div className="w-full min-h-[50vh] md:min-h-[60vh] flex flex-col items-center justify-center px-4 pt-20">
+                    <h1 className="text-[4rem] sm:text-[6rem] md:text-[9rem] lg:text-[11rem] leading-none tracking-tight text-black text-center break-words w-full">
+                        Community
+                    </h1>
                 </div>
 
                 {/* Main Feed Section */}

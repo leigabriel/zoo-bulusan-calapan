@@ -26,9 +26,6 @@ const DAYS_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 const FILTERS = ['all', 'upcoming', 'ongoing', 'past'];
 
-const BARCODE_WIDTHS = [2, 4, 1, 3, 2, 5, 1, 2, 4, 2, 1, 3, 4, 2, 1, 5, 2, 3, 1, 4, 2, 2, 1, 3, 4, 2, 5, 1, 2, 3];
-const BARCODE_HEIGHTS = ['80%', '100%', '60%', '90%', '100%', '70%', '100%', '80%', '50%', '90%', '100%', '60%', '80%', '100%', '70%', '90%', '100%', '60%', '80%', '100%', '50%', '90%', '70%', '100%', '80%', '60%', '100%', '90%', '80%', '100%'];
-
 const Icons = {
     Close: () => (
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
@@ -36,41 +33,35 @@ const Icons = {
         </svg>
     ),
     ChevronLeft: () => (
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-5 h-5">
             <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
         </svg>
     ),
     ChevronRight: () => (
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-5 h-5">
             <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
         </svg>
     ),
     Location: () => (
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3 h-3 flex-shrink-0">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 flex-shrink-0">
             <path fillRule="evenodd" d="M9.69 18.933l.003.001C9.89 19.02 10 19 10 19s.11.02.308-.066l.002-.001.006-.003.018-.008a5.741 5.741 0 00.281-.14c.186-.096.446-.24.757-.433.62-.384 1.445-.966 2.274-1.765C15.302 14.988 17 12.493 17 9A7 7 0 103 9c0 3.492 1.698 5.988 3.355 7.584a13.731 13.731 0 002.273 1.765 11.842 11.842 0 00.976.544l.062.029.018.008.006.003zM10 11.25a2.25 2.25 0 100-4.5 2.25 2.25 0 000 4.5z" clipRule="evenodd" />
         </svg>
     ),
     Clock: () => (
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5 flex-shrink-0">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 flex-shrink-0">
             <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm.75-13a.75.75 0 00-1.5 0v5c0 .414.336.75.75.75h4a.75.75 0 000-1.5h-3.25V5z" clipRule="evenodd" />
         </svg>
     ),
-    ArrowDiag: () => (
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-3.5 h-3.5">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 19.5l15-15m0 0H8.25m11.25 0v11.25" />
-        </svg>
-    ),
     Check: () => (
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-8 h-8 text-[#212631]">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-8 h-8">
             <path fillRule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clipRule="evenodd" />
         </svg>
     )
 };
 
-const StatusBadge = ({ status, size = 'sm' }) => {
-    const sizing = size === 'sm' ? 'text-[8px] px-2 py-1' : 'text-[10px] md:text-xs px-3 py-1.5';
+const StatusBadge = ({ status }) => {
     return (
-        <span className={`inline-block border rounded-full uppercase tracking-widest font-normal leading-none ${sizing} border-[#212631] text-[#212631] ${status === 'past' ? 'opacity-40' : ''}`}>
+        <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium uppercase tracking-widest ${status === 'past' ? 'bg-gray-100 text-gray-500' : 'bg-black text-white'}`}>
             {status}
         </span>
     );
@@ -145,7 +136,7 @@ const Events = () => {
                         eventDate,
                         startTime: event.start_time || event.time,
                         endTime: event.end_time,
-                        location: event.location || 'Zoo Bulusan Venue',
+                        location: event.location || 'Zoo Bulusan',
                         status: computedStatus,
                         imageUrl: event.image_url || DEFAULT_EVENT_IMAGES[index % DEFAULT_EVENT_IMAGES.length],
                         tags: event.tags || ['Wildlife', 'Education'],
@@ -175,23 +166,19 @@ const Events = () => {
     useEffect(() => {
         if (!loading) {
             const ctx = gsap.context(() => {
-                gsap.fromTo('.hero-anim',
-                    { y: 30, opacity: 0 },
-                    { y: 0, opacity: 1, duration: 1, stagger: 0.1, ease: 'power3.out' }
+                gsap.fromTo('.section-anim',
+                    { y: 40, opacity: 0 },
+                    {
+                        scrollTrigger: {
+                            trigger: '.section-anim',
+                            start: 'top 85%',
+                        },
+                        y: 0,
+                        opacity: 1,
+                        duration: 0.8,
+                        ease: 'power3.out'
+                    }
                 );
-
-                gsap.utils.toArray('.event-anim').forEach((el) => {
-                    gsap.fromTo(el,
-                        { y: 30, opacity: 0 },
-                        {
-                            scrollTrigger: {
-                                trigger: el,
-                                start: 'top 95%'
-                            },
-                            y: 0, opacity: 1, duration: 0.6, ease: 'power2.out'
-                        }
-                    );
-                });
             }, containerRef);
             return () => ctx.revert();
         }
@@ -209,16 +196,6 @@ const Events = () => {
         return new Date(dateStr + 'T00:00:00').toLocaleDateString('en-US', {
             year: 'numeric', month: 'long', day: 'numeric',
         });
-    };
-
-    const parseDateParts = (dateStr) => {
-        if (!dateStr) return { day: '', month: '', year: '' };
-        const d = new Date(dateStr + 'T00:00:00');
-        return {
-            day: String(d.getDate()).padStart(2, '0'),
-            month: d.toLocaleDateString('en-US', { month: 'short' }).toUpperCase(),
-            year: String(d.getFullYear()),
-        };
     };
 
     const getMinDate = () => new Date().toISOString().split('T')[0];
@@ -254,9 +231,6 @@ const Events = () => {
 
     const prevMonth = () => setCalendarDate(new Date(calYear, calMonth - 1, 1));
     const nextMonth = () => setCalendarDate(new Date(calYear, calMonth + 1, 1));
-
-    const upcomingFiltered = filteredEvents.filter(e => e.status !== 'past');
-    const pastFiltered = filteredEvents.filter(e => e.status === 'past');
 
     const handleSubmitAttempt = (e) => {
         e.preventDefault();
@@ -315,477 +289,232 @@ const Events = () => {
 
     return (
         <ReactLenis root>
-            <div ref={containerRef} className="min-h-screen flex flex-col bg-[#ebebeb] text-[#212631]">
+            <div ref={containerRef} className="min-h-screen bg-white text-black">
                 <Header />
 
-                <section className="pt-24 md:pt-32 pb-8 px-4 md:px-8 lg:px-12 max-w-[1600px] mx-auto w-full border-b border-[#212631]/10">
-                    <p className="hero-anim inline-block bg-[#212631]/5 px-4 py-1.5 rounded-full text-[10px] md:text-xs uppercase tracking-[0.35em] font-normal mb-4 md:mb-6 text-[#212631]/50">
-                        Zoo Bulusan Network
-                    </p>
+                <div className="w-full min-h-[40vh] md:min-h-[60vh] flex flex-col items-center justify-center px-4 pt-24 pb-8">
+                    <h1 className="text-[3.5rem] sm:text-[6rem] md:text-[9rem] lg:text-[11rem] leading-none tracking-tight text-black text-center break-words w-full">
+                        Events
+                    </h1>
+                </div>
 
-                    <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 md:gap-12 mb-10">
-                        <div className="flex-1 min-w-0">
-                            <div className="overflow-hidden rounded-3xl">
-                                <h1 className="hero-anim text-5xl md:text-7xl lg:text-8xl xl:text-9xl font-normal uppercase tracking-tighter leading-[0.9] text-[#212631]">
-                                    Activities &
-                                </h1>
-                            </div>
-                            <div className="overflow-hidden rounded-3xl">
-                                <h1 className="hero-anim text-5xl md:text-7xl lg:text-8xl xl:text-9xl font-normal uppercase tracking-tighter leading-[0.9] text-[#26bc61]">
-                                    Events
-                                </h1>
-                            </div>
-                        </div>
-
-                        <div className="hero-anim flex flex-col gap-4 md:items-end shrink-0">
-                            <p className="text-[10px] md:text-xs uppercase tracking-widest font-normal leading-relaxed max-w-xs md:text-right text-[#212631]/60">
-                                Experience unforgettable moments with our animals through live feedings, shows, and educational activities.
-                            </p>
-                            <div className="flex items-center gap-2 flex-wrap mt-2">
-                                {[
-                                    { value: events.length, label: 'Total' },
-                                    { value: events.filter(e => e.status === 'ongoing').length, label: 'Ongoing' },
-                                    { value: events.filter(e => e.status === 'upcoming').length, label: 'Upcoming' },
-                                ].map(({ value, label }) => (
-                                    <div key={label} className="flex items-center gap-2 px-4 py-2 border border-[#212631]/20 bg-[#212631]/5 rounded-full">
-                                        <span className="text-sm font-normal tabular-nums text-[#212631]">{value}</span>
-                                        <span className="text-[9px] uppercase tracking-widest font-normal text-[#212631]/50">{label}</span>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                <div className="px-4 md:px-8 lg:px-12 max-w-[1600px] mx-auto w-full pt-8 pb-20">
-                    <div className="hero-anim flex items-center gap-2 mb-8 overflow-x-auto no-scrollbar pb-2">
+                <div className="max-w-[1400px] mx-auto px-4 md:px-8 pb-20 md:pb-32">
+                    <div className="flex flex-wrap gap-2 md:gap-4 justify-center mb-10 md:mb-16">
                         {FILTERS.map(f => {
                             const active = filter === f;
-                            const label = f === 'all' ? 'All Events' : f;
                             return (
                                 <button
                                     key={f}
                                     onClick={() => setFilter(f)}
-                                    className={`text-[9px] md:text-[10px] uppercase tracking-[0.2em] px-6 py-3 font-normal border transition-colors whitespace-nowrap rounded-full ${active ? 'border-[#212631] bg-[#212631] text-[#ebebeb]' : 'border-[#212631]/20 text-[#212631]/50 hover:bg-[#212631]/10 hover:text-[#212631]'}`}
+                                    className={`text-[10px] md:text-xs uppercase tracking-widest px-4 py-2 md:px-6 md:py-3 font-bold transition-colors rounded-full border-2 ${active ? 'border-black bg-black text-white' : 'border-gray-200 text-gray-500 hover:border-black hover:text-black'}`}
                                 >
-                                    {label}
+                                    {f === 'all' ? 'All Events' : f}
                                 </button>
                             );
                         })}
                     </div>
 
-                    {loading && (
-                        <div className="flex items-center justify-center py-40">
-                            <motion.div
-                                className="w-8 h-8 border-2 border-[#212631]/20 border-t-[#212631] rounded-full"
-                                animate={{ rotate: 360 }}
-                                transition={{ duration: 0.8, repeat: Infinity, ease: 'linear' }}
-                            />
+                    {loading ? (
+                        <div className="flex justify-center py-40">
+                            <div className="w-8 h-8 border-2 border-gray-200 border-t-black rounded-full animate-spin" />
                         </div>
-                    )}
-
-                    {!loading && !error && (
-                        <>
-                            <div className="hidden md:block event-anim">
-                                <div className="flex items-center justify-between mb-6 bg-[#ebebeb] border border-[#212631]/20 p-4 rounded-3xl">
-                                    <div className="flex items-center gap-4 px-2">
-                                        <h2 className="text-2xl font-normal uppercase tracking-tighter text-[#212631]">
-                                            {MONTHS[calMonth]}
-                                        </h2>
-                                        <span className="text-lg font-normal text-[#212631]/40 tracking-widest mt-1">
-                                            {calYear}
-                                        </span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <button onClick={prevMonth} className="w-10 h-10 rounded-full flex items-center justify-center border border-[#212631]/20 text-[#212631] hover:bg-[#212631] hover:text-[#ebebeb] transition-colors cursor-pointer">
-                                            <Icons.ChevronLeft />
-                                        </button>
-                                        <button onClick={() => setCalendarDate(new Date())} className="px-6 h-10 rounded-full flex items-center justify-center text-[10px] uppercase tracking-widest font-normal border border-[#212631]/20 text-[#212631] hover:bg-[#212631] hover:text-[#ebebeb] transition-colors cursor-pointer">
-                                            Today
-                                        </button>
-                                        <button onClick={nextMonth} className="w-10 h-10 rounded-full flex items-center justify-center border border-[#212631]/20 text-[#212631] hover:bg-[#212631] hover:text-[#ebebeb] transition-colors cursor-pointer">
-                                            <Icons.ChevronRight />
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <div className="rounded-3xl overflow-hidden border border-[#212631]/10">
-                                    <div className="grid grid-cols-7 bg-[#ebebeb]">
-                                        {DAYS_SHORT.map(day => (
-                                            <div key={day} className="px-4 py-3 border-r border-b border-[#212631]/10 bg-[#212631]/5 text-center">
-                                                <span className="text-[10px] uppercase tracking-widest font-normal text-[#212631]/60">{day}</span>
-                                            </div>
-                                        ))}
-
-                                        <AnimatePresence mode="wait">
-                                            <motion.div
-                                                key={`${calYear}-${calMonth}-${filter}`}
-                                                className="contents"
-                                                initial={{ opacity: 0 }}
-                                                animate={{ opacity: 1 }}
-                                                exit={{ opacity: 0 }}
-                                                transition={{ duration: 0.2 }}
-                                            >
-                                                {calendarCells.map((day, i) => {
-                                                    const dayEvents = getEventsForDay(day);
-                                                    const isCurrentDay = isToday(day);
-
-                                                    return (
-                                                        <div key={i} className={`border-r border-b border-[#212631]/10 flex flex-col min-h-[100px] lg:min-h-[140px] rounded-xl ${day ? 'bg-[#ebebeb] hover:bg-[#212631]/5 transition-colors' : 'bg-[#212631]/5'}`}>
-                                                            {day && (
-                                                                <>
-                                                                    <div className="px-2 pt-2 pb-1">
-                                                                        <span className={`inline-block text-[10px] lg:text-xs font-normal uppercase tracking-tighter leading-none rounded-full ${isCurrentDay ? 'bg-[#212631] text-[#ebebeb] px-2 py-1' : 'text-[#212631] px-1'}`}>
-                                                                            {day}
-                                                                        </span>
-                                                                    </div>
-                                                                    <div className="flex flex-col gap-1.5 px-1.5 pb-2 flex-1">
-                                                                        {dayEvents.slice(0, 2).map((event) => (
-                                                                            <button
-                                                                                key={event.id}
-                                                                                onClick={() => setSelectedEvent(event)}
-                                                                                className="w-full text-left overflow-hidden border border-[#212631]/20 bg-[#ebebeb] rounded-xl group flex items-center gap-2 p-1 cursor-pointer hover:bg-white transition-colors"
-                                                                            >
-                                                                                <div className="w-8 h-8 flex-shrink-0 border border-[#212631]/10 overflow-hidden rounded-lg">
-                                                                                    <img src={event.imageUrl} alt={event.title} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all rounded-lg" />
-                                                                                </div>
-                                                                                <div className="flex flex-col flex-1 min-w-0">
-                                                                                    <span className="text-[8px] lg:text-[9px] font-normal uppercase tracking-tight text-[#212631] truncate block">
-                                                                                        {event.title}
-                                                                                    </span>
-                                                                                    <span className="text-[7px] uppercase font-normal tracking-widest text-[#212631]/50 mt-0.5 block truncate">
-                                                                                        {formatTime(event.startTime)}
-                                                                                    </span>
-                                                                                </div>
-                                                                            </button>
-                                                                        ))}
-                                                                        {dayEvents.length > 2 && (
-                                                                            <button
-                                                                                onClick={() => setSelectedEvent(dayEvents[2])}
-                                                                                className="text-[8px] font-normal uppercase tracking-widest px-1 text-left text-[#212631]/60 hover:text-[#212631] transition-colors mt-1 rounded-full cursor-pointer"
-                                                                            >
-                                                                                +{dayEvents.length - 2} More
-                                                                            </button>
-                                                                        )}
-                                                                    </div>
-                                                                </>
-                                                            )}
-                                                        </div>
-                                                    );
-                                                })}
-                                            </motion.div>
-                                        </AnimatePresence>
-                                    </div>
-
-                                    {!hasAnyEventInMonth && (
-                                        <div className="text-center py-16 bg-[#ebebeb] rounded-b-3xl">
-                                            <p className="text-[10px] uppercase tracking-widest font-normal text-[#212631]/40 mb-1">
-                                                No {filter === 'all' ? '' : filter} events in {MONTHS[calMonth]}
-                                            </p>
-                                        </div>
-                                    )}
+                    ) : (
+                        <div className="section-anim bg-white border border-gray-200 rounded-xl md:rounded-2xl shadow-sm overflow-hidden">
+                            <div className="flex flex-col sm:flex-row items-center justify-between p-4 md:p-8 border-b border-gray-200 gap-4">
+                                <h2 className="text-2xl sm:text-3xl md:text-4xl text-black">
+                                    {MONTHS[calMonth]} {calYear}
+                                </h2>
+                                <div className="flex items-center gap-2 md:gap-4">
+                                    <button onClick={prevMonth} className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center rounded-full border border-gray-200 hover:bg-gray-50 transition-colors">
+                                        <Icons.ChevronLeft />
+                                    </button>
+                                    <button onClick={() => setCalendarDate(new Date())} className="px-4 md:px-6 h-10 md:h-12 rounded-full border border-gray-200 hover:bg-gray-50 text-[10px] md:text-xs font-bold uppercase tracking-widest transition-colors">
+                                        Today
+                                    </button>
+                                    <button onClick={nextMonth} className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center rounded-full border border-gray-200 hover:bg-gray-50 transition-colors">
+                                        <Icons.ChevronRight />
+                                    </button>
                                 </div>
                             </div>
 
-                            <div className="md:hidden bg-[#ebebeb] border border-[#212631]/10 p-4 rounded-3xl">
-                                {filteredEvents.length === 0 ? (
-                                    <div className="flex flex-col items-center justify-center py-20 text-center gap-2">
-                                        <p className="text-[10px] font-normal uppercase tracking-widest text-[#212631]/40">No events found</p>
+                            <div className="grid grid-cols-7 border-b border-gray-200 bg-gray-50">
+                                {DAYS_SHORT.map(day => (
+                                    <div key={day} className="py-2 md:py-4 text-center border-r border-gray-200 last:border-r-0">
+                                        <span className="text-[10px] md:text-xs uppercase tracking-widest font-bold text-gray-400">{day}</span>
                                     </div>
-                                ) : (
-                                    <>
-                                        {upcomingFiltered.length > 0 && (
-                                            <div className="mb-10">
-                                                <div className="flex items-end justify-between mb-4 border-b border-[#212631]/20 pb-2">
-                                                    <p className="text-[10px] uppercase tracking-[0.25em] font-normal text-[#212631]">
-                                                        {filter === 'all' ? 'Upcoming' : filter}
-                                                    </p>
-                                                    <span className="text-lg font-normal text-[#212631]/20">{calYear}</span>
-                                                </div>
-                                                {upcomingFiltered.map((event) => {
-                                                    const { day, month, year } = parseDateParts(event.eventDate);
-                                                    return (
-                                                        <div
-                                                            key={event.id}
-                                                            onClick={() => setSelectedEvent(event)}
-                                                            onKeyDown={(e) => e.key === 'Enter' && setSelectedEvent(event)}
-                                                            className="event-anim group flex items-center gap-4 py-4 cursor-pointer border-b border-[#212631]/10 hover:bg-[#212631]/5 transition-colors rounded-2xl px-2"
-                                                            role="button"
-                                                            tabIndex={0}
-                                                        >
-                                                            <div className="w-14 h-14 flex-shrink-0 overflow-hidden border border-[#212631]/20 rounded-xl">
-                                                                <img
-                                                                    src={event.imageUrl}
-                                                                    alt={event.title}
-                                                                    className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500 rounded-xl"
-                                                                />
-                                                            </div>
-
-                                                            <div className="w-10 flex-shrink-0 flex flex-col items-start">
-                                                                <span className="text-lg font-normal leading-none tabular-nums text-[#212631]">{day}</span>
-                                                                <span className="text-[10px] font-normal uppercase leading-none mt-0.5 text-[#212631]/60">{month}</span>
-                                                                <span className="text-[9px] font-normal leading-none mt-0.5 text-[#212631]/40">{year}</span>
-                                                            </div>
-
-                                                            <div className="flex-1 min-w-0 flex flex-col gap-1.5">
-                                                                <h3 className="text-sm font-normal uppercase tracking-tight truncate group-hover:underline underline-offset-2 text-[#212631]">
-                                                                    {event.title}
-                                                                </h3>
-                                                                <div><StatusBadge status={event.status} size="sm" /></div>
-                                                                <p className="text-[9px] uppercase tracking-widest font-normal flex items-center gap-1 text-[#212631]/60">
-                                                                    <Icons.Location />
-                                                                    <span className="truncate">{event.location}</span>
-                                                                </p>
-                                                            </div>
-
-                                                            <div className="flex-shrink-0 text-[#212631]/40 group-hover:text-[#212631] transition-colors pr-2">
-                                                                <Icons.ArrowDiag />
-                                                            </div>
-                                                        </div>
-                                                    );
-                                                })}
-                                            </div>
-                                        )}
-
-                                        {pastFiltered.length > 0 && (
-                                            <div>
-                                                <div className="flex items-end justify-between mb-4 border-b border-[#212631]/20 pb-2 pt-6">
-                                                    <p className="text-[10px] uppercase tracking-[0.25em] font-normal text-[#212631]/50">Past Events</p>
-                                                </div>
-                                                {pastFiltered.map((event) => {
-                                                    const { day, month, year } = parseDateParts(event.eventDate);
-                                                    return (
-                                                        <div
-                                                            key={event.id}
-                                                            onClick={() => setSelectedEvent(event)}
-                                                            onKeyDown={(e) => e.key === 'Enter' && setSelectedEvent(event)}
-                                                            className="event-anim group flex items-center gap-4 py-4 cursor-pointer border-b border-[#212631]/10 hover:bg-[#212631]/5 transition-colors rounded-2xl px-2"
-                                                            role="button"
-                                                            tabIndex={0}
-                                                        >
-                                                            <div className="w-14 h-14 flex-shrink-0 overflow-hidden border border-[#212631]/20 rounded-xl">
-                                                                <img
-                                                                    src={event.imageUrl}
-                                                                    alt={event.title}
-                                                                    className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500 rounded-xl"
-                                                                />
-                                                            </div>
-
-                                                            <div className="w-10 flex-shrink-0 flex flex-col items-start">
-                                                                <span className="text-lg font-normal leading-none tabular-nums text-[#212631]">{day}</span>
-                                                                <span className="text-[10px] font-normal uppercase leading-none mt-0.5 text-[#212631]/60">{month}</span>
-                                                                <span className="text-[9px] font-normal leading-none mt-0.5 text-[#212631]/40">{year}</span>
-                                                            </div>
-
-                                                            <div className="flex-1 min-w-0 flex flex-col gap-1.5">
-                                                                <h3 className="text-sm font-normal uppercase tracking-tight truncate group-hover:underline underline-offset-2 text-[#212631]">
-                                                                    {event.title}
-                                                                </h3>
-                                                                <div><StatusBadge status={event.status} size="sm" /></div>
-                                                                <p className="text-[9px] uppercase tracking-widest font-normal flex items-center gap-1 text-[#212631]/60">
-                                                                    <Icons.Location />
-                                                                    <span className="truncate">{event.location}</span>
-                                                                </p>
-                                                            </div>
-
-                                                            <div className="flex-shrink-0 text-[#212631]/40 group-hover:text-[#212631] transition-colors pr-2">
-                                                                <Icons.ArrowDiag />
-                                                            </div>
-                                                        </div>
-                                                    );
-                                                })}
-                                            </div>
-                                        )}
-                                    </>
-                                )}
+                                ))}
                             </div>
-                        </>
+
+                            <div className="grid grid-cols-7 bg-white">
+                                <AnimatePresence mode="wait">
+                                    <motion.div
+                                        key={`${calYear}-${calMonth}-${filter}`}
+                                        className="contents"
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        exit={{ opacity: 0 }}
+                                        transition={{ duration: 0.3 }}
+                                    >
+                                        {calendarCells.map((day, i) => {
+                                            const dayEvents = getEventsForDay(day);
+                                            const isCurrentDay = isToday(day);
+
+                                            return (
+                                                <div key={i} className={`min-h-[80px] sm:min-h-[100px] md:min-h-[160px] p-1 sm:p-2 md:p-4 border-r border-b border-gray-200 relative overflow-hidden ${day ? 'hover:bg-gray-50 transition-colors' : 'bg-gray-50/50'}`}>
+                                                    {day && (
+                                                        <>
+                                                            <span className={`inline-flex items-center justify-center w-6 h-6 sm:w-8 sm:h-8 rounded-full text-xs sm:text-sm font-medium mb-1 md:mb-2 ${isCurrentDay ? 'bg-black text-white' : 'text-gray-900'}`}>
+                                                                {day}
+                                                            </span>
+                                                            <div className="flex flex-col gap-1 md:gap-2">
+                                                                {dayEvents.slice(0, 2).map((event) => (
+                                                                    <button
+                                                                        key={event.id}
+                                                                        onClick={() => setSelectedEvent(event)}
+                                                                        className="text-left group cursor-pointer w-full"
+                                                                    >
+                                                                        <div className="font-medium text-[9px] sm:text-[11px] md:text-sm text-black truncate group-hover:underline">
+                                                                            {event.title}
+                                                                        </div>
+                                                                        <div className="text-[8px] sm:text-[10px] md:text-xs text-gray-500 truncate hidden sm:block">
+                                                                            {formatTime(event.startTime)}
+                                                                        </div>
+                                                                    </button>
+                                                                ))}
+                                                                {dayEvents.length > 2 && (
+                                                                    <button
+                                                                        onClick={() => setSelectedEvent(dayEvents[2])}
+                                                                        className="text-[9px] sm:text-xs font-bold text-gray-400 hover:text-black mt-1 text-left w-full truncate"
+                                                                    >
+                                                                        +{dayEvents.length - 2}
+                                                                        <span className="hidden sm:inline"> More</span>
+                                                                    </button>
+                                                                )}
+                                                            </div>
+                                                        </>
+                                                    )}
+                                                </div>
+                                            );
+                                        })}
+                                    </motion.div>
+                                </AnimatePresence>
+                            </div>
+
+                            {!hasAnyEventInMonth && (
+                                <div className="p-8 md:p-12 text-center text-gray-400 text-xs md:text-sm tracking-widest uppercase">
+                                    No events scheduled for this month.
+                                </div>
+                            )}
+                        </div>
                     )}
                 </div>
 
-                <section id="book-event" className="w-full bg-[#ffdd45] border-t border-[#212631]/10 pt-20 pb-40 px-4 md:px-8 relative z-10 rounded-t-3xl">
-                    <div className="max-w-5xl mx-auto flex flex-col items-center event-anim">
-                        <div className="text-center mb-16">
-                            <span className="text-[10px] tracking-[0.3em] uppercase font-normal text-[#212631]/40 mb-4 block bg-[#212631]/5 px-4 py-1.5 rounded-full w-fit mx-auto">Venue Protocol</span>
-                            <h2 className="text-4xl md:text-6xl font-normal uppercase tracking-tighter text-[#212631] mb-6">Plan Your Own Event</h2>
-                            <p className="text-sm tracking-widest uppercase font-normal text-[#212631]/60 leading-relaxed max-w-2xl mx-auto">
-                                Secure a spot for private gatherings, educational tours, or custom programs at Zoo Bulusan.
-                            </p>
+                <section className="bg-yellow-300 py-16 md:py-32 px-4 border-t border-gray-200">
+                    <div className="max-w-4xl mx-auto section-anim">
+                        <div className="text-center mb-10 md:mb-16">
+                            <h2 className="text-3xl md:text-5xl lg:text-6xl text-black mb-4">Plan Your Own Event</h2>
+                            <p className="text-gray-500 text-sm md:text-lg px-4">Book our venue for your private gatherings and educational tours.</p>
                         </div>
 
-                        <div className="w-full relative rounded-[2rem] bg-[#ebebeb] shadow-2xl border border-[#212631]/20">
-                            <form onSubmit={handleSubmitAttempt} className="flex flex-col md:flex-row w-full h-full">
-
-                                <div className="w-full md:w-[70%] p-6 md:p-12 relative flex flex-col gap-8 rounded-t-[2rem] md:rounded-tr-none md:rounded-l-[2rem]">
-
-                                    <div className="flex justify-between items-end border-b-2 border-[#212631] pb-4">
-                                        <div>
-                                            <h3 className="text-3xl md:text-4xl font-normal uppercase tracking-tighter text-[#212631] leading-none">Event Request</h3>
-                                            <p className="text-[9px] tracking-[0.2em] uppercase font-bold text-[#212631]/40 mt-2">Official Venue Registration Form</p>
-                                        </div>
-                                        <div className="text-right">
-                                            <span className="text-[10px] tracking-[0.2em] font-mono font-bold uppercase border border-[#212631] px-3 py-1.5 rounded-full text-[#212631]">No. {Math.floor(Math.random() * 9000) + 1000}</span>
-                                        </div>
-                                    </div>
-
-                                    <div className="border border-[#212631]/30 rounded-2xl overflow-hidden flex flex-col bg-white/50 backdrop-blur-sm shadow-sm">
-
-                                        <div className="border-b border-[#212631]/20 p-4 hover:bg-[#212631]/5 transition-colors focus-within:bg-[#212631]/5 group">
-                                            <label className="text-[8px] tracking-[0.2em] uppercase font-bold text-[#212631]/50 block mb-1">Event Designation *</label>
-                                            <input
-                                                type="text"
-                                                value={eventForm.venueEventName}
-                                                onChange={e => setEventForm({ ...eventForm, venueEventName: sanitizeInput(e.target.value) })}
-                                                className="w-full bg-transparent text-sm md:text-base font-normal font-mono uppercase tracking-tight text-[#212631] outline-none placeholder:text-[#212631]/20"
-                                                placeholder="E.g., Corporate Retreat"
-                                                required
-                                            />
-                                        </div>
-
-                                        <div className="flex flex-col sm:flex-row border-b border-[#212631]/20">
-                                            <div className="w-full sm:w-1/2 border-b sm:border-b-0 sm:border-r border-[#212631]/20 p-4 hover:bg-[#212631]/5 transition-colors focus-within:bg-[#212631]/5">
-                                                <label className="text-[8px] tracking-[0.2em] uppercase font-bold text-[#212631]/50 block mb-1">Event Date *</label>
-                                                <input
-                                                    type="date"
-                                                    value={eventForm.venueEventDate}
-                                                    onChange={e => setEventForm({ ...eventForm, venueEventDate: e.target.value })}
-                                                    min={getMinDate()}
-                                                    className="w-full bg-transparent text-sm md:text-base font-normal font-mono uppercase tracking-wider text-[#212631] outline-none"
-                                                    required
-                                                />
-                                            </div>
-                                            <div className="w-full sm:w-1/2 p-4 hover:bg-[#212631]/5 transition-colors focus-within:bg-[#212631]/5">
-                                                <label className="text-[8px] tracking-[0.2em] uppercase font-bold text-[#212631]/50 block mb-1">Event Time</label>
-                                                <input
-                                                    type="time"
-                                                    value={eventForm.venueEventTime}
-                                                    onChange={e => setEventForm({ ...eventForm, venueEventTime: e.target.value })}
-                                                    className="w-full bg-transparent text-sm md:text-base font-normal font-mono uppercase tracking-wider text-[#212631] outline-none"
-                                                />
-                                            </div>
-                                        </div>
-
-                                        <div className="flex flex-col sm:flex-row border-b border-[#212631]/20">
-                                            <div className="w-full sm:w-1/2 border-b sm:border-b-0 sm:border-r border-[#212631]/20 p-4 hover:bg-[#212631]/5 transition-colors focus-within:bg-[#212631]/5">
-                                                <label className="text-[8px] tracking-[0.2em] uppercase font-bold text-[#212631]/50 block mb-1">Headcount (Max 500) *</label>
-                                                <input
-                                                    type="number"
-                                                    value={eventForm.numberOfParticipants}
-                                                    onChange={e => setEventForm({ ...eventForm, numberOfParticipants: e.target.value })}
-                                                    min="1" max="500"
-                                                    className="w-full bg-transparent text-sm md:text-base font-normal font-mono uppercase tracking-tight text-[#212631] outline-none"
-                                                    required
-                                                />
-                                            </div>
-                                            <div className="w-full sm:w-1/2 p-4 hover:bg-[#212631]/5 transition-colors focus-within:bg-[#212631]/5">
-                                                <label className="text-[8px] tracking-[0.2em] uppercase font-bold text-[#212631]/50 block mb-1">Contact Phone</label>
-                                                <input
-                                                    type="tel"
-                                                    value={eventForm.participantPhone}
-                                                    onChange={e => setEventForm({ ...eventForm, participantPhone: sanitizePhone(e.target.value) })}
-                                                    className="w-full bg-transparent text-sm md:text-base font-normal font-mono uppercase tracking-tight text-[#212631] outline-none placeholder:text-[#212631]/20"
-                                                    placeholder="+63 XXX XXX XXXX"
-                                                />
-                                            </div>
-                                        </div>
-
-                                        <div className="flex flex-col sm:flex-row border-b border-[#212631]/20">
-                                            <div className="w-full sm:w-1/2 border-b sm:border-b-0 sm:border-r border-[#212631]/20 p-4 hover:bg-[#212631]/5 transition-colors focus-within:bg-[#212631]/5">
-                                                <label className="text-[8px] tracking-[0.2em] uppercase font-bold text-[#212631]/50 block mb-1">Organizer Name *</label>
-                                                <input
-                                                    type="text"
-                                                    value={eventForm.participantName}
-                                                    onChange={e => setEventForm({ ...eventForm, participantName: sanitizeInput(e.target.value) })}
-                                                    className="w-full bg-transparent text-sm md:text-base font-normal font-mono uppercase tracking-tight text-[#212631] outline-none placeholder:text-[#212631]/20"
-                                                    placeholder="Full Name"
-                                                    required
-                                                />
-                                            </div>
-                                            <div className="w-full sm:w-1/2 p-4 hover:bg-[#212631]/5 transition-colors focus-within:bg-[#212631]/5">
-                                                <label className="text-[8px] tracking-[0.2em] uppercase font-bold text-[#212631]/50 block mb-1">Organizer Email *</label>
-                                                <input
-                                                    type="email"
-                                                    value={eventForm.participantEmail}
-                                                    onChange={e => setEventForm({ ...eventForm, participantEmail: sanitizeEmail(e.target.value) })}
-                                                    className="w-full bg-transparent text-sm md:text-base font-normal font-mono uppercase tracking-tight text-[#212631] outline-none placeholder:text-[#212631]/20"
-                                                    placeholder="email@example.com"
-                                                    required
-                                                />
-                                            </div>
-                                        </div>
-
-                                        <div className="p-4 hover:bg-[#212631]/5 transition-colors focus-within:bg-[#212631]/5">
-                                            <label className="text-[8px] tracking-[0.2em] uppercase font-bold text-[#212631]/50 block mb-2">Event Details & Requirements</label>
-                                            <textarea
-                                                value={eventForm.venueEventDescription}
-                                                onChange={e => setEventForm({ ...eventForm, venueEventDescription: sanitizeInput(e.target.value) })}
-                                                className="w-full bg-transparent text-sm font-normal text-[#212631] outline-none resize-y min-h-[80px] placeholder:text-[#212631]/20"
-                                                placeholder="Please specify any particular setup, animal encounters, or catering requests..."
-                                            />
-                                        </div>
-
-                                    </div>
+                        <form onSubmit={handleSubmitAttempt} className="bg-white p-6 sm:p-8 md:p-12 rounded-xl md:rounded-2xl shadow-sm border border-gray-200">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 mb-6 md:mb-8">
+                                <div className="flex flex-col gap-2">
+                                    <label className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-gray-500">Event Name *</label>
+                                    <input
+                                        type="text"
+                                        value={eventForm.venueEventName}
+                                        onChange={e => setEventForm({ ...eventForm, venueEventName: sanitizeInput(e.target.value) })}
+                                        className="border-b border-gray-300 py-2 md:py-3 text-sm md:text-base text-black font-medium focus:border-black outline-none bg-transparent transition-colors rounded-none"
+                                        placeholder="E.g., Corporate Retreat"
+                                        required
+                                    />
                                 </div>
-
-                                <div className="w-full md:w-[30%] bg-[#f4f4f4] rounded-b-[2rem] md:rounded-bl-none md:rounded-r-[2rem] p-8 md:p-10 relative flex flex-col justify-between">
-
-                                    <div className="hidden md:block absolute top-0 bottom-0 left-0 w-px border-l-2 border-dashed border-[#212631]/20" />
-                                    <div className="hidden md:block absolute top-[-1px] left-[-1px] -translate-x-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-[#ffdd45] border border-[#212631]/20 z-10" />
-                                    <div className="hidden md:block absolute bottom-[-1px] left-[-1px] -translate-x-1/2 translate-y-1/2 w-10 h-10 rounded-full bg-[#ffdd45] border border-[#212631]/20 z-10" />
-
-                                    <div className="md:hidden absolute left-0 right-0 top-0 h-px border-t-2 border-dashed border-[#212631]/20" />
-                                    <div className="md:hidden absolute left-[-1px] top-[-1px] -translate-x-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-[#ffdd45] border border-[#212631]/20 z-10" />
-                                    <div className="md:hidden absolute right-[-1px] top-[-1px] translate-x-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-[#ffdd45] border border-[#212631]/20 z-10" />
-
-                                    <div>
-                                        <h4 className="text-2xl font-normal uppercase tracking-tighter text-[#212631] border-b-2 border-[#212631] pb-4 mb-6 text-center">Pass Data</h4>
-                                        <div className="flex flex-col gap-4">
-                                            <div className="flex justify-between items-center bg-white border border-[#212631]/10 p-4 rounded-xl shadow-sm">
-                                                <span className="text-[9px] tracking-[0.2em] uppercase text-[#212631]/50 font-bold">Total Pax</span>
-                                                <span className="text-base font-bold text-[#212631] tabular-nums font-mono">{eventForm.numberOfParticipants || 1}</span>
-                                            </div>
-                                            <div className="flex justify-between items-center bg-white border border-[#212631]/10 p-4 rounded-xl shadow-sm">
-                                                <span className="text-[9px] tracking-[0.2em] uppercase text-[#212631]/50 font-bold">Date set</span>
-                                                <span className="text-xs font-bold text-[#212631] font-mono">{eventForm.venueEventDate ? formatDisplayDate(eventForm.venueEventDate) : '—'}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div className="mt-8 flex flex-col gap-4">
-                                        <label className="flex items-start gap-3 cursor-pointer group px-1">
-                                            <div className="mt-0.5 relative flex items-center justify-center shrink-0">
-                                                <input
-                                                    type="checkbox"
-                                                    required
-                                                    className="peer appearance-none w-5 h-5 border-2 rounded-[4px] border-[#212631]/40 checked:bg-[#212631] checked:border-[#212631] transition-all cursor-pointer bg-white"
-                                                />
-                                                <svg className="absolute w-3 h-3 text-[#ebebeb] pointer-events-none opacity-0 peer-checked:opacity-100 transition-opacity" viewBox="0 0 14 10" fill="none">
-                                                    <path d="M1 5L5 9L13 1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                                                </svg>
-                                            </div>
-                                            <p className="text-[9px] tracking-[0.15em] uppercase font-normal text-[#212631]/60 leading-relaxed pt-0.5">
-                                                I acknowledge the <a href="#" className="text-[#212631] font-bold hover:underline">Terms of Service</a> &amp; <a href="#" className="text-[#212631] font-bold hover:underline">Privacy Policy</a>.
-                                            </p>
-                                        </label>
-
-                                        <button
-                                            type="submit"
-                                            disabled={isSubmitting}
-                                            className="w-full py-5 bg-[#212631] text-[#ebebeb] rounded-2xl border border-[#212631] text-[10px] tracking-[0.2em] uppercase font-bold hover:bg-transparent hover:text-[#212631] disabled:opacity-50 disabled:pointer-events-none transition-colors cursor-pointer flex items-center justify-center gap-2 shadow-xl"
-                                        >
-                                            {isSubmitting ? 'Processing...' : 'Reserve Event'}
-                                        </button>
-                                    </div>
-
-                                    <div className="w-full h-10 flex gap-[2px] justify-center items-end mt-8 opacity-20">
-                                        {BARCODE_WIDTHS.map((w, i) => (
-                                            <div key={i} className="bg-[#212631]" style={{ width: `${w}px`, height: BARCODE_HEIGHTS[i], minHeight: '30%' }} />
-                                        ))}
-                                    </div>
+                                <div className="flex flex-col gap-2">
+                                    <label className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-gray-500">Estimated Attendees *</label>
+                                    <input
+                                        type="number"
+                                        value={eventForm.numberOfParticipants}
+                                        onChange={e => setEventForm({ ...eventForm, numberOfParticipants: e.target.value })}
+                                        min="1" max="500"
+                                        className="border-b border-gray-300 py-2 md:py-3 text-sm md:text-base text-black font-medium focus:border-black outline-none bg-transparent transition-colors rounded-none"
+                                        required
+                                    />
                                 </div>
+                                <div className="flex flex-col gap-2">
+                                    <label className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-gray-500">Event Date *</label>
+                                    <input
+                                        type="date"
+                                        value={eventForm.venueEventDate}
+                                        onChange={e => setEventForm({ ...eventForm, venueEventDate: e.target.value })}
+                                        min={getMinDate()}
+                                        className="border-b border-gray-300 py-2 md:py-3 text-sm md:text-base text-black font-medium focus:border-black outline-none bg-transparent transition-colors rounded-none"
+                                        required
+                                    />
+                                </div>
+                                <div className="flex flex-col gap-2">
+                                    <label className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-gray-500">Event Time</label>
+                                    <input
+                                        type="time"
+                                        value={eventForm.venueEventTime}
+                                        onChange={e => setEventForm({ ...eventForm, venueEventTime: e.target.value })}
+                                        className="border-b border-gray-300 py-2 md:py-3 text-sm md:text-base text-black font-medium focus:border-black outline-none bg-transparent transition-colors rounded-none"
+                                    />
+                                </div>
+                            </div>
 
-                            </form>
-                        </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 mb-6 md:mb-8 pt-6 md:pt-8 border-t border-gray-100">
+                                <div className="flex flex-col gap-2">
+                                    <label className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-gray-500">Full Name *</label>
+                                    <input
+                                        type="text"
+                                        value={eventForm.participantName}
+                                        onChange={e => setEventForm({ ...eventForm, participantName: sanitizeInput(e.target.value) })}
+                                        className="border-b border-gray-300 py-2 md:py-3 text-sm md:text-base text-black font-medium focus:border-black outline-none bg-transparent transition-colors rounded-none"
+                                        placeholder="John Doe"
+                                        required
+                                    />
+                                </div>
+                                <div className="flex flex-col gap-2">
+                                    <label className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-gray-500">Email Address *</label>
+                                    <input
+                                        type="email"
+                                        value={eventForm.participantEmail}
+                                        onChange={e => setEventForm({ ...eventForm, participantEmail: sanitizeEmail(e.target.value) })}
+                                        className="border-b border-gray-300 py-2 md:py-3 text-sm md:text-base text-black font-medium focus:border-black outline-none bg-transparent transition-colors rounded-none"
+                                        placeholder="john@example.com"
+                                        required
+                                    />
+                                </div>
+                                <div className="flex flex-col gap-2 md:col-span-2">
+                                    <label className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-gray-500">Phone Number</label>
+                                    <input
+                                        type="tel"
+                                        value={eventForm.participantPhone}
+                                        onChange={e => setEventForm({ ...eventForm, participantPhone: sanitizePhone(e.target.value) })}
+                                        className="border-b border-gray-300 py-2 md:py-3 text-sm md:text-base text-black font-medium focus:border-black outline-none bg-transparent transition-colors rounded-none"
+                                        placeholder="+63 900 000 0000"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="flex flex-col gap-2 mb-10 md:mb-12">
+                                <label className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-gray-500">Additional Details & Requirements</label>
+                                <textarea
+                                    value={eventForm.venueEventDescription}
+                                    onChange={e => setEventForm({ ...eventForm, venueEventDescription: sanitizeInput(e.target.value) })}
+                                    className="border-b border-gray-300 py-2 md:py-3 text-sm md:text-base text-black font-medium focus:border-black outline-none bg-transparent transition-colors min-h-[80px] md:min-h-[100px] resize-y rounded-none"
+                                    placeholder="Please describe your event setup, specific requests, or questions..."
+                                />
+                            </div>
+
+                            <button
+                                type="submit"
+                                disabled={isSubmitting}
+                                className="w-full py-4 md:py-5 bg-black text-white rounded-full text-[10px] md:text-xs font-bold uppercase tracking-widest hover:bg-gray-800 disabled:opacity-50 transition-colors"
+                            >
+                                {isSubmitting ? 'Processing...' : 'Submit Request'}
+                            </button>
+                        </form>
                     </div>
                 </section>
 
@@ -796,87 +525,73 @@ const Events = () => {
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
-                            transition={{ duration: 0.25 }}
-                            className="fixed inset-0 z-[200] flex items-end md:items-center justify-center bg-[#212631]/80 backdrop-blur-md p-0 md:p-6"
+                            transition={{ duration: 0.2 }}
+                            className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 md:p-8"
                             onClick={(e) => e.target === e.currentTarget && setSelectedEvent(null)}
                         >
                             <motion.div
                                 key="modal-panel"
-                                initial={{ opacity: 0, y: 40 }}
+                                initial={{ opacity: 0, y: 30 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: 40 }}
-                                transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                                className="w-full md:max-w-3xl overflow-hidden flex flex-col bg-[#ebebeb] rounded-t-3xl md:rounded-3xl border border-[#212631]/20 shadow-2xl max-h-[92vh]"
+                                exit={{ opacity: 0, y: 20 }}
+                                transition={{ duration: 0.4, ease: [0.25, 1, 0.5, 1] }}
+                                className="w-full md:max-w-5xl bg-white rounded-xl md:rounded-2xl shadow-2xl overflow-hidden flex flex-col md:flex-row max-h-[90vh]"
                             >
-                                <div className="flex items-center justify-between px-6 py-4 border-b border-[#212631]/20 shrink-0 bg-[#ebebeb]">
-                                    <span className="text-[10px] tracking-[0.2em] uppercase font-normal text-[#212631]/60 px-2 py-1 bg-[#212631]/5 rounded-full">
-                                        Event Details
-                                    </span>
-                                    <button
-                                        onClick={() => setSelectedEvent(null)}
-                                        className="w-8 h-8 rounded-full flex items-center justify-center border border-[#212631]/20 text-[#212631] hover:bg-[#212631] hover:text-[#ebebeb] transition-colors cursor-pointer"
-                                    >
-                                        <Icons.Close />
-                                    </button>
+                                <div className="w-full md:w-1/2 h-48 sm:h-64 md:h-auto relative bg-gray-100 flex-shrink-0">
+                                    <img src={selectedEvent.imageUrl} alt={selectedEvent.title} className="absolute inset-0 w-full h-full object-cover" />
                                 </div>
-
-                                <div className="overflow-y-auto flex-1 flex flex-col">
-                                    <div className="w-full aspect-[16/7] overflow-hidden flex-shrink-0 border-b border-[#212631]/20 rounded-t-3xl md:rounded-none">
-                                        <img src={selectedEvent.imageUrl} alt={selectedEvent.title} className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700" />
+                                <div className="w-full md:w-1/2 p-6 md:p-12 flex flex-col overflow-y-auto">
+                                    <div className="flex justify-between items-start mb-6 md:mb-8">
+                                        <StatusBadge status={selectedEvent.status} />
+                                        <button
+                                            onClick={() => setSelectedEvent(null)}
+                                            className="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 transition-colors"
+                                        >
+                                            <Icons.Close />
+                                        </button>
                                     </div>
 
-                                    <div className="p-8 md:p-10 flex flex-col gap-6">
-                                        <div className="flex flex-col gap-3 border-b border-[#212631]/20 pb-6">
-                                            <div className="flex items-start justify-between gap-4">
-                                                <h2 className="text-3xl md:text-5xl font-normal uppercase tracking-tighter text-[#212631] leading-[0.9]">
-                                                    {selectedEvent.title}
-                                                </h2>
-                                                <StatusBadge status={selectedEvent.status} size="lg" />
-                                            </div>
-                                            <p className="text-[10px] uppercase tracking-widest font-normal text-[#212631]/50">
-                                                {formatDisplayDate(selectedEvent.eventDate)}
+                                    <h2 className="text-3xl sm:text-4xl md:text-5xl text-black leading-none mb-3 md:mb-4 break-words">
+                                        {selectedEvent.title}
+                                    </h2>
+                                    <p className="text-gray-500 uppercase tracking-widest text-xs md:text-sm mb-6 md:mb-8">
+                                        {formatDisplayDate(selectedEvent.eventDate)}
+                                    </p>
+
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8 mb-6 md:mb-8 border-t border-gray-200 pt-6 md:pt-8">
+                                        <div>
+                                            <h4 className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-gray-400 mb-2">Time</h4>
+                                            <p className="text-black font-medium text-sm md:text-base flex items-center gap-2">
+                                                <Icons.Clock />
+                                                {formatTime(selectedEvent.startTime) || '—'}
+                                                {selectedEvent.endTime && <span className="text-gray-500">to {formatTime(selectedEvent.endTime)}</span>}
                                             </p>
                                         </div>
-
-                                        <div className="grid grid-cols-2 gap-4 border border-[#212631]/20 bg-[#212631]/5 p-5 rounded-2xl">
-                                            <div className="flex flex-col gap-2">
-                                                <h4 className="text-[9px] uppercase tracking-widest font-normal text-[#212631]/40 px-2">Time</h4>
-                                                <p className="text-xs font-normal uppercase flex items-center gap-1.5 text-[#212631] px-2">
-                                                    <Icons.Clock />
-                                                    {formatTime(selectedEvent.startTime) || '—'}
-                                                    {selectedEvent.endTime && (
-                                                        <span className="text-[9px] text-[#212631]/50 ml-2">
-                                                            Until {formatTime(selectedEvent.endTime)}
-                                                        </span>
-                                                    )}
-                                                </p>
-                                            </div>
-                                            <div className="flex flex-col gap-2">
-                                                <h4 className="text-[9px] uppercase tracking-widest font-normal text-[#212631]/40 px-2">Location</h4>
-                                                <p className="text-xs font-normal uppercase flex items-center gap-1.5 text-[#212631] truncate px-2">
-                                                    <Icons.Location />
-                                                    {selectedEvent.location}
-                                                </p>
-                                            </div>
-                                        </div>
-
-                                        <div className="flex flex-col gap-3 bg-[#ebebeb] p-6 rounded-2xl border border-[#212631]/10">
-                                            <h4 className="text-[9px] uppercase tracking-widest font-normal text-[#212631]/40">About this Event</h4>
-                                            <p className="text-sm font-normal leading-relaxed text-[#212631]/70 whitespace-pre-wrap">
-                                                {selectedEvent.description || 'Join us for an immersive wildlife experience. Learn directly from our experts and connect with nature.'}
+                                        <div>
+                                            <h4 className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-gray-400 mb-2">Location</h4>
+                                            <p className="text-black font-medium text-sm md:text-base flex items-center gap-2">
+                                                <Icons.Location />
+                                                {selectedEvent.location}
                                             </p>
                                         </div>
-
-                                        {selectedEvent.tags && selectedEvent.tags.length > 0 && (
-                                            <div className="flex flex-wrap gap-2 pt-2">
-                                                {selectedEvent.tags.map((tag, i) => (
-                                                    <span key={i} className="border border-[#212631]/20 rounded-full text-[9px] uppercase tracking-widest font-normal px-4 py-1.5 bg-[#ebebeb] text-[#212631]/60">
-                                                        {tag}
-                                                    </span>
-                                                ))}
-                                            </div>
-                                        )}
                                     </div>
+
+                                    <div className="mb-6 md:mb-8">
+                                        <h4 className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-gray-400 mb-3 md:mb-4">About this Event</h4>
+                                        <p className="text-gray-700 text-sm md:text-base leading-relaxed">
+                                            {selectedEvent.description || 'Join us for an immersive wildlife experience. Learn directly from our experts and connect with nature.'}
+                                        </p>
+                                    </div>
+
+                                    {selectedEvent.tags && selectedEvent.tags.length > 0 && (
+                                        <div className="flex flex-wrap gap-2 mt-auto">
+                                            {selectedEvent.tags.map((tag, i) => (
+                                                <span key={i} className="px-3 py-1 md:px-4 md:py-2 bg-gray-100 rounded-full text-[10px] md:text-xs font-medium text-gray-600">
+                                                    {tag}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    )}
                                 </div>
                             </motion.div>
                         </motion.div>
@@ -886,50 +601,33 @@ const Events = () => {
                 <AnimatePresence>
                     {showSubmitConfirm && (
                         <div className="fixed inset-0 z-[250] flex items-center justify-center p-4">
-                            <motion.div
-                                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                                className="absolute inset-0 bg-[#212631]/80 backdrop-blur-md"
-                            />
+                            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
                             <motion.div
                                 initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
-                                className="bg-[#ebebeb] border border-[#212631]/20 rounded-3xl w-full max-w-md relative z-10 flex flex-col overflow-hidden shadow-2xl"
+                                className="bg-white rounded-2xl w-full max-w-md relative z-10 overflow-hidden shadow-2xl p-6 md:p-8 text-center"
                             >
-                                <div className="p-8 border-b border-[#212631]/20 flex flex-col items-center text-center">
-                                    <div className="w-12 h-12 rounded-full bg-[#212631] text-[#ebebeb] flex items-center justify-center mb-6">
-                                        <Icons.Check />
+                                <div className="w-12 h-12 md:w-16 md:h-16 mx-auto bg-black text-white rounded-full flex items-center justify-center mb-4 md:mb-6"><Icons.Check /></div>
+                                <h3 className="text-2xl md:text-3xl mb-2 text-black">Verify Details</h3>
+                                <p className="text-gray-500 text-sm mb-6 md:mb-8">Please ensure the information below is correct.</p>
+
+                                <div className="space-y-3 md:space-y-4 mb-6 md:mb-8 text-left bg-gray-50 p-4 md:p-6 rounded-xl border border-gray-100 text-sm md:text-base">
+                                    <div className="flex justify-between border-b border-gray-200 pb-2">
+                                        <span className="text-[10px] md:text-xs font-bold uppercase text-gray-400">Event</span>
+                                        <span className="font-medium text-black truncate max-w-[150px] sm:max-w-[200px]">{eventForm.venueEventName}</span>
                                     </div>
-                                    <h3 className="text-2xl font-normal uppercase tracking-tighter text-[#212631] mb-2">Verify Details</h3>
-                                    <p className="text-[10px] tracking-[0.18em] uppercase font-normal text-[#212631]/50 leading-relaxed">
-                                        Ensure submitted information is accurate.
-                                    </p>
+                                    <div className="flex justify-between border-b border-gray-200 pb-2">
+                                        <span className="text-[10px] md:text-xs font-bold uppercase text-gray-400">Date</span>
+                                        <span className="font-medium text-black">{formatDateFromDB(eventForm.venueEventDate)}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-[10px] md:text-xs font-bold uppercase text-gray-400">Attendees</span>
+                                        <span className="font-medium text-black">{eventForm.numberOfParticipants}</span>
+                                    </div>
                                 </div>
 
-                                <div className="p-8 bg-[#212631]/5 flex flex-col gap-4">
-                                    {[
-                                        { label: 'Type', value: 'Venue' },
-                                        { label: 'Event', value: eventForm.venueEventName },
-                                        { label: 'Date', value: formatDateFromDB(eventForm.venueEventDate) },
-                                        { label: 'Pax', value: eventForm.numberOfParticipants },
-                                    ].map(({ label, value }) => (
-                                        <div key={label} className="flex justify-between items-center bg-white/50 p-3 rounded-2xl">
-                                            <span className="text-[9px] tracking-widest uppercase font-normal text-[#212631]/50 px-2">{label}</span>
-                                            <span className="text-[10px] font-normal uppercase text-[#212631] truncate max-w-[150px] px-2">{value}</span>
-                                        </div>
-                                    ))}
-                                </div>
-
-                                <div className="p-8 border-t border-[#212631]/20 flex gap-4 bg-[#ebebeb]">
-                                    <button
-                                        onClick={() => setShowSubmitConfirm(false)}
-                                        className="flex-1 py-4 rounded-full border border-[#212631]/20 text-[9px] tracking-[0.18em] uppercase font-normal text-[#212631] hover:bg-[#212631]/5 transition-colors cursor-pointer"
-                                    >
-                                        Return
-                                    </button>
-                                    <button
-                                        onClick={confirmSubmit}
-                                        disabled={isSubmitting}
-                                        className="flex-1 py-4 rounded-full bg-[#212631] border border-[#212631] text-[9px] tracking-[0.18em] uppercase font-normal text-[#ebebeb] hover:bg-transparent hover:text-[#212631] disabled:opacity-50 transition-colors cursor-pointer"
-                                    >
+                                <div className="flex flex-col sm:flex-row gap-3 md:gap-4">
+                                    <button onClick={() => setShowSubmitConfirm(false)} className="flex-1 py-3 md:py-4 rounded-full border border-gray-200 text-[10px] md:text-xs font-bold uppercase tracking-widest text-black hover:bg-gray-50">Return</button>
+                                    <button onClick={confirmSubmit} disabled={isSubmitting} className="flex-1 py-3 md:py-4 rounded-full bg-black text-white text-[10px] md:text-xs font-bold uppercase tracking-widest hover:bg-gray-800 disabled:opacity-50">
                                         {isSubmitting ? 'Wait...' : 'Confirm'}
                                     </button>
                                 </div>
@@ -941,35 +639,26 @@ const Events = () => {
                 <AnimatePresence>
                     {showConfirmation && confirmationData && (
                         <div className="fixed inset-0 z-[300] flex items-center justify-center p-4">
-                            <motion.div
-                                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                                className="absolute inset-0 bg-[#212631]/80 backdrop-blur-md"
-                            />
+                            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
                             <motion.div
                                 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }}
-                                className="bg-[#ebebeb] rounded-3xl border border-[#212631]/20 w-full max-w-sm p-10 relative z-10 flex flex-col items-center text-center shadow-2xl"
+                                className="bg-white rounded-2xl w-full max-w-md p-8 md:p-10 relative z-10 text-center shadow-2xl"
                             >
-                                <div className="mb-6 text-[#26bc61] bg-[#26bc61]/10 p-4 rounded-full"><Icons.Check /></div>
-                                <h3 className="text-3xl font-normal uppercase tracking-tighter text-[#212631] mb-2">Confirmed</h3>
-                                <p className="text-[10px] tracking-widest uppercase font-normal text-[#212631]/50 mb-8">Reservation securely logged.</p>
+                                <div className="mb-4 md:mb-6 text-green-500 flex justify-center"><Icons.Check /></div>
+                                <h3 className="text-3xl md:text-4xl mb-2 text-black">Confirmed</h3>
+                                <p className="text-gray-500 text-sm mb-6 md:mb-8">Your reservation request has been received.</p>
 
-                                <div className="w-full border border-[#212631]/20 rounded-2xl bg-[#212631]/5 p-6 mb-8 flex flex-col items-center justify-center">
-                                    <span className="text-[8px] tracking-[0.3em] uppercase font-normal text-[#212631]/40 mb-2">Reference ID</span>
-                                    <span className="text-xl font-normal tracking-widest uppercase text-[#212631]">{confirmationData.reference}</span>
+                                <div className="bg-gray-50 border border-gray-100 rounded-xl p-4 md:p-6 mb-6 md:mb-8">
+                                    <span className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-gray-400 block mb-2">Reference ID</span>
+                                    <span className="text-xl md:text-2xl text-black">{confirmationData.reference}</span>
                                 </div>
 
-                                <div className="w-full flex flex-col gap-3">
-                                    <button
-                                        onClick={() => setShowConfirmation(false)}
-                                        className="w-full rounded-full py-4 border border-[#212631]/20 text-[9px] tracking-[0.18em] uppercase font-normal text-[#212631] hover:bg-[#212631]/5 transition-colors cursor-pointer"
-                                    >
-                                        Dismiss
-                                    </button>
-                                    <button
-                                        onClick={() => { setShowConfirmation(false); navigate('/reservations'); }}
-                                        className="w-full rounded-full py-4 bg-[#212631] border border-[#212631] text-[9px] tracking-[0.18em] uppercase font-normal text-[#ebebeb] hover:bg-transparent hover:text-[#212631] transition-colors cursor-pointer"
-                                    >
+                                <div className="space-y-3">
+                                    <button onClick={() => { setShowConfirmation(false); navigate('/reservations'); }} className="w-full py-3 md:py-4 bg-black text-white rounded-full text-[10px] md:text-xs font-bold uppercase tracking-widest hover:bg-gray-800">
                                         Manage Bookings
+                                    </button>
+                                    <button onClick={() => setShowConfirmation(false)} className="w-full py-3 md:py-4 border border-gray-200 rounded-full text-[10px] md:text-xs font-bold uppercase tracking-widest text-black hover:bg-gray-50">
+                                        Dismiss
                                     </button>
                                 </div>
                             </motion.div>

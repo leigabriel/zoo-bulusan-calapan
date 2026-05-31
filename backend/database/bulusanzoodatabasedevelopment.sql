@@ -342,6 +342,7 @@ CREATE TABLE ticket_reservations (
     visitor_email VARCHAR(100) NOT NULL,
     visitor_phone VARCHAR(20) DEFAULT NULL,
     reservation_date DATE NOT NULL,
+    reservation_time VARCHAR(20) DEFAULT NULL,
     adult_quantity INT DEFAULT 0,
     child_quantity INT DEFAULT 0,
     bulusan_resident_quantity INT DEFAULT 0,
@@ -351,6 +352,9 @@ CREATE TABLE ticket_reservations (
     status ENUM('pending', 'confirmed', 'completed', 'cancelled', 'no_show') DEFAULT 'pending',
     notes TEXT DEFAULT NULL,
     is_archived BOOLEAN DEFAULT FALSE,
+    qr_data TEXT DEFAULT NULL,
+    checked_in_at TIMESTAMP NULL DEFAULT NULL,
+    checked_in_by INT DEFAULT NULL,
     confirmed_at TIMESTAMP NULL DEFAULT NULL,
     confirmed_by INT DEFAULT NULL,
     cancelled_at TIMESTAMP NULL DEFAULT NULL,
@@ -360,11 +364,13 @@ CREATE TABLE ticket_reservations (
     UNIQUE KEY uk_ticket_reservations_reference (reservation_reference),
     INDEX idx_ticket_reservations_user_id (user_id),
     INDEX idx_ticket_reservations_date (reservation_date),
+    INDEX idx_ticket_reservations_time (reservation_time),
     INDEX idx_ticket_reservations_status (status),
     INDEX idx_ticket_reservations_created_at (created_at),
     INDEX idx_ticket_reservations_is_archived (is_archived),
     CONSTRAINT fk_ticket_reservations_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL ON UPDATE CASCADE,
-    CONSTRAINT fk_ticket_reservations_confirmed_by FOREIGN KEY (confirmed_by) REFERENCES users(id) ON DELETE SET NULL ON UPDATE CASCADE
+    CONSTRAINT fk_ticket_reservations_confirmed_by FOREIGN KEY (confirmed_by) REFERENCES users(id) ON DELETE SET NULL ON UPDATE CASCADE,
+    CONSTRAINT fk_ticket_reservations_checked_in_by FOREIGN KEY (checked_in_by) REFERENCES users(id) ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- event reservations
@@ -385,6 +391,9 @@ CREATE TABLE event_reservations (
     status ENUM('pending', 'confirmed', 'completed', 'cancelled', 'no_show') DEFAULT 'pending',
     notes TEXT DEFAULT NULL,
     is_archived BOOLEAN DEFAULT FALSE,
+    qr_data TEXT DEFAULT NULL,
+    checked_in_at TIMESTAMP NULL DEFAULT NULL,
+    checked_in_by INT DEFAULT NULL,
     confirmed_at TIMESTAMP NULL DEFAULT NULL,
     confirmed_by INT DEFAULT NULL,
     cancelled_at TIMESTAMP NULL DEFAULT NULL,
@@ -399,7 +408,8 @@ CREATE TABLE event_reservations (
     INDEX idx_event_reservations_is_archived (is_archived),
     CONSTRAINT fk_event_reservations_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL ON UPDATE CASCADE,
     CONSTRAINT fk_event_reservations_event FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE SET NULL ON UPDATE CASCADE,
-    CONSTRAINT fk_event_reservations_confirmed_by FOREIGN KEY (confirmed_by) REFERENCES users(id) ON DELETE SET NULL ON UPDATE CASCADE
+    CONSTRAINT fk_event_reservations_confirmed_by FOREIGN KEY (confirmed_by) REFERENCES users(id) ON DELETE SET NULL ON UPDATE CASCADE,
+    CONSTRAINT fk_event_reservations_checked_in_by FOREIGN KEY (checked_in_by) REFERENCES users(id) ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- staff activity logs

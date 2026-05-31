@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { gsap } from 'gsap';
 import { useAuth } from '../context/AuthContext';
 import { getProfileImageUrl, messageAPI, userAPI, reservationAPI } from '../services/api-client';
 import LogoutModal from './common/LogoutModal';
@@ -131,131 +130,14 @@ const Header = () => {
     const aiScannerRef = useRef(null);
     const notificationPanelRef = useRef(null);
     const lastScrollY = useRef(0);
-    const isTransitioningRef = useRef(false);
-
-    // ===== SVG Transition Logic =====
-    const TRANSITION_ROUTES = ['/', '/animals', '/plants', '/events', '/about', '/reservations', '/community'];
-
-    useEffect(() => {
-        const paths = document.querySelectorAll(".transition-path");
-        if (!paths.length) return;
-
-        // Si aterriza en una ruta que no debe tener transición, ocultar el SVG instantáneamente
-        if (!TRANSITION_ROUTES.includes(location.pathname)) {
-            paths.forEach((path) => {
-                const length = path.getTotalLength();
-                gsap.set(path, { strokeDasharray: length, strokeDashoffset: length });
-            });
-            return;
-        }
-
-        // Start fully covered to hide any unstyled flash on load
-        paths.forEach((path) => {
-            const length = path.getTotalLength();
-            gsap.set(path, {
-                strokeDasharray: length,
-                strokeDashoffset: 0,
-                attr: { "stroke-width": 700 }
-            });
-        });
-
-        // Wipe out to reveal the page
-        const tween = gsap.timeline();
-        paths.forEach((path) => {
-            const length = path.getTotalLength();
-            tween.to(
-                path,
-                {
-                    strokeDashoffset: -length,
-                    attr: { "stroke-width": 200 },
-                    duration: 1,
-                    ease: "power1.inOut",
-                    onComplete: () => {
-                        // Reset back to completely hidden and ready for next swipe
-                        gsap.set(path, { strokeDashoffset: length });
-                    }
-                },
-                0
-            );
-        });
-    }, []); // Empty dependency ensures it fires when the component mounts
 
     const handleTransitionNavigate = (e, path) => {
         if (e) e.preventDefault();
-        if (location.pathname === path || isTransitioningRef.current) return;
+        if (location.pathname === path) return;
 
-        // Solo aplicar la transición si la ruta de destino está en nuestra lista
-        if (!TRANSITION_ROUTES.includes(path)) {
-            navigate(path);
-            window.scrollTo(0, 0);
-            return;
-        }
-
-        isTransitioningRef.current = true;
-        const paths = document.querySelectorAll(".transition-path");
-
-        if (!paths.length) {
-            isTransitioningRef.current = false;
-            navigate(path);
-            window.scrollTo(0, 0);
-            return;
-        }
-
-        // Fase 1: Cubrir la pantalla
-        const coverTween = gsap.timeline({
-            onComplete: () => {
-                // Navegar mientras la pantalla está completamente cubierta por el SVG
-                navigate(path);
-                window.scrollTo(0, 0);
-
-                // FIX PARA EL PARPADEO (Flickering): 
-                // Darle tiempo a React para actualizar el DOM con la nueva ruta usando requestAnimationFrame
-                requestAnimationFrame(() => {
-                    requestAnimationFrame(() => {
-                        // Fase 2: Revelar la nueva página
-                        const revealTween = gsap.timeline({
-                            onComplete: () => {
-                                isTransitioningRef.current = false;
-                                paths.forEach(p => gsap.set(p, { strokeDashoffset: p.getTotalLength() }));
-                            }
-                        });
-
-                        paths.forEach((path) => {
-                            const length = path.getTotalLength();
-                            revealTween.to(
-                                path,
-                                {
-                                    strokeDashoffset: -length,
-                                    attr: { "stroke-width": 200 },
-                                    duration: 1,
-                                    ease: "power1.inOut",
-                                },
-                                0
-                            );
-                        });
-                    });
-                });
-            }
-        });
-
-        paths.forEach((path) => {
-            const length = path.getTotalLength();
-            // Start the wipe from the far end
-            gsap.set(path, { strokeDashoffset: length, strokeDasharray: length });
-
-            coverTween.to(
-                path,
-                {
-                    strokeDashoffset: 0,
-                    attr: { "stroke-width": 700 },
-                    duration: 1,
-                    ease: "power1.inOut",
-                },
-                0
-            );
-        });
+        navigate(path);
+        window.scrollTo(0, 0);
     };
-    // =================================
 
     useEffect(() => {
         const onScroll = () => {
@@ -292,7 +174,7 @@ const Header = () => {
             return () => {
                 document.removeEventListener('mousedown', handler);
                 document.body.style.overflow = 'unset';
-            };
+            }
         }, [isOpen, ref, setter]);
     };
 
@@ -1017,34 +899,6 @@ const Header = () => {
                     </div>
                 </div>
             )}
-
-            {/* Transition SVG overlay */}
-            <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 scale-[1.5] w-full h-full pointer-events-none z-[99999]" aria-hidden="true">
-                <svg
-                    viewBox="0 0 2453 2535"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                    preserveAspectRatio="none"
-                    className="w-full h-full transition-svg-el"
-                >
-                    <path
-                        className="transition-path"
-                        d="M227.549 1818.76C227.549 1818.76 406.016 2207.75 569.049 2130.26C843.431 1999.85 -264.104 1002.3 227.549 876.262C552.918 792.849 773.647 2456.11 1342.05 2130.26C1885.43 1818.76 14.9644 455.772 760.548 137.262C1342.05 -111.152 1663.5 2266.35 2209.55 1972.76C2755.6 1679.18 1536.63 384.467 1826.55 137.262C2013.5 -22.1463 2209.55 381.262 2209.55 381.262"
-                        stroke="#3db53d"
-                        strokeWidth="200"
-                        strokeLinecap="round"
-                        style={{ strokeDashoffset: 99999, strokeDasharray: 99999 }}
-                    />
-                    <path
-                        className="transition-path"
-                        d="M1661.28 2255.51C1661.28 2255.51 2311.09 1960.37 2111.78 1817.01C1944.47 1696.67 718.456 2870.17 499.781 2255.51C308.969 1719.17 2457.51 1613.83 2111.78 963.512C1766.05 313.198 427.949 2195.17 132.281 1455.51C-155.219 736.292 2014.78 891.514 1708.78 252.012C1437.81 -314.29 369.471 909.169 132.281 566.512C18.1772 401.672 244.781 193.012 244.781 193.012"
-                        stroke="#26bc61"
-                        strokeWidth="200"
-                        strokeLinecap="round"
-                        style={{ strokeDashoffset: 99999, strokeDasharray: 99999 }}
-                    />
-                </svg>
-            </div>
         </>
     );
 };

@@ -28,3 +28,6 @@ backend/uploads/profile-images/*
 # Frontend public uploads (legacy)
 frontend/public/profile-img/*
 !frontend/public/profile-img/.gitkeep
+
+tasks.md
+bulusanzoocalapandatabasedevelopment.sql

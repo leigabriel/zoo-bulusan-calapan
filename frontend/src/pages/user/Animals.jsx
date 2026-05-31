@@ -11,11 +11,11 @@ import { userAPI } from '../../services/api-client';
 gsap.registerPlugin(ScrollTrigger);
 
 const statusMap = {
-    healthy: { label: 'Healthy', dot: 'bg-green-400' },
-    sick: { label: 'Under Care', dot: 'bg-red-400' },
-    recovering: { label: 'Recovering', dot: 'bg-amber-400' },
+    healthy: { label: 'Healthy', dot: 'bg-green-500' },
+    sick: { label: 'Under Care', dot: 'bg-red-500' },
+    recovering: { label: 'Recovering', dot: 'bg-amber-500' },
 };
-const getStatus = (s) => statusMap[s?.toLowerCase()] ?? { label: s || 'Active', dot: 'bg-green-400' };
+const getStatus = (s) => statusMap[s?.toLowerCase()] ?? { label: s || 'Active', dot: 'bg-green-500' };
 
 const deduplicateById = (arr) => {
     const seen = new Set();
@@ -27,125 +27,61 @@ const deduplicateById = (arr) => {
 };
 
 const CloseIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-3.5 h-3.5">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
         <path fillRule="evenodd" d="M5.47 5.47a.75.75 0 011.06 0L12 10.94l5.47-5.47a.75.75 0 111.06 1.06L13.06 12l5.47 5.47a.75.75 0 11-1.06 1.06L12 13.06l-5.47 5.47a.75.75 0 01-1.06-1.06L10.94 12 5.47 6.53a.75.75 0 010-1.06z" clipRule="evenodd" />
     </svg>
 );
 
-const AnimalImage = ({ animal, big = false, hovered = false }) => (
-    <div className="relative w-full overflow-hidden rounded-xl" style={{ aspectRatio: '1 / 1' }}>
-        {animal.imageUrl ? (
-            <motion.img
-                src={animal.imageUrl}
-                alt={animal.name}
-                className="absolute inset-0 w-full h-full object-cover block rounded-xl"
-                animate={{ scale: hovered ? 1.04 : 1 }}
-                transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
-            />
-        ) : (
-            <div className="absolute inset-0 bg-[#212631]/5 flex items-center justify-center rounded-xl">
-                <span className={`font-black uppercase text-[#212631]/10 tracking-tighter ${big ? 'text-7xl' : 'text-4xl'}`}>
-                    {animal.name[0]}
-                </span>
-            </div>
-        )}
-    </div>
-);
-
-const CellMeta = ({ animal, index, big = false }) => {
+const AnimalCard = ({ animal, onClick }) => {
+    const imgRef = useRef(null);
     const status = getStatus(animal.status);
-    const num = String(index + 1).padStart(3, '0');
+
+    const handleMouseEnter = () => {
+        gsap.to(imgRef.current, { scale: 1.05, duration: 0.6, ease: 'power3.out', overwrite: 'auto' });
+    };
+
+    const handleMouseLeave = () => {
+        gsap.to(imgRef.current, { scale: 1, duration: 0.6, ease: 'power3.out', overwrite: 'auto' });
+    };
+
     return (
-        <div className={`flex items-center justify-between border-t border-[#212631]/10 mt-2 ${big ? 'px-3.5 py-2.5' : 'px-2.5 py-1.5'}`}>
-            <div className="flex items-center gap-1.5 min-w-0 flex-1 overflow-hidden">
-                <span className="text-[8px] tracking-[0.16em] uppercase font-bold text-[#212631]/30 shrink-0">{num}</span>
-                <span className={`font-semibold text-[#212631] truncate ${big ? 'text-xs' : 'text-[10px]'}`}>
-                    {animal.name}
-                </span>
+        <div
+            className="animal-card flex flex-col cursor-pointer group"
+            onClick={() => onClick(animal)}
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
+        >
+            <div className="w-full aspect-square overflow-hidden bg-gray-100 mb-4">
+                {animal.imageUrl ? (
+                    <img
+                        ref={imgRef}
+                        src={animal.imageUrl}
+                        alt={animal.name}
+                        className="w-full h-full object-cover origin-center"
+                    />
+                ) : (
+                    <div ref={imgRef} className="w-full h-full flex items-center justify-center bg-gray-100">
+                        <span className="font-bold text-5xl text-gray-300 uppercase">{animal.name[0]}</span>
+                    </div>
+                )}
             </div>
-            <span className={`shrink-0 rounded-full ml-2 ${status.dot} ${big ? 'w-1.5 h-1.5' : 'w-1.5 h-1.5'} opacity-50`} />
-        </div>
-    );
-};
 
-const BigCell = ({ animal, index, onClick }) => {
-    const [hovered, setHovered] = useState(false);
-    return (
-        <div
-            className="grid-cell cursor-pointer bg-[#ebebeb] overflow-hidden flex flex-col border-r border-[#212631]/10 p-2"
-            onMouseEnter={() => setHovered(true)}
-            onMouseLeave={() => setHovered(false)}
-            onClick={() => onClick(animal)}
-        >
-            <AnimalImage animal={animal} big hovered={hovered} />
-            <CellMeta animal={animal} index={index} big />
-        </div>
-    );
-};
-
-const SmallCell = ({ animal, index, onClick, borderRight = false, borderBottom = false }) => {
-    const [hovered, setHovered] = useState(false);
-    return (
-        <div
-            className={`grid-cell cursor-pointer bg-[#ebebeb] overflow-hidden flex flex-col p-2 ${borderRight ? 'border-r border-[#212631]/10' : ''} ${borderBottom ? 'border-b border-[#212631]/10' : ''}`}
-            onMouseEnter={() => setHovered(true)}
-            onMouseLeave={() => setHovered(false)}
-            onClick={() => onClick(animal)}
-        >
-            <AnimalImage animal={animal} hovered={hovered} />
-            <CellMeta animal={animal} index={index} />
-        </div>
-    );
-};
-
-const RowBlock = ({ group, startIndex, bigOnLeft, onClick }) => {
-    const [bigAnimal, ...rest] = group;
-    const smalls = rest.slice(0, 4);
-
-    const BigSide = (
-        <BigCell
-            animal={bigAnimal}
-            index={startIndex}
-            onClick={onClick}
-        />
-    );
-
-    const SmallSide = (
-        <div className="grid grid-cols-2">
-            {smalls.map((animal, i) => (
-                <SmallCell
-                    key={animal.id}
-                    animal={animal}
-                    index={startIndex + 1 + i}
-                    onClick={onClick}
-                    borderRight={i % 2 === 0}
-                    borderBottom={i < 2 && smalls.length > 2}
-                />
-            ))}
-        </div>
-    );
-
-    return (
-        <div className="grid grid-cols-2 border-t border-l border-[#212631]/10">
-            {bigOnLeft ? (
-                <>
-                    {BigSide}
-                    {SmallSide}
-                </>
-            ) : (
-                <>
-                    <div className="border-r border-[#212631]/10">{SmallSide}</div>
-                    {BigSide}
-                </>
-            )}
+            <div className="flex justify-between items-baseline mb-1">
+                <span className="font-medium text-black text-lg">{animal.name}</span>
+                <div className="flex items-center gap-2">
+                    <span className={`w-1.5 h-1.5 rounded-full ${status.dot}`} />
+                    <span className="text-sm font-medium text-black">{status.label}</span>
+                </div>
+            </div>
+            <div className="text-sm text-gray-500">{animal.species}</div>
         </div>
     );
 };
 
 const Stat = ({ label, value }) => (
-    <div>
-        <p className="text-[8px] tracking-[0.18em] uppercase font-black text-[#212631]/30 mb-1">{label}</p>
-        <p className="text-sm font-semibold text-[#212631]">{value}</p>
+    <div className="mb-4">
+        <p className="text-xs tracking-widest uppercase font-bold text-gray-400 mb-1">{label}</p>
+        <p className="text-base font-medium text-black">{value}</p>
     </div>
 );
 
@@ -169,67 +105,67 @@ const DetailModal = ({ animal, onClose }) => {
 
     return (
         <motion.div
-            className="fixed inset-0 z-[300] flex items-center justify-center p-4 md:p-6"
+            className="fixed inset-0 z-[300] flex items-center justify-center p-4 md:p-8"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.18 }}
+            transition={{ duration: 0.2 }}
         >
             <div
-                className="absolute inset-0 bg-[#212631]/50 backdrop-blur-sm"
+                className="absolute inset-0 bg-black/60 backdrop-blur-sm"
                 onClick={onClose}
             />
 
             <motion.div
-                className="relative z-10 flex flex-col bg-[#ebebeb] border border-[#212631]/10 w-full h-full md:h-auto md:max-w-[760px] md:max-h-[85vh] overflow-hidden rounded-2xl"
-                initial={{ opacity: 0, y: 12 }}
+                className="relative z-10 flex flex-col md:flex-row bg-white w-full h-full md:h-auto md:max-w-6xl md:max-h-[85vh] overflow-hidden rounded-none md:rounded-xl shadow-2xl"
+                initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 12 }}
-                transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
+                exit={{ opacity: 0, y: 20 }}
+                transition={{ duration: 0.4, ease: [0.25, 1, 0.5, 1] }}
             >
-                <div className="flex items-center justify-between px-4 py-3 border-b border-[#212631]/10 shrink-0">
-                    <div className="flex items-center gap-2.5">
-                        <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${status.dot}`} />
-                        <span className="text-[9px] tracking-[0.18em] uppercase font-bold text-[#212631]/40">
-                            {animal.species} — {status.label}
-                        </span>
-                    </div>
-                    <button
-                        onClick={onClose}
-                        className="w-7 h-7 flex items-center justify-center text-[#212631] opacity-40 hover:opacity-100 transition-opacity cursor-pointer rounded-full hover:bg-[#212631]/5"
-                        aria-label="Close"
-                    >
-                        <CloseIcon />
-                    </button>
+                {/* Left Side: Image */}
+                <div className="w-full md:w-1/2 h-64 md:h-auto bg-gray-100 relative shrink-0">
+                    {animal.imageUrl ? (
+                        <img
+                            src={animal.imageUrl}
+                            alt={animal.name}
+                            className="absolute inset-0 w-full h-full object-cover"
+                        />
+                    ) : (
+                        <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
+                            <span className="text-9xl font-bold uppercase text-gray-200">
+                                {animal.name[0]}
+                            </span>
+                        </div>
+                    )}
                 </div>
 
-                <div className="flex flex-col md:flex-row flex-1 overflow-y-auto md:overflow-hidden">
-                    <div className="shrink-0 md:w-[320px] p-5 border-b md:border-b-0 md:border-r border-[#212631]/10 flex items-start justify-center">
-                        <div className="w-full overflow-hidden rounded-xl" style={{ aspectRatio: '1 / 1' }}>
-                            {animal.imageUrl ? (
-                                <img
-                                    src={animal.imageUrl}
-                                    alt={animal.name}
-                                    className="w-full h-full object-cover block rounded-xl"
-                                />
-                            ) : (
-                                <div className="w-full h-full bg-[#212631]/5 flex items-center justify-center rounded-xl">
-                                    <span className="text-7xl font-black uppercase text-[#212631]/10 tracking-tighter">
-                                        {animal.name[0]}
-                                    </span>
-                                </div>
-                            )}
+                {/* Right Side: Content */}
+                <div className="w-full md:w-1/2 flex flex-col p-6 md:p-12 overflow-y-auto">
+                    <div className="flex justify-between items-start mb-8">
+                        <div>
+                            <div className="flex items-center gap-2 mb-3">
+                                <span className={`w-2 h-2 rounded-full ${status.dot}`} />
+                                <span className="text-xs tracking-widest uppercase font-bold text-gray-500">
+                                    {animal.species} — {status.label}
+                                </span>
+                            </div>
+                            <h2 className="text-5xl md:text-6xl text-black tracking-tight leading-none">
+                                {animal.name}
+                            </h2>
                         </div>
+                        <button
+                            onClick={onClose}
+                            className="p-3 bg-gray-100 hover:bg-gray-200 text-black rounded-full transition-colors cursor-pointer shrink-0"
+                            aria-label="Close"
+                        >
+                            <CloseIcon />
+                        </button>
                     </div>
 
-                    <div className="flex-1 flex flex-col p-5 md:overflow-y-auto">
-                        <h2 className="font-black uppercase text-[#212631] leading-[0.88] tracking-tighter mb-5"
-                            style={{ fontSize: 'clamp(24px, 3vw, 40px)' }}>
-                            {animal.name}
-                        </h2>
-
+                    <div className="flex-1">
                         {hasStats && (
-                            <div className="grid grid-cols-3 gap-3 pb-4 mb-4 border-b border-[#212631]/10">
+                            <div className="grid grid-cols-2 md:grid-cols-3 gap-6 mb-8">
                                 {animal.lifespan && <Stat label="Lifespan" value={animal.lifespan} />}
                                 {animal.weight && <Stat label="Weight" value={animal.weight} />}
                                 {animal.length && <Stat label="Length" value={animal.length} />}
@@ -237,48 +173,30 @@ const DetailModal = ({ animal, onClose }) => {
                         )}
 
                         {hasHabDiet && (
-                            <div className="grid grid-cols-2 gap-3 pb-4 mb-4 border-b border-[#212631]/10">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                                 {animal.habitat && <Stat label="Habitat" value={animal.habitat} />}
                                 {animal.diet && <Stat label="Diet" value={animal.diet} />}
                             </div>
                         )}
 
                         {hasInfo && (
-                            <p className="text-sm leading-relaxed text-[#212631]/55 flex-1">
-                                {animal.animalInformation || animal.description}
-                            </p>
+                            <div className="mb-8">
+                                <p className="text-xs tracking-widest uppercase font-bold text-gray-400 mb-3">About</p>
+                                <p className="text-lg leading-relaxed text-gray-700">
+                                    {animal.animalInformation || animal.description}
+                                </p>
+                            </div>
                         )}
+                    </div>
 
-                        <div className="flex items-center justify-between pt-4 mt-4 border-t border-[#212631]/10">
-                            <span className="text-[9px] tracking-[0.16em] uppercase font-bold text-[#212631]/30">
-                                {animal.exhibit}
-                            </span>
-                            <button
-                                onClick={onClose}
-                                className="text-[9px] tracking-[0.18em] uppercase font-black text-[#212631] border border-[#212631]/20 px-4 py-2 hover:bg-[#212631] hover:text-[#ebebeb] transition-colors duration-150 cursor-pointer rounded-full"
-                            >
-                                Close
-                            </button>
-                        </div>
+                    <div className="pt-8 mt-4 border-t border-gray-200 flex justify-between items-center">
+                        <span className="text-xs tracking-widest uppercase font-bold text-gray-400">
+                            Exhibit: {animal.exhibit}
+                        </span>
                     </div>
                 </div>
             </motion.div>
         </motion.div>
-    );
-};
-
-const MobileCell = ({ animal, index, onClick }) => {
-    const [hovered, setHovered] = useState(false);
-    return (
-        <div
-            className="grid-cell border-r border-b border-[#212631]/10 overflow-hidden bg-[#ebebeb] cursor-pointer flex flex-col p-2"
-            onMouseEnter={() => setHovered(true)}
-            onMouseLeave={() => setHovered(false)}
-            onClick={() => onClick(animal)}
-        >
-            <AnimalImage animal={animal} hovered={hovered} />
-            <CellMeta animal={animal} index={index} />
-        </div>
     );
 };
 
@@ -287,7 +205,7 @@ const Animals = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [selectedAnimal, setSelectedAnimal] = useState(null);
-    const containerRef = useRef(null);
+    const gridRef = useRef(null);
 
     const fetchAnimals = useCallback(async () => {
         try {
@@ -327,97 +245,52 @@ const Animals = () => {
     useEffect(() => {
         if (!loading && animals.length > 0) {
             const ctx = gsap.context(() => {
-                gsap.fromTo('.hero-anim',
-                    { y: 30, opacity: 0 },
-                    { y: 0, opacity: 1, duration: 1, stagger: 0.1, ease: 'power3.out' }
-                );
-
-                gsap.utils.toArray('.grid-cell').forEach((cell) => {
-                    gsap.fromTo(cell,
-                        { y: 40, opacity: 0 },
-                        {
-                            scrollTrigger: {
-                                trigger: cell,
-                                start: 'top 90%',
-                            },
-                            y: 0,
-                            opacity: 1,
-                            duration: 0.6,
-                            ease: 'power2.out'
+                // Scroll animation for grid items
+                gsap.fromTo('.animal-card',
+                    { y: 60, opacity: 0 },
+                    {
+                        y: 0,
+                        opacity: 1,
+                        duration: 0.8,
+                        stagger: 0.1,
+                        ease: 'power3.out',
+                        scrollTrigger: {
+                            trigger: gridRef.current,
+                            start: 'top 85%',
                         }
-                    );
-                });
-            }, containerRef);
+                    }
+                );
+            }, gridRef);
             return () => ctx.revert();
         }
     }, [loading, animals]);
 
-    const scrollToGrid = () => {
-        document.getElementById('animals-grid')?.scrollIntoView({ behavior: 'smooth' });
-    };
-
-    const rows = [];
-    for (let i = 0; i < animals.length; i += 5) {
-        rows.push({ group: animals.slice(i, i + 5), startIndex: i });
-    }
-
     return (
         <ReactLenis root>
-            <div ref={containerRef} className="bg-[#ebebeb] text-[#212631] relative min-h-screen">
+            <div className="bg-white text-black relative min-h-screen">
                 <Header />
 
-                <div className="sticky top-0 w-full h-[80vh] flex flex-col items-center justify-center overflow-hidden z-0">
-                    <div className="absolute inset-0 bg-[url('/background/1001.webp')] bg-cover bg-center bg-no-repeat" />
-
-                    <div className="relative z-10 flex flex-col items-center justify-center text-center px-4 w-full max-w-5xl h-full">
-                        <h1 className="hero-anim font-extrabold uppercase text-[#212631] leading-[0.85] tracking-tighter"
-                            style={{ fontSize: 'clamp(40px, 11vw, 130px)' }}>
-                            Meet Our Animals
-                        </h1>
-                        <p className="hero-anim mt-8 md:mt-10 text-xs md:text-sm tracking-[0.1em] text-[#212631]/60 max-w-2xl font-semibold uppercase leading-relaxed mb-10">
-                            Discover the diverse species that call Zoo Bulusan home. Learn about their habitats, diets, and unique characteristics.
-                            {!loading && animals.length > 0 && (
-                                <span className="block mt-4 text-[#212631]/80 font-black">
-                                    CURRENTLY CARING FOR {animals.length} ANIMALS
-                                </span>
-                            )}
-                        </p>
-
-                        <button
-                            onClick={scrollToGrid}
-                            className="hero-anim px-8 py-4 bg-[#212631] text-[#ebebeb] border border-[#212631] text-[10px] tracking-[0.2em] uppercase font-black hover:bg-transparent hover:text-[#212631] transition-colors duration-300 rounded-full"
-                        >
-                            Explore The Grid
-                        </button>
-                    </div>
-
-                    <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-3 opacity-60 cursor-pointer hover:opacity-100 transition-opacity" onClick={scrollToGrid}>
-                        <span className="text-[9px] tracking-[0.2em] uppercase font-bold text-[#212631] rounded-full px-2 py-1 bg-[#212631]/5">Scroll</span>
-                        <motion.div
-                            animate={{ y: [0, 8, 0] }}
-                            transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
-                            className="w-[1px] h-12 bg-gradient-to-b from-[#212631] to-transparent rounded-full"
-                        />
-                    </div>
+                {/* Hero Section - Clean Style */}
+                <div className="w-full min-h-[50vh] md:min-h-[60vh] flex flex-col items-center justify-center px-4 pt-20">
+                    <h1 className="text-[4rem] sm:text-[6rem] md:text-[9rem] lg:text-[11rem] leading-none tracking-tight text-black text-center">
+                        Meet Our Animals
+                    </h1>
                 </div>
 
-                <main id="animals-grid" className="relative z-10 w-full bg-[#ebebeb] border-t border-[#212631]/10 min-h-screen">
+                {/* Grid Section */}
+                <main ref={gridRef} className="relative z-10 w-full bg-white min-h-screen px-4 md:px-8 pb-32 max-w-[1800px] mx-auto">
                     {loading && (
                         <div className="flex items-center justify-center py-40">
-                            <motion.div
-                                className="w-5 h-5 rounded-full border-[1.5px] border-[#212631]/15 border-t-[#212631]"
-                                animate={{ rotate: 360 }}
-                                transition={{ repeat: Infinity, duration: 0.85, ease: 'linear' }}
-                            />
+                            <div className="w-8 h-8 rounded-full border-2 border-gray-200 border-t-black animate-spin" />
                         </div>
                     )}
 
                     {!loading && error && (
-                        <div className="flex flex-col items-center gap-3 py-32 px-6">
-                            <p className="text-[10px] tracking-widest uppercase font-bold text-[#212631]/35">{error}</p>
+                        <div className="flex flex-col items-center gap-4 py-32 px-6">
+                            <p className="text-sm tracking-widest uppercase font-bold text-gray-400">{error}</p>
                             <button
                                 onClick={fetchAnimals}
-                                className="text-[9px] tracking-[0.18em] uppercase font-black text-[#212631] border border-[#212631]/20 px-4 py-2 hover:bg-[#212631] hover:text-[#ebebeb] transition-colors cursor-pointer rounded-full"
+                                className="text-xs tracking-widest uppercase font-black text-black border-2 border-black px-6 py-3 hover:bg-black hover:text-white transition-colors cursor-pointer"
                             >
                                 Retry
                             </button>
@@ -425,40 +298,22 @@ const Animals = () => {
                     )}
 
                     {!loading && !error && animals.length === 0 && (
-                        <p className="text-center py-40 font-black uppercase tracking-tighter text-[#212631]/6"
-                            style={{ fontSize: 'clamp(32px, 5vw, 56px)' }}>
+                        <p className="text-center py-40 text-4xl md:text-6xl text-gray-300">
                             No animals available
                         </p>
                     )}
 
                     {!loading && !error && animals.length > 0 && (
-                        <>
-                            <div className="hidden md:block">
-                                {rows.map(({ group, startIndex }, rowIdx) => (
-                                    <RowBlock
-                                        key={`row-${startIndex}`}
-                                        group={group}
-                                        startIndex={startIndex}
-                                        bigOnLeft={rowIdx % 2 === 0}
-                                        onClick={setSelectedAnimal}
-                                    />
-                                ))}
-                            </div>
-
-                            <div className="md:hidden grid grid-cols-2">
-                                {animals.map((animal, idx) => (
-                                    <MobileCell
-                                        key={animal.id}
-                                        animal={animal}
-                                        index={idx}
-                                        onClick={setSelectedAnimal}
-                                    />
-                                ))}
-                            </div>
-                        </>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-6 md:gap-x-8 gap-y-12 md:gap-y-16">
+                            {animals.map((animal) => (
+                                <AnimalCard
+                                    key={animal.id}
+                                    animal={animal}
+                                    onClick={setSelectedAnimal}
+                                />
+                            ))}
+                        </div>
                     )}
-
-                    <div className="h-20 bg-[#ebebeb] border-t border-[#212631]/10"></div>
                 </main>
 
                 <AnimatePresence>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import AIChatAssistant from '../features/ai-assistant/AIChatAssistant';
+import { AI_ASSISTANT_ICON } from '../../config/ai-assistant-theme';
 
 const MESSAGES = [
     "Need help?", "Ask me anything!", "Lost? I gotchu.",
@@ -59,10 +60,10 @@ const AIFloatingButton = () => {
                                     animate={{ opacity: 1, y: 0, scale: 1 }}
                                     exit={{ opacity: 0, y: 6, scale: 0.92 }}
                                     transition={{ duration: 0.25 }}
-                                    className="absolute right-full mr-3 bottom-1 px-3 py-1.5 bg-gray-800 text-white text-sm font-medium rounded-lg shadow-lg whitespace-nowrap"
+                                    className="absolute right-full mr-3 bottom-1 px-3 py-1.5 bg-emerald-900 text-white text-sm font-medium rounded-lg shadow-lg whitespace-nowrap"
                                 >
                                     {MESSAGES[msgIndex]}
-                                    <div className="absolute top-1/2 -right-1 -translate-y-1/2 w-2 h-2 bg-gray-800 rotate-45" />
+                                    <div className="absolute top-1/2 -right-1 -translate-y-1/2 w-2 h-2 bg-emerald-900 rotate-45" />
                                 </motion.div>
                             )}
                         </AnimatePresence>
@@ -72,10 +73,9 @@ const AIFloatingButton = () => {
                             className="relative z-50 w-25 h-25 flex items-center justify-center transition-transform duration-200 active:scale-95 hover:scale-110"
                         >
                             <img
-                                src="/zusan.gif"
+                                src={AI_ASSISTANT_ICON}
                                 className="w-25 h-25 object-contain"
                                 alt="Open Assistant"
-                                style={{ mixBlendMode: 'multiply' }}
                             />
                         </button>
                     </div>
@@ -86,7 +86,7 @@ const AIFloatingButton = () => {
                 {assistantOpen && (
                     <div className="fixed inset-0 z-[100] flex justify-end">
                         <motion.div
-                            className="absolute inset-0 bg-emerald-950/20 backdrop-blur-md"
+                            className="absolute inset-0 bg-emerald-900/15 backdrop-blur-md"
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}

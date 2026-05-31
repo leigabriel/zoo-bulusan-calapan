@@ -1,6 +1,9 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ReactLenis } from 'lenis/react';
 import { getAuthHeaders, API_BASE_URL } from '../../../services/api-client';
+import { AI_ASSISTANT_ICON, AI_ASSISTANT_THEME } from '../../../config/ai-assistant-theme';
+
+const THEME = AI_ASSISTANT_THEME;
 
 const SendIcon = () => (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
@@ -24,17 +27,17 @@ const VoiceIcon = () => (
 );
 
 const Modal = ({ title, subtitle, cancelLabel, confirmLabel, onCancel, onConfirm }) => (
-    <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: 'rgba(33,38,49,0.2)', backdropFilter: 'blur(6px)' }} onClick={onCancel}>
-        <div className="rounded-2xl p-8 w-80 flex flex-col gap-6" style={{ background: '#ebebeb', border: '1px solid #d4d4d4' }} onClick={e => e.stopPropagation()}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: 'rgba(20, 57, 36, 0.18)', backdropFilter: 'blur(6px)' }} onClick={onCancel}>
+        <div className="rounded-2xl p-8 w-80 flex flex-col gap-6" style={{ background: THEME.surface, border: `1px solid ${THEME.border}` }} onClick={e => e.stopPropagation()}>
             <div className="flex flex-col gap-1">
-                <p className="text-xl font-bold" style={{ color: '#212631' }}>{title}</p>
-                <p className="text-base" style={{ color: '#888' }}>{subtitle}</p>
+                <p className="text-xl font-bold" style={{ color: THEME.text }}>{title}</p>
+                <p className="text-base" style={{ color: THEME.textMuted }}>{subtitle}</p>
             </div>
             <div className="flex gap-3">
-                <button onClick={onCancel} className="flex-1 py-3 rounded-xl text-base font-semibold transition-all active:scale-95" style={{ background: '#dcdcdc', color: '#212631' }}>
+                <button onClick={onCancel} className="flex-1 py-3 rounded-xl text-base font-semibold transition-all active:scale-95" style={{ background: THEME.accentSoft, color: THEME.text }}>
                     {cancelLabel}
                 </button>
-                <button onClick={onConfirm} className="flex-1 py-3 rounded-xl text-base font-semibold transition-all active:scale-95" style={{ background: '#212631', color: '#ebebeb' }}>
+                <button onClick={onConfirm} className="flex-1 py-3 rounded-xl text-base font-semibold transition-all active:scale-95" style={{ background: THEME.accentDark, color: '#f7fff9' }}>
                     {confirmLabel}
                 </button>
             </div>
@@ -43,8 +46,8 @@ const Modal = ({ title, subtitle, cancelLabel, confirmLabel, onCancel, onConfirm
 );
 
 const AssistantAvatar = ({ role = 'staff' }) => (
-    <div className="w-9 h-9 rounded-xl overflow-hidden flex-shrink-0" style={{ background: role === 'admin' ? '#d8f5d0' : '#dcdcdc' }}>
-        <img src="/zusan.gif" alt="Companion" className="w-full h-full object-cover p-1" />
+    <div className="w-9 h-9 rounded-xl overflow-hidden flex-shrink-0" style={{ background: role === 'admin' ? THEME.accentSoft : THEME.surfaceMuted }}>
+        <img src={AI_ASSISTANT_ICON} alt="Companion" className="w-full h-full object-contain p-1.5" />
     </div>
 );
 
@@ -282,22 +285,22 @@ const RoleCompanionAssistant = ({ onClose, role = 'staff' }) => {
                 />
             )}
 
-            <div ref={panelRef} className="h-full flex flex-col overflow-hidden" style={{ background: '#ebebeb', color: '#212631' }}>
+            <div ref={panelRef} className="h-full flex flex-col overflow-hidden" style={{ background: THEME.base, color: THEME.text }}>
 
-                <div className="px-7 pt-8 pb-6 flex items-center justify-between shrink-0" style={{ borderBottom: '1px solid #d4d4d4' }}>
+                <div className="px-7 pt-8 pb-6 flex items-center justify-between shrink-0" style={{ borderBottom: `1px solid ${THEME.border}` }}>
                     <div className="flex items-center gap-3">
                         <div className="relative">
-                            <div className="w-10 h-10 rounded-xl overflow-hidden" style={{ background: '#dcdcdc' }}>
-                                <img src="/zusan.gif" alt={assistantIdentity} className="w-full h-full object-cover p-1" />
+                            <div className="w-10 h-10 rounded-xl overflow-hidden" style={{ background: THEME.accentSoft }}>
+                                <img src={AI_ASSISTANT_ICON} alt={assistantIdentity} className="w-full h-full object-contain p-1.5" />
                             </div>
-                            <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2" style={{ background: '#4ade80', borderColor: '#ebebeb' }} />
+                            <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2" style={{ background: THEME.accent, borderColor: THEME.base }} />
                         </div>
                         <div>
-                            <p className="text-base font-bold" style={{ color: '#212631' }}>{assistantIdentity}</p>
-                            <p className="text-sm" style={{ color: '#999' }}>{config.status}</p>
+                            <p className="text-base font-bold" style={{ color: THEME.text }}>{assistantIdentity}</p>
+                            <p className="text-sm" style={{ color: THEME.textMuted }}>{config.status}</p>
                         </div>
                     </div>
-                    <button onClick={() => setShowCloseConfirm(true)} className="w-9 h-9 rounded-xl flex items-center justify-center transition-all active:scale-90" style={{ background: '#dcdcdc', color: '#666' }}>
+                    <button onClick={() => setShowCloseConfirm(true)} className="w-9 h-9 rounded-xl flex items-center justify-center transition-all active:scale-90" style={{ background: THEME.accentSoft, color: THEME.textMuted }}>
                         <CloseIcon />
                     </button>
                 </div>
@@ -305,27 +308,27 @@ const RoleCompanionAssistant = ({ onClose, role = 'staff' }) => {
                 {!started ? (
                     <div className="flex-1 flex flex-col px-7 py-10 overflow-y-auto">
                         <div className="flex-1 flex flex-col gap-10">
-                            <div className="w-16 h-16 rounded-2xl overflow-hidden" style={{ background: '#dcdcdc' }}>
-                                <img src="/zusan.gif" alt={assistantIdentity} className="w-full h-full object-cover p-2" />
+                            <div className="w-16 h-16 rounded-2xl overflow-hidden" style={{ background: THEME.accentSoft }}>
+                                <img src={AI_ASSISTANT_ICON} alt={assistantIdentity} className="w-full h-full object-contain p-2" />
                             </div>
 
                             <div className="flex flex-col gap-3">
-                                <p className="text-3xl font-bold leading-tight" style={{ color: '#212631' }}>
+                                <p className="text-3xl font-bold leading-tight" style={{ color: THEME.text }}>
                                     {config.introTitle}
                                 </p>
-                                <p className="text-lg leading-relaxed" style={{ color: '#777' }}>
+                                <p className="text-lg leading-relaxed" style={{ color: THEME.textMuted }}>
                                     {config.introText}
                                 </p>
                             </div>
 
                             <div className="flex flex-col gap-3">
-                                <p className="text-sm font-semibold uppercase tracking-widest" style={{ color: '#aaa' }}>Try asking</p>
+                                <p className="text-sm font-semibold uppercase tracking-widest" style={{ color: THEME.textSoft }}>Try asking</p>
                                 {config.suggestions.map((q) => (
                                     <button
                                         key={q}
                                         onClick={() => handleSend(q)}
                                         className="text-left px-5 py-4 rounded-2xl text-base font-medium transition-all active:scale-98 hover:opacity-80"
-                                        style={{ background: '#fff', color: '#212631', border: '1px solid #d4d4d4' }}
+                                        style={{ background: THEME.surface, color: THEME.text, border: `1px solid ${THEME.border}` }}
                                     >
                                         {q}
                                     </button>
@@ -333,7 +336,7 @@ const RoleCompanionAssistant = ({ onClose, role = 'staff' }) => {
                             </div>
                         </div>
 
-                        <div className="mt-10 flex items-center gap-3 px-5 py-3 rounded-2xl" style={{ background: '#fff', border: '1px solid #d4d4d4' }}>
+                        <div className="mt-10 flex items-center gap-3 px-5 py-3 rounded-2xl" style={{ background: THEME.surface, border: `1px solid ${THEME.border}` }}>
                             <input
                                 type="text"
                                 value={input}
@@ -341,13 +344,13 @@ const RoleCompanionAssistant = ({ onClose, role = 'staff' }) => {
                                 onKeyPress={e => e.key === 'Enter' && handleSend()}
                                 placeholder={config.placeholder}
                                 className="flex-1 bg-transparent outline-none text-base font-medium py-1.5"
-                                style={{ color: '#212631' }}
+                                style={{ color: THEME.text }}
                             />
                             <button
                                 onClick={() => handleSend()}
                                 disabled={!input.trim() || loading}
                                 className="w-9 h-9 rounded-xl flex items-center justify-center transition-all active:scale-90 disabled:opacity-25"
-                                style={{ background: '#212631', color: '#ebebeb' }}
+                                style={{ background: THEME.accentDark, color: '#f7fff9' }}
                             >
                                 <SendIcon />
                             </button>
@@ -364,8 +367,8 @@ const RoleCompanionAssistant = ({ onClose, role = 'staff' }) => {
                                             <div
                                                 className="px-5 py-4 text-base leading-relaxed font-medium whitespace-pre-wrap break-words"
                                                 style={msg.role === 'user'
-                                                    ? { background: '#212631', color: '#ebebeb', borderRadius: '1rem 1rem 0.25rem 1rem' }
-                                                    : { background: '#fff', color: '#212631', border: '1px solid #e0e0e0', borderRadius: '0.25rem 1rem 1rem 1rem' }
+                                                    ? { background: THEME.accentDark, color: '#f7fff9', borderRadius: '1rem 1rem 0.25rem 1rem' }
+                                                    : { background: THEME.surface, color: THEME.text, border: `1px solid ${THEME.border}`, borderRadius: '0.25rem 1rem 1rem 1rem' }
                                                 }
                                             >
                                                 {msg.content}
@@ -378,9 +381,9 @@ const RoleCompanionAssistant = ({ onClose, role = 'staff' }) => {
                                                     disabled={!ttsSupported}
                                                     className="mt-2 inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all disabled:opacity-40"
                                                     style={{
-                                                        background: speakingMessageIndex === i ? '#212631' : '#fff',
-                                                        color: speakingMessageIndex === i ? '#ebebeb' : '#212631',
-                                                        borderColor: '#d4d4d4'
+                                                        background: speakingMessageIndex === i ? THEME.accentDark : THEME.surface,
+                                                        color: speakingMessageIndex === i ? '#f7fff9' : THEME.text,
+                                                        borderColor: THEME.border
                                                     }}
                                                 >
                                                     <VoiceIcon />
@@ -394,9 +397,9 @@ const RoleCompanionAssistant = ({ onClose, role = 'staff' }) => {
                                 {loading && (
                                     <div className="flex items-end gap-3">
                                         <AssistantAvatar role={normalizedRole} />
-                                        <div className="px-5 py-4 flex gap-1.5" style={{ background: '#fff', border: '1px solid #e0e0e0', borderRadius: '0.25rem 1rem 1rem 1rem' }}>
+                                        <div className="px-5 py-4 flex gap-1.5" style={{ background: THEME.surface, border: `1px solid ${THEME.border}`, borderRadius: '0.25rem 1rem 1rem 1rem' }}>
                                             {[0, 150, 300].map(d => (
-                                                <span key={d} className="w-2 h-2 rounded-full animate-bounce" style={{ background: '#bbb', animationDelay: `${d}ms` }} />
+                                                <span key={d} className="w-2 h-2 rounded-full animate-bounce" style={{ background: THEME.textSoft, animationDelay: `${d}ms` }} />
                                             ))}
                                         </div>
                                     </div>
@@ -406,8 +409,8 @@ const RoleCompanionAssistant = ({ onClose, role = 'staff' }) => {
                             </div>
                         </ReactLenis>
 
-                        <div className="absolute bottom-0 left-0 w-full px-7 pb-7 pt-10" style={{ background: 'linear-gradient(to top, #ebebeb 65%, transparent)' }}>
-                            <div className="max-w-2xl mx-auto flex items-center gap-3 px-5 py-3 rounded-2xl" style={{ background: '#fff', border: '1px solid #d4d4d4' }}>
+                        <div className="absolute bottom-0 left-0 w-full px-7 pb-7 pt-10" style={{ background: `linear-gradient(to top, ${THEME.base} 65%, transparent)` }}>
+                            <div className="max-w-2xl mx-auto flex items-center gap-3 px-5 py-3 rounded-2xl" style={{ background: THEME.surface, border: `1px solid ${THEME.border}` }}>
                                 <input
                                     type="text"
                                     value={input}
@@ -415,13 +418,13 @@ const RoleCompanionAssistant = ({ onClose, role = 'staff' }) => {
                                     onKeyPress={e => e.key === 'Enter' && handleSend()}
                                     placeholder={config.placeholder}
                                     className="flex-1 bg-transparent outline-none text-base font-medium py-1.5"
-                                    style={{ color: '#212631' }}
+                                    style={{ color: THEME.text }}
                                 />
                                 <button
                                     onClick={() => handleSend()}
                                     disabled={!input.trim() || loading}
                                     className="w-9 h-9 rounded-xl flex items-center justify-center transition-all active:scale-90 disabled:opacity-25"
-                                    style={{ background: '#212631', color: '#ebebeb' }}
+                                    style={{ background: THEME.accentDark, color: '#f7fff9' }}
                                 >
                                     <SendIcon />
                                 </button>

@@ -1469,12 +1469,42 @@ export const reservationAPI = {
         return handleResponse(response);
     },
 
+    getTicketAvailability: async (start, days) => {
+        const params = new URLSearchParams();
+        if (start) params.append('start', start);
+        if (days) params.append('days', days);
+        const response = await fetch(`${API_BASE_URL}/reservations/availability/ticket?${params}`, {
+            headers: getAuthHeaders('user')
+        });
+        return handleResponse(response);
+    },
+
+    getEventAvailability: async (start, days) => {
+        const params = new URLSearchParams();
+        if (start) params.append('start', start);
+        if (days) params.append('days', days);
+        const response = await fetch(`${API_BASE_URL}/reservations/availability/event?${params}`, {
+            headers: getAuthHeaders('user')
+        });
+        return handleResponse(response);
+    },
+
+    scanReservation: async (qrData, markUsed = false) => {
+        const response = await fetch(`${API_BASE_URL}/reservations/scan`, {
+            method: 'POST',
+            headers: getAuthHeaders('staff'),
+            body: JSON.stringify({ qrData, markUsed })
+        });
+        return handleResponse(response);
+    },
+
     createTicketReservation: async (reservationData) => {
         const formData = new FormData();
         formData.append('visitorName', reservationData.visitorName || '');
         formData.append('visitorEmail', reservationData.visitorEmail || '');
         formData.append('visitorPhone', reservationData.visitorPhone || '');
         formData.append('reservationDate', reservationData.reservationDate || '');
+        formData.append('reservationTime', reservationData.reservationTime || '');
         formData.append('adultQuantity', reservationData.adultQuantity || 0);
         formData.append('childQuantity', reservationData.childQuantity || 0);
         formData.append('bulusanResidentQuantity', reservationData.bulusanResidentQuantity || 0);

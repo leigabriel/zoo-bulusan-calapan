@@ -35,6 +35,7 @@ import AdminMessages from './pages/admin/AdminMessages';
 import AdminStaffMonitoring from './pages/admin/AdminStaffMonitoring';
 import AdminCommunityModeration from './pages/admin/AdminCommunityModeration';
 import StaffDashboard from './pages/staff/StaffDashboard';
+import QRScanner from './pages/staff/QRScanner';
 import StaffEvents from './pages/staff/StaffEvents';
 import StaffTickets from './pages/staff/StaffTickets';
 import StaffReservations from './pages/staff/StaffReservations';
@@ -261,6 +262,11 @@ function AppRoutes() {
                     <StaffLayout>
                         <StaffDashboard />
                     </StaffLayout>
+                </ProtectedRoute>
+            } />
+            <Route path="/staff/qr-scanner" element={
+                <ProtectedRoute allowedRoles={['admin', 'staff']}>
+                    <QRScanner />
                 </ProtectedRoute>
             } />
             <Route path="/staff/events" element={

@@ -90,72 +90,83 @@ const Help = () => {
 
     const helpCategories = [
         { id: 'all', label: 'All Topics', icon: Icons.Book },
-        { id: 'tickets', label: 'Tickets & Booking', icon: Icons.Ticket },
-        { id: 'ai', label: 'AI Features', icon: Icons.Robot },
-        { id: 'map', label: 'Zoo Map', icon: Icons.Map },
-        { id: 'account', label: 'Account', icon: Icons.User }
+        { id: 'tickets', label: 'Tickets & Entry', icon: Icons.Ticket },
+        { id: 'reservations', label: 'Reservations & Events', icon: Icons.Clock },
+        { id: 'ai', label: 'AI Scanner & Assistant', icon: Icons.Robot },
+        { id: 'map', label: 'Map & Navigation', icon: Icons.Map },
+        { id: 'account', label: 'Account & Profile', icon: Icons.User },
+        { id: 'community', label: 'Community & Messages', icon: Icons.Mail }
     ];
+
+    const CATEGORY_META = {
+        tickets: { label: 'Tickets', badge: 'bg-emerald-100 text-emerald-700' },
+        reservations: { label: 'Reservations', badge: 'bg-lime-100 text-lime-700' },
+        ai: { label: 'AI Tools', badge: 'bg-green-100 text-green-700' },
+        map: { label: 'Map', badge: 'bg-emerald-100 text-emerald-700' },
+        account: { label: 'Account', badge: 'bg-teal-100 text-teal-700' },
+        community: { label: 'Community', badge: 'bg-emerald-50 text-emerald-700' }
+    };
 
     const faqs = [
         {
             category: 'tickets',
-            question: 'How do I purchase tickets?',
-            answer: 'To purchase tickets, navigate to the "Tickets" page from the main menu. Select the number of tickets for each category (Adult, Child, Senior, or Bulusan Resident), choose your preferred visit date and time, fill in guest information, and complete the payment process.'
+            question: 'How do I buy tickets for a visit?',
+            answer: 'Open Tickets from the main menu, choose your ticket types, pick a visit date, and complete the checkout flow. Your ticket confirmation appears in My Tickets.'
         },
         {
             category: 'tickets',
-            question: 'Can I cancel or reschedule my booking?',
-            answer: 'Yes! You can cancel or reschedule your booking up to 24 hours before your scheduled visit for a full refund. Go to "My Tickets" to manage your bookings.'
+            question: 'How do Bulusan resident tickets work?',
+            answer: 'Select the Bulusan Resident ticket type and upload a clear photo of your valid resident ID. Approval status appears in My Tickets once verified.'
         },
         {
-            category: 'tickets',
-            question: 'What are the ticket prices?',
-            answer: 'Adult Pass (18-59): ₱40, Child Pass (4-17): ₱20, Senior Pass (60+): ₱30, Bulusan Resident: FREE with valid ID.'
+            category: 'reservations',
+            question: 'How do I reserve a spot for an event?',
+            answer: 'Visit Events, select an activity, and complete the reservation form. You can review your request in Reservations after submission.'
         },
         {
-            category: 'tickets',
-            question: 'Is there a maximum number of tickets I can book?',
-            answer: 'Yes, you can book a maximum of 10 tickets per transaction. For larger groups, please contact us directly.'
-        },
-        {
-            category: 'ai',
-            question: 'What is the AI Animal Scanner?',
-            answer: 'The AI Animal Scanner uses advanced machine learning to identify animals from photos. Simply point your camera at an animal or upload a photo, and our AI will tell you what species it is along with interesting facts.'
+            category: 'reservations',
+            question: 'Where can I view or update my reservations?',
+            answer: 'Go to Reservations to review ticket and event requests. If changes are allowed for your booking, you will see the available actions there.'
         },
         {
             category: 'ai',
-            question: 'How does the AI Assistant work?',
-            answer: 'Our AI Assistant can answer questions about the zoo, animals, events, and help you plan your visit. Click the chat button to start a conversation!'
+            question: 'How do I use the AI Animal Scanner?',
+            answer: 'Open the AI Scanner, take a clear photo, and submit it for identification. For best results, use good lighting and keep the subject centered.'
         },
         {
             category: 'ai',
-            question: 'What is the AI Scanner?',
-            answer: 'The AI Scanner uses image recognition to identify animals at the zoo. Simply take a photo of an animal and the AI will tell you what species it is along with interesting facts!'
+            question: 'What can the AI Assistant help with?',
+            answer: 'The AI Assistant answers questions about animals, exhibits, ticketing, events, and navigation. Tap the chat button to get help any time.'
         },
         {
             category: 'map',
-            question: 'How do I use the interactive zoo map?',
-            answer: 'Go to the "Map" page to see an interactive layout of the zoo. You can click on different areas to learn about exhibits, find facilities like restrooms and food stalls, and get directions.'
+            question: 'Where is the interactive zoo map?',
+            answer: 'Open the Map page from the main menu. Use the map to locate exhibits, facilities, and walking routes.'
         },
         {
             category: 'map',
-            question: 'Are there accessibility features on the map?',
-            answer: 'Yes! Our map shows wheelchair-accessible paths, accessible restrooms, and rest areas. Look for the accessibility icons on the map.'
-        },
-        {
-            category: 'account',
-            question: 'How do I create an account?',
-            answer: 'Click on "Login" in the top navigation, then select "Sign Up". Fill in your details including name, email, and password. You\'ll receive a confirmation email to activate your account.'
+            question: 'Does the map include accessible routes?',
+            answer: 'Yes. Accessibility markers highlight ramps, rest areas, and easier walking paths where available.'
         },
         {
             category: 'account',
             question: 'How do I reset my password?',
-            answer: 'On the login page, click "Forgot Password" and enter your email address. We\'ll send you a link to reset your password.'
+            answer: 'On the Login screen, select Forgot Password and follow the email reset instructions.'
         },
         {
             category: 'account',
-            question: 'How can I update my profile?',
-            answer: 'Go to your Profile page by clicking on your avatar in the header. Click "Edit Profile" to update your personal information.'
+            question: 'How do I update my profile photo?',
+            answer: 'Open your Profile page, choose Edit Profile, and upload a new image. Save changes to apply the update.'
+        },
+        {
+            category: 'community',
+            question: 'How do I post updates in the community?',
+            answer: 'Go to Community, tap Create Post, add your text or photo, and submit. Posts appear after moderation if required.'
+        },
+        {
+            category: 'community',
+            question: 'How do I report a post or message?',
+            answer: 'Use the Report option on a post or message to flag content. Our staff review reports and take action based on guidelines.'
         }
     ];
 
@@ -168,26 +179,26 @@ const Help = () => {
     });
 
     const quickLinks = [
-        { label: 'Buy Tickets', path: '/tickets', icon: Icons.Ticket, color: 'bg-emerald-500' },
-        { label: 'AI Scanner', path: '/classifier', icon: Icons.Camera, color: 'bg-purple-500' },
-        { label: 'Zoo Map', path: '/map', icon: Icons.Map, color: 'bg-blue-500' },
-        { label: 'My Profile', path: '/profile', icon: Icons.User, color: 'bg-teal-500' }
+        { label: 'Buy Tickets', path: '/tickets', icon: Icons.Ticket },
+        { label: 'AI Scanner', path: '/classifier', icon: Icons.Camera },
+        { label: 'Upcoming Events', path: '/events', icon: Icons.Clock },
+        { label: 'Zoo Map', path: '/map', icon: Icons.Map }
     ];
 
     return (
-        <div className="min-h-screen bg-gray-50 flex flex-col">
+        <div className="min-h-screen bg-[#f2fbf4] text-[#1f2d23] flex flex-col">
             {/* Floating Navigation */}
             <div className="fixed top-4 left-4 right-4 z-50 flex justify-between items-center pointer-events-none">
                 <button
                     onClick={() => navigate(-1)}
-                    className="pointer-events-auto flex items-center gap-2 px-4 py-2.5 bg-white/90 backdrop-blur-sm text-gray-700 rounded-full shadow-lg hover:bg-white hover:shadow-xl transition-all duration-300 font-medium"
+                    className="pointer-events-auto flex items-center gap-2 px-4 py-2.5 bg-white/90 backdrop-blur-sm text-emerald-900 rounded-full shadow-lg border border-emerald-100 hover:shadow-xl transition-all duration-300 font-medium"
                 >
                     <Icons.Back />
                     <span className="hidden sm:inline">Back</span>
                 </button>
                 <Link
                     to="/"
-                    className="pointer-events-auto flex items-center gap-2 px-4 py-2.5 bg-white/90 backdrop-blur-sm text-gray-700 rounded-full shadow-lg hover:bg-white hover:shadow-xl transition-all duration-300 font-medium"
+                    className="pointer-events-auto flex items-center gap-2 px-4 py-2.5 bg-white/90 backdrop-blur-sm text-emerald-900 rounded-full shadow-lg border border-emerald-100 hover:shadow-xl transition-all duration-300 font-medium"
                 >
                     <Icons.Home />
                     <span className="hidden sm:inline">Home</span>
@@ -195,25 +206,31 @@ const Help = () => {
             </div>
 
             {/* Hero Section */}
-            <section className="relative text-white py-20 pt-24 text-center bg-cover bg-center" style={{ backgroundImage: 'linear-gradient(135deg, rgba(59,130,246,0.92), rgba(16,185,129,0.92)), url(https://images.unsplash.com/photo-1564349683136-77e08dba1ef7)' }}>
+            <section className="relative py-20 pt-28 text-center overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-br from-[#effbf3] via-[#ddf3e5] to-[#cce9d7]" />
+                <div className="absolute -top-24 right-0 w-72 h-72 rounded-full bg-[#bfe6cc] opacity-40 blur-3xl" />
                 <div className="relative z-10 container mx-auto px-4">
-                    <h1 className="text-4xl md:text-5xl font-bold mb-4 tracking-tight">Help Center</h1>
-                    <p className="text-lg max-w-xl mx-auto opacity-90 font-light mb-8">How can we help you today?</p>
+                    <p className="text-xs uppercase tracking-[0.35em] font-semibold text-emerald-700/80 bg-white/70 border border-emerald-200 inline-flex px-4 py-2 rounded-full mb-6">
+                        Zoo Bulusan Help
+                    </p>
+                    <h1 className="text-4xl md:text-5xl font-bold mb-3 tracking-tight">Help Center</h1>
+                    <p className="text-base md:text-lg max-w-2xl mx-auto text-emerald-900/70 mb-8">
+                        Find answers for tickets, reservations, AI tools, and planning your visit.
+                    </p>
 
                     {/* Search Bar */}
                     <div className="max-w-xl mx-auto">
                         <div className="relative">
-                            <Icons.Search />
+                            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-emerald-700">
+                                <Icons.Search />
+                            </div>
                             <input
                                 type="text"
                                 placeholder="Search for help..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full pl-12 pr-4 py-4 rounded-2xl bg-white/20 backdrop-blur-sm text-white placeholder-white/70 border border-white/30 focus:outline-none focus:ring-2 focus:ring-white/50 focus:bg-white/30 transition-all"
+                                className="w-full pl-12 pr-4 py-4 rounded-2xl bg-white text-emerald-900 placeholder-emerald-700/50 border border-emerald-200 focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:border-emerald-400 transition-all"
                             />
-                            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-white/70">
-                                <Icons.Search />
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -226,12 +243,12 @@ const Help = () => {
                         <Link
                             key={index}
                             to={user ? link.path : '/login'}
-                            className="bg-white rounded-2xl p-4 md:p-6 shadow-lg hover:shadow-xl transition-all hover:-translate-y-1 border border-gray-100 flex flex-col items-center text-center gap-2 md:gap-3"
+                            className="bg-white rounded-2xl p-4 md:p-6 shadow-lg hover:shadow-xl transition-all hover:-translate-y-1 border border-emerald-100 flex flex-col items-center text-center gap-2 md:gap-3"
                         >
-                            <div className={`w-12 h-12 ${link.color} rounded-xl flex items-center justify-center text-white`}>
+                            <div className="w-12 h-12 bg-emerald-100 text-emerald-700 rounded-xl flex items-center justify-center">
                                 <link.icon />
                             </div>
-                            <span className="font-medium text-gray-800 text-sm md:text-base">{link.label}</span>
+                            <span className="font-medium text-emerald-900 text-sm md:text-base">{link.label}</span>
                         </Link>
                     ))}
                 </div>
@@ -242,8 +259,8 @@ const Help = () => {
                 <div className="flex flex-col lg:flex-row gap-8">
                     {/* Categories Sidebar */}
                     <div className="lg:w-64 flex-shrink-0">
-                        <div className="bg-white rounded-2xl shadow-lg p-4 border border-gray-100 sticky top-24">
-                            <h3 className="font-semibold text-gray-800 mb-4 px-2">Categories</h3>
+                        <div className="bg-white rounded-2xl shadow-lg p-4 border border-emerald-100 sticky top-24">
+                            <h3 className="font-semibold text-emerald-900 mb-4 px-2">Categories</h3>
 
                             {/* Mobile: Horizontal scroll */}
                             <div className="lg:hidden flex overflow-x-auto gap-2 pb-2 scrollbar-hide">
@@ -252,8 +269,8 @@ const Help = () => {
                                         key={cat.id}
                                         onClick={() => setActiveCategory(cat.id)}
                                         className={`flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-xl transition-all ${activeCategory === cat.id
-                                                ? 'bg-emerald-500 text-white'
-                                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                                ? 'bg-emerald-600 text-white'
+                                                : 'bg-emerald-50 text-emerald-800 hover:bg-emerald-100'
                                             }`}
                                     >
                                         <cat.icon />
@@ -269,8 +286,8 @@ const Help = () => {
                                         key={cat.id}
                                         onClick={() => setActiveCategory(cat.id)}
                                         className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all ${activeCategory === cat.id
-                                                ? 'bg-emerald-50 text-emerald-700'
-                                                : 'text-gray-600 hover:bg-gray-50'
+                                                ? 'bg-emerald-100 text-emerald-800'
+                                                : 'text-emerald-900/60 hover:bg-emerald-50'
                                             }`}
                                     >
                                         <cat.icon />
@@ -283,52 +300,49 @@ const Help = () => {
 
                     {/* FAQ Content */}
                     <div className="flex-grow">
-                        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
-                            <div className="p-4 md:p-6 border-b border-gray-100">
-                                <h2 className="text-xl font-bold text-gray-800">Frequently Asked Questions</h2>
-                                <p className="text-sm text-gray-500 mt-1">
+                        <div className="bg-white rounded-2xl shadow-lg border border-emerald-100 overflow-hidden">
+                            <div className="p-4 md:p-6 border-b border-emerald-100">
+                                <h2 className="text-xl font-bold text-emerald-900">Frequently Asked Questions</h2>
+                                <p className="text-sm text-emerald-900/60 mt-1">
                                     {filteredFaqs.length} {filteredFaqs.length === 1 ? 'result' : 'results'} found
                                 </p>
                             </div>
 
-                            <div className="divide-y divide-gray-100">
+                            <div className="divide-y divide-emerald-100">
                                 {filteredFaqs.length > 0 ? (
-                                    filteredFaqs.map((faq, index) => (
+                                    filteredFaqs.map((faq, index) => {
+                                        const meta = CATEGORY_META[faq.category] || { label: 'General', badge: 'bg-emerald-100 text-emerald-700' };
+                                        return (
                                         <div key={index} className="p-4 md:p-6">
                                             <button
                                                 onClick={() => setExpandedFaq(expandedFaq === index ? null : index)}
                                                 className="w-full flex items-start justify-between gap-4 text-left"
                                             >
                                                 <div className="flex-grow">
-                                                    <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium mb-2 ${faq.category === 'tickets' ? 'bg-emerald-100 text-emerald-700' :
-                                                            faq.category === 'ai' ? 'bg-purple-100 text-purple-700' :
-                                                                faq.category === 'map' ? 'bg-blue-100 text-blue-700' :
-                                                                    'bg-teal-100 text-teal-700'
-                                                        }`}>
-                                                        {faq.category === 'tickets' ? 'Tickets' :
-                                                            faq.category === 'ai' ? 'AI Features' :
-                                                                faq.category === 'map' ? 'Map' : 'Account'}
+                                                    <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium mb-2 ${meta.badge}`}>
+                                                        {meta.label}
                                                     </span>
-                                                    <h3 className="font-semibold text-gray-800">{faq.question}</h3>
+                                                    <h3 className="font-semibold text-emerald-900">{faq.question}</h3>
                                                 </div>
-                                                <div className="text-gray-400 flex-shrink-0 mt-4">
+                                                <div className="text-emerald-700/60 flex-shrink-0 mt-4">
                                                     {expandedFaq === index ? <Icons.ChevronUp /> : <Icons.ChevronDown />}
                                                 </div>
                                             </button>
                                             {expandedFaq === index && (
-                                                <div className="mt-4 pt-4 border-t border-gray-100">
-                                                    <p className="text-gray-600 leading-relaxed">{faq.answer}</p>
+                                                <div className="mt-4 pt-4 border-t border-emerald-100">
+                                                    <p className="text-emerald-900/70 leading-relaxed">{faq.answer}</p>
                                                 </div>
                                             )}
                                         </div>
-                                    ))
+                                    );
+                                    })
                                 ) : (
                                     <div className="p-8 text-center">
-                                        <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                        <div className="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-4 text-emerald-600">
                                             <Icons.Search />
                                         </div>
-                                        <h3 className="font-semibold text-gray-800 mb-2">No results found</h3>
-                                        <p className="text-sm text-gray-500">Try adjusting your search or filter</p>
+                                        <h3 className="font-semibold text-emerald-900 mb-2">No results found</h3>
+                                        <p className="text-sm text-emerald-900/60">Try adjusting your search or filter</p>
                                     </div>
                                 )}
                             </div>
@@ -338,35 +352,35 @@ const Help = () => {
 
                 {/* Contact Section */}
                 <div className="mt-12">
-                    <div className="bg-gradient-to-br from-emerald-500 to-teal-600 rounded-3xl p-6 md:p-12 text-white">
+                    <div className="bg-[#e3f6ea] border border-emerald-200 rounded-3xl p-6 md:p-12 text-emerald-900">
                         <div className="text-center mb-8">
                             <h2 className="text-2xl md:text-3xl font-bold mb-2">Still need help?</h2>
-                            <p className="opacity-90">Our team is ready to assist you</p>
+                            <p className="text-emerald-900/70">Our team is ready to assist you</p>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 max-w-4xl mx-auto">
-                            <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-4 md:p-6 text-center">
-                                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center mx-auto mb-3">
+                            <div className="bg-white rounded-2xl p-4 md:p-6 text-center border border-emerald-100 shadow-sm">
+                                <div className="w-12 h-12 bg-emerald-100 text-emerald-700 rounded-xl flex items-center justify-center mx-auto mb-3">
                                     <Icons.Mail />
                                 </div>
                                 <h3 className="font-semibold mb-1">Email Us</h3>
-                                <p className="text-sm opacity-90">info@bulusanwildlife.com</p>
+                                <p className="text-sm text-emerald-900/70">info@bulusanwildlife.com</p>
                             </div>
 
-                            <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-4 md:p-6 text-center">
-                                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center mx-auto mb-3">
+                            <div className="bg-white rounded-2xl p-4 md:p-6 text-center border border-emerald-100 shadow-sm">
+                                <div className="w-12 h-12 bg-emerald-100 text-emerald-700 rounded-xl flex items-center justify-center mx-auto mb-3">
                                     <Icons.Phone />
                                 </div>
                                 <h3 className="font-semibold mb-1">Call Us</h3>
-                                <p className="text-sm opacity-90">(043) 123-4567</p>
+                                <p className="text-sm text-emerald-900/70">(043) 123-4567</p>
                             </div>
 
-                            <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-4 md:p-6 text-center">
-                                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center mx-auto mb-3">
+                            <div className="bg-white rounded-2xl p-4 md:p-6 text-center border border-emerald-100 shadow-sm">
+                                <div className="w-12 h-12 bg-emerald-100 text-emerald-700 rounded-xl flex items-center justify-center mx-auto mb-3">
                                     <Icons.Clock />
                                 </div>
                                 <h3 className="font-semibold mb-1">Operating Hours</h3>
-                                <p className="text-sm opacity-90">8:00 AM - 5:00 PM Daily</p>
+                                <p className="text-sm text-emerald-900/70">8:00 AM - 5:00 PM Daily</p>
                             </div>
                         </div>
                     </div>

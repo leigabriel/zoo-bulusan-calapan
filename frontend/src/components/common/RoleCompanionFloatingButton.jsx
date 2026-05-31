@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import RoleCompanionAssistant from '../features/ai-assistant/RoleCompanionAssistant';
+import { AI_ASSISTANT_ICON } from '../../config/ai-assistant-theme';
 
 const ROLE_MESSAGES = {
     admin: [
@@ -93,10 +94,9 @@ const RoleCompanionFloatingButton = ({ role = 'staff' }) => {
                             aria-label={`Open ${normalizedRole} AI companion`}
                         >
                             <img
-                                src="/zusan.gif"
+                                src={AI_ASSISTANT_ICON}
                                 className="w-20 h-20 object-contain"
                                 alt="Open AI Companion"
-                                style={{ mixBlendMode: 'multiply' }}
                             />
                         </button>
                     </div>
@@ -107,7 +107,7 @@ const RoleCompanionFloatingButton = ({ role = 'staff' }) => {
                 {assistantOpen && (
                     <div className="fixed inset-0 z-[120] flex justify-end">
                         <motion.div
-                            className="absolute inset-0 bg-emerald-950/20 backdrop-blur-md"
+                            className="absolute inset-0 bg-emerald-900/15 backdrop-blur-md"
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}

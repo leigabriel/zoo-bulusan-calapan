@@ -4,6 +4,7 @@ import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 import { ReactLenis } from 'lenis/react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { QRCodeSVG } from 'qrcode.react';
 import AIFloatingButton from '../../components/common/AIFloatingButton';
 import ReservationHistoryPanel from '../../components/features/ReservationHistoryPanel';
 import { useAuth } from '../../hooks/use-auth';
@@ -81,12 +82,15 @@ const Reservations = () => {
     const [showConfirmation, setShowConfirmation] = useState(false);
     const [confirmationData, setConfirmationData] = useState(null);
     const [ticketCounts, setTicketCounts] = useState({ adult: 0, child: 0, bulusan_resident: 0 });
-    const [ticketForm, setTicketForm] = useState({ reservationDate: '', visitorName: '', visitorEmail: '', visitorPhone: '', notes: '' });
+    const [ticketForm, setTicketForm] = useState({ reservationDate: '', reservationTime: '', visitorName: '', visitorEmail: '', visitorPhone: '', notes: '' });
     const [residentIdImage, setResidentIdImage] = useState(null);
     const [residentIdPreview, setResidentIdPreview] = useState(null);
     const [idUploadError, setIdUploadError] = useState('');
     const [eventForm, setEventForm] = useState({ venueEventName: '', venueEventDate: '', venueEventTime: '', venueEventDescription: '', numberOfParticipants: 1, participantName: '', participantEmail: '', participantPhone: '', notes: '' });
     const [showHistoryPanel, setShowHistoryPanel] = useState(false);
+    const [ticketAvailability, setTicketAvailability] = useState([]);
+    const [eventAvailability, setEventAvailability] = useState([]);
+    const [loadingSlots, setLoadingSlots] = useState(false);
 
     // Confirmation modal states
     const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
@@ -109,6 +113,56 @@ const Reservations = () => {
             setEventForm(prev => ({ ...prev, participantName: fullName, participantEmail: user.email || '' }));
         }
     }, [user]);
+
+    useEffect(() => {
+        const fetchAvailability = async () => {
+            if (ticketForm.reservationDate && reservationType === 'ticket') {
+                setLoadingSlots(true);
+                try {
+                    const res = await reservationAPI.getTicketAvailability(ticketForm.reservationDate, 1);
+                    if (res.success && res.dates) {
+                        const dateData = res.dates.find(d => d.date === ticketForm.reservationDate);
+                        if (dateData) {
+                            setTicketAvailability(dateData.slots.map(slot => ({
+                                id: slot.time,
+                                label: slot.label,
+                                available: slot.remaining
+                            })));
+                        } else {
+                            setTicketAvailability([]);
+                        }
+                    }
+                } catch (err) { }
+                setLoadingSlots(false);
+            }
+        };
+        fetchAvailability();
+    }, [ticketForm.reservationDate, reservationType]);
+
+    useEffect(() => {
+        const fetchAvailability = async () => {
+            if (eventForm.venueEventDate && reservationType === 'event') {
+                setLoadingSlots(true);
+                try {
+                    const res = await reservationAPI.getEventAvailability(eventForm.venueEventDate, 1);
+                    if (res.success && res.dates) {
+                        const dateData = res.dates.find(d => d.date === eventForm.venueEventDate);
+                        if (dateData) {
+                            setEventAvailability(dateData.slots.map(slot => ({
+                                id: slot.time,
+                                label: slot.label,
+                                available: slot.remaining
+                            })));
+                        } else {
+                            setEventAvailability([]);
+                        }
+                    }
+                } catch (err) { }
+                setLoadingSlots(false);
+            }
+        };
+        fetchAvailability();
+    }, [eventForm.venueEventDate, reservationType]);
 
     useEffect(() => {
         if (showCreateModal || showConfirmation || showHistoryPanel || showSubmitConfirm || showCloseConfirm) {
@@ -173,6 +227,7 @@ const Reservations = () => {
     const validateTicketForm = () => {
         if (getTotalVisitors() === 0) { notify.warning('Please select at least one ticket.'); return false; }
         if (!ticketForm.reservationDate) { notify.warning('Please select your visit date.'); return false; }
+        if (!ticketForm.reservationTime) { notify.warning('Please select an arrival time slot.'); return false; }
         if (!ticketForm.visitorName.trim()) { notify.warning('Please enter your full name.'); return false; }
         if (!ticketForm.visitorEmail.trim()) { notify.warning('Please enter your email address.'); return false; }
         if (ticketCounts.bulusan_resident > 0 && !residentIdImage) { notify.warning('Please upload your Bulusan resident ID for verification.'); return false; }
@@ -188,6 +243,7 @@ const Reservations = () => {
                     visitorEmail: ticketForm.visitorEmail,
                     visitorPhone: ticketForm.visitorPhone,
                     reservationDate: ticketForm.reservationDate,
+                    reservationTime: ticketForm.reservationTime,
                     adultQuantity: ticketCounts.adult,
                     childQuantity: ticketCounts.child,
                     bulusanResidentQuantity: ticketCounts.bulusan_resident,
@@ -198,7 +254,9 @@ const Reservations = () => {
                     setConfirmationData({
                         type: 'ticket',
                         reference: res.reservationReference,
+                        qrData: res.qrData,
                         date: ticketForm.reservationDate,
+                        time: ticketForm.reservationTime,
                         total: calculateTotal(),
                         visitors: getTotalVisitors()
                     });
@@ -224,8 +282,10 @@ const Reservations = () => {
                     setConfirmationData({
                         type: 'event',
                         reference: res.reservationReference,
+                        qrData: res.qrData,
                         eventName: eventForm.venueEventName,
                         eventDate: eventForm.venueEventDate,
+                        eventTime: eventForm.venueEventTime,
                         participants: eventForm.numberOfParticipants
                     });
                     setShowConfirmation(true);
@@ -556,13 +616,29 @@ const Reservations = () => {
                                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                                                         <div className="flex flex-col gap-2">
                                                             <label className="text-[9px] tracking-[0.2em] uppercase font-bold text-[#212631]">Phone (Optional)</label>
-                                                            <input type="tel" value={ticketForm.visitorPhone} onChange={e => setTicketForm({ ...ticketForm, visitorPhone: sanitizePhone(e.target.value) })} className="w-full bg-[#ebebeb] border border-[#212631]/20 p-4 text-sm font-semibold text-[#212631] focus:border-[#212631] outline-none transition-colors" />
+                                                            <input type="tel" value={ticketForm.visitorPhone} onChange={e => setTicketForm({ ...ticketForm, visitorPhone: sanitizePhone(e.target.value) })} className="w-full bg-[#ebebeb] border border-[#212631]/20 p-4 text-sm font-semibold text-[#212631] focus:border-[#212631] outline-none transition-colors h-[54px]" />
                                                         </div>
                                                         <div className="flex flex-col gap-2">
                                                             <label className="text-[9px] tracking-[0.2em] uppercase font-bold text-[#212631]">Arrival Date *</label>
-                                                            <input type="date" value={ticketForm.reservationDate} onChange={e => setTicketForm({ ...ticketForm, reservationDate: e.target.value })} min={getMinDate()} max={getMaxDate()} className="w-full bg-[#ebebeb] border border-[#212631]/20 p-4 text-sm font-semibold text-[#212631] focus:border-[#212631] outline-none transition-colors uppercase tracking-wider h-[54px]" required />
+                                                            <input type="date" value={ticketForm.reservationDate} onChange={e => setTicketForm({ ...ticketForm, reservationDate: e.target.value, reservationTime: '' })} min={getMinDate()} max={getMaxDate()} className="w-full bg-[#ebebeb] border border-[#212631]/20 p-4 text-sm font-semibold text-[#212631] focus:border-[#212631] outline-none transition-colors uppercase tracking-wider h-[54px]" required />
                                                         </div>
                                                     </div>
+
+                                                    {ticketForm.reservationDate && (
+                                                        <div className="flex flex-col gap-2">
+                                                            <label className="text-[9px] tracking-[0.2em] uppercase font-bold text-[#212631]">Arrival Time *</label>
+                                                            <select value={ticketForm.reservationTime} onChange={e => setTicketForm({ ...ticketForm, reservationTime: e.target.value })} className="w-full bg-[#ebebeb] border border-[#212631]/20 p-4 text-sm font-semibold text-[#212631] focus:border-[#212631] outline-none transition-colors h-[54px]" required>
+                                                                <option value="" disabled>Select a time slot</option>
+                                                                {loadingSlots ? <option disabled>Loading slots...</option> : 
+                                                                    ticketAvailability.map(slot => (
+                                                                        <option key={slot.id} value={slot.id} disabled={slot.available <= 0 || getTotalVisitors() > slot.available}>
+                                                                            {slot.label} ({slot.available} left)
+                                                                        </option>
+                                                                    ))
+                                                                }
+                                                            </select>
+                                                        </div>
+                                                    )}
 
                                                     <div className="flex flex-col gap-2">
                                                         <label className="text-[9px] tracking-[0.2em] uppercase font-bold text-[#212631]">Special Requirements / Notes</label>
@@ -580,11 +656,20 @@ const Reservations = () => {
                                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                                                     <div className="flex flex-col gap-2">
                                                         <label className="text-[9px] tracking-[0.2em] uppercase font-bold text-[#212631]">Event Date *</label>
-                                                        <input type="date" value={eventForm.venueEventDate} onChange={e => setEventForm({ ...eventForm, venueEventDate: e.target.value })} min={getMinDate()} className="w-full bg-[#ebebeb] border border-[#212631]/20 p-4 text-sm font-semibold text-[#212631] focus:border-[#212631] outline-none transition-colors uppercase tracking-wider h-[54px]" required />
+                                                        <input type="date" value={eventForm.venueEventDate} onChange={e => setEventForm({ ...eventForm, venueEventDate: e.target.value, venueEventTime: '' })} min={getMinDate()} className="w-full bg-[#ebebeb] border border-[#212631]/20 p-4 text-sm font-semibold text-[#212631] focus:border-[#212631] outline-none transition-colors uppercase tracking-wider h-[54px]" required />
                                                     </div>
                                                     <div className="flex flex-col gap-2">
                                                         <label className="text-[9px] tracking-[0.2em] uppercase font-bold text-[#212631]">Event Time</label>
-                                                        <input type="time" value={eventForm.venueEventTime} onChange={e => setEventForm({ ...eventForm, venueEventTime: e.target.value })} className="w-full bg-[#ebebeb] border border-[#212631]/20 p-4 text-sm font-semibold text-[#212631] focus:border-[#212631] outline-none transition-colors uppercase tracking-wider h-[54px]" />
+                                                        <select value={eventForm.venueEventTime} onChange={e => setEventForm({ ...eventForm, venueEventTime: e.target.value })} className="w-full bg-[#ebebeb] border border-[#212631]/20 p-4 text-sm font-semibold text-[#212631] focus:border-[#212631] outline-none transition-colors h-[54px]" required disabled={!eventForm.venueEventDate}>
+                                                            <option value="" disabled>{eventForm.venueEventDate ? "Select a time slot" : "Select date first"}</option>
+                                                            {loadingSlots ? <option disabled>Loading slots...</option> : 
+                                                                eventAvailability.map(slot => (
+                                                                    <option key={slot.id} value={slot.id} disabled={slot.available <= 0 || parseInt(eventForm.numberOfParticipants || 0) > slot.available}>
+                                                                        {slot.label} ({slot.available} left)
+                                                                    </option>
+                                                                ))
+                                                            }
+                                                        </select>
                                                     </div>
                                                 </div>
 
@@ -702,6 +787,12 @@ const Reservations = () => {
                                 <div className="mb-6 text-[#212631]"><Icons.Check /></div>
                                 <h3 className="text-3xl font-black uppercase tracking-tighter text-[#212631] mb-2">Confirmed</h3>
                                 <p className="text-[10px] tracking-widest uppercase font-bold text-[#212631]/50 mb-8">Reservation securely logged.</p>
+
+                                {confirmationData.qrData && (
+                                    <div className="mb-8 flex justify-center bg-white p-4">
+                                        <QRCodeSVG value={confirmationData.qrData} size={150} />
+                                    </div>
+                                )}
 
                                 <div className="w-full border border-[#212631]/20 bg-[#ebebeb] p-6 mb-8 flex flex-col items-center justify-center">
                                     <span className="text-[8px] tracking-[0.3em] uppercase font-bold text-[#212631]/40 mb-2">Reference ID</span>

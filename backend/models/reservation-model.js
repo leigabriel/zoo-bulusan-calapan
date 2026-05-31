@@ -96,21 +96,22 @@ class Reservation {
     static async createTicketReservation(data) {
         const { 
             reservationReference, userId, visitorName, visitorEmail, visitorPhone,
-            reservationDate, adultQuantity, childQuantity, bulusanResidentQuantity,
-            totalVisitors, residentIdImage, status, notes
+            reservationDate, reservationTime, adultQuantity, childQuantity, bulusanResidentQuantity,
+            totalVisitors, residentIdImage, status, notes, qrData
         } = data;
         
         const [result] = await db.query(
             `INSERT INTO ticket_reservations (
                 reservation_reference, user_id, visitor_name, visitor_email, visitor_phone,
-                reservation_date, adult_quantity, child_quantity, bulusan_resident_quantity,
-                total_visitors, resident_id_image, status, notes
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                reservation_date, reservation_time, adult_quantity, child_quantity, bulusan_resident_quantity,
+                total_visitors, resident_id_image, status, notes, qr_data
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
                 reservationReference, userId || null, visitorName, visitorEmail,
-                visitorPhone || null, reservationDate, adultQuantity || 0,
-                childQuantity || 0, bulusanResidentQuantity || 0, totalVisitors || 0,
-                residentIdImage || null, status || 'pending', notes || null
+                visitorPhone || null, reservationDate, reservationTime || null,
+                adultQuantity || 0, childQuantity || 0, bulusanResidentQuantity || 0,
+                totalVisitors || 0, residentIdImage || null, status || 'pending',
+                notes || null, qrData || null
             ]
         );
         return result.insertId;
@@ -120,20 +121,21 @@ class Reservation {
         const { 
             reservationReference, userId, eventId, participantName, participantEmail,
             participantPhone, numberOfParticipants, participantDetails, status, notes,
-            venueEventName, venueEventDate, venueEventTime, venueEventDescription
+            venueEventName, venueEventDate, venueEventTime, venueEventDescription, qrData
         } = data;
         
         const [result] = await db.query(
             `INSERT INTO event_reservations (
                 reservation_reference, user_id, event_id, participant_name, participant_email,
                 participant_phone, number_of_participants, participant_details, status, notes,
-                venue_event_name, venue_event_date, venue_event_time, venue_event_description
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                venue_event_name, venue_event_date, venue_event_time, venue_event_description, qr_data
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
                 reservationReference, userId || null, eventId || null, participantName, participantEmail,
                 participantPhone || null, numberOfParticipants || 1, participantDetails || null,
                 status || 'pending', notes || null,
-                venueEventName || null, venueEventDate || null, venueEventTime || null, venueEventDescription || null
+                venueEventName || null, venueEventDate || null, venueEventTime || null,
+                venueEventDescription || null, qrData || null
             ]
         );
         return result.insertId;
@@ -326,6 +328,71 @@ class Reservation {
         const [result] = await db.query(
             'UPDATE ticket_reservations SET verification_status = ? WHERE id = ?',
             [status, id]
+        );
+        return result.affectedRows > 0;
+    }
+
+    static async getTicketTotalsByDate(reservationDate) {
+        const [rows] = await db.query(
+            `SELECT COALESCE(SUM(total_visitors), 0) as total_visitors,
+                    COALESCE(SUM(bulusan_resident_quantity), 0) as bulusan_residents
+             FROM ticket_reservations
+             WHERE reservation_date = ? AND status IN ('pending', 'confirmed')`,
+            [reservationDate]
+        );
+        return rows[0] || { total_visitors: 0, bulusan_residents: 0 };
+    }
+
+    static async getTicketTotalsByDateRange(startDate, endDate) {
+        const [rows] = await db.query(
+            `SELECT reservation_date, reservation_time,
+                    COALESCE(SUM(total_visitors), 0) as total_visitors
+             FROM ticket_reservations
+             WHERE reservation_date BETWEEN ? AND ? AND status IN ('pending', 'confirmed')
+             GROUP BY reservation_date, reservation_time`,
+            [startDate, endDate]
+        );
+        return rows;
+    }
+
+    static async getEventTotalsByDateTime(venueEventDate, venueEventTime) {
+        const [rows] = await db.query(
+            `SELECT COALESCE(SUM(number_of_participants), 0) as total_participants
+             FROM event_reservations
+             WHERE venue_event_date = ? AND venue_event_time = ? AND status IN ('pending', 'confirmed')`,
+            [venueEventDate, venueEventTime]
+        );
+        return rows[0] || { total_participants: 0 };
+    }
+
+    static async getEventTotalsByDateRange(startDate, endDate) {
+        const [rows] = await db.query(
+            `SELECT venue_event_date, venue_event_time,
+                    COALESCE(SUM(number_of_participants), 0) as total_participants
+             FROM event_reservations
+             WHERE venue_event_date BETWEEN ? AND ? AND status IN ('pending', 'confirmed')
+             GROUP BY venue_event_date, venue_event_time`,
+            [startDate, endDate]
+        );
+        return rows;
+    }
+
+    static async markTicketReservationUsed(reference, staffId) {
+        const [result] = await db.query(
+            `UPDATE ticket_reservations
+             SET status = 'completed', checked_in_at = NOW(), checked_in_by = ?
+             WHERE reservation_reference = ? AND status IN ('pending', 'confirmed')`,
+            [staffId, reference]
+        );
+        return result.affectedRows > 0;
+    }
+
+    static async markEventReservationUsed(reference, staffId) {
+        const [result] = await db.query(
+            `UPDATE event_reservations
+             SET status = 'completed', checked_in_at = NOW(), checked_in_by = ?
+             WHERE reservation_reference = ? AND status IN ('pending', 'confirmed')`,
+            [staffId, reference]
         );
         return result.affectedRows > 0;
     }

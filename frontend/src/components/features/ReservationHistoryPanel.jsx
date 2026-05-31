@@ -1,6 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../hooks/use-auth';
 import { reservationAPI } from '../../services/api-client';
+import { QRCodeCanvas } from 'qrcode.react';
+import html2canvas from 'html2canvas';
+import { notify } from '../../utils/toast';
 
 const Icons = {
     Ticket: () => (
@@ -42,6 +45,125 @@ const ReservationHistoryPanel = ({ isOpen, onClose }) => {
     const [showArchived, setShowArchived] = useState(false);
     const [archiving, setArchiving] = useState(false);
     const [selectedReservation, setSelectedReservation] = useState(null);
+    const receiptRef = useRef(null);
+    const [downloading, setDownloading] = useState(false);
+
+    const handleDownload = async () => {
+        if (!selectedReservation || !receiptRef.current) return;
+        try {
+            setDownloading(true);
+            // Allow state to update and DOM to settle for QR code
+            await new Promise(resolve => setTimeout(resolve, 150));
+            
+            const canvas = document.createElement('canvas');
+            canvas.width = 600;
+            canvas.height = selectedReservation.type === 'ticket' ? 750 : 700;
+            const ctx = canvas.getContext('2d');
+            
+            // Background
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Header
+            ctx.fillStyle = '#000000';
+            ctx.font = '900 32px Arial, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('ZOO BULUSAN', canvas.width / 2, 70);
+            
+            ctx.font = 'bold 20px Arial, sans-serif';
+            ctx.fillStyle = '#444444';
+            ctx.fillText('Reservation Receipt', canvas.width / 2, 105);
+            
+            // Line
+            ctx.strokeStyle = '#e5e7eb';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(40, 135);
+            ctx.lineTo(560, 135);
+            ctx.stroke();
+            
+            // Details
+            ctx.textAlign = 'left';
+            
+            let y = 180;
+            const addRow = (label, value, isBold = false, isEmerald = false) => {
+                ctx.font = 'normal 16px Arial, sans-serif';
+                ctx.fillStyle = '#6b7280';
+                ctx.fillText(label, 50, y);
+                
+                ctx.font = isBold ? 'bold 16px Arial, sans-serif' : 'normal 16px Arial, sans-serif';
+                ctx.fillStyle = isEmerald ? '#059669' : '#111827';
+                ctx.textAlign = 'right';
+                ctx.fillText(value, 550, y);
+                ctx.textAlign = 'left';
+                y += 35;
+            };
+            
+            addRow('Reference ID', selectedReservation.reservation_reference, true);
+            addRow('Type', selectedReservation.type === 'ticket' ? 'Zoo Visit' : (selectedReservation.venue_event_name || selectedReservation.event_title || 'Venue Booking'), true);
+            addRow('Status', selectedReservation.status.toUpperCase(), true);
+            
+            const dateStr = formatDate(selectedReservation.reservation_date || selectedReservation.venue_event_date || selectedReservation.event_date);
+            addRow('Date', dateStr, true);
+            
+            const timeStr = selectedReservation.reservation_time || selectedReservation.venue_event_time || selectedReservation.start_time || 'N/A';
+            addRow('Time', timeStr, true);
+            
+            ctx.beginPath();
+            ctx.moveTo(40, y + 5);
+            ctx.lineTo(560, y + 5);
+            ctx.stroke();
+            y += 40;
+            
+            if (selectedReservation.type === 'ticket') {
+                if (selectedReservation.adult_quantity > 0) addRow('Adults', `${selectedReservation.adult_quantity} × P40`);
+                if (selectedReservation.child_quantity > 0) addRow('Children', `${selectedReservation.child_quantity} × P20`);
+                if (selectedReservation.bulusan_resident_quantity > 0) addRow('Bulusan Residents', `${selectedReservation.bulusan_resident_quantity} (FREE)`);
+                
+                y += 10;
+                ctx.font = 'bold 20px Arial, sans-serif';
+                ctx.fillStyle = '#111827';
+                ctx.fillText('Total Amount', 50, y);
+                
+                ctx.textAlign = 'right';
+                const total = calculateTotal(selectedReservation);
+                ctx.fillStyle = '#059669';
+                ctx.fillText(total === 0 ? 'FREE' : `P${total}`, 550, y);
+                ctx.textAlign = 'left';
+                y += 40;
+            } else {
+                addRow('Participants', selectedReservation.number_of_participants, true);
+                addRow('Organizer', selectedReservation.participant_name, true);
+            }
+            
+            // QR Code
+            if (selectedReservation.qr_data) {
+                const qrCanvas = receiptRef.current.querySelector('canvas');
+                if (qrCanvas) {
+                    y += 10;
+                    ctx.drawImage(qrCanvas, (canvas.width - 180) / 2, y, 180, 180);
+                    y += 210;
+                    ctx.font = 'bold 12px Arial, sans-serif';
+                    ctx.fillStyle = '#9ca3af';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('SCAN THIS CODE AT THE ENTRANCE', canvas.width / 2, y);
+                }
+            }
+            
+            const dataUrl = canvas.toDataURL('image/png', 1.0);
+            const link = document.createElement('a');
+            link.href = dataUrl;
+            link.download = `Receipt_${selectedReservation.reservation_reference}.png`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        } catch (err) {
+            console.error('Failed to download receipt', err);
+            notify.error('Failed to download receipt: ' + err.message);
+        } finally {
+            setDownloading(false);
+        }
+    };
 
     // Body scroll lock when panel is open
     useEffect(() => {
@@ -304,12 +426,12 @@ const ReservationHistoryPanel = ({ isOpen, onClose }) => {
                 <div className="fixed inset-0 bg-black/50 z-[110] flex items-center justify-center p-4">
                     <div className="bg-white rounded-2xl w-full max-w-sm max-h-[80vh] overflow-y-auto">
                         <div className="p-4 border-b flex items-center justify-between">
-                            <h3 className="font-bold">Details</h3>
+                            <h3 className="font-bold">Receipt Details</h3>
                             <button onClick={() => setSelectedReservation(null)} className="p-1.5 hover:bg-gray-100 rounded-lg">
                                 <Icons.Close />
                             </button>
                         </div>
-                        <div className="p-4 space-y-4">
+                        <div className="p-4 space-y-4" ref={receiptRef}>
                             <div className="flex items-center gap-3">
                                 <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
                                     selectedReservation.type === 'ticket' ? 'bg-emerald-100 text-emerald-600' : 'bg-purple-100 text-purple-600'
@@ -327,7 +449,7 @@ const ReservationHistoryPanel = ({ isOpen, onClose }) => {
                             </div>
 
                             <div className="bg-gray-50 rounded-lg p-3">
-                                <p className="text-xs text-gray-500">Reference</p>
+                                <p className="text-xs text-gray-500">Reference ID</p>
                                 <p className="font-mono font-bold">{selectedReservation.reservation_reference}</p>
                             </div>
 
@@ -335,6 +457,10 @@ const ReservationHistoryPanel = ({ isOpen, onClose }) => {
                                 <div className="flex justify-between py-1.5 border-b">
                                     <span className="text-gray-500">Date</span>
                                     <span className="font-medium">{formatDate(selectedReservation.reservation_date || selectedReservation.venue_event_date || selectedReservation.event_date)}</span>
+                                </div>
+                                <div className="flex justify-between py-1.5 border-b">
+                                    <span className="text-gray-500">Time</span>
+                                    <span className="font-medium">{selectedReservation.reservation_time || selectedReservation.venue_event_time || selectedReservation.start_time || 'N/A'}</span>
                                 </div>
                                 {selectedReservation.type === 'ticket' && (
                                     <>
@@ -384,24 +510,44 @@ const ReservationHistoryPanel = ({ isOpen, onClose }) => {
                                 )}
                             </div>
 
-                            <div className="flex gap-2 pt-2">
+                            {selectedReservation.qr_data && (
+                                <div className="flex flex-col items-center pt-4 pb-2">
+                                    <div className="bg-white p-2 rounded-lg border border-gray-200">
+                                        <QRCodeCanvas value={selectedReservation.qr_data} size={150} />
+                                    </div>
+                                    <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400 mt-3 text-center">
+                                        Scan this code at the entrance
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="p-4 border-t flex flex-col gap-2">
+                            <button
+                                onClick={handleDownload}
+                                disabled={downloading}
+                                className="w-full py-2.5 bg-black text-white hover:bg-gray-800 font-bold uppercase tracking-wider text-xs rounded-lg transition disabled:opacity-50"
+                            >
+                                {downloading ? 'Preparing...' : 'Download Receipt'}
+                            </button>
+                            <div className="flex gap-2">
                                 <button
                                     onClick={() => setSelectedReservation(null)}
-                                    className="flex-1 py-2.5 bg-gray-100 hover:bg-gray-200 font-medium rounded-lg transition"
+                                    className="flex-1 py-2.5 bg-gray-100 hover:bg-gray-200 font-medium text-sm rounded-lg transition"
                                 >
                                     Close
                                 </button>
                                 <button
                                     onClick={() => selectedReservation.is_archived ? handleUnarchive(selectedReservation) : handleArchive(selectedReservation)}
                                     disabled={archiving}
-                                    className={`flex-1 py-2.5 font-medium rounded-lg transition disabled:opacity-50 flex items-center justify-center gap-2 ${
+                                    className={`flex-1 py-2.5 font-medium text-sm rounded-lg transition disabled:opacity-50 flex items-center justify-center gap-2 ${
                                         selectedReservation.is_archived
                                             ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
                                             : 'bg-gray-600 hover:bg-gray-700 text-white'
                                     }`}
                                 >
                                     {selectedReservation.is_archived ? <Icons.Restore /> : <Icons.Archive />}
-                                    {archiving ? 'Processing...' : (selectedReservation.is_archived ? 'Restore' : 'Archive')}
+                                    {archiving ? '...' : (selectedReservation.is_archived ? 'Restore' : 'Archive')}
                                 </button>
                             </div>
                         </div>
