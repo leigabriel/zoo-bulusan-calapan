@@ -247,12 +247,12 @@ const StaffDashboard = () => {
                     <h1 className="text-2xl font-bold text-gray-900">Welcome back, {user?.firstName || user?.fullName || 'Staff'}!</h1>
                     <p className="text-gray-500">Here's what's happening at the zoo today</p>
                 </div>
-                <Link to="/staff/qr-scanner" className="bg-[#212631] text-white px-4 py-2 rounded-lg font-medium text-sm flex items-center gap-2 hover:bg-[#212631]/90 transition-colors self-start sm:self-auto">
+                {/* <Link to="/staff/qr-scanner" className="bg-[#212631] text-white px-4 py-2 rounded-lg font-medium text-sm flex items-center gap-2 hover:bg-[#212631]/90 transition-colors self-start sm:self-auto">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
                         <path fillRule="evenodd" d="M3.75 4.5a.75.75 0 01.75-.75h3a.75.75 0 010 1.5h-2.25v2.25a.75.75 0 01-1.5 0v-3zm12.75-.75a.75.75 0 01.75.75v3a.75.75 0 01-1.5 0V5.25h-2.25a.75.75 0 010-1.5h3zm-13.5 13.5a.75.75 0 01.75-.75h2.25v-2.25a.75.75 0 011.5 0v3a.75.75 0 01-.75.75h-3a.75.75 0 01-.75-.75zm13.5.75a.75.75 0 01-.75-.75v-2.25a.75.75 0 011.5 0v2.25h2.25a.75.75 0 010 1.5h-3z" clipRule="evenodd" />
                     </svg>
                     QR Scanner
-                </Link>
+                </Link> */}
             </div>
 
             {/* Stats Grid - Only Total Animals, Total Plants, Total Reservations */}

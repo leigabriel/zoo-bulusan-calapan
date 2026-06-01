@@ -266,7 +266,9 @@ function AppRoutes() {
             } />
             <Route path="/staff/qr-scanner" element={
                 <ProtectedRoute allowedRoles={['admin', 'staff']}>
-                    <QRScanner />
+                    <StaffLayout>
+                        <QRScanner />
+                    </StaffLayout>
                 </ProtectedRoute>
             } />
             <Route path="/staff/events" element={

@@ -90,12 +90,13 @@ const StaffEvents = ({ globalSearch = '' }) => {
     const [showSaveConfirm, setShowSaveConfirm] = useState(false);
     const [confirmData, setConfirmData] = useState(null);
     const [saving, setSaving] = useState(false);
+    const [error, setError] = useState('');
     const [imageInputMode, setImageInputMode] = useState('upload');
     const [imageFile, setImageFile] = useState(null);
     const [imagePreview, setImagePreview] = useState(null);
     const [form, setForm] = useState({
         title: '', description: '', eventDate: '', startTime: '', endTime: '',
-        location: '', capacity: '', status: 'upcoming', imageUrl: '', color: '#22c55e'
+        status: 'upcoming', imageUrl: '', color: '#22c55e'
     });
 
     useEffect(() => {
@@ -118,9 +119,12 @@ const StaffEvents = ({ globalSearch = '' }) => {
 
     const openCreateModal = () => {
         setEditingEvent(null);
+        setError('');
+        const now = new Date();
+        const todayLocal = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
         setForm({
-            title: '', description: '', eventDate: '', startTime: '', endTime: '',
-            location: '', capacity: '', status: 'upcoming', imageUrl: '', color: '#22c55e'
+            title: '', description: '', eventDate: todayLocal, startTime: '', endTime: '',
+            status: 'upcoming', imageUrl: '', color: '#22c55e'
         });
         setImageInputMode('upload');
         setImageFile(null);
@@ -130,6 +134,7 @@ const StaffEvents = ({ globalSearch = '' }) => {
 
     const openEditModal = (event) => {
         setEditingEvent(event);
+        setError('');
         const eventDate = event.event_date ? event.event_date.split('T')[0] : '';
         setForm({
             title: event.title || '',
@@ -137,8 +142,6 @@ const StaffEvents = ({ globalSearch = '' }) => {
             eventDate: eventDate,
             startTime: event.start_time || '',
             endTime: event.end_time || '',
-            location: event.location || '',
-            capacity: event.capacity || '',
             status: event.status || 'upcoming',
             imageUrl: event.image_url || '',
             color: event.color || '#22c55e'
@@ -152,12 +155,13 @@ const StaffEvents = ({ globalSearch = '' }) => {
     const closeModal = () => {
         setShowModal(false);
         setEditingEvent(null);
+        setError('');
         setImageInputMode('upload');
         setImageFile(null);
         setImagePreview(null);
         setForm({
             title: '', description: '', eventDate: '', startTime: '', endTime: '',
-            location: '', capacity: '', status: 'upcoming', imageUrl: '', color: '#22c55e'
+            status: 'upcoming', imageUrl: '', color: '#22c55e'
         });
     };
 
@@ -175,6 +179,11 @@ const StaffEvents = ({ globalSearch = '' }) => {
 
     const saveEvent = async (e) => {
         e.preventDefault();
+        setError('');
+        if (!form.title || !form.eventDate) {
+            setError('Title and date are required.');
+            return;
+        }
         // Show confirmation modal instead of directly saving
         setConfirmData({
             isUpdate: !!editingEvent,
@@ -187,6 +196,7 @@ const StaffEvents = ({ globalSearch = '' }) => {
 
     const executeSave = async () => {
         setSaving(true);
+        setError('');
         try {
             // Handle image upload if file mode selected
             let imageUrl = form.imageUrl;
@@ -204,13 +214,11 @@ const StaffEvents = ({ globalSearch = '' }) => {
             const eventData = {
                 title: form.title,
                 description: form.description,
-                event_date: form.eventDate,
-                start_time: form.startTime,
-                end_time: form.endTime,
-                location: form.location,
-                capacity: form.capacity ? parseInt(form.capacity) : null,
+                eventDate: form.eventDate,
+                startTime: form.startTime || null,
+                endTime: form.endTime || null,
                 status: form.status,
-                image_url: imageUrl,
+                imageUrl: imageUrl,
                 color: form.color
             };
             let res;
@@ -225,11 +233,15 @@ const StaffEvents = ({ globalSearch = '' }) => {
                 setShowSaveConfirm(false);
                 setConfirmData(null);
             } else {
-                notify.error(res.message || 'We could not save this event right now.');
+                const message = res.message || 'We could not save this event right now.';
+                setError(message);
+                notify.error(message);
             }
         } catch (err) {
             console.error(err);
-            notify.error('We could not save this event right now.');
+            const message = 'We could not save this event right now.';
+            setError(message);
+            notify.error(message);
         } finally {
             setSaving(false);
         }
@@ -444,97 +456,98 @@ const StaffEvents = ({ globalSearch = '' }) => {
             {showModal && (
                 <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
                     <div className="bg-white border border-green-200 rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-                        <div className="p-6 border-b border-green-200 flex items-center justify-between sticky top-0 bg-white">
-                            <h3 className="text-xl font-bold text-gray-900">
-                                {editingEvent ? 'Edit Event' : 'Add New Event'}
-                            </h3>
-                            <button onClick={closeModal} className="p-2 hover:bg-green-50 rounded-lg text-gray-500 hover:text-gray-900 transition">
+                        <div className="flex items-center justify-between p-5 border-b border-green-200">
+                            <h2 className="text-xl font-bold text-gray-900">
+                                {editingEvent ? 'Edit Event' : 'New Event'}
+                            </h2>
+                            <button
+                                onClick={closeModal}
+                                className="text-gray-500 hover:text-gray-900 transition"
+                            >
                                 <CloseIcon />
                             </button>
                         </div>
-                        <form onSubmit={saveEvent} className="p-6 space-y-4">
+                        <form onSubmit={saveEvent} className="p-5 space-y-4">
+                            {error && (
+                                <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 text-sm">
+                                    {error}
+                                </div>
+                            )}
                             <div>
-                                <label className="block text-sm font-medium text-gray-500 mb-2">Title *</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Title <span className="text-red-400">*</span>
+                                </label>
                                 <input
                                     type="text"
                                     value={form.title}
                                     onChange={(e) => setForm({ ...form, title: sanitizeInput(e.target.value) })}
                                     required
-                                    className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-500"
-                                    placeholder="Event title"
+                                    className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-500 transition"
+                                    placeholder="Add title here"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Description
+                                </label>
+                                <textarea
+                                    value={form.description}
+                                    onChange={(e) => setForm({ ...form, description: sanitizeInput(e.target.value) })}
+                                    rows={3}
+                                    className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-500 transition resize-none"
+                                    placeholder="Enter event description here"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    <span className="flex items-center gap-2">
+                                        <CalendarIcon />
+                                        Date <span className="text-red-400">*</span>
+                                    </span>
+                                </label>
+                                <input
+                                    type="date"
+                                    value={form.eventDate}
+                                    onChange={(e) => setForm({ ...form, eventDate: e.target.value })}
+                                    required
+                                    className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:border-green-500 transition"
                                 />
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-500 mb-2">Date *</label>
-                                    <input
-                                        type="date"
-                                        value={form.eventDate}
-                                        onChange={(e) => setForm({ ...form, eventDate: e.target.value })}
-                                        required
-                                        className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:border-green-500"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-500 mb-2">Status</label>
-                                    <select
-                                        value={form.status}
-                                        onChange={(e) => setForm({ ...form, status: e.target.value })}
-                                        className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:border-green-500"
-                                    >
-                                        <option value="upcoming">Upcoming</option>
-                                        <option value="ongoing">Ongoing</option>
-                                        <option value="completed">Completed</option>
-                                        <option value="cancelled">Cancelled</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-500 mb-2">Start Time</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Start Time
+                                    </label>
                                     <input
                                         type="time"
                                         value={form.startTime}
                                         onChange={(e) => setForm({ ...form, startTime: e.target.value })}
-                                        className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:border-green-500"
+                                        className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:border-green-500 transition"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-500 mb-2">End Time</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        End Time
+                                    </label>
                                     <input
                                         type="time"
                                         value={form.endTime}
                                         onChange={(e) => setForm({ ...form, endTime: e.target.value })}
-                                        className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:border-green-500"
+                                        className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:border-green-500 transition"
                                     />
                                 </div>
                             </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-500 mb-2">Location</label>
-                                    <input
-                                        type="text"
-                                        value={form.location}
-                                        onChange={(e) => setForm({ ...form, location: sanitizeInput(e.target.value) })}
-                                        className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-500"
-                                        placeholder="Event location"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-500 mb-2">Capacity</label>
-                                    <input
-                                        type="number"
-                                        value={form.capacity}
-                                        onChange={(e) => setForm({ ...form, capacity: e.target.value })}
-                                        className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-500"
-                                        placeholder="Max attendees"
-                                    />
-                                </div>
-                            </div>
-                            {/* Event Image Upload */}
                             <div>
-                                <label className="block text-sm font-medium text-gray-500 mb-2">Event Image</label>
-
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    <span className="flex items-center gap-2">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+                                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                                            <circle cx="8.5" cy="8.5" r="1.5" />
+                                            <polyline points="21 15 16 10 5 21" />
+                                        </svg>
+                                        Event Image
+                                    </span>
+                                </label>
                                 <input
                                     type="file"
                                     accept="image/*"
@@ -566,9 +579,8 @@ const StaffEvents = ({ globalSearch = '' }) => {
                                     </div>
                                 )}
                             </div>
-                            {/* Tag Color */}
                             <div>
-                                <label className="block text-sm font-medium text-gray-500 mb-2">Tag Color</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Tag Color</label>
                                 <div className="flex gap-2 flex-wrap">
                                     {TAG_COLORS.map((color) => (
                                         <button
@@ -585,21 +597,44 @@ const StaffEvents = ({ globalSearch = '' }) => {
                                 </div>
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-500 mb-2">Description</label>
-                                <textarea
-                                    value={form.description}
-                                    onChange={(e) => setForm({ ...form, description: sanitizeInput(e.target.value) })}
-                                    rows="3"
-                                    className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-500 resize-none"
-                                    placeholder="Event description..."
-                                />
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                                <select
+                                    value={form.status}
+                                    onChange={(e) => setForm({ ...form, status: e.target.value })}
+                                    className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:border-green-500 transition"
+                                >
+                                    <option value="upcoming">Upcoming</option>
+                                    <option value="ongoing">Ongoing</option>
+                                    <option value="completed">Completed</option>
+                                    <option value="cancelled">Cancelled</option>
+                                </select>
                             </div>
                             <div className="flex gap-3 pt-4">
-                                <button type="button" onClick={closeModal} className="flex-1 px-4 py-3 bg-green-50 hover:bg-green-50 text-gray-900 rounded-xl font-medium transition">
+                                <button
+                                    type="button"
+                                    onClick={closeModal}
+                                    className="flex-1 px-4 py-3 bg-green-50 hover:bg-green-50 text-gray-900 rounded-xl font-medium transition"
+                                >
                                     Cancel
                                 </button>
-                                <button type="submit" disabled={saving} className="flex-1 px-4 py-3 bg-green-500 hover:bg-green-600 text-white rounded-xl font-medium transition disabled:opacity-50">
-                                    {saving ? 'Saving...' : (editingEvent ? 'Update Event' : 'Add Event')}
+                                <button
+                                    type="submit"
+                                    disabled={saving}
+                                    className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-green-500 hover:bg-green-600 text-black rounded-xl font-medium transition disabled:opacity-50"
+                                >
+                                    {saving ? (
+                                        <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin"></div>
+                                    ) : editingEvent ? (
+                                        <>
+                                            <EditIcon />
+                                            Update
+                                        </>
+                                    ) : (
+                                        <>
+                                            <PlusIcon />
+                                            Add Event
+                                        </>
+                                    )}
                                 </button>
                             </div>
                         </form>

@@ -1,32 +1,12 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import RoleCompanionAssistant from '../features/ai-assistant/RoleCompanionAssistant';
 import { AI_ASSISTANT_ICON } from '../../config/ai-assistant-theme';
 
-const ROLE_MESSAGES = {
-    admin: [
-        'Need a quick KPI summary?',
-        'Review admin priorities with me.',
-        'Draft a short action plan.',
-        'Need an escalation checklist?',
-        'Align staffing in minutes.'
-    ],
-    staff: [
-        'Need a shift checklist?',
-        'Verify reservations faster.',
-        'Need moderation steps?',
-        'Quick response templates here.',
-        'Resolve tickets with me.'
-    ]
-};
-
 const RoleCompanionFloatingButton = ({ role = 'staff' }) => {
     const normalizedRole = role === 'admin' ? 'admin' : 'staff';
-    const messages = useMemo(() => ROLE_MESSAGES[normalizedRole], [normalizedRole]);
 
     const [assistantOpen, setAssistantOpen] = useState(false);
-    const [msgIndex, setMsgIndex] = useState(0);
-    const [showMsg, setShowMsg] = useState(false);
 
     const closePanels = () => setAssistantOpen(false);
 
@@ -41,23 +21,6 @@ const RoleCompanionFloatingButton = ({ role = 'staff' }) => {
         };
     }, [assistantOpen]);
 
-    useEffect(() => {
-        if (assistantOpen) return;
-
-        const cycle = () => {
-            setShowMsg(true);
-            setMsgIndex(prev => (prev + 1) % messages.length);
-            setTimeout(() => setShowMsg(false), 2600);
-        };
-
-        const interval = setInterval(cycle, 5200);
-        const initial = setTimeout(cycle, 1400);
-
-        return () => {
-            clearInterval(interval);
-            clearTimeout(initial);
-        };
-    }, [assistantOpen, messages]);
 
     const panelVariants = {
         hidden: { x: '100%' },
@@ -65,29 +28,11 @@ const RoleCompanionFloatingButton = ({ role = 'staff' }) => {
         exit: { x: '100%', transition: { type: 'spring', damping: 30, stiffness: 220 } }
     };
 
-    const bubbleColor = normalizedRole === 'admin' ? 'bg-emerald-800' : 'bg-gray-800';
-
     return (
         <>
             {!assistantOpen && (
                 <div className="fixed bottom-0 right-0 z-[70] flex items-end justify-end p-4">
                     <div className="relative flex items-end">
-                        <AnimatePresence>
-                            {showMsg && (
-                                <motion.div
-                                    key={msgIndex}
-                                    initial={{ opacity: 0, y: 6, scale: 0.92 }}
-                                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                                    exit={{ opacity: 0, y: 6, scale: 0.92 }}
-                                    transition={{ duration: 0.25 }}
-                                    className={`absolute right-full mr-3 bottom-1 px-3 py-1.5 text-white text-sm font-medium rounded-lg shadow-lg whitespace-nowrap ${bubbleColor}`}
-                                >
-                                    {messages[msgIndex]}
-                                    <div className={`absolute top-1/2 -right-1 -translate-y-1/2 w-2 h-2 rotate-45 ${bubbleColor}`} />
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
-
                         <button
                             onClick={() => setAssistantOpen(true)}
                             className="relative z-50 w-20 h-20 flex items-center justify-center transition-transform duration-200 active:scale-95 hover:scale-110"

@@ -521,7 +521,7 @@ const AdminEvents = () => {
                             --fc-highlight-color: rgba(34, 197, 94, 0.15);
                         }
                         .fc .fc-toolbar-title {
-                            color: #fff;
+                            color: #111827;
                             font-size: 1.25rem;
                             font-weight: 600;
                         }

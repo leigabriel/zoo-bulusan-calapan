@@ -114,7 +114,7 @@ const HeroSection = () => {
                     <img
                         src="/pixels/buffalo.png"
                         alt="Buffalo"
-                        className="hero-drag-item absolute w-24 md:w-36 lg:w-56 left-[calc(50%-3.5rem)] md:left-[calc(50%-5.5rem)] lg:left-[calc(50%-7rem)] top-[25%] md:top-[12%] pointer-events-auto cursor-grab active:cursor-grabbing"
+                        className="hero-drag-item absolute w-24 md:w-36 lg:w-56 left-[calc(50%-3.5rem)] md:left-[calc(50%-5.5rem)] lg:left-[calc(50%-7rem)] rotate-12 top-[25%] md:top-[12%] pointer-events-auto cursor-grab active:cursor-grabbing"
                     />
                     <img
                         src="/pixels/turtle.png"
@@ -318,14 +318,14 @@ const AboutSection = () => {
             <div className="abs txt top-[8%] md:top-[10.5%] left-[6%] md:left-[8.5%] text-[14vw] md:text-[7.2vw] font-normal tracking-[-0.02em]">BULUSAN</div>
             <div className="abs txt txt-serif top-[8%] md:top-[10.5%] right-[6%] md:right-[9%] text-[10vw] md:text-[7vw]">ZOO</div>
 
-            <div className="abs txt top-[16%] md:top-[20.5%] left-[20%] md:left-[24.5%] text-[4.5vw] md:text-[1.2vw] tracking-[0.05em]">CALAPAN</div>
-            <div className="abs txt top-[16%] md:top-[20.5%] left-[55%] md:left-[58%] text-[4.5vw] md:text-[1.2vw] tracking-[0.08em]">NATURE PARK</div>
+            <div className="abs txt top-[16%] md:top-[20.5%] left-[20%] md:left-[24.5%] text-[4.5vw] md:text-[1.2vw] tracking-[0.05em]"></div>
+            <div className="abs txt top-[16%] md:top-[20.5%] left-[55%] md:left-[58%] text-[4.5vw] md:text-[1.9vw] tracking-[0.08em]">NATURE PARK</div>
 
             <div className="abs txt txt-italic top-[21%] md:top-[23%] left-[6%] md:left-[9.5%] text-[18vw] md:text-[9vw] font-medium tracking-[-0.07em] scale-y-[1.1] scale-x-[0.95] z-[30]">MORE</div>
             <div className="abs txt txt-italic top-[28%] md:top-[23%] left-[45%] md:left-[59%] text-[18vw] md:text-[9vw] font-medium tracking-[-0.07em] scale-y-[1.1] scale-x-[0.95] z-[30]">THAN</div>
 
-            <div className="abs txt top-[37%] md:top-[36%] left-[10%] md:left-[29%] text-[7vw] md:text-[4.8vw] font-normal">A</div>
-            <div className="abs txt top-[36%] md:top-[35.5%] left-[20%] md:left-[49%] text-[9.5vw] md:text-[6vw] tracking-[-0.03em]">DESTINATION;</div>
+            <div className="abs txt top-[37%] md:top-[36.5%] left-[10%] md:left-[29%] text-[7vw] md:text-[4.8vw] font-normal">A</div>
+            <div className="abs txt top-[36%] md:top-[36%] left-[20%] md:left-[49%] text-[9.5vw] md:text-[6vw] tracking-[-0.03em]">DESTINATION;</div>
 
             <div className="abs txt top-[44%] md:top-[45.5%] left-[10%] md:left-[20.5%] text-[4.5vw] md:text-[2.2vw]">IS</div>
             <div className="abs txt top-[44%] md:top-[45%] left-[22%] md:left-[42.5%] text-[5vw] md:text-[2.8vw] tracking-[-0.01em]">A PLACE</div>

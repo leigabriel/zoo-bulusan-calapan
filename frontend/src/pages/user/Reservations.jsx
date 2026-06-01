@@ -82,7 +82,7 @@ const Reservations = () => {
     const [showConfirmation, setShowConfirmation] = useState(false);
     const [confirmationData, setConfirmationData] = useState(null);
     const [ticketCounts, setTicketCounts] = useState({ adult: 0, child: 0, bulusan_resident: 0 });
-    const [ticketForm, setTicketForm] = useState({ reservationDate: '', reservationTime: '', visitorName: '', visitorEmail: '', visitorPhone: '', notes: '' });
+    const [ticketForm, setTicketForm] = useState({ reservationDate: '', reservationTime: '', visitorName: '', visitorEmail: '' });
     const [residentIdImage, setResidentIdImage] = useState(null);
     const [residentIdPreview, setResidentIdPreview] = useState(null);
     const [idUploadError, setIdUploadError] = useState('');
@@ -241,16 +241,15 @@ const Reservations = () => {
                 const res = await reservationAPI.createTicketReservation({
                     visitorName: ticketForm.visitorName,
                     visitorEmail: ticketForm.visitorEmail,
-                    visitorPhone: ticketForm.visitorPhone,
                     reservationDate: ticketForm.reservationDate,
                     reservationTime: ticketForm.reservationTime,
                     adultQuantity: ticketCounts.adult,
                     childQuantity: ticketCounts.child,
                     bulusanResidentQuantity: ticketCounts.bulusan_resident,
-                    residentIdImage: residentIdImage,
-                    notes: ticketForm.notes
+                    residentIdImage: residentIdImage
                 });
                 if (res.success) {
+                    notify.success('Reservation submitted. We are preparing your pass.');
                     setConfirmationData({
                         type: 'ticket',
                         reference: res.reservationReference,
@@ -279,6 +278,7 @@ const Reservations = () => {
                     notes: eventForm.notes
                 });
                 if (res.success) {
+                    notify.success('Reservation submitted. We are preparing your pass.');
                     setConfirmationData({
                         type: 'event',
                         reference: res.reservationReference,
@@ -305,7 +305,7 @@ const Reservations = () => {
     const resetForms = () => {
         setTicketCounts({ adult: 0, child: 0, bulusan_resident: 0 });
         const fullName = user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : '';
-        setTicketForm({ reservationDate: '', visitorName: fullName, visitorEmail: user?.email || '', visitorPhone: '', notes: '' });
+        setTicketForm({ reservationDate: '', visitorName: fullName, visitorEmail: user?.email || '' });
         setResidentIdImage(null);
         setResidentIdPreview(null);
         setIdUploadError('');
@@ -314,7 +314,7 @@ const Reservations = () => {
 
     const hasFormData = () => {
         if (reservationType === 'ticket') {
-            return getTotalVisitors() > 0 || ticketForm.reservationDate || ticketForm.notes || ticketForm.visitorPhone;
+            return getTotalVisitors() > 0 || ticketForm.reservationDate || ticketForm.reservationTime;
         } else {
             return eventForm.venueEventName || eventForm.venueEventDate || eventForm.venueEventDescription || eventForm.participantPhone;
         }
@@ -613,15 +613,9 @@ const Reservations = () => {
                                                         </div>
                                                     </div>
 
-                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                                                        <div className="flex flex-col gap-2">
-                                                            <label className="text-[9px] tracking-[0.2em] uppercase font-bold text-[#212631]">Phone (Optional)</label>
-                                                            <input type="tel" value={ticketForm.visitorPhone} onChange={e => setTicketForm({ ...ticketForm, visitorPhone: sanitizePhone(e.target.value) })} className="w-full bg-[#ebebeb] border border-[#212631]/20 p-4 text-sm font-semibold text-[#212631] focus:border-[#212631] outline-none transition-colors h-[54px]" />
-                                                        </div>
-                                                        <div className="flex flex-col gap-2">
-                                                            <label className="text-[9px] tracking-[0.2em] uppercase font-bold text-[#212631]">Arrival Date *</label>
-                                                            <input type="date" value={ticketForm.reservationDate} onChange={e => setTicketForm({ ...ticketForm, reservationDate: e.target.value, reservationTime: '' })} min={getMinDate()} max={getMaxDate()} className="w-full bg-[#ebebeb] border border-[#212631]/20 p-4 text-sm font-semibold text-[#212631] focus:border-[#212631] outline-none transition-colors uppercase tracking-wider h-[54px]" required />
-                                                        </div>
+                                                    <div className="flex flex-col gap-2">
+                                                        <label className="text-[9px] tracking-[0.2em] uppercase font-bold text-[#212631]">Arrival Date *</label>
+                                                        <input type="date" value={ticketForm.reservationDate} onChange={e => setTicketForm({ ...ticketForm, reservationDate: e.target.value, reservationTime: '' })} min={getMinDate()} max={getMaxDate()} className="w-full bg-[#ebebeb] border border-[#212631]/20 p-4 text-sm font-semibold text-[#212631] focus:border-[#212631] outline-none transition-colors uppercase tracking-wider h-[54px]" required />
                                                     </div>
 
                                                     {ticketForm.reservationDate && (
@@ -640,10 +634,6 @@ const Reservations = () => {
                                                         </div>
                                                     )}
 
-                                                    <div className="flex flex-col gap-2">
-                                                        <label className="text-[9px] tracking-[0.2em] uppercase font-bold text-[#212631]">Special Requirements / Notes</label>
-                                                        <textarea value={ticketForm.notes} onChange={e => setTicketForm({ ...ticketForm, notes: sanitizeInput(e.target.value) })} className="w-full bg-[#ebebeb] border border-[#212631]/20 p-4 text-sm font-semibold text-[#212631] focus:border-[#212631] outline-none transition-colors resize-y min-h-[100px]" />
-                                                    </div>
                                                 </div>
                                             </>
                                         ) : (
@@ -784,7 +774,14 @@ const Reservations = () => {
                         <div className="fixed inset-0 z-[300] flex items-center justify-center p-4">
                             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-[#212631]/80 backdrop-blur-md" />
                             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }} className="bg-[#ebebeb] border border-[#212631]/20 w-full max-w-sm p-10 relative z-10 flex flex-col items-center text-center shadow-2xl">
-                                <div className="mb-6 text-[#212631]"><Icons.Check /></div>
+                                <motion.div
+                                    className="mb-6 text-[#212631]"
+                                    initial={{ scale: 0.85, opacity: 0 }}
+                                    animate={{ scale: [0.85, 1.12, 1], opacity: 1 }}
+                                    transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                                >
+                                    <Icons.Check />
+                                </motion.div>
                                 <h3 className="text-3xl font-black uppercase tracking-tighter text-[#212631] mb-2">Confirmed</h3>
                                 <p className="text-[10px] tracking-widest uppercase font-bold text-[#212631]/50 mb-8">Reservation securely logged.</p>
 

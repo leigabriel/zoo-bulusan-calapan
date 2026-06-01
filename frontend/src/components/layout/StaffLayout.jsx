@@ -454,6 +454,7 @@ const StaffLayout = ({ children }) => {
 
     const menuItems = [
         { path: '/staff/dashboard', label: 'Overview', Icon: OverviewIcon },
+        { path: '/staff/qr-scanner', label: 'QR Scanner', Icon: ScannerIcon },
     ];
 
     const managementItems = [
