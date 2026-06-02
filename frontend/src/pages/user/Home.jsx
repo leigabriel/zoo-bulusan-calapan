@@ -111,11 +111,6 @@ const HeroSection = () => {
                         alt="Rabbit"
                         className="hero-drag-item absolute w-15 sm:w-24 md:w-36 lg:w-46 left-[5%] sm:left-[10%] md:left-[18%] top-[55%] sm:top-[70%] md:top-[40%] -rotate-12 pointer-events-auto cursor-grab active:cursor-grabbing"
                     />
-                    {/* <img
-                        src="/pixels/buffalo.png"
-                        alt="Buffalo"
-                        className="hero-drag-item absolute w-20 sm:w-24 md:w-36 lg:w-56 left-[calc(50%-2.5rem)] sm:left-[calc(50%-3.5rem)] md:left-[calc(50%-5.5rem)] lg:left-[calc(50%-7rem)] rotate-12 top-[15%] sm:top-[25%] md:top-[12%] pointer-events-auto cursor-grab active:cursor-grabbing"
-                    /> */}
                     <img
                         src="/pixels/pixelrab.png"
                         alt="Turtle"
@@ -125,14 +120,28 @@ const HeroSection = () => {
 
                 <div className="hero-content text-center flex flex-col items-center z-10 px-4 sm:px-5 pointer-events-none">
                     <h2 className="hero-title opacity-0 font-['Mistral',_cursive] text-[clamp(2rem,5vw,5rem)] text-black -mb-1 sm:-mb-2">
-                        welcome to
+                        Welcome to
                     </h2>
-                    <div className="text-[clamp(2.5rem,8vw,6rem)] font-semibold text-black leading-none tracking-tight mb-[20px] sm:mb-[30px] overflow-hidden py-2 sm:py-4">
-                        {['BULUSAN ZOO', 'NATURE PARK'].map((line, i) => (
-                            <span key={i} className="block overflow-hidden">
-                                <span className="hero-line block" style={{ clipPath: 'inset(100% 0% 0% 0%)' }}>{line}</span>
+                    <div className="mb-[20px] sm:mb-[30px]">
+                        <div className="text-[clamp(2.5rem,8vw,6rem)] font-semibold text-black leading-none tracking-tight overflow-hidden py-2 sm:py-4">
+                            <span className="block overflow-hidden">
+                                <span
+                                    className="hero-line block"
+                                    style={{ clipPath: 'inset(100% 0% 0% 0%)' }}
+                                >
+                                    BULUSAN ZOO
+                                </span>
                             </span>
-                        ))}
+                        </div>
+
+                        <div className="overflow-hidden mt-2">
+                            <p
+                                className="hero-line text-md sm:text-xl md:text-2xl font-semibold text-black/70 tracking-wide"
+                                style={{ clipPath: 'inset(100% 0% 0% 0%)' }}
+                            >
+                                Explore Nature, Learn, and Connect
+                            </p>
+                        </div>
                     </div>
                     <button
                         onClick={() => navigate('/reservations')}

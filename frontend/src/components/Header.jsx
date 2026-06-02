@@ -437,7 +437,7 @@ const Header = () => {
                         </div>
 
                         <nav className="hidden md:flex flex-1 items-center justify-center">
-                            <div className="flex items-center gap-0.5 bg-[#c6fe69] rounded-full px-1.5 py-1.5">
+                            <div className="flex items-center border border-gray-500 shadow-md shadow-gray-400 gap-0.5 bg-[#c6fe69] rounded-full px-1.5 py-1.5">
                                 {NAV_LINKS.map((link) => (
                                     <Link
                                         key={link.path}
@@ -531,15 +531,15 @@ const Header = () => {
                                     key={link.path}
                                     to={link.path}
                                     onClick={(e) => { e.preventDefault(); setIsMenuOpen(false); handleTransitionNavigate(e, link.path); }}
-                                    className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${active ? 'bg-gray-900' : 'hover:bg-gray-50'}`}
+                                    className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${active ? 'bg-[#c6fe69]' : 'hover:bg-gray-50'}`}
                                 >
                                     <img
                                         src={link.iconUrl}
                                         alt={link.label}
                                         className="w-4 h-4 object-contain flex-shrink-0"
-                                        style={{ opacity: active ? 1 : 0.45, filter: active ? 'brightness(0) invert(1)' : 'none' }}
+                                        style={{ opacity: active ? 1 : 0.45, filter: active ? 'brightness(0) invert(0)' : 'none' }}
                                     />
-                                    <span className={`text-[13px] font-medium ${active ? 'text-white' : 'text-gray-600'}`}>
+                                    <span className={`text-[13px] font-medium ${active ? 'text-[#000]' : 'text-gray-600'}`}>
                                         {link.label}
                                     </span>
                                 </Link>
