@@ -10,6 +10,7 @@ import ConfirmationModal from '../../components/common/ConfirmationModal';
 import { communityAPI, getProfileImageUrl } from '../../services/api-client';
 import { useAuth } from '../../context/AuthContext';
 import { notify } from '../../utils/toast';
+import Footer from '../../components/Footer';
 
 const CommunityPage = () => {
     const { user } = useAuth();
@@ -129,7 +130,7 @@ const CommunityPage = () => {
 
     return (
         <ReactLenis root>
-            <div className="bg-[#00ff00] text-[#212631] relative min-h-screen">
+            <div className="bg-[#fff] text-[#212631] relative min-h-screen">
                 <Header />
 
                 {/* Intro Section - Clean Style */}
@@ -297,6 +298,8 @@ const CommunityPage = () => {
                         </div>
                     )}
                 </AnimatePresence>
+
+                <Footer />
 
                 <ConfirmationModal
                     isOpen={confirmState.isOpen}

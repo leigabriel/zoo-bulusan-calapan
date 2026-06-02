@@ -26,18 +26,25 @@ const AIFloatingButton = () => {
     return (
         <>
             {!assistantOpen && (
-                <div className="fixed bottom-0 right-0 z-50 flex items-end justify-end p-4">
-                    <div className="relative flex items-end">
+                <div className="fixed bottom-0 right-0 z-50 flex items-end justify-end p-3 sm:p-4">
+                    <div className="relative">
                         <button
                             onClick={() => setAssistantOpen(true)}
-                            className="relative z-50 w-25 h-25 flex items-center justify-center transition-transform duration-200 active:scale-95 hover:scale-110"
-                        >
-                            <img
-                                src={AI_ASSISTANT_ICON}
-                                className="w-25 h-25 object-contain"
-                                alt="Open Assistant"
-                            />
-                        </button>
+                            className="relative border border-gray-500 z-40 flex items-center justify-center
+                       w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20
+                       rounded-full bg-[#c6fe69]
+                       shadow-lg
+                       transition-transform duration-200
+                       active:scale-95 hover:scale-110"
+                        />
+
+                        <img
+                            src={AI_ASSISTANT_ICON}
+                            className="absolute inset-0 m-auto z-50
+                       w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12
+                       object-contain pointer-events-none"
+                            alt="Assistant Icon"
+                        />
                     </div>
                 </div>
             )}

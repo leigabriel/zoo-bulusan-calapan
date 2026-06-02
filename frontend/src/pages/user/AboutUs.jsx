@@ -169,7 +169,7 @@ const JournalHero = ({ entry }) => {
                     </div>
                 </div>
                 <motion.div
-                    className="absolute inset-0 bg-[#ebebeb] origin-bottom z-20"
+                    className="absolute inset-0 bg-[#fff] origin-bottom z-20"
                     initial={{ scaleY: 1 }}
                     animate={inView ? { scaleY: 0 } : { scaleY: 1 }}
                     transition={{ duration: 1.2, ease: E }}
@@ -212,7 +212,7 @@ const JournalCard = ({ entry, index }) => {
                     <img src={entry.image} alt={entry.title} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-[1400ms] ease-out" />
                 </motion.div>
                 <motion.div
-                    className="absolute inset-0 bg-[#ebebeb] origin-top z-10"
+                    className="absolute inset-0 bg-[#fff] origin-top z-10"
                     initial={{ scaleY: 1 }}
                     animate={inView ? { scaleY: 0 } : { scaleY: 1 }}
                     transition={{ duration: 1.0, delay: d + 0.06, ease: E }}
@@ -233,15 +233,33 @@ const JournalCard = ({ entry, index }) => {
     );
 };
 
-const AboutUs = () => {
-    const heroRef = useRef(null);
-    const { scrollYProgress: hp } = useScroll({ target: heroRef, offset: ['start start', 'end start'] });
+// Sub-component to handle the word-by-word staggered fade in for the pinned header text
+const FadingWord = ({ word, progress, start, end }) => {
+    // Maps the scroll progress directly to the opacity
+    const opacity = useTransform(progress, [start, end], [0, 1]);
+    return <motion.span style={{ opacity }}>{word}</motion.span>;
+};
 
-    const badgeY = useTransform(hp, [0, 1], [0, -60]);
-    const badgeO = useTransform(hp, [0, 0.4], [1, 0]);
-    const titleY = useTransform(hp, [0, 1], [0, -40]);
-    const descY = useTransform(hp, [0, 1], [0, -20]);
-    const statsY = useTransform(hp, [0, 1], [0, -30]);
+
+const AboutUs = () => {
+    // ---- NEW PINNED HERO ANIMATION VARIABLES ----
+    const bannerContainerRef = useRef(null);
+    // Setting offset so the animation stretches over the 400vh container
+    const { scrollYProgress: bp } = useScroll({
+        target: bannerContainerRef,
+        offset: ['start start', 'end bottom']
+    });
+
+    // Transforms replicating the GSAP behavior
+    const bannerScale = useTransform(bp, [0, 1], [0, 1]);
+    const maskScale = useTransform(bp, [0, 0.9], [0.9, 1]);
+
+    // Intro Text moving outside
+    const helloX = useTransform(bp, [0, 0.9], ["0vw", "-50vw"]);
+    const worldX = useTransform(bp, [0, 0.9], ["0vw", "50vw"]);
+
+    const bannerHeaderWords = "I will found you...".split(" ");
+    // ---------------------------------------------
 
     const journalEntries = [
         { id: 1, title: 'BULUSAN ECO-TRAIL', desc: 'Discover the 1-hour immersive trek through century-old forests ending at the shores of Brgy. Parang.', image: 'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09', grid: 'col-span-12', aspect: 'aspect-[4/5] md:aspect-[21/8]', isHero: true },
@@ -258,59 +276,85 @@ const AboutUs = () => {
 
     return (
         <ReactLenis root>
-            <div className="min-h-screen bg-[#ebebeb] text-[#212631] selection:bg-emerald-200 overflow-x-hidden flex flex-col">
+            {/* Adding the Google Font for the banner specifically to the document root or ensuring it loads */}
+            <style dangerouslySetInnerHTML={{ __html: `@import url("https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&display=swap");` }} />
+
+            <div className="min-h-screen bg-[#fff] text-[#212631] overflow-x-hidden flex flex-col">
                 <Header />
 
                 <main className="flex-grow">
 
-                    <section ref={heroRef} className="min-h-screen pt-24 md:pt-28 flex flex-col justify-between mx-auto px-4 sm:px-6 md:px-10 max-w-[1500px]">
+                    {/* ===== REPLACED ANIMATED HERO SECTION ===== */}
+                    <section
+                        ref={bannerContainerRef}
+                        className="relative h-[400vh] bg-[#e3e3db] w-full"
+                        style={{ fontFamily: '"Instrument Serif", serif' }}
+                    >
+                        {/* Sticky wrapper pinning the effect to the viewport */}
+                        <div className="sticky top-0 h-screen w-full overflow-hidden flex items-center justify-center">
 
-                        <motion.div style={{ y: badgeY, opacity: badgeO }} className="mt-8 md:mt-12">
-                            <Reveal delay={0}>
-                                <p className="text-[10px] sm:text-xs font-medium tracking-[0.3em] text-[#155f15] uppercase flex items-center gap-2.5">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse flex-shrink-0" />
-                                    Preserving Calapan's Green Heart
-                                </p>
-                            </Reveal>
-                        </motion.div>
+                            {/* Banner Image & Header Container scaling up */}
+                            <motion.div
+                                style={{ scale: bannerScale }}
+                                className="absolute w-full h-full origin-center"
+                            >
+                                {/* Base Image */}
+                                <div className="absolute inset-0 w-full h-full">
+                                    <img src="./img/banner-img.jpg" alt="Banner Base" className="w-full h-full object-cover" />
+                                </div>
 
-                        <motion.div style={{ y: titleY }} className="flex-1 flex items-center py-10 md:py-0">
-                            <div className="w-full">
-                                <h1 className="text-[clamp(3.2rem,9.5vw,8rem)] font-medium tracking-[-0.035em] text-[#007a55] leading-[0.86] mb-0">
-                                    <Chars text="Bulusan" delay={0.08} stagger={0.044} />
-                                    <br />
-                                    <span className="flex items-baseline gap-[0.15em] flex-wrap">
-                                        <Chars text="Nature" delay={0.36} stagger={0.038} />
-                                        <Chars
-                                            text="Zoo"
-                                            className="text-[#007a55]"
-                                            delay={0.62}
-                                            stagger={0.044}
-                                        />
-                                    </span>
-                                </h1>
+                                {/* Masked Image layer */}
+                                <motion.div
+                                    style={{
+                                        scale: maskScale,
+                                        WebkitMaskImage: 'url("/banner-img-mask.png")',
+                                        maskImage: 'url("/banner-img-mask.png")',
+                                        WebkitMaskSize: 'cover',
+                                        maskSize: 'cover',
+                                        WebkitMaskPosition: 'center',
+                                        maskPosition: 'center',
+                                    }}
+                                    className="absolute inset-0 w-full h-full"
+                                >
+                                    <img src="./img/banner-img.jpg" alt="Banner Masked" className="w-full h-full object-cover" />
+                                </motion.div>
+
+                                {/* Center Header Text Reveal (I will found you...) */}
+                                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[75%] text-center text-[#e3e3db] z-10 pointer-events-none">
+                                    <h1 className="text-[3rem] sm:text-[4rem] font-normal leading-[1.1] flex flex-wrap justify-center gap-[0.3em]">
+                                        {bannerHeaderWords.map((word, i) => {
+                                            const totalWords = bannerHeaderWords.length;
+                                            const start = 0.7 + (i / totalWords) * 0.2;
+                                            const end = 0.7 + ((i + 1) / totalWords) * 0.2;
+
+                                            return (
+                                                <FadingWord key={i} word={word} progress={bp} start={start} end={end} />
+                                            );
+                                        })}
+                                    </h1>
+                                </div>
+                            </motion.div>
+
+                            {/* Banner Intro Text Container (Hello World sliding out) */}
+                            <div className="absolute top-1/2 -translate-y-1/2 w-full flex gap-2 z-20 pointer-events-none px-[4vw]">
+                                <motion.div style={{ x: helloX }} className="flex-1 flex justify-end relative">
+                                    <h1 className="text-[4rem] sm:text-[6rem] lg:text-[8rem] font-normal text-[#141414] leading-[1.1] m-0">
+                                        Hello
+                                    </h1>
+                                </motion.div>
+                                <motion.div style={{ x: worldX }} className="flex-1 relative">
+                                    <h1 className="text-[4rem] sm:text-[6rem] lg:text-[8rem] font-normal text-[#141414] leading-[1.1] m-0">
+                                        World
+                                    </h1>
+                                </motion.div>
                             </div>
-                        </motion.div>
 
-                        <Wire delay={0.2} className="mb-0" />
-
-                        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-8 sm:gap-6 py-8 md:py-10">
-                            <motion.div style={{ y: descY }} className="sm:w-[55%] lg:w-[48%]">
-                                <Reveal delay={0.7}>
-                                    <p className="text-sm sm:text-base text-[#212631]/58 leading-relaxed">
-                                        A 32-acre sanctuary in Calapan City blending century-old rainforests with wildlife education and sustainable eco-tourism.
-                                    </p>
-                                </Reveal>
-                            </motion.div>
-
-                            <motion.div style={{ y: statsY }} className="flex gap-10 sm:gap-12 md:gap-16 sm:justify-end">
-                                <Stat value="98%" label="Deflection" delay={0.45} />
-                                <Stat value="10+" label="Species" delay={0.58} />
-                            </motion.div>
                         </div>
                     </section>
+                    {/* ============================================== */}
 
-                    <section className="mx-auto px-4 sm:px-6 md:px-10 max-w-[1500px] pb-20 md:pb-28">
+
+                    <section className="mx-auto px-4 sm:px-6 md:px-10 max-w-[1500px] pb-20 md:pb-28 pt-20">
                         <Wire delay={0} className="mb-0" />
                         <div className="divide-y divide-[#212631]/10">
                             {features.map((f, i) => (

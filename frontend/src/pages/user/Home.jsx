@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { Draggable } from 'gsap/Draggable';
-
+import * as THREE from 'three';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 import AIFloatingButton from '../../components/common/AIFloatingButton';
@@ -101,33 +101,33 @@ const HeroSection = () => {
     }, []);
 
     return (
-        <div ref={containerRef} className="relative w-full min-h-screen overflow-hidden bg-white">
-            <section className="relative w-full min-h-screen flex flex-col items-center justify-center overflow-hidden">
+        <div ref={containerRef} className="relative w-full min-h-[100dvh] overflow-hidden bg-white">
+            <section className="relative w-full min-h-[100dvh] flex flex-col items-center justify-center overflow-hidden">
                 <div className="hero-bg-parallax absolute inset-0 bg-white -z-10 origin-bottom" />
 
                 <div className="hero-images absolute inset-0 z-0 flex items-center justify-center overflow-hidden pointer-events-none">
                     <img
-                        src="/pixels/rabbit.png"
+                        src="/pixels/pixeldeer.png"
                         alt="Rabbit"
-                        className="hero-drag-item absolute w-24 md:w-36 lg:w-56 left-[10%] md:left-[15%] top-[70%] md:top-[40%] -rotate-12 pointer-events-auto cursor-grab active:cursor-grabbing"
+                        className="hero-drag-item absolute w-15 sm:w-24 md:w-36 lg:w-46 left-[5%] sm:left-[10%] md:left-[18%] top-[55%] sm:top-[70%] md:top-[40%] -rotate-12 pointer-events-auto cursor-grab active:cursor-grabbing"
                     />
-                    <img
+                    {/* <img
                         src="/pixels/buffalo.png"
                         alt="Buffalo"
-                        className="hero-drag-item absolute w-24 md:w-36 lg:w-56 left-[calc(50%-3.5rem)] md:left-[calc(50%-5.5rem)] lg:left-[calc(50%-7rem)] rotate-12 top-[25%] md:top-[12%] pointer-events-auto cursor-grab active:cursor-grabbing"
-                    />
+                        className="hero-drag-item absolute w-20 sm:w-24 md:w-36 lg:w-56 left-[calc(50%-2.5rem)] sm:left-[calc(50%-3.5rem)] md:left-[calc(50%-5.5rem)] lg:left-[calc(50%-7rem)] rotate-12 top-[15%] sm:top-[25%] md:top-[12%] pointer-events-auto cursor-grab active:cursor-grabbing"
+                    /> */}
                     <img
-                        src="/pixels/turtle.png"
+                        src="/pixels/pixelrab.png"
                         alt="Turtle"
-                        className="hero-drag-item absolute w-24 md:w-36 lg:w-56 right-[10%] md:right-[15%] top-[70%] md:top-[40%] rotate-12 pointer-events-auto cursor-grab active:cursor-grabbing"
+                        className="hero-drag-item absolute w-20 sm:w-24 md:w-36 lg:w-56 right-[5%] sm:right-[10%] md:right-[18%] top-[57%] sm:top-[70%] md:top-[45%] rotate-12 pointer-events-auto cursor-grab active:cursor-grabbing"
                     />
                 </div>
 
-                <div className="hero-content text-center flex flex-col items-center z-10 px-5 pointer-events-none">
-                    <h2 className="hero-title opacity-0 font-['Mistral',_cursive] text-[clamp(2.5rem,5vw,5rem)] text-black -mb-2">
+                <div className="hero-content text-center flex flex-col items-center z-10 px-4 sm:px-5 pointer-events-none">
+                    <h2 className="hero-title opacity-0 font-['Mistral',_cursive] text-[clamp(2rem,5vw,5rem)] text-black -mb-1 sm:-mb-2">
                         welcome to
                     </h2>
-                    <div className="text-[clamp(3rem,8vw,6rem)] font-semibold text-black leading-none tracking-tight mb-[30px] overflow-hidden py-4">
+                    <div className="text-[clamp(2.5rem,8vw,6rem)] font-semibold text-black leading-none tracking-tight mb-[20px] sm:mb-[30px] overflow-hidden py-2 sm:py-4">
                         {['BULUSAN ZOO', 'NATURE PARK'].map((line, i) => (
                             <span key={i} className="block overflow-hidden">
                                 <span className="hero-line block" style={{ clipPath: 'inset(100% 0% 0% 0%)' }}>{line}</span>
@@ -136,508 +136,803 @@ const HeroSection = () => {
                     </div>
                     <button
                         onClick={() => navigate('/reservations')}
-                        className="hero-btn pointer-events-auto opacity-0 bg-[#5dcd5a] text-white py-2.5 px-10 rounded-xl cursor-pointer transition-transform duration-500 ease-out hover:scale-105 active:scale-95 flex items-center justify-center focus:outline-none"
+                        className="hero-btn pointer-events-auto opacity-0 bg-[#c6fe69] text-black py-2 sm:py-2.5 px-8 sm:px-10 rounded-xl cursor-pointer transition-transform duration-500 ease-out hover:scale-105 active:scale-95 flex items-center justify-center focus:outline-none"
                         style={ticketMaskStyle}
                     >
-                        <span className="font-['Mistral',_cursive] text-[2rem] tracking-[1px] block mt-1">
+                        <span className="font-['Mistral',_cursive] text-[1.5rem] sm:text-[2rem] tracking-[1px] block mt-1">
                             Reserved
                         </span>
                     </button>
                 </div>
 
-                <div className="scroll-hint opacity-0 absolute bottom-[30px] flex flex-col items-center text-black text-[0.9rem] z-10">
-                    <p className="m-0 mb-1 font-medium">scroll to explore</p>
-                    <span className="text-[1.2rem]">↓</span>
-                </div>
+                {/* <div className="scroll-hint opacity-0 absolute bottom-[20px] sm:bottom-[30px] flex flex-col items-center text-black text-[0.8rem] sm:text-[0.9rem] z-10">
+                    <p className="m-0 mb-1 font-medium text-2xl">scroll to explore</p>
+                    <span className="text-[1rem] sm:text-[2.2rem] animate-bounce">↓</span>
+                </div> */}
             </section>
         </div>
     );
 };
 
-const AboutSection = () => {
-    const sectionRef = useRef(null);
-
-    useLayoutEffect(() => {
-        const ctx = gsap.context(() => {
-        }, sectionRef);
-
-        return () => ctx.revert();
-    }, []);
-
-    return (
-        <section ref={sectionRef} className="relative w-full h-[100dvh] md:h-screen bg-white overflow-hidden pointer-events-none">
-            <style>{`
-                .abs { position: absolute; }
-                .txt { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; white-space: nowrap; color: #000; z-index: 20; line-height: 1; }
-                .txt-serif { font-family: 'Times New Roman', Times, Baskerville, Georgia, serif; }
-                .txt-italic { font-style: italic; }
-                .grad-rainbow { background: linear-gradient(90deg, #32cd32, #ff8c00, #1e90ff); }
-                .grad-red-blur { background: radial-gradient(circle, rgba(255,69,0,0.85) 0%, rgba(255,69,0,0) 65%); filter: blur(8px); }
-                .grad-green-fade { background: linear-gradient(90deg, #32cd32, rgba(255,255,255,0)); }
-                .pattern-checkered {
-                    background-image: 
-                        repeating-linear-gradient(45deg, #ddd 25%, transparent 25%, transparent 75%, #ddd 75%, #ddd),
-                        repeating-linear-gradient(45deg, #ddd 25%, #fff 25%, #fff 75%, #ddd 75%, #ddd);
-                    background-position: 0 0, 4px 4px;
-                    background-size: 8px 8px;
-                }
-                
-                @keyframes float { 0%, 100% { translate: 0 0; } 50% { translate: 0 -15px; } }
-                @keyframes float-reverse { 0%, 100% { translate: 0 0; } 50% { translate: 0 15px; } }
-                @keyframes spin { from { rotate: 0deg; } to { rotate: 360deg; } }
-                @keyframes spin-fast { from { rotate: 0deg; } to { rotate: -360deg; } }
-                @keyframes wiggle { 0%, 100% { rotate: -3deg; } 50% { rotate: 3deg; } }
-                @keyframes hueShift { 0% { filter: hue-rotate(0deg); } 100% { filter: hue-rotate(360deg); } }
-                @keyframes patternMove { from { background-position: 0 0, 4px 4px; } to { background-position: 40px 40px, 44px 44px; } }
-                @keyframes pulse-blur { 0%, 100% { filter: blur(8px); scale: 1; opacity: 1; } 50% { filter: blur(14px); scale: 1.1; opacity: 0.7; } }
-                @keyframes pulse-scale { 0%, 100% { scale: 1; } 50% { scale: 1.1; } }
-
-                .anim-float { animation: float 6s infinite ease-in-out; }
-                .anim-float-alt { animation: float-reverse 7s infinite ease-in-out; }
-                .anim-spin { animation: spin 12s infinite linear; }
-                .anim-spin-fast { animation: spin-fast 8s infinite linear; }
-                .anim-wiggle { animation: wiggle 4s infinite ease-in-out; }
-                .anim-hue { animation: hueShift 6s infinite linear; }
-                .anim-pattern { animation: patternMove 3s infinite linear; }
-                .anim-pulse-blur { animation: pulse-blur 4s infinite ease-in-out; }
-                .anim-pulse-scale { animation: pulse-scale 3s infinite ease-in-out; }
-
-                .scribble-circle { border-radius: 50%; border: 1px solid #000; }
-                .img-placeholder { object-fit: cover; background-color: #ccc; }
-            `}</style>
-
-            <svg style={{ width: 0, height: 0, position: 'absolute' }}>
-                <defs>
-                    <linearGradient id="rainbow-stroke" x1="0%" y1="0%" x2="100%" y2="0%">
-                        <stop offset="0%" stopColor="#32cd32" />
-                        <stop offset="50%" stopColor="#ff8c00" />
-                        <stop offset="100%" stopColor="#1e90ff" />
-                    </linearGradient>
-                </defs>
-            </svg>
-
-            <div className="abs grad-red-blur anim-pulse-blur right-[-10%] top-[5%] md:left-[70%] md:top-[8%] w-[40%] md:w-[12%] h-[20%] md:h-[15%] z-1"></div>
-            <div className="abs grad-rainbow anim-hue left-[5%] top-[14%] md:left-[5%] md:top-[20%] w-[30%] md:w-[12%] h-[2%] md:h-[2.5%] z-5 mix-blend-multiply"></div>
-            <div className="abs grad-rainbow anim-hue hidden md:block left-[20.5%] top-[33%] w-[4.5%] h-[9.5%] z-5 mix-blend-multiply"></div>
-            <div className="abs grad-rainbow anim-hue right-[5%] top-[54%] md:left-[58.5%] md:top-[58.5%] w-[25%] md:w-[9%] h-[4%] md:h-[3.5%] z-5 mix-blend-multiply"></div>
-
-            <div className="abs pattern-checkered anim-pattern left-[5%] top-[40%] md:left-[6.5%] md:top-[42.5%] w-[20%] md:w-[12%] h-[5%] md:h-[4.5%] z-2"></div>
-            <div className="abs grad-green-fade anim-pulse-scale left-[10%] top-[70%] md:left-[9.5%] md:top-[68.5%] w-[20%] md:w-[9%] h-[4%] md:h-[3.5%] z-5"></div>
-            <div className="abs pattern-checkered anim-pattern hidden md:block left-[19%] top-[68.5%] w-[10.5%] h-[3.5%] z-5 opacity-60"></div>
-
-            <svg className="abs anim-wiggle hidden md:block left-[30.5%] top-[48.5%] w-[20%] h-[9%] z-1">
-                <rect width="100%" height="100%" fill="none" stroke="#000" strokeWidth="1.5" />
-                <line x1="0" y1="0" x2="100%" y2="100%" stroke="#000" strokeWidth="1.5" />
-            </svg>
-
-            <svg className="abs anim-float hidden md:block left-[56.5%] top-[41%] w-[5.5%] h-[5.5%] z-[15]" viewBox="0 0 100 100">
-                <rect x="15" y="35" width="50" height="50" fill="none" stroke="#000" strokeWidth="1.5" />
-                <rect x="35" y="15" width="50" height="50" fill="none" stroke="#000" strokeWidth="1.5" />
-                <line x1="15" y1="35" x2="35" y2="15" stroke="#000" strokeWidth="1.5" />
-                <line x1="65" y1="35" x2="85" y2="15" stroke="#000" strokeWidth="1.5" />
-                <line x1="15" y1="85" x2="35" y2="65" stroke="#000" strokeWidth="1.5" />
-                <line x1="65" y1="85" x2="85" y2="65" stroke="#000" strokeWidth="1.5" />
-            </svg>
-
-            <svg className="abs anim-float-alt hidden md:block left-[70%] top-[61%] w-[20%] h-[7%] z-[15]" viewBox="0 0 250 80">
-                <rect x="15" y="35" width="210" height="30" fill="none" stroke="#000" strokeWidth="1.5" />
-                <rect x="35" y="15" width="210" height="30" fill="none" stroke="#000" strokeWidth="1.5" />
-                <line x1="15" y1="35" x2="35" y2="15" stroke="#000" strokeWidth="1.5" />
-                <line x1="225" y1="35" x2="245" y2="15" stroke="#000" strokeWidth="1.5" />
-                <line x1="15" y1="65" x2="35" y2="45" stroke="#000" strokeWidth="1.5" />
-                <line x1="225" y1="65" x2="245" y2="45" stroke="#000" strokeWidth="1.5" />
-            </svg>
-
-            <svg className="abs anim-float hidden md:block left-[42%] top-[81.5%] w-[7.5%] h-[6.5%] z-[15]" viewBox="0 0 100 100">
-                <rect x="10" y="40" width="60" height="50" fill="none" stroke="#000" strokeWidth="1.5" />
-                <rect x="30" y="20" width="60" height="50" fill="none" stroke="#000" strokeWidth="1.5" />
-                <line x1="10" y1="40" x2="30" y2="20" stroke="#000" strokeWidth="1.5" />
-                <line x1="70" y1="40" x2="90" y2="20" stroke="#000" strokeWidth="1.5" />
-                <line x1="10" y1="90" x2="30" y2="70" stroke="#000" strokeWidth="1.5" />
-                <line x1="70" y1="90" x2="90" y2="70" stroke="#000" strokeWidth="1.5" />
-            </svg>
-
-            <svg className="abs anim-float-alt hidden md:block left-[81.5%] top-[81%] w-[6.5%] h-[6.5%] z-[15]" viewBox="0 0 100 100">
-                <rect x="15" y="35" width="50" height="50" fill="none" stroke="#000" strokeWidth="1.5" />
-                <rect x="35" y="15" width="50" height="50" fill="none" stroke="#000" strokeWidth="1.5" />
-                <line x1="15" y1="35" x2="35" y2="15" stroke="#000" strokeWidth="1.5" />
-                <line x1="65" y1="35" x2="85" y2="15" stroke="#000" strokeWidth="1.5" />
-                <line x1="15" y1="85" x2="35" y2="65" stroke="#000" strokeWidth="1.5" />
-                <line x1="65" y1="85" x2="85" y2="65" stroke="#000" strokeWidth="1.5" />
-            </svg>
-
-            <svg className="abs anim-float left-[20%] top-[12%] md:left-[34%] md:top-[18%] w-[30%] md:w-[14%] h-auto md:h-[16%] z-10" viewBox="0 0 150 100">
-                <path d="M30,70 C10,65 15,40 35,40 C40,20 70,15 90,30 C110,15 140,25 140,50 C150,65 140,85 120,85 C100,90 90,85 80,85 C60,95 40,85 30,70 Z" fill="#fff" stroke="#000" strokeWidth="1.5" strokeLinejoin="round" />
-            </svg>
-
-            <svg className="abs anim-float-alt right-[5%] top-[20%] md:left-[74%] md:top-[20%] w-[35%] md:w-[15%] h-auto md:h-[14%] z-10" viewBox="0 0 150 100">
-                <path d="M20,60 C5,50 15,30 35,30 C45,10 75,5 95,25 C115,10 145,25 140,50 C145,65 130,85 110,80 C95,95 70,85 60,80 C40,90 20,80 20,60 Z" fill="#fff" stroke="#000" strokeWidth="1.5" strokeLinejoin="round" />
-            </svg>
-
-            <svg className="abs anim-float left-[5%] top-[50%] md:left-[10%] md:top-[55%] w-[45%] md:w-[20%] h-auto md:h-[14%] z-12" viewBox="0 0 200 100">
-                <path d="M30,60 C10,50 20,30 40,35 C50,15 80,15 100,30 C115,10 150,15 160,35 C180,30 195,50 185,70 C195,85 170,95 150,85 C130,100 100,90 90,85 C70,100 40,90 30,60 Z" fill="#fff" stroke="#000" strokeWidth="1.5" strokeLinejoin="round" />
-            </svg>
-
-            <svg className="abs anim-float-alt right-[10%] top-[72%] md:left-[52%] md:top-[59%] w-[25%] md:w-[8.5%] h-auto md:h-[13%] z-12" viewBox="0 0 100 100">
-                <path d="M20,60 C5,50 15,25 35,30 C45,10 75,10 85,30 C100,35 95,60 80,70 C85,85 60,95 50,85 C35,100 15,85 20,60 Z" fill="#fff" stroke="#000" strokeWidth="1.5" strokeLinejoin="round" />
-            </svg>
-
-            <svg className="abs anim-wiggle left-[4%] top-[30%] md:left-[4%] md:top-[34%] w-[25%] md:w-[14%] h-[4%] md:h-[6%] z-10" viewBox="0 0 100 20" preserveAspectRatio="none">
-                <path d="M0,15 Q10,0 20,15 T40,15 T60,15 T80,15 T100,15" fill="none" stroke="url(#rainbow-stroke)" strokeWidth="2.5" strokeLinecap="round" />
-            </svg>
-
-            <svg className="abs anim-wiggle hidden md:block left-[26%] top-[43%] w-[16%] h-[5%] z-10 overflow-visible" viewBox="0 0 100 20" preserveAspectRatio="none">
-                <path d="M0,10 Q10,0 20,10 T40,10 T60,10 T80,10 T98,10" fill="none" stroke="url(#rainbow-stroke)" strokeWidth="2.5" strokeLinecap="round" />
-                <polygon points="95,5 105,10 95,15" fill="#1e90ff" />
-            </svg>
-
-            <svg className="abs anim-wiggle right-[10%] top-[60%] md:left-[42%] md:top-[59%] w-[25%] md:w-[12%] h-[2%] md:h-[3.5%] z-10" viewBox="0 0 100 20" preserveAspectRatio="none">
-                <path d="M0,10 Q10,20 20,10 T40,10 T60,10 T80,10 T100,10" fill="none" stroke="url(#rainbow-stroke)" strokeWidth="3" strokeLinecap="round" />
-            </svg>
-
-            <div className="abs scribble-circle anim-spin hidden md:block left-[27%] top-[22%] w-[7.5%] aspect-square rotate-[15deg] z-5"></div>
-            <div className="abs scribble-circle anim-spin-fast hidden md:block left-[26.5%] top-[21%] w-[8.5%] aspect-[1.1] rotate-[35deg] border-black/50 z-5"></div>
-
-            <div className="abs scribble-circle anim-spin left-[60%] top-[14%] md:left-[60%] md:top-[9%] w-[20%] md:w-[10%] aspect-[1.3] rotate-[5deg] z-5"></div>
-            <div className="abs scribble-circle anim-spin-fast left-[59%] top-[13.5%] md:left-[59.5%] md:top-[8.5%] w-[22%] md:w-[11%] aspect-[1.2] rotate-[15deg] border-black/60 z-5"></div>
-
-            <div className="abs scribble-circle anim-spin hidden md:block left-[23%] top-[72%] w-[9%] aspect-[1.1] rotate-[-10deg] z-5"></div>
-            <div className="abs scribble-circle anim-spin-fast hidden md:block left-[23.5%] top-[71.5%] w-[8.5%] aspect-[1.2] rotate-[5deg] border-black/40 z-5"></div>
-
-            <div className="abs anim-pulse-scale hidden md:block left-[1.8%] top-[58.5%] w-[3.2%] aspect-[1.2] bg-black rounded-full z-10"></div>
-            <div className="abs anim-pulse-scale hidden md:block left-[5.5%] top-[58.8%] w-[2.2%] aspect-square border-[1.5px] border-black rounded-full z-10"></div>
-            <div className="abs anim-pulse-scale hidden md:block left-[61%] top-[63%] w-[3%] aspect-[1.2] bg-black rounded-full z-10"></div>
-            <div className="abs anim-pulse-scale hidden md:block left-[18.5%] top-[84%] w-[3.5%] aspect-[1.5] border-[1.5px] border-black rounded-full z-10"></div>
-
-            <img src="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=200&q=80" alt="Landscape" className="abs img-placeholder anim-float left-[70%] top-[26%] md:left-[50.5%] md:top-[23%] w-[20%] md:w-[8.5%] h-[8%] md:h-[9.5%] z-11 object-cover" />
-            <img src="https://images.unsplash.com/photo-1598974355420-565d752be316?w=200&q=80" alt="Animal" className="abs img-placeholder anim-float-alt hidden md:block left-[49%] top-[68.5%] w-[3.5%] h-[4.5%] grayscale z-11 object-cover" />
-            <img src="https://images.unsplash.com/photo-1534447677768-be436bb09401?w=200&q=80" alt="Clouds" className="abs img-placeholder anim-float hidden md:block left-[63.5%] top-[63%] w-[5.5%] h-[5%] z-11 object-cover" />
-            <img src="https://images.unsplash.com/photo-1522030299830-16b8d3d049fe?w=200&q=80" alt="Moon" className="abs img-placeholder anim-pulse-scale left-[75%] top-[87%] md:left-[34%] md:top-[83.5%] w-[10%] md:w-[3%] aspect-square rounded-full grayscale z-11 object-cover" />
-            <img src="https://images.unsplash.com/photo-1522030299830-16b8d3d049fe?w=200&q=80" alt="Moon Sliver" className="abs img-placeholder anim-pulse-scale hidden md:block left-[8.5%] top-[58.8%] w-[2%] aspect-[0.8] rounded-full grayscale z-11 object-cover" />
-
-            <div className="abs txt top-[8%] md:top-[10.5%] left-[6%] md:left-[8.5%] text-[14vw] md:text-[7.2vw] font-normal tracking-[-0.02em]">BULUSAN</div>
-            <div className="abs txt txt-serif top-[8%] md:top-[10.5%] right-[6%] md:right-[9%] text-[10vw] md:text-[7vw]">ZOO</div>
-
-            <div className="abs txt top-[16%] md:top-[20.5%] left-[20%] md:left-[24.5%] text-[4.5vw] md:text-[1.2vw] tracking-[0.05em]"></div>
-            <div className="abs txt top-[16%] md:top-[20.5%] left-[55%] md:left-[58%] text-[4.5vw] md:text-[1.9vw] tracking-[0.08em]">NATURE PARK</div>
-
-            <div className="abs txt txt-italic top-[21%] md:top-[23%] left-[6%] md:left-[9.5%] text-[18vw] md:text-[9vw] font-medium tracking-[-0.07em] scale-y-[1.1] scale-x-[0.95] z-[30]">MORE</div>
-            <div className="abs txt txt-italic top-[28%] md:top-[23%] left-[45%] md:left-[59%] text-[18vw] md:text-[9vw] font-medium tracking-[-0.07em] scale-y-[1.1] scale-x-[0.95] z-[30]">THAN</div>
-
-            <div className="abs txt top-[37%] md:top-[36.5%] left-[10%] md:left-[29%] text-[7vw] md:text-[4.8vw] font-normal">A</div>
-            <div className="abs txt top-[36%] md:top-[36%] left-[20%] md:left-[49%] text-[9.5vw] md:text-[6vw] tracking-[-0.03em]">DESTINATION;</div>
-
-            <div className="abs txt top-[44%] md:top-[45.5%] left-[10%] md:left-[20.5%] text-[4.5vw] md:text-[2.2vw]">IS</div>
-            <div className="abs txt top-[44%] md:top-[45%] left-[22%] md:left-[42.5%] text-[5vw] md:text-[2.8vw] tracking-[-0.01em]">A PLACE</div>
-            <div className="abs txt top-[44%] md:top-[45%] left-[60%] md:left-[81%] text-[5vw] md:text-[3vw] tracking-[-0.01em]">WHERE</div>
-
-            <div className="abs txt top-[49%] md:top-[48%] left-[6%] md:left-[5.5%] text-[13vw] md:text-[7vw] font-normal tracking-[-0.03em] z-[25]">NATURE,</div>
-            <div className="abs txt txt-serif top-[55%] md:top-[48.5%] left-[15%] md:left-[51.5%] text-[9.5vw] md:text-[6.8vw] tracking-[-0.03em] scale-y-[1.05] z-[25]">WILDLIFE, AND</div>
-
-            <div className="abs txt top-[61%] md:top-[60%] left-[8%] md:left-[29.5%] text-[6vw] md:text-[2.8vw] tracking-[0.01em]">SERENITY</div>
-            <div className="abs txt top-[61%] md:top-[60%] left-[55%] md:left-[78%] text-[6vw] md:text-[2.8vw] tracking-[0.01em]">MEET,</div>
-
-            <div className="abs txt top-[66%] md:top-[64%] left-[8%] md:left-[29.5%] text-[5.5vw] md:text-[2.8vw] tracking-[0.01em]">EVERY VISITOR TO</div>
-
-            <div className="abs txt top-[71%] md:top-[69%] left-[15%] md:left-[30.5%] text-[6vw] md:text-[2.8vw] tracking-[0.01em]">SLOW DOWN,</div>
-            <div className="abs txt txt-serif top-[75%] md:top-[69%] left-[30%] md:left-[70%] text-[7vw] md:text-[3vw] tracking-[-0.01em]">APPRECIATE,</div>
-
-            <div className="abs txt top-[81%] md:top-[74%] left-[6%] md:left-[10.5%] text-[12vw] md:text-[6.5vw] tracking-[-0.02em]">AND</div>
-            <div className="abs txt txt-serif top-[87%] md:top-[74%] left-[15%] md:left-[35.5%] text-[9vw] md:text-[6.2vw] tracking-[-0.02em] scale-y-[1.05] z-[25]">RECONNECT WITH</div>
-
-            <div className="abs txt top-[93%] md:top-[84.5%] left-[6%] md:left-[12.5%] text-[4vw] md:text-[2.6vw] tracking-[0.02em]">THE</div>
-            <div className="abs txt top-[93%] md:top-[84.5%] left-[22%] md:left-[22.5%] text-[4vw] md:text-[2.6vw] tracking-[0.02em]">BEAUTY OF</div>
-            <div className="abs txt top-[96%] md:top-[84.5%] left-[6%] md:left-[50%] text-[4vw] md:text-[2.6vw] tracking-[0.02em]">THE NATURAL WORLD.</div>
-        </section>
-    );
-};
-
-const Tooltip = ({ title, desc }) => (
-    <div className="absolute bottom-[calc(100%+20px)] left-1/2 -translate-x-1/2 z-[999] whitespace-nowrap w-56 bg-black px-5 py-4 rounded-2xl shadow-2xl pointer-events-none tooltip-anim opacity-0 scale-95 origin-bottom">
-        <p className="font-['Mistral',_cursive] text-[#5dcd5a] text-2xl mb-1.5 leading-none tracking-wide">{title}</p>
-        <p className="text-white/80 text-sm leading-relaxed whitespace-normal font-medium">{desc}</p>
-        <div className="absolute -bottom-[8px] left-1/2 -translate-x-1/2 w-4 h-4 bg-black rotate-45" />
-    </div>
+const AboutSection = () => (
+    <section className="relative w-full h-[100svh] p-4 sm:p-8 overflow-hidden bg-[#fff]">
+        <div className="w-full h-full flex justify-center items-center text-center rounded-[1.5rem] sm:rounded-[2rem] bg-[#c6fe69] px-4">
+            <h1 className="w-full sm:w-[90%] md:w-[90%] text-[#000] text-3xl sm:text-[2rem] md:text-[5rem] font-black leading-[1.1] md:leading-[1]">
+                Bulusan Zoo Nature Park is more than a destination, it is a place where nature,
+                wildlife, and serenity meet, inviting every visitor to slow down, appreciate,
+                and reconnect with the beauty of the natural world.            
+            </h1>
+        </div>
+    </section>
 );
 
-const PurposeSection = () => {
-    const sectionRef = useRef(null);
-    const [hoveredId, setHoveredId] = useState(null);
+// const Tooltip = ({ title, desc }) => (
+//     <div className="absolute bottom-[calc(100%+20px)] left-1/2 -translate-x-1/2 z-[999] whitespace-nowrap w-48 sm:w-56 bg-black px-4 sm:px-5 py-3 sm:py-4 rounded-2xl shadow-2xl pointer-events-none tooltip-anim opacity-0 scale-95 origin-bottom">
+//         <p className="font-['Mistral',_cursive] text-[#5dcd5a] text-xl sm:text-2xl mb-1 sm:mb-1.5 leading-none tracking-wide">{title}</p>
+//         <p className="text-white/80 text-xs sm:text-sm leading-relaxed whitespace-normal font-medium">{desc}</p>
+//         <div className="absolute -bottom-[6px] sm:-bottom-[8px] left-1/2 -translate-x-1/2 w-3 sm:w-4 h-3 sm:h-4 bg-black rotate-45" />
+//     </div>
+// );
 
-    const titleWords = 'Our Purpose'.split(' ');
-    const bodyWords = 'This zoo exists to protect wildlife, preserve biodiversity, and provide a safe environment for animals under human care.'.split(' ');
+// const PurposeSection = () => {
+//     const sectionRef = useRef(null);
+//     const [hoveredId, setHoveredId] = useState(null);
 
-    const animals = [
-        { id: 'rescue', src: '/pixels/pixeldeer.png', posClass: 'left-[5%] top-[12%] md:left-[9%] md:top-[16%]', rotate: -5, speed: -100, tooltip: { title: 'Rescue', desc: 'Emergency medical intervention for local species.' } },
-        { id: 'habitat', src: '/pixels/pixelhor.png', posClass: 'right-[5%] top-[6%] md:right-[10%] md:top-[11%]', rotate: 7, speed: 150, tooltip: { title: 'Habitat', desc: 'Preservation of native flora and nesting grounds.' } },
-        { id: 'sanctuary', src: '/pixels/pixelrab.png', posClass: 'left-[8%] bottom-[10%] md:left-[14%] md:bottom-[14%]', rotate: -8, speed: -120, tooltip: { title: 'Sanctuary', desc: 'Safe haven for animals unable to return to the wild.' } },
-        { id: 'education', src: '/pixels/pixelmon.png', posClass: 'right-[7%] bottom-[14%] md:right-[16%] md:bottom-[18%]', rotate: 5, speed: 180, tooltip: { title: 'Education', desc: 'Building awareness for the next generation.' } },
-    ];
+//     const titleWords = 'Our Purpose'.split(' ');
+//     const bodyWords = 'This zoo exists to protect wildlife, preserve biodiversity, and provide a safe environment for animals under human care.'.split(' ');
 
-    useLayoutEffect(() => {
-        const ctx = gsap.context(() => {
-            gsap.fromTo('.purpose-word',
-                { opacity: 0, rotationX: -90, transformOrigin: '50% 50% -50' },
-                {
-                    opacity: 1, rotationX: 0, duration: 1, ease: 'back.out(1.5)', stagger: 0.05,
-                    scrollTrigger: { trigger: sectionRef.current, start: 'top 75%', toggleActions: 'play reverse play reverse' }
-                }
-            );
+//     const animals = [
+//         { id: 'rescue', src: '/pixels/pixeldeer.png', posClass: 'left-[2%] sm:left-[5%] top-[10%] sm:top-[12%] md:left-[9%] md:top-[16%]', rotate: -5, speed: -100, tooltip: { title: 'Rescue', desc: 'Emergency medical intervention for local species.' } },
+//         { id: 'habitat', src: '/pixels/pixelhor.png', posClass: 'right-[2%] sm:right-[5%] top-[4%] sm:top-[6%] md:right-[10%] md:top-[11%]', rotate: 7, speed: 150, tooltip: { title: 'Habitat', desc: 'Preservation of native flora and nesting grounds.' } },
+//         { id: 'sanctuary', src: '/pixels/pixelrab.png', posClass: 'left-[5%] sm:left-[8%] bottom-[8%] sm:bottom-[10%] md:left-[14%] md:bottom-[14%]', rotate: -8, speed: -120, tooltip: { title: 'Sanctuary', desc: 'Safe haven for animals unable to return to the wild.' } },
+//         { id: 'education', src: '/pixels/pixelmon.png', posClass: 'right-[4%] sm:right-[7%] bottom-[10%] sm:bottom-[14%] md:right-[16%] md:bottom-[18%]', rotate: 5, speed: 180, tooltip: { title: 'Education', desc: 'Building awareness for the next generation.' } },
+//     ];
 
-            gsap.fromTo('.purpose-line',
-                { scaleX: 0, transformOrigin: 'center' },
-                { scaleX: 1, duration: 1, ease: 'power3.inOut', scrollTrigger: { trigger: sectionRef.current, start: 'top 65%', toggleActions: 'play reverse play reverse' } }
-            );
+//     useLayoutEffect(() => {
+//         const ctx = gsap.context(() => {
+//             gsap.fromTo('.purpose-word',
+//                 { opacity: 0, rotationX: -90, transformOrigin: '50% 50% -50' },
+//                 {
+//                     opacity: 1, rotationX: 0, duration: 1, ease: 'back.out(1.5)', stagger: 0.05,
+//                     scrollTrigger: { trigger: sectionRef.current, start: 'top 75%', toggleActions: 'play reverse play reverse' }
+//                 }
+//             );
 
-            gsap.fromTo('.purpose-body-word',
-                { opacity: 0, y: 30, rotationY: 45 },
-                {
-                    opacity: 1, y: 0, rotationY: 0, duration: 0.8, ease: 'power2.out', stagger: 0.015,
-                    scrollTrigger: { trigger: sectionRef.current, start: 'top 60%', toggleActions: 'play reverse play reverse' }
-                }
-            );
+//             gsap.fromTo('.purpose-line',
+//                 { scaleX: 0, transformOrigin: 'center' },
+//                 { scaleX: 1, duration: 1, ease: 'power3.inOut', scrollTrigger: { trigger: sectionRef.current, start: 'top 65%', toggleActions: 'play reverse play reverse' } }
+//             );
 
-            animals.forEach((a, i) => {
-                const isLeft = a.posClass.includes('left');
-                gsap.fromTo(`.animal-${i}`,
-                    { opacity: 0, x: isLeft ? '-100vw' : '100vw', rotation: isLeft ? -90 : 90 },
-                    {
-                        opacity: 1, x: 0, rotation: a.rotate, ease: 'power3.out',
-                        scrollTrigger: { trigger: sectionRef.current, start: 'top 80%', end: 'center center', scrub: 1 }
-                    }
-                );
+//             gsap.fromTo('.purpose-body-word',
+//                 { opacity: 0, y: 30, rotationY: 45 },
+//                 {
+//                     opacity: 1, y: 0, rotationY: 0, duration: 0.8, ease: 'power2.out', stagger: 0.015,
+//                     scrollTrigger: { trigger: sectionRef.current, start: 'top 60%', toggleActions: 'play reverse play reverse' }
+//                 }
+//             );
 
-                gsap.to(`.animal-${i}`, {
-                    yPercent: a.speed, ease: 'none',
-                    scrollTrigger: { trigger: sectionRef.current, start: 'top bottom', end: 'bottom top', scrub: true }
-                });
+//             animals.forEach((a, i) => {
+//                 const isLeft = a.posClass.includes('left');
+//                 gsap.fromTo(`.animal-${i}`,
+//                     { opacity: 0, x: isLeft ? '-100vw' : '100vw', rotation: isLeft ? -90 : 90 },
+//                     {
+//                         opacity: 1, x: 0, rotation: a.rotate, ease: 'power3.out',
+//                         scrollTrigger: { trigger: sectionRef.current, start: 'top 80%', end: 'center center', scrub: 1 }
+//                     }
+//                 );
 
-                Draggable.create(`.animal-${i}`, {
-                    type: 'x,y', bounds: sectionRef.current, edgeResistance: 0.8,
-                    onDragStart: function () { gsap.to(this.target, { scale: 1.15, duration: 0.4, ease: 'power3.out' }); },
-                    onDragEnd: function () { gsap.to(this.target, { scale: 1, duration: 0.6, ease: 'elastic.out(1, 0.5)' }); }
-                });
-            });
+//                 gsap.to(`.animal-${i}`, {
+//                     yPercent: a.speed, ease: 'none',
+//                     scrollTrigger: { trigger: sectionRef.current, start: 'top bottom', end: 'bottom top', scrub: true }
+//                 });
 
-        }, sectionRef);
+//                 Draggable.create(`.animal-${i}`, {
+//                     type: 'x,y', bounds: sectionRef.current, edgeResistance: 0.8,
+//                     onDragStart: function () { gsap.to(this.target, { scale: 1.15, duration: 0.4, ease: 'power3.out' }); },
+//                     onDragEnd: function () { gsap.to(this.target, { scale: 1, duration: 0.6, ease: 'elastic.out(1, 0.5)' }); }
+//                 });
+//             });
 
-        return () => ctx.revert();
-    }, []);
+//         }, sectionRef);
 
-    useEffect(() => {
-        if (hoveredId) {
-            gsap.to('.tooltip-anim', { opacity: 1, scale: 1, duration: 0.4, ease: 'back.out(1.5)', overwrite: true });
-        }
-    }, [hoveredId]);
+//         return () => ctx.revert();
+//     }, []);
 
-    return (
-        <section
-            ref={sectionRef}
-            className="relative w-full min-h-screen bg-white px-6 py-16 md:px-16 flex flex-col items-center justify-center overflow-hidden"
-        >
-            {animals.map((a, i) => (
-                <div key={a.id} className={`animal-${i} absolute z-[5] overflow-visible ${a.posClass}`}>
-                    <div
-                        onMouseEnter={() => setHoveredId(a.id)}
-                        onMouseLeave={() => { setHoveredId(null); gsap.to('.tooltip-anim', { opacity: 0, scale: 0.9, duration: 0.2, overwrite: true }); }}
-                        className="cursor-grab active:cursor-grabbing relative"
-                    >
-                        <div className="transition-all duration-500 hover:drop-shadow-[0_0_25px_rgba(93,205,90,0.6)] drop-shadow-[0_8px_20px_rgba(0,0,0,0.15)]">
-                            <img src={a.src} alt={a.id} className="w-24 md:w-44 lg:w-52 h-auto pointer-events-none select-none" />
-                        </div>
-                        {hoveredId === a.id && <Tooltip title={a.tooltip.title} desc={a.tooltip.desc} />}
-                    </div>
-                </div>
-            ))}
+//     useEffect(() => {
+//         if (hoveredId) {
+//             gsap.to('.tooltip-anim', { opacity: 1, scale: 1, duration: 0.4, ease: 'back.out(1.5)', overwrite: true });
+//         }
+//     }, [hoveredId]);
 
-            <div className="relative z-10 w-full max-w-6xl mx-auto flex flex-col items-center justify-center text-center">
-                <h2 className="font-['Mistral',_cursive] text-6xl md:text-8xl text-black mb-6 flex flex-wrap justify-center gap-x-5 py-2 [perspective:800px]">
-                    {titleWords.map((word, i) => (
-                        <span key={i} className="purpose-word inline-block pointer-events-none opacity-0">
-                            {word}
-                        </span>
-                    ))}
-                </h2>
-                <div className="purpose-line w-24 h-[3px] bg-[#3db53d] mb-10 opacity-0" />
-                <p className="text-[clamp(1.5rem,3.5vw,3.5rem)] leading-[1.2] text-black font-medium max-w-5xl flex flex-wrap justify-center gap-x-3 py-2 [perspective:600px]">
-                    {bodyWords.map((word, i) => (
-                        <span key={i} className="purpose-body-word inline-block pointer-events-none opacity-0">
-                            {word}
-                        </span>
-                    ))}
-                </p>
-            </div>
-        </section>
-    );
-};
+//     return (
+//         <section
+//             ref={sectionRef}
+//             className="relative w-full min-h-[100dvh] bg-white px-4 sm:px-6 py-12 sm:py-16 md:px-16 flex flex-col items-center justify-center overflow-hidden"
+//         >
+//             {animals.map((a, i) => (
+//                 <div key={a.id} className={`animal-${i} absolute z-[5] overflow-visible ${a.posClass}`}>
+//                     <div
+//                         onMouseEnter={() => setHoveredId(a.id)}
+//                         onMouseLeave={() => { setHoveredId(null); gsap.to('.tooltip-anim', { opacity: 0, scale: 0.9, duration: 0.2, overwrite: true }); }}
+//                         className="cursor-grab active:cursor-grabbing relative"
+//                     >
+//                         <div className="transition-all duration-500 hover:drop-shadow-[0_0_25px_rgba(93,205,90,0.6)] drop-shadow-[0_8px_20px_rgba(0,0,0,0.15)]">
+//                             <img src={a.src} alt={a.id} className="w-16 sm:w-24 md:w-44 lg:w-52 h-auto pointer-events-none select-none" />
+//                         </div>
+//                         {hoveredId === a.id && <Tooltip title={a.tooltip.title} desc={a.tooltip.desc} />}
+//                     </div>
+//                 </div>
+//             ))}
+
+//             <div className="relative z-10 w-full max-w-6xl mx-auto flex flex-col items-center justify-center text-center">
+//                 <h2 className="font-['Mistral',_cursive] text-4xl sm:text-6xl md:text-8xl text-black mb-4 sm:mb-6 flex flex-wrap justify-center gap-x-3 sm:gap-x-5 py-2 [perspective:800px]">
+//                     {titleWords.map((word, i) => (
+//                         <span key={i} className="purpose-word inline-block pointer-events-none opacity-0">
+//                             {word}
+//                         </span>
+//                     ))}
+//                 </h2>
+//                 <div className="purpose-line w-16 sm:w-24 h-[2px] sm:h-[3px] bg-[#3db53d] mb-6 sm:mb-10 opacity-0" />
+//                 <p className="text-[clamp(1.2rem,3.5vw,3.5rem)] leading-[1.3] md:leading-[1.2] text-black font-medium max-w-5xl flex flex-wrap justify-center gap-x-2 sm:gap-x-3 py-2 [perspective:600px]">
+//                     {bodyWords.map((word, i) => (
+//                         <span key={i} className="purpose-body-word inline-block pointer-events-none opacity-0">
+//                             {word}
+//                         </span>
+//                     ))}
+//                 </p>
+//             </div>
+//         </section>
+//     );
+// };
 
 const ExploreSection = () => {
     const sectionRef = useRef(null);
 
-    const titleWords = 'Explore Habitats'.split(' ');
-    const bodyWords = 'Animals are grouped into environments that reflect their natural ecosystems. Each habitat is designed to support natural behavior, from dense forest settings to open grasslands.'.split(' ');
+    const paragraphs = [
+        "Bulusan Zoo Nature Park in Calapan City is a vibrant sanctuary for wildlife enthusiasts who value nature and build with intent. It is more than a destination it is where bold ideas turn into living habitats, powered by conservation and care.",
+        "We believe great preservation starts with clarity and expression. That is why Bulusan is built to amplify your interactive experience. From the first step to the final view, it is a space where storytelling takes shape and your vision for nature comes to life."
+    ];
+
+    const keywords = ['vibrant', 'living', 'clarity', 'expression', 'shape', 'intuitive', 'storytelling', 'interactive', 'vision'];
+    const wordHighlightBgColor = '60, 60, 60';
 
     useLayoutEffect(() => {
         const ctx = gsap.context(() => {
-            gsap.fromTo('.explore-text-content',
-                { scale: 0.8, opacity: 0, letterSpacing: '2px' },
-                {
-                    scale: 1, opacity: 1, letterSpacing: 'normal', ease: 'power2.out',
-                    scrollTrigger: { trigger: sectionRef.current, start: 'top 80%', end: 'center center', scrub: 1 }
-                }
-            );
+            const containers = document.querySelectorAll('.anime-text-container-explore');
+            containers.forEach(container => {
+                ScrollTrigger.create({
+                    trigger: container,
+                    pin: container,
+                    start: 'top top',
+                    end: `+=${window.innerHeight * 4}`,
+                    pinSpacing: true,
+                    onUpdate: self => {
+                        const progress = self.progress;
+                        const words = Array.from(container.querySelectorAll('.word'));
+                        const totalWords = words.length;
+
+                        words.forEach((word, index) => {
+                            const wordText = word.querySelector('span');
+                            if (!wordText) return;
+
+                            if (progress <= 0.7) {
+                                const revealProgress = progress / 0.7;
+                                const overlapWords = 15;
+                                const wordStart = index / totalWords;
+                                const wordEnd = wordStart + overlapWords / totalWords;
+
+                                let wordProgress = 0;
+                                if (revealProgress <= wordStart) wordProgress = 0;
+                                else if (revealProgress >= wordEnd) wordProgress = 1;
+                                else wordProgress = (revealProgress - wordStart) / (wordEnd - wordStart);
+
+                                word.style.opacity = wordProgress;
+                                const bgOpacity = wordProgress >= 0.9 ? 1 - (wordProgress - 0.9) / 0.1 : 1;
+                                word.style.backgroundColor = `rgba(${wordHighlightBgColor}, ${bgOpacity})`;
+
+                                const textProgress = wordProgress >= 0.9 ? (wordProgress - 0.9) / 0.1 : 0;
+                                wordText.style.opacity = textProgress;
+                            } else {
+                                const reverseProgress = (progress - 0.7) / 0.3;
+                                const reverseOverlap = 5;
+                                const wordStart = index / totalWords;
+                                const wordEnd = wordStart + reverseOverlap / totalWords;
+
+                                let wordProgress = 0;
+                                if (reverseProgress <= wordStart) wordProgress = 0;
+                                else if (reverseProgress >= wordEnd) wordProgress = 1;
+                                else wordProgress = (reverseProgress - wordStart) / (wordEnd - wordStart);
+
+                                wordText.style.opacity = 1 - wordProgress;
+                                word.style.backgroundColor = `rgba(${wordHighlightBgColor}, ${wordProgress})`;
+                            }
+                        });
+                    }
+                });
+            });
         }, sectionRef);
 
         return () => ctx.revert();
     }, []);
 
+    const renderWords = (text) => {
+        const words = text.split(/\s+/);
+        return words.map((word, i) => {
+            if (!word.trim()) return null;
+            const normalizedWord = word.toLowerCase().replace(/[.,!?;:"]/g, '');
+            const isKeyword = keywords.includes(normalizedWord);
+
+            return (
+                <div
+                    key={i}
+                    className={`word inline-block relative mr-1 mb-1 px-1 sm:px-2 py-0.5 sm:py-1 rounded-3xl will-change-[background-color,opacity] opacity-0 ${isKeyword ? 'keyword-wrapper !m-[0_0.2rem_0.1rem_0.1rem] sm:!m-[0_0.4rem_0.2rem_0.2rem]' : ''}`}
+                >
+                    <span
+                        className={`relative opacity-0 ${isKeyword ? `keyword ${normalizedWord} rounded-3xl inline-block w-full h-full py-0 sm:py-0.5 text-[#000] z-10` : 'text-'}`}
+                    >
+                        {word}
+                        {isKeyword && (
+                            <span className={`absolute invert top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100%+0.5rem)] sm:w-[calc(100%+1rem)] h-[calc(100%+0.2rem)] sm:h-[calc(100%+0.4rem)] rounded-3xl -z-10 ${['vibrant', 'shape', 'interactive'].includes(normalizedWord) ? 'bg-[#7a78ff]' :
+                                ['living', 'expression', 'storytelling'].includes(normalizedWord) ? 'bg-[#fe6d38]' :
+                                    ['clarity', 'intuitive', 'vision'].includes(normalizedWord) ? 'bg-[#c6fe69]' : 'bg-white'
+                                }`}></span>
+                        )}
+                    </span>
+                </div>
+            );
+        });
+    };
+
     return (
-        <section
-            ref={sectionRef}
-            className="relative w-full min-h-screen px-6 py-16 md:px-16 flex flex-col items-center justify-center overflow-hidden bg-white"
-        >
-            <div className="explore-text-content relative z-10 w-full max-w-[1500px] mx-auto flex flex-col items-center justify-center text-center opacity-0">
-                <h2 className="font-['Mistral',_cursive] text-6xl md:text-8xl text-black mb-8 flex flex-wrap justify-center gap-x-5 py-2">
-                    {titleWords.map((word, i) => (
-                        <span key={i} className="inline-block pointer-events-none">{word}</span>
+        <section ref={sectionRef} className="invert anime-text-container-explore relative w-full h-[100dvh] p-4 sm:p-8 overflow-hidden bg-[#000]">
+            <div className="copy-container w-full h-full flex justify-center items-center text-center rounded-2xl sm:rounded-3xl border-2 border-dashed border-[rgb(60,60,60)] px-4">
+                <div className="anime-text w-[95%] sm:w-[90%] md:w-[70%]">
+                    {paragraphs.map((p, idx) => (
+                        <p key={idx} className="text-center mb-6 sm:mb-8 text-[1.25rem] sm:text-2xl md:text-4xl font-black leading-tight sm:leading-tight text-white">
+                            {renderWords(p)}
+                        </p>
                     ))}
-                </h2>
-                <p className="text-[clamp(2rem,4vw,5.5rem)] leading-[1.15] text-black font-extrabold tracking-tight flex flex-wrap justify-center gap-x-3 py-2">
-                    {bodyWords.map((word, i) => (
-                        <span key={i} className="inline-block pointer-events-none">{word}</span>
-                    ))}
-                </p>
+                </div>
             </div>
         </section>
     );
 };
 
-const FeaturedSection = () => {
-    const containerRef = useRef(null);
+const PromoHeroSection = () => (
+    <section className="relative w-full h-[100svh] p-4 sm:p-8 overflow-hidden bg-[#fff]">
+        <div className="w-full h-full flex justify-center items-center text-center rounded-[1.5rem] sm:rounded-[2rem] bg-[#fe6d38] px-4">
+            <h1 className="w-full sm:w-[90%] md:w-[70%] text-[#000] text-3xl sm:text-[2rem] md:text-[5rem] font-black leading-[1.1] md:leading-[1]">
+                Playground for wild ideas and natural habitats.
+            </h1>
+        </div>
+    </section>
+);
+
+const FeaturesSection = () => {
+    const sectionRef = useRef(null);
+
+    const paragraphs = [
+        "Bulusan brings nature, structure, and clarity together in one intuitive space. Engage with our AI Assistant, manage virtual habitats, and explore rich storytelling visuals. All for a vibrant and living ecosystem.",
+        "With built-in support for interactive features, our conservation initiatives let you build with expression. It is the fastest way to bring your creative vision to life and shape a sustainable future."
+    ];
+
+    const keywords = ['vibrant', 'living', 'clarity', 'expression', 'shape', 'intuitive', 'storytelling', 'interactive', 'vision'];
+    const wordHighlightBgColor = '60, 60, 60';
 
     useLayoutEffect(() => {
         const ctx = gsap.context(() => {
-            gsap.fromTo('.featured-text span',
-                { opacity: 0, z: -500, scale: 0.2 },
-                {
-                    opacity: 1, z: 0, scale: 1, ease: 'expo.out', stagger: 0.2,
-                    scrollTrigger: { trigger: containerRef.current, start: 'top 80%', end: 'center center', scrub: 1 }
-                }
-            );
+            const containers = document.querySelectorAll('.anime-text-container-featured');
+            containers.forEach(container => {
+                ScrollTrigger.create({
+                    trigger: container,
+                    pin: container,
+                    start: 'top top',
+                    end: `+=${window.innerHeight * 4}`,
+                    pinSpacing: true,
+                    onUpdate: self => {
+                        const progress = self.progress;
+                        const words = Array.from(container.querySelectorAll('.word'));
+                        const totalWords = words.length;
 
-            gsap.fromTo('.featured-drag-1',
-                { opacity: 0, rotation: -360, x: '50vw', y: '-50vh' },
-                {
-                    opacity: 1, rotation: 0, x: 0, y: 0, ease: 'power2.out',
-                    scrollTrigger: { trigger: containerRef.current, start: 'top 80%', end: 'center center', scrub: 1.5 }
-                }
-            );
+                        words.forEach((word, index) => {
+                            const wordText = word.querySelector('span');
+                            if (!wordText) return;
 
-            gsap.fromTo('.featured-drag-2',
-                { opacity: 0, rotation: 360, x: '-50vw', y: '50vh' },
-                {
-                    opacity: 1, rotation: 0, x: 0, y: 0, ease: 'power2.out',
-                    scrollTrigger: { trigger: containerRef.current, start: 'top 80%', end: 'center center', scrub: 1.5 }
-                }
-            );
+                            if (progress <= 0.7) {
+                                const revealProgress = progress / 0.7;
+                                const overlapWords = 15;
+                                const wordStart = index / totalWords;
+                                const wordEnd = wordStart + overlapWords / totalWords;
 
-            gsap.fromTo('.featured-subtext',
-                { opacity: 0, y: 40 },
-                {
-                    opacity: 1, y: 0, duration: 1, ease: 'power3.out',
-                    scrollTrigger: { trigger: containerRef.current, start: 'top 70%' }
-                }
-            );
+                                let wordProgress = 0;
+                                if (revealProgress <= wordStart) wordProgress = 0;
+                                else if (revealProgress >= wordEnd) wordProgress = 1;
+                                else wordProgress = (revealProgress - wordStart) / (wordEnd - wordStart);
 
-            gsap.fromTo('.featured-card',
-                { opacity: 0, y: 60, scale: 0.9 },
-                {
-                    opacity: 1,
-                    y: 0,
-                    scale: 1,
-                    duration: 1,
-                    ease: 'expo.out',
-                    stagger: 0.2,
-                    scrollTrigger: { trigger: '.featured-grid', start: 'top 75%' }
-                }
-            );
+                                word.style.opacity = wordProgress;
+                                const bgOpacity = wordProgress >= 0.9 ? 1 - (wordProgress - 0.9) / 0.1 : 1;
+                                word.style.backgroundColor = `rgba(${wordHighlightBgColor}, ${bgOpacity})`;
 
-            gsap.to('.featured-card', {
-                y: -30,
-                scrollTrigger: {
-                    trigger: '.featured-grid',
-                    scrub: true
-                }
+                                const textProgress = wordProgress >= 0.9 ? (wordProgress - 0.9) / 0.1 : 0;
+                                wordText.style.opacity = textProgress;
+                            } else {
+                                const reverseProgress = (progress - 0.7) / 0.3;
+                                const reverseOverlap = 5;
+                                const wordStart = index / totalWords;
+                                const wordEnd = wordStart + reverseOverlap / totalWords;
+
+                                let wordProgress = 0;
+                                if (reverseProgress <= wordStart) wordProgress = 0;
+                                else if (reverseProgress >= wordEnd) wordProgress = 1;
+                                else wordProgress = (reverseProgress - wordStart) / (wordEnd - wordStart);
+
+                                wordText.style.opacity = 1 - wordProgress;
+                                word.style.backgroundColor = `rgba(${wordHighlightBgColor}, ${wordProgress})`;
+                            }
+                        });
+                    }
+                });
             });
-
-            Draggable.create('.featured-drag-item', {
-                type: 'x,y',
-                bounds: containerRef.current,
-                edgeResistance: 0.8,
-                onDragStart: function () { gsap.to(this.target, { scale: 1.1, duration: 0.3, ease: 'power2.out' }); },
-                onDragEnd: function () { gsap.to(this.target, { scale: 1, duration: 0.5, ease: 'back.out(1.5)' }); }
-            });
-
-        }, containerRef);
+        }, sectionRef);
 
         return () => ctx.revert();
     }, []);
 
+    const renderWords = (text) => {
+        const words = text.split(/\s+/);
+        return words.map((word, i) => {
+            if (!word.trim()) return null;
+            const normalizedWord = word.toLowerCase().replace(/[.,!?;:"]/g, '');
+            const isKeyword = keywords.includes(normalizedWord);
+
+            return (
+                <div
+                    key={i}
+                    className={`word inline-block relative mr-1 mb-1 px-1 sm:px-2 py-0.5 sm:py-1 rounded-3xl will-change-[background-color,opacity] opacity-0 ${isKeyword ? 'keyword-wrapper !m-[0_0.2rem_0.1rem_0.1rem] sm:!m-[0_0.4rem_0.2rem_0.2rem]' : ''}`}
+                >
+                    <span
+                        className={`relative opacity-0 ${isKeyword ? `keyword ${normalizedWord} rounded-3xl inline-block w-full h-full py-0 sm:py-0.5 text-[#000] z-10` : 'text-'}`}
+                    >
+                        {word}
+                        {isKeyword && (
+                            <span className={`absolute invert top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100%+0.5rem)] sm:w-[calc(100%+1rem)] h-[calc(100%+0.2rem)] sm:h-[calc(100%+0.4rem)] rounded-3xl -z-10 ${['vibrant', 'shape', 'interactive'].includes(normalizedWord) ? 'bg-[#7a78ff]' :
+                                ['living', 'expression', 'storytelling'].includes(normalizedWord) ? 'bg-[#fe6d38]' :
+                                    ['clarity', 'intuitive', 'vision'].includes(normalizedWord) ? 'bg-[#c6fe69]' : 'bg-white'
+                                }`}></span>
+                        )}
+                    </span>
+                </div>
+            );
+        });
+    };
+
     return (
-        <section
-            ref={containerRef}
-            className="relative min-h-screen flex items-center justify-center overflow-hidden bg-white text-black [perspective:1000px]"
-        >
-            <div className="featured-text-wrap relative z-10 flex flex-col items-center justify-center w-full max-w-7xl mx-auto [transform-style:preserve-3d]">
-
-                <img
-                    src="/pixels/pixeldeer.png"
-                    alt=""
-                    className="featured-drag-1 featured-drag-item absolute -top-12 -right-12 md:-top-24 md:-right-32 w-36 h-36 md:w-60 md:h-60 cursor-grab z-20 drop-shadow-2xl object-contain pointer-events-auto opacity-0"
-                />
-
-                <div className="featured-text relative flex flex-col font-black text-[clamp(4.5rem,13vw,14rem)] leading-[0.85] tracking-tighter uppercase pointer-events-none select-none text-center py-4">
-                    <span className="block origin-center opacity-0 text-black">BULUSAN</span>
-                    <span className="block origin-center text-gray-800 opacity-0">FEATURED</span>
+        <section ref={sectionRef} className="anime-text-container-featured invert relative w-full h-[100dvh] p-4 sm:p-8 overflow-hidden bg-[#000]">
+            <div className="copy-container w-full h-full flex justify-center items-center text-center rounded-2xl sm:rounded-3xl border-2 border-dashed border-[rgb(60,60,60)] px-4">
+                <div className="anime-text w-[95%] sm:w-[90%] md:w-[70%]">
+                    {paragraphs.map((p, idx) => (
+                        <p key={idx} className="text-center mb-6 sm:mb-8 text-[1.25rem] sm:text-2xl md:text-4xl font-black leading-tight sm:leading-tight text-white">
+                            {renderWords(p)}
+                        </p>
+                    ))}
                 </div>
-
-                <img
-                    src="/pixels/pixelmon.png"
-                    alt=""
-                    className="featured-drag-2 featured-drag-item absolute -bottom-10 -left-10 md:-bottom-20 md:-left-24 w-32 h-32 md:w-52 md:h-52 cursor-grab z-20 drop-shadow-2xl object-contain pointer-events-auto opacity-0"
-                />
-
-                <div className="featured-content mt-10 md:mt-16 relative z-10 w-full max-w-5xl px-8">
-                    <p className="featured-subtext text-center text-md md:text-xl tracking-wide text-gray-700 max-w-7xl mx-auto opacity-0">
-                        Explore curated wildlife highlights, immersive habitats, and interactive experiences designed for deeper engagement.
-                    </p>
-
-                    <div className="featured-grid mt-10 grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div className="featured-card opacity-0 p-6 rounded-2xl bg-gray-50 border border-gray-200 shadow-xl">
-                            <h3 className="text-lg font-semibold mb-2 text-black">AI Zusan Assistant</h3>
-                            <p className="text-sm text-gray-600">
-                                Your personal guide for real-time insights and interactive learning.
-                            </p>
-                        </div>
-
-                        <div className="featured-card opacity-0 p-6 rounded-2xl bg-gray-50 border border-gray-200 shadow-xl">
-                            <h3 className="text-lg font-semibold mb-2 text-black">Mini Zoo Game</h3>
-                            <p className="text-sm text-gray-600">
-                                Design and manage your own virtual zoo with real animal data and behaviors.
-                            </p>
-                        </div>
-
-                        <div className="featured-card opacity-0 p-6 rounded-2xl bg-gray-50 border border-gray-200 shadow-xl">
-                            <h3 className="text-lg font-semibold mb-2 text-black">Conservation Initiatives</h3>
-                            <p className="text-sm text-gray-600">
-                                Learn about and participate in efforts to protect and preserve wildlife and their habitats.
-                            </p>
-                        </div>
-                    </div>
-                </div>
-
             </div>
         </section>
+    );
+};
+
+const CTASection = () => (
+    <section className="relative w-full h-[100svh] p-4 sm:p-8 overflow-hidden bg-[#fff]">
+        <div className="w-full h-full flex justify-center items-center text-center rounded-[1.5rem] sm:rounded-[2rem] bg-[#c6fe69] px-4">
+            <h1 className="w-full sm:w-[90%] md:w-[70%] text-[#000] text-3xl sm:text-[2rem] md:text-[5rem] font-black leading-[1.1] md:leading-[1]">
+                Join Bulusan Zoo now to explore interactive habitats.
+            </h1>
+        </div>
+    </section>
+);
+
+const PricingSection = () => {
+    const workRef = useRef(null);
+    const gridCanvasRef = useRef(null);
+    const lettersCanvasRef = useRef(null);
+    const textContainerRef = useRef(null);
+    const cardsRef = useRef(null);
+    const stProgressRef = useRef(0);
+
+    const cards = [
+        {
+            label: 'Adult Ticket Entry',
+            price: '₱40',
+            color: '#ebebeb',
+            textColor: '#111111',
+            borderColor: '#e5e5e5',
+            features: ['Ages 18-60', 'All Exhibits', 'Weekend Entry'],
+        },
+        {
+            label: 'Child Ticket Entry',
+            price: '₱20',
+            color: '#c6fe69',
+            textColor: '#111111',
+            borderColor: '#e5e5e5',
+            features: ['Ages 5–17', 'All Exhibits', 'Weekend Entry'],
+        },
+        {
+            label: 'Free Ticket for Bulusan Residents',
+            price: '₱0',
+            color: '#111111',
+            textColor: '#ffffff',
+            borderColor: '#111111',
+            features: ['All Ages', 'Valid ID Required', 'All Exhibits'],
+        },
+    ];
+
+    const isMobile = () => window.innerWidth < 768;
+
+    const getCardW = () => isMobile() ? window.innerWidth * 0.72 : window.innerWidth * 0.30;
+    const getCardGap = () => isMobile() ? window.innerWidth * 0.08 : window.innerWidth * 0.05;
+    const getMoveDistance = () => {
+        const cw = getCardW();
+        const gap = getCardGap();
+        return window.innerWidth + cards.length * (cw + gap) + gap;
+    };
+
+    const moveDistanceRef = useRef(getMoveDistance());
+
+    useLayoutEffect(() => {
+        const work = workRef.current;
+        const gridCanvas = gridCanvasRef.current;
+        const textContainer = textContainerRef.current;
+        const cardsContainer = cardsRef.current;
+        if (!work || !gridCanvas || !textContainer || !cardsContainer) return;
+
+        const gridCtx = gridCanvas.getContext('2d');
+        const lerp = (s, e, t) => s + (e - s) * t;
+        let currentXPosition = 0;
+
+        const resizeGridCanvas = () => {
+            const dpr = window.devicePixelRatio || 1;
+            gridCanvas.width = window.innerWidth * dpr;
+            gridCanvas.height = window.innerHeight * dpr;
+            gridCanvas.style.width = `${window.innerWidth}px`;
+            gridCanvas.style.height = `${window.innerHeight}px`;
+            gridCtx.scale(dpr, dpr);
+        };
+        resizeGridCanvas();
+
+        const drawGrid = (progress = 0) => {
+            gridCtx.fillStyle = '#f7f7f7';
+            gridCtx.fillRect(0, 0, gridCanvas.width, gridCanvas.height);
+            gridCtx.fillStyle = '#d1d1d1';
+            const dotSize = 1;
+            const spacing = isMobile() ? 20 : 30;
+            const rows = Math.ceil(window.innerHeight / spacing);
+            const cols = Math.ceil(window.innerWidth / spacing) + 15;
+            const offset = (progress * spacing * 10) % spacing;
+
+            for (let y = 0; y < rows; y++) {
+                for (let x = 0; x < cols; x++) {
+                    gridCtx.beginPath();
+                    gridCtx.arc(x * spacing - offset, y * spacing, dotSize, 0, Math.PI * 2);
+                    gridCtx.fill();
+                }
+            }
+        };
+
+        const lettersScene = new THREE.Scene();
+        const lettersCamera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
+        lettersCamera.position.z = 20;
+        const lettersRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, canvas: lettersCanvasRef.current });
+        lettersRenderer.setSize(window.innerWidth, window.innerHeight);
+        lettersRenderer.setClearColor(0x000000, 0);
+        lettersRenderer.setPixelRatio(window.devicePixelRatio);
+
+        const createPath = (yPos, amplitude) => {
+            const points = Array.from({ length: 21 }, (_, i) => {
+                const t = i / 20;
+                return new THREE.Vector3(
+                    -25 + 50 * t,
+                    yPos + Math.sin(t * Math.PI) * -amplitude,
+                    (1 - Math.pow(Math.abs(t - 0.5) * 2, 2)) * -5
+                );
+            });
+            const curve = new THREE.CatmullRomCurve3(points);
+            const line = new THREE.Line(
+                new THREE.BufferGeometry().setFromPoints(curve.getPoints(100)),
+                new THREE.LineBasicMaterial({ color: 0x000000, transparent: true, opacity: 0 })
+            );
+            line.curve = curve;
+            return line;
+        };
+
+        const paths = [
+            createPath(10, 2),
+            createPath(3.5, 1),
+            createPath(-3.5, -1),
+            createPath(-10, -2),
+        ];
+        paths.forEach(l => lettersScene.add(l));
+
+        const letterPositions = new Map();
+        const lineSpeedMultipliers = [0.8, 1, 0.7, 0.9];
+
+        const updateLetterSize = () => {
+            const fs = isMobile() ? 'clamp(3rem, 20vw, 7rem)' : 'clamp(5rem, 12vw, 14rem)';
+            textContainer.querySelectorAll('.pricing-letter').forEach(el => {
+                el.style.fontSize = fs;
+            });
+        };
+
+        paths.forEach((line, i) => {
+            line.letterElements = Array.from({ length: 15 }, () => {
+                const el = document.createElement('div');
+                el.className = 'pricing-letter';
+                el.textContent = ['P', 'R', 'I', 'C'][i];
+                textContainer.appendChild(el);
+                letterPositions.set(el, { current: { x: 0, y: 0 }, target: { x: 0, y: 0 } });
+                return el;
+            });
+        });
+        updateLetterSize();
+
+        const updateTargetPositions = (progress = 0) => {
+            paths.forEach((line, li) => {
+                line.letterElements.forEach((el, i) => {
+                    const point = line.curve.getPoint((i / 14 + progress * lineSpeedMultipliers[li]) % 1);
+                    const vec = point.clone().project(lettersCamera);
+                    const pos = letterPositions.get(el);
+                    pos.target = {
+                        x: (-vec.x * 0.5 + 0.5) * window.innerWidth,
+                        y: (-vec.y * 0.5 + 0.5) * window.innerHeight,
+                    };
+                });
+            });
+        };
+
+        const updateLetterPositions = () => {
+            letterPositions.forEach((pos, el) => {
+                const dx = pos.target.x - pos.current.x;
+                if (Math.abs(dx) > window.innerWidth * 0.7) {
+                    pos.current.x = pos.target.x;
+                    pos.current.y = pos.target.y;
+                } else {
+                    pos.current.x = lerp(pos.current.x, pos.target.x, 0.07);
+                    pos.current.y = lerp(pos.current.y, pos.target.y, 0.07);
+                }
+                el.style.transform = `translate(-50%, -50%) translate3d(${pos.current.x}px, ${pos.current.y}px, 0px)`;
+            });
+        };
+
+        const updateCardsPosition = () => {
+            const targetX = -moveDistanceRef.current * stProgressRef.current;
+            currentXPosition = lerp(currentXPosition, targetX, 0.07);
+            gsap.set(cardsContainer, { x: currentXPosition });
+        };
+
+        let rafId;
+        const tick = () => {
+            updateLetterPositions();
+            updateCardsPosition();
+            lettersRenderer.render(lettersScene, lettersCamera);
+            rafId = requestAnimationFrame(tick);
+        };
+
+        const st = ScrollTrigger.create({
+            trigger: work,
+            start: 'top top',
+            end: '+=700%',
+            pin: true,
+            pinSpacing: true,
+            scrub: 1,
+            onUpdate: self => {
+                stProgressRef.current = self.progress;
+                updateTargetPositions(self.progress);
+                drawGrid(self.progress);
+            },
+        });
+
+        drawGrid(0);
+        updateTargetPositions(0); // Calculate initial targets
+
+        // FIX: Snap current positions directly to initial targets
+        // This prevents them from starting at 0,0 (top left) and sliding in
+        letterPositions.forEach((pos, el) => {
+            pos.current.x = pos.target.x;
+            pos.current.y = pos.target.y;
+            el.style.transform = `translate(-50%, -50%) translate3d(${pos.current.x}px, ${pos.current.y}px, 0px)`;
+        });
+
+        tick(); // Start the loop cleanly
+
+        const onResize = () => {
+            moveDistanceRef.current = getMoveDistance();
+            resizeGridCanvas();
+            drawGrid(stProgressRef.current);
+            lettersCamera.aspect = window.innerWidth / window.innerHeight;
+            lettersCamera.updateProjectionMatrix();
+            lettersRenderer.setSize(window.innerWidth, window.innerHeight);
+            updateTargetPositions(stProgressRef.current);
+            updateLetterSize();
+        };
+        window.addEventListener('resize', onResize);
+
+        return () => {
+            cancelAnimationFrame(rafId);
+            st.kill();
+            window.removeEventListener('resize', onResize);
+            lettersRenderer.dispose();
+            textContainer.querySelectorAll('.pricing-letter').forEach(el => el.remove());
+        };
+    }, []);
+
+    const cardW = `clamp(260px, 72vw, 30vw)`;
+    const cardH = `clamp(340px, 65vh, 70vh)`;
+    const cardGap = `clamp(20px, 5vw, 8vw)`;
+    const cardPad = `clamp(1.5rem, 3vw, 2.5rem)`;
+
+    return (
+        <>
+            <style>{`
+                .pricing-letter {
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    font-size: clamp(5rem, 12vw, 14rem);
+                    font-weight: 200; 
+                    color: rgba(0, 0, 0, 0); 
+                    z-index: 2;
+                    transform-origin: center;
+                    will-change: transform;
+                    pointer-events: none;
+                    user-select: none;
+                    line-height: 1;
+                    letter-spacing: -0.02em;
+                }
+                .pricing-intro-h1, .pricing-outro-h1 {
+                    font-size: clamp(2.5rem, 6vw, 7rem);
+                    font-weight: 600;
+                    text-transform: uppercase;
+                    letter-spacing: 0.15em;
+                    color: #111;
+                    margin: 0;
+                }
+                .pricing-card-label {
+                    font-size: clamp(0.6rem, 1vw, 0.75rem);
+                    font-weight: 600;
+                    text-transform: uppercase;
+                    letter-spacing: 0.15em;
+                    opacity: 0.5;
+                    margin: 0 0 1rem 0;
+                }
+                .pricing-card-tier {
+                    font-size: clamp(1rem, 2vw, 1.25rem);
+                    font-weight: 600;
+                    text-transform: uppercase;
+                    letter-spacing: 0.05em;
+                    margin: 0 0 0.5rem 0;
+                }
+                .pricing-card-price {
+                    font-size: clamp(2.5rem, 6vw, 5rem);
+                    font-weight: 600;
+                    line-height: 1;
+                    letter-spacing: -0.05em;
+                    margin: 0;
+                }
+                .pricing-card-feature {
+                    display: flex;
+                    align-items: center;
+                    gap: 0.75rem;
+                    font-size: clamp(0.7rem, 1.1vw, 0.85rem);
+                    font-weight: 600;
+                    letter-spacing: 0.02em;
+                    opacity: 0.7;
+                }
+                .pricing-card-dot {
+                    width: 4px;
+                    height: 4px;
+                    border-radius: 50%;
+                    flex-shrink: 0;
+                    opacity: 0.4;
+                }
+                .pricing-card-divider {
+                    height: 1px;
+                    opacity: 0.1;
+                    margin: clamp(1rem, 3vh, 1.5rem) 0;
+                }
+            `}</style>
+
+            <section style={{
+                position: 'relative', width: '100vw', height: '100vh',
+                overflow: 'hidden', display: 'flex',
+                justifyContent: 'center', alignItems: 'center',
+                backgroundColor: '#ffffff',
+            }}>
+                <h1 className="pricing-intro-h1">Pricing</h1>
+            </section>
+
+            <section
+                ref={workRef}
+                style={{ position: 'relative', width: '100vw', height: '100vh', overflow: 'hidden', backgroundColor: '#f7f7f7' }}
+            >
+                <canvas ref={gridCanvasRef} style={{ position: 'absolute', top: 0, left: 0, zIndex: 0 }} />
+                <canvas ref={lettersCanvasRef} style={{ position: 'absolute', top: 0, left: 0, zIndex: 1 }} />
+
+                <div
+                    ref={textContainerRef}
+                    style={{
+                        position: 'absolute', top: 0, left: 0,
+                        width: '100%', height: '100%',
+                        zIndex: 2, pointerEvents: 'none',
+                        perspective: '2500px', perspectiveOrigin: 'center',
+                    }}
+                />
+
+                <div
+                    ref={cardsRef}
+                    style={{
+                        position: 'absolute', top: 0, left: 0,
+                        width: 'max-content',
+                        height: '100vh',
+                        paddingLeft: '100vw',
+                        paddingRight: 'clamp(20px, 8vw, 12vw)',
+                        display: 'flex',
+                        gap: cardGap,
+                        alignItems: 'center',
+                        zIndex: 10,
+                    }}
+                >
+                    {cards.map((card, i) => (
+                        <div
+                            key={i}
+                            style={{
+                                flexShrink: 0,
+                                width: cardW,
+                                height: cardH,
+                                backgroundColor: card.color,
+                                border: `1px solid ${card.borderColor}`,
+                                display: 'flex',
+                                flexDirection: 'column',
+                                justifyContent: 'space-between',
+                                padding: cardPad,
+                                boxSizing: 'border-box',
+                            }}
+                        >
+                            <div>
+                                <p className="pricing-card-label" style={{ color: card.textColor }}>
+                                    Ticket
+                                </p>
+                                <p className="pricing-card-tier" style={{ color: card.textColor }}>
+                                    {card.label}
+                                </p>
+                                <p className="pricing-card-price" style={{ color: card.textColor }}>
+                                    {card.price}
+                                </p>
+                            </div>
+
+                            <div>
+                                <div className="pricing-card-divider" style={{ backgroundColor: card.textColor }} />
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(0.5rem, 1.5vh, 0.8rem)' }}>
+                                    {card.features.map((f, fi) => (
+                                        <div key={fi} className="pricing-card-feature" style={{ color: card.textColor }}>
+                                            <span className="pricing-card-dot" style={{ backgroundColor: card.textColor }} />
+                                            {f}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </section>
+
+            <section style={{
+                position: 'relative', width: '100vw', height: '100vh',
+                overflow: 'hidden', display: 'flex',
+                justifyContent: 'center', alignItems: 'center',
+                backgroundColor: '#ffffff', top: '-0.125em',
+            }}>
+                <h1 className="pricing-outro-h1">Bulusan Zoo</h1>
+            </section>
+        </>
     );
 };
 
@@ -656,7 +951,7 @@ const Home = () => {
                 infinite: false
             }}
         >
-            <div className="relative min-h-screen bg-white">
+            <div className="relative min-h-[100dvh] bg-white">
                 <Header />
                 <AIFloatingButton />
 
@@ -669,16 +964,19 @@ const Home = () => {
                         <AboutSection />
                     </div>
 
-                    <div className="relative z-20 w-full">
+                    {/* <div className="relative z-20 w-full">
                         <PurposeSection />
-                    </div>
+                    </div> */}
 
                     <div className="relative z-30 w-full">
                         <ExploreSection />
                     </div>
 
                     <div className="relative z-40 w-full">
-                        <FeaturedSection />
+                        <PromoHeroSection />
+                        <FeaturesSection />
+                        <CTASection />
+                        <PricingSection />
                     </div>
                 </main>
 

@@ -1,4 +1,4 @@
-export const AI_ASSISTANT_ICON = 'https://cdn-icons-png.flaticon.com/128/14025/14025276.png';
+export const AI_ASSISTANT_ICON = '../pixels/zusan.png';
 
 export const AI_ASSISTANT_THEME = {
     base: '#edf9f0',

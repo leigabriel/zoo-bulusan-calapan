@@ -429,7 +429,7 @@ const Header = () => {
                     <div className="flex items-center h-full">
                         <div className="flex items-center flex-shrink-0 w-[180px]">
                             <Link to="/" className="flex items-center" onClick={(e) => { e.preventDefault(); setIsMenuOpen(false); handleTransitionNavigate(e, '/'); }}>
-                                <img src="https://cdn-icons-png.flaticon.com/128/12801/12801273.png" alt="Logo" className="w-6 h-6 object-contain mr-2" />
+                                <img src="https://cdn-icons-png.flaticon.com/128/12801/12801273.png" alt="Logo" className="w-7 h-7 object-contain mr-2" />
                                 <span className="text-[18px] font-bold text-[#212631] tracking-tight">
                                     BULUSAN ZOO
                                 </span>
@@ -437,15 +437,15 @@ const Header = () => {
                         </div>
 
                         <nav className="hidden md:flex flex-1 items-center justify-center">
-                            <div className="flex items-center gap-0.5 bg-[#212631] rounded-full px-1.5 py-1.5">
+                            <div className="flex items-center gap-0.5 bg-[#c6fe69] rounded-full px-1.5 py-1.5">
                                 {NAV_LINKS.map((link) => (
                                     <Link
                                         key={link.path}
                                         to={link.path}
                                         onClick={(e) => { e.preventDefault(); handleTransitionNavigate(e, link.path); }}
                                         className={`px-4 py-1.5 rounded-full text-[13px] font-medium transition-all duration-150 whitespace-nowrap ${location.pathname === link.path
-                                            ? 'bg-[#ebebeb] text-gray-900 shadow-sm'
-                                            : 'text-[#ebebeb]/80 hover:text-gray-200'
+                                            ? 'bg-[#000] text-gray-100 shadow-sm'
+                                            : 'text-[#000]/50 hover:text-gray-600'
                                             }`}
                                     >
                                         {link.label}
@@ -575,16 +575,16 @@ const Header = () => {
 
             <div className={`fixed inset-0 z-[120] flex justify-end transition-all duration-300 ${showSidePanel ? 'visible' : 'invisible'}`}>
                 <div
-                    className={`absolute inset-0 bg-black/25 backdrop-blur-[2px] transition-opacity duration-300 ${showSidePanel ? 'opacity-100' : 'opacity-0'}`}
+                    className={`absolute inset-0 bg-black/20 backdrop-blur-md transition-opacity duration-300 ${showSidePanel ? 'opacity-100' : 'opacity-0'}`}
                     onClick={closeSidePanel}
                 />
                 <div
                     ref={sidePanelRef}
-                    className={`w-full h-full md:w-[300px] bg-gray-50 shadow-2xl flex flex-col transform transition-transform duration-300 relative ${showSidePanel ? 'translate-x-0' : 'translate-x-full'}`}
+                    className={`w-full h-full md:w-[300px] bg-white shadow-2xl flex flex-col transform transition-transform duration-300 relative ${showSidePanel ? 'translate-x-0' : 'translate-x-full'}`}
                     role="dialog"
                     aria-modal="true"
                 >
-                    <div className="flex-shrink-0 px-5 pt-5 pb-4 bg-white border-b border-gray-100">
+                    <div className="flex-shrink-0 px-5 pt-5 pb-4 bg-[#fff] border-b border-gray-200">
                         <div className="flex items-center justify-between mb-4">
                             <span className="text-[13px] font-semibold text-gray-800">Account</span>
                             <CloseBtn onClick={closeSidePanel} />
@@ -600,7 +600,7 @@ const Header = () => {
                                 />
                                 <div className="min-w-0">
                                     <p className="text-[13px] font-semibold text-gray-900 truncate">{displayName}</p>
-                                    <p className="text-[11px] text-gray-400 truncate mt-0.5">{user.email}</p>
+                                    <p className="text-[11px] text-blue-600 truncate mt-0.5">{user.email}</p>
                                 </div>
                             </div>
                         )}
@@ -610,7 +610,7 @@ const Header = () => {
                         {quickItems.length > 0 && (
                             <>
                                 <SectionLabel label="Quick Access" />
-                                <div className="rounded-xl overflow-hidden border border-gray-100 bg-white">
+                                <div className="rounded-xl overflow-hidden border border-gray-200 bg-white">
                                     {quickItems.map((item, i) => (
                                         <MenuItem key={i} iconUrl={item.iconUrl} label={item.label} to={item.path} onClose={closeSidePanel} onNavigate={handleTransitionNavigate} isLast={i === quickItems.length - 1} />
                                     ))}
@@ -619,21 +619,21 @@ const Header = () => {
                         )}
 
                         <SectionLabel label="Account" />
-                        <div className="rounded-xl overflow-hidden border border-gray-100 bg-white">
+                        <div className="rounded-xl overflow-hidden border border-gray-200 bg-white">
                             {accountItems.map((item, i) => (
                                 <MenuItem key={i} iconUrl={item.iconUrl} label={item.label} to={item.path} onClick={item.action} onClose={closeSidePanel} onNavigate={handleTransitionNavigate} isLast={i === accountItems.length - 1} />
                             ))}
                         </div>
 
                         <SectionLabel label="Explore" />
-                        <div className="rounded-xl overflow-hidden border border-gray-100 bg-white">
+                        <div className="rounded-xl overflow-hidden border border-gray-200 bg-white">
                             {exploreItems.map((item, i) => (
                                 <MenuItem key={i} iconUrl={item.iconUrl} label={item.label} to={item.path} onClick={item.action} onClose={closeSidePanel} onNavigate={handleTransitionNavigate} isLast={i === exploreItems.length - 1} />
                             ))}
                         </div>
 
                         <SectionLabel label="Preferences & AI" />
-                        <div className="rounded-xl overflow-hidden border border-gray-100 bg-white">
+                        <div className="rounded-xl overflow-hidden border border-gray-200 bg-white">
                             <MenuItem iconUrl={ICONS.setting} label="Settings" to="/settings" onClose={closeSidePanel} onNavigate={handleTransitionNavigate} isLast={false} />
                             <MenuItem
                                 iconUrl={ICONS.camera}
@@ -645,7 +645,7 @@ const Header = () => {
                         </div>
 
                         <SectionLabel label="Help" />
-                        <div className="rounded-xl overflow-hidden border border-gray-100 bg-white">
+                        <div className="rounded-xl overflow-hidden border border-gray-200 bg-white">
                             <MenuItem iconUrl={ICONS.help} label="Help Center" to="/help" onClose={closeSidePanel} onNavigate={handleTransitionNavigate} isLast={false} />
                             <MenuItem iconUrl={ICONS.support} label="Contact Support" onClick={openEmailModal} isLast={false} />
                             <MenuItem

@@ -298,7 +298,7 @@ const Events = () => {
                     </h1>
                 </div>
 
-                <div className="max-w-[1400px] mx-auto px-4 md:px-8 pb-20 md:pb-32">
+                <div className="max-w-8xl mx-auto px-4 md:px-8 pb-20 md:pb-32">
                     <div className="flex flex-wrap gap-2 md:gap-4 justify-center mb-10 md:mb-16">
                         {FILTERS.map(f => {
                             const active = filter === f;
@@ -306,7 +306,7 @@ const Events = () => {
                                 <button
                                     key={f}
                                     onClick={() => setFilter(f)}
-                                    className={`text-[10px] md:text-xs uppercase tracking-widest px-4 py-2 md:px-6 md:py-3 font-bold transition-colors rounded-full border-2 ${active ? 'border-black bg-black text-white' : 'border-gray-200 text-gray-500 hover:border-black hover:text-black'}`}
+                                    className={`text-xs md:text-xs uppercase tracking-widest px-0.5 py-2 md:px-4 md:py-3 font-bold transition-colors rounded-full border-2 ${active ? 'border-black bg-black text-white' : 'border-gray-200 text-gray-500 hover:border-black hover:text-black'}`}
                                 >
                                     {f === 'all' ? 'All Events' : f}
                                 </button>
@@ -345,7 +345,7 @@ const Events = () => {
                                 ))}
                             </div>
 
-                            <div className="grid grid-cols-7 bg-white">
+                            <div className="grid grid-cols-7 bg-[#F2F0EB]">
                                 <AnimatePresence mode="wait">
                                     <motion.div
                                         key={`${calYear}-${calMonth}-${filter}`}
@@ -358,39 +358,51 @@ const Events = () => {
                                         {calendarCells.map((day, i) => {
                                             const dayEvents = getEventsForDay(day);
                                             const isCurrentDay = isToday(day);
+                                            const featuredEvent = dayEvents[0];
 
                                             return (
-                                                <div key={i} className={`min-h-[80px] sm:min-h-[100px] md:min-h-[160px] p-1 sm:p-2 md:p-4 border-r border-b border-gray-200 relative overflow-hidden ${day ? 'hover:bg-gray-50 transition-colors' : 'bg-gray-50/50'}`}>
+                                                <div
+                                                    key={i}
+                                                    className={`min-h-[120px] sm:min-h-[150px] md:min-h-[220px] border-r border-b border-gray-300 relative overflow-hidden group ${day ? 'hover:bg-black/5 cursor-pointer transition-colors' : 'bg-transparent'}`}
+                                                    onClick={() => featuredEvent && setSelectedEvent(featuredEvent)}
+                                                >
                                                     {day && (
                                                         <>
-                                                            <span className={`inline-flex items-center justify-center w-6 h-6 sm:w-8 sm:h-8 rounded-full text-xs sm:text-sm font-medium mb-1 md:mb-2 ${isCurrentDay ? 'bg-black text-white' : 'text-gray-900'}`}>
-                                                                {day}
-                                                            </span>
-                                                            <div className="flex flex-col gap-1 md:gap-2">
-                                                                {dayEvents.slice(0, 2).map((event) => (
-                                                                    <button
-                                                                        key={event.id}
-                                                                        onClick={() => setSelectedEvent(event)}
-                                                                        className="text-left group cursor-pointer w-full"
-                                                                    >
-                                                                        <div className="font-medium text-[9px] sm:text-[11px] md:text-sm text-black truncate group-hover:underline">
-                                                                            {event.title}
+                                                            {featuredEvent && featuredEvent.imageUrl ? (
+                                                                <div className="absolute inset-0 w-full h-full">
+                                                                    <img
+                                                                        src={featuredEvent.imageUrl}
+                                                                        alt={featuredEvent.title}
+                                                                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                                                                    />
+                                                                    <div className="absolute top-3 left-3 md:top-4 md:left-4 z-10">
+                                                                        <span className={`inline-flex items-center justify-center w-6 h-6 sm:w-8 sm:h-8 rounded-full text-[10px] sm:text-xs font-bold ${isCurrentDay ? 'bg-blue-600 text-white' : 'bg-black text-white shadow-md'}`}>
+                                                                            {day}
+                                                                        </span>
+                                                                    </div>
+                                                                </div>
+                                                            ) : (
+                                                                <div className="p-3 md:p-4 h-full flex flex-col">
+                                                                    <span className={`inline-flex items-center justify-center w-6 h-6 sm:w-8 sm:h-8 text-[10px] sm:text-xs font-bold mb-3 md:mb-4 ${dayEvents.length > 0 || isCurrentDay ? 'bg-black text-white rounded-full' : 'text-black'}`}>
+                                                                        {day}
+                                                                    </span>
+
+                                                                    {dayEvents.length > 0 && (
+                                                                        <div className="flex flex-col gap-3 mt-1">
+                                                                            {dayEvents.map((event) => (
+                                                                                <div key={event.id} className="text-left w-full group-hover:opacity-80 transition-opacity">
+                                                                                    <div className="font-medium text-[10px] sm:text-[11px] md:text-sm text-black leading-tight">
+                                                                                        {event.title}
+                                                                                    </div>
+                                                                                    <div className="text-[9px] sm:text-[10px] md:text-xs text-gray-500 mt-1 uppercase tracking-widest">
+                                                                                        {formatTime(event.startTime)}
+                                                                                    </div>
+                                                                                </div>
+                                                                            ))}
                                                                         </div>
-                                                                        <div className="text-[8px] sm:text-[10px] md:text-xs text-gray-500 truncate hidden sm:block">
-                                                                            {formatTime(event.startTime)}
-                                                                        </div>
-                                                                    </button>
-                                                                ))}
-                                                                {dayEvents.length > 2 && (
-                                                                    <button
-                                                                        onClick={() => setSelectedEvent(dayEvents[2])}
-                                                                        className="text-[9px] sm:text-xs font-bold text-gray-400 hover:text-black mt-1 text-left w-full truncate"
-                                                                    >
-                                                                        +{dayEvents.length - 2}
-                                                                        <span className="hidden sm:inline"> More</span>
-                                                                    </button>
-                                                                )}
-                                                            </div>
+                                                                    )}
+                                                                </div>
+                                                            )}
                                                         </>
                                                     )}
                                                 </div>
@@ -409,7 +421,7 @@ const Events = () => {
                     )}
                 </div>
 
-                <section className="bg-yellow-300 py-16 md:py-32 px-4 border-t border-gray-200">
+                <section className="bg-[#c6fe69] py-16 md:py-32 px-4 border-t border-gray-200">
                     <div className="max-w-4xl mx-auto section-anim">
                         <div className="text-center mb-10 md:mb-16">
                             <h2 className="text-3xl md:text-5xl lg:text-6xl text-black mb-4">Plan Your Own Event</h2>
