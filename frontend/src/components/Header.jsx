@@ -470,7 +470,7 @@ const Header = () => {
                             ) : user ? (
                                 <button
                                     onClick={() => setShowSidePanel(true)}
-                                    className="flex items-center gap-2 pl-1 pr-3 py-1 rounded-full border border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50 transition-all"
+                                        className="flex items-center gap-2 pl-1 pr-3 py-1 rounded-full border border-gray-200 bg-white hover:border-gray-500 hover:bg-[#c6fe69] transition-all"
                                 >
                                     <img
                                         src={avatarSrc}

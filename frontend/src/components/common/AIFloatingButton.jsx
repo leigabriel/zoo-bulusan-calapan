@@ -30,7 +30,7 @@ const AIFloatingButton = () => {
                     <div className="relative">
                         <button
                             onClick={() => setAssistantOpen(true)}
-                            className="relative border border-gray-500 z-40 flex items-center justify-center
+                            className="relative cursor-pointer border border-gray-500 z-40 flex items-center justify-center
                        w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20
                        rounded-full bg-[#c6fe69]
                        shadow-lg

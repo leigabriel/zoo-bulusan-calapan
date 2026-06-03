@@ -13,12 +13,12 @@ import '../../App.css';
 gsap.registerPlugin(ScrollTrigger, Draggable);
 
 const ticketMaskStyle = {
-    WebkitMaskImage: 'radial-gradient(circle at 0px 50%, transparent 4px, black 4.5px), radial-gradient(circle at 100% 50%, transparent 4px, black 4.5px)',
-    WebkitMaskSize: '51% 12px',
+    WebkitMaskImage: 'radial-gradient(circle at 0px 50%, transparent 5px, black 6px), radial-gradient(circle at 100% 50%, transparent 5px, black 6px)',
+    WebkitMaskSize: '51% 16px', // 16px dictates the vertical spacing between holes
     WebkitMaskRepeat: 'repeat-y',
     WebkitMaskPosition: 'left, right',
-    maskImage: 'radial-gradient(circle at 0px 50%, transparent 4px, black 4.5px), radial-gradient(circle at 100% 50%, transparent 4px, black 4.5px)',
-    maskSize: '51% 12px',
+    maskImage: 'radial-gradient(circle at 0px 50%, transparent 5px, black 6px), radial-gradient(circle at 100% 50%, transparent 5px, black 6px)',
+    maskSize: '51% 16px',
     maskRepeat: 'repeat-y',
     maskPosition: 'left, right',
 };
@@ -145,12 +145,14 @@ const HeroSection = () => {
                     </div>
                     <button
                         onClick={() => navigate('/reservations')}
-                        className="hero-btn pointer-events-auto opacity-0 bg-[#c6fe69] text-black py-2 sm:py-2.5 px-8 sm:px-10 rounded-xl cursor-pointer transition-transform duration-500 ease-out hover:scale-105 active:scale-95 flex items-center justify-center focus:outline-none"
+                        className="hero-btn group pointer-events-auto bg-[#c6fe69] text-black p-1 sm:p-1.5 rounded-xl cursor-pointer transition-all duration-300 ease-out hover:scale-110 hover:drop-shadow-xl active:scale-95 focus:outline-none drop-shadow-md transform-gpu"
                         style={ticketMaskStyle}
                     >
-                        <span className="font-['Mistral',_cursive] text-[1.5rem] sm:text-[2rem] tracking-[1px] block mt-1">
-                            Reserved
-                        </span>
+                        <div className="w-full h-full rounded-lg flex items-center justify-center py-1.5 sm:py-0.5 px-7 sm:px-9">
+                            <span className="font-['Mistral',_cursive] text-[1.5rem] sm:text-[2rem] tracking-[1px] block mt-1 transition-transform duration-300 ease-out group-hover:scale-105">
+                                Plan a Visit
+                            </span>
+                        </div>
                     </button>
                 </div>
 
