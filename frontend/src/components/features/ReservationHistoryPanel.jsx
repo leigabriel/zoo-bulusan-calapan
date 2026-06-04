@@ -421,8 +421,14 @@ const ReservationHistoryPanel = ({ isOpen, onClose }) => {
             </div>
 
             {selectedReservation && (
-                <div className="fixed inset-0 bg-slate-900/60 z-[110] flex flex-col items-center justify-center p-4 backdrop-blur-sm transition-opacity">
-                    <div className="w-full max-w-sm relative flex flex-col">
+                <div
+                    className="fixed inset-0 bg-slate-900/60 z-[110] flex flex-col items-center justify-center p-4 backdrop-blur-sm transition-opacity"
+                    onClick={() => setSelectedReservation(null)}
+                >
+                    <div
+                        className="w-full max-w-sm relative flex flex-col"
+                        onClick={(e) => e.stopPropagation()}
+                    >
                         <div
                             ref={receiptRef}
                             className="bg-white rounded-2xl w-full shadow-2xl overflow-hidden relative"

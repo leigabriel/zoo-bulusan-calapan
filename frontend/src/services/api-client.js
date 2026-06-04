@@ -6,12 +6,12 @@ const getApiBaseUrl = () => {
     if (envUrl && !envUrl.includes('localhost')) {
         return envUrl.replace(/\/$/, '');
     }
-    
+
     // Dynamically use current hostname with backend port
     const backendPort = import.meta.env.VITE_BACKEND_PORT || '5000';
     const protocol = window.location.protocol;
     const hostname = window.location.hostname;
-    
+
     return `${protocol}//${hostname}:${backendPort}/api`;
 };
 
@@ -20,11 +20,11 @@ const getBackendBaseUrl = () => {
     if (envUrl && !envUrl.includes('localhost') && !envUrl.includes('0.0.0.0')) {
         return envUrl.replace(/\/$/, '');
     }
-    
+
     const backendPort = import.meta.env.VITE_BACKEND_PORT || '5000';
     const protocol = window.location.protocol;
     const hostname = window.location.hostname;
-    
+
     return `${protocol}//${hostname}:${backendPort}`;
 };
 
@@ -83,14 +83,14 @@ const getAuthHeadersMultipart = (type = 'user') => {
 const handleResponse = async (response) => {
     // Handle empty responses
     const text = await response.text();
-    
+
     if (!text) {
         if (!response.ok) {
             throw new Error(`Request failed with status ${response.status}`);
         }
         return { success: true };
     }
-    
+
     // Try to parse as JSON
     let data;
     try {
@@ -102,7 +102,7 @@ const handleResponse = async (response) => {
         }
         throw new Error('Invalid server response');
     }
-    
+
     if (!response.ok) {
         // For suspended users, preserve the suspension info by throwing an error with all fields
         if (data.suspended) {
@@ -355,7 +355,7 @@ export const adminAPI = {
         const params = new URLSearchParams();
         if (startDate) params.append('startDate', startDate);
         if (endDate) params.append('endDate', endDate);
-        
+
         const response = await fetch(`${API_BASE_URL}/admin/reports/revenue?${params}`, {
             headers: getAuthHeaders('admin')
         });
@@ -367,7 +367,7 @@ export const adminAPI = {
         if (startDate) params.append('startDate', startDate);
         if (endDate) params.append('endDate', endDate);
         params.append('reportType', reportType);
-        
+
         const response = await fetch(`${API_BASE_URL}/admin/reports/data?${params}`, {
             headers: getAuthHeaders('admin')
         });
@@ -391,7 +391,7 @@ export const adminAPI = {
     uploadImage: async (file) => {
         const formData = new FormData();
         formData.append('image', file);
-        
+
         const token = getToken('admin');
         const response = await fetch(`${API_BASE_URL}/admin/upload-image`, {
             method: 'POST',
@@ -406,7 +406,7 @@ export const adminAPI = {
     uploadAnimalImage: async (file) => {
         const formData = new FormData();
         formData.append('image', file);
-        
+
         const token = getToken('admin');
         const response = await fetch(`${API_BASE_URL}/admin/upload-animal-image`, {
             method: 'POST',
@@ -421,7 +421,7 @@ export const adminAPI = {
     uploadPlantImage: async (file) => {
         const formData = new FormData();
         formData.append('image', file);
-        
+
         const token = getToken('admin');
         const response = await fetch(`${API_BASE_URL}/admin/upload-plant-image`, {
             method: 'POST',
@@ -436,7 +436,7 @@ export const adminAPI = {
     uploadEventImage: async (file) => {
         const formData = new FormData();
         formData.append('image', file);
-        
+
         const token = getToken('admin');
         const response = await fetch(`${API_BASE_URL}/admin/upload-event-image`, {
             method: 'POST',
@@ -545,7 +545,7 @@ export const adminAPI = {
         if (filters.endDate) params.append('endDate', filters.endDate);
         if (filters.status) params.append('status', filters.status);
         if (filters.paymentStatus) params.append('paymentStatus', filters.paymentStatus);
-        
+
         const response = await fetch(`${API_BASE_URL}/admin/tickets/export?${params}`, {
             headers: getAuthHeaders('admin')
         });
@@ -572,7 +572,7 @@ export const adminAPI = {
         if (options.limit) params.append('limit', options.limit);
         if (options.staffId) params.append('staffId', options.staffId);
         if (options.actionType) params.append('actionType', options.actionType);
-        
+
         const response = await fetch(`${API_BASE_URL}/admin/monitoring/activities?${params}`, {
             headers: getAuthHeaders('admin')
         });
@@ -721,7 +721,7 @@ export const staffAPI = {
         if (filters.status) params.append('status', filters.status);
         if (filters.date) params.append('date', filters.date);
         if (filters.search) params.append('search', filters.search);
-        
+
         const response = await fetch(`${API_BASE_URL}/staff/tickets?${params}`, {
             headers: getAuthHeaders('staff')
         });
@@ -956,7 +956,7 @@ export const staffAPI = {
     uploadImage: async (file) => {
         const formData = new FormData();
         formData.append('image', file);
-        
+
         const token = getToken('staff');
         const response = await fetch(`${API_BASE_URL}/staff/upload-image`, {
             method: 'POST',
@@ -971,7 +971,7 @@ export const staffAPI = {
     uploadAnimalImage: async (file) => {
         const formData = new FormData();
         formData.append('image', file);
-        
+
         const token = getToken('staff');
         const response = await fetch(`${API_BASE_URL}/staff/upload-animal-image`, {
             method: 'POST',
@@ -986,7 +986,7 @@ export const staffAPI = {
     uploadPlantImage: async (file) => {
         const formData = new FormData();
         formData.append('image', file);
-        
+
         const token = getToken('staff');
         const response = await fetch(`${API_BASE_URL}/staff/upload-plant-image`, {
             method: 'POST',
@@ -1001,7 +1001,7 @@ export const staffAPI = {
     uploadEventImage: async (file) => {
         const formData = new FormData();
         formData.append('image', file);
-        
+
         const token = getToken('staff');
         const response = await fetch(`${API_BASE_URL}/staff/upload-event-image`, {
             method: 'POST',
@@ -1509,7 +1509,7 @@ export const reservationAPI = {
         formData.append('childQuantity', reservationData.childQuantity || 0);
         formData.append('bulusanResidentQuantity', reservationData.bulusanResidentQuantity || 0);
         formData.append('notes', reservationData.notes || '');
-        
+
         // append resident id image file if provided
         if (reservationData.residentIdImage instanceof File) {
             formData.append('residentIdImage', reservationData.residentIdImage);
@@ -1699,10 +1699,10 @@ export const predictionAPI = {
  */
 export const getProfileImageUrl = (profileImg) => {
     if (!profileImg) return null;
-    
+
     // Import default avatar utilities lazily to avoid circular dependencies
     const DEFAULT_AVATAR_KEYS = ['deer', 'owl', 'dove', 'eagle', 'horse', 'tiger', 'monkey', 'ostrich', 'parrot', 'rabbit'];
-    
+
     // Check if it's a default avatar key
     if (DEFAULT_AVATAR_KEYS.includes(profileImg)) {
         // Generate inline SVG data URL for default avatars
@@ -1722,27 +1722,27 @@ export const getProfileImageUrl = (profileImg) => {
         const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="${avatar.bgColor}"/><text x="50" y="60" font-size="50" text-anchor="middle" dominant-baseline="middle">${avatar.emoji}</text></svg>`;
         return `data:image/svg+xml,${encodeURIComponent(svg)}`;
     }
-    
+
     // If it's already a full URL (http/https), use it directly
     if (profileImg.startsWith('http')) {
         return profileImg;
     }
-    
+
     // If it's a data URL, use it directly
     if (profileImg.startsWith('data:')) {
         return profileImg;
     }
-    
+
     // If it's a relative path starting with /uploads, prepend the backend URL
     if (profileImg.startsWith('/uploads')) {
         return `${BACKEND_BASE_URL}${profileImg}`;
     }
-    
+
     // Legacy: if it's in the frontend's profile-img folder
     if (profileImg.startsWith('/profile-img/')) {
         return profileImg;
     }
-    
+
     // Default: assume it's in the backend uploads
     return `${BACKEND_BASE_URL}/uploads/profile-images/${profileImg}`;
 };
@@ -1753,22 +1753,22 @@ export const getProfileImageUrl = (profileImg) => {
  */
 export const getResidentIdImageUrl = (residentIdImg) => {
     if (!residentIdImg) return null;
-    
+
     // If it's a base64 data URL, use it directly
     if (residentIdImg.startsWith('data:image')) {
         return residentIdImg;
     }
-    
+
     // If it's already a full URL (http/https), use it directly  
     if (residentIdImg.startsWith('http')) {
         return residentIdImg;
     }
-    
+
     // If it's a relative path starting with /uploads, prepend the backend URL
     if (residentIdImg.startsWith('/uploads')) {
         return `${BACKEND_BASE_URL}${residentIdImg}`;
     }
-    
+
     // Default: assume it's in the backend resident-id-images folder
     return `${BACKEND_BASE_URL}/uploads/resident-id-images/${residentIdImg}`;
 };

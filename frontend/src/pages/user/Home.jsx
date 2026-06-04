@@ -107,14 +107,14 @@ const HeroSection = () => {
 
                 <div className="hero-images absolute inset-0 z-0 flex items-center justify-center overflow-hidden pointer-events-none">
                     <img
-                        src="/pixels/pixeldeer.png"
+                        src="/pixels/deer.png"
                         alt="Rabbit"
-                        className="hero-drag-item absolute w-15 sm:w-24 md:w-36 lg:w-46 left-[5%] sm:left-[10%] md:left-[18%] top-[55%] sm:top-[70%] md:top-[40%] -rotate-12 pointer-events-auto cursor-grab active:cursor-grabbing"
+                        className="hero-drag-item absolute w-20 sm:w-24 md:w-36 lg:w-56 left-[5%] sm:left-[10%] md:left-20%] top-[55%] sm:top-[70%] md:top-[40%] -rotate-12 pointer-events-auto cursor-grab active:cursor-grabbing"
                     />
                     <img
-                        src="/pixels/pixelrab.png"
+                        src="/pixels/rabbit.png"
                         alt="Turtle"
-                        className="hero-drag-item absolute w-20 sm:w-24 md:w-36 lg:w-56 right-[5%] sm:right-[10%] md:right-[18%] top-[57%] sm:top-[70%] md:top-[45%] rotate-12 pointer-events-auto cursor-grab active:cursor-grabbing"
+                        className="hero-drag-item absolute w-20 sm:w-24 md:w-36 lg:w-56 right-[5%] sm:right-[10%] md:right-[14%] top-[57%] sm:top-[70%] md:top-[45%] rotate-12 pointer-events-auto cursor-grab active:cursor-grabbing"
                     />
                 </div>
 
