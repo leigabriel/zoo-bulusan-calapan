@@ -195,7 +195,7 @@ const AIChatAssistant = ({ onClose }) => {
                                 onClick={() => handleSend()}
                                 disabled={!input.trim() || loading}
                                 className="w-9 h-9 rounded-xl flex items-center justify-center transition-all active:scale-90 disabled:opacity-25"
-                                style={{ background: THEME.accentDark, color: '#f7fff9' }}
+                                style={{ background: THEME.accentDark, color: '#000' }}
                             >
                                 <SendIcon />
                             </button>

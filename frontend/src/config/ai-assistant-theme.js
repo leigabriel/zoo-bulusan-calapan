@@ -1,14 +1,14 @@
 export const AI_ASSISTANT_ICON = '../pixels/zusan.png';
 
 export const AI_ASSISTANT_THEME = {
-    base: '#edf9f0',
+    base: '#ffffff',
     surface: '#ffffff',
-    surfaceMuted: '#f6fdf8',
-    border: '#cfe8d7',
-    text: '#1f2d23',
-    textMuted: '#5f776a',
-    textSoft: '#7c9686',
-    accent: '#1f8a4c',
-    accentDark: '#16693a',
-    accentSoft: '#d7f1df'
+    surfaceMuted: '#ffffff',
+    border: '#e2e8f0', // Soft gray to keep UI outlines visible
+    text: '#000000',
+    textMuted: '#333333', // Dark gray for readability
+    textSoft: '#666666',
+    accent: '#c6fe69',
+    accentDark: '#b5ed5a', // Slightly darker tint for active/hover button states
+    accentSoft: '#f3fce3' // Very light tint of your accent for the avatar background
 };
