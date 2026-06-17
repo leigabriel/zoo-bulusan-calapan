@@ -383,6 +383,7 @@ CREATE TABLE event_reservations (
     venue_event_name VARCHAR(200) DEFAULT NULL,
     venue_event_date DATE DEFAULT NULL,
     venue_event_time VARCHAR(50) DEFAULT NULL,
+    venue_event_end_time VARCHAR(50) DEFAULT NULL,
     venue_event_description TEXT DEFAULT NULL,
     participant_name VARCHAR(100) NOT NULL,
     participant_email VARCHAR(100) NOT NULL,

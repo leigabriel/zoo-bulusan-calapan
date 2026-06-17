@@ -194,14 +194,6 @@ exports.createTicketReservation = async (req, res) => {
             });
         }
 
-        const validTime = TICKET_TIME_SLOTS.some(slot => slot.id === reservationTime);
-        if (!validTime) {
-            return res.status(400).json({
-                success: false,
-                message: 'Selected time slot is invalid.'
-            });
-        }
-
         // parse quantities from formdata strings
         const adult = parseInt(adultQuantity) || 0;
         const child = parseInt(childQuantity) || 0;
@@ -274,7 +266,7 @@ exports.createEventReservation = async (req, res) => {
         const { 
             eventId, participantName, participantEmail, participantPhone,
             numberOfParticipants, participantDetails, notes,
-            venueEventName, venueEventDate, venueEventTime, venueEventDescription
+            venueEventName, venueEventDate, venueEventStartTime, venueEventEndTime, venueEventDescription
         } = req.body;
 
         if (!participantName || !participantEmail) {
@@ -291,35 +283,21 @@ exports.createEventReservation = async (req, res) => {
             });
         }
 
-        if (!venueEventTime) {
+        if (!venueEventStartTime || !venueEventEndTime) {
             return res.status(400).json({
                 success: false,
-                message: 'Please select an event time.'
-            });
-        }
-
-        const validTime = EVENT_TIME_SLOTS.some(slot => slot.id === venueEventTime);
-        if (!validTime) {
-            return res.status(400).json({
-                success: false,
-                message: 'Selected event time is invalid.'
+                message: 'Please provide both event start and end time.'
             });
         }
 
         const participants = parseInt(numberOfParticipants, 10) || 1;
-        if (participants > EVENT_SLOT_CAPACITY) {
-            return res.status(400).json({
-                success: false,
-                message: `Maximum headcount is ${EVENT_SLOT_CAPACITY} participants.`
-            });
-        }
 
-        const eventTotals = await Reservation.getEventTotalsByDateTime(venueEventDate, venueEventTime);
+        const eventTotals = await Reservation.getEventTotalsByDate(venueEventDate);
         const projectedTotal = (eventTotals?.total_participants || 0) + participants;
         if (projectedTotal > EVENT_SLOT_CAPACITY) {
             return res.status(400).json({
                 success: false,
-                message: `This time slot only has ${Math.max(0, EVENT_SLOT_CAPACITY - (eventTotals?.total_participants || 0))} spots remaining.`
+                message: `This date only has ${Math.max(0, EVENT_SLOT_CAPACITY - (eventTotals?.total_participants || 0))} spots remaining.`
             });
         }
 
@@ -330,7 +308,8 @@ exports.createEventReservation = async (req, res) => {
             type: 'event',
             ref: reservationReference,
             date: venueEventDate,
-            time: venueEventTime,
+            time: venueEventStartTime,
+            endTime: venueEventEndTime,
             name: participantName,
             email: participantEmail,
             participants,
@@ -351,7 +330,8 @@ exports.createEventReservation = async (req, res) => {
             notes,
             venueEventName,
             venueEventDate,
-            venueEventTime,
+            venueEventStartTime,
+            venueEventEndTime,
             venueEventDescription,
             qrData
         });

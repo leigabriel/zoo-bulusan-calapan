@@ -86,7 +86,7 @@ const Reservations = () => {
     const [residentIdImage, setResidentIdImage] = useState(null);
     const [residentIdPreview, setResidentIdPreview] = useState(null);
     const [idUploadError, setIdUploadError] = useState('');
-    const [eventForm, setEventForm] = useState({ venueEventName: '', venueEventDate: '', venueEventTime: '', venueEventDescription: '', numberOfParticipants: 1, participantName: '', participantEmail: '', participantPhone: '', notes: '' });
+    const [eventForm, setEventForm] = useState({ venueEventName: '', venueEventDate: '', venueEventStartTime: '', venueEventEndTime: '', venueEventDescription: '', numberOfParticipants: 1, participantName: '', participantEmail: '', participantPhone: '', notes: '' });
     const [showHistoryPanel, setShowHistoryPanel] = useState(false);
     const [ticketAvailability, setTicketAvailability] = useState([]);
     const [eventAvailability, setEventAvailability] = useState([]);
@@ -269,7 +269,8 @@ const Reservations = () => {
                 const res = await reservationAPI.createEventReservation({
                     venueEventName: eventForm.venueEventName,
                     venueEventDate: eventForm.venueEventDate,
-                    venueEventTime: eventForm.venueEventTime,
+                    venueEventStartTime: eventForm.venueEventStartTime,
+                    venueEventEndTime: eventForm.venueEventEndTime,
                     venueEventDescription: eventForm.venueEventDescription,
                     participantName: eventForm.participantName,
                     participantEmail: eventForm.participantEmail,
@@ -285,7 +286,8 @@ const Reservations = () => {
                         qrData: res.qrData,
                         eventName: eventForm.venueEventName,
                         eventDate: eventForm.venueEventDate,
-                        eventTime: eventForm.venueEventTime,
+                        eventStartTime: eventForm.venueEventStartTime,
+                        eventEndTime: eventForm.venueEventEndTime,
                         participants: eventForm.numberOfParticipants
                     });
                     setShowConfirmation(true);
@@ -309,14 +311,14 @@ const Reservations = () => {
         setResidentIdImage(null);
         setResidentIdPreview(null);
         setIdUploadError('');
-        setEventForm({ venueEventName: '', venueEventDate: '', venueEventTime: '', venueEventDescription: '', numberOfParticipants: 1, participantName: fullName, participantEmail: user?.email || '', participantPhone: '', notes: '' });
+        setEventForm({ venueEventName: '', venueEventDate: '', venueEventStartTime: '', venueEventEndTime: '', venueEventDescription: '', numberOfParticipants: 1, participantName: fullName, participantEmail: user?.email || '', participantPhone: '', notes: '' });
     };
 
     const hasFormData = () => {
         if (reservationType === 'ticket') {
             return getTotalVisitors() > 0 || ticketForm.reservationDate || ticketForm.reservationTime;
         } else {
-            return eventForm.venueEventName || eventForm.venueEventDate || eventForm.venueEventDescription || eventForm.participantPhone;
+            return eventForm.venueEventName || eventForm.venueEventDate || eventForm.venueEventStartTime || eventForm.venueEventEndTime || eventForm.venueEventDescription || eventForm.participantPhone;
         }
     };
 
@@ -621,16 +623,7 @@ const Reservations = () => {
                                                     {ticketForm.reservationDate && (
                                                         <div className="flex flex-col gap-2">
                                                             <label className="text-[9px] tracking-[0.2em] uppercase font-bold text-[#212631]">Arrival Time *</label>
-                                                            <select value={ticketForm.reservationTime} onChange={e => setTicketForm({ ...ticketForm, reservationTime: e.target.value })} className="w-full bg-[#ebebeb] border border-[#212631]/20 p-4 text-sm font-semibold text-[#212631] focus:border-[#212631] outline-none transition-colors h-[54px]" required>
-                                                                <option value="" disabled>Select a time slot</option>
-                                                                {loadingSlots ? <option disabled>Loading slots...</option> : 
-                                                                    ticketAvailability.map(slot => (
-                                                                        <option key={slot.id} value={slot.id} disabled={slot.available <= 0 || getTotalVisitors() > slot.available}>
-                                                                            {slot.label} ({slot.available} left)
-                                                                        </option>
-                                                                    ))
-                                                                }
-                                                            </select>
+                                                            <input type="time" value={ticketForm.reservationTime} onChange={e => setTicketForm({ ...ticketForm, reservationTime: e.target.value })} className="w-full bg-[#ebebeb] border border-[#212631]/20 p-4 text-sm font-semibold text-[#212631] focus:border-[#212631] outline-none transition-colors h-[54px]" required />
                                                         </div>
                                                     )}
 
@@ -646,20 +639,17 @@ const Reservations = () => {
                                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                                                     <div className="flex flex-col gap-2">
                                                         <label className="text-[9px] tracking-[0.2em] uppercase font-bold text-[#212631]">Event Date *</label>
-                                                        <input type="date" value={eventForm.venueEventDate} onChange={e => setEventForm({ ...eventForm, venueEventDate: e.target.value, venueEventTime: '' })} min={getMinDate()} className="w-full bg-[#ebebeb] border border-[#212631]/20 p-4 text-sm font-semibold text-[#212631] focus:border-[#212631] outline-none transition-colors uppercase tracking-wider h-[54px]" required />
+                                                        <input type="date" value={eventForm.venueEventDate} onChange={e => setEventForm({ ...eventForm, venueEventDate: e.target.value })} min={getMinDate()} className="w-full bg-[#ebebeb] border border-[#212631]/20 p-4 text-sm font-semibold text-[#212631] focus:border-[#212631] outline-none transition-colors uppercase tracking-wider h-[54px]" required />
                                                     </div>
                                                     <div className="flex flex-col gap-2">
-                                                        <label className="text-[9px] tracking-[0.2em] uppercase font-bold text-[#212631]">Event Time</label>
-                                                        <select value={eventForm.venueEventTime} onChange={e => setEventForm({ ...eventForm, venueEventTime: e.target.value })} className="w-full bg-[#ebebeb] border border-[#212631]/20 p-4 text-sm font-semibold text-[#212631] focus:border-[#212631] outline-none transition-colors h-[54px]" required disabled={!eventForm.venueEventDate}>
-                                                            <option value="" disabled>{eventForm.venueEventDate ? "Select a time slot" : "Select date first"}</option>
-                                                            {loadingSlots ? <option disabled>Loading slots...</option> : 
-                                                                eventAvailability.map(slot => (
-                                                                    <option key={slot.id} value={slot.id} disabled={slot.available <= 0 || parseInt(eventForm.numberOfParticipants || 0) > slot.available}>
-                                                                        {slot.label} ({slot.available} left)
-                                                                    </option>
-                                                                ))
-                                                            }
-                                                        </select>
+                                                        <label className="text-[9px] tracking-[0.2em] uppercase font-bold text-[#212631]">Event Start Time *</label>
+                                                        <input type="time" value={eventForm.venueEventStartTime} onChange={e => setEventForm({ ...eventForm, venueEventStartTime: e.target.value })} className="w-full bg-[#ebebeb] border border-[#212631]/20 p-4 text-sm font-semibold text-[#212631] focus:border-[#212631] outline-none transition-colors h-[54px]" required />
+                                                    </div>
+                                                </div>
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                                                    <div className="flex flex-col gap-2">
+                                                        <label className="text-[9px] tracking-[0.2em] uppercase font-bold text-[#212631]">Event End Time *</label>
+                                                        <input type="time" value={eventForm.venueEventEndTime} onChange={e => setEventForm({ ...eventForm, venueEventEndTime: e.target.value })} className="w-full bg-[#ebebeb] border border-[#212631]/20 p-4 text-sm font-semibold text-[#212631] focus:border-[#212631] outline-none transition-colors h-[54px]" required />
                                                     </div>
                                                 </div>
 
@@ -750,6 +740,8 @@ const Reservations = () => {
                                             <div className="flex justify-between items-center"><span className="text-[9px] tracking-widest uppercase font-bold text-[#212631]/60">Type</span><span className="text-[10px] font-black uppercase text-[#212631]">Venue</span></div>
                                             <div className="flex justify-between items-center"><span className="text-[9px] tracking-widest uppercase font-bold text-[#212631]/60">Event</span><span className="text-[10px] font-black uppercase text-[#212631] truncate max-w-[150px]">{eventForm.venueEventName}</span></div>
                                             <div className="flex justify-between items-center"><span className="text-[9px] tracking-widest uppercase font-bold text-[#212631]/60">Date</span><span className="text-[10px] font-black uppercase text-[#212631]">{formatDate(eventForm.venueEventDate)}</span></div>
+                                            <div className="flex justify-between items-center"><span className="text-[9px] tracking-widest uppercase font-bold text-[#212631]/60">Start</span><span className="text-[10px] font-black uppercase text-[#212631]">{eventForm.venueEventStartTime || '-'}</span></div>
+                                            <div className="flex justify-between items-center"><span className="text-[9px] tracking-widest uppercase font-bold text-[#212631]/60">End</span><span className="text-[10px] font-black uppercase text-[#212631]">{eventForm.venueEventEndTime || '-'}</span></div>
                                             <div className="flex justify-between items-center"><span className="text-[9px] tracking-widest uppercase font-bold text-[#212631]/60">Pax</span><span className="text-[10px] font-black uppercase text-[#212631]">{eventForm.numberOfParticipants}</span></div>
                                         </>
                                     )}

@@ -121,21 +121,21 @@ class Reservation {
         const { 
             reservationReference, userId, eventId, participantName, participantEmail,
             participantPhone, numberOfParticipants, participantDetails, status, notes,
-            venueEventName, venueEventDate, venueEventTime, venueEventDescription, qrData
+            venueEventName, venueEventDate, venueEventStartTime, venueEventEndTime, venueEventDescription, qrData
         } = data;
         
         const [result] = await db.query(
             `INSERT INTO event_reservations (
                 reservation_reference, user_id, event_id, participant_name, participant_email,
                 participant_phone, number_of_participants, participant_details, status, notes,
-                venue_event_name, venue_event_date, venue_event_time, venue_event_description, qr_data
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                venue_event_name, venue_event_date, venue_event_time, venue_event_end_time, venue_event_description, qr_data
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
                 reservationReference, userId || null, eventId || null, participantName, participantEmail,
                 participantPhone || null, numberOfParticipants || 1, participantDetails || null,
                 status || 'pending', notes || null,
-                venueEventName || null, venueEventDate || null, venueEventTime || null,
-                venueEventDescription || null, qrData || null
+                venueEventName || null, venueEventDate || null, venueEventStartTime || null,
+                venueEventEndTime || null, venueEventDescription || null, qrData || null
             ]
         );
         return result.insertId;
@@ -353,6 +353,16 @@ class Reservation {
             [startDate, endDate]
         );
         return rows;
+    }
+
+    static async getEventTotalsByDate(venueEventDate) {
+        const [rows] = await db.query(
+            `SELECT COALESCE(SUM(number_of_participants), 0) as total_participants
+             FROM event_reservations
+             WHERE venue_event_date = ? AND status IN ('pending', 'confirmed')`,
+            [venueEventDate]
+        );
+        return rows[0] || { total_participants: 0 };
     }
 
     static async getEventTotalsByDateTime(venueEventDate, venueEventTime) {

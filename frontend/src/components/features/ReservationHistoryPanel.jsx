@@ -110,6 +110,10 @@ const ReservationHistoryPanel = ({ isOpen, onClose }) => {
             const timeStr = selectedReservation.reservation_time || selectedReservation.venue_event_time || selectedReservation.start_time || 'N/A';
             addRow('Time', timeStr, true);
 
+            if (selectedReservation.venue_event_end_time) {
+                addRow('End Time', selectedReservation.venue_event_end_time, true);
+            }
+
             ctx.beginPath();
             ctx.moveTo(40, y + 5);
             ctx.lineTo(baseWidth - 40, y + 5);
@@ -476,6 +480,12 @@ const ReservationHistoryPanel = ({ isOpen, onClose }) => {
                                         <span className="text-slate-500">Time</span>
                                         <span className="font-semibold text-slate-800">{selectedReservation.reservation_time || selectedReservation.venue_event_time || selectedReservation.start_time || 'N/A'}</span>
                                     </div>
+                                    {selectedReservation.venue_event_end_time && (
+                                        <div className="flex justify-between items-center py-2 border-b border-slate-100">
+                                            <span className="text-slate-500">End Time</span>
+                                            <span className="font-semibold text-slate-800">{selectedReservation.venue_event_end_time}</span>
+                                        </div>
+                                    )}
 
                                     {selectedReservation.type === 'ticket' && (
                                         <>
