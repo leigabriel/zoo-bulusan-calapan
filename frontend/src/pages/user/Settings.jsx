@@ -96,19 +96,15 @@ const Settings = () => {
         fetchSettings();
     }, [user]);
 
-    useEffect(() => {
-        if (activeSection === 'activities' && activities.length === 0) {
-            fetchActivities();
-        }
-    }, [activeSection]);
-
     const fetchActivities = async () => {
         setActivitiesLoading(true);
         setActivitiesError(null);
         try {
             const response = await userAPI.getActivities();
             if (response.success) {
-                setActivities(response.activities);
+                setActivities(response.activities || []);
+            } else {
+                setActivitiesError("Unable to load activity history.");
             }
         } catch (error) {
             console.error("Failed to fetch activities:", error);
@@ -117,6 +113,12 @@ const Settings = () => {
             setActivitiesLoading(false);
         }
     };
+
+    useEffect(() => {
+        if (activeSection === 'activities' && user) {
+            fetchActivities();
+        }
+    }, [activeSection, user]);
 
     const handleNotificationToggle = async (key, value) => {
         const newSettings = { ...notifications, [key]: value };
@@ -157,8 +159,11 @@ const Settings = () => {
     }
 
     const formatDate = (dateString) => {
+        if (!dateString) return '';
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) return '';
         const options = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
-        return new Date(dateString).toLocaleDateString('en-US', options);
+        return date.toLocaleDateString('en-US', options);
     };
 
     const getActivityIcon = (type) => {
@@ -278,8 +283,8 @@ const Settings = () => {
                             </div>
                         ) : (
                             <div className="space-y-4">
-                                {activities.map((activity) => (
-                                    <div key={`${activity.type}-${activity.id}`} className="flex items-start gap-4 p-4 bg-white border border-gray-100 rounded-xl shadow-sm hover:shadow-md transition-shadow">
+                                {activities.filter(Boolean).map((activity, index) => (
+                                    <div key={activity.id ? `${activity.type || 'activity'}-${activity.id}` : `activity-${index}`} className="flex items-start gap-4 p-4 bg-white border border-gray-100 rounded-xl shadow-sm hover:shadow-md transition-shadow">
                                         <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${getActivityColor(activity.type)}`}>
                                             {getActivityIcon(activity.type)}
                                         </div>
