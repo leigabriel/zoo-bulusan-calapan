@@ -22,7 +22,7 @@ class User {
     static async findById(id) {
         const [rows] = await db.query(
             `SELECT id, first_name, last_name, username, email, phone_number, gender, birthday, 
-             role, profile_image, is_active, email_verified, created_at, updated_at 
+             role, profile_image, is_active, email_verified, notification_settings, created_at, updated_at 
              FROM users WHERE id = ?`,
             [id]
         );
@@ -303,6 +303,64 @@ class User {
             [appealId]
         );
         return rows[0];
+    }
+    
+    // User Settings
+    static async getSettings(userId) {
+        const [rows] = await db.query(
+            'SELECT notification_settings FROM users WHERE id = ?',
+            [userId]
+        );
+        if (rows[0] && rows[0].notification_settings) {
+            return typeof rows[0].notification_settings === 'string' ? JSON.parse(rows[0].notification_settings) : rows[0].notification_settings;
+        }
+        return null;
+    }
+
+    static async updateSettings(userId, settings) {
+        const [result] = await db.query(
+            'UPDATE users SET notification_settings = ?, updated_at = NOW() WHERE id = ?',
+            [JSON.stringify(settings), userId]
+        );
+        return result.affectedRows > 0;
+    }
+
+    // User Activities
+    static async getActivities(userId) {
+        // Fetch tickets
+        const [tickets] = await db.query(
+            `SELECT id, 'ticket_reservation' as type, created_at, status, ticket_type as details 
+             FROM tickets WHERE user_id = ?`,
+            [userId]
+        );
+        
+        // Fetch posts
+        const [posts] = await db.query(
+            `SELECT id, 'community_post' as type, created_at, status, content as details 
+             FROM community_posts WHERE user_id = ?`,
+            [userId]
+        );
+        
+        // Fetch comments
+        const [comments] = await db.query(
+            `SELECT id, 'community_comment' as type, created_at, 'published' as status, comment_text as details 
+             FROM community_comments WHERE user_id = ?`,
+            [userId]
+        );
+        
+        // Fetch likes
+        const [likes] = await db.query(
+            `SELECT l.id, 'community_like' as type, l.created_at, 'liked' as status, p.content as details 
+             FROM community_post_likes l 
+             JOIN community_posts p ON l.post_id = p.id 
+             WHERE l.user_id = ?`,
+            [userId]
+        );
+
+        const activities = [...tickets, ...posts, ...comments, ...likes];
+        activities.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        
+        return activities;
     }
 }
 

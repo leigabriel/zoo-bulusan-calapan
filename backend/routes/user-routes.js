@@ -12,6 +12,9 @@ router.use(protect);
 
 router.get('/profile', userController.getProfile);
 router.put('/profile', userController.updateProfile);
+router.get('/settings', userController.getSettings);
+router.put('/settings', userController.updateSettings);
+router.get('/activities', userController.getActivities);
 router.get('/notifications', userController.getNotifications);
 router.put('/notifications/:id/read', userController.markNotificationRead);
 router.put('/notifications/read-all', userController.markAllNotificationsRead);

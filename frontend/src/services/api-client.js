@@ -1078,6 +1078,29 @@ export const userAPI = {
         return handleResponse(response);
     },
 
+    getSettings: async () => {
+        const response = await fetch(`${API_BASE_URL}/users/settings`, {
+            headers: getAuthHeaders('user')
+        });
+        return handleResponse(response);
+    },
+
+    updateSettings: async (settings) => {
+        const response = await fetch(`${API_BASE_URL}/users/settings`, {
+            method: 'PUT',
+            headers: getAuthHeaders('user'),
+            body: JSON.stringify({ settings })
+        });
+        return handleResponse(response);
+    },
+
+    getActivities: async () => {
+        const response = await fetch(`${API_BASE_URL}/users/activities`, {
+            headers: getAuthHeaders('user')
+        });
+        return handleResponse(response);
+    },
+
     getSlotAvailability: async (date) => {
         const response = await fetch(`${API_BASE_URL}/users/tickets/availability?date=${encodeURIComponent(date)}`);
         return handleResponse(response);

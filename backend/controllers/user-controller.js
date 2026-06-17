@@ -102,6 +102,42 @@ exports.updateProfile = async (req, res) => {
     }
 };
 
+exports.getSettings = async (req, res) => {
+    try {
+        const settings = await User.getSettings(req.user.id);
+        res.json({ success: true, settings });
+    } catch (error) {
+        console.error('Error getting settings:', error);
+        res.status(500).json({ success: false, message: 'Error getting settings' });
+    }
+};
+
+exports.updateSettings = async (req, res) => {
+    try {
+        const { settings } = req.body;
+        const result = await User.updateSettings(req.user.id, settings);
+        
+        if (result) {
+            res.json({ success: true, message: 'Settings updated successfully' });
+        } else {
+            res.status(400).json({ success: false, message: 'Failed to update settings' });
+        }
+    } catch (error) {
+        console.error('Error updating settings:', error);
+        res.status(500).json({ success: false, message: 'Error updating settings' });
+    }
+};
+
+exports.getActivities = async (req, res) => {
+    try {
+        const activities = await User.getActivities(req.user.id);
+        res.json({ success: true, activities });
+    } catch (error) {
+        console.error('Error getting activities:', error);
+        res.status(500).json({ success: false, message: 'Error getting activities' });
+    }
+};
+
 exports.getNotifications = async (req, res) => {
     try {
         const notifications = await Notification.getByUserId(req.user.id, 50);

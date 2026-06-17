@@ -51,6 +51,7 @@ CREATE TABLE users (
     suspended_by INT DEFAULT NULL,
     last_login_at TIMESTAMP NULL DEFAULT NULL,
     last_login_ip VARCHAR(45) DEFAULT NULL,
+    notification_settings JSON DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     UNIQUE KEY uk_users_username (username),
