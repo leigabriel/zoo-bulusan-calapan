@@ -1,6 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ReactLenis } from 'lenis/react';
+import { useNavigate } from 'react-router-dom';
 import { AI_ASSISTANT_ICON, AI_ASSISTANT_THEME } from '../../../config/ai-assistant-theme';
+import { getAuthHeaders } from '../../../services/api-client';
+import TicketCard from './TicketCard';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 const THEME = AI_ASSISTANT_THEME;
@@ -52,6 +55,7 @@ const SUGGESTIONS = [
 const GREETING = "Mabuhay! I'm Zusan. I'm here to guide you through the Calapan Bulusan Zoo. Ask me anything about our animals, exhibits, or how to get around.";
 
 const AIChatAssistant = ({ onClose }) => {
+    const navigate = useNavigate();
     const [started, setStarted] = useState(false);
     const [messages, setMessages] = useState([]);
     const [input, setInput] = useState('');
@@ -81,16 +85,27 @@ const AIChatAssistant = ({ onClose }) => {
         try {
             const response = await fetch(`${API_URL}/ai/chat`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: getAuthHeaders('user'),
                 body: JSON.stringify({ message: msg, history: history.slice(-5) })
             });
             const data = await response.json();
-            setMessages(prev => [...prev, { role: 'assistant', content: data.success ? data.response : "I'm having trouble connecting. Please try again." }]);
+            setMessages(prev => [...prev, {
+                role: 'assistant',
+                content: data.success ? data.response : "I'm having trouble connecting. Please try again.",
+                cards: data.cards || [],
+                action: data.action || null
+            }]);
         } catch {
-            setMessages(prev => [...prev, { role: 'assistant', content: "Network error. Please check your connection." }]);
+            setMessages(prev => [...prev, { role: 'assistant', content: "Network error. Please check your connection.", cards: [], action: null }]);
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleAction = (action) => {
+        if (!action || !action.href) return;
+        onClose?.();
+        navigate(action.href);
     };
 
     const handleSend = async (overrideMsg) => {
@@ -208,14 +223,38 @@ const AIChatAssistant = ({ onClose }) => {
                                 {messages.map((msg, i) => (
                                     <div key={i} className={`flex gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : 'items-end'}`}>
                                         {msg.role === 'assistant' && <Avatar />}
-                                        <div
-                                            className="max-w-[80%] px-5 py-4 text-base leading-relaxed font-medium"
-                                            style={msg.role === 'user'
-                                                ? { background: THEME.accentDark, color: '#f7fff9', borderRadius: '1rem 1rem 0.25rem 1rem' }
-                                                : { background: THEME.surface, color: THEME.text, border: `1px solid ${THEME.border}`, borderRadius: '0.25rem 1rem 1rem 1rem' }
-                                            }
-                                        >
-                                            {msg.content}
+                                        <div className={`min-w-0 flex-1 flex flex-col gap-2.5 ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
+                                            <div
+                                                className="max-w-[80%] px-5 py-4 text-base leading-relaxed font-medium whitespace-pre-wrap break-words"
+                                                style={msg.role === 'user'
+                                                    ? { background: THEME.accentDark, color: '#f7fff9', borderRadius: '1rem 1rem 0.25rem 1rem' }
+                                                    : { background: THEME.surface, color: THEME.text, border: `1px solid ${THEME.border}`, borderRadius: '0.25rem 1rem 1rem 1rem' }
+                                                }
+                                            >
+                                                {msg.content}
+                                            </div>
+
+                                            {msg.cards?.length > 0 && (
+                                                <div className="w-full flex flex-col gap-2.5">
+                                                    {msg.cards.map((card, ci) => (
+                                                        <TicketCard key={`${card.reference || ci}-${ci}`} data={card} />
+                                                    ))}
+                                                </div>
+                                            )}
+
+                                            {msg.action && (
+                                                <button
+                                                    onClick={() => handleAction(msg.action)}
+                                                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all active:scale-95 hover:opacity-90"
+                                                    style={
+                                                        msg.action.variant === 'ghost'
+                                                            ? { background: THEME.surface, color: THEME.text, border: `1px solid ${THEME.border}` }
+                                                            : { background: THEME.accentDark, color: '#0f172a' }
+                                                    }
+                                                >
+                                                    {msg.action.label}
+                                                </button>
+                                            )}
                                         </div>
                                     </div>
                                 ))}

@@ -1,11 +1,12 @@
 const express = require('express');
 const router = express.Router();
-const { protect, authorize } = require('../middleware/auth');
+const { protect, authorize, optionalAuth } = require('../middleware/auth');
 
 // import models
 const Animal = require('../models/animal-model');
 const Event = require('../models/event-model');
 const Ticket = require('../models/ticket-model');
+const Reservation = require('../models/reservation-model');
 
 // load google ai client
 let GoogleGenerativeAI = null;
@@ -74,9 +75,207 @@ const getDynamicZooData = async () => {
     }
 };
 
+// Fetch the logged-in user's OWN reservations only.
+// Returns sanitized non-sensitive booking details.
+// Never returns account credentials, payment records, tokens, or other users' data.
+const getSanitizedUserReservations = async (userId) => {
+    if (!userId) return null;
+    try {
+        const [ticketReservations, eventReservations] = await Promise.all([
+            Reservation.findTicketReservationsByUserId(userId),
+            Reservation.findEventReservationsByUserId(userId)
+        ]);
+
+        const sanitizeTicket = (r) => ({
+            type: 'ticket',
+            reference: r.reservation_reference || null,
+            visitorName: r.visitor_name || null,
+            date: r.reservation_date || null,
+            time: r.reservation_time || null,
+            adults: r.adult_quantity || 0,
+            children: r.child_quantity || 0,
+            residents: r.bulusan_resident_quantity || 0,
+            totalVisitors: r.total_visitors || 0,
+            status: r.status || 'pending',
+            archived: !!r.is_archived
+        });
+
+        const sanitizeEvent = (r) => ({
+            type: 'event',
+            reference: r.reservation_reference || null,
+            eventTitle: r.event_title || r.venue_event_name || null,
+            date: r.venue_event_date || r.event_date || null,
+            time: r.venue_event_time || r.start_time || null,
+            location: r.venue_event_location || r.event_location || null,
+            participants: r.number_of_participants || 1,
+            status: r.status || 'pending',
+            archived: !!r.is_archived
+        });
+
+        return {
+            tickets: (ticketReservations || []).map(sanitizeTicket),
+            events: (eventReservations || []).map(sanitizeEvent)
+        };
+    } catch (error) {
+        console.error('Error fetching user reservations for AI:', error);
+        return null;
+    }
+};
+
+// Build a compact prompt section from the sanitized user reservations.
+const buildUserReservationContext = (userData) => {
+    if (!userData) return '';
+
+    const activeTickets = userData.tickets.filter(t => !t.archived && ['pending', 'confirmed'].includes(t.status));
+    const activeEvents = userData.events.filter(e => !e.archived && ['pending', 'confirmed'].includes(e.status));
+
+    let text = `\n\nLOGGED-IN USER RESERVATION DATA (only for the person who is chatting with you):\n`;
+    text += `- Active ticket reservations: ${activeTickets.length}\n`;
+    text += `- Active event reservations: ${activeEvents.length}`;
+
+    if (activeTickets.length > 0) {
+        text += `\nActive tickets:`;
+        activeTickets.forEach(t => {
+            text += `\n  - Reference ${t.reference}, name ${t.visitorName}, date ${t.date}${t.time ? ` at ${t.time}` : ''}, ${t.totalVisitors} visitor(s), status ${t.status}.`;
+        });
+    }
+
+    if (activeEvents.length > 0) {
+        text += `\nActive events:`;
+        activeEvents.forEach(e => {
+            text += `\n  - Reference ${e.reference}, event ${e.eventTitle}, ${e.date}${e.time ? ` at ${e.time}` : ''}, ${e.participants} participant(s), status ${e.status}.`;
+        });
+    }
+
+    if (userData.tickets.length === 0 && userData.events.length === 0) {
+        text += `\n(This user has no reservations on record.)`;
+    }
+
+    text += `\nAnswer this user's question about their own tickets or reservations using the details above only. If there is no active reservation, say so clearly. Never claim to have reservation data for any other person.`;
+    return text;
+};
+
+// Build structured card data + contextual action buttons for the /chat response.
+const buildChatCards = (message, userData) => {
+    const lowerMsg = String(message || '').toLowerCase();
+    const cards = [];
+    let action = null;
+
+    const asksReservation = /reservation|ticket|booking|booked|receipt/.test(lowerMsg);
+    const asksMine = /\bmy\b|mine/.test(lowerMsg) || /(current|active|upcoming) reservation/.test(lowerMsg);
+    const asksToBook = /\b(book|reserve|purchase|buy)\b/.test(lowerMsg);
+
+    if (!asksReservation) {
+        return { cards, action };
+    }
+
+    if (asksMine && userData) {
+        (userData.tickets || [])
+            .filter(t => !t.archived && ['pending', 'confirmed'].includes(t.status))
+            .forEach(t => cards.push({
+                kind: 'ticket',
+                title: 'Zoo Visit',
+                reference: t.reference,
+                name: t.visitorName,
+                date: t.date,
+                time: t.time,
+                adults: t.adults,
+                children: t.children,
+                residents: t.residents,
+                visitors: t.totalVisitors,
+                total: ((t.adults || 0) * 40) + ((t.children || 0) * 20),
+                status: t.status
+            }));
+
+        (userData.events || [])
+            .filter(e => !e.archived && ['pending', 'confirmed'].includes(e.status))
+            .forEach(e => cards.push({
+                kind: 'event',
+                title: e.eventTitle,
+                reference: e.reference,
+                date: e.date,
+                time: e.time,
+                participants: e.participants,
+                status: e.status
+            }));
+
+        if (cards.length > 0) {
+            action = { label: 'View Reservations', href: '/reservations', variant: 'primary' };
+        } else {
+            action = { label: 'Open Reservations', href: '/reservations', variant: 'ghost' };
+        }
+        return { cards, action };
+    }
+
+    if (asksMine && !userData) {
+        action = { label: 'Sign In', href: '/login', variant: 'primary' };
+        return { cards, action };
+    }
+
+    if (asksToBook) {
+        action = { label: 'Book Now', href: '/reservations', variant: 'primary' };
+        return { cards, action };
+    }
+
+    return { cards, action };
+};
+
+// answers a "my reservation / my ticket" request using the user's own data (static fallback when AI is unavailable)
+const getUserReservationFallback = (message, userData) => {
+    const lowerMsg = String(message || '').toLowerCase();
+
+    const asksReservation = /reservation|ticket|booking|booked/.test(lowerMsg);
+    if (!asksReservation) return null;
+
+    const asksOwn = /my\s+(active|current|upcoming|latest|reservation|reservations|ticket|tickets|booking)/.test(lowerMsg)
+        || /(my|mine)/.test(lowerMsg);
+
+    if (!asksOwn) return null;
+
+    if (!userData) {
+        return 'I can check your reservations for you. Please sign in to your account, then ask me again and I will look up your booking details.';
+    }
+
+    const activeTickets = (userData.tickets || []).filter(t => !t.archived && ['pending', 'confirmed'].includes(t.status));
+    const activeEvents = (userData.events || []).filter(e => !e.archived && ['pending', 'confirmed'].includes(e.status));
+
+    const asksActive = /active|current|upcoming|latest|next/.test(lowerMsg);
+
+    const formatTickets = (items) => items.map(t =>
+        `Ticket ${t.reference} for ${t.visitorName} on ${t.date}${t.time ? ` at ${t.time}` : ''} (${t.totalVisitors} visitor(s), status ${t.status})`
+    );
+    const formatEvents = (items) => items.map(e =>
+        `${e.eventTitle} on ${e.date}${e.time ? ` at ${e.time}` : ''} (${e.participants} participant(s), status ${e.status})`
+    );
+
+    if (asksActive || /active|current|upcoming/.test(lowerMsg)) {
+        const parts = [];
+        if (activeTickets.length > 0) parts.push(...formatTickets(activeTickets));
+        if (activeEvents.length > 0) parts.push(...formatEvents(activeEvents));
+
+        if (parts.length > 0) {
+            return `You have ${activeTickets.length + activeEvents.length} active reservation(s).\n${parts.map(p => `- ${p}`).join('\n')}\n\nView full details on your Reservations page or show your booking reference at the zoo entrance.`;
+        }
+        return 'You currently have no active reservations. When a reservation is confirmed, it will appear here. You can also check your Reservations page for your booking history.';
+    }
+
+    const allParts = [...formatTickets(userData.tickets || []), ...formatEvents(userData.events || [])];
+    if (allParts.length > 0) {
+        return `Here is a summary of your reservations:\n${allParts.map(p => `- ${p}`).join('\n')}\n\nYou can view the full list on your Reservations page. Only your own booking details are shown.`;
+    }
+
+    return 'You have no reservations on record. When you make a booking, they will show up here. You can reserve tickets on the Reservations page.';
+};
+
 // fallback response for ai
-const getFallbackResponse = (message, dynamicData = null) => {
+const getFallbackResponse = (message, dynamicData = null, userData = null) => {
     const lowerMsg = message.toLowerCase();
+
+    // Answer "my reservation / my ticket" questions using the logged-in user's own data.
+    const userReservationAnswer = getUserReservationFallback(message, userData);
+    if (userReservationAnswer) {
+        return userReservationAnswer;
+    }
 
     if (lowerMsg.includes('ticket') || lowerMsg.includes('price') || lowerMsg.includes('cost') || lowerMsg.includes('fee')) {
         let response = "Mabuhay! Here are our ticket prices:\n\n- Adult (18+): P50\n- Child (4-17): P30\n- Senior Citizens: P40\n- Students (with ID): P35\n- PWD (with ID): P35\n- Calapan Residents: FREE (with valid ID)\n\nYou can book tickets online through our website!";
@@ -428,10 +627,11 @@ ai assistant
 
 data privacy rules
 
-* never reveal personal user information
-* never reveal reservation records
-* never reveal payment information
-* never reveal account details
+* never reveal other people's personal information
+* never reveal reservation records, booking details, or payment information of any user other than the person currently chatting with you
+* never reveal passwords, security tokens, or account credentials
+* when the person chatting with you asks about their own reservations or tickets, use only the "logged-in user reservation data" provided in the prompt, and answer directly with what you find
+* if the logged-in user's reservation data is not present in the prompt, explain that you cannot access their reservations unless they are signed in
 * you may provide general statistics such as:
 
   * total animals
@@ -459,7 +659,7 @@ mission
 
 `;
 
-router.post('/chat', async (req, res) => {
+router.post('/chat', optionalAuth, async (req, res) => {
     try {
         const { message, history = [] } = req.body;
 
@@ -472,6 +672,11 @@ router.post('/chat', async (req, res) => {
 
         // Fetch dynamic data from database
         const dynamicData = await getDynamicZooData();
+
+        // Fetch the logged-in user's OWN reservations (sanitized, non-sensitive only)
+        const userData = req.user?.id ? await getSanitizedUserReservations(req.user.id) : null;
+        const userReservationContext = buildUserReservationContext(userData);
+        const cardsPayload = buildChatCards(message, userData);
         
         // Build dynamic context section
         let dynamicContext = '';
@@ -487,8 +692,7 @@ ${dynamicData.upcomingEvents.length > 0 ? `
 UPCOMING EVENTS:
 ${dynamicData.upcomingEvents.map(e => `- ${e.title} on ${e.date}: ${e.description || 'Check website for details'}`).join('\n')}` : '- No upcoming events scheduled at this time'}
 
-Remember: Only share this general zoo information. Never share personal user data, booking details, or payment information.
-`;
+Remember: Only share this general zoo information. Never expose passwords, account credentials, payment card data, or any other person's reservation/booking details.`;
         }
 
         const apiKey = process.env.GEMINI_API_KEY;
@@ -498,9 +702,11 @@ Remember: Only share this general zoo information. Never share personal user dat
             // fallback response
             return res.json({
                 success: true,
-                response: getFallbackResponse(message, dynamicData),
+                response: getFallbackResponse(message, dynamicData, userData),
                 timestamp: new Date().toISOString(),
-                source: 'fallback'
+                source: 'fallback',
+                cards: cardsPayload.cards,
+                action: cardsPayload.action
             });
         }
 
@@ -508,9 +714,11 @@ Remember: Only share this general zoo information. Never share personal user dat
         if (!GoogleGenerativeAI) {
             return res.json({
                 success: true,
-                response: getFallbackResponse(message, dynamicData),
+                response: getFallbackResponse(message, dynamicData, userData),
                 timestamp: new Date().toISOString(),
-                source: 'fallback'
+                source: 'fallback',
+                cards: cardsPayload.cards,
+                action: cardsPayload.action
             });
         }
 
@@ -543,7 +751,7 @@ Remember: Only share this general zoo information. Never share personal user dat
                     }));
 
                 // Create the full prompt with context
-                const systemPrompt = `${ZOO_BULUSAN_CONTEXT}${dynamicContext}\n\nUser's question: ${message}`;
+                const systemPrompt = `${ZOO_BULUSAN_CONTEXT}${dynamicContext}${userReservationContext}\n\nUser's question: ${message}`;
 
                 // Use generateContent for simpler, more reliable response
                 const result = await model.generateContent({
@@ -573,22 +781,26 @@ Remember: Only share this general zoo information. Never share personal user dat
             }
         }
 
-        if (chosen && finalText) {
+if (chosen && finalText) {
             res.json({
                 success: true,
                 response: finalText,
                 timestamp: new Date().toISOString(),
-                source: chosen
+                source: chosen,
+                cards: cardsPayload.cards,
+                action: cardsPayload.action
             });
             return;
         }
 
-        // fallback
+// fallback
         return res.json({
             success: true,
-            response: getFallbackResponse(message, dynamicData),
+            response: getFallbackResponse(message, dynamicData, userData),
             timestamp: new Date().toISOString(),
-            source: 'fallback'
+            source: 'fallback',
+            cards: cardsPayload.cards,
+            action: cardsPayload.action
         });
 
     } catch (error) {
