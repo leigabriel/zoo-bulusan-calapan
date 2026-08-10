@@ -30,6 +30,18 @@ const Icons = {
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
             <path fillRule="evenodd" d="M4.755 10.059a7.5 7.5 0 0112.548-3.364l1.903 1.903h-3.183a.75.75 0 100 1.5h4.992a.75.75 0 00.75-.75V4.356a.75.75 0 00-1.5 0v3.18l-1.9-1.9A9 9 0 003.306 9.67a.75.75 0 101.45.388zm15.408 3.352a.75.75 0 00-.919.53 7.5 7.5 0 01-12.548 3.364l-1.902-1.903h3.183a.75.75 0 000-1.5H2.984a.75.75 0 00-.75.75v4.992a.75.75 0 001.5 0v-3.18l1.9 1.9a9 9 0 0015.059-4.035.75.75 0 00-.53-.918z" clipRule="evenodd" />
         </svg>
+    ),
+    CreditCard: () => (
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
+            <path d="M4.5 3.75a3 3 0 00-3 3v.75h21v-.75a3 3 0 00-3-3h-15z" />
+            <path fillRule="evenodd" d="M22.5 9.75h-21v7.5a3 3 0 003 3h15a3 3 0 003-3v-7.5zm-18 3.75a.75.75 0 01.75-.75h6a.75.75 0 010 1.5h-6a.75.75 0 01-.75-.75zm.75 2.25a.75.75 0 000 1.5h3a.75.75 0 000-1.5h-3z" clipRule="evenodd" />
+        </svg>
+    ),
+    Cash: () => (
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
+            <path d="M4.5 6.375a2.625 2.625 0 00-2.625 2.625v7.5A2.625 2.625 0 004.5 19.125h15a2.625 2.625 0 002.625-2.625v-7.5A2.625 2.625 0 0019.5 6.375h-15zM12 8.25a3.75 3.75 0 100 7.5 3.75 3.75 0 000-7.5z" />
+            <path d="M12 10.5a1.5 1.5 0 100 3 1.5 1.5 0 000-3z" />
+        </svg>
     )
 };
 
@@ -46,6 +58,9 @@ const ReservationHistoryPanel = ({ isOpen, onClose }) => {
     const [selectedReservation, setSelectedReservation] = useState(null);
     const receiptRef = useRef(null);
     const [downloading, setDownloading] = useState(false);
+    const [showPaymentDemo, setShowPaymentDemo] = useState(false);
+    const [paymentOption, setPaymentOption] = useState(null);
+    const [showQR, setShowQR] = useState(false);
 
     const handleDownload = async () => {
         if (!selectedReservation || !receiptRef.current) return;
@@ -372,7 +387,7 @@ const ReservationHistoryPanel = ({ isOpen, onClose }) => {
                                     {filteredReservations.map(reservation => (
                                         <div
                                             key={`${reservation.type}-${reservation.id}`}
-                                            onClick={() => setSelectedReservation(reservation)}
+                                            onClick={() => { setShowQR(false); setSelectedReservation(reservation); }}
                                             className="bg-white border border-slate-200 shadow-sm hover:shadow-md rounded-xl p-4 cursor-pointer transition-all duration-200 group"
                                         >
                                             <div className="flex items-start gap-4">
@@ -526,6 +541,25 @@ const ReservationHistoryPanel = ({ isOpen, onClose }) => {
                                                 <span className="text-slate-500">Organizer</span>
                                                 <span className="font-semibold text-slate-800">{selectedReservation.participant_name}</span>
                                             </div>
+                                            <div className="pt-4">
+                                                <p className="text-xs text-slate-400 uppercase tracking-widest mb-3 font-semibold">Payment Method</p>
+                                                <div className="flex flex-col gap-3">
+                                                    <button
+                                                        onClick={() => { setPaymentOption('now'); setShowPaymentDemo(true); }}
+                                                        className="w-full py-3 bg-slate-800 text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-slate-900 transition flex items-center justify-center gap-2 shadow-sm"
+                                                    >
+                                                        <Icons.CreditCard />
+                                                        Pay Now
+                                                    </button>
+                                                    <button
+                                                        onClick={() => { setPaymentOption('bulusan'); setShowPaymentDemo(true); }}
+                                                        className="w-full py-3 bg-emerald-600 text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-emerald-700 transition flex items-center justify-center gap-2 shadow-sm"
+                                                    >
+                                                        <Icons.Cash />
+                                                        Pay at Bulusan
+                                                    </button>
+                                                </div>
+                                            </div>
                                         </>
                                     )}
                                 </div>
@@ -535,19 +569,28 @@ const ReservationHistoryPanel = ({ isOpen, onClose }) => {
                                 <>
                                     <div className="w-full border-t-2 border-dashed border-slate-200 relative z-10"></div>
                                     <div className="p-8 flex flex-col items-center bg-slate-50">
-                                        <div className="bg-white p-3 rounded-xl shadow-sm border border-slate-100">
-                                            <QRCodeCanvas
-                                                value={selectedReservation.qr_data}
-                                                size={260}
-                                                level="H"
-                                                includeMargin={true}
-                                                bgColor="#ffffff"
-                                                fgColor="#0f172a"
-                                            />
+                                        <button
+                                            onClick={() => setShowQR(prev => !prev)}
+                                            className="w-full py-3 bg-slate-800 text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-slate-900 transition flex items-center justify-center gap-2 shadow-sm"
+                                        >
+                                            <Icons.Ticket />
+                                            {showQR ? 'Hide QR Code' : 'Show QR Code'}
+                                        </button>
+                                        <div className={showQR ? 'mt-5 flex flex-col items-center' : 'hidden'}>
+                                            <div className="bg-white p-3 rounded-xl shadow-sm border border-slate-100">
+                                                <QRCodeCanvas
+                                                    value={selectedReservation.qr_data}
+                                                    size={260}
+                                                    level="H"
+                                                    includeMargin={true}
+                                                    bgColor="#ffffff"
+                                                    fgColor="#0f172a"
+                                                />
+                                            </div>
+                                            <p className="text-[10px] uppercase tracking-widest font-semibold text-slate-400 mt-5 text-center">
+                                                Scan at the entrance
+                                            </p>
                                         </div>
-                                        <p className="text-[10px] uppercase tracking-widest font-semibold text-slate-400 mt-5 text-center">
-                                            Scan at the entrance
-                                        </p>
                                     </div>
                                 </>
                             )}
@@ -573,6 +616,63 @@ const ReservationHistoryPanel = ({ isOpen, onClose }) => {
                                 {archiving ? 'Processing...' : (selectedReservation.is_archived ? 'Restore' : 'Archive')}
                             </button>
                         </div>
+                    </div>
+                </div>
+            )}
+
+            {showPaymentDemo && (
+                <div
+                    className="fixed inset-0 bg-slate-900/60 z-[120] flex flex-col items-center justify-center p-4 backdrop-blur-sm"
+                    onClick={() => setShowPaymentDemo(false)}
+                >
+                    <div
+                        className="bg-white rounded-2xl w-full max-w-sm p-8 text-center relative shadow-2xl"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <button
+                            onClick={() => setShowPaymentDemo(false)}
+                            className="absolute right-4 top-4 p-1.5 text-slate-400 hover:bg-slate-200 hover:text-slate-700 rounded-full transition"
+                        >
+                            <Icons.Close />
+                        </button>
+                        <div className={`w-14 h-14 mx-auto rounded-full flex items-center justify-center mb-4 ${paymentOption === 'now' ? 'bg-slate-800 text-white' : 'bg-emerald-600 text-white'}`}>
+                            {paymentOption === 'now' ? <Icons.CreditCard /> : <Icons.Cash />}
+                        </div>
+                        <h3 className="text-xl font-bold text-slate-800 uppercase tracking-wide">
+                            {paymentOption === 'now' ? 'Pay Now' : 'Pay at Bulusan'}
+                        </h3>
+                        <p className="text-sm text-slate-500 mt-3 leading-relaxed">
+                            {paymentOption === 'now'
+                                ? 'You will be redirected to secure online payment to complete your event reservation.'
+                                : 'Payment will be settled in cash at the Bulusan Zoo admission booth on the day of your visit.'}
+                        </p>
+                        <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 mt-6 text-left">
+                            <div className="flex justify-between items-center py-1.5">
+                                <span className="text-xs text-slate-500">Event</span>
+                                <span className="text-xs font-semibold text-slate-800">{selectedReservation?.venue_event_name || selectedReservation?.event_title}</span>
+                            </div>
+                            <div className="flex justify-between items-center py-1.5">
+                                <span className="text-xs text-slate-500">Reference</span>
+                                <span className="font-mono text-xs font-semibold text-slate-800">{selectedReservation?.reservation_reference}</span>
+                            </div>
+                        </div>
+                        <div className="mt-6 flex flex-col gap-3">
+                            <button
+                                onClick={() => setShowPaymentDemo(false)}
+                                className="w-full py-3 bg-slate-800 text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-slate-900 transition"
+                            >
+                                {paymentOption === 'now' ? 'Proceed to Payment' : 'Confirm Pay at Bulusan'}
+                            </button>
+                            <button
+                                onClick={() => setShowPaymentDemo(false)}
+                                className="w-full py-3 border border-slate-200 text-slate-600 rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-slate-50 transition"
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                        <p className="text-[10px] uppercase tracking-widest font-semibold text-slate-300 mt-4">
+                            UI Demo Only
+                        </p>
                     </div>
                 </div>
             )}

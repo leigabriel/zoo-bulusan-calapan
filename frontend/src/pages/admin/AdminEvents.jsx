@@ -555,10 +555,10 @@ const AdminEvents = () => {
                             color: #ffffff !important;
                         }
                         .fc .fc-event .fc-event-title {
-                            color: #ffffff !important;
+                            color: #000000 !important;
                         }
                         .fc .fc-event .fc-event-time {
-                            color: #ffffff !important;
+                            color: #000000 !important;
                         }
                         .fc-daygrid-event-dot {
                             border-color:  !important;
