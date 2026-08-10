@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { AI_ASSISTANT_ICON, AI_ASSISTANT_THEME } from '../../../config/ai-assistant-theme';
 import { getAuthHeaders } from '../../../services/api-client';
 import TicketCard from './TicketCard';
+import ZooCard from './ZooCard';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 const THEME = AI_ASSISTANT_THEME;
@@ -49,6 +50,8 @@ const Avatar = () => (
 const SUGGESTIONS = [
     "What animals can I see today?",
     "When is feeding time?",
+    "What plants are in your collection?",
+    "Any upcoming events?",
     "Tell me about the conservation program."
 ];
 
@@ -237,7 +240,9 @@ const AIChatAssistant = ({ onClose }) => {
                                             {msg.cards?.length > 0 && (
                                                 <div className="w-full flex flex-col gap-2.5">
                                                     {msg.cards.map((card, ci) => (
-                                                        <TicketCard key={`${card.reference || ci}-${ci}`} data={card} />
+                                                        card.kind === 'animal' || card.kind === 'plant' || card.kind === 'zoo-event'
+                                                            ? <ZooCard key={`${card.name || card.title || ci}-${ci}`} data={card} />
+                                                            : <TicketCard key={`${card.reference || ci}-${ci}`} data={card} />
                                                     ))}
                                                 </div>
                                             )}

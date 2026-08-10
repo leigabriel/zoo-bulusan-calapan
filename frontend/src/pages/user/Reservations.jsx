@@ -655,7 +655,7 @@ const Reservations = () => {
 
                                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                                                     <div className="flex flex-col gap-2">
-                                                        <label className="text-[9px] tracking-[0.2em] uppercase font-bold text-[#212631]">Headcount (Max 500) *</label>
+                                                        <label className="text-[9px] tracking-[0.2em] uppercase font-bold text-[#212631]">Headcount</label>
                                                         <input type="number" value={eventForm.numberOfParticipants} onChange={e => setEventForm({ ...eventForm, numberOfParticipants: e.target.value })} min="1" max="500" className="w-full bg-[#ebebeb] border border-[#212631]/20 p-4 text-sm font-semibold text-[#212631] focus:border-[#212631] outline-none transition-colors" required />
                                                     </div>
                                                     <div className="flex flex-col gap-2">

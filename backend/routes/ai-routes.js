@@ -4,6 +4,7 @@ const { protect, authorize, optionalAuth } = require('../middleware/auth');
 
 // import models
 const Animal = require('../models/animal-model');
+const Plant = require('../models/plant-model');
 const Event = require('../models/event-model');
 const Ticket = require('../models/ticket-model');
 const Reservation = require('../models/reservation-model');
@@ -37,6 +38,14 @@ const getDynamicZooData = async () => {
             });
         }
         
+        // Fetch plants from database
+        let plants = [];
+        try {
+            plants = await Plant.getAll() || [];
+        } catch (e) {
+            console.warn('Could not fetch plants:', e.message);
+        }
+        
         // Fetch upcoming events
         let upcomingEvents = [];
         try {
@@ -58,14 +67,45 @@ const getDynamicZooData = async () => {
             console.warn('Could not fetch ticket stats:', e.message);
         }
         
+        // Normalize a date value to YYYY-MM-DD
+        const formatDate = (d) => {
+            if (!d) return null;
+            if (typeof d === 'string') return d.split('T')[0];
+            return d;
+        };
+        
         return {
             animalCount,
             animalsByStatus,
             animalNames: animalNames.slice(0, 20), // Limit to 20 animals for context
-            upcomingEvents: upcomingEvents.slice(0, 5).map(e => ({
+            animalCatalog: (animals || []).slice(0, 8).map(a => ({
+                id: a.id,
+                name: a.name,
+                species: a.species || null,
+                exhibit: a.habitat || a.exhibit || null,
+                diet: a.diet || null,
+                description: a.description || null,
+                imageUrl: a.image_url || null,
+                status: a.status || 'healthy'
+            })),
+            plantCatalog: plants.slice(0, 8).map(p => ({
+                id: p.id,
+                name: p.name,
+                scientificName: p.scientific_name || null,
+                category: p.category || null,
+                description: p.description || null,
+                imageUrl: p.image_url || null
+            })),
+            upcomingEvents,
+            eventCatalog: upcomingEvents.slice(0, 5).map(e => ({
+                id: e.id,
                 title: e.title,
-                date: e.start_date || e.event_date,
-                description: e.description?.substring(0, 100)
+                date: formatDate(e.event_date),
+                time: e.start_time || null,
+                location: e.location || null,
+                description: e.description?.substring(0, 120) || null,
+                imageUrl: e.image_url || null,
+                status: e.status || 'upcoming'
             })),
             ticketStats
         };
@@ -156,7 +196,7 @@ const buildUserReservationContext = (userData) => {
 };
 
 // Build structured card data + contextual action buttons for the /chat response.
-const buildChatCards = (message, userData) => {
+const buildChatCards = (message, userData, dynamicData) => {
     const lowerMsg = String(message || '').toLowerCase();
     const cards = [];
     let action = null;
@@ -165,55 +205,101 @@ const buildChatCards = (message, userData) => {
     const asksMine = /\bmy\b|mine/.test(lowerMsg) || /(current|active|upcoming) reservation/.test(lowerMsg);
     const asksToBook = /\b(book|reserve|purchase|buy)\b/.test(lowerMsg);
 
-    if (!asksReservation) {
-        return { cards, action };
-    }
+    if (asksReservation) {
+        if (asksMine && userData) {
+            (userData.tickets || [])
+                .filter(t => !t.archived && ['pending', 'confirmed'].includes(t.status))
+                .forEach(t => cards.push({
+                    kind: 'ticket',
+                    title: 'Zoo Visit',
+                    reference: t.reference,
+                    name: t.visitorName,
+                    date: t.date,
+                    time: t.time,
+                    adults: t.adults,
+                    children: t.children,
+                    residents: t.residents,
+                    visitors: t.totalVisitors,
+                    total: ((t.adults || 0) * 40) + ((t.children || 0) * 20),
+                    status: t.status
+                }));
 
-    if (asksMine && userData) {
-        (userData.tickets || [])
-            .filter(t => !t.archived && ['pending', 'confirmed'].includes(t.status))
-            .forEach(t => cards.push({
-                kind: 'ticket',
-                title: 'Zoo Visit',
-                reference: t.reference,
-                name: t.visitorName,
-                date: t.date,
-                time: t.time,
-                adults: t.adults,
-                children: t.children,
-                residents: t.residents,
-                visitors: t.totalVisitors,
-                total: ((t.adults || 0) * 40) + ((t.children || 0) * 20),
-                status: t.status
-            }));
+            (userData.events || [])
+                .filter(e => !e.archived && ['pending', 'confirmed'].includes(e.status))
+                .forEach(e => cards.push({
+                    kind: 'event',
+                    title: e.eventTitle,
+                    reference: e.reference,
+                    date: e.date,
+                    time: e.time,
+                    participants: e.participants,
+                    status: e.status
+                }));
 
-        (userData.events || [])
-            .filter(e => !e.archived && ['pending', 'confirmed'].includes(e.status))
-            .forEach(e => cards.push({
-                kind: 'event',
-                title: e.eventTitle,
-                reference: e.reference,
-                date: e.date,
-                time: e.time,
-                participants: e.participants,
-                status: e.status
-            }));
-
-        if (cards.length > 0) {
-            action = { label: 'View Reservations', href: '/reservations', variant: 'primary' };
-        } else {
-            action = { label: 'Open Reservations', href: '/reservations', variant: 'ghost' };
+            if (cards.length > 0) {
+                action = { label: 'View Reservations', href: '/reservations', variant: 'primary' };
+            } else {
+                action = { label: 'Open Reservations', href: '/reservations', variant: 'ghost' };
+            }
+            return { cards, action };
         }
+
+        if (asksMine && !userData) {
+            action = { label: 'Sign In', href: '/login', variant: 'primary' };
+            return { cards, action };
+        }
+
+        if (asksToBook) {
+            action = { label: 'Book Now', href: '/reservations', variant: 'primary' };
+            return { cards, action };
+        }
+
         return { cards, action };
     }
 
-    if (asksMine && !userData) {
-        action = { label: 'Sign In', href: '/login', variant: 'primary' };
+    // Zoo catalog questions: animals, plants, and events.
+    const asksAnimals = /\b(animal|animals|wildlife|species|mammal|mammals|reptile|reptiles|bird|birds)\b/.test(lowerMsg);
+    const asksPlants = /\b(plant|plants|flora|botanical|botany|tree|trees|endangered)\b/.test(lowerMsg);
+    const asksEvents = /\b(event|events|activity|activities|upcoming|calendar)\b/.test(lowerMsg);
+
+    // Specific animal mentioned by name.
+    if (dynamicData?.animalCatalog?.length) {
+        const matched = dynamicData.animalCatalog.filter(a => a.name && lowerMsg.includes(String(a.name).toLowerCase()));
+        if (matched.length > 0) {
+            matched.slice(0, 3).forEach(a => cards.push({ kind: 'animal', ...a }));
+            action = { label: 'Explore More Animals', href: '/animals', variant: 'ghost' };
+            return { cards, action };
+        }
+    }
+
+    // General animal list request.
+    if (asksAnimals && dynamicData?.animalCatalog?.length) {
+        dynamicData.animalCatalog.slice(0, 5).forEach(a => cards.push({ kind: 'animal', ...a }));
+        action = { label: 'View All Animals', href: '/animals', variant: 'primary' };
         return { cards, action };
     }
 
-    if (asksToBook) {
-        action = { label: 'Book Now', href: '/reservations', variant: 'primary' };
+    // Specific plant mentioned by name.
+    if (dynamicData?.plantCatalog?.length) {
+        const matched = dynamicData.plantCatalog.filter(p => p.name && lowerMsg.includes(String(p.name).toLowerCase()));
+        if (matched.length > 0) {
+            matched.slice(0, 3).forEach(p => cards.push({ kind: 'plant', ...p }));
+            action = { label: 'Explore More Plants', href: '/plants', variant: 'ghost' };
+            return { cards, action };
+        }
+    }
+
+    // General plant list request.
+    if (asksPlants && dynamicData?.plantCatalog?.length) {
+        dynamicData.plantCatalog.slice(0, 5).forEach(p => cards.push({ kind: 'plant', ...p }));
+        action = { label: 'View All Plants', href: '/plants', variant: 'primary' };
+        return { cards, action };
+    }
+
+    // Upcoming events request.
+    if (asksEvents && dynamicData?.eventCatalog?.length) {
+        dynamicData.eventCatalog.slice(0, 5).forEach(e => cards.push({ kind: 'zoo-event', ...e }));
+        action = { label: 'View Events Calendar', href: '/events', variant: 'primary' };
         return { cards, action };
     }
 
@@ -309,10 +395,19 @@ const getFallbackResponse = (message, dynamicData = null, userData = null) => {
         return "Zoo Bulusan Location:\n\nBulusan Wildlife Park\nCalapan City, Oriental Mindoro\nMIMAROPA Region, Philippines\n\nEmail: info@zoobulusan.com\nPhone: (043) 123-4567";
     }
 
+    if (lowerMsg.includes('plant') || lowerMsg.includes('flora') || lowerMsg.includes('botanical') || lowerMsg.includes('botany') || lowerMsg.includes('tree')) {
+        let response = "Zoo Bulusan also features a lush botanical collection across our grounds.";
+        if (dynamicData?.plantCatalog?.length > 0) {
+            response = `Our botanical collection features ${dynamicData.plantCatalog.length}+ plants, including ${dynamicData.plantCatalog.slice(0, 5).map(p => p.name).join(', ')}.`;
+        }
+        response += " Visit our Plants page to explore the full collection and learn about each species.";
+        return response;
+    }
+
     if (lowerMsg.includes('event') || lowerMsg.includes('activity') || lowerMsg.includes('program')) {
         let response = "Check out our Events page for:\n\n- Wildlife educational programs\n- Guided tours\n- Conservation workshops\n- School field trips\n- Special seasonal events";
         if (dynamicData?.upcomingEvents?.length > 0) {
-            response = `Upcoming Events at Zoo Bulusan:\n\n${dynamicData.upcomingEvents.map(e => `- ${e.title} (${e.date})`).join('\n')}\n\nVisit our Events page for more details!`;
+            response = `Upcoming Events at Zoo Bulusan:\n\n${dynamicData.upcomingEvents.map(e => `- ${e.title} (${e.event_date})`).join('\n')}\n\nVisit our Events page for more details!`;
         }
         response += "\n\nBook in advance for group visits!";
         return response;
@@ -676,7 +771,7 @@ router.post('/chat', optionalAuth, async (req, res) => {
         // Fetch the logged-in user's OWN reservations (sanitized, non-sensitive only)
         const userData = req.user?.id ? await getSanitizedUserReservations(req.user.id) : null;
         const userReservationContext = buildUserReservationContext(userData);
-        const cardsPayload = buildChatCards(message, userData);
+        const cardsPayload = buildChatCards(message, userData, dynamicData);
         
         // Build dynamic context section
         let dynamicContext = '';
@@ -690,7 +785,7 @@ CURRENT ZOO DATA (Live from database - use this information when answering):
 - Today's Ticket Availability: ${dynamicData.ticketStats.availableSlots} (${dynamicData.ticketStats.todayTickets} tickets sold today)
 ${dynamicData.upcomingEvents.length > 0 ? `
 UPCOMING EVENTS:
-${dynamicData.upcomingEvents.map(e => `- ${e.title} on ${e.date}: ${e.description || 'Check website for details'}`).join('\n')}` : '- No upcoming events scheduled at this time'}
+${dynamicData.upcomingEvents.map(e => `- ${e.title} on ${e.event_date}: ${e.description || 'Check website for details'}`).join('\n')}` : '- No upcoming events scheduled at this time'}
 
 Remember: Only share this general zoo information. Never expose passwords, account credentials, payment card data, or any other person's reservation/booking details.`;
         }
@@ -841,7 +936,7 @@ CURRENT ZOO DATA (Live from database):
 - Today's Ticket Availability: ${dynamicData.ticketStats.availableSlots}
 ${dynamicData.upcomingEvents.length > 0 ? `
 UPCOMING EVENTS:
-${dynamicData.upcomingEvents.map(e => `- ${e.title} on ${e.date}: ${e.description || 'Check system for details'}`).join('\n')}` : '- No upcoming events scheduled at this time'}
+${dynamicData.upcomingEvents.map(e => `- ${e.title} on ${e.event_date}: ${e.description || 'Check system for details'}`).join('\n')}` : '- No upcoming events scheduled at this time'}
 
 Only provide operationally useful summaries. Never expose personal user records.
 `;
