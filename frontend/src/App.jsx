@@ -15,6 +15,7 @@ import Help from './pages/user/Help';
 import UserMessages from './pages/user/UserMessages';
 import CommunityPage from './pages/user/CommunityPage';
 import PublicUserProfile from './pages/user/PublicUserProfile';
+import Donation from './pages/user/Donation';
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
 import GoogleAuthSuccess from './pages/auth/GoogleAuthSuccess';
@@ -34,6 +35,7 @@ import AdminTickets from './pages/admin/AdminTickets';
 import AdminMessages from './pages/admin/AdminMessages';
 import AdminStaffMonitoring from './pages/admin/AdminStaffMonitoring';
 import AdminCommunityModeration from './pages/admin/AdminCommunityModeration';
+import AdminSettings from './pages/admin/AdminSettings';
 import StaffDashboard from './pages/staff/StaffDashboard';
 import QRScanner from './pages/staff/QRScanner';
 import StaffEvents from './pages/staff/StaffEvents';
@@ -133,6 +135,11 @@ function AppRoutes() {
             <Route path="/my-messages" element={
                 <ProtectedRoute allowedRoles={['user']}>
                     <UserMessages />
+                </ProtectedRoute>
+            } />
+            <Route path="/donation" element={
+                <ProtectedRoute allowedRoles={['user', 'staff', 'admin']}>
+                    <Donation />
                 </ProtectedRoute>
             } />
             <Route path="/help" element={<Help />} />
@@ -252,6 +259,13 @@ function AppRoutes() {
                 <ProtectedRoute allowedRoles={['admin']}>
                     <AdminLayout>
                         <AdminCommunityModeration />
+                    </AdminLayout>
+                </ProtectedRoute>
+            } />
+            <Route path="/admin/settings" element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                    <AdminLayout>
+                        <AdminSettings />
                     </AdminLayout>
                 </ProtectedRoute>
             } />

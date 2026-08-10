@@ -633,6 +633,23 @@ export const adminAPI = {
             headers: getAuthHeaders('admin')
         });
         return handleResponse(response);
+    },
+
+    // Donation settings
+    getDonationConfig: async () => {
+        const response = await fetch(`${API_BASE_URL}/admin/donation-config`, {
+            headers: getAuthHeaders('admin')
+        });
+        return handleResponse(response);
+    },
+
+    updateDonationConfig: async (config) => {
+        const response = await fetch(`${API_BASE_URL}/admin/donation-config`, {
+            method: 'PUT',
+            headers: getAuthHeaders('admin'),
+            body: JSON.stringify({ config })
+        });
+        return handleResponse(response);
     }
 };
 
@@ -1183,6 +1200,11 @@ export const userAPI = {
             method: 'PUT',
             headers: getAuthHeaders('user')
         });
+        return handleResponse(response);
+    },
+
+    getDonationConfig: async () => {
+        const response = await fetch(`${API_BASE_URL}/users/donation-config`);
         return handleResponse(response);
     }
 };

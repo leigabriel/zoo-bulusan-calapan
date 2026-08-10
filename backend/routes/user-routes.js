@@ -1,12 +1,14 @@
 const express = require('express');
 const router = express.Router();
 const userController = require('../controllers/user-controller');
+const donationController = require('../controllers/donation-controller');
 const { protect } = require('../middleware/auth');
 
 router.get('/animals', userController.getAnimals);
 router.get('/animals/:id', userController.getAnimalById);
 router.get('/events', userController.getEvents);
 router.get('/tickets/availability', userController.getSlotAvailability);
+router.get('/donation-config', donationController.getPublicConfig);
 
 router.use(protect);
 

@@ -26,4 +26,4 @@ dist-ssr
 .env
 .env.production
 
-public/models*
+public/model*

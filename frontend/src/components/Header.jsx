@@ -27,6 +27,7 @@ const ICONS = {
     support: 'https://cdn-icons-png.flaticon.com/128/16850/16850034.png',
     logout: 'https://cdn-icons-png.flaticon.com/128/17720/17720307.png',
     about: 'https://cdn-icons-png.flaticon.com/128/3916/3916708.png',
+    donation: 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%23000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13"/><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"/><path d="M7.5 8a2.5 2.5 0 0 1 0-5C11 3 12 8 12 8"/><path d="M16.5 8a2.5 2.5 0 0 0 0-5C13 3 12 8 12 8"/></svg>'),
 };
 
 const NAV_LINKS = [
@@ -123,6 +124,7 @@ const Header = () => {
     const [emailSent, setEmailSent] = useState(false);
     const [emailError, setEmailError] = useState('');
     const [isLoggingOut, setIsLoggingOut] = useState(false);
+    const [donationEnabled, setDonationEnabled] = useState(false);
 
     const navigate = useNavigate();
     const location = useLocation();
@@ -153,6 +155,20 @@ const Header = () => {
         window.addEventListener('scroll', onScroll, { passive: true });
         return () => window.removeEventListener('scroll', onScroll);
     }, [isMenuOpen]);
+
+    useEffect(() => {
+        const loadDonationConfig = async () => {
+            try {
+                const res = await userAPI.getDonationConfig();
+                if (res?.success && res.config) {
+                    setDonationEnabled(Boolean(res.config.enabled));
+                }
+            } catch {
+                setDonationEnabled(false);
+            }
+        };
+        loadDonationConfig();
+    }, []);
 
     useEffect(() => {
         setIsMenuOpen(false);
@@ -414,6 +430,7 @@ const Header = () => {
     const exploreItems = [
         { iconUrl: ICONS.wildlife, label: 'Wildlife Origins', path: '/map' },
         { iconUrl: ICONS.game, label: 'Mini Zoo Game', action: handleOpenMiniZooGame },
+        ...(donationEnabled ? [{ iconUrl: ICONS.donation, label: 'Donate', path: '/donation' }] : []),
     ];
 
     const avatarSrc = getProfileImageUrl(user?.profileImage || user?.profile_image) || '/profile-img/default-avatar.svg';

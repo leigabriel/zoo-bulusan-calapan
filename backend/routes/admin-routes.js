@@ -3,6 +3,7 @@ const router = express.Router();
 const adminController = require('../controllers/admin-controller');
 const messageController = require('../controllers/message-controller');
 const monitoringController = require('../controllers/monitoring-controller');
+const donationController = require('../controllers/donation-controller');
 const { protect, authorize } = require('../middleware/auth');
 const multer = require('multer');
 const path = require('path');
@@ -112,6 +113,10 @@ router.put('/appeals/:id/review', adminController.reviewAppeal);
 router.get('/notifications', adminController.getNotifications);
 router.put('/notifications/:id/read', adminController.markNotificationRead);
 router.put('/notifications/read-all', adminController.markAllNotificationsRead);
+
+// Donation settings
+router.get('/donation-config', donationController.getConfig);
+router.put('/donation-config', donationController.updateConfig);
 
 // model management
 router.post('/upload-model', modelUpload.fields([
