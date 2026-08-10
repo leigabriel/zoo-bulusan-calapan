@@ -8,6 +8,8 @@ router.use(protect);
 
 router.get('/ticket/my', reservationController.getUserTicketReservations);
 router.get('/event/my', reservationController.getUserEventReservations);
+router.get('/event/hosted', reservationController.getUserHostedEvents);
+router.put('/event/hosted/:id', reservationController.updateUserHostedEvent);
 router.get('/availability/ticket', reservationController.getTicketAvailability);
 router.get('/availability/event', reservationController.getEventAvailability);
 router.post('/ticket', handleCloudinaryResidentIdUpload, reservationController.createTicketReservation);

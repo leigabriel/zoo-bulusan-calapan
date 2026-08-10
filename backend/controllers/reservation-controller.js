@@ -519,6 +519,53 @@ exports.getUserEventReservations = async (req, res) => {
     }
 };
 
+exports.getUserHostedEvents = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const reservations = await Reservation.findHostedEventReservationsByUserId(userId);
+        res.json({ success: true, reservations });
+    } catch (error) {
+        console.error('Error getting user hosted events:', error);
+        res.status(500).json({ success: false, message: 'Error fetching hosted events' });
+    }
+};
+
+exports.updateUserHostedEvent = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const userId = req.user.id;
+        const {
+            venueEventName, venueEventDate, venueEventStartTime, venueEventEndTime,
+            venueEventDescription, numberOfParticipants, notes
+        } = req.body;
+
+        if (!venueEventName || !venueEventDate) {
+            return res.status(400).json({ success: false, message: 'Event name and date are required' });
+        }
+
+        const participants = parseInt(numberOfParticipants, 10) || 1;
+
+        const updated = await Reservation.updateHostedEvent(id, userId, {
+            venueEventName,
+            venueEventDate,
+            venueEventStartTime,
+            venueEventEndTime,
+            venueEventDescription,
+            numberOfParticipants: participants,
+            notes
+        });
+
+        if (!updated) {
+            return res.status(404).json({ success: false, message: 'Event not found or you are not authorized to edit it' });
+        }
+
+        res.json({ success: true, message: 'Event updated successfully' });
+    } catch (error) {
+        console.error('Error updating hosted event:', error);
+        res.status(500).json({ success: false, message: 'Error updating hosted event' });
+    }
+};
+
 exports.getReservationStats = async (req, res) => {
     try {
         const [

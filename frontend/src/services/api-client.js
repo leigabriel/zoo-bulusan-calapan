@@ -1514,6 +1514,22 @@ export const reservationAPI = {
         return handleResponse(response);
     },
 
+    getMyHostedEvents: async () => {
+        const response = await fetch(`${API_BASE_URL}/reservations/event/hosted`, {
+            headers: getAuthHeaders('user')
+        });
+        return handleResponse(response);
+    },
+
+    updateHostedEvent: async (id, eventData) => {
+        const response = await fetch(`${API_BASE_URL}/reservations/event/hosted/${id}`, {
+            method: 'PUT',
+            headers: getAuthHeaders('user'),
+            body: JSON.stringify(eventData)
+        });
+        return handleResponse(response);
+    },
+
     getTicketAvailability: async (start, days) => {
         const params = new URLSearchParams();
         if (start) params.append('start', start);

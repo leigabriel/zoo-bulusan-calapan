@@ -424,6 +424,7 @@ const Header = () => {
     const accountItems = [
         { iconUrl: ICONS.profile, label: 'My Account', path: getProfilePath() },
         { iconUrl: ICONS.ticket, label: 'My Reservation', action: handleOpenReservationHistory },
+        { iconUrl: ICONS.events, label: 'My Events', path: '/my-events' },
         { iconUrl: ICONS.messages, label: 'Messages', path: '/my-messages' },
     ];
 

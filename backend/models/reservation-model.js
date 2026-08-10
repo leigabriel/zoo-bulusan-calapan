@@ -93,6 +93,20 @@ class Reservation {
         return rows;
     }
 
+    static async findHostedEventReservationsByUserId(userId) {
+        const [rows] = await db.query(
+            `SELECT er.*, e.title as event_title, e.event_date, e.start_time, e.end_time, e.location as event_location,
+                    CONCAT(u.first_name, ' ', u.last_name) as user_name, u.email as user_email 
+             FROM event_reservations er 
+             LEFT JOIN users u ON er.user_id = u.id 
+             LEFT JOIN events e ON er.event_id = e.id
+             WHERE er.user_id = ? AND er.status = 'confirmed' AND er.is_archived = FALSE
+             ORDER BY er.venue_event_date ASC`,
+            [userId]
+        );
+        return rows;
+    }
+
     static async createTicketReservation(data) {
         const { 
             reservationReference, userId, visitorName, visitorEmail, visitorPhone,
@@ -249,6 +263,24 @@ class Reservation {
         const [result] = await db.query(
             `UPDATE event_reservations SET ${updates.join(', ')} WHERE id = ?`,
             params
+        );
+        return result.affectedRows > 0;
+    }
+
+    static async updateHostedEvent(id, userId, data) {
+        const { venueEventName, venueEventDate, venueEventStartTime, venueEventEndTime, venueEventDescription, numberOfParticipants, notes } = data;
+        const [result] = await db.query(
+            `UPDATE event_reservations SET 
+                venue_event_name = ?, venue_event_date = ?, venue_event_time = ?,
+                venue_event_end_time = ?, venue_event_description = ?,
+                number_of_participants = ?, notes = ?
+             WHERE id = ? AND user_id = ? AND status = 'confirmed'`,
+            [
+                venueEventName, venueEventDate, venueEventStartTime,
+                venueEventEndTime, venueEventDescription,
+                numberOfParticipants, notes,
+                id, userId
+            ]
         );
         return result.affectedRows > 0;
     }

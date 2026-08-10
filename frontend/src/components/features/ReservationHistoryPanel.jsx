@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/use-auth';
 import { reservationAPI } from '../../services/api-client';
 import { QRCodeCanvas } from 'qrcode.react';
@@ -46,6 +47,7 @@ const Icons = {
 };
 
 const ReservationHistoryPanel = ({ isOpen, onClose }) => {
+    const navigate = useNavigate();
     const { isAuthenticated } = useAuth();
     const [activeTab, setActiveTab] = useState('all');
     const [ticketReservations, setTicketReservations] = useState([]);
@@ -441,11 +443,11 @@ const ReservationHistoryPanel = ({ isOpen, onClose }) => {
 
             {selectedReservation && (
                 <div
-                    className="fixed inset-0 bg-slate-900/60 z-[110] flex flex-col items-center justify-center p-4 backdrop-blur-sm transition-opacity"
+                    className="fixed inset-0 bg-slate-900/60 z-[110] flex items-start sm:items-center justify-center p-3 sm:p-6 overflow-y-auto backdrop-blur-sm"
                     onClick={() => setSelectedReservation(null)}
                 >
                     <div
-                        className="w-full max-w-sm relative flex flex-col"
+                        className="w-full max-w-xl relative flex flex-col my-auto"
                         onClick={(e) => e.stopPropagation()}
                     >
                         <div
@@ -455,10 +457,10 @@ const ReservationHistoryPanel = ({ isOpen, onClose }) => {
                             <div className="absolute top-[65%] left-0 -translate-x-1/2 -translate-y-1/2 w-6 h-6 bg-slate-900/60 rounded-full hidden sm:block"></div>
                             <div className="absolute top-[65%] right-0 translate-x-1/2 -translate-y-1/2 w-6 h-6 bg-slate-900/60 rounded-full hidden sm:block"></div>
 
-                            <div className="p-6 text-center bg-slate-50 border-b border-slate-100 relative">
+                            <div className="px-5 sm:px-6 py-6 text-center bg-slate-50 border-b border-slate-100 relative">
                                 <button
                                     onClick={() => setSelectedReservation(null)}
-                                    className="absolute right-4 top-4 p-1.5 text-slate-400 hover:bg-slate-200 hover:text-slate-700 rounded-full transition"
+                                    className="absolute right-3 top-3 sm:right-4 sm:top-4 p-1.5 text-slate-400 hover:bg-slate-200 hover:text-slate-700 rounded-full transition"
                                 >
                                     <Icons.Close />
                                 </button>
@@ -466,7 +468,7 @@ const ReservationHistoryPanel = ({ isOpen, onClose }) => {
                                     }`}>
                                     {selectedReservation.type === 'ticket' ? <Icons.Ticket /> : <Icons.Calendar />}
                                 </div>
-                                <h3 className="text-lg font-bold text-slate-800 uppercase tracking-wide">
+                                <h3 className="text-base sm:text-lg font-bold text-slate-800 uppercase tracking-wide break-words px-4">
                                     {selectedReservation.type === 'ticket' ? 'Zoo Visit' : (selectedReservation.venue_event_name || selectedReservation.event_title || 'Venue Booking')}
                                 </h3>
                                 <div className="mt-2 inline-block">
@@ -476,29 +478,29 @@ const ReservationHistoryPanel = ({ isOpen, onClose }) => {
                                 </div>
                             </div>
 
-                            <div className="px-8 py-6 space-y-4">
-                                <div className="text-center mb-6">
+                            <div className="px-5 sm:px-8 py-5 sm:py-6 space-y-4">
+                                <div className="text-center mb-5 sm:mb-6">
                                     <p className="text-xs text-slate-400 uppercase tracking-widest mb-1">Reference No.</p>
-                                    <p className="font-mono text-lg font-bold text-slate-700">{selectedReservation.reservation_reference}</p>
+                                    <p className="font-mono text-base sm:text-lg font-bold text-slate-700 break-all">{selectedReservation.reservation_reference}</p>
                                 </div>
 
                                 <div className="space-y-3 text-sm">
-                                    <div className="flex justify-between items-center py-2 border-b border-slate-100">
-                                        <span className="text-slate-500">Buyer</span>
-                                        <span className="font-semibold text-slate-800">{getBuyerName(selectedReservation)}</span>
+                                    <div className="flex justify-between items-start gap-3 py-2 border-b border-slate-100">
+                                        <span className="text-slate-500 flex-shrink-0">Buyer</span>
+                                        <span className="font-semibold text-slate-800 text-right break-words">{getBuyerName(selectedReservation)}</span>
                                     </div>
                                     <div className="flex justify-between items-center py-2 border-b border-slate-100">
                                         <span className="text-slate-500">Date</span>
-                                        <span className="font-semibold text-slate-800">{formatDate(selectedReservation.reservation_date || selectedReservation.venue_event_date || selectedReservation.event_date)}</span>
+                                        <span className="font-semibold text-slate-800 text-right">{formatDate(selectedReservation.reservation_date || selectedReservation.venue_event_date || selectedReservation.event_date)}</span>
                                     </div>
                                     <div className="flex justify-between items-center py-2 border-b border-slate-100">
                                         <span className="text-slate-500">Time</span>
-                                        <span className="font-semibold text-slate-800">{selectedReservation.reservation_time || selectedReservation.venue_event_time || selectedReservation.start_time || 'N/A'}</span>
+                                        <span className="font-semibold text-slate-800 text-right">{selectedReservation.reservation_time || selectedReservation.venue_event_time || selectedReservation.start_time || 'N/A'}</span>
                                     </div>
                                     {selectedReservation.venue_event_end_time && (
                                         <div className="flex justify-between items-center py-2 border-b border-slate-100">
                                             <span className="text-slate-500">End Time</span>
-                                            <span className="font-semibold text-slate-800">{selectedReservation.venue_event_end_time}</span>
+                                            <span className="font-semibold text-slate-800 text-right">{selectedReservation.venue_event_end_time}</span>
                                         </div>
                                     )}
 
@@ -524,7 +526,7 @@ const ReservationHistoryPanel = ({ isOpen, onClose }) => {
                                             )}
                                             <div className="flex justify-between items-center pt-4 pb-2">
                                                 <span className="font-semibold text-slate-800 uppercase tracking-wide">Total</span>
-                                                <span className="font-bold text-lg text-slate-800">
+                                                <span className="font-bold text-base sm:text-lg text-slate-800">
                                                     {calculateTotal(selectedReservation) === 0 ? 'FREE' : `₱${calculateTotal(selectedReservation)}`}
                                                 </span>
                                             </div>
@@ -537,23 +539,23 @@ const ReservationHistoryPanel = ({ isOpen, onClose }) => {
                                                 <span className="text-slate-500">Participants</span>
                                                 <span className="font-semibold text-slate-800">{selectedReservation.number_of_participants}</span>
                                             </div>
-                                            <div className="flex justify-between items-center py-2 border-b border-slate-100">
-                                                <span className="text-slate-500">Organizer</span>
-                                                <span className="font-semibold text-slate-800">{selectedReservation.participant_name}</span>
+                                            <div className="flex justify-between items-start gap-3 py-2 border-b border-slate-100">
+                                                <span className="text-slate-500 flex-shrink-0">Organizer</span>
+                                                <span className="font-semibold text-slate-800 text-right break-words">{selectedReservation.participant_name}</span>
                                             </div>
                                             <div className="pt-4">
                                                 <p className="text-xs text-slate-400 uppercase tracking-widest mb-3 font-semibold">Payment Method</p>
-                                                <div className="flex flex-col gap-3">
+                                                <div className="flex flex-col sm:flex-row gap-3">
                                                     <button
                                                         onClick={() => { setPaymentOption('now'); setShowPaymentDemo(true); }}
-                                                        className="w-full py-3 bg-slate-800 text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-slate-900 transition flex items-center justify-center gap-2 shadow-sm"
+                                                        className="flex-1 py-3 bg-slate-800 text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-slate-900 transition flex items-center justify-center gap-2 shadow-sm"
                                                     >
                                                         <Icons.CreditCard />
                                                         Pay Now
                                                     </button>
                                                     <button
                                                         onClick={() => { setPaymentOption('bulusan'); setShowPaymentDemo(true); }}
-                                                        className="w-full py-3 bg-emerald-600 text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-emerald-700 transition flex items-center justify-center gap-2 shadow-sm"
+                                                        className="flex-1 py-3 bg-emerald-600 text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-emerald-700 transition flex items-center justify-center gap-2 shadow-sm"
                                                     >
                                                         <Icons.Cash />
                                                         Pay at Bulusan
@@ -568,7 +570,7 @@ const ReservationHistoryPanel = ({ isOpen, onClose }) => {
                             {selectedReservation.qr_data && (
                                 <>
                                     <div className="w-full border-t-2 border-dashed border-slate-200 relative z-10"></div>
-                                    <div className="p-8 flex flex-col items-center bg-slate-50">
+                                    <div className="p-5 sm:p-8 flex flex-col items-center bg-slate-50">
                                         <button
                                             onClick={() => setShowQR(prev => !prev)}
                                             className="w-full py-3 bg-slate-800 text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-slate-900 transition flex items-center justify-center gap-2 shadow-sm"
@@ -585,6 +587,7 @@ const ReservationHistoryPanel = ({ isOpen, onClose }) => {
                                                     includeMargin={true}
                                                     bgColor="#ffffff"
                                                     fgColor="#0f172a"
+                                                    className="!w-full !h-auto max-w-[260px]"
                                                 />
                                             </div>
                                             <p className="text-[10px] uppercase tracking-widest font-semibold text-slate-400 mt-5 text-center">
@@ -596,7 +599,15 @@ const ReservationHistoryPanel = ({ isOpen, onClose }) => {
                             )}
                         </div>
 
-                        <div className="w-full mt-4 flex flex-col sm:flex-row gap-3 px-2 sm:px-0">
+                        <div className="w-full mt-4 flex flex-col sm:flex-row gap-3">
+                            {selectedReservation.type === 'event' && selectedReservation.status === 'confirmed' && (
+                                <button
+                                    onClick={() => { setSelectedReservation(null); navigate('/my-events'); }}
+                                    className="flex-1 py-3.5 bg-teal-600 text-white hover:bg-teal-700 font-semibold uppercase tracking-wider text-xs rounded-xl shadow-sm transition flex items-center justify-center gap-2"
+                                >
+                                    Manage Event
+                                </button>
+                            )}
                             <button
                                 onClick={handleDownload}
                                 disabled={downloading}
@@ -622,16 +633,16 @@ const ReservationHistoryPanel = ({ isOpen, onClose }) => {
 
             {showPaymentDemo && (
                 <div
-                    className="fixed inset-0 bg-slate-900/60 z-[120] flex flex-col items-center justify-center p-4 backdrop-blur-sm"
+                    className="fixed inset-0 bg-slate-900/60 z-[120] flex items-start sm:items-center justify-center p-4 overflow-y-auto backdrop-blur-sm"
                     onClick={() => setShowPaymentDemo(false)}
                 >
                     <div
-                        className="bg-white rounded-2xl w-full max-w-sm p-8 text-center relative shadow-2xl"
+                        className="bg-white rounded-2xl w-full max-w-sm p-5 sm:p-8 text-center relative shadow-2xl my-auto"
                         onClick={(e) => e.stopPropagation()}
                     >
                         <button
                             onClick={() => setShowPaymentDemo(false)}
-                            className="absolute right-4 top-4 p-1.5 text-slate-400 hover:bg-slate-200 hover:text-slate-700 rounded-full transition"
+                            className="absolute right-3 top-3 sm:right-4 sm:top-4 p-1.5 text-slate-400 hover:bg-slate-200 hover:text-slate-700 rounded-full transition"
                         >
                             <Icons.Close />
                         </button>
@@ -647,13 +658,13 @@ const ReservationHistoryPanel = ({ isOpen, onClose }) => {
                                 : 'Payment will be settled in cash at the Bulusan Zoo admission booth on the day of your visit.'}
                         </p>
                         <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 mt-6 text-left">
-                            <div className="flex justify-between items-center py-1.5">
-                                <span className="text-xs text-slate-500">Event</span>
-                                <span className="text-xs font-semibold text-slate-800">{selectedReservation?.venue_event_name || selectedReservation?.event_title}</span>
+                            <div className="flex justify-between items-start gap-3 py-1.5">
+                                <span className="text-xs text-slate-500 flex-shrink-0">Event</span>
+                                <span className="text-xs font-semibold text-slate-800 text-right break-words">{selectedReservation?.venue_event_name || selectedReservation?.event_title}</span>
                             </div>
                             <div className="flex justify-between items-center py-1.5">
                                 <span className="text-xs text-slate-500">Reference</span>
-                                <span className="font-mono text-xs font-semibold text-slate-800">{selectedReservation?.reservation_reference}</span>
+                                <span className="font-mono text-xs font-semibold text-slate-800 break-all text-right">{selectedReservation?.reservation_reference}</span>
                             </div>
                         </div>
                         <div className="mt-6 flex flex-col gap-3">
@@ -671,7 +682,6 @@ const ReservationHistoryPanel = ({ isOpen, onClose }) => {
                             </button>
                         </div>
                         <p className="text-[10px] uppercase tracking-widest font-semibold text-slate-300 mt-4">
-                            UI Demo Only
                         </p>
                     </div>
                 </div>
