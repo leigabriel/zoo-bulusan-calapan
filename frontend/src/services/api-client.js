@@ -1530,6 +1530,18 @@ export const reservationAPI = {
         return handleResponse(response);
     },
 
+    uploadHostedEventImage: async (id, file) => {
+        const formData = new FormData();
+        formData.append('image', file);
+
+        const response = await fetch(`${API_BASE_URL}/reservations/event/hosted/${id}/image`, {
+            method: 'POST',
+            headers: getAuthHeadersMultipart('user'),
+            body: formData
+        });
+        return handleResponse(response);
+    },
+
     getTicketAvailability: async (start, days) => {
         const params = new URLSearchParams();
         if (start) params.append('start', start);

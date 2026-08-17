@@ -60,6 +60,8 @@ const MyEvents = () => {
     const [form, setForm] = useState({});
     const [saving, setSaving] = useState(false);
     const [showConfirm, setShowConfirm] = useState(false);
+    const [photoUpload, setPhotoUpload] = useState(null);
+    const [photoUploading, setPhotoUploading] = useState(false);
 
     useEffect(() => {
         fetchHostedEvents();
@@ -148,6 +150,36 @@ const MyEvents = () => {
 
     const getMinDate = () => new Date().toISOString().split('T')[0];
 
+    const handlePhotoFileChange = (e, event) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            setPhotoUpload({ id: event.id, file, preview: reader.result });
+        };
+        reader.readAsDataURL(file);
+        e.target.value = '';
+    };
+
+    const uploadPhoto = async () => {
+        if (!photoUpload) return;
+        setPhotoUploading(true);
+        try {
+            const res = await reservationAPI.uploadHostedEventImage(photoUpload.id, photoUpload.file);
+            if (res.success) {
+                notify.success('Your event photo has been updated.');
+                setPhotoUpload(null);
+                fetchHostedEvents(false);
+            } else {
+                throw new Error(res.message || 'Failed to upload photo');
+            }
+        } catch (err) {
+            notify.error(err.message || 'We could not upload your photo. Please try again.');
+        } finally {
+            setPhotoUploading(false);
+        }
+    };
+
     return (
         <ReactLenis root>
             <div className="min-h-screen bg-white text-black">
@@ -200,56 +232,104 @@ const MyEvents = () => {
                         </div>
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            {events.map((event) => (
-                                <div key={event.id} className="bg-white border border-gray-200 rounded-2xl shadow-sm hover:shadow-md transition-shadow overflow-hidden">
-                                    <div className="p-6 md:p-8 flex flex-col h-full">
-                                        <div className="flex items-start justify-between gap-4 mb-4">
-                                            <div className="w-12 h-12 rounded-full bg-teal-50 text-teal-600 flex items-center justify-center flex-shrink-0">
-                                                <Icons.Calendar />
+                            {events.map((event) => {
+                                const isUploadingThis = photoUpload && photoUpload.id === event.id;
+                                return (
+                                    <div key={event.id} className="bg-white border border-gray-200 rounded-2xl shadow-sm hover:shadow-md transition-shadow overflow-hidden">
+                                        <div className="p-6 md:p-8 flex flex-col h-full">
+                                            <div className="relative -mt-6 -mx-6 md:-mt-8 md:-mx-8 mb-6 h-40 md:h-44 bg-gray-100 overflow-hidden">
+                                                <img
+                                                    src={isUploadingThis ? photoUpload.preview : (event.event_image_url || '/images/event-img-placeholder.jpg')}
+                                                    alt={event.venue_event_name || event.event_title || 'Event'}
+                                                    className="w-full h-full object-cover"
+                                                    onError={(e) => { e.target.src = '/images/event-img-placeholder.jpg'; }}
+                                                />
+                                                {isUploadingThis ? (
+                                                    <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                                                        <div className="bg-white rounded-xl p-4 flex flex-col items-center gap-3 mx-4">
+                                                            <p className="text-xs font-bold uppercase tracking-widest text-gray-700">Replace placeholder photo?</p>
+                                                            <div className="flex gap-2">
+                                                                <button
+                                                                    onClick={() => setPhotoUpload(null)}
+                                                                    disabled={photoUploading}
+                                                                    className="px-4 py-2 rounded-full border border-gray-200 text-[10px] font-bold uppercase tracking-widest text-black hover:bg-gray-50 disabled:opacity-50"
+                                                                >
+                                                                    Cancel
+                                                                </button>
+                                                                <button
+                                                                    onClick={uploadPhoto}
+                                                                    disabled={photoUploading}
+                                                                    className="px-4 py-2 rounded-full bg-black text-white text-[10px] font-bold uppercase tracking-widest hover:bg-gray-800 disabled:opacity-50"
+                                                                >
+                                                                    {photoUploading ? 'Uploading...' : 'Save Photo'}
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                ) : (
+                                                    <label className="absolute bottom-3 right-3 flex items-center gap-2 px-3 py-2 bg-black/70 text-white text-[10px] font-bold uppercase tracking-widest rounded-full cursor-pointer hover:bg-black/90 transition-colors backdrop-blur-sm">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
+                                                            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                                                            <circle cx="12" cy="13" r="4" />
+                                                        </svg>
+                                                        <span>Change Photo</span>
+                                                        <input
+                                                            type="file"
+                                                            accept="image/*"
+                                                            className="hidden"
+                                                            onChange={(e) => handlePhotoFileChange(e, event)}
+                                                        />
+                                                    </label>
+                                                )}
                                             </div>
-                                            <span className={`text-[10px] uppercase font-bold px-3 py-1 rounded-full ${STATUS_STYLES[event.status] || STATUS_STYLES.pending}`}>
-                                                {event.status}
-                                            </span>
-                                        </div>
+                                            <div className="flex items-start justify-between gap-4 mb-4">
+                                                <div className="w-12 h-12 rounded-full bg-teal-50 text-teal-600 flex items-center justify-center flex-shrink-0">
+                                                    <Icons.Calendar />
+                                                </div>
+                                                <span className={`text-[10px] uppercase font-bold px-3 py-1 rounded-full ${STATUS_STYLES[event.status] || STATUS_STYLES.pending}`}>
+                                                    {event.status}
+                                                </span>
+                                            </div>
 
-                                        <h3 className="text-xl md:text-2xl font-bold text-black leading-tight mb-3 break-words">
-                                            {event.venue_event_name || event.event_title || 'Untitled Event'}
-                                        </h3>
+                                            <h3 className="text-xl md:text-2xl font-bold text-black leading-tight mb-3 break-words">
+                                                {event.venue_event_name || event.event_title || 'Untitled Event'}
+                                            </h3>
 
-                                        <div className="flex flex-col gap-2 text-sm text-gray-600 mb-6">
-                                            <p className="flex items-center gap-2">
-                                                <Icons.Calendar />
-                                                {formatDisplayDate(event.venue_event_date)}
-                                            </p>
-                                            {(event.venue_event_time || event.venue_event_end_time) && (
+                                            <div className="flex flex-col gap-2 text-sm text-gray-600 mb-6">
                                                 <p className="flex items-center gap-2">
-                                                    <Icons.Clock />
-                                                    {formatTime(event.venue_event_time) || '—'}
-                                                    {event.venue_event_end_time && <span>to {formatTime(event.venue_event_end_time)}</span>}
+                                                    <Icons.Calendar />
+                                                    {formatDisplayDate(event.venue_event_date)}
                                                 </p>
-                                            )}
-                                            <p className="flex items-center gap-2">
-                                                <Icons.Users />
-                                                {event.number_of_participants || 1} participant{event.number_of_participants !== 1 ? 's' : ''}
-                                            </p>
-                                        </div>
-
-                                        <div className="mt-auto">
-                                            <div className="bg-gray-50 border border-gray-100 rounded-xl p-4 mb-4">
-                                                <span className="text-[10px] uppercase tracking-widest font-bold text-gray-400 block mb-1">Reference ID</span>
-                                                <span className="font-mono text-sm text-black">{event.reservation_reference}</span>
+                                                {(event.venue_event_time || event.venue_event_end_time) && (
+                                                    <p className="flex items-center gap-2">
+                                                        <Icons.Clock />
+                                                        {formatTime(event.venue_event_time) || '—'}
+                                                        {event.venue_event_end_time && <span>to {formatTime(event.venue_event_end_time)}</span>}
+                                                    </p>
+                                                )}
+                                                <p className="flex items-center gap-2">
+                                                    <Icons.Users />
+                                                    {event.number_of_participants || 1} participant{event.number_of_participants !== 1 ? 's' : ''}
+                                                </p>
                                             </div>
-                                            <button
-                                                onClick={() => openEdit(event)}
-                                                className="w-full py-3.5 bg-black text-white rounded-xl text-[10px] md:text-xs font-bold uppercase tracking-widest hover:bg-gray-800 transition-colors flex items-center justify-center gap-2"
-                                            >
-                                                <Icons.Edit />
-                                                Edit Event Details
-                                            </button>
+
+                                            <div className="mt-auto">
+                                                <div className="bg-gray-50 border border-gray-100 rounded-xl p-4 mb-4">
+                                                    <span className="text-[10px] uppercase tracking-widest font-bold text-gray-400 block mb-1">Reference ID</span>
+                                                    <span className="font-mono text-sm text-black">{event.reservation_reference}</span>
+                                                </div>
+                                                <button
+                                                    onClick={() => openEdit(event)}
+                                                    className="w-full py-3.5 bg-black text-white rounded-xl text-[10px] md:text-xs font-bold uppercase tracking-widest hover:bg-gray-800 transition-colors flex items-center justify-center gap-2"
+                                                >
+                                                    <Icons.Edit />
+                                                    Edit Event Details
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            ))}
+                                );
+                            })}
                         </div>
                     )}
                 </div>

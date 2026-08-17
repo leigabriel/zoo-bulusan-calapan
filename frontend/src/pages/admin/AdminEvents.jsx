@@ -404,6 +404,23 @@ const AdminEvents = () => {
         });
     };
 
+    // Render calendar events as images instead of text
+    const renderEventContent = (arg) => {
+        const imageUrl = arg.event.extendedProps.imageUrl || '/images/event-img-placeholder.jpg';
+        const isList = arg.view.type === 'listWeek';
+        return (
+            <div className={isList ? 'flex items-center gap-2 w-full' : 'w-full h-full overflow-hidden'}>
+                <img
+                    src={imageUrl}
+                    alt={arg.event.title}
+                    draggable={false}
+                    className={isList ? 'w-9 h-9 rounded object-cover flex-shrink-0' : 'w-full h-full object-cover'}
+                    onError={(e) => { e.target.src = '/images/event-img-placeholder.jpg'; }}
+                />
+            </div>
+        );
+    };
+
     // Get upcoming and ongoing events for sidebar
     const upcomingOngoingEvents = events
         .filter(e => e.extendedProps.status === 'upcoming' || e.extendedProps.status === 'ongoing')
@@ -609,6 +626,25 @@ const AdminEvents = () => {
                         .fc .fc-daygrid-day.fc-day-has-event {
                             position: relative;
                         }
+                        /* Show events as images instead of text */
+                        .fc .fc-event {
+                            padding: 0 !important;
+                            border: none !important;
+                            box-shadow: none;
+                        }
+                        .fc .fc-event .fc-event-main {
+                            padding: 0;
+                            overflow: hidden;
+                        }
+                        .fc .fc-daygrid-event {
+                            height: 2.5rem !important;
+                        }
+                        .fc .fc-timegrid-event {
+                            background-color: transparent !important;
+                        }
+                        .fc .fc-list-event .fc-event-main {
+                            overflow: visible;
+                        }
                     `}</style>
                     <FullCalendar
                         ref={calendarRef}
@@ -627,6 +663,7 @@ const AdminEvents = () => {
                         weekends={true}
                         dateClick={handleDateClick}
                         eventClick={handleEventClick}
+                        eventContent={renderEventContent}
                         eventDrop={async (info) => {
                             // Handle drag and drop - use local timezone
                             const d = info.event.start;

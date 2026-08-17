@@ -96,6 +96,7 @@ class Reservation {
     static async findHostedEventReservationsByUserId(userId) {
         const [rows] = await db.query(
             `SELECT er.*, e.title as event_title, e.event_date, e.start_time, e.end_time, e.location as event_location,
+                    e.image_url as event_image_url,
                     CONCAT(u.first_name, ' ', u.last_name) as user_name, u.email as user_email 
              FROM event_reservations er 
              LEFT JOIN users u ON er.user_id = u.id 
@@ -281,6 +282,14 @@ class Reservation {
                 numberOfParticipants, notes,
                 id, userId
             ]
+        );
+        return result.affectedRows > 0;
+    }
+
+    static async updateEventReservationEventId(id, eventId) {
+        const [result] = await db.query(
+            'UPDATE event_reservations SET event_id = ? WHERE id = ?',
+            [eventId, id]
         );
         return result.affectedRows > 0;
     }

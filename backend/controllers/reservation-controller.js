@@ -41,6 +41,92 @@ const generateReservationReference = () => {
 const TICKET_DAILY_CAPACITY = 100;
 const EVENT_SLOT_CAPACITY = 100;
 
+const EVENT_IMAGE_PLACEHOLDER = '/images/event-img-placeholder.jpg';
+
+// Helper to normalize a date value to YYYY-MM-DD
+const toDateString = (value) => {
+    if (!value) return null;
+    if (typeof value === 'string') return value.split('T')[0];
+    if (value instanceof Date) {
+        const year = value.getFullYear();
+        const month = String(value.getMonth() + 1).padStart(2, '0');
+        const day = String(value.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+    return String(value);
+};
+
+// Create (or update) an entry in the events table so a confirmed event
+// reservation shows up on the user/admin/staff event calendars.
+const createOrUpdateLinkedEvent = async (reservation, imageUrl = null) => {
+    if (!reservation) return null;
+
+    const title = reservation.venue_event_name || reservation.event_title || 'Venue Event';
+    const eventDate = toDateString(reservation.venue_event_date || reservation.event_date);
+    const startTime = reservation.venue_event_time || reservation.start_time || null;
+    const endTime = reservation.venue_event_end_time || reservation.end_time || null;
+    const description = reservation.venue_event_description || null;
+
+    if (reservation.event_id) {
+        const existing = await Event.findById(reservation.event_id);
+        if (existing) {
+            await Event.update(reservation.event_id, {
+                title,
+                description,
+                eventDate,
+                startTime,
+                endTime,
+                location: existing.location || 'Zoo Bulusan',
+                imageUrl: imageUrl || existing.image_url || EVENT_IMAGE_PLACEHOLDER,
+                status: 'upcoming',
+                color: existing.color || '#22c55e'
+            });
+            return reservation.event_id;
+        }
+    }
+
+    const newEventId = await Event.create({
+        title,
+        description,
+        eventDate,
+        startTime,
+        endTime,
+        location: 'Zoo Bulusan',
+        imageUrl: imageUrl || EVENT_IMAGE_PLACEHOLDER,
+        status: 'upcoming',
+        color: '#22c55e',
+        createdBy: reservation.user_id || null
+    });
+
+    await Reservation.updateEventReservationEventId(reservation.id, newEventId);
+    return newEventId;
+};
+
+// Remove an event from the calendar that was created on behalf of a
+// reservation, so cancelled bookings no longer clutter the calendars.
+const removeReservationOwnedEvent = async (reservation) => {
+    if (!reservation?.event_id) return;
+    try {
+        const linked = await Event.findById(reservation.event_id);
+        if (linked && linked.created_by && reservation.user_id &&
+            String(linked.created_by) === String(reservation.user_id)) {
+            await Event.delete(reservation.event_id);
+        }
+    } catch (error) {
+        console.error('Error removing linked reservation event:', error);
+    }
+};
+
+// Notify the reservation owner about confirmation/cancellation.
+const notifyReservationUser = async (userId, title, message, link = null) => {
+    if (!userId) return;
+    try {
+        await Notification.create({ userId, title, message, type: 'event', link });
+    } catch (error) {
+        console.error('Error creating user notification:', error);
+    }
+};
+
 const TICKET_TIME_SLOTS = [
     { id: '09:00', label: '09:00 AM', start: '09:00', end: '10:30' },
     { id: '11:00', label: '11:00 AM', start: '11:00', end: '12:30' },
@@ -425,6 +511,30 @@ exports.updateEventReservationStatus = async (req, res) => {
             await Reservation.updateEventReservationStatus(id, status, confirmedBy);
         }
 
+        if (status === 'confirmed') {
+            // Create/update the linked event so it appears on the event calendars.
+            await createOrUpdateLinkedEvent(existingReservation);
+            await notifyReservationUser(
+                existingReservation?.user_id,
+                'Event Reservation Confirmed',
+                `Your event "${existingReservation?.venue_event_name || 'reservation'}" has been confirmed and added to the events calendar.`,
+                '/my-events'
+            );
+        }
+
+        if (['cancelled', 'no_show'].includes(status)) {
+            // Remove the reservation-created event from the calendars if applicable.
+            await removeReservationOwnedEvent(existingReservation);
+            if (status === 'cancelled') {
+                await notifyReservationUser(
+                    existingReservation?.user_id,
+                    'Event Reservation Cancelled',
+                    `Your event "${existingReservation?.venue_event_name || 'reservation'}" has been cancelled.`,
+                    '/my-events'
+                );
+            }
+        }
+
         if (req.user && ['staff', 'admin'].includes(req.user.role)) {
             const ref = existingReservation?.reservation_reference || `#${id}`;
             await logStaffActivity(
@@ -484,15 +594,19 @@ exports.deleteTicketReservation = async (req, res) => {
 exports.deleteEventReservation = async (req, res) => {
     try {
         const { id } = req.params;
+        const existing = await Reservation.findEventReservationById(id);
         const deleted = await Reservation.deleteEventReservation(id);
 
         if (!deleted) {
             return res.status(404).json({ success: false, message: 'Reservation not found' });
         }
 
+        // Clean up the calendar event created from this reservation if applicable.
+        await removeReservationOwnedEvent(existing);
+
         res.json({ success: true, message: 'Reservation deleted successfully' });
     } catch (error) {
-        console.error('Error deleting reservation:', error);
+        console.error('Error deleting event reservation:', error);
         res.status(500).json({ success: false, message: 'Error deleting reservation' });
     }
 };
@@ -559,10 +673,60 @@ exports.updateUserHostedEvent = async (req, res) => {
             return res.status(404).json({ success: false, message: 'Event not found or you are not authorized to edit it' });
         }
 
+        // Keep the calendar event in sync with the edited reservation details.
+        const updatedReservation = await Reservation.findEventReservationById(id);
+        if (updatedReservation && updatedReservation.status === 'confirmed') {
+            await createOrUpdateLinkedEvent(updatedReservation);
+        }
+
         res.json({ success: true, message: 'Event updated successfully' });
     } catch (error) {
         console.error('Error updating hosted event:', error);
         res.status(500).json({ success: false, message: 'Error updating hosted event' });
+    }
+};
+
+// Upload a photo for a confirmed hosted event, replacing the placeholder image.
+exports.uploadHostedEventImage = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const userId = req.user.id;
+
+        const reservation = await Reservation.findEventReservationById(id);
+        if (!reservation) {
+            return res.status(404).json({ success: false, message: 'Reservation not found' });
+        }
+        if (Number(reservation.user_id) !== Number(userId)) {
+            return res.status(403).json({ success: false, message: 'Not authorized to update this event' });
+        }
+        if (reservation.status !== 'confirmed') {
+            return res.status(400).json({ success: false, message: 'Only confirmed events can have an image uploaded.' });
+        }
+
+        let imageUrl = null;
+        if (req.cloudinaryResult && req.cloudinaryResult.secure_url) {
+            imageUrl = req.cloudinaryResult.secure_url;
+        } else if (req.file && req.file.filename) {
+            if (process.env.BACKEND_URL) {
+                imageUrl = `${process.env.BACKEND_URL}/uploads/${req.file.filename}`;
+            } else {
+                const protocol = process.env.NODE_ENV === 'production' ? 'https' : req.protocol;
+                const host = req.get('host');
+                imageUrl = `${protocol}://${host}/uploads/${req.file.filename}`;
+            }
+        }
+
+        if (!imageUrl) {
+            return res.status(400).json({ success: false, message: 'No image uploaded.' });
+        }
+
+        // Ensure the linked calendar event exists (creates one if needed) with the new image.
+        await createOrUpdateLinkedEvent(reservation, imageUrl);
+
+        res.json({ success: true, message: 'Event image updated successfully', imageUrl });
+    } catch (error) {
+        console.error('Error uploading hosted event image:', error);
+        res.status(500).json({ success: false, message: 'Error uploading event image' });
     }
 };
 

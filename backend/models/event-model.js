@@ -36,6 +36,17 @@ class Event {
         return formatEventRow(rows[0]);
     }
 
+    static async findByReservationId(reservationId) {
+        const [rows] = await db.query(
+            `SELECT e.* FROM events e
+             INNER JOIN event_reservations er ON er.event_id = e.id
+             WHERE er.id = ?
+             LIMIT 1`,
+            [reservationId]
+        );
+        return formatEventRow(rows[0]);
+    }
+
     static async getUpcoming() {
         const [rows] = await db.query(
             `SELECT * FROM events 
@@ -54,11 +65,11 @@ class Event {
     }
 
     static async create(eventData) {
-        const { title, description, eventDate, startTime, endTime, location, imageUrl, status, color } = eventData;
+        const { title, description, eventDate, startTime, endTime, location, imageUrl, status, color, createdBy } = eventData;
         const [result] = await db.query(
-            `INSERT INTO events (title, description, event_date, start_time, end_time, location, image_url, status, color) 
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            [title, description, eventDate, startTime, endTime, location, imageUrl || null, status || 'upcoming', color || '#22c55e']
+            `INSERT INTO events (title, description, event_date, start_time, end_time, location, image_url, status, color, created_by) 
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [title, description, eventDate, startTime, endTime, location, imageUrl || null, status || 'upcoming', color || '#22c55e', createdBy || null]
         );
         return result.insertId;
     }
@@ -75,6 +86,14 @@ class Event {
 
     static async delete(id) {
         const [result] = await db.query('DELETE FROM events WHERE id = ?', [id]);
+        return result.affectedRows > 0;
+    }
+
+    static async updateImageUrl(id, imageUrl) {
+        const [result] = await db.query(
+            'UPDATE events SET image_url = ? WHERE id = ?',
+            [imageUrl, id]
+        );
         return result.affectedRows > 0;
     }
 
