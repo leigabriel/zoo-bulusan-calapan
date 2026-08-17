@@ -205,7 +205,7 @@ const StaffDashboard = () => {
 
     // Stat Card Component - matching admin design
     const StatCard = ({ title, value, icon, trend, trendValue }) => (
-        <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-green-500 via-green-600 to-green-700 p-5 shadow-lg shadow-green-500/30 transition-all duration-300 hover:scale-[1.01]">
+        <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-green-300 via-green-400 to-green-500 p-5 shadow-lg shadow-green-500/30 transition-all duration-300 hover:scale-[1.01]">
             <div className="flex items-start justify-between mb-4">
                 <div className="w-12 h-12 rounded-2xl bg-white/30 backdrop-blur-sm flex items-center justify-center text-gray-900 border border-white/20">
                     {icon}
