@@ -5,6 +5,7 @@ import timeGridPlugin from '@fullcalendar/timegrid';
 import listPlugin from '@fullcalendar/list';
 import interactionPlugin from '@fullcalendar/interaction';
 import { adminAPI } from '../../services/api-client';
+import { notify } from '../../utils/toast';
 
 // Icons
 const PlusIcon = () => (
@@ -303,6 +304,7 @@ const AdminEvents = () => {
                 const response = await adminAPI.updateEvent(selectedEvent.id, eventData);
                 if (response.success) {
                     await fetchEvents();
+                    notify.success('Event updated.');
                     setShowModal(false);
                     resetForm();
                 }
@@ -311,13 +313,14 @@ const AdminEvents = () => {
                 const response = await adminAPI.createEvent(eventData);
                 if (response.success) {
                     await fetchEvents();
+                    notify.success('Event added.');
                     setShowModal(false);
                     resetForm();
                 }
             }
         } catch (err) {
             console.error('Error saving event:', err);
-            setError(err.message || 'Failed to save event');
+            notify.error(err.message || "Couldn't save event. Please try again.");
         } finally {
             setSaving(false);
         }
@@ -342,12 +345,13 @@ const AdminEvents = () => {
             const response = await adminAPI.deleteEvent(selectedEvent.id);
             if (response.success) {
                 await fetchEvents();
+                notify.success('Event removed.');
                 setShowModal(false);
                 resetForm();
             }
         } catch (err) {
             console.error('Error deleting event:', err);
-            setError(err.message || 'Failed to delete event');
+            notify.error(err.message || "Couldn't remove event. Please try again.");
         } finally {
             setSaving(false);
         }

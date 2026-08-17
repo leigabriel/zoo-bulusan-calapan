@@ -205,7 +205,7 @@ const StaffEvents = ({ globalSearch = '' }) => {
                 if (uploadRes.success) {
                     imageUrl = uploadRes.imageUrl;
                 } else {
-                    notify.error(uploadRes.message || 'We could not upload the image. Please try again.');
+                    notify.error(uploadRes.message || "Couldn't upload image.");
                     setSaving(false);
                     return;
                 }
@@ -229,17 +229,18 @@ const StaffEvents = ({ globalSearch = '' }) => {
             }
             if (res.success) {
                 await fetchEvents();
+                notify.success(editingEvent ? 'Event updated.' : 'Event added.');
                 closeModal();
                 setShowSaveConfirm(false);
                 setConfirmData(null);
             } else {
-                const message = res.message || 'We could not save this event right now.';
+                const message = res.message || "Couldn't save event.";
                 setError(message);
                 notify.error(message);
             }
         } catch (err) {
             console.error(err);
-            const message = 'We could not save this event right now.';
+            const message = "Couldn't save event. Please try again.";
             setError(message);
             notify.error(message);
         } finally {
@@ -252,13 +253,14 @@ const StaffEvents = ({ globalSearch = '' }) => {
             const res = await staffAPI.deleteEvent(id);
             if (res.success) {
                 setEvents(events.filter(e => e.id !== id));
+                notify.success('Event removed.');
                 setDeleteConfirm(null);
             } else {
-                notify.error(res.message || 'We could not remove this event right now.');
+                notify.error(res.message || "Couldn't remove event.");
             }
         } catch (err) {
             console.error(err);
-            notify.error('We could not remove this event right now.');
+            notify.error("Couldn't remove event. Please try again.");
         }
     };
 

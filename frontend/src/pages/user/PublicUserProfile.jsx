@@ -17,8 +17,8 @@ const PublicUserProfile = ({ userId, onClose }) => {
                 const response = await communityAPI.getUserProfile(userId, user?.role || 'user');
                 setProfile(response.profile || null);
             } catch {
-                notify.error('Could not load this profile right now.');
-            } finally {
+            notify.error("Couldn't load profile.");
+        } finally {
                 setLoading(false);
             }
         };

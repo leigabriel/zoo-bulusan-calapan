@@ -431,7 +431,7 @@ const RegisterPage = () => {
 
         if (validationErrors.length > 0) {
             setErrors(validationErrors);
-            notify.warning(validationErrors[0] || 'Please check your form details.');
+            notify.warning(validationErrors[0] || 'Check your form details.');
             return;
         }
 
@@ -450,7 +450,7 @@ const RegisterPage = () => {
                 if (response.requiresVerification) {
                     setRegisteredEmail(formData.email.trim().toLowerCase());
                     setShowVerificationModal(true);
-                    notify.success('Registration successful. Please verify your email.');
+                    notify.success('Account created. Verify email.');
                     setFormData({
                         firstName: '',
                         lastName: '',
@@ -462,7 +462,7 @@ const RegisterPage = () => {
                 } else {
                     // Show success modal for immediate registration without email verification
                     setShowSuccessModal(true);
-                    notify.success('Account created successfully.');
+                    notify.success('Account created.');
                     setFormData({
                         firstName: '',
                         lastName: '',
@@ -473,12 +473,12 @@ const RegisterPage = () => {
                     });
                 }
             } else {
-                const message = response.message || 'Registration failed';
+                const message = response.message || "Couldn't create account.";
                 setErrors([message]);
                 notify.error(message);
             }
         } catch (err) {
-            const message = err.message || 'An error occurred during registration';
+            const message = err.message || "Couldn't create account.";
             setErrors([message]);
             notify.error(message);
         } finally {

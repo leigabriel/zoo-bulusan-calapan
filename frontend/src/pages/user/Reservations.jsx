@@ -192,7 +192,7 @@ const Reservations = () => {
     const getTotalVisitors = () => Object.values(ticketCounts).reduce((a, b) => a + b, 0);
     const updateTicketCount = (type, delta) => {
         if (delta > 0 && getTotalVisitors() >= 20) {
-            notify.warning('You can add up to 20 visitors per reservation.');
+            notify.warning('Maximum 20 visitors per booking.');
             return;
         }
         setTicketCounts(prev => ({ ...prev, [type]: Math.max(0, prev[type] + delta) }));
@@ -225,12 +225,12 @@ const Reservations = () => {
     const getMinDate = () => new Date().toISOString().split('T')[0];
 
     const validateTicketForm = () => {
-        if (getTotalVisitors() === 0) { notify.warning('Please select at least one ticket.'); return false; }
-        if (!ticketForm.reservationDate) { notify.warning('Please select your visit date.'); return false; }
-        if (!ticketForm.reservationTime) { notify.warning('Please select an arrival time slot.'); return false; }
-        if (!ticketForm.visitorName.trim()) { notify.warning('Please enter your full name.'); return false; }
-        if (!ticketForm.visitorEmail.trim()) { notify.warning('Please enter your email address.'); return false; }
-        if (ticketCounts.bulusan_resident > 0 && !residentIdImage) { notify.warning('Please upload your Bulusan resident ID for verification.'); return false; }
+        if (getTotalVisitors() === 0) { notify.warning('Select a ticket first.'); return false; }
+        if (!ticketForm.reservationDate) { notify.warning('Please select a visit date.'); return false; }
+        if (!ticketForm.reservationTime) { notify.warning('Please select an arrival time.'); return false; }
+        if (!ticketForm.visitorName.trim()) { notify.warning('Please enter your name.'); return false; }
+        if (!ticketForm.visitorEmail.trim()) { notify.warning('Please enter your email.'); return false; }
+        if (ticketCounts.bulusan_resident > 0 && !residentIdImage) { notify.warning('Please upload residency ID.'); return false; }
         return true;
     };
 
@@ -249,7 +249,7 @@ const Reservations = () => {
                     residentIdImage: residentIdImage
                 });
                 if (res.success) {
-                    notify.success('Reservation submitted. We are preparing your pass.');
+                    notify.success('Reservation submitted.');
                     setConfirmationData({
                         type: 'ticket',
                         reference: res.reservationReference,
@@ -279,7 +279,7 @@ const Reservations = () => {
                     notes: eventForm.notes
                 });
                 if (res.success) {
-                    notify.success('Reservation submitted. We are preparing your pass.');
+                    notify.success('Reservation submitted.');
                     setConfirmationData({
                         type: 'event',
                         reference: res.reservationReference,
@@ -298,7 +298,7 @@ const Reservations = () => {
                 }
             }
         } catch (err) {
-            notify.error(err.message || 'We could not complete your reservation. Please try again.');
+            notify.error(err.message || "Couldn't complete reservation. Please try again.");
         } finally {
             setIsSubmitting(false);
         }
@@ -345,7 +345,7 @@ const Reservations = () => {
             if (!validateTicketForm()) return;
         } else {
             if (!eventForm.venueEventName || !eventForm.venueEventDate) {
-                notify.warning('Please provide the event name and date.');
+                notify.warning('Provide name and date.');
                 return;
             }
         }

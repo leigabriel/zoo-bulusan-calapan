@@ -168,10 +168,11 @@ const StaffAnimals = ({ globalSearch = '' }) => {
             }
             if (res.success) {
                 await fetchAnimals();
+                notify.success(editingAnimal ? 'Animal updated.' : 'Animal added.');
                 closeModal();
             } else throw new Error(res.message || 'Save failed');
         } catch (err) {
-            notify.error(err.message || 'We could not save this animal right now.');
+            notify.error(err.message || "Couldn't save animal. Please try again.");
         } finally {
             setSaving(false);
         }
@@ -182,10 +183,11 @@ const StaffAnimals = ({ globalSearch = '' }) => {
             const res = await staffAPI.deleteAnimal(id);
             if (res.success) {
                 setAnimals(animals.filter(a => a.id !== id));
+                notify.success('Animal removed.');
                 setDeleteConfirm(null);
             } else throw new Error(res.message || 'Delete failed');
         } catch (err) {
-            notify.error(err.message || 'We could not remove this animal right now.');
+            notify.error(err.message || "Couldn't remove animal. Please try again.");
         }
     };
 

@@ -1,11 +1,11 @@
 import { toast } from 'react-toastify';
 
 const fallbackMessages = {
-    saved: 'Changes saved successfully.',
-    deleted: 'Item removed successfully.',
-    loading: 'Processing your request...',
+    saved: 'Changes saved.',
+    deleted: 'Removed successfully.',
+    loading: 'Working on it...',
     retry: 'Something went wrong. Please try again.',
-    required: 'Please complete all required fields.'
+    required: 'Please fill in all required fields.'
 };
 
 const friendlyMessage = (message, fallbackKey = 'retry') => {
@@ -13,10 +13,37 @@ const friendlyMessage = (message, fallbackKey = 'retry') => {
         return fallbackMessages[fallbackKey] || fallbackMessages.retry;
     }
 
+    // Modern polished app style: short, natural, no technical jargon
+    const lowerMessage = message.toLowerCase();
+
+    if (lowerMessage.includes('network error') || lowerMessage.includes('offline')) {
+        return "You're offline. Check your connection and try again.";
+    }
+
+    if (lowerMessage.includes('unauthorized') || lowerMessage.includes('401') || lowerMessage.includes('permission')) {
+        return "You don't have permission to do that.";
+    }
+
+    if (lowerMessage.includes('not found') || lowerMessage.includes('404')) {
+        return "We couldn't find what you're looking for.";
+    }
+
+    if (lowerMessage.includes('already exists') || lowerMessage.includes('duplicate')) {
+        return "This already exists.";
+    }
+
+    if (lowerMessage.includes('invalid') || lowerMessage.includes('validation')) {
+        return "Please check your information and try again.";
+    }
+
+    if (lowerMessage.includes('file too large') || lowerMessage.includes('size limit')) {
+        return "File is too large. Please try a smaller one.";
+    }
+
     const cleaned = message
-        .replace(/request failed with status \d+/i, 'Something went wrong. Please try again.')
-        .replace(/server error/ig, 'Something went wrong. Please try again.')
-        .replace(/upload error/ig, 'We could not upload your file.')
+        .replace(/request failed with status \d+/i, 'Something went wrong.')
+        .replace(/server error/ig, 'Something went wrong.')
+        .replace(/upload error/ig, "Couldn't upload your file.")
         .replace(/failed/ig, 'could not be completed')
         .replace(/error/ig, 'issue')
         .trim();

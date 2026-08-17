@@ -77,9 +77,9 @@ const QRScanner = () => {
                     scanStatus: res.status,
                     qrData: decodedText
                 });
-                notify.success('Valid ticket detected!');
+                notify.success('Ticket verified.');
             } else {
-                setError(res.message || 'Invalid or expired ticket sequence.');
+                setError(res.message || 'Invalid or expired ticket.');
                 notify.error('Invalid ticket.');
                 if (isCamera) {
                     setTimeout(() => {
@@ -90,9 +90,9 @@ const QRScanner = () => {
             }
         } catch (err) {
             console.error(err);
-            const errorMessage = typeof err === 'string' ? err : (err.message || 'Error processing ticket.');
+            const errorMessage = typeof err === 'string' ? err : (err.message || "Couldn't process ticket.");
             setError(errorMessage);
-            notify.error('Error processing ticket.');
+            notify.error("Couldn't process ticket.");
             if (isCamera) {
                 setTimeout(() => {
                     setError(null);
@@ -189,8 +189,8 @@ const QRScanner = () => {
 
         } catch (err) {
             console.error(err);
-            setError('Could not read QR code from image. Please ensure the image is clear and contains a valid QR code.');
-            notify.error('Could not read QR code from image.');
+            setError("Couldn't read QR code. Please ensure the image is clear.");
+            notify.error("Couldn't read QR code.");
         } finally {
             if (fileScannerRef.current) {
                 try { fileScannerRef.current.clear(); } catch (e) { }
@@ -206,17 +206,17 @@ const QRScanner = () => {
         try {
             const res = await reservationAPI.scanReservation(scanResult.qrData, true);
             if (res.success) {
-                notify.success('Check-in confirmed successfully.');
+                notify.success('Check-in confirmed.');
                 setScanResult({ ...scanResult, scanStatus: 'used' });
                 setTimeout(() => {
                     setScanResult(null);
                 }, 2000);
             } else {
-                notify.error(res.message || 'Failed to check-in.');
+                notify.error(res.message || 'Check-in failed.');
             }
         } catch (err) {
             console.error(err);
-            notify.error('Error confirming check-in.');
+            notify.error("Couldn't confirm check-in.");
         } finally {
             setLoading(false);
         }

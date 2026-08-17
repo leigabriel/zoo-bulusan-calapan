@@ -67,7 +67,7 @@ const CommunityPage = () => {
             const response = await communityAPI.getPosts(user?.role || 'user');
             setPosts(response.posts || []);
         } catch {
-            notify.error('Could not load community posts right now.');
+            notify.error("Couldn't load posts.");
         } finally {
             setLoadingPosts(false);
         }
@@ -118,7 +118,7 @@ const CommunityPage = () => {
             }
             await loadPosts();
         } catch {
-            notify.error('Could not save your post right now.');
+            notify.error("Couldn't save post.");
         } finally {
             setSavingPost(false);
         }

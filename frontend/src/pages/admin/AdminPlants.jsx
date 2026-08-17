@@ -195,11 +195,12 @@ const AdminPlants = ({ globalSearch = '' }) => {
             }
             if (res.success) {
                 await fetchPlants();
+                notify.success(editingPlant ? 'Plant updated.' : 'Plant added.');
                 closeModal();
             } else throw new Error(res.message || 'Save failed');
         } catch (err) {
             console.error(err);
-            notify.error(err.message || 'We could not save this plant right now.');
+            notify.error(err.message || "Couldn't save plant. Please try again.");
         } finally {
             setSaving(false);
         }
@@ -210,11 +211,12 @@ const AdminPlants = ({ globalSearch = '' }) => {
             const res = await plantAPI.delete(id, 'admin');
             if (res.success) {
                 setPlants(plants.filter(p => p.id !== id));
+                notify.success('Plant removed.');
                 setDeleteConfirm(null);
             } else throw new Error(res.message || 'Delete failed');
         } catch (err) {
             console.error(err);
-            notify.error(err.message || 'We could not remove this plant right now.');
+            notify.error(err.message || "Couldn't remove plant. Please try again.");
         }
     };
 

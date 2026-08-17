@@ -416,7 +416,7 @@ const StaffLayout = ({ children }) => {
                 });
             }
         } catch (err) {
-            notify.error('We could not load your profile right now.');
+            notify.error("Couldn't load profile.");
         } finally {
             setProfileLoading(false);
         }
@@ -430,12 +430,12 @@ const StaffLayout = ({ children }) => {
             const res = await authAPI.updateProfile(payload, 'staff');
             if (res && res.success) {
                 updateUser({ ...user, firstName: profileForm.firstName, lastName: profileForm.lastName });
-                notify.success('Profile updated successfully.');
+                notify.success('Profile updated.');
             } else {
-                notify.error(res.message || 'We could not save your profile changes.');
+                notify.error(res.message || "Couldn't save changes.");
             }
         } catch (err) {
-            notify.error('We could not save your profile changes.');
+            notify.error("Couldn't save changes.");
         } finally {
             setProfileSaving(false);
         }

@@ -39,7 +39,7 @@ const AdminCommunityModeration = () => {
             setAllPosts(allPostsRes.posts || []);
             setReportedComments(reportsRes.reports || []);
         } catch {
-            notify.error('Could not load moderation data right now.');
+            notify.error("Couldn't load moderation data.");
         } finally {
             setLoading(false);
         }
@@ -55,7 +55,7 @@ const AdminCommunityModeration = () => {
             notify.success(action === 'approved' ? 'Post approved.' : 'Post declined.');
             await loadData();
         } catch {
-            notify.error('Could not update this post right now.');
+            notify.error("Couldn't update post status.");
         }
     };
 
@@ -82,7 +82,7 @@ const AdminCommunityModeration = () => {
         if (!postId || !action) return;
 
         if (action === 'declined' && !note.trim()) {
-            notify.warning('Please provide a specific reason for rejection.');
+            notify.warning('Provide a reason first.');
             return;
         }
 
@@ -93,10 +93,10 @@ const AdminCommunityModeration = () => {
     const reviewReport = async (reportId, action) => {
         try {
             await communityAPI.reviewReport(reportId, action, 'admin');
-            notify.success('Comment report updated.');
+            notify.success('Report updated.');
             await loadData();
         } catch {
-            notify.error('Could not update this report right now.');
+            notify.error("Couldn't update report.");
         }
     };
 
@@ -128,11 +128,11 @@ const AdminCommunityModeration = () => {
         try {
             await communityAPI.deleteComment(removeCommentModal.commentId, 'admin');
             await communityAPI.reviewReport(removeCommentModal.reportId, 'reviewed', 'admin');
-            notify.success('Reported comment removed.');
+            notify.success('Comment removed.');
             closeRemoveCommentModal();
             await loadData();
         } catch {
-            notify.error('Could not remove this comment right now.');
+            notify.error("Couldn't remove comment.");
         }
     };
 
@@ -153,7 +153,7 @@ const AdminCommunityModeration = () => {
             closeRemoveModal();
             await loadData();
         } catch {
-            notify.error('Could not remove this post right now.');
+            notify.error("Couldn't remove post.");
         }
     };
 

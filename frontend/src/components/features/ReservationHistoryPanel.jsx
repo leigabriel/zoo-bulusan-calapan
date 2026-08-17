@@ -181,7 +181,7 @@ const ReservationHistoryPanel = ({ isOpen, onClose }) => {
             link.click();
             document.body.removeChild(link);
         } catch (err) {
-            notify.error('Failed to download receipt: ' + err.message);
+            notify.error("Couldn't download receipt.");
         } finally {
             setDownloading(false);
         }

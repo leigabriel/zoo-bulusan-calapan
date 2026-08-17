@@ -343,7 +343,7 @@ const Reports = () => {
 
     const exportReport = () => {
         if (!reportData || reportRows.length === 0) {
-            notify.info('Generate a report first before exporting.');
+            notify.info('Generate a report first.');
             return;
         }
 
@@ -397,7 +397,7 @@ const Reports = () => {
 
     const handlePrint = () => {
         if (!reportData || reportRows.length === 0) {
-            notify.info('Generate a report first before printing.');
+            notify.info('Generate a report first.');
             return;
         }
 
@@ -474,7 +474,7 @@ const Reports = () => {
 
         const printWindow = window.open('', '_blank', 'width=1200,height=800');
         if (!printWindow) {
-            notify.error('Please allow pop-ups to print this report.');
+            notify.error('Please allow pop-ups.');
             return;
         }
 

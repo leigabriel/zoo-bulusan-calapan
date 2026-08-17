@@ -159,12 +159,13 @@ const StaffTickets = () => {
                 if (selectedTicket?.id === ticketId) {
                     setSelectedTicket({ ...selectedTicket, status: newStatus });
                 }
+                notify.success(`Ticket ${newStatus}.`);
                 setShowCancelModal(false);
                 setCancellationReason('');
             }
         } catch (err) {
             console.error('Error updating ticket:', err);
-            notify.error('We could not update the ticket status. Please try again.');
+            notify.error(err.message || "Couldn't update ticket status. Please try again.");
         } finally {
             setUpdating(false);
         }
@@ -200,10 +201,11 @@ const StaffTickets = () => {
                         if (selectedTicket?.id === ticketId) {
                             setSelectedTicket({ ...selectedTicket, payment_status: 'paid', paymentStatus: 'paid' });
                         }
+                        notify.success('Payment confirmed.');
                     }
                 } catch (err) {
                     console.error(err);
-                    notify.error('We could not mark this ticket as paid. Please try again.');
+                    notify.error(err.message || "Couldn't update payment status. Please try again.");
                 } finally {
                     setUpdating(false);
                 }
@@ -226,10 +228,11 @@ const StaffTickets = () => {
                         if (selectedTicket?.id === ticketId) {
                             setSelectedTicket({ ...selectedTicket, verification_status: status, verificationStatus: status });
                         }
+                        notify.success(status === 'approved' ? 'ID verified.' : 'ID verification rejected.');
                     }
                 } catch (err) {
                     console.error(err);
-                    notify.error('We could not update the verification status. Please try again.');
+                    notify.error(err.message || "Couldn't update verification status. Please try again.");
                 } finally {
                     setUpdating(false);
                 }

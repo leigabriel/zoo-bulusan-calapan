@@ -181,12 +181,13 @@ const AdminTickets = ({ globalSearch = '' }) => {
                 if (selectedTicket?.id === ticketId) {
                     setSelectedTicket({ ...selectedTicket, status: newStatus });
                 }
+                notify.success(`Ticket ${newStatus}.`);
                 setShowCancelModal(false);
                 setCancelReason('');
             }
         } catch (err) {
             console.error(err);
-            notify.error('We could not update the ticket status. Please try again.');
+            notify.error(err.message || "Couldn't update ticket status. Please try again.");
         } finally {
             setActionLoading(false);
         }
@@ -228,10 +229,11 @@ const AdminTickets = ({ globalSearch = '' }) => {
                         if (selectedTicket?.id === ticketId) {
                             setSelectedTicket({ ...selectedTicket, paymentStatus: 'paid' });
                         }
+                        notify.success('Payment confirmed.');
                     }
                 } catch (err) {
                     console.error(err);
-                    notify.error('We could not mark this ticket as paid. Please try again.');
+                    notify.error(err.message || "Couldn't update payment status. Please try again.");
                 } finally {
                     setActionLoading(false);
                 }
@@ -254,10 +256,11 @@ const AdminTickets = ({ globalSearch = '' }) => {
                         if (selectedTicket?.id === ticketId) {
                             setSelectedTicket({ ...selectedTicket, verificationStatus: status });
                         }
+                        notify.success(status === 'approved' ? 'ID verified.' : 'ID verification rejected.');
                     }
                 } catch (err) {
                     console.error(err);
-                    notify.error('We could not update the verification status. Please try again.');
+                    notify.error(err.message || "Couldn't update verification status. Please try again.");
                 } finally {
                     setActionLoading(false);
                 }
@@ -308,7 +311,7 @@ const AdminTickets = ({ globalSearch = '' }) => {
             }
         } catch (err) {
             console.error(err);
-            notify.error('We could not export tickets right now. Please try again.');
+            notify.error(err.message || "Couldn't export tickets. Please try again.");
         } finally {
             setExportLoading(false);
         }

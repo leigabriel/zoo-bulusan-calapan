@@ -152,11 +152,12 @@ const AdminUsers = ({ globalSearch = '' }) => {
             }
             if (res.success) {
                 await fetchUsers();
+                notify.success(editingUser ? 'User updated.' : 'User created.');
                 closeModal();
             } else throw new Error(res.message || 'Save failed');
         } catch (err) {
             console.error(err);
-            notify.error(err.message || 'We could not save this user right now.');
+            notify.error(err.message || "Couldn't save user. Please try again.");
         } finally {
             setSaving(false);
         }
@@ -170,12 +171,13 @@ const AdminUsers = ({ globalSearch = '' }) => {
             const res = await adminAPI.suspendUser(suspendUser.id, suspendReason);
             if (res.success) {
                 setUsers(users.map(u => u.id === suspendUser.id ? { ...u, is_suspended: true, suspension_reason: suspendReason } : u));
+                notify.success('Account suspended.');
                 setSuspendUser(null);
                 setSuspendReason('');
             } else throw new Error(res.message || 'Suspend failed');
         } catch (err) {
             console.error(err);
-            notify.error(err.message || 'We could not update this account right now.');
+            notify.error(err.message || "Couldn't update this account. Please try again.");
         } finally {
             setSuspending(false);
         }
@@ -187,10 +189,11 @@ const AdminUsers = ({ globalSearch = '' }) => {
             const res = await adminAPI.unsuspendUser(userId);
             if (res.success) {
                 setUsers(users.map(u => u.id === userId ? { ...u, is_suspended: false, suspension_reason: null } : u));
+                notify.success('Account restored.');
             } else throw new Error(res.message || 'Unsuspend failed');
         } catch (err) {
             console.error(err);
-            notify.error(err.message || 'We could not restore this account right now.');
+            notify.error(err.message || "Couldn't restore this account. Please try again.");
         } finally {
             setSuspending(false);
         }

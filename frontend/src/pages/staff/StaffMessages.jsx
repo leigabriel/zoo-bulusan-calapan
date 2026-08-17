@@ -135,10 +135,10 @@ const StaffMessages = ({ globalSearch = '' }) => {
             setShowReplyModal(false);
             setReplyContent('');
             setShowViewModal(false);
-            notify.success('Reply sent successfully.');
+            notify.success('Reply sent.');
         } catch (err) {
             console.error('Error sending reply:', err);
-            notify.error('We could not send your reply. Please try again.');
+            notify.error("Couldn't send reply.");
         } finally {
             setReplying(false);
         }
@@ -157,8 +157,10 @@ const StaffMessages = ({ globalSearch = '' }) => {
                 setShowViewModal(false);
                 setSelectedMessage(null);
             }
+            notify.success('Message removed.');
         } catch (err) {
             console.error('Error deleting message:', err);
+            notify.error("Couldn't remove message.");
         }
     };
 

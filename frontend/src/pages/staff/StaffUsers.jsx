@@ -175,19 +175,21 @@ const StaffUsers = ({ globalSearch = '' }) => {
 
             if (editingUser) {
                 await staffAPI.updateUser(editingUser.id, userData);
+                notify.success('User updated.');
             } else {
                 if (!form.password) {
-                    notify.warning('Please add a password for the new account.');
+                    notify.warning('Add a password first.');
                     setSaving(false);
                     return;
                 }
                 await staffAPI.createUser(userData);
+                notify.success('User created.');
             }
             closeModal();
             fetchUsers();
         } catch (err) {
             console.error('Error saving user:', err);
-            notify.error(err.message || 'We could not save this user right now.');
+            notify.error(err.message || "Couldn't save user.");
         } finally {
             setSaving(false);
         }
@@ -195,18 +197,19 @@ const StaffUsers = ({ globalSearch = '' }) => {
 
     const handleSuspendUser = async () => {
         if (!suspendUser || !suspendReason.trim()) {
-            notify.warning('Please provide a reason before continuing.');
+            notify.warning('Provide a reason first.');
             return;
         }
         setSuspending(true);
         try {
             await staffAPI.suspendUser(suspendUser.id, suspendReason);
+            notify.success('Account suspended.');
             setSuspendUser(null);
             setSuspendReason('');
             fetchUsers();
         } catch (err) {
             console.error('Error suspending user:', err);
-            notify.error(err.message || 'We could not update this account right now.');
+            notify.error(err.message || "Couldn't update account.");
         } finally {
             setSuspending(false);
         }
@@ -216,10 +219,11 @@ const StaffUsers = ({ globalSearch = '' }) => {
         if (!confirm('Are you sure you want to unsuspend this user?')) return;
         try {
             await staffAPI.unsuspendUser(userId);
+            notify.success('Account restored.');
             fetchUsers();
         } catch (err) {
             console.error('Error unsuspending user:', err);
-            notify.error(err.message || 'We could not restore this account right now.');
+            notify.error(err.message || "Couldn't restore account.");
         }
     };
 

@@ -36,7 +36,7 @@ const CommentSection = ({ postId, currentUser, refreshTrigger, onRequireConfirma
             const response = await communityAPI.getComments(postId, currentUser?.role || 'user');
             setComments(response.comments || []);
         } catch {
-            notify.error('Could not load comments right now.');
+            notify.error("Couldn't load comments.");
         } finally {
             setLoading(false);
         }
@@ -66,7 +66,7 @@ const CommentSection = ({ postId, currentUser, refreshTrigger, onRequireConfirma
             await loadComments();
             notify.success('Comment posted.');
         } catch {
-            notify.error('Could not add your comment right now.');
+            notify.error("Couldn't add comment.");
         }
     };
 
@@ -91,7 +91,7 @@ const CommentSection = ({ postId, currentUser, refreshTrigger, onRequireConfirma
             await loadComments();
             notify.success('Reply posted.');
         } catch {
-            notify.error('Could not add your reply right now.');
+            notify.error("Couldn't add reply.");
         }
     };
 
@@ -116,7 +116,7 @@ const CommentSection = ({ postId, currentUser, refreshTrigger, onRequireConfirma
             await loadComments();
             notify.success('Comment updated.');
         } catch {
-            notify.error('Could not update your comment right now.');
+            notify.error("Couldn't update comment.");
         }
     };
 
@@ -135,9 +135,9 @@ const CommentSection = ({ postId, currentUser, refreshTrigger, onRequireConfirma
 
             await communityAPI.deleteComment(commentId, currentUser?.role || 'user');
             await loadComments();
-            notify.success('Comment deleted.');
+            notify.success('Comment removed.');
         } catch {
-            notify.error('Could not delete your comment right now.');
+            notify.error("Couldn't remove comment.");
         }
     };
 
@@ -146,7 +146,7 @@ const CommentSection = ({ postId, currentUser, refreshTrigger, onRequireConfirma
             await communityAPI.toggleCommentHeart(commentId, currentUser?.role || 'user');
             await loadComments();
         } catch {
-            notify.error('Could not update hearts right now.');
+            notify.error("Couldn't update heart.");
         }
     };
 
@@ -156,7 +156,7 @@ const CommentSection = ({ postId, currentUser, refreshTrigger, onRequireConfirma
 
         const trimmedReason = reason.trim();
         if (!trimmedReason) {
-            notify.warning('Please provide a reason before reporting this comment.');
+            notify.warning('Please provide a reason.');
             return;
         }
 
@@ -173,9 +173,9 @@ const CommentSection = ({ postId, currentUser, refreshTrigger, onRequireConfirma
 
             await communityAPI.reportComment(comment.id, trimmedReason, currentUser?.role || 'user');
             await loadComments();
-            notify.success('Comment reported for moderation review.');
+            notify.success('Comment reported.');
         } catch {
-            notify.error('Could not submit your report right now.');
+            notify.error("Couldn't submit report.");
         }
     };
 

@@ -29,12 +29,12 @@ const PostForm = ({ onSubmit, loading, initialPost = null, onCancelEdit, onBefor
         if (!file) return;
 
         if (!ALLOWED_TYPES.includes(file.type)) {
-            notify.warning('Please upload a JPG, PNG, WEBP, or GIF image.');
+            notify.warning('Please upload a valid image.');
             return;
         }
 
         if (file.size > MAX_SIZE) {
-            notify.warning('Please upload an image smaller than 5MB.');
+            notify.warning('Image must be under 5MB.');
             return;
         }
 
@@ -54,7 +54,7 @@ const PostForm = ({ onSubmit, loading, initialPost = null, onCancelEdit, onBefor
         const cleanContent = content.trim();
 
         if (!cleanContent) {
-            notify.warning('Please write something before posting.');
+            notify.warning('Please write something first.');
             return;
         }
 

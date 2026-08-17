@@ -88,7 +88,7 @@ const AdminProfile = () => {
                 }
             } catch (err) {
                 console.error('Error loading admin profile', err);
-                notify.error('We could not load your profile right now.');
+                notify.error("Couldn't load profile.");
             } finally {
                 setLoading(false);
             }
@@ -114,7 +114,7 @@ const AdminProfile = () => {
             if (profileImage) {
                 const imageRes = await authAPI.uploadProfileImage(profileImage, 'admin');
                 if (!imageRes?.success) {
-                    throw new Error(imageRes?.message || 'We could not update your profile photo right now.');
+                    throw new Error(imageRes?.message || "Couldn't upload photo.");
                 }
             }
 
@@ -123,13 +123,13 @@ const AdminProfile = () => {
             if (res && res.success) {
                 updateUser({ ...user, firstName: form.firstName, lastName: form.lastName });
                 setProfileImage(null);
-                notify.success('Profile updated successfully.');
+                notify.success('Profile updated.');
             } else {
-                notify.error(res.message || 'We could not save your profile changes.');
+                notify.error(res.message || "Couldn't save changes.");
             }
         } catch (err) {
             console.error(err);
-            notify.error(err.message || 'We could not save your profile changes.');
+            notify.error(err.message || "Couldn't save changes.");
         } finally {
             setSaving(false);
         }

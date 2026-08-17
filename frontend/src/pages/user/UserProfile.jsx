@@ -90,11 +90,11 @@ const UserProfile = () => {
                 }
                 setSelectedFile(null);
                 setImagePreview(null);
-                notify.success('Profile photo updated successfully.');
+                notify.success('Photo updated.');
             }
         } catch (error) {
             console.error(error);
-            notify.error('We could not update your photo. Please try again.');
+            notify.error("Couldn't update photo. Please try again.");
         } finally {
             setUploadingImage(false);
         }
@@ -106,11 +106,11 @@ const UserProfile = () => {
             const response = await authAPI.deleteProfileImage();
             if (response.success) {
                 updateUser({ ...user, profileImage: null, profile_image: null });
-                notify.success('Profile photo removed successfully.');
+                notify.success('Photo removed.');
             }
         } catch (error) {
             console.error(error);
-            notify.error('We could not remove your photo right now.');
+            notify.error("Couldn't remove photo.");
         } finally {
             setUploadingImage(false);
         }
@@ -131,13 +131,13 @@ const UserProfile = () => {
                     });
                 }
                 setIsEditing(false);
-                notify.success('Profile details updated successfully.');
+                notify.success('Profile updated.');
             } else {
-                notify.error(response.message || 'We could not save your changes right now.');
+                notify.error(response.message || "Couldn't save changes.");
             }
         } catch (error) {
             console.error(error);
-            notify.error('We could not save your changes right now.');
+            notify.error("Couldn't save changes.");
         } finally {
             setLoading(false);
         }
@@ -168,7 +168,7 @@ const UserProfile = () => {
                 setShowPasswordModal(false);
                 setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
                 setPasswordError('');
-                notify.success('Password updated successfully.');
+                notify.success('Password updated.');
             } else {
                 setPasswordError(response.message || 'Failed to change password');
             }
@@ -223,11 +223,11 @@ const UserProfile = () => {
                     profileImage: avatarKey,
                     profile_image: avatarKey
                 });
-                notify.success('Avatar updated successfully.');
+                notify.success('Avatar updated.');
             }
         } catch (error) {
             console.error('Error updating avatar:', error);
-            notify.error('We could not update your avatar right now.');
+            notify.error("Couldn't update avatar.");
         } finally {
             setUploadingImage(false);
             setSelectedDefaultAvatar(null);

@@ -126,12 +126,12 @@ const Settings = () => {
         
         try {
             await userAPI.updateSettings(newSettings);
-            notify.success('Settings updated successfully.');
+            notify.success('Settings updated.');
         } catch (error) {
             console.error("Failed to save settings:", error);
             // Revert on failure
             setNotifications(notifications);
-            notify.error('Failed to update settings. Please try again.');
+            notify.error("Couldn't update settings.");
         }
     };
 

@@ -119,7 +119,7 @@ const MyEvents = () => {
 
     const saveChanges = async () => {
         if (!form.venueEventName || !form.venueEventDate) {
-            notify.warning('Please provide the event name and date.');
+            notify.warning('Provide name and date.');
             return;
         }
         setSaving(true);
@@ -134,15 +134,15 @@ const MyEvents = () => {
                 notes: form.notes
             });
             if (res.success) {
-                notify.success('Your event has been updated.');
+                notify.success('Event updated.');
                 setShowConfirm(true);
                 setEditingEvent(null);
                 fetchHostedEvents(false);
             } else {
-                throw new Error(res.message || 'Failed to update event');
+                throw new Error(res.message || "Couldn't update event.");
             }
         } catch (err) {
-            notify.error(err.message || 'We could not update your event. Please try again.');
+            notify.error(err.message || "Couldn't update event.");
         } finally {
             setSaving(false);
         }
@@ -167,14 +167,14 @@ const MyEvents = () => {
         try {
             const res = await reservationAPI.uploadHostedEventImage(photoUpload.id, photoUpload.file);
             if (res.success) {
-                notify.success('Your event photo has been updated.');
+                notify.success('Photo updated.');
                 setPhotoUpload(null);
                 fetchHostedEvents(false);
             } else {
-                throw new Error(res.message || 'Failed to upload photo');
+                throw new Error(res.message || "Couldn't upload photo.");
             }
         } catch (err) {
-            notify.error(err.message || 'We could not upload your photo. Please try again.');
+            notify.error(err.message || "Couldn't upload photo.");
         } finally {
             setPhotoUploading(false);
         }

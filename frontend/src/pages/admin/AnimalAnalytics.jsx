@@ -126,7 +126,7 @@ const AnimalAnalytics = () => {
 
     const handleDelete = async () => {
         if (selectedIds.length === 0) {
-            notify.warning('Select at least one record to continue.');
+            notify.warning('Select records first.');
             return;
         }
 
@@ -135,7 +135,7 @@ const AnimalAnalytics = () => {
         try {
             const data = await predictionAPI.delete(selectedIds);
             if (data && data.success) {
-                notify.success('Selected records were removed successfully.');
+                notify.success('Records removed.');
                 setSelectedIds([]);
                 setSelectAll(false);
                 fetchPredictions();
@@ -144,7 +144,7 @@ const AnimalAnalytics = () => {
             }
         } catch (error) {
             console.error('Error deleting records:', error);
-            notify.error('We could not delete those records. Please try again.');
+            notify.error("Couldn't remove records.");
         }
     };
 
@@ -155,7 +155,7 @@ const AnimalAnalytics = () => {
         try {
             const data = await predictionAPI.clearAll();
             if (data && data.success) {
-                notify.success('All records were cleared successfully.');
+                notify.success('Database cleared.');
                 setSelectedIds([]);
                 setSelectAll(false);
                 fetchPredictions();
@@ -164,7 +164,7 @@ const AnimalAnalytics = () => {
             }
         } catch (error) {
             console.error('Error clearing records:', error);
-            notify.error('We could not clear records right now. Please try again.');
+            notify.error("Couldn't clear database.");
         }
     };
 

@@ -62,12 +62,12 @@ const AdminSettings = () => {
         try {
             const res = await adminAPI.updateDonationConfig(config);
             if (res && res.success) {
-                notify.success('Donation settings saved successfully.');
+                notify.success('Settings saved.');
             } else {
-                notify.error(res?.message || 'Could not save donation settings.');
+                notify.error(res?.message || "Couldn't save settings.");
             }
         } catch {
-            notify.error('Could not save donation settings.');
+            notify.error("Couldn't save settings. Please try again.");
         } finally {
             setSaving(false);
         }

@@ -119,6 +119,7 @@ const AdminMessages = ({ globalSearch = '' }) => {
             } else {
                 setAppeals(appeals.map(a => ({ ...a, is_read: true })));
             }
+            notify.success('All marked as read.');
         } catch (err) {
             console.error('Error marking all as read:', err);
         }
@@ -137,10 +138,10 @@ const AdminMessages = ({ globalSearch = '' }) => {
             setShowReplyModal(false);
             setReplyContent('');
             setShowViewModal(false);
-            notify.success('Reply sent successfully.');
+            notify.success('Reply sent.');
         } catch (err) {
             console.error('Error sending reply:', err);
-            notify.error('We could not send your reply. Please try again.');
+            notify.error(err.message || "Couldn't send reply. Please try again.");
         } finally {
             setReplying(false);
         }
@@ -159,8 +160,10 @@ const AdminMessages = ({ globalSearch = '' }) => {
                 setShowViewModal(false);
                 setSelectedMessage(null);
             }
+            notify.success('Message removed.');
         } catch (err) {
             console.error('Error deleting message:', err);
+            notify.error(err.message || "Couldn't remove message. Please try again.");
         }
     };
 

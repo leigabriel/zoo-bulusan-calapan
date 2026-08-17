@@ -268,7 +268,7 @@ const LoginPage = () => {
         // Check for verified parameter from email verification redirect
         const verifiedParam = searchParams.get('verified');
         if (verifiedParam === 'true') {
-            notify.success('Email verified successfully. You can now sign in.');
+            notify.success('Email verified.');
             window.history.replaceState(null, '', '/login');
         }
 
@@ -288,14 +288,14 @@ const LoginPage = () => {
         try {
             const response = await authAPI.resendVerification({ email: verificationEmail });
             if (response.success) {
-                notify.success('Verification email sent. Please check your inbox.');
+                notify.success('Verification email sent.');
                 setVerificationEmail('');
                 setShowVerificationPrompt(false);
             } else {
-                notify.error(response.message || 'We could not resend the verification email right now.');
+                notify.error(response.message || "Couldn't send email.");
             }
         } catch (err) {
-            notify.error(err.message || 'We could not resend the verification email right now.');
+            notify.error(err.message || "Couldn't send email.");
         } finally {
             setResendingVerification(false);
         }
@@ -352,9 +352,9 @@ const LoginPage = () => {
             } else if (response.requiresVerification) {
                 setVerificationEmail(response.email || identifier);
                 setShowVerificationPrompt(true);
-                notify.warning(response.message || 'Please verify your email before signing in.');
+                notify.warning(response.message || 'Please verify your email.');
             } else {
-                notify.error(response.message || 'We could not sign you in. Please try again.');
+                notify.error(response.message || "Couldn't sign you in.");
             }
         } catch (err) {
             if (err.suspended) {
@@ -368,9 +368,9 @@ const LoginPage = () => {
             } else if (err.requiresVerification) {
                 setVerificationEmail(err.email || identifier);
                 setShowVerificationPrompt(true);
-                notify.warning(err.message || 'Please verify your email before signing in.');
+                notify.warning(err.message || 'Please verify your email.');
             } else {
-                notify.error(err.message || 'We could not sign you in. Please try again.');
+                notify.error(err.message || "Couldn't sign you in.");
             }
         } finally {
             setLoading(false);
@@ -379,7 +379,7 @@ const LoginPage = () => {
 
     const handleSubmitAppeal = async () => {
         if (!appealMessage.trim()) {
-            notify.warning('Please enter your appeal message.');
+            notify.warning('Enter your appeal message.');
             return;
         }
 
@@ -395,11 +395,12 @@ const LoginPage = () => {
             if (response.success) {
                 setAppealSent(true);
                 setAppealMessage('');
+                notify.success('Appeal sent.');
             } else {
-                notify.error(response.message || 'We could not submit your appeal right now.');
+                notify.error(response.message || "Couldn't submit appeal.");
             }
         } catch (err) {
-            notify.error(err.message || 'We could not submit your appeal right now.');
+            notify.error(err.message || "Couldn't submit appeal.");
         } finally {
             setAppealLoading(false);
         }

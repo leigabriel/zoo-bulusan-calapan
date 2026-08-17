@@ -9,7 +9,7 @@ const PostFeed = ({ posts, currentUser, onRefresh, onEditPost, onUserClick, onPo
             await communityAPI.togglePostLike(postId, currentUser?.role || 'user');
             onRefresh();
         } catch {
-            notify.error('Could not update post likes right now.');
+            notify.error("Couldn't update like.");
         }
     };
 
@@ -21,10 +21,10 @@ const PostFeed = ({ posts, currentUser, onRefresh, onEditPost, onUserClick, onPo
         }
         try {
             await communityAPI.deletePost(postId, currentUser?.role || 'user');
-            notify.success('Post deleted.');
+            notify.success('Post removed.');
             onRefresh();
         } catch {
-            notify.error('Could not delete your post right now.');
+            notify.error("Couldn't remove post.");
         }
     };
 
@@ -40,7 +40,7 @@ const PostFeed = ({ posts, currentUser, onRefresh, onEditPost, onUserClick, onPo
 
     const handleReport = (e) => {
         e.stopPropagation();
-        notify.success('Post reported for review.');
+        notify.success('Post reported.');
     };
 
     return (

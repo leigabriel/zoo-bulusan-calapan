@@ -235,16 +235,16 @@ const Events = () => {
     const handleSubmitAttempt = (e) => {
         e.preventDefault();
         if (!isAuthenticated) {
-            notify.warning('Please authenticate to submit a reservation request.');
+            notify.warning('Login required to reserve.');
             navigate('/login');
             return;
         }
         if (!eventForm.venueEventName || !eventForm.venueEventDate) {
-            notify.warning('Please provide the event name and date.');
+            notify.warning('Provide name and date.');
             return;
         }
         if (!eventForm.venueEventStartTime || !eventForm.venueEventEndTime) {
-            notify.warning('Please provide both event start and end time.');
+            notify.warning('Provide start and end time.');
             return;
         }
         setShowSubmitConfirm(true);
@@ -286,7 +286,7 @@ const Events = () => {
                 throw new Error(res.message || 'Failed to create reservation');
             }
         } catch (err) {
-            notify.error(err.message || 'We could not complete your reservation. Please try again.');
+            notify.error(err.message || "Couldn't complete reservation.");
         } finally {
             setIsSubmitting(false);
         }
