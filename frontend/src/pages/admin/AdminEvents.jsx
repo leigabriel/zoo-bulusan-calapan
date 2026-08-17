@@ -65,6 +65,12 @@ const EyeIcon = () => (
     </svg>
 );
 
+const CheckIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+        <polyline points="20 6 9 17 4 12" />
+    </svg>
+);
+
 // Tag colors for events
 const TAG_COLORS = [
     { name: 'Green', value: '#22c55e', bg: 'bg-green-500' },
@@ -563,13 +569,13 @@ const AdminEvents = () => {
                             cursor: pointer;
                         }
                         .fc .fc-event {
-                            border-radius: 6px;
-                            padding: 2px 6px;
+                            border-radius: 8px;
+                            padding: 0 !important;
                             font-size: 0.75rem;
                             font-weight: 500;
                             border: none;
                             cursor: pointer;
-                            color: #ffffff !important;
+                            overflow: hidden;
                         }
                         .fc .fc-event .fc-event-title {
                             color: #000000 !important;
@@ -581,7 +587,9 @@ const AdminEvents = () => {
                             border-color:  !important;
                         }
                         .fc .fc-event:hover {
-                            opacity: 0.9;
+                            opacity: 0.95;
+                            transform: scale(1.02);
+                            transition: all 0.2s;
                         }
                         .fc .fc-button {
                             border-radius: 8px !important;
@@ -630,14 +638,17 @@ const AdminEvents = () => {
                         .fc .fc-event {
                             padding: 0 !important;
                             border: none !important;
-                            box-shadow: none;
+                            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
                         }
                         .fc .fc-event .fc-event-main {
                             padding: 0;
                             overflow: hidden;
+                            height: 100%;
                         }
                         .fc .fc-daygrid-event {
-                            height: 2.5rem !important;
+                            height: auto !important;
+                            aspect-ratio: 1 / 1 !important;
+                            margin: 5px !important;
                         }
                         .fc .fc-timegrid-event {
                             background-color: transparent !important;
@@ -854,7 +865,7 @@ const AdminEvents = () => {
             {/* Event Modal */}
             {showModal && (
                 <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-white border border-green-200 rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+                    <div className="bg-white border border-green-200 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
                         {/* Modal Header */}
                         <div className="flex items-center justify-between p-5 border-b border-green-200">
                             <h2 className="text-xl font-bold text-gray-900">
@@ -906,11 +917,11 @@ const AdminEvents = () => {
                                 )}
 
                                 {formData.imageUrl && (
-                                    <div className="mt-4 rounded-xl overflow-hidden">
+                                    <div className="mt-4 rounded-xl overflow-hidden shadow-md">
                                         <img
                                             src={formData.imageUrl}
                                             alt="Event"
-                                            className="w-full h-40 object-cover"
+                                            className="w-full h-64 object-cover"
                                             onError={(e) => { e.target.style.display = 'none'; }}
                                         />
                                     </div>
@@ -1083,21 +1094,28 @@ const AdminEvents = () => {
 
                                 {/* Tag Color */}
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Tag Color
-                                    </label>
-                                    <div className="flex gap-2 flex-wrap">
+                                    <div className="flex items-center justify-between mb-2">
+                                        <label className="text-sm font-medium text-gray-700">
+                                            Tag Color
+                                        </label>
+                                        <span className="text-xs font-semibold text-green-500 uppercase tracking-wider">
+                                            {TAG_COLORS.find(c => c.value === formData.color)?.name || 'Default'}
+                                        </span>
+                                    </div>
+                                    <div className="flex gap-3 flex-wrap p-3 bg-green-50 rounded-xl border border-green-100">
                                         {TAG_COLORS.map((color) => (
                                             <button
                                                 key={color.value}
                                                 type="button"
                                                 onClick={() => setFormData({ ...formData, color: color.value })}
-                                                className={`w-8 h-8 rounded-lg ${color.bg} transition-all ${formData.color === color.value
-                                                        ? 'ring-2 ring-white ring-offset-2 ring-offset-white'
-                                                        : 'hover:scale-110'
+                                                className={`w-10 h-10 rounded-xl ${color.bg} transition-all flex items-center justify-center shadow-sm ${formData.color === color.value
+                                                        ? 'ring-2 ring-green-500 ring-offset-2 ring-offset-white scale-110 shadow-md'
+                                                        : 'hover:scale-105 opacity-80 hover:opacity-100'
                                                     }`}
                                                 title={color.name}
-                                            />
+                                            >
+                                                {formData.color === color.value && <CheckIcon />}
+                                            </button>
                                         ))}
                                     </div>
                                 </div>
