@@ -53,10 +53,6 @@ const HeroSection = () => {
                 .fromTo('.hero-btn',
                     { opacity: 0, scale: 0.9, y: 30 },
                     { opacity: 1, scale: 1, y: 0, duration: 1.2, ease: 'elastic.out(1, 0.5)' }, 0.7
-                )
-                .fromTo('.scroll-hint',
-                    { opacity: 0, y: 20 },
-                    { opacity: 1, y: 0, duration: 1, ease: 'power2.out' }, 0.9
                 );
 
             gsap.to('.hero-bg-parallax', {
@@ -399,9 +395,9 @@ const ExploreSection = () => {
             <div className="copy-container w-full h-full flex justify-center items-center text-center rounded-2xl sm:rounded-3xl border-2 border-dashed border-[rgb(60,60,60)] px-4">
                 <div className="anime-text w-[95%] sm:w-[90%] md:w-[70%]">
                     {paragraphs.map((p, idx) => (
-                        <p key={idx} className="text-center mb-6 sm:mb-8 text-[1.25rem] sm:text-2xl md:text-4xl font-black leading-tight sm:leading-tight text-white">
+                        <div key={idx} className="text-center mb-6 sm:mb-8 text-[1.25rem] sm:text-2xl md:text-4xl font-black leading-tight sm:leading-tight text-white">
                             {renderWords(p)}
-                        </p>
+                        </div>
                     ))}
                 </div>
             </div>
@@ -522,9 +518,9 @@ const FeaturesSection = () => {
             <div className="copy-container w-full h-full flex justify-center items-center text-center rounded-2xl sm:rounded-3xl border-2 border-dashed border-[rgb(60,60,60)] px-4">
                 <div className="anime-text w-[95%] sm:w-[90%] md:w-[70%]">
                     {paragraphs.map((p, idx) => (
-                        <p key={idx} className="text-center mb-6 sm:mb-8 text-[1.25rem] sm:text-2xl md:text-4xl font-black leading-tight sm:leading-tight text-white">
+                        <div key={idx} className="text-center mb-6 sm:mb-8 text-[1.25rem] sm:text-2xl md:text-4xl font-black leading-tight sm:leading-tight text-white">
                             {renderWords(p)}
-                        </p>
+                        </div>
                     ))}
                 </div>
             </div>

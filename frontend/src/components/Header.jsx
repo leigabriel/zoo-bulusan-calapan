@@ -6,7 +6,7 @@ import LogoutModal from './common/LogoutModal';
 import AnimalClassifier from './features/ai-scanner/AnimalClassifier';
 import ReservationHistoryPanel from './features/ReservationHistoryPanel';
 
-const MINIZOO_GAME_URL = (typeof process !== 'undefined' && process.env && process.env.VITE_MINIZOO_GAME_URL) ? process.env.VITE_MINIZOO_GAME_URL : 'http://localhost:5174';
+const MINIZOO_GAME_URL = (typeof process !== 'undefined' && process.env && process.env.VITE_MINIZOO_GAME_URL) ? process.env.VITE_MINIZOO_GAME_URL : 'https://bulusanzootopia.vercel.app';
 
 const ICONS = {
     home: 'https://cdn-icons-png.flaticon.com/128/3917/3917743.png',

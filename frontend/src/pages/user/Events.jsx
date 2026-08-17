@@ -80,7 +80,7 @@ const Events = () => {
     const [calendarDate, setCalendarDate] = useState(new Date());
 
     const [eventForm, setEventForm] = useState({
-        venueEventName: '', venueEventDate: '', venueEventTime: '',
+        venueEventName: '', venueEventDate: '', venueEventStartTime: '', venueEventEndTime: '',
         venueEventDescription: '', numberOfParticipants: 1,
         participantName: '', participantEmail: '', participantPhone: '', notes: ''
     });
@@ -243,6 +243,10 @@ const Events = () => {
             notify.warning('Please provide the event name and date.');
             return;
         }
+        if (!eventForm.venueEventStartTime || !eventForm.venueEventEndTime) {
+            notify.warning('Please provide both event start and end time.');
+            return;
+        }
         setShowSubmitConfirm(true);
     };
 
@@ -253,7 +257,8 @@ const Events = () => {
             const res = await reservationAPI.createEventReservation({
                 venueEventName: eventForm.venueEventName,
                 venueEventDate: eventForm.venueEventDate,
-                venueEventTime: eventForm.venueEventTime,
+                venueEventStartTime: eventForm.venueEventStartTime,
+                venueEventEndTime: eventForm.venueEventEndTime,
                 venueEventDescription: eventForm.venueEventDescription,
                 participantName: eventForm.participantName,
                 participantEmail: eventForm.participantEmail,
@@ -272,7 +277,7 @@ const Events = () => {
                 setShowConfirmation(true);
                 const fullName = user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : '';
                 setEventForm({
-                    venueEventName: '', venueEventDate: '', venueEventTime: '',
+                    venueEventName: '', venueEventDate: '', venueEventStartTime: '', venueEventEndTime: '',
                     venueEventDescription: '', numberOfParticipants: 1,
                     participantName: fullName, participantEmail: user?.email || '',
                     participantPhone: '', notes: ''
@@ -464,12 +469,23 @@ const Events = () => {
                                     />
                                 </div>
                                 <div className="flex flex-col gap-2">
-                                    <label className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-gray-500">Event Time</label>
+                                    <label className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-gray-500">Event Start Time *</label>
                                     <input
                                         type="time"
-                                        value={eventForm.venueEventTime}
-                                        onChange={e => setEventForm({ ...eventForm, venueEventTime: e.target.value })}
+                                        value={eventForm.venueEventStartTime}
+                                        onChange={e => setEventForm({ ...eventForm, venueEventStartTime: e.target.value })}
                                         className="border-b border-gray-300 py-2 md:py-3 text-sm md:text-base text-black font-medium focus:border-black outline-none bg-transparent transition-colors rounded-none"
+                                        required
+                                    />
+                                </div>
+                                <div className="flex flex-col gap-2">
+                                    <label className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-gray-500">Event End Time *</label>
+                                    <input
+                                        type="time"
+                                        value={eventForm.venueEventEndTime}
+                                        onChange={e => setEventForm({ ...eventForm, venueEventEndTime: e.target.value })}
+                                        className="border-b border-gray-300 py-2 md:py-3 text-sm md:text-base text-black font-medium focus:border-black outline-none bg-transparent transition-colors rounded-none"
+                                        required
                                     />
                                 </div>
                             </div>
@@ -630,6 +646,14 @@ const Events = () => {
                                     <div className="flex justify-between border-b border-gray-200 pb-2">
                                         <span className="text-[10px] md:text-xs font-bold uppercase text-gray-400">Date</span>
                                         <span className="font-medium text-black">{formatDateFromDB(eventForm.venueEventDate)}</span>
+                                    </div>
+                                    <div className="flex justify-between border-b border-gray-200 pb-2">
+                                        <span className="text-[10px] md:text-xs font-bold uppercase text-gray-400">Start Time</span>
+                                        <span className="font-medium text-black">{eventForm.venueEventStartTime || '—'}</span>
+                                    </div>
+                                    <div className="flex justify-between border-b border-gray-200 pb-2">
+                                        <span className="text-[10px] md:text-xs font-bold uppercase text-gray-400">End Time</span>
+                                        <span className="font-medium text-black">{eventForm.venueEventEndTime || '—'}</span>
                                     </div>
                                     <div className="flex justify-between">
                                         <span className="text-[10px] md:text-xs font-bold uppercase text-gray-400">Attendees</span>
