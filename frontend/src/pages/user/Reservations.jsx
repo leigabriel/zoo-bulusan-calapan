@@ -779,7 +779,7 @@ const Reservations = () => {
 
                                 {confirmationData.qrData && (
                                     <div className="mb-8 flex justify-center bg-white p-4">
-                                        <QRCodeSVG value={confirmationData.qrData} size={150} />
+                                        <QRCodeSVG value={confirmationData.qrData} size={240} level="M" includeMargin={true} />
                                     </div>
                                 )}
 

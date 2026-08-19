@@ -73,7 +73,7 @@ const ReservationHistoryPanel = ({ isOpen, onClose }) => {
             const buyerName = selectedReservation.user_name || selectedReservation.visitor_name || selectedReservation.participant_name || 'Guest';
 
             const baseWidth = 700;
-            const baseHeight = selectedReservation.type === 'ticket' ? 860 : 820;
+            const baseHeight = selectedReservation.type === 'ticket' ? 1000 : 920;
             const scale = window.devicePixelRatio ? Math.min(window.devicePixelRatio, 2) : 2;
             const canvas = document.createElement('canvas');
             canvas.width = baseWidth * scale;
@@ -162,10 +162,16 @@ const ReservationHistoryPanel = ({ isOpen, onClose }) => {
                 const qrCanvas = receiptRef.current.querySelector('canvas');
                 if (qrCanvas) {
                     y += 10;
+                    const qrSize = 280;
+                    const upScaledQr = document.createElement('canvas');
+                    upScaledQr.width = Math.round(qrSize * scale);
+                    upScaledQr.height = Math.round(qrSize * scale);
+                    const upCtx = upScaledQr.getContext('2d');
+                    upCtx.imageSmoothingEnabled = false;
+                    upCtx.drawImage(qrCanvas, 0, 0, upScaledQr.width, upScaledQr.height);
                     ctx.imageSmoothingEnabled = false;
-                    const qrSize = 260;
-                    ctx.drawImage(qrCanvas, (baseWidth - qrSize) / 2, y, qrSize, qrSize);
-                    y += 280;
+                    ctx.drawImage(upScaledQr, (baseWidth - qrSize) / 2, y, qrSize, qrSize);
+                    y += 300;
                     ctx.font = 'bold 12px sans-serif';
                     ctx.fillStyle = '#94a3b8';
                     ctx.textAlign = 'center';
@@ -582,12 +588,12 @@ const ReservationHistoryPanel = ({ isOpen, onClose }) => {
                                             <div className="bg-white p-3 rounded-xl shadow-sm border border-slate-100">
                                                 <QRCodeCanvas
                                                     value={selectedReservation.qr_data}
-                                                    size={260}
-                                                    level="H"
+                                                    size={320}
+                                                    level="M"
                                                     includeMargin={true}
                                                     bgColor="#ffffff"
                                                     fgColor="#0f172a"
-                                                    className="!w-full !h-auto max-w-[260px]"
+                                                    style={{ width: '320px', height: '320px', maxWidth: '100%' }}
                                                 />
                                             </div>
                                             <p className="text-[10px] uppercase tracking-widest font-semibold text-slate-400 mt-5 text-center">
