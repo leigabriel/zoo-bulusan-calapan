@@ -390,12 +390,12 @@ const AdminLayout = ({ children }) => {
             {/* Left Sidebar */}
             <aside
                 className={`${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'} 
-                    fixed lg:relative z-50 lg:z-auto w-64 bg-white border-r border-gray-200 
+                    fixed lg:relative z-50 lg:z-auto w-64 bg-[#ebebeb] border-r border-gray-300 
                     transition-transform duration-300 flex flex-col h-full`}
                 aria-label="Admin navigation"
             >
                 {/* Logo Section */}
-                <div className="p-5 flex items-center gap-3 border-b border-gray-200">
+                <div className="p-5 flex items-center gap-3 border-b border-gray-300">
                     <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center text-white">
                         <img src="https://cdn-icons-png.flaticon.com/128/1864/1864472.png" alt="Bz Logo" className="w-6 h-6 object-contain" />
                     </div>
@@ -564,7 +564,7 @@ const AdminLayout = ({ children }) => {
             {/* Main Content Area */}
             <div className="flex-1 flex flex-col overflow-hidden">
                 {/* Top Header */}
-                <header className="bg-white border-b border-gray-200 px-4 lg:px-6 py-4 flex justify-between items-center">
+                <header className="bg-[#ebebeb] border-b border-gray-300 px-4 lg:px-6 py-4 flex justify-between items-center">
                     <div className="flex items-center gap-4">
                         <button
                             onClick={() => setSidebarOpen(!sidebarOpen)}
