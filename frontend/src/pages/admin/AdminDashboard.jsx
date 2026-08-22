@@ -213,9 +213,11 @@ const AdminDashboard = () => {
         { name: 'Revenue (₱)', data: weeklyRevenue, yAxisIndex: 1 }
     ]), [weeklyVisitors, weeklyRevenue]);
 
-    const donutSeries = useMemo(() => stats.ticketDistribution.length
-        ? stats.ticketDistribution.map(item => item.count)
-        : [1], [stats.ticketDistribution]);
+    const donutSeries = useMemo(() => [{
+        data: stats.ticketDistribution.length
+            ? stats.ticketDistribution.map(item => ({ x: item.type, y: item.count }))
+            : [{ x: 'No tickets', y: 0 }]
+    }], [stats.ticketDistribution]);
 
     const donutOptions = useMemo(() => ({
         chart: {

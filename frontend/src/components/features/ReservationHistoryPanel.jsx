@@ -164,7 +164,7 @@ const ReservationHistoryPanel = ({ isOpen, onClose }) => {
             }
 
              if (selectedReservation.reservation_reference) {
-                 const qrSvg = receiptRef.current.querySelector('svg');
+                 const qrSvg = receiptRef.current.querySelector('.receipt-qr-code');
                  if (qrSvg) {
                      const svgMarkup = new XMLSerializer().serializeToString(qrSvg);
                      const qrImage = await new Promise((resolve, reject) => {
@@ -637,6 +637,7 @@ const ReservationHistoryPanel = ({ isOpen, onClose }) => {
                                         <div className={showQR ? 'mt-5 flex flex-col items-center' : 'hidden'}>
                                             <div className="bg-white p-3 rounded-xl shadow-sm border border-slate-100">
                                                  <QRCodeSVG
+                                                     className="receipt-qr-code"
                                                      value={`${window.location.origin}/verify/${selectedReservation.type}/${encodeURIComponent(selectedReservation.reservation_reference)}`}
                                                      size={280}
                                                      level="M"

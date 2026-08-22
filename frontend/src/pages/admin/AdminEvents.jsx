@@ -665,12 +665,13 @@ const AdminEvents = () => {
                         ref={calendarRef}
                         plugins={[dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin]}
                         initialView={currentView}
-                        headerToolbar={{
-                            left: 'prev,next today',
-                            center: 'title',
-                            right: ''
-                        }}
-                        events={events}
+                         headerToolbar={{
+                             left: 'prev,next today',
+                             center: 'title',
+                             right: ''
+                         }}
+                         buttonIcons={false}
+                         events={events}
                         editable={true}
                         selectable={true}
                         selectMirror={true}

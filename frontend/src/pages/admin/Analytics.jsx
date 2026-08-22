@@ -346,7 +346,12 @@ const Analytics = () => {
         }
     };
 
-    const distributionChartSeries = ticketDistribution.map(d => d.count || 0);
+    const distributionChartSeries = [{
+        data: ticketDistribution.map(d => ({
+            x: d.type || 'Unknown',
+            y: Number(d.count) || 0
+        }))
+    }];
 
     // Calculate total for ticket distribution percentage
     const totalDistribution = ticketDistribution.reduce((acc, d) => acc + (d.count || 0), 0);
