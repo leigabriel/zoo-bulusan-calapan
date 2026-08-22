@@ -4,6 +4,7 @@ const dotenv = require('dotenv');
 const morgan = require('morgan');
 const path = require('path');
 
+// Load only the local environment file.
 dotenv.config({ path: path.join(__dirname, '.env') });
 
 const authRoutes = require('./routes/auth-routes');
@@ -19,6 +20,9 @@ const reservationRoutes = require('./routes/reservation-routes');
 const animalDetectRoutes = require('./routes/animal-detect-routes');
 const uploadRoutes = require('./routes/upload-routes');
 const communityRoutes = require('./routes/community-routes');
+const paymentRoutes = require('./routes/payment-routes');
+const paymentController = require('./controllers/payment-controller');
+const ensureEventPaymentSchema = require('./database/ensure-event-payment-schema');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -53,6 +57,8 @@ app.use(cors({
 
 app.options('*', cors());
 
+// PayMongo signs the raw request body. This route must be registered before JSON parsing.
+app.post('/api/payments/paymongo/webhook', express.raw({ type: 'application/json' }), paymentController.handleWebhook);
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
@@ -83,6 +89,7 @@ app.use('/api/ai', aiRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/plants', plantRoutes);
 app.use('/api/reservations', reservationRoutes);
+app.use('/api/payments', paymentRoutes);
 app.use('/api/animal-detect', animalDetectRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/community', communityRoutes);
@@ -129,9 +136,13 @@ app.use((err, req, res, next) => {
     });
 });
 
-app.listen(PORT, HOST, () => {
-    console.info(`Server started on ${HOST}:${PORT}`);
-});
+ensureEventPaymentSchema()
+    .catch(error => console.error('Event payment schema initialization failed:', error.message))
+    .finally(() => {
+        app.listen(PORT, HOST, () => {
+            console.info(`Server started on ${HOST}:${PORT}`);
+        });
+    });
 
 process.on('unhandledRejection', () => {
     console.error('Unhandled rejection');

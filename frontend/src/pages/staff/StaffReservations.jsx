@@ -437,6 +437,17 @@ const StaffReservations = ({ globalSearch = '' }) => {
                                         <p className="text-green-600 font-bold">₱{selectedReservation.total_amount}</p>
                                     </div>
                                 )}
+                                {selectedReservation.type === 'event' && (
+                                    <div className="col-span-2 border-t border-gray-100 pt-4">
+                                        <p className="text-xs text-gray-500 uppercase mb-2">Event Payment</p>
+                                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
+                                            <div><span className="block text-gray-500">Amount</span><strong className="text-gray-900">₱{Number(selectedReservation.payment_amount || 0).toFixed(2)}</strong></div>
+                                            <div><span className="block text-gray-500">Method</span><strong className="text-gray-900">{selectedReservation.payment_method === 'gcash' ? 'GCash via PayMongo' : selectedReservation.payment_method === 'pay_at_bulusan' ? 'Pay at Bulusan' : 'Not selected'}</strong></div>
+                                            <div><span className="block text-gray-500">Status</span><strong className={selectedReservation.payment_status === 'paid' ? 'text-green-600' : 'text-amber-600'}>{(selectedReservation.payment_status || 'unpaid').toUpperCase()}</strong></div>
+                                            <div><span className="block text-gray-500">Reference</span><strong className="text-gray-900 break-all">{selectedReservation.paymongo_payment_id || selectedReservation.paymongo_checkout_session_id || '—'}</strong></div>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                             {(selectedReservation.notes || selectedReservation.participant_details) && (
                                 <div>

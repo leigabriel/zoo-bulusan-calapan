@@ -107,6 +107,20 @@ const Reservations = () => {
     }, [isAuthenticated]);
 
     useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        const paymentResult = params.get('payment');
+        if (!paymentResult) return;
+
+        if (paymentResult === 'success') {
+            notify.success('Payment submitted. Your reservation will update after PayMongo confirms it.');
+        } else if (paymentResult === 'cancelled') {
+            notify.info('Payment was cancelled. You can try again from reservation history.');
+        }
+        setShowHistoryPanel(true);
+        window.history.replaceState({}, '', window.location.pathname);
+    }, []);
+
+    useEffect(() => {
         if (user) {
             const fullName = `${user.firstName || ''} ${user.lastName || ''}`.trim();
             setTicketForm(prev => ({ ...prev, visitorName: fullName, visitorEmail: user.email || '' }));

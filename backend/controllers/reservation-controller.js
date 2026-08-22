@@ -4,6 +4,7 @@ const Notification = require('../models/notification-model');
 const { logStaffActivity } = require('../middleware/track-activity');
 const crypto = require('crypto');
 const { reservationQrSecret } = require('../config/app-config');
+const { readConfig: readEventPaymentConfig } = require('../config/event-payment-config');
 
 // Helper function to create notifications for admin/staff
 const createAdminStaffNotification = async (title, message, type = 'event', link = null) => {
@@ -389,6 +390,10 @@ exports.createEventReservation = async (req, res) => {
 
         const reservationReference = generateReservationReference();
         const userId = req.user?.id || null;
+        const paymentConfig = readEventPaymentConfig();
+        const paymentAmount = paymentConfig.enabled && Number(paymentConfig.amountPerParticipant) > 0
+            ? Math.round(Number(paymentConfig.amountPerParticipant) * 100) / 100
+            : 0;
 
         const qrData = buildQrData({
             type: 'event',
@@ -419,7 +424,8 @@ exports.createEventReservation = async (req, res) => {
             venueEventStartTime,
             venueEventEndTime,
             venueEventDescription,
-            qrData
+            qrData,
+            paymentAmount
         });
 
         // Create notification for admin/staff
@@ -435,7 +441,9 @@ exports.createEventReservation = async (req, res) => {
             message: 'Event reservation created successfully',
             reservationId,
             reservationReference,
-            qrData
+            qrData,
+            paymentAmount,
+            paymentStatus: 'unpaid'
         });
     } catch (error) {
         console.error('Error creating event reservation:', error);
@@ -658,6 +666,13 @@ exports.updateUserHostedEvent = async (req, res) => {
         }
 
         const participants = parseInt(numberOfParticipants, 10) || 1;
+        const existingReservation = await Reservation.findEventReservationById(id);
+        if (!existingReservation || Number(existingReservation.user_id) !== Number(userId)) {
+            return res.status(404).json({ success: false, message: 'Event not found or you are not authorized to edit it' });
+        }
+        if (existingReservation.payment_status === 'paid' && participants !== Number(existingReservation.number_of_participants)) {
+            return res.status(400).json({ success: false, message: 'Paid event reservations cannot change participant count.' });
+        }
 
         const updated = await Reservation.updateHostedEvent(id, userId, {
             venueEventName,
@@ -671,6 +686,14 @@ exports.updateUserHostedEvent = async (req, res) => {
 
         if (!updated) {
             return res.status(404).json({ success: false, message: 'Event not found or you are not authorized to edit it' });
+        }
+
+        if (existingReservation.payment_status !== 'paid') {
+            const paymentConfig = readEventPaymentConfig();
+            const amount = paymentConfig.enabled && Number(paymentConfig.amountPerParticipant) > 0
+                ? Math.round(Number(paymentConfig.amountPerParticipant) * 100) / 100
+                : 0;
+            await Reservation.updateEventPayment(id, { paymentAmount: amount });
         }
 
         // Keep the calendar event in sync with the edited reservation details.

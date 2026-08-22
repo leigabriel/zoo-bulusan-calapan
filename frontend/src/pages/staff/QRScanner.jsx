@@ -51,6 +51,7 @@ const QRScanner = () => {
     const cameraScannerRef = useRef(null);
     const fileScannerRef = useRef(null);
     const lastScanRef = useRef({ text: '', time: 0 });
+    const processingScanRef = useRef(false);
 
     const processQRText = async (decodedText, isCamera = true) => {
         try {
@@ -59,16 +60,9 @@ const QRScanner = () => {
                 return;
             }
             lastScanRef.current = { text: decodedText, time: now };
+            processingScanRef.current = true;
             setLoading(true);
             setError(null);
-
-            if (isCamera && cameraScannerRef.current && cameraScannerRef.current.isScanning) {
-                try {
-                    await cameraScannerRef.current.stop();
-                } catch (e) {
-                    console.error(e);
-                }
-            }
 
             const res = await reservationAPI.scanReservation(decodedText, false);
             if (res.success && res.reservation) {
@@ -100,31 +94,24 @@ const QRScanner = () => {
                 }, 3000);
             }
         } finally {
+            processingScanRef.current = false;
             setLoading(false);
         }
     };
 
     useEffect(() => {
-        if (!isAuthenticated || scanMethod !== 'camera' || scanResult || loading) return;
+        if (!isAuthenticated || scanMethod !== 'camera' || scanResult) return;
 
         let isMounted = true;
+        let scanner;
 
         const initCamera = async () => {
             try {
                 await new Promise(r => setTimeout(r, 200));
                 if (!isMounted) return;
 
-                if (!cameraScannerRef.current) {
-                    cameraScannerRef.current = new Html5Qrcode("qr-reader-camera");
-                }
-
-                const cameras = await Html5Qrcode.getCameras();
-                if (!cameras || cameras.length === 0) {
-                    throw new Error("No cameras found on device.");
-                }
-
-                const backCamera = cameras.find(c => c.label.toLowerCase().includes('back') || c.label.toLowerCase().includes('environment'));
-                const cameraId = backCamera ? backCamera.id : cameras[0].id;
+                scanner = new Html5Qrcode("qr-reader-camera");
+                cameraScannerRef.current = scanner;
 
                 const config = {
                     fps: 15,
@@ -137,20 +124,31 @@ const QRScanner = () => {
                     experimentalFeatures: { useBarCodeDetectorIfSupported: true }
                 };
 
-                await cameraScannerRef.current.start(
-                    cameraId,
+                // Using facingMode lets the browser select the rear camera on phones
+                // and prompts for permission without requiring camera enumeration first.
+                await scanner.start(
+                    { facingMode: 'environment' },
                     config,
                     (text) => {
-                        if (isMounted && !loading && !scanResult) processQRText(text, true);
+                        if (isMounted && !processingScanRef.current && !scanResult) {
+                            processQRText(text, true);
+                        }
                     },
                     () => { }
                 );
+
+                if (!isMounted && scanner.isScanning) {
+                    await scanner.stop();
+                }
 
             } catch (err) {
                 console.error(err);
                 if (isMounted) {
                     const errorMsg = typeof err === 'string' ? err : (err.message || 'Unknown camera error');
-                    setError(`Could not access camera: ${errorMsg}. Please check permissions or try uploading an image.`);
+                    const secureContextHint = window.isSecureContext
+                        ? ''
+                        : ' Camera access requires HTTPS or localhost.';
+                    setError(`Could not access camera: ${errorMsg}.${secureContextHint} Please check permissions or try uploading an image.`);
                 }
             }
         };
@@ -159,18 +157,23 @@ const QRScanner = () => {
 
         return () => {
             isMounted = false;
-            if (cameraScannerRef.current) {
-                if (cameraScannerRef.current.isScanning) {
-                    cameraScannerRef.current.stop().catch(console.error);
-                }
-                try {
-                    cameraScannerRef.current.clear();
-                } catch (err) {
-                    console.error(err);
-                }
+            if (scanner) {
+                const stopCamera = async () => {
+                    try {
+                        if (scanner.isScanning) await scanner.stop();
+                        scanner.clear();
+                    } catch (err) {
+                        console.error('Unable to stop QR camera:', err);
+                    } finally {
+                        if (cameraScannerRef.current === scanner) {
+                            cameraScannerRef.current = null;
+                        }
+                    }
+                };
+                stopCamera();
             }
         };
-    }, [isAuthenticated, scanMethod, scanResult, loading]);
+    }, [isAuthenticated, scanMethod, scanResult]);
 
     const handleFileUpload = async (event) => {
         const file = event.target.files[0];
@@ -193,7 +196,11 @@ const QRScanner = () => {
             notify.error("Couldn't read QR code.");
         } finally {
             if (fileScannerRef.current) {
-                try { fileScannerRef.current.clear(); } catch (e) { }
+                try {
+                    fileScannerRef.current.clear();
+                } catch (err) {
+                    console.error('Unable to clear QR image scanner:', err);
+                }
             }
             setLoading(false);
             if (fileInputRef.current) fileInputRef.current.value = '';

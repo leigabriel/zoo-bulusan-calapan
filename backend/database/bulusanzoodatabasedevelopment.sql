@@ -390,6 +390,12 @@ CREATE TABLE event_reservations (
     participant_phone VARCHAR(20) DEFAULT NULL,
     number_of_participants INT DEFAULT 1,
     participant_details TEXT DEFAULT NULL,
+    payment_amount DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+    payment_method VARCHAR(30) DEFAULT NULL,
+    payment_status ENUM('unpaid', 'pending', 'paid', 'failed', 'expired', 'refunded') NOT NULL DEFAULT 'unpaid',
+    paymongo_checkout_session_id VARCHAR(100) DEFAULT NULL,
+    paymongo_payment_id VARCHAR(100) DEFAULT NULL,
+    payment_paid_at TIMESTAMP NULL DEFAULT NULL,
     status ENUM('pending', 'confirmed', 'completed', 'cancelled', 'no_show') DEFAULT 'pending',
     notes TEXT DEFAULT NULL,
     is_archived BOOLEAN DEFAULT FALSE,
@@ -406,12 +412,21 @@ CREATE TABLE event_reservations (
     INDEX idx_event_reservations_user_id (user_id),
     INDEX idx_event_reservations_event_id (event_id),
     INDEX idx_event_reservations_status (status),
+    INDEX idx_event_reservations_payment_status (payment_status),
+    INDEX idx_event_reservations_checkout (paymongo_checkout_session_id),
     INDEX idx_event_reservations_created_at (created_at),
     INDEX idx_event_reservations_is_archived (is_archived),
     CONSTRAINT fk_event_reservations_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL ON UPDATE CASCADE,
     CONSTRAINT fk_event_reservations_event FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE SET NULL ON UPDATE CASCADE,
     CONSTRAINT fk_event_reservations_confirmed_by FOREIGN KEY (confirmed_by) REFERENCES users(id) ON DELETE SET NULL ON UPDATE CASCADE,
     CONSTRAINT fk_event_reservations_checked_in_by FOREIGN KEY (checked_in_by) REFERENCES users(id) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE paymongo_webhook_events (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    event_id VARCHAR(150) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uk_paymongo_webhook_event (event_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- staff activity logs

@@ -650,6 +650,22 @@ export const adminAPI = {
             body: JSON.stringify({ config })
         });
         return handleResponse(response);
+    },
+
+    getEventPaymentConfig: async () => {
+        const response = await fetch(`${API_BASE_URL}/admin/event-payment-config`, {
+            headers: getAuthHeaders('admin')
+        });
+        return handleResponse(response);
+    },
+
+    updateEventPaymentConfig: async (config) => {
+        const response = await fetch(`${API_BASE_URL}/admin/event-payment-config`, {
+            method: 'PUT',
+            headers: getAuthHeaders('admin'),
+            body: JSON.stringify({ config })
+        });
+        return handleResponse(response);
     }
 };
 
@@ -1601,6 +1617,29 @@ export const reservationAPI = {
             method: 'POST',
             headers: getAuthHeaders('user'),
             body: JSON.stringify(reservationData)
+        });
+        return handleResponse(response);
+    },
+
+    getEventPaymentConfig: async () => {
+        const response = await fetch(`${API_BASE_URL}/payments/event/config`, {
+            headers: getAuthHeaders('user')
+        });
+        return handleResponse(response);
+    },
+
+    createEventPaymentCheckout: async (id) => {
+        const response = await fetch(`${API_BASE_URL}/payments/event/${id}/checkout`, {
+            method: 'POST',
+            headers: getAuthHeaders('user')
+        });
+        return handleResponse(response);
+    },
+
+    setEventPayAtBulusan: async (id) => {
+        const response = await fetch(`${API_BASE_URL}/payments/event/${id}/pay-at-bulusan`, {
+            method: 'POST',
+            headers: getAuthHeaders('user')
         });
         return handleResponse(response);
     },

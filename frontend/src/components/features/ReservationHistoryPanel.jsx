@@ -52,6 +52,7 @@ const ReservationHistoryPanel = ({ isOpen, onClose }) => {
     const [activeTab, setActiveTab] = useState('all');
     const [ticketReservations, setTicketReservations] = useState([]);
     const [eventReservations, setEventReservations] = useState([]);
+    const [eventPaymentConfig, setEventPaymentConfig] = useState({ enabled: false, amountPerParticipant: 0 });
     const [archivedReservations, setArchivedReservations] = useState([]);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState('all');
@@ -62,6 +63,7 @@ const ReservationHistoryPanel = ({ isOpen, onClose }) => {
     const [downloading, setDownloading] = useState(false);
     const [showPaymentDemo, setShowPaymentDemo] = useState(false);
     const [paymentOption, setPaymentOption] = useState(null);
+    const [paymentLoading, setPaymentLoading] = useState(false);
     const [showQR, setShowQR] = useState(false);
 
     const handleDownload = async () => {
@@ -73,7 +75,7 @@ const ReservationHistoryPanel = ({ isOpen, onClose }) => {
             const buyerName = selectedReservation.user_name || selectedReservation.visitor_name || selectedReservation.participant_name || 'Guest';
 
             const baseWidth = 700;
-            const baseHeight = selectedReservation.type === 'ticket' ? 1000 : 920;
+            const baseHeight = selectedReservation.type === 'ticket' ? 1000 : 1040;
             const scale = window.devicePixelRatio ? Math.min(window.devicePixelRatio, 2) : 2;
             const canvas = document.createElement('canvas');
             canvas.width = baseWidth * scale;
@@ -156,6 +158,9 @@ const ReservationHistoryPanel = ({ isOpen, onClose }) => {
             } else {
                 addRow('Participants', selectedReservation.number_of_participants, true);
                 addRow('Organizer', selectedReservation.participant_name, true);
+                addRow('Amount', getEventAmount(selectedReservation) > 0 ? `P${getEventAmount(selectedReservation).toFixed(2)}` : 'Not configured', true);
+                addRow('Payment', selectedReservation.payment_method === 'gcash' ? 'GCash via PayMongo' : selectedReservation.payment_method === 'pay_at_bulusan' ? 'Pay at Bulusan' : 'Not selected', true);
+                addRow('Payment Status', (selectedReservation.payment_status || 'unpaid').toUpperCase(), true);
             }
 
             if (selectedReservation.qr_data) {
@@ -213,9 +218,10 @@ const ReservationHistoryPanel = ({ isOpen, onClose }) => {
     const fetchReservations = async () => {
         try {
             setLoading(true);
-            const [ticketRes, eventRes] = await Promise.all([
+            const [ticketRes, eventRes, paymentConfigRes] = await Promise.all([
                 reservationAPI.getMyTicketReservations(),
-                reservationAPI.getMyEventReservations()
+                reservationAPI.getMyEventReservations(),
+                reservationAPI.getEventPaymentConfig()
             ]);
 
             if (ticketRes.success) {
@@ -229,6 +235,9 @@ const ReservationHistoryPanel = ({ isOpen, onClose }) => {
                 const archived = (eventRes.reservations || []).filter(r => r.is_archived);
                 setEventReservations(active);
                 setArchivedReservations(prev => [...prev.filter(r => r.type !== 'event'), ...archived.map(r => ({ ...r, type: 'event' }))]);
+            }
+            if (paymentConfigRes.success && paymentConfigRes.config) {
+                setEventPaymentConfig(paymentConfigRes.config);
             }
         } catch (err) {
 
@@ -305,6 +314,37 @@ const ReservationHistoryPanel = ({ isOpen, onClose }) => {
     };
 
     const calculateTotal = (r) => ((r.adult_quantity || 0) * 40) + ((r.child_quantity || 0) * 20);
+    const getEventAmount = (reservation) => {
+        const storedAmount = Number(reservation?.payment_amount || 0);
+        if (storedAmount > 0) return storedAmount;
+        return Number(eventPaymentConfig.amountPerParticipant || 0);
+    };
+
+    const handleEventPayment = async () => {
+        if (!selectedReservation || paymentLoading) return;
+        try {
+            setPaymentLoading(true);
+            if (paymentOption === 'now') {
+                const response = await reservationAPI.createEventPaymentCheckout(selectedReservation.id);
+                if (!response.success || !response.checkoutUrl) {
+                    throw new Error(response.message || 'Unable to start GCash payment.');
+                }
+                window.location.assign(response.checkoutUrl);
+                return;
+            }
+
+            const response = await reservationAPI.setEventPayAtBulusan(selectedReservation.id);
+            if (!response.success) throw new Error(response.message || 'Unable to select payment method.');
+            notify.success('Payment method saved: Pay at Bulusan.');
+            setShowPaymentDemo(false);
+            await fetchReservations();
+            setSelectedReservation(prev => prev ? { ...prev, payment_method: 'pay_at_bulusan', payment_status: 'unpaid' } : prev);
+        } catch (error) {
+            notify.error(error.message || 'Unable to process payment.');
+        } finally {
+            setPaymentLoading(false);
+        }
+    };
 
     if (!isOpen) return null;
 
@@ -539,8 +579,8 @@ const ReservationHistoryPanel = ({ isOpen, onClose }) => {
                                         </>
                                     )}
 
-                                    {selectedReservation.type === 'event' && (
-                                        <>
+                                     {selectedReservation.type === 'event' && (
+                                         <>
                                             <div className="flex justify-between items-center py-2 border-b border-slate-100">
                                                 <span className="text-slate-500">Participants</span>
                                                 <span className="font-semibold text-slate-800">{selectedReservation.number_of_participants}</span>
@@ -549,25 +589,32 @@ const ReservationHistoryPanel = ({ isOpen, onClose }) => {
                                                 <span className="text-slate-500 flex-shrink-0">Organizer</span>
                                                 <span className="font-semibold text-slate-800 text-right break-words">{selectedReservation.participant_name}</span>
                                             </div>
-                                            <div className="pt-4">
-                                                <p className="text-xs text-slate-400 uppercase tracking-widest mb-3 font-semibold">Payment Method</p>
-                                                <div className="flex flex-col sm:flex-row gap-3">
-                                                    <button
-                                                        onClick={() => { setPaymentOption('now'); setShowPaymentDemo(true); }}
-                                                        className="flex-1 py-3 bg-slate-800 text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-slate-900 transition flex items-center justify-center gap-2 shadow-sm"
-                                                    >
-                                                        <Icons.CreditCard />
-                                                        Pay Now
-                                                    </button>
-                                                    <button
-                                                        onClick={() => { setPaymentOption('bulusan'); setShowPaymentDemo(true); }}
-                                                        className="flex-1 py-3 bg-emerald-600 text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-emerald-700 transition flex items-center justify-center gap-2 shadow-sm"
-                                                    >
-                                                        <Icons.Cash />
-                                                        Pay at Bulusan
-                                                    </button>
-                                                </div>
-                                            </div>
+                                             <div className="pt-4">
+                                                 <p className="text-xs text-slate-400 uppercase tracking-widest mb-3 font-semibold">Event Payment</p>
+                                                 <div className="space-y-2 text-sm">
+                                                     <div className="flex justify-between gap-3"><span className="text-slate-500">Amount</span><span className="font-bold text-slate-800">{getEventAmount(selectedReservation) > 0 ? `₱${getEventAmount(selectedReservation).toFixed(2)}` : 'Not configured'}</span></div>
+                                                     <div className="flex justify-between gap-3"><span className="text-slate-500">Method</span><span className="font-semibold text-slate-800">{selectedReservation.payment_method === 'gcash' ? 'GCash via PayMongo' : selectedReservation.payment_method === 'pay_at_bulusan' ? 'Pay at Bulusan' : 'Not selected'}</span></div>
+                                                     <div className="flex justify-between gap-3"><span className="text-slate-500">Status</span><span className={`font-bold uppercase ${selectedReservation.payment_status === 'paid' ? 'text-emerald-600' : 'text-amber-600'}`}>{selectedReservation.payment_status || 'unpaid'}</span></div>
+                                                 </div>
+                                                 {selectedReservation.payment_status !== 'paid' && eventPaymentConfig.enabled && getEventAmount(selectedReservation) > 0 && (
+                                                     <div className="flex flex-col sm:flex-row gap-3 mt-4">
+                                                         <button
+                                                             onClick={() => { setPaymentOption('now'); setShowPaymentDemo(true); }}
+                                                             className="flex-1 py-3 bg-slate-800 text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-slate-900 transition flex items-center justify-center gap-2 shadow-sm"
+                                                         >
+                                                             <Icons.CreditCard />
+                                                             Pay with GCash
+                                                         </button>
+                                                         <button
+                                                             onClick={() => { setPaymentOption('bulusan'); setShowPaymentDemo(true); }}
+                                                             className="flex-1 py-3 bg-emerald-600 text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-emerald-700 transition flex items-center justify-center gap-2 shadow-sm"
+                                                         >
+                                                             <Icons.Cash />
+                                                             Pay at Bulusan
+                                                         </button>
+                                                     </div>
+                                                 )}
+                                             </div>
                                         </>
                                     )}
                                 </div>
@@ -674,11 +721,12 @@ const ReservationHistoryPanel = ({ isOpen, onClose }) => {
                             </div>
                         </div>
                         <div className="mt-6 flex flex-col gap-3">
-                            <button
-                                onClick={() => setShowPaymentDemo(false)}
-                                className="w-full py-3 bg-slate-800 text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-slate-900 transition"
-                            >
-                                {paymentOption === 'now' ? 'Proceed to Payment' : 'Confirm Pay at Bulusan'}
+                             <button
+                                 onClick={handleEventPayment}
+                                 disabled={paymentLoading}
+                                 className="w-full py-3 bg-slate-800 text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-slate-900 transition"
+                             >
+                                 {paymentLoading ? 'Processing...' : paymentOption === 'now' ? 'Proceed to GCash Payment' : 'Confirm Pay at Bulusan'}
                             </button>
                             <button
                                 onClick={() => setShowPaymentDemo(false)}

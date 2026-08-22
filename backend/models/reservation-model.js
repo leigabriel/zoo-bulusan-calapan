@@ -93,6 +93,17 @@ class Reservation {
         return rows;
     }
 
+    static async findEventReservationByPaymentReference(checkoutSessionId, reservationReference) {
+        const [rows] = await db.query(
+            `SELECT * FROM event_reservations
+             WHERE (paymongo_checkout_session_id = ? AND ? IS NOT NULL)
+                OR (reservation_reference = ? AND ? IS NOT NULL)
+             LIMIT 1`,
+            [checkoutSessionId || null, checkoutSessionId || null, reservationReference || null, reservationReference || null]
+        );
+        return rows[0];
+    }
+
     static async findHostedEventReservationsByUserId(userId) {
         const [rows] = await db.query(
             `SELECT er.*, e.title as event_title, e.event_date, e.start_time, e.end_time, e.location as event_location,
@@ -136,24 +147,50 @@ class Reservation {
         const { 
             reservationReference, userId, eventId, participantName, participantEmail,
             participantPhone, numberOfParticipants, participantDetails, status, notes,
-            venueEventName, venueEventDate, venueEventStartTime, venueEventEndTime, venueEventDescription, qrData
+            venueEventName, venueEventDate, venueEventStartTime, venueEventEndTime, venueEventDescription, qrData,
+            paymentAmount
         } = data;
         
         const [result] = await db.query(
             `INSERT INTO event_reservations (
                 reservation_reference, user_id, event_id, participant_name, participant_email,
                 participant_phone, number_of_participants, participant_details, status, notes,
-                venue_event_name, venue_event_date, venue_event_time, venue_event_end_time, venue_event_description, qr_data
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                venue_event_name, venue_event_date, venue_event_time, venue_event_end_time, venue_event_description, qr_data,
+                payment_amount, payment_status
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
                 reservationReference, userId || null, eventId || null, participantName, participantEmail,
                 participantPhone || null, numberOfParticipants || 1, participantDetails || null,
                 status || 'pending', notes || null,
                 venueEventName || null, venueEventDate || null, venueEventStartTime || null,
-                venueEventEndTime || null, venueEventDescription || null, qrData || null
+                venueEventEndTime || null, venueEventDescription || null, qrData || null,
+                paymentAmount || 0, 'unpaid'
             ]
         );
         return result.insertId;
+    }
+
+    static async updateEventPayment(id, data) {
+        const updates = [];
+        const params = [];
+        const fields = {
+            paymentAmount: 'payment_amount',
+            paymentMethod: 'payment_method',
+            paymentStatus: 'payment_status',
+            checkoutSessionId: 'paymongo_checkout_session_id',
+            paymentId: 'paymongo_payment_id',
+            paidAt: 'payment_paid_at'
+        };
+        Object.entries(fields).forEach(([key, column]) => {
+            if (Object.prototype.hasOwnProperty.call(data, key)) {
+                updates.push(`${column} = ?`);
+                params.push(data[key]);
+            }
+        });
+        if (!updates.length) return false;
+        params.push(id);
+        const [result] = await db.query(`UPDATE event_reservations SET ${updates.join(', ')} WHERE id = ?`, params);
+        return result.affectedRows > 0;
     }
 
     static async updateTicketReservationStatus(id, status, confirmedBy = null) {

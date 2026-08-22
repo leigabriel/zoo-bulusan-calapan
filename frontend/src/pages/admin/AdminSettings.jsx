@@ -35,17 +35,27 @@ const AdminSettings = () => {
         accountName: '',
         note: ''
     });
+    const [eventPayment, setEventPayment] = useState({ enabled: false, amountPerParticipant: 0 });
 
     useEffect(() => {
         const loadConfig = async () => {
             try {
-                const res = await adminAPI.getDonationConfig();
+                const [res, paymentRes] = await Promise.all([
+                    adminAPI.getDonationConfig(),
+                    adminAPI.getEventPaymentConfig()
+                ]);
                 if (res.success && res.config) {
                     setConfig({
                         enabled: Boolean(res.config.enabled),
                         gcashNumber: res.config.gcashNumber || '',
                         accountName: res.config.accountName || '',
                         note: res.config.note || ''
+                    });
+                }
+                if (paymentRes.success && paymentRes.config) {
+                    setEventPayment({
+                        enabled: Boolean(paymentRes.config.enabled),
+                        amountPerParticipant: Number(paymentRes.config.amountPerParticipant) || 0
                     });
                 }
             } catch {
@@ -60,7 +70,10 @@ const AdminSettings = () => {
     const handleSave = async () => {
         setSaving(true);
         try {
-            const res = await adminAPI.updateDonationConfig(config);
+            const [res] = await Promise.all([
+                adminAPI.updateDonationConfig(config),
+                adminAPI.updateEventPaymentConfig(eventPayment)
+            ]);
             if (res && res.success) {
                 notify.success('Settings saved.');
             } else {
@@ -119,6 +132,43 @@ const AdminSettings = () => {
                                 </label>
                             </div>
                         </div>
+                    </div>
+
+                    <div className="bg-white border border-emerald-200 rounded-2xl p-5 md:p-6">
+                        <div className="flex items-start sm:items-center justify-between gap-4 mb-5">
+                            <div>
+                                <h2 className="text-lg font-bold text-emerald-900">Event GCash Payments</h2>
+                                <p className="text-sm text-emerald-900/60 mt-0.5">
+                                    Enable PayMongo GCash payments for event reservations only. Ticket reservations are not affected.
+                                </p>
+                            </div>
+                            <label className="relative inline-flex items-center cursor-pointer flex-shrink-0">
+                                <input
+                                    type="checkbox"
+                                    checked={eventPayment.enabled}
+                                    onChange={(e) => setEventPayment({ ...eventPayment, enabled: e.target.checked })}
+                                    className="sr-only peer"
+                                />
+                                <div className="w-12 h-7 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-emerald-300/50 rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-emerald-500 after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all"></div>
+                            </label>
+                        </div>
+                        <div className="flex items-center justify-between gap-4">
+                            <span className={`px-3 py-1 rounded-full text-xs font-semibold ${eventPayment.enabled ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-500'}`}>
+                                {eventPayment.enabled ? 'Enabled' : 'Disabled'}
+                            </span>
+                            <div className="w-full max-w-xs">
+                                <label className="block text-sm font-medium text-emerald-900 mb-2">Fee per participant (PHP)</label>
+                                <input
+                                    type="number"
+                                    min="0"
+                                    step="0.01"
+                                    value={eventPayment.amountPerParticipant}
+                                    onChange={(e) => setEventPayment({ ...eventPayment, amountPerParticipant: e.target.value })}
+                                    className="w-full bg-[#f6fdf8] border border-emerald-200 rounded-xl px-4 py-3 text-emerald-900 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 transition-all"
+                                />
+                            </div>
+                        </div>
+                        <p className="text-xs text-emerald-900/50 mt-4">PayMongo credentials must be configured on the backend before enabling this option.</p>
                     </div>
 
                     <div className="bg-white border border-emerald-200 rounded-2xl p-5 md:p-6">

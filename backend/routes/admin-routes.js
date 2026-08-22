@@ -4,6 +4,7 @@ const adminController = require('../controllers/admin-controller');
 const messageController = require('../controllers/message-controller');
 const monitoringController = require('../controllers/monitoring-controller');
 const donationController = require('../controllers/donation-controller');
+const { readConfig: readEventPaymentConfig, writeConfig: writeEventPaymentConfig } = require('../config/event-payment-config');
 const { protect, authorize } = require('../middleware/auth');
 const multer = require('multer');
 const path = require('path');
@@ -117,6 +118,18 @@ router.put('/notifications/read-all', adminController.markAllNotificationsRead);
 // Donation settings
 router.get('/donation-config', donationController.getConfig);
 router.put('/donation-config', donationController.updateConfig);
+router.get('/event-payment-config', (req, res) => {
+    res.json({ success: true, config: readEventPaymentConfig() });
+});
+router.put('/event-payment-config', (req, res) => {
+    try {
+        const updated = writeEventPaymentConfig(req.body.config || {});
+        res.json({ success: true, message: 'Event payment settings updated successfully', config: updated });
+    } catch (error) {
+        console.error('Error updating event payment config:', error);
+        res.status(500).json({ success: false, message: 'Unable to update event payment settings.' });
+    }
+});
 
 // model management
 router.post('/upload-model', modelUpload.fields([
