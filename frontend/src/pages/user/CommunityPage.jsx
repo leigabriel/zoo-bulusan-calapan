@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ReactLenis } from 'lenis/react';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
+import gsap from 'gsap';
 import Header from '../../components/Header';
 import PostForm from '../../components/features/community/PostForm';
 import PostFeed from '../../components/features/community/PostFeed';
@@ -20,6 +21,39 @@ const CommunityPage = () => {
     const [postModalOpen, setPostModalOpen] = useState(false);
     const [selectedPost, setSelectedPost] = useState(null);
     const [commentOnly, setCommentOnly] = useState(false);
+    const communityTitleRef = useRef(null);
+    const communityLetterRefs = useRef([]);
+
+    const animateCommunityTitle = (isHovering) => {
+        const letters = communityLetterRefs.current.filter(Boolean);
+        if (!letters.length) return;
+
+        letters.forEach((letter, index) => {
+            if (isHovering) {
+                gsap.to(letter, {
+                    y: index % 2 === 0 ? -12 - index : 10 + index,
+                    rotate: index % 2 === 0 ? -5 - index : 4 + index,
+                    scale: index % 3 === 0 ? 1.14 : 1.04,
+                    color: index % 2 === 0 ? '#526f3c' : '#789c2b',
+                    duration: 0.45 + index * 0.035,
+                    delay: index * 0.035,
+                    ease: 'power3.out',
+                    overwrite: 'auto'
+                });
+            } else {
+                gsap.to(letter, {
+                    y: 0,
+                    rotate: 0,
+                    scale: 1,
+                    color: '#000000',
+                    duration: 0.65,
+                    delay: index * 0.025,
+                    ease: 'elastic.out(1, 0.45)',
+                    overwrite: 'auto'
+                });
+            }
+        });
+    };
     const [confirmState, setConfirmState] = useState({
         isOpen: false,
         title: '',
@@ -133,8 +167,23 @@ const CommunityPage = () => {
                 {/* Intro Section - Clean Style */}
                 <div className="w-full min-h-[42vh] md:min-h-[54vh] flex flex-col items-center justify-center px-4 pt-20">
                     <p className="mb-5 rounded-full bg-[#c6fe69] px-4 py-2 text-xs font-bold uppercase tracking-[0.3em] text-[#212631]">Share the wild with us</p>
-                    <h1 className="text-[4rem] sm:text-[6rem] md:text-[9rem] lg:text-[11rem] leading-none tracking-tight text-black text-center break-words w-full">
-                        Community
+                    <h1
+                        ref={communityTitleRef}
+                        onMouseEnter={() => animateCommunityTitle(true)}
+                        onMouseLeave={() => animateCommunityTitle(false)}
+                        className="cursor-pointer text-[4rem] sm:text-[6rem] md:text-[9rem] lg:text-[11rem] leading-none tracking-tight text-black text-center break-words w-full"
+                    >
+                        {Array.from('Community').map((letter, index) => (
+                            <span
+                                key={`${letter}-${index}`}
+                                ref={(element) => { communityLetterRefs.current[index] = element; }}
+                                className="inline-block"
+                                aria-hidden="true"
+                            >
+                                {letter}
+                            </span>
+                        ))}
+                        <span className="sr-only">Community</span>
                     </h1>
                 </div>
 

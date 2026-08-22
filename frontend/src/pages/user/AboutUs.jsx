@@ -153,7 +153,7 @@ const JournalHero = ({ entry }) => {
         <article ref={ref} className={`relative ${entry.grid} group`}>
             <div className={`relative overflow-hidden mb-6 md:mb-8 ${entry.aspect} bg-[#212631]/5 rounded-sm`}>
                 <motion.div className="absolute w-full h-[120%] -top-[10%]" style={{ y: imgY }}>
-                    <img src={entry.image} alt={entry.title} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-[1400ms] ease-out" />
+                    <img src={entry.image} alt={entry.title} className="w-full h-full object-cover" />
                 </motion.div>
                 <motion.div className="absolute inset-0 bg-[#212631]" style={{ opacity: overlayO }} />
                 <div className="absolute inset-0 flex items-center justify-center z-10 p-6 sm:p-10">
@@ -209,7 +209,7 @@ const JournalCard = ({ entry, index }) => {
         >
             <div className={`relative overflow-hidden mb-5 ${entry.aspect} bg-[#212631]/5 rounded-sm`}>
                 <motion.div className="absolute w-full h-[120%] -top-[10%]" style={{ y: imgY }}>
-                    <img src={entry.image} alt={entry.title} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-[1400ms] ease-out" />
+                    <img src={entry.image} alt={entry.title} className="w-full h-full object-cover" />
                 </motion.div>
                 <motion.div
                     className="absolute inset-0 bg-[#fff] origin-top z-10"
