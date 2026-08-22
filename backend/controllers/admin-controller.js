@@ -34,44 +34,84 @@ const getDateRange = (period) => {
 
 exports.getDashboardStats = async (req, res) => {
     try {
-        const { period = 'today' } = req.query;
-        const startDate = getDateRange(period);
-        
-        // For counts that should be filtered by period
-        let ticketsQuery, revenueQuery;
-        
-        if (startDate) {
-            const dateStr = startDate.toISOString().slice(0, 19).replace('T', ' ');
-            const [ticketsResult] = await db.query(
-                'SELECT COUNT(*) as count FROM ticket_reservations WHERE created_at >= ?',
-                [dateStr]
-            );
-            const [revenueResult] = await db.query(
-                `SELECT COALESCE(SUM((adult_quantity * 40) + (child_quantity * 20)), 0) as total 
-                 FROM ticket_reservations 
-                 WHERE status IN ('confirmed', 'completed') AND created_at >= ?`,
-                [dateStr]
-            );
-            ticketsQuery = ticketsResult[0]?.count || 0;
-            revenueQuery = revenueResult[0]?.total || 0;
-        } else {
-            ticketsQuery = await Ticket.count();
-            revenueQuery = await Ticket.getTotalRevenue();
-        }
+        const requestedPeriod = req.query.period || 'today';
+        const period = ['today', 'week', 'month', 'year'].includes(requestedPeriod) ? requestedPeriod : 'today';
+        const periodStart = {
+            today: 'CURDATE()',
+            week: 'DATE_SUB(CURDATE(), INTERVAL 6 DAY)',
+            month: 'DATE_FORMAT(CURDATE(), \'%Y-%m-01\')',
+            year: 'MAKEDATE(YEAR(CURDATE()), 1)'
+        }[period] || null;
+        const previousStart = {
+            today: 'DATE_SUB(CURDATE(), INTERVAL 1 DAY)',
+            week: 'DATE_SUB(CURDATE(), INTERVAL 13 DAY)',
+            month: 'DATE_FORMAT(DATE_SUB(CURDATE(), INTERVAL 1 MONTH), \'%Y-%m-01\')',
+            year: 'MAKEDATE(YEAR(CURDATE()) - 1, 1)'
+        }[period] || null;
+        const currentEnd = periodStart ? (period === 'today' ? 'DATE_ADD(CURDATE(), INTERVAL 1 DAY)' : period === 'week' ? 'DATE_ADD(CURDATE(), INTERVAL 1 DAY)' : period === 'month' ? 'DATE_ADD(LAST_DAY(CURDATE()), INTERVAL 1 DAY)' : 'DATE_ADD(MAKEDATE(YEAR(CURDATE()), 1), INTERVAL 1 YEAR)') : null;
+        const previousEnd = previousStart ? period === 'today' ? 'CURDATE()' : period === 'week' ? 'DATE_SUB(CURDATE(), INTERVAL 6 DAY)' : period === 'month' ? 'DATE_FORMAT(CURDATE(), \'%Y-%m-01\')' : 'MAKEDATE(YEAR(CURDATE()), 1)' : null;
+        const ticketDate = periodStart ? `AND tr.reservation_date >= ${periodStart} AND tr.reservation_date < ${currentEnd}` : '';
+        const eventDate = periodStart ? `AND er.created_at >= ${periodStart} AND er.created_at < ${currentEnd}` : '';
+        const validTicket = `tr.status IN ('confirmed', 'completed')`;
+        const validEvent = `er.status IN ('confirmed', 'completed') AND er.payment_status = 'paid'`;
 
-        const [
-            totalUsers,
-            totalAnimals,
-            totalPlants,
-            activeTickets,
-            upcomingEvents
-        ] = await Promise.all([
-            User.count(),
-            Animal.count(),
-            Plant.count(),
-            Ticket.countByStatus('confirmed'),
-            Event.countUpcoming()
+        const [summaryRows, previousRows, weeklyRows, distributionRows, breakdownRows, eventRows, totalUsers, totalAnimals, totalPlants] = await Promise.all([
+            db.query(`SELECT
+                (SELECT COALESCE(SUM(tr.adult_quantity + tr.child_quantity + tr.bulusan_resident_quantity), 0) FROM ticket_reservations tr WHERE ${validTicket} ${ticketDate}) AS tickets,
+                (SELECT COALESCE(SUM(tr.total_visitors), 0) FROM ticket_reservations tr WHERE ${validTicket} ${ticketDate}) AS visitors,
+                (SELECT COALESCE(SUM((tr.adult_quantity * 40) + (tr.child_quantity * 20)), 0) FROM ticket_reservations tr WHERE ${validTicket} ${ticketDate}) AS ticketRevenue,
+                (SELECT COALESCE(SUM(er.payment_amount), 0) FROM event_reservations er WHERE ${validEvent} ${eventDate}) AS eventRevenue`),
+            db.query(`SELECT
+                COALESCE(SUM(CASE WHEN ${validTicket} AND tr.reservation_date >= ${previousStart} AND tr.reservation_date < ${previousEnd} THEN tr.adult_quantity + tr.child_quantity + tr.bulusan_resident_quantity ELSE 0 END), 0) AS tickets,
+                COALESCE(SUM(CASE WHEN ${validTicket} AND tr.reservation_date >= ${previousStart} AND tr.reservation_date < ${previousEnd} THEN tr.total_visitors ELSE 0 END), 0) AS visitors,
+                COALESCE(SUM(CASE WHEN ${validTicket} AND tr.reservation_date >= ${previousStart} AND tr.reservation_date < ${previousEnd} THEN (tr.adult_quantity * 40) + (tr.child_quantity * 20) ELSE 0 END), 0) AS ticketRevenue
+             FROM ticket_reservations tr`),
+            db.query(`SELECT DATE(tr.reservation_date) AS date, DAYNAME(tr.reservation_date) AS day,
+                COALESCE(SUM(tr.total_visitors), 0) AS visitors,
+                COALESCE(SUM(CASE WHEN tr.status IN ('confirmed', 'completed') THEN (tr.adult_quantity * 40) + (tr.child_quantity * 20) ELSE 0 END), 0) AS revenue
+             FROM ticket_reservations tr
+             WHERE tr.status NOT IN ('cancelled', 'no_show') AND tr.reservation_date >= DATE_SUB(CURDATE(), INTERVAL 6 DAY)
+             GROUP BY DATE(tr.reservation_date), DAYNAME(tr.reservation_date) ORDER BY date ASC`),
+            db.query(`SELECT type, count, revenue FROM (
+                SELECT 'Adult' AS type, COALESCE(SUM(adult_quantity), 0) AS count, COALESCE(SUM(adult_quantity * 40), 0) AS revenue FROM ticket_reservations tr WHERE ${validTicket} ${ticketDate}
+                UNION ALL SELECT 'Child', COALESCE(SUM(child_quantity), 0), COALESCE(SUM(child_quantity * 20), 0) FROM ticket_reservations tr WHERE ${validTicket} ${ticketDate}
+                UNION ALL SELECT 'Bulusan Resident', COALESCE(SUM(bulusan_resident_quantity), 0), 0 FROM ticket_reservations tr WHERE ${validTicket} ${ticketDate}
+            ) ticket_types WHERE count > 0`),
+            db.query(`SELECT source, amount FROM (
+                SELECT 'Ticket Sales' AS source, COALESCE(SUM((adult_quantity * 40) + (child_quantity * 20)), 0) AS amount FROM ticket_reservations tr WHERE ${validTicket} ${ticketDate}
+                UNION ALL SELECT 'Event Reservations', COALESCE(SUM(payment_amount), 0) FROM event_reservations er WHERE ${validEvent} ${eventDate}
+            ) revenue_sources`),
+            db.query(`SELECT e.id, e.title, e.event_date, e.status,
+                SUM(CASE WHEN er.status NOT IN ('cancelled', 'no_show') THEN 1 ELSE 0 END) AS registrations,
+                COALESCE(SUM(CASE WHEN er.status IN ('confirmed', 'completed') AND er.payment_status = 'paid' THEN er.payment_amount ELSE 0 END), 0) AS revenue
+             FROM events e LEFT JOIN event_reservations er ON er.event_id = e.id
+             WHERE e.event_date >= CURDATE() AND e.status IN ('upcoming', 'ongoing')
+             GROUP BY e.id, e.title, e.event_date, e.status ORDER BY e.event_date ASC LIMIT 5`),
+            User.count(), Animal.count(), Plant.count()
         ]);
+        const summary = summaryRows[0][0] || {};
+        const previous = previousRows[0][0] || {};
+        const pct = (current, prior) => prior > 0 ? Number((((current - prior) / prior) * 100).toFixed(1)) : (current > 0 ? 100 : 0);
+        const totalRevenue = Number(summary.ticketRevenue || 0) + Number(summary.eventRevenue || 0);
+        const weeklyByDate = new Map(weeklyRows[0].map(row => {
+            const rowDate = row.date instanceof Date
+                ? `${row.date.getFullYear()}-${String(row.date.getMonth() + 1).padStart(2, '0')}-${String(row.date.getDate()).padStart(2, '0')}`
+                : String(row.date).slice(0, 10);
+            return [rowDate, row];
+        }));
+        const weeklyData = Array.from({ length: 7 }, (_, index) => {
+            const date = new Date();
+            date.setHours(0, 0, 0, 0);
+            date.setDate(date.getDate() - (6 - index));
+            const dateKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+            const row = weeklyByDate.get(dateKey);
+            return {
+                day: date.toLocaleDateString('en-US', { weekday: 'short' }),
+                date: dateKey,
+                visitors: Number(row?.visitors) || 0,
+                revenue: Number(row?.revenue) || 0
+            };
+        });
 
         res.json({
             success: true,
@@ -79,10 +119,20 @@ exports.getDashboardStats = async (req, res) => {
                 totalUsers: Number(totalUsers) || 0,
                 totalAnimals: Number(totalAnimals) || 0,
                 totalPlants: Number(totalPlants) || 0,
-                totalTickets: Number(ticketsQuery) || 0,
-                totalRevenue: Number(revenueQuery) || 0,
-                activeTickets: Number(activeTickets) || 0,
-                upcomingEvents: Number(upcomingEvents) || 0
+                totalTickets: Number(summary.tickets) || 0,
+                totalVisitors: Number(summary.visitors) || 0,
+                totalRevenue,
+                totalProfit: totalRevenue,
+                upcomingEvents: eventRows[0].length,
+                trends: {
+                    tickets: pct(Number(summary.tickets), Number(previous.tickets)),
+                    visitors: pct(Number(summary.visitors), Number(previous.visitors)),
+                    revenue: pct(totalRevenue, Number(previous.ticketRevenue))
+                },
+                weeklyData,
+                ticketDistribution: distributionRows[0].map(row => ({ type: row.type, count: Number(row.count), revenue: Number(row.revenue) })),
+                revenueBreakdown: breakdownRows[0].map(row => ({ source: row.source, amount: Number(row.amount) })),
+                eventOverview: eventRows[0].map(row => ({ ...row, registrations: Number(row.registrations), revenue: Number(row.revenue) }))
             },
             period
         });

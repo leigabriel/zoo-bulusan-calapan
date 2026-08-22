@@ -989,7 +989,19 @@ exports.getEventAvailability = async (req, res) => {
 exports.scanReservation = async (req, res) => {
     try {
         const { qrData, markUsed } = req.body;
-        const payload = parseQrData(qrData);
+        let payload = parseQrData(qrData);
+
+        // New QR codes contain only a short verification URL and reference.
+        if (!payload && typeof qrData === 'string' && /^https?:\/\//i.test(qrData)) {
+            try {
+                const parts = new URL(qrData).pathname.split('/').filter(Boolean);
+                const type = parts.at(-2);
+                const ref = parts.at(-1) ? decodeURIComponent(parts.at(-1)) : null;
+                if (['ticket', 'event'].includes(type) && ref) payload = { type, ref };
+            } catch {
+                payload = null;
+            }
+        }
 
         if (!payload || !payload.ref || !payload.type) {
             return res.json({ success: true, status: 'fake', message: 'Invalid QR code.' });
@@ -1041,7 +1053,18 @@ exports.scanReservation = async (req, res) => {
                 date: reservationDate,
                 time: reservationTime,
                 totalVisitors: isTicket ? reservation.total_visitors : reservation.number_of_participants,
-                status: reservation.status
+                status: reservation.status,
+                phone: isTicket ? reservation.visitor_phone : reservation.participant_phone,
+                adultQuantity: isTicket ? reservation.adult_quantity : null,
+                childQuantity: isTicket ? reservation.child_quantity : null,
+                residentQuantity: isTicket ? reservation.bulusan_resident_quantity : null,
+                ticketAmount: isTicket ? ((reservation.adult_quantity * 40) + (reservation.child_quantity * 20)) : null,
+                eventName: isTicket ? null : (reservation.venue_event_name || reservation.event_title),
+                eventDescription: isTicket ? null : reservation.venue_event_description,
+                eventEndTime: isTicket ? null : reservation.venue_event_end_time,
+                paymentAmount: isTicket ? null : reservation.payment_amount,
+                paymentMethod: isTicket ? null : reservation.payment_method,
+                paymentStatus: isTicket ? null : reservation.payment_status
             }
         });
     } catch (error) {

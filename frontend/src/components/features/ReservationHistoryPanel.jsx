@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/use-auth';
 import { reservationAPI } from '../../services/api-client';
-import { QRCodeCanvas } from 'qrcode.react';
+import { QRCodeSVG } from 'qrcode.react';
 import { notify } from '../../utils/toast';
 
 const Icons = {
@@ -75,7 +75,7 @@ const ReservationHistoryPanel = ({ isOpen, onClose }) => {
             const buyerName = selectedReservation.user_name || selectedReservation.visitor_name || selectedReservation.participant_name || 'Guest';
 
             const baseWidth = 700;
-            const baseHeight = selectedReservation.type === 'ticket' ? 1000 : 1040;
+             const baseHeight = selectedReservation.type === 'ticket' ? 1100 : 1250;
             const scale = window.devicePixelRatio ? Math.min(window.devicePixelRatio, 2) : 2;
             const canvas = document.createElement('canvas');
             canvas.width = baseWidth * scale;
@@ -163,20 +163,23 @@ const ReservationHistoryPanel = ({ isOpen, onClose }) => {
                 addRow('Payment Status', (selectedReservation.payment_status || 'unpaid').toUpperCase(), true);
             }
 
-            if (selectedReservation.qr_data) {
-                const qrCanvas = receiptRef.current.querySelector('canvas');
-                if (qrCanvas) {
-                    y += 10;
-                    const qrSize = 280;
-                    const upScaledQr = document.createElement('canvas');
-                    upScaledQr.width = Math.round(qrSize * scale);
-                    upScaledQr.height = Math.round(qrSize * scale);
-                    const upCtx = upScaledQr.getContext('2d');
-                    upCtx.imageSmoothingEnabled = false;
-                    upCtx.drawImage(qrCanvas, 0, 0, upScaledQr.width, upScaledQr.height);
-                    ctx.imageSmoothingEnabled = false;
-                    ctx.drawImage(upScaledQr, (baseWidth - qrSize) / 2, y, qrSize, qrSize);
-                    y += 300;
+             if (selectedReservation.reservation_reference) {
+                 const qrSvg = receiptRef.current.querySelector('svg');
+                 if (qrSvg) {
+                     const svgMarkup = new XMLSerializer().serializeToString(qrSvg);
+                     const qrImage = await new Promise((resolve, reject) => {
+                         const image = new Image();
+                         image.onload = () => resolve(image);
+                         image.onerror = reject;
+                         image.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgMarkup)}`;
+                     });
+                     y += 10;
+                     const qrSize = 280;
+                     ctx.imageSmoothingEnabled = false;
+                     ctx.fillStyle = '#ffffff';
+                     ctx.fillRect((baseWidth - qrSize - 24) / 2, y - 12, qrSize + 24, qrSize + 24);
+                     ctx.drawImage(qrImage, (baseWidth - qrSize) / 2, y, qrSize, qrSize);
+                     y += 300;
                     ctx.font = 'bold 12px sans-serif';
                     ctx.fillStyle = '#94a3b8';
                     ctx.textAlign = 'center';
@@ -620,7 +623,7 @@ const ReservationHistoryPanel = ({ isOpen, onClose }) => {
                                 </div>
                             </div>
 
-                            {selectedReservation.qr_data && (
+                             {selectedReservation.reservation_reference && (
                                 <>
                                     <div className="w-full border-t-2 border-dashed border-slate-200 relative z-10"></div>
                                     <div className="p-5 sm:p-8 flex flex-col items-center bg-slate-50">
@@ -633,15 +636,14 @@ const ReservationHistoryPanel = ({ isOpen, onClose }) => {
                                         </button>
                                         <div className={showQR ? 'mt-5 flex flex-col items-center' : 'hidden'}>
                                             <div className="bg-white p-3 rounded-xl shadow-sm border border-slate-100">
-                                                <QRCodeCanvas
-                                                    value={selectedReservation.qr_data}
-                                                    size={320}
-                                                    level="M"
-                                                    includeMargin={true}
-                                                    bgColor="#ffffff"
-                                                    fgColor="#0f172a"
-                                                    style={{ width: '320px', height: '320px', maxWidth: '100%' }}
-                                                />
+                                                 <QRCodeSVG
+                                                     value={`${window.location.origin}/verify/${selectedReservation.type}/${encodeURIComponent(selectedReservation.reservation_reference)}`}
+                                                     size={280}
+                                                     level="M"
+                                                     bgColor="#ffffff"
+                                                     fgColor="#0f172a"
+                                                     style={{ display: 'block', width: '280px', height: '280px', maxWidth: '100%' }}
+                                                 />
                                             </div>
                                             <p className="text-[10px] uppercase tracking-widest font-semibold text-slate-400 mt-5 text-center">
                                                 Scan at the entrance
@@ -707,7 +709,7 @@ const ReservationHistoryPanel = ({ isOpen, onClose }) => {
                         </h3>
                         <p className="text-sm text-slate-500 mt-3 leading-relaxed">
                             {paymentOption === 'now'
-                                ? 'You will be redirected to secure online payment to complete your event reservation.'
+                                ? 'Pay securely with GCash. Desktop users will see the PayMongo GCash QR code; mobile users can open the GCash app from the checkout page.'
                                 : 'Payment will be settled in cash at the Bulusan Zoo admission booth on the day of your visit.'}
                         </p>
                         <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 mt-6 text-left">

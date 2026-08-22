@@ -382,10 +382,18 @@ const QRScanner = () => {
                                 </div>
 
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-10 gap-x-8 bg-gray-50 p-10 rounded-[2.5rem] border-2 border-gray-100 mt-4">
-                                    <div className="col-span-1 sm:col-span-2">
-                                        <p className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-2">Guest Name</p>
-                                        <p className="font-extrabold text-gray-900 text-4xl">{scanResult.name}</p>
-                                    </div>
+                                     <div className="col-span-1 sm:col-span-2">
+                                         <p className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-2">Guest Name</p>
+                                         <p className="font-extrabold text-gray-900 text-4xl">{scanResult.name}</p>
+                                         {scanResult.email && <p className="text-gray-500 text-lg mt-2">{scanResult.email}</p>}
+                                     </div>
+                                     {scanResult.type === 'event' && scanResult.eventName && (
+                                         <div className="col-span-1 sm:col-span-2">
+                                             <p className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-2">Event</p>
+                                             <p className="font-bold text-gray-900 text-2xl">{scanResult.eventName}</p>
+                                             {scanResult.eventDescription && <p className="text-gray-500 mt-2">{scanResult.eventDescription}</p>}
+                                         </div>
+                                     )}
                                     <div>
                                         <p className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-2">Date</p>
                                         <p className="font-bold text-gray-900 text-2xl">{new Date(scanResult.date).toLocaleDateString(undefined, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}</p>
@@ -394,14 +402,28 @@ const QRScanner = () => {
                                         <p className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-2">Time</p>
                                         <p className="font-bold text-gray-900 text-2xl">{scanResult.time || 'Anytime'}</p>
                                     </div>
-                                    <div className="col-span-1 sm:col-span-2">
-                                        <p className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-2">Admissions</p>
-                                        <p className="font-bold text-gray-900 text-2xl flex items-center gap-3">
-                                            <span className="bg-gray-900 text-white px-4 py-1 rounded-xl font-extrabold shadow-sm">{scanResult.totalVisitors}</span>
-                                            {scanResult.totalVisitors === 1 ? 'Person' : 'People'}
-                                        </p>
-                                    </div>
-                                </div>
+                                     <div className="col-span-1 sm:col-span-2">
+                                         <p className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-2">Admissions</p>
+                                         <p className="font-bold text-gray-900 text-2xl flex items-center gap-3">
+                                             <span className="bg-gray-900 text-white px-4 py-1 rounded-xl font-extrabold shadow-sm">{scanResult.totalVisitors}</span>
+                                             {scanResult.totalVisitors === 1 ? 'Person' : 'People'}
+                                         </p>
+                                     </div>
+                                     {scanResult.type === 'ticket' ? (
+                                         <div className="col-span-1 sm:col-span-2 border-t border-gray-200 pt-6 grid grid-cols-2 sm:grid-cols-4 gap-4">
+                                             <div><p className="text-xs font-bold text-gray-400 uppercase">Adults</p><p className="font-bold text-gray-900 text-xl">{scanResult.adultQuantity || 0}</p></div>
+                                             <div><p className="text-xs font-bold text-gray-400 uppercase">Children</p><p className="font-bold text-gray-900 text-xl">{scanResult.childQuantity || 0}</p></div>
+                                             <div><p className="text-xs font-bold text-gray-400 uppercase">Residents</p><p className="font-bold text-gray-900 text-xl">{scanResult.residentQuantity || 0}</p></div>
+                                             <div><p className="text-xs font-bold text-gray-400 uppercase">Amount</p><p className="font-bold text-gray-900 text-xl">₱{Number(scanResult.ticketAmount || 0).toLocaleString()}</p></div>
+                                         </div>
+                                     ) : (
+                                         <div className="col-span-1 sm:col-span-2 border-t border-gray-200 pt-6 grid grid-cols-2 gap-4">
+                                             <div><p className="text-xs font-bold text-gray-400 uppercase">Payment</p><p className="font-bold text-gray-900 text-xl">₱{Number(scanResult.paymentAmount || 0).toLocaleString()}</p></div>
+                                             <div><p className="text-xs font-bold text-gray-400 uppercase">Payment Status</p><p className="font-bold text-gray-900 text-xl uppercase">{scanResult.paymentStatus || 'unpaid'}</p></div>
+                                             {scanResult.eventEndTime && <div><p className="text-xs font-bold text-gray-400 uppercase">End Time</p><p className="font-bold text-gray-900 text-xl">{scanResult.eventEndTime}</p></div>}
+                                         </div>
+                                     )}
+                                 </div>
 
                                 <div className="mt-auto pt-10 flex flex-col sm:flex-row gap-5">
                                     <button

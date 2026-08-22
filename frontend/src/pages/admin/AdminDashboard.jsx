@@ -1,8 +1,8 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import Chart from 'react-apexcharts';
 import { useAuth } from '../../context/AuthContext';
-import { adminAPI, getProfileImageUrl, userAPI } from '../../services/api-client';
+import { adminAPI, getProfileImageUrl } from '../../services/api-client';
 
 // Icons
 const UsersIcon = () => (
@@ -74,21 +74,19 @@ const AdminDashboard = () => {
         totalAnimals: 0,
         totalPlants: 0,
         totalTickets: 0,
-        totalRevenue: 0
+        totalRevenue: 0,
+        totalVisitors: 0,
+        totalProfit: 0,
+        ticketDistribution: [],
+        revenueBreakdown: [],
+        eventOverview: [],
+        trends: {}
     });
 
     const [recentUsers, setRecentUsers] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    const [weeklyData, setWeeklyData] = useState([
-        { day: 'Mon', visitors: 0, revenue: 0 },
-        { day: 'Tue', visitors: 0, revenue: 0 },
-        { day: 'Wed', visitors: 0, revenue: 0 },
-        { day: 'Thu', visitors: 0, revenue: 0 },
-        { day: 'Fri', visitors: 0, revenue: 0 },
-        { day: 'Sat', visitors: 0, revenue: 0 },
-        { day: 'Sun', visitors: 0, revenue: 0 },
-    ]);
+    const [weeklyData, setWeeklyData] = useState([]);
 
     const maxVisitors = useMemo(() => Math.max(...weeklyData.map(d => d.visitors), 1), [weeklyData]);
 
@@ -150,12 +148,25 @@ const AdminDashboard = () => {
             axisBorder: { show: false },
             axisTicks: { show: false },
         },
-        yaxis: {
-            labels: {
-                style: { colors: '#374151', fontSize: '12px' },
-                formatter: (val) => Math.round(val)
+        yaxis: [
+            {
+                title: { text: 'Visitors', style: { color: '#374151' } },
+                labels: {
+                    style: { colors: '#374151', fontSize: '12px' },
+                    formatter: (val) => Math.round(val)
+                },
+                min: 0
+            },
+            {
+                opposite: true,
+                title: { text: 'Revenue (₱)', style: { color: '#374151' } },
+                labels: {
+                    style: { colors: '#374151', fontSize: '12px' },
+                    formatter: (val) => `₱${Math.round(val).toLocaleString()}`
+                },
+                min: 0
             }
-        },
+        ],
         fill: {
             type: 'gradient',
             gradient: {
@@ -193,23 +204,28 @@ const AdminDashboard = () => {
             xaxis: { lines: { show: false } },
             yaxis: { lines: { show: true } }
         },
+        noData: { text: 'No visitor data for this week' },
         theme: { mode: 'light' }
     }), [weeklyCategories]);
 
     const weeklyChartSeries = useMemo(() => ([
-        { name: 'Visitors', data: weeklyVisitors },
-        { name: 'Revenue (₱)', data: weeklyRevenue }
+        { name: 'Visitors', data: weeklyVisitors, yAxisIndex: 0 },
+        { name: 'Revenue (₱)', data: weeklyRevenue, yAxisIndex: 1 }
     ]), [weeklyVisitors, weeklyRevenue]);
 
-    const donutSeries = useMemo(() => [45, 25, 20, 10], []);
+    const donutSeries = useMemo(() => stats.ticketDistribution.length
+        ? stats.ticketDistribution.map(item => item.count)
+        : [1], [stats.ticketDistribution]);
 
     const donutOptions = useMemo(() => ({
         chart: {
             type: 'donut',
             background: 'transparent',
         },
-        labels: ['Adult', 'Children', 'Senior', 'Student'],
-        colors: ['#22c55e', '#22c55e', '#4ade80', '#86efac'],
+        labels: stats.ticketDistribution.length
+            ? stats.ticketDistribution.map(item => item.type)
+            : ['No tickets'],
+        colors: ['#22c55e', '#4ade80', '#86efac'],
         legend: { show: false },
         dataLabels: { enabled: false },
         plotOptions: {
@@ -240,7 +256,7 @@ const AdminDashboard = () => {
             y: { formatter: (val) => `${val} tickets` }
         },
         theme: { mode: 'light' }
-    }), [stats.totalTickets]);
+    }), [stats.totalTickets, stats.ticketDistribution]);
 
     const revenueAreaOptions = useMemo(() => ({
         chart: {
@@ -276,18 +292,13 @@ const AdminDashboard = () => {
         { name: 'Revenue', data: weeklyRevenue }
     ]), [weeklyRevenue]);
 
-    useEffect(() => {
-        fetchDashboardData();
-    }, [timeFilter]);
-
-    const fetchDashboardData = async () => {
+    const fetchDashboardData = useCallback(async () => {
         try {
             setLoading(true);
 
-            const [dashboardRes, usersRes, analyticsRes, animalsRes, plantsRes] = await Promise.all([
+            const [dashboardRes, usersRes, animalsRes, plantsRes] = await Promise.all([
                 adminAPI.getDashboard(timeFilter).catch(() => null),
                 adminAPI.getUsers().catch(() => null),
-                adminAPI.getAnalytics(timeFilter).catch(() => null),
                 adminAPI.getAnimals?.().catch(() => null),
                 adminAPI.getPlants?.().catch(() => null),
             ]);
@@ -297,7 +308,13 @@ const AdminDashboard = () => {
                 totalAnimals: 0,
                 totalPlants: 0,
                 totalTickets: 0,
-                totalRevenue: 0
+                totalRevenue: 0,
+                totalVisitors: 0,
+                totalProfit: 0,
+                ticketDistribution: [],
+                revenueBreakdown: [],
+                eventOverview: [],
+                trends: {}
             };
 
             if (dashboardRes?.success) {
@@ -322,6 +339,18 @@ const AdminDashboard = () => {
                 updatedStats.totalRevenue = Number(
                     s.totalRevenue ?? s.total_revenue ?? s.revenue
                 ) || 0;
+                updatedStats.totalVisitors = Number(s.totalVisitors) || 0;
+                updatedStats.totalProfit = Number(s.totalProfit) || 0;
+                updatedStats.ticketDistribution = Array.isArray(s.ticketDistribution) ? s.ticketDistribution : [];
+                updatedStats.revenueBreakdown = Array.isArray(s.revenueBreakdown) ? s.revenueBreakdown : [];
+                updatedStats.eventOverview = Array.isArray(s.eventOverview) ? s.eventOverview : [];
+                updatedStats.trends = s.trends || {};
+                const liveWeeklyData = s.weeklyData ?? dashboardRes.data?.weeklyData;
+                setWeeklyData(Array.isArray(liveWeeklyData) ? liveWeeklyData.map(day => ({
+                    ...day,
+                    visitors: Number(day.visitors) || 0,
+                    revenue: Number(day.revenue) || 0
+                })) : []);
             }
 
             if (usersRes?.success && Array.isArray(usersRes.users)) {
@@ -350,21 +379,6 @@ const AdminDashboard = () => {
                 updatedStats.totalPlants = plantsRes.plants.length;
             }
 
-            if (analyticsRes?.success && analyticsRes?.data?.weeklyData) {
-                const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-
-                const filledData = days.map(day => {
-                    const found = analyticsRes.data.weeklyData.find(d => d.day === day);
-                    return {
-                        day,
-                        visitors: Number(found?.visitors) || 0,
-                        revenue: Number(found?.revenue) || 0
-                    };
-                });
-
-                setWeeklyData(filledData);
-            }
-
             setStats(updatedStats);
 
         } catch (error) {
@@ -372,7 +386,13 @@ const AdminDashboard = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [timeFilter]);
+
+    useEffect(() => {
+        fetchDashboardData();
+        const refreshTimer = setInterval(fetchDashboardData, 30000);
+        return () => clearInterval(refreshTimer);
+    }, [fetchDashboardData]);
 
     // Stat Card Component
     const StatCard = ({ title, value, icon, trend, trendValue, trendLabel }) => (
@@ -399,7 +419,7 @@ const AdminDashboard = () => {
     );
 
     // Donut Chart Component
-    const DonutChart = ({ data, total, label }) => {
+    const DonutChart = ({ total, label }) => {
         const segments = [
             { color: '#22c55e', value: 45 },
             { color: '#22c55e', value: 25 },
@@ -525,40 +545,40 @@ const AdminDashboard = () => {
                     value={stats.totalUsers.toLocaleString()}
                     icon={<UsersIcon />}
                     trend="up"
-                    trendValue="12.5%"
-                    trendLabel="vs last month"
+                    trendValue="Live"
+                    trendLabel="database total"
                 />
                 <StatCard
                     title="Total Animals"
                     value={stats.totalAnimals.toLocaleString()}
                     icon={<AnimalIcon />}
                     trend="up"
-                    trendValue="3.2%"
-                    trendLabel="vs last month"
+                    trendValue="Live"
+                    trendLabel="database total"
                 />
                 <StatCard
                     title="Total Plants"
                     value={stats.totalPlants.toLocaleString()}
                     icon={<PlantIcon />}
                     trend="up"
-                    trendValue="2.1%"
-                    trendLabel="vs last month"
+                    trendValue="Live"
+                    trendLabel="database total"
                 />
                 <StatCard
                     title="Tickets Sold"
                     value={stats.totalTickets.toLocaleString()}
                     icon={<TicketIcon />}
                     trend="up"
-                    trendValue="8.1%"
-                    trendLabel="vs last month"
+                    trendValue={`${stats.trends?.tickets >= 0 ? '+' : ''}${stats.trends?.tickets || 0}%`}
+                    trendLabel="vs previous period"
                 />
                 <StatCard
                     title="Revenue"
                     value={`₱${stats.totalRevenue.toLocaleString()}`}
                     icon={<RevenueIcon />}
                     trend="up"
-                    trendValue="15.3%"
-                    trendLabel="vs last month"
+                    trendValue={`${stats.trends?.revenue >= 0 ? '+' : ''}${stats.trends?.revenue || 0}%`}
+                    trendLabel="vs previous period"
                 />
             </div>
 
@@ -631,34 +651,17 @@ const AdminDashboard = () => {
 
                     {/* Legend */}
                     <div className="mt-4 space-y-3">
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                                <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                                <span className="text-sm text-gray-700">Adult</span>
-                            </div>
-                            <span className="text-sm font-medium text-gray-900">45%</span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                                <div className="w-3 h-3 rounded-full bg-[#22c55e]"></div>
-                                <span className="text-sm text-gray-700">Children</span>
-                            </div>
-                            <span className="text-sm font-medium text-gray-900">25%</span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                                <div className="w-3 h-3 rounded-full bg-green-400"></div>
-                                <span className="text-sm text-gray-700">Senior</span>
-                            </div>
-                            <span className="text-sm font-medium text-gray-900">20%</span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                                <div className="w-3 h-3 rounded-full bg-[#86efac]"></div>
-                                <span className="text-sm text-gray-700">Student</span>
-                            </div>
-                            <span className="text-sm font-medium text-gray-900">10%</span>
-                        </div>
+                        {stats.ticketDistribution.map((item, index) => {
+                            const total = stats.ticketDistribution.reduce((sum, entry) => sum + entry.count, 0);
+                            return <div key={item.type} className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: ['#22c55e', '#4ade80', '#86efac'][index] }}></div>
+                                    <span className="text-sm text-gray-700">{item.type}</span>
+                                </div>
+                                <span className="text-sm font-medium text-gray-900">{total ? Math.round((item.count / total) * 100) : 0}%</span>
+                            </div>;
+                        })}
+                        {!stats.ticketDistribution.length && <p className="text-sm text-gray-500 text-center">No ticket sales for this period</p>}
                     </div>
                 </div>
             </div>
@@ -672,12 +675,12 @@ const AdminDashboard = () => {
                             <UsersIcon />
                         </div>
                         <span className="text-green-600 text-sm font-medium flex items-center gap-1">
-                            <TrendUpIcon /> +12%
+                            Live
                         </span>
                     </div>
-                    <p className="text-gray-500 text-sm">New Visitors</p>
-                    <p className="text-3xl font-bold text-gray-900 mb-1">862</p>
-                    <p className="text-gray-500 text-sm">Last Week</p>
+                    <p className="text-gray-500 text-sm">Visitors</p>
+                    <p className="text-3xl font-bold text-gray-900 mb-1">{stats.totalVisitors.toLocaleString()}</p>
+                    <p className="text-gray-500 text-sm">Selected period</p>
                 </div>
 
                 {/* Total Profit Card */}
@@ -685,11 +688,11 @@ const AdminDashboard = () => {
                     <div className="flex items-center justify-between mb-4">
                         <p className="text-gray-500 text-sm">Total Profit</p>
                         <span className="text-green-600 text-sm font-medium flex items-center gap-1">
-                            <TrendUpIcon /> +42%
+                            Live
                         </span>
                     </div>
-                    <p className="text-3xl font-bold text-gray-900 mb-2">₱{weeklyTotals.totalRevenue.toLocaleString()}</p>
-                    <p className="text-gray-500 text-sm mb-2">Weekly Revenue</p>
+                    <p className="text-3xl font-bold text-gray-900 mb-2">₱{stats.totalProfit.toLocaleString()}</p>
+                    <p className="text-gray-500 text-sm mb-2">Selected period revenue</p>
                     <Chart
                         options={revenueAreaOptions}
                         series={revenueAreaSeries}
@@ -702,43 +705,40 @@ const AdminDashboard = () => {
                 <div className="bg-white border border-green-200 rounded-2xl p-6">
                     <h3 className="text-lg font-bold text-gray-900 mb-4">Revenue Breakdown</h3>
                     <div className="space-y-4">
-                        <div>
-                            <div className="flex justify-between text-sm mb-1">
-                                <span className="text-gray-500">Ticket Sales</span>
-                                <span className="text-gray-900 font-medium">₱55,640</span>
-                            </div>
-                            <div className="h-2 bg-green-50 rounded-full overflow-hidden">
-                                <div className="h-full w-[65%] bg-green-500 rounded-full"></div>
-                            </div>
-                        </div>
-                        <div>
-                            <div className="flex justify-between text-sm mb-1">
-                                <span className="text-gray-500">Merchandise</span>
-                                <span className="text-gray-900 font-medium">₱11,420</span>
-                            </div>
-                            <div className="h-2 bg-green-50 rounded-full overflow-hidden">
-                                <div className="h-full w-[25%] bg-green-400 rounded-full"></div>
-                            </div>
-                        </div>
-                        <div>
-                            <div className="flex justify-between text-sm mb-1">
-                                <span className="text-gray-500">Food & Beverages</span>
-                                <span className="text-gray-900 font-medium">₱8,540</span>
-                            </div>
-                            <div className="h-2 bg-green-50 rounded-full overflow-hidden">
-                                <div className="h-full w-[18%] bg-[#22c55e] rounded-full"></div>
-                            </div>
-                        </div>
-                        <div>
-                            <div className="flex justify-between text-sm mb-1">
-                                <span className="text-gray-500">Special Events</span>
-                                <span className="text-gray-900 font-medium">₱2,120</span>
-                            </div>
-                            <div className="h-2 bg-green-50 rounded-full overflow-hidden">
-                                <div className="h-full w-[8%] bg-[#86efac] rounded-full"></div>
-                            </div>
-                        </div>
+                        {stats.revenueBreakdown.map(item => {
+                            const percentage = stats.totalProfit ? Math.round((item.amount / stats.totalProfit) * 100) : 0;
+                            return <div key={item.source}>
+                                <div className="flex justify-between text-sm mb-1">
+                                    <span className="text-gray-500">{item.source}</span>
+                                    <span className="text-gray-900 font-medium">₱{item.amount.toLocaleString()}</span>
+                                </div>
+                                <div className="h-2 bg-green-50 rounded-full overflow-hidden">
+                                    <div className="h-full bg-green-500 rounded-full" style={{ width: `${percentage}%` }}></div>
+                                </div>
+                            </div>;
+                        })}
+                        {!stats.revenueBreakdown.length && <p className="text-sm text-gray-500">No revenue recorded for this period</p>}
                     </div>
+                </div>
+            </div>
+
+            {/* Upcoming Event Overview */}
+            <div className="bg-white border border-green-200 rounded-2xl p-6">
+                <div className="flex items-center justify-between mb-5">
+                    <div>
+                        <h3 className="text-lg font-bold text-gray-900">Event Overview</h3>
+                        <p className="text-sm text-gray-500">Upcoming events and live registrations</p>
+                    </div>
+                    <Link to="/admin/events" className="text-sm text-green-600 font-medium">View events</Link>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+                    {stats.eventOverview.map(event => <div key={event.id} className="rounded-xl bg-green-50 p-4">
+                        <p className="font-semibold text-gray-900 truncate">{event.title}</p>
+                        <p className="text-xs text-gray-500 mt-1">{new Date(event.event_date).toLocaleDateString()}</p>
+                        <p className="text-sm text-gray-700 mt-3">{event.registrations} registrations</p>
+                        <p className="text-sm font-medium text-green-700">₱{event.revenue.toLocaleString()}</p>
+                    </div>)}
+                    {!stats.eventOverview.length && <p className="text-sm text-gray-500">No upcoming events.</p>}
                 </div>
             </div>
 

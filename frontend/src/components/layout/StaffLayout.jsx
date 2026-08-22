@@ -532,8 +532,8 @@ const StaffLayout = ({ children }) => {
             >
                 {/* Logo Section */}
                 <div className="p-5 flex items-center gap-3 border-b border-gray-300">
-                    <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center text-white">
-                        <img src="https://cdn-icons-png.flaticon.com/128/1864/1864472.png" alt="Bz Logo" className="w-6 h-6 object-contain" />
+                    <div className="w-12 h-12 rounded-xl flex items-center justify-center text-white">
+                        <img src="/bz-url-logo.png" alt="Bz Logo" className="w-12 h-12 object-contain" />
                     </div>
                     <div>
                         <h1 className="font-bold text-gray-900 text-lg uppercase">Bulusan Zoo</h1>

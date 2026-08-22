@@ -169,7 +169,12 @@ exports.createEventCheckout = async (req, res) => {
             checkoutSessionId: checkout.id
         });
 
-        res.json({ success: true, checkoutUrl: checkout.attributes?.checkout_url, checkoutSessionId: checkout.id });
+        res.json({
+            success: true,
+            paymentMethod: 'gcash',
+            checkoutUrl: checkout.attributes?.checkout_url,
+            checkoutSessionId: checkout.id
+        });
     } catch (error) {
         console.error('Error creating PayMongo checkout:', error);
         res.status(500).json({ success: false, message: error.message || 'Unable to start GCash payment.' });

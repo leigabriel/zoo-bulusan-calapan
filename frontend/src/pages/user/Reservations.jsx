@@ -791,11 +791,18 @@ const Reservations = () => {
                                 <h3 className="text-3xl font-black uppercase tracking-tighter text-[#212631] mb-2">Confirmed</h3>
                                 <p className="text-[10px] tracking-widest uppercase font-bold text-[#212631]/50 mb-8">Reservation securely logged.</p>
 
-                                {confirmationData.qrData && (
-                                    <div className="mb-8 flex justify-center bg-white p-4">
-                                        <QRCodeSVG value={confirmationData.qrData} size={240} level="M" includeMargin={true} />
-                                    </div>
-                                )}
+                                {confirmationData.reference && (
+                                     <div className="mb-8 flex justify-center bg-white p-4 rounded-sm">
+                                         <QRCodeSVG
+                                             value={`${window.location.origin}/verify/${confirmationData.type}/${encodeURIComponent(confirmationData.reference)}`}
+                                             size={240}
+                                             level="M"
+                                             bgColor="#ffffff"
+                                             fgColor="#212631"
+                                             style={{ display: 'block', width: '240px', height: '240px' }}
+                                         />
+                                     </div>
+                                 )}
 
                                 <div className="w-full border border-[#212631]/20 bg-[#ebebeb] p-6 mb-8 flex flex-col items-center justify-center">
                                     <span className="text-[8px] tracking-[0.3em] uppercase font-bold text-[#212631]/40 mb-2">Reference ID</span>

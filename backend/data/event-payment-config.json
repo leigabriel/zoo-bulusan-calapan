@@ -1,5 +1,5 @@
 {
-    "enabled": true,
+    "enabled": false,
     "amountPerParticipant": 1,
     "currency": "PHP"
 }

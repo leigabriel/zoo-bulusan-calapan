@@ -28,7 +28,7 @@ const GiantTitle = () => {
                     fontWeight: 400,
                     lineHeight: 1,
                     letterSpacing: 0,
-                    color: "#ffffff",
+                    color: "#c6fe69",
                 }}
                 initial={{ y: "100%", opacity: 0 }}
                 animate={isInView ? { y: "0%", opacity: 1 } : { y: "100%", opacity: 0 }}
