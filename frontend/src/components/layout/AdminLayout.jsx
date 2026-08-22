@@ -5,7 +5,7 @@ import { authAPI, adminAPI, getProfileImageUrl } from '../../services/api-client
 import { sanitizeInput } from '../../utils/sanitize';
 import { notify } from '../../utils/toast';
 import LogoutModal from '../common/LogoutModal';
-import RoleCompanionFloatingButton from '../common/RoleCompanionFloatingButton';
+import AIAssistIcon from '../common/AIAssistIcon';
 
 // Icons
 const SearchIcon = () => (
@@ -307,6 +307,7 @@ const AdminLayout = ({ children }) => {
 
     const menuItems = [
         { path: '/admin/dashboard', label: 'Overview', Icon: OverviewIcon },
+        { path: '/admin/ai-assist', label: 'AI Assist', Icon: AIAssistIcon },
     ];
 
     const managementItems = [
@@ -885,7 +886,6 @@ const AdminLayout = ({ children }) => {
                 onConfirm={handleLogout}
             />
 
-            <RoleCompanionFloatingButton role="admin" />
         </div>
     );
 };

@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ReactLenis } from 'lenis/react';
+import { useNavigate } from 'react-router-dom';
 import { getAuthHeaders, API_BASE_URL } from '../../../services/api-client';
 import { AI_ASSISTANT_ICON, AI_ASSISTANT_THEME } from '../../../config/ai-assistant-theme';
 
@@ -15,6 +16,24 @@ const CloseIcon = () => (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
         <line x1="18" y1="6" x2="6" y2="18" />
         <line x1="6" y1="6" x2="18" y2="18" />
+    </svg>
+);
+
+const MenuIcon = () => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="w-5 h-5">
+        <path d="M4 6h16M4 12h16M4 18h16" />
+    </svg>
+);
+
+const PlusIcon = () => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="w-4 h-4">
+        <path d="M12 5v14M5 12h14" />
+    </svg>
+);
+
+const TrashIcon = () => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+        <path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3" />
     </svg>
 );
 
@@ -53,30 +72,30 @@ const AssistantAvatar = ({ role = 'staff' }) => (
 
 const ROLE_CONFIG = {
     admin: {
-        name: 'Zusan AdminOps',
-        status: 'Admin Companion · Online',
-        introTitle: 'Admin Companion ready.',
-        introText: 'I help prioritize admin tasks, interpret KPI trends, align staffing, and guide moderation escalations for Zoo Bulusan.',
-        greeting: "Magandang araw. I am your Admin Companion. Share the goal, time range, and report type so I can draft a focused action plan.",
+        name: 'AI Assist',
+        status: 'Admin workspace · Online',
+        introTitle: 'AI Assist is ready.',
+        introText: 'Ask for operational summaries, current events, ticket and reservation lists, or a focused next-step plan.',
+        greeting: "Magandang araw. I am AI Assist for the admin workspace. Ask for a safe operational summary or the next action.",
         suggestions: [
-            'Summarize today\'s admin priorities.',
-            'Draft a 3-step plan for reservations and staffing.',
-            'Create a moderation escalation checklist.'
+            'List current events and their status.',
+            'Show today\'s ticket reservations.',
+            'Summarize today\'s admin priorities.'
         ],
-        placeholder: 'Ask your admin companion...'
+        placeholder: 'Ask AI Assist about operations...'
     },
     staff: {
-        name: 'Zusan StaffMate',
-        status: 'Staff Companion · Online',
-        introTitle: 'Staff Companion ready.',
-        introText: 'I help with shift checklists, reservation verification, ticket check-in, and moderation triage.',
-        greeting: "Mabuhay. I am your Staff Companion. Tell me the task and I will give step-by-step actions for the staff portal.",
+        name: 'AI Assist',
+        status: 'Staff workspace · Online',
+        introTitle: 'AI Assist is ready.',
+        introText: 'Ask for shift guidance, current events, ticket and reservation lists, or clear step-by-step actions.',
+        greeting: "Mabuhay. I am AI Assist for the staff workspace. Tell me the task and I will give safe, practical steps.",
         suggestions: [
             'Give me my shift checklist.',
-            'How do I verify a reservation quickly?',
-            'What is the standard response for a reported comment?'
+            'List pending ticket reservations.',
+            'What are the current events?'
         ],
-        placeholder: 'Ask your staff companion...'
+        placeholder: 'Ask AI Assist about operations...'
     }
 };
 
@@ -90,6 +109,13 @@ const cleanAssistantText = (text = '') => {
         .replace(/\n{3,}/g, '\n\n')
         .trim();
 };
+
+const createChatSession = () => ({
+    id: `chat-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    title: 'New chat',
+    messages: [],
+    updatedAt: Date.now()
+});
 
 const detectMessageLanguage = (text = '') => {
     const normalized = String(text || '').toLowerCase();
@@ -138,16 +164,23 @@ const pickPreferredVoice = (voices, langTag = 'en-US') => {
     return voicePool[0] || voices[0] || null;
 };
 
-const RoleCompanionAssistant = ({ onClose, role = 'staff' }) => {
+const RoleCompanionAssistant = ({ onClose, role = 'staff', confirmOnOutside = true }) => {
     const normalizedRole = role === 'admin' ? 'admin' : 'staff';
     const config = ROLE_CONFIG[normalizedRole];
+    const navigate = useNavigate();
+    const sessionsKey = `ai_assist_sessions_${normalizedRole}`;
+    const legacySessionKey = `ai_assist_session_${normalizedRole}`;
 
     const [started, setStarted] = useState(false);
     const [messages, setMessages] = useState([]);
+    const [sessions, setSessions] = useState([]);
+    const [activeSessionId, setActiveSessionId] = useState(null);
+    const [sessionHydrated, setSessionHydrated] = useState(false);
     const [input, setInput] = useState('');
     const [loading, setLoading] = useState(false);
     const [showCloseConfirm, setShowCloseConfirm] = useState(false);
     const [showSidebarModal, setShowSidebarModal] = useState(false);
+    const [sessionSidebarOpen, setSessionSidebarOpen] = useState(false);
     const [speakingMessageIndex, setSpeakingMessageIndex] = useState(null);
     const [ttsSupported, setTtsSupported] = useState(false);
     const [availableVoices, setAvailableVoices] = useState([]);
@@ -156,18 +189,104 @@ const RoleCompanionAssistant = ({ onClose, role = 'staff' }) => {
     const panelRef = useRef(null);
 
     useEffect(() => {
+        try {
+            const savedSessions = sessionStorage.getItem(sessionsKey);
+            let parsedSessions = savedSessions ? JSON.parse(savedSessions) : [];
+
+            if (!Array.isArray(parsedSessions) || parsedSessions.length === 0) {
+                const legacySession = sessionStorage.getItem(legacySessionKey);
+                const parsedLegacy = legacySession ? JSON.parse(legacySession) : null;
+                parsedSessions = parsedLegacy?.messages?.length > 0
+                    ? [{ ...createChatSession(), title: 'Previous chat', messages: parsedLegacy.messages, updatedAt: Date.now() }]
+                    : [createChatSession()];
+            }
+
+            const activeSession = parsedSessions[0];
+            setSessions(parsedSessions);
+            setActiveSessionId(activeSession.id);
+            setMessages(activeSession.messages || []);
+            setStarted((activeSession.messages || []).length > 0);
+            sessionStorage.removeItem(legacySessionKey);
+        } catch {
+            const freshSession = createChatSession();
+            setSessions([freshSession]);
+            setActiveSessionId(freshSession.id);
+            setMessages([]);
+            setStarted(false);
+        } finally {
+            setSessionHydrated(true);
+        }
+    }, [legacySessionKey, sessionsKey]);
+
+    useEffect(() => {
+        if (!sessionHydrated || !activeSessionId) return;
+
+        setSessions(prev => prev.map(session => session.id === activeSessionId
+            ? { ...session, messages, updatedAt: Date.now() }
+            : session
+        ));
+    }, [activeSessionId, messages, sessionHydrated]);
+
+    useEffect(() => {
+        if (!sessionHydrated || sessions.length === 0) return;
+        sessionStorage.setItem(sessionsKey, JSON.stringify(sessions));
+    }, [sessions, sessionHydrated, sessionsKey]);
+
+    useEffect(() => {
+        if (!sessionHydrated || !activeSessionId) return;
+        const firstUserMessage = messages.find(message => message.role === 'user')?.content;
+        if (!firstUserMessage) return;
+
+        setSessions(prev => prev.map(session => session.id === activeSessionId && session.title === 'New chat'
+            ? { ...session, title: firstUserMessage.slice(0, 34) + (firstUserMessage.length > 34 ? '...' : '') }
+            : session
+        ));
+    }, [activeSessionId, messages, sessionHydrated]);
+
+    const selectSession = (session) => {
+        setActiveSessionId(session.id);
+        setMessages(session.messages || []);
+        setStarted((session.messages || []).length > 0);
+        setInput('');
+        setSessionSidebarOpen(false);
+    };
+
+    const startNewSession = () => {
+        const newSession = createChatSession();
+        setSessions(prev => [newSession, ...prev]);
+        setActiveSessionId(newSession.id);
+        setMessages([]);
+        setStarted(false);
+        setInput('');
+        setSessionSidebarOpen(false);
+    };
+
+    const deleteSession = (sessionId) => {
+        setSessions(prev => {
+            const remaining = prev.filter(session => session.id !== sessionId);
+            const nextSessions = remaining.length > 0 ? remaining : [createChatSession()];
+            const nextActive = nextSessions.find(session => session.id === activeSessionId) || nextSessions[0];
+            setActiveSessionId(nextActive.id);
+            setMessages(nextActive.messages || []);
+            setStarted((nextActive.messages || []).length > 0);
+            return nextSessions;
+        });
+        setInput('');
+    };
+
+    useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages, loading]);
 
     useEffect(() => {
         const handleOutside = (e) => {
-            if (panelRef.current && !panelRef.current.contains(e.target) && !showCloseConfirm && !showSidebarModal && window.innerWidth >= 768) {
+            if (confirmOnOutside && panelRef.current && !panelRef.current.contains(e.target) && !showCloseConfirm && !showSidebarModal && window.innerWidth >= 768) {
                 setShowSidebarModal(true);
             }
         };
         document.addEventListener('mousedown', handleOutside);
         return () => document.removeEventListener('mousedown', handleOutside);
-    }, [showCloseConfirm, showSidebarModal]);
+    }, [confirmOnOutside, showCloseConfirm, showSidebarModal]);
 
     useEffect(() => {
         const hasSupport = typeof window !== 'undefined' && 'speechSynthesis' in window && typeof window.SpeechSynthesisUtterance !== 'undefined';
@@ -189,6 +308,7 @@ const RoleCompanionAssistant = ({ onClose, role = 'staff' }) => {
     }, []);
 
     const assistantIdentity = useMemo(() => config.name, [config.name]);
+    const activeSession = sessions.find(session => session.id === activeSessionId);
 
     const stopSpeech = () => {
         if (!ttsSupported) return;
@@ -235,12 +355,23 @@ const RoleCompanionAssistant = ({ onClose, role = 'staff' }) => {
             });
             const data = await response.json();
             const assistantText = data.success ? data.response : 'I could not process that request. Please try again.';
-            setMessages(prev => [...prev, { role: 'assistant', content: cleanAssistantText(assistantText) }]);
+            setMessages(prev => [...prev, {
+                role: 'assistant',
+                content: cleanAssistantText(assistantText),
+                cards: data.cards || [],
+                action: data.action || null
+            }]);
         } catch {
-            setMessages(prev => [...prev, { role: 'assistant', content: cleanAssistantText('Network error. Please check your connection.') }]);
+            setMessages(prev => [...prev, { role: 'assistant', content: cleanAssistantText('Network error. Please check your connection.'), cards: [], action: null }]);
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleAction = (action) => {
+        if (!action?.href) return;
+        onClose?.();
+        navigate(action.href);
     };
 
     const handleSend = async (overrideMsg) => {
@@ -285,10 +416,92 @@ const RoleCompanionAssistant = ({ onClose, role = 'staff' }) => {
                 />
             )}
 
-            <div ref={panelRef} className="h-full flex flex-col overflow-hidden" style={{ background: THEME.base, color: THEME.text }}>
+            <div ref={panelRef} className="relative h-full flex overflow-hidden" style={{ background: THEME.base, color: THEME.text }}>
+                {sessionSidebarOpen && (
+                    <button
+                        type="button"
+                        aria-label="Close chat sessions"
+                        onClick={() => setSessionSidebarOpen(false)}
+                        className="fixed inset-0 z-20 bg-slate-950/20 md:hidden"
+                    />
+                )}
 
-                <div className="px-7 pt-8 pb-6 flex items-center justify-between shrink-0" style={{ borderBottom: `1px solid ${THEME.border}` }}>
+                <aside
+                    className={`${sessionSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'} fixed md:relative inset-y-0 left-0 z-30 w-72 shrink-0 flex flex-col transition-transform duration-200 md:transition-none`}
+                    style={{ background: '#f7f8f6', borderRight: `1px solid ${THEME.border}` }}
+                    aria-label="Chat sessions"
+                >
+                    <div className="p-4 flex items-center justify-between">
+                        <p className="text-sm font-bold" style={{ color: THEME.text }}>Chat history</p>
+                        <button
+                            type="button"
+                            onClick={() => setSessionSidebarOpen(false)}
+                            className="p-2 rounded-lg md:hidden"
+                            style={{ color: THEME.textMuted }}
+                            aria-label="Close chat history"
+                        >
+                            <CloseIcon />
+                        </button>
+                    </div>
+                    <div className="px-3">
+                        <button
+                            type="button"
+                            onClick={startNewSession}
+                            className="w-full flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors"
+                            style={{ background: THEME.accentDark, color: '#f7fff9' }}
+                        >
+                            <PlusIcon />
+                            New chat
+                        </button>
+                    </div>
+                    <div className="flex-1 overflow-y-auto px-2 py-4 space-y-1">
+                        {[...sessions].sort((a, b) => b.updatedAt - a.updatedAt).map(session => (
+                            <div
+                                key={session.id}
+                                className="group flex items-center gap-1 rounded-xl transition-colors"
+                                style={{ background: session.id === activeSessionId ? THEME.accentSoft : 'transparent' }}
+                            >
+                                <button
+                                    type="button"
+                                    onClick={() => selectSession(session)}
+                                    className="min-w-0 flex-1 text-left px-3 py-2.5 text-sm truncate"
+                                    style={{ color: THEME.text }}
+                                >
+                                    {session.title || 'New chat'}
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={(event) => {
+                                        event.stopPropagation();
+                                        deleteSession(session.id);
+                                    }}
+                                    className="mr-2 p-1.5 rounded-lg opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity"
+                                    style={{ color: THEME.textMuted }}
+                                    aria-label={`Delete ${session.title || 'chat'}`}
+                                >
+                                    <TrashIcon />
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+                    <div className="p-4 text-xs leading-relaxed" style={{ color: THEME.textSoft, borderTop: `1px solid ${THEME.border}` }}>
+                        Conversations are kept in this browser tab and separated by role.
+                    </div>
+                </aside>
+
+                <div className="min-w-0 flex-1 flex flex-col overflow-hidden">
+
+                <div className="px-4 sm:px-7 pt-5 sm:pt-8 pb-5 sm:pb-6 flex items-center justify-between shrink-0" style={{ borderBottom: `1px solid ${THEME.border}` }}>
                     <div className="flex items-center gap-3">
+                        <button
+                            type="button"
+                            onClick={() => setSessionSidebarOpen(true)}
+                            className="p-2 rounded-lg md:hidden"
+                            style={{ color: THEME.textMuted }}
+                            aria-label="Open chat history"
+                        >
+                            <MenuIcon />
+                        </button>
                         <div className="relative">
                             <div className="w-10 h-10 rounded-xl overflow-hidden" style={{ background: THEME.accentSoft }}>
                                 <img src={AI_ASSISTANT_ICON} alt={assistantIdentity} className="w-full h-full object-contain p-1.5" />
@@ -297,7 +510,7 @@ const RoleCompanionAssistant = ({ onClose, role = 'staff' }) => {
                         </div>
                         <div>
                             <p className="text-base font-bold" style={{ color: THEME.text }}>{assistantIdentity}</p>
-                            <p className="text-sm" style={{ color: THEME.textMuted }}>{config.status}</p>
+                            <p className="text-sm truncate max-w-[12rem]" style={{ color: THEME.textMuted }}>{activeSession?.title || config.status}</p>
                         </div>
                     </div>
                     <button onClick={() => setShowCloseConfirm(true)} className="w-9 h-9 rounded-xl flex items-center justify-center transition-all active:scale-90" style={{ background: THEME.accentSoft, color: THEME.textMuted }}>
@@ -374,6 +587,40 @@ const RoleCompanionAssistant = ({ onClose, role = 'staff' }) => {
                                                 {msg.content}
                                             </div>
 
+                                            {msg.cards?.length > 0 && (
+                                                <div className="w-full space-y-2">
+                                                    {msg.cards.map((card, cardIndex) => (
+                                                        <div key={`${card.kind}-${card.reference || card.id || cardIndex}`} className="rounded-xl px-4 py-3 text-sm" style={{ background: THEME.surface, border: `1px solid ${THEME.border}` }}>
+                                                            <div className="flex items-center justify-between gap-3">
+                                                                <span className="font-bold" style={{ color: THEME.text }}>{card.title || card.name || 'Record'}</span>
+                                                                {card.status && <span className="text-xs font-semibold uppercase" style={{ color: THEME.accentDark }}>{card.status}</span>}
+                                                            </div>
+                                                            <div className="mt-1 text-xs space-y-0.5" style={{ color: THEME.textMuted }}>
+                                                                {card.reference && <p>Reference: {card.reference}</p>}
+                                                                {card.date && <p>Date: {card.date}{card.time ? ` at ${card.time}` : ''}</p>}
+                                                                {card.visitors !== undefined && <p>Visitors: {card.visitors}</p>}
+                                                                {card.participants !== undefined && <p>Participants: {card.participants}</p>}
+                                                                {card.species && <p>Species: {card.species}</p>}
+                                                                {card.location && <p>Location: {card.location}</p>}
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+
+                                            {msg.action && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleAction(msg.action)}
+                                                    className="inline-flex items-center px-4 py-2.5 rounded-xl text-sm font-semibold transition-all active:scale-95"
+                                                    style={msg.action.variant === 'ghost'
+                                                        ? { background: THEME.surface, color: THEME.text, border: `1px solid ${THEME.border}` }
+                                                        : { background: THEME.accentDark, color: '#f7fff9' }}
+                                                >
+                                                    {msg.action.label}
+                                                </button>
+                                            )}
+
                                             {msg.role === 'assistant' && (
                                                 <button
                                                     type="button"
@@ -432,6 +679,7 @@ const RoleCompanionAssistant = ({ onClose, role = 'staff' }) => {
                         </div>
                     </div>
                 )}
+                </div>
             </div>
         </>
     );

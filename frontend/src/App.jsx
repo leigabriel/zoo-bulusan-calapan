@@ -52,6 +52,7 @@ import StaffLayout from './components/layout/StaffLayout';
 import AnimalClassifier from './components/features/ai-scanner/AnimalClassifier';
 import MapPage from './pages/user/Map';
 import './App.css';
+import AIAssist from './pages/AIAssist';
 
 const ProtectedRoute = ({ children, allowedRoles }) => {
     const { isAuthenticated, user, loading } = useAuth();
@@ -169,6 +170,13 @@ function AppRoutes() {
                     </AdminLayout>
                 </ProtectedRoute>
             } />
+            <Route path="/admin/ai-assist" element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                    <AdminLayout>
+                        <AIAssist role="admin" />
+                    </AdminLayout>
+                </ProtectedRoute>
+            } />
             <Route path="/admin/events" element={
                 <ProtectedRoute allowedRoles={['admin']}>
                     <AdminLayout>
@@ -281,6 +289,13 @@ function AppRoutes() {
                 <ProtectedRoute allowedRoles={['admin', 'staff']}>
                     <StaffLayout>
                         <StaffDashboard />
+                    </StaffLayout>
+                </ProtectedRoute>
+            } />
+            <Route path="/staff/ai-assist" element={
+                <ProtectedRoute allowedRoles={['admin', 'staff']}>
+                    <StaffLayout>
+                        <AIAssist role="staff" />
                     </StaffLayout>
                 </ProtectedRoute>
             } />

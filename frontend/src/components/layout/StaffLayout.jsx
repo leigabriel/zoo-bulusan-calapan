@@ -5,7 +5,7 @@ import { authAPI, staffAPI, reservationAPI, communityAPI, getProfileImageUrl } f
 import { sanitizeInput } from '../../utils/sanitize';
 import { notify } from '../../utils/toast';
 import LogoutModal from '../common/LogoutModal';
-import RoleCompanionFloatingButton from '../common/RoleCompanionFloatingButton';
+import AIAssistIcon from '../common/AIAssistIcon';
 
 // Icons matching Admin design system
 const OverviewIcon = () => (
@@ -454,6 +454,7 @@ const StaffLayout = ({ children }) => {
 
     const menuItems = [
         { path: '/staff/dashboard', label: 'Overview', Icon: OverviewIcon },
+        { path: '/staff/ai-assist', label: 'AI Assist', Icon: AIAssistIcon },
         { path: '/staff/qr-scanner', label: 'QR Scanner', Icon: ScannerIcon },
     ];
 
@@ -1022,7 +1023,6 @@ const StaffLayout = ({ children }) => {
                 onConfirm={handleLogout}
             />
 
-            <RoleCompanionFloatingButton role="staff" />
         </div>
     );
 };

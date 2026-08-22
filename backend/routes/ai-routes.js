@@ -115,6 +115,81 @@ const getDynamicZooData = async () => {
     }
 };
 
+// Operational context for admins and staff. Keep this deliberately narrower
+// than the management APIs: the assistant must never receive private user or
+// payment fields, even though those fields exist on the reservation rows.
+const getCompanionOperationalData = async (dynamicData) => {
+    try {
+        const [ticketReservations, eventReservations] = await Promise.all([
+            Reservation.getAllTicketReservations(),
+            Reservation.getAllEventReservations()
+        ]);
+
+        const safeDate = (value) => value ? String(value).split('T')[0] : null;
+        const safeTickets = (ticketReservations || []).slice(0, 20).map((r) => ({
+            kind: 'ticket',
+            title: 'Zoo Visit',
+            reference: r.reservation_reference || null,
+            date: safeDate(r.reservation_date),
+            time: r.reservation_time || null,
+            visitors: Number(r.total_visitors || 0),
+            status: r.status || 'pending'
+        }));
+        const safeEvents = (eventReservations || []).slice(0, 20).map((r) => ({
+            kind: 'event',
+            title: r.event_title || 'Event Reservation',
+            reference: r.reservation_reference || null,
+            date: safeDate(r.venue_event_date || r.event_date),
+            time: r.venue_event_time || r.start_time || null,
+            participants: Number(r.number_of_participants || 0),
+            status: r.status || 'pending'
+        }));
+
+        return {
+            tickets: safeTickets,
+            eventReservations: safeEvents,
+            events: (dynamicData?.eventCatalog || []).slice(0, 10).map((event) => ({
+                id: event.id,
+                title: event.title,
+                date: event.date,
+                time: event.time,
+                location: event.location,
+                status: event.status
+            }))
+        };
+    } catch (error) {
+        console.error('Could not fetch companion operational data:', error.message);
+        return { tickets: [], eventReservations: [], events: [] };
+    }
+};
+
+const buildCompanionCards = (message, dynamicData, operationalData, role = 'staff') => {
+    const lowerMsg = String(message || '').toLowerCase();
+    const asksList = /\b(list|show|current|pending|upcoming|all|records|data|status)\b/.test(lowerMsg);
+    const cards = [];
+    let action = null;
+    const add = (items) => items.slice(0, 6).forEach((item) => cards.push(item));
+
+    if (asksList && /\b(ticket|tickets)\b/.test(lowerMsg)) {
+        add(operationalData?.tickets || []);
+        action = { label: 'Open Reservations', href: `/${role}/reservations`, variant: 'primary' };
+    } else if (asksList && /\b(reservation|reservations|booking|bookings)\b/.test(lowerMsg)) {
+        add([...(operationalData?.tickets || []), ...(operationalData?.eventReservations || [])]);
+        action = { label: 'Open Reservations', href: `/${role}/reservations`, variant: 'primary' };
+    } else if (asksList && /\b(animal|animals|wildlife|species)\b/.test(lowerMsg)) {
+        add((dynamicData?.animalCatalog || []).map((animal) => ({ kind: 'animal', ...animal })));
+        action = { label: 'Open Animal Records', href: `/${role}/animals`, variant: 'ghost' };
+    } else if (asksList && /\b(plant|plants|flora|botanical)\b/.test(lowerMsg)) {
+        add((dynamicData?.plantCatalog || []).map((plant) => ({ kind: 'plant', ...plant })));
+        action = { label: 'Open Plant Records', href: `/${role}/plants`, variant: 'ghost' };
+    } else if (asksList && /\b(event|events|calendar|activity|activities)\b/.test(lowerMsg)) {
+        add((operationalData?.events || []).map((event) => ({ kind: 'zoo-event', ...event })));
+        action = { label: 'Open Events', href: `/${role}/events`, variant: 'primary' };
+    }
+
+    return { cards, action };
+};
+
 // Fetch the logged-in user's OWN reservations only.
 // Returns sanitized non-sensitive booking details.
 // Never returns account credentials, payment records, tokens, or other users' data.
@@ -469,12 +544,51 @@ const sanitizeCompanionOutput = (text = '') => {
     return cleaned;
 };
 
-const getCompanionFallbackResponse = (role, message, dynamicData = null, language = 'english') => {
+const getCompanionFallbackResponse = (role, message, dynamicData = null, language = 'english', operationalData = null) => {
     const lowerMsg = String(message || '').toLowerCase();
     const totalAnimals = dynamicData?.animalCount || 'the latest';
     const ticketSoldToday = dynamicData?.ticketStats?.todayTickets ?? 'latest';
     const availability = dynamicData?.ticketStats?.availableSlots || 'unknown';
     const isTagalog = language === 'tagalog';
+    const asksList = /\b(list|show|current|pending|upcoming|all|records|data|status)\b/.test(lowerMsg);
+
+    const formatOperationalList = (items, label) => {
+        if (!items || items.length === 0) {
+            return isTagalog ? `Walang ${label} na available sa kasalukuyang records.` : `No ${label} are available in the current records.`;
+        }
+        return items.slice(0, 6).map((item, index) => {
+            const details = [item.reference, item.date, item.status].filter(Boolean).join(' | ');
+            return `${index + 1}. ${item.title || label}${details ? ` (${details})` : ''}`;
+        }).join('\n');
+    };
+
+    if (asksList && /\b(ticket|tickets)\b/.test(lowerMsg)) {
+        const tickets = operationalData?.tickets || [];
+        return isTagalog
+            ? `Mga ticket reservation sa system:\n${formatOperationalList(tickets, 'ticket reservation')}\n\nBuksan ang Reservations page para sa susunod na action.`
+            : `Ticket reservations in the system:\n${formatOperationalList(tickets, 'ticket reservation')}\n\nOpen the Reservations page for the next action.`;
+    }
+
+    if (asksList && /\b(reservation|reservations|booking|bookings)\b/.test(lowerMsg)) {
+        const reservations = [...(operationalData?.tickets || []), ...(operationalData?.eventReservations || [])];
+        return isTagalog
+            ? `Mga reservation sa system:\n${formatOperationalList(reservations, 'reservation')}\n\nBuksan ang Reservations page para sa susunod na action.`
+            : `Reservations in the system:\n${formatOperationalList(reservations, 'reservation')}\n\nOpen the Reservations page for the next action.`;
+    }
+
+    if (asksList && /\b(event|events|calendar|activity|activities)\b/.test(lowerMsg)) {
+        const events = operationalData?.events || [];
+        return isTagalog
+            ? `Mga kasalukuyan at paparating na event:\n${formatOperationalList(events, 'event')}\n\nBuksan ang Events page para sa buong detalye.`
+            : `Current and upcoming events:\n${formatOperationalList(events, 'event')}\n\nOpen the Events page for full details.`;
+    }
+
+    if (asksList && /\b(animal|animals|wildlife|species)\b/.test(lowerMsg) && dynamicData?.animalCatalog?.length) {
+        const animals = dynamicData.animalCatalog.slice(0, 6).map((animal) => `${animal.name}${animal.species ? ` (${animal.species})` : ''}`);
+        return isTagalog
+            ? `Mga animal record na available:\n${animals.map((animal, index) => `${index + 1}. ${animal}`).join('\n')}`
+            : `Animal records currently available:\n${animals.map((animal, index) => `${index + 1}. ${animal}`).join('\n')}`;
+    }
 
     if (role === 'admin') {
         if (lowerMsg.includes('priority') || lowerMsg.includes('today') || lowerMsg.includes('focus')) {
@@ -767,7 +881,6 @@ router.post('/chat', optionalAuth, async (req, res) => {
 
         // Fetch dynamic data from database
         const dynamicData = await getDynamicZooData();
-
         // Fetch the logged-in user's OWN reservations (sanitized, non-sensitive only)
         const userData = req.user?.id ? await getSanitizedUserReservations(req.user.id) : null;
         const userReservationContext = buildUserReservationContext(userData);
@@ -923,6 +1036,8 @@ router.post('/companion/chat', protect, authorize('admin', 'staff'), async (req,
         }
 
         const dynamicData = await getDynamicZooData();
+        const operationalData = await getCompanionOperationalData(dynamicData);
+        const cardsPayload = buildCompanionCards(message, dynamicData, operationalData, role);
 
         let dynamicContext = '';
         if (dynamicData) {
@@ -936,21 +1051,31 @@ CURRENT ZOO DATA (Live from database):
 - Today's Ticket Availability: ${dynamicData.ticketStats.availableSlots}
 ${dynamicData.upcomingEvents.length > 0 ? `
 UPCOMING EVENTS:
-${dynamicData.upcomingEvents.map(e => `- ${e.title} on ${e.event_date}: ${e.description || 'Check system for details'}`).join('\n')}` : '- No upcoming events scheduled at this time'}
+${dynamicData.eventCatalog.map(e => `- ${e.title} on ${e.date || 'date unavailable'}${e.time ? ` at ${e.time}` : ''}${e.location ? ` at ${e.location}` : ''} (${e.status})`).join('\n')}` : '- No upcoming events scheduled at this time'}
 
 Only provide operationally useful summaries. Never expose personal user records.
 `;
         }
 
+        const operationalContext = `
+
+SAFE OPERATIONAL LISTS (reference, date, status, and visitor totals only; no personal, payment, or credential data):
+- Ticket reservations: ${JSON.stringify(operationalData.tickets.slice(0, 20))}
+- Event reservations: ${JSON.stringify(operationalData.eventReservations.slice(0, 20))}
+- Current/upcoming events: ${JSON.stringify(operationalData.events.slice(0, 10))}
+`;
+
         const apiKey = process.env.GEMINI_API_KEY;
         if (!apiKey || typeof apiKey !== 'string' || apiKey.trim().length === 0 || !GoogleGenerativeAI) {
             return res.json({
                 success: true,
-                response: sanitizeCompanionOutput(getCompanionFallbackResponse(role, message, dynamicData, preferredLanguage)),
+                response: sanitizeCompanionOutput(getCompanionFallbackResponse(role, message, dynamicData, preferredLanguage, operationalData)),
                 timestamp: new Date().toISOString(),
                 source: 'fallback',
                 role,
-                language: preferredLanguage
+                language: preferredLanguage,
+                cards: cardsPayload.cards,
+                action: cardsPayload.action
             });
         }
 
@@ -978,7 +1103,7 @@ Only provide operationally useful summaries. Never expose personal user records.
                         parts: [{ text: msg.content }]
                     }));
 
-                const systemPrompt = `${getCompanionSystemContext(role, preferredLanguage)}${dynamicContext}\n\nUser request: ${message}`;
+                const systemPrompt = `${getCompanionSystemContext(role, preferredLanguage)}${dynamicContext}${operationalContext}\n\nUser request: ${message}`;
 
                 const result = await model.generateContent({
                     contents: [
@@ -1014,26 +1139,32 @@ Only provide operationally useful summaries. Never expose personal user records.
                 timestamp: new Date().toISOString(),
                 source: chosen,
                 role,
-                language: preferredLanguage
+                language: preferredLanguage,
+                cards: cardsPayload.cards,
+                action: cardsPayload.action
             });
         }
 
         return res.json({
             success: true,
-            response: sanitizeCompanionOutput(getCompanionFallbackResponse(role, message, dynamicData, preferredLanguage)),
+            response: sanitizeCompanionOutput(getCompanionFallbackResponse(role, message, dynamicData, preferredLanguage, operationalData)),
             timestamp: new Date().toISOString(),
             source: 'fallback',
             role,
-            language: preferredLanguage
+            language: preferredLanguage,
+            cards: cardsPayload.cards,
+            action: cardsPayload.action
         });
     } catch (error) {
         const preferredLanguage = detectCompanionLanguage(req.body.message || '');
         return res.json({
             success: true,
-            response: sanitizeCompanionOutput(getCompanionFallbackResponse(req.user?.role || 'staff', req.body.message || '', null, preferredLanguage)),
+            response: sanitizeCompanionOutput(getCompanionFallbackResponse(req.user?.role || 'staff', req.body.message || '', null, preferredLanguage, null)),
             timestamp: new Date().toISOString(),
             source: 'fallback',
-            language: preferredLanguage
+            language: preferredLanguage,
+            cards: [],
+            action: null
         });
     }
 });
