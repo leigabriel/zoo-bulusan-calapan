@@ -1,13 +1,13 @@
 import { communityAPI, getProfileImageUrl } from '../../../services/api-client';
 import { notify } from '../../../utils/toast';
 
-const PostFeed = ({ posts, currentUser, onRefresh, onEditPost, onUserClick, onPostClick, onConfirmDelete }) => {
+const PostFeed = ({ posts, currentUser, onRefresh, onUpdatePost, onEditPost, onPostClick, onCommentClick, onConfirmDelete }) => {
 
     const togglePostLike = async (postId, e) => {
         e.stopPropagation();
         try {
-            await communityAPI.togglePostLike(postId, currentUser?.role || 'user');
-            onRefresh();
+            const result = await communityAPI.togglePostLike(postId, currentUser?.role || 'user');
+            onUpdatePost?.(postId, { likedByViewer: result.liked, likeCount: result.likeCount });
         } catch {
             notify.error("Couldn't update like.");
         }
@@ -33,11 +33,6 @@ const PostFeed = ({ posts, currentUser, onRefresh, onEditPost, onUserClick, onPo
         onEditPost(post);
     };
 
-    const handleUserClick = (userId, e) => {
-        e.stopPropagation();
-        if (onUserClick) onUserClick(userId);
-    };
-
     const handleReport = (e) => {
         e.stopPropagation();
         notify.success('Post reported.');
@@ -52,18 +47,18 @@ const PostFeed = ({ posts, currentUser, onRefresh, onEditPost, onUserClick, onPo
                 return (
                     <article
                         key={post.id}
-                        className="bg-[#ebebeb] border border-[#212631]/15 cursor-pointer group flex flex-col hover:border-[#212631]/35 transition-colors"
+                        className="min-w-0 bg-white border border-[#212631]/10 rounded-3xl overflow-hidden cursor-pointer group flex flex-col shadow-sm hover:shadow-md hover:border-[#212631]/20 transition-all"
                         onClick={() => onPostClick && onPostClick(post)}
                     >
-                        <div className="flex items-center justify-between p-5 md:p-6 border-b border-[#212631]/15">
+                        <div className="flex items-start justify-between gap-3 p-4 sm:p-5 md:p-6 border-b border-[#212631]/15">
                             <div
                                 className="flex items-center gap-4 cursor-pointer"
-                                onClick={(e) => handleUserClick(post.author.id, e)}
+                                onClick={(e) => e.stopPropagation()}
                             >
                                 <img
                                     src={getProfileImageUrl(post.author.profileImage) || 'https://via.placeholder.com/56x56?text=U'}
                                     alt="author"
-                                    className="w-10 h-10 rounded-none object-cover border border-[#212631]/20 grayscale group-hover:grayscale-0 transition-all duration-300"
+                                    className="w-10 h-10 rounded-full object-cover border border-[#212631]/20 transition-all duration-300"
                                 />
                                 <div className="flex flex-col">
                                     <p className="text-sm font-black uppercase text-[#212631] tracking-tight hover:underline">
@@ -104,32 +99,35 @@ const PostFeed = ({ posts, currentUser, onRefresh, onEditPost, onUserClick, onPo
                             </div>
                         )}
 
-                        <div className="flex items-center justify-between p-4 md:p-5 bg-[#ebebeb] border-t border-[#212631]/15 mt-auto">
-                            <div className="flex items-center gap-5">
+                         <div className="flex flex-wrap items-center justify-between gap-2 p-3 sm:p-4 md:p-5 bg-[#ebebeb] border-t border-[#212631]/15 mt-auto">
+                             <div className="flex flex-wrap items-center gap-1 sm:gap-2">
                                 <button
-                                    className="flex items-center gap-2 text-[10px] tracking-[0.18em] uppercase font-bold text-[#212631]/70 hover:text-[#212631] transition-colors"
+                                    className="flex min-h-14 min-w-14 items-center gap-2 rounded-full px-3 text-base font-semibold text-[#212631]/70 hover:bg-[#212631]/5 hover:text-[#212631] transition-colors"
                                     onClick={(e) => {
                                         e.stopPropagation();
-                                        if (onPostClick) onPostClick(post);
+                                        if (onCommentClick) onCommentClick(post);
                                     }}
                                 >
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                     <svg className="h-7 w-7 sm:h-8 sm:w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
                                     </svg>
-                                    {post.commentCount || 0} Comments
+                                         {post.commentCount || 0}
                                 </button>
 
                                 {isApproved && (
                                     <button
                                         onClick={(e) => togglePostLike(post.id, e)}
-                                        className={`flex items-center gap-1.5 text-[10px] tracking-[0.18em] uppercase font-bold transition-colors ${post.likedByViewer ? 'text-red-600' : 'text-[#212631]/70 hover:text-[#212631]'}`}
+                                        className={`flex min-h-14 min-w-14 items-center gap-2 rounded-full px-3 text-base font-semibold transition-colors ${post.likedByViewer ? 'text-red-600' : 'text-[#212631]/70 hover:bg-red-50 hover:text-red-600'}`}
                                     >
-                                        <svg className={`w-4 h-4 ${post.likedByViewer ? 'fill-red-600' : 'fill-none'}`} stroke="currentColor" viewBox="0 0 24 24">
+                                         <svg className={`h-7 w-7 sm:h-8 sm:w-8 ${post.likedByViewer ? 'fill-red-600' : 'fill-none'}`} stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
                                         </svg>
-                                        {post.likeCount || 0} Likes
-                                    </button>
-                                )}
+                                         {post.likeCount || 0}
+                                     </button>
+                                 )}
+                                 <button onClick={(e) => { e.stopPropagation(); const url = `${window.location.origin}/community#post-${post.id}`; if (navigator.share) navigator.share({ title: 'Zoo Community', text: post.content, url }).catch(() => {}); else navigator.clipboard?.writeText(url).then(() => notify.success('Post link copied.')); }} className="flex min-h-14 min-w-14 items-center justify-center rounded-full text-base font-semibold text-[#212631]/70 hover:bg-[#212631]/5 hover:text-[#212631]" aria-label="Share post">
+                                     <svg className="h-7 w-7 sm:h-8 sm:w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M7 17 17 7m0 0H9m8 0v8" /></svg>
+                                 </button>
                             </div>
 
                             {isOwner && (
@@ -154,7 +152,7 @@ const PostFeed = ({ posts, currentUser, onRefresh, onEditPost, onUserClick, onPo
             })}
 
             {posts.length === 0 && (
-                <div className="border border-[#212631]/15 p-10 sm:p-16 flex flex-col items-center justify-center text-center bg-[#ebebeb]">
+                <div className="border border-[#212631]/10 rounded-3xl p-10 sm:p-16 flex flex-col items-center justify-center text-center bg-white">
                     <p className="text-2xl font-black uppercase tracking-tighter text-[#212631]/60 mb-2">No Posts Yet</p>
                     <p className="text-[10px] tracking-[0.18em] uppercase font-bold text-[#212631]/75">Be the first to share something.</p>
                 </div>

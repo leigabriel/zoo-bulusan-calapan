@@ -191,7 +191,7 @@ const CommentSection = ({ postId, currentUser, refreshTrigger, onRequireConfirma
                 <img
                     src={getProfileImageUrl(comment.author.profileImage) || 'https://via.placeholder.com/48x48?text=U'}
                     alt="author"
-                    className="w-10 h-10 rounded-none object-cover border border-[#212631]/20 shrink-0 grayscale"
+                    className="w-10 h-10 rounded-full object-cover border border-[#212631]/20 shrink-0"
                 />
                 <div className="flex-1 flex flex-col">
                     <div className="flex items-center justify-between mb-2">
@@ -215,7 +215,7 @@ const CommentSection = ({ postId, currentUser, refreshTrigger, onRequireConfirma
                             <textarea
                                 value={editingText}
                                 onChange={(event) => setEditingText(event.target.value)}
-                                className="w-full bg-transparent border border-[#212631]/25 p-3 text-sm font-medium text-[#212631] outline-none focus:border-[#212631]"
+                                className="w-full rounded-xl bg-transparent border border-[#212631]/25 p-3 text-sm font-medium text-[#212631] outline-none focus:border-[#212631]"
                                 rows={3}
                                 maxLength={1200}
                             />
@@ -275,11 +275,11 @@ const CommentSection = ({ postId, currentUser, refreshTrigger, onRequireConfirma
                     </div>
 
                     {replyingToId === comment.id && (
-                        <div className="mt-4 border border-[#212631]/15 p-4 bg-[#212631]/5">
+                        <div className="mt-4 rounded-2xl border border-[#212631]/15 p-4 bg-[#212631]/5">
                             <textarea
                                 value={replyText}
                                 onChange={(event) => setReplyText(event.target.value)}
-                                className="w-full bg-transparent border border-[#212631]/25 p-3 text-sm font-medium text-[#212631] outline-none focus:border-[#212631]"
+                                className="w-full rounded-xl bg-transparent border border-[#212631]/25 p-3 text-sm font-medium text-[#212631] outline-none focus:border-[#212631]"
                                 placeholder="Write your reply..."
                                 rows={3}
                                 maxLength={1200}
@@ -324,12 +324,12 @@ const CommentSection = ({ postId, currentUser, refreshTrigger, onRequireConfirma
     }
 
     return (
-        <div className="flex flex-col gap-8">
-            <div className="flex flex-col md:flex-row gap-4 items-start border border-[#212631]/15 p-5 bg-[#ebebeb]">
+            <div className="flex flex-col gap-8">
+            <div className="flex flex-col md:flex-row gap-4 items-start rounded-2xl border border-[#212631]/15 p-5 bg-[#ebebeb]">
                 <img
                     src={getProfileImageUrl(currentUser?.profileImage || currentUser?.profile_image) || 'https://via.placeholder.com/48x48?text=U'}
                     alt="You"
-                    className="w-10 h-10 rounded-none object-cover border border-[#212631]/20 shrink-0 hidden md:block grayscale"
+                    className="w-10 h-10 rounded-full object-cover border border-[#212631]/20 shrink-0 hidden md:block"
                 />
                 <div className="flex-1 flex flex-col gap-4 w-full">
                     <textarea

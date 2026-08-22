@@ -66,9 +66,9 @@ const PostForm = ({ onSubmit, loading, initialPost = null, onCancelEdit, onBefor
             if (!confirmed) return;
         }
 
-        await onSubmit({ content: cleanContent, imageFile, removeImage });
+        const submitted = await onSubmit({ content: cleanContent, imageFile, removeImage });
 
-        if (!initialPost) {
+        if (!initialPost && submitted !== false) {
             setContent('');
             setImageFile(null);
             setPreviewUrl('');
@@ -77,7 +77,7 @@ const PostForm = ({ onSubmit, loading, initialPost = null, onCancelEdit, onBefor
     };
 
     return (
-        <form onSubmit={submitForm} className="bg-[#ebebeb] flex flex-col">
+        <form onSubmit={submitForm} className="bg-white flex flex-col">
             <h2 className="text-xl md:text-2xl font-black uppercase text-[#212631] tracking-tighter mb-6 border-b border-[#212631]/15 pb-4">
                 {initialPost ? 'Edit Entry' : 'New Entry'}
             </h2>
@@ -91,12 +91,12 @@ const PostForm = ({ onSubmit, loading, initialPost = null, onCancelEdit, onBefor
             />
 
             {previewUrl && (
-                <div className="mt-4 relative w-full border border-[#212631]/15 bg-[#212631]/5">
-                    <img src={previewUrl} alt="Preview" className="max-h-64 w-full object-cover grayscale" />
+                <div className="mt-4 relative w-full overflow-hidden rounded-2xl border border-[#212631]/10 bg-[#f8faf6]">
+                    <img src={previewUrl} alt="Preview" className="max-h-64 w-full object-cover" />
                     <button
                         type="button"
                         onClick={clearImage}
-                        className="absolute top-3 right-3 w-8 h-8 flex items-center justify-center border border-[#212631]/20 bg-[#ebebeb] text-[#212631] hover:bg-red-500 hover:text-white hover:border-red-500 transition-colors cursor-pointer"
+                        className="absolute right-3 top-3 flex h-10 w-10 items-center justify-center rounded-full border border-[#212631]/10 bg-white text-[#212631] shadow-sm hover:bg-red-500 hover:text-white hover:border-red-500 transition-colors cursor-pointer"
                     >
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
                             <path fillRule="evenodd" d="M5.47 5.47a.75.75 0 011.06 0L12 10.94l5.47-5.47a.75.75 0 111.06 1.06L13.06 12l5.47 5.47a.75.75 0 11-1.06 1.06L12 13.06l-5.47 5.47a.75.75 0 01-1.06-1.06L10.94 12 5.47 6.53a.75.75 0 010-1.06z" clipRule="evenodd" />
@@ -107,7 +107,7 @@ const PostForm = ({ onSubmit, loading, initialPost = null, onCancelEdit, onBefor
 
             <div className="mt-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 {!previewUrl ? (
-                    <label className="inline-flex items-center gap-2 px-4 py-3 border border-[#212631]/25 text-[#212631] cursor-pointer hover:bg-[#212631] hover:text-[#ebebeb] transition-colors text-[9px] tracking-[0.18em] uppercase font-black w-max">
+                    <label className="inline-flex items-center gap-2 rounded-full px-5 py-3 border border-[#212631]/15 text-[#212631] cursor-pointer hover:bg-[#c6fe69] transition-colors text-[10px] tracking-[0.15em] uppercase font-black w-max">
                         <input type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
@@ -123,7 +123,7 @@ const PostForm = ({ onSubmit, loading, initialPost = null, onCancelEdit, onBefor
                         <button
                             type="button"
                             onClick={onCancelEdit}
-                            className="flex-1 sm:flex-none px-6 py-3 border border-[#212631]/25 text-[#212631] text-[9px] tracking-[0.18em] uppercase font-black hover:bg-[#212631]/10 transition-colors"
+                            className="flex-1 rounded-full sm:flex-none px-6 py-3 border border-[#212631]/15 text-[#212631] text-[10px] tracking-[0.15em] uppercase font-black hover:bg-[#212631]/10 transition-colors"
                         >
                             Cancel
                         </button>
@@ -131,7 +131,7 @@ const PostForm = ({ onSubmit, loading, initialPost = null, onCancelEdit, onBefor
                     <button
                         type="submit"
                         disabled={loading || !content.trim()}
-                        className="flex-1 sm:flex-none px-8 py-3 bg-[#212631] text-[#ebebeb] border border-[#212631] text-[9px] tracking-[0.18em] uppercase font-black hover:bg-transparent hover:text-[#212631] disabled:opacity-50 disabled:pointer-events-none transition-colors"
+                        className="flex-1 rounded-full sm:flex-none px-8 py-3 bg-[#212631] text-white border border-[#212631] text-[10px] tracking-[0.15em] uppercase font-black hover:bg-[#c6fe69] hover:text-[#212631] hover:border-[#c6fe69] disabled:opacity-50 disabled:pointer-events-none transition-colors"
                     >
                         {loading ? 'Processing...' : initialPost ? 'Save' : 'Publish'}
                     </button>

@@ -1,10 +1,9 @@
 import { useEffect, useState } from 'react';
 import { ReactLenis } from 'lenis/react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion as Motion, AnimatePresence } from 'framer-motion';
 import Header from '../../components/Header';
 import PostForm from '../../components/features/community/PostForm';
 import PostFeed from '../../components/features/community/PostFeed';
-import PublicUserProfile from './PublicUserProfile';
 import CommentSection from '../../components/features/community/CommentSection';
 import ConfirmationModal from '../../components/common/ConfirmationModal';
 import { communityAPI, getProfileImageUrl } from '../../services/api-client';
@@ -18,8 +17,9 @@ const CommunityPage = () => {
     const [loadingPosts, setLoadingPosts] = useState(false);
     const [savingPost, setSavingPost] = useState(false);
     const [editingPost, setEditingPost] = useState(null);
-    const [selectedUserId, setSelectedUserId] = useState(null);
+    const [postModalOpen, setPostModalOpen] = useState(false);
     const [selectedPost, setSelectedPost] = useState(null);
+    const [commentOnly, setCommentOnly] = useState(false);
     const [confirmState, setConfirmState] = useState({
         isOpen: false,
         title: '',
@@ -118,49 +118,34 @@ const CommunityPage = () => {
             }
             await loadPosts();
         } catch {
-            notify.error("Couldn't save post.");
+            notify.error('Please Try Again');
+            return false;
         } finally {
             setSavingPost(false);
         }
     };
 
-    const scrollToFeed = () => {
-        document.getElementById('community-feed')?.scrollIntoView({ behavior: 'smooth' });
-    };
-
     return (
         <ReactLenis root>
-            <div className="bg-[#fff] text-[#212631] relative min-h-screen">
+            <div className="bg-[#f6f7f4] text-[#212631] relative min-h-screen">
                 <Header />
 
                 {/* Intro Section - Clean Style */}
-                <div className="w-full min-h-[50vh] md:min-h-[60vh] flex flex-col items-center justify-center px-4 pt-20">
+                <div className="w-full min-h-[42vh] md:min-h-[54vh] flex flex-col items-center justify-center px-4 pt-20">
+                    <p className="mb-5 rounded-full bg-[#c6fe69] px-4 py-2 text-xs font-bold uppercase tracking-[0.3em] text-[#212631]">Share the wild with us</p>
                     <h1 className="text-[4rem] sm:text-[6rem] md:text-[9rem] lg:text-[11rem] leading-none tracking-tight text-black text-center break-words w-full">
                         Community
                     </h1>
                 </div>
 
                 {/* Main Feed Section */}
-                <main id="community-feed" className="relative z-10 w-full bg-[#ebebeb] border-t border-[#212631]/15">
-                    <div className="max-w-[1600px] mx-auto grid grid-cols-1 lg:grid-cols-[1fr_2fr] xl:grid-cols-[380px_1fr_380px] min-h-screen">
-
-                        <div className="border-b lg:border-b-0 lg:border-r border-[#212631]/15 bg-[#ebebeb] relative">
-                            <div className="sticky top-20 p-5 md:p-8 h-max">
-                                <PostForm
-                                    onSubmit={createOrUpdatePost}
-                                    loading={savingPost}
-                                    initialPost={editingPost}
-                                    onCancelEdit={() => setEditingPost(null)}
-                                    onBeforeSubmit={confirmPostSubmit}
-                                />
-                            </div>
-                        </div>
-
-                        <div className="bg-[#ebebeb] border-b xl:border-b-0 xl:border-r border-[#212631]/15 min-h-screen">
-                            <div className="p-0 sm:p-5 md:p-8">
+                <main id="community-feed" className="relative z-10 w-full bg-[#eef0ec] border-t border-[#212631]/10">
+                    <div className="max-w-[820px] mx-auto min-h-screen">
+                         <div className="bg-[#eef0ec] min-h-screen">
+                             <div className="p-4 sm:p-6 md:p-8">
                                 {loadingPosts ? (
                                     <div className="flex items-center justify-center py-32">
-                                        <motion.div
+                                        <Motion.div
                                             className="w-5 h-5 rounded-full border-[1.5px] border-[#212631]/25 border-t-[#212631]"
                                             animate={{ rotate: 360 }}
                                             transition={{ repeat: Infinity, duration: 0.85, ease: 'linear' }}
@@ -171,52 +156,41 @@ const CommunityPage = () => {
                                         posts={posts}
                                         currentUser={user}
                                         onRefresh={loadPosts}
-                                        onEditPost={setEditingPost}
-                                        onUserClick={setSelectedUserId}
-                                        onPostClick={setSelectedPost}
+                                         onEditPost={(post) => { setEditingPost(post); setPostModalOpen(true); }}
+                                         onUpdatePost={(postId, changes) => setPosts((current) => current.map((post) => post.id === postId ? { ...post, ...changes } : post))}
+                                         onPostClick={(post) => { setCommentOnly(false); setSelectedPost(post); }}
+                                         onCommentClick={(post) => { setCommentOnly(true); setSelectedPost(post); }}
                                         onConfirmDelete={confirmPostDelete}
                                     />
                                 )}
                             </div>
                         </div>
 
-                        <div className="hidden xl:block bg-[#ebebeb] relative">
-                            <div className="sticky top-20 p-8 h-max">
-                                {selectedUserId ? (
-                                    <PublicUserProfile userId={selectedUserId} onClose={() => setSelectedUserId(null)} />
-                                ) : (
-                                    <div className="flex flex-col items-center justify-center text-center p-12 border border-[#212631]/15 bg-[#ebebeb]">
-                                        <span className="text-[10px] tracking-[0.18em] uppercase font-bold text-[#212631]/55">
-                                            Profile Viewer
-                                        </span>
-                                        <p className="mt-4 text-[10px] uppercase tracking-widest text-[#212631]/75 leading-relaxed">
-                                            Select a user from the feed to view their profile information here.
-                                        </p>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
                     </div>
                 </main>
 
+                <button
+                    type="button"
+                    onClick={() => setPostModalOpen(true)}
+                    className="group fixed left-3 top-[92px] z-[80] flex h-14 w-14 items-center justify-center rounded-full border border-[#212631]/10 bg-white/95 p-1.5 text-sm font-black text-[#212631] shadow-[0_10px_30px_rgba(33,38,49,0.16)] backdrop-blur-md transition-all hover:-translate-y-0.5 hover:shadow-[0_14px_34px_rgba(33,38,49,0.22)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#c6fe69] sm:left-6 sm:top-[108px] sm:h-auto sm:w-auto sm:justify-start sm:gap-3 sm:pr-5"
+                    aria-label="Create post"
+                >
+                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#212631] transition-colors group-hover:bg-[#5c7d16]">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="34" height="34" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path d="M12 2C6.49 2 2 6.49 2 12C2 17.51 6.49 22 12 22C17.51 22 22 17.51 22 12C22 6.49 17.51 2 12 2ZM16 12.75H12.75V16C12.75 16.41 12.41 16.75 12 16.75C11.59 16.75 11.25 16.41 11.25 16V12.75H8C7.59 12.75 7.25 12.41 7.25 12C7.25 11.59 7.59 11.25 8 11.25H11.25V8C11.25 7.59 11.59 7.25 12 7.25C12.41 7.25 12.75 7.59 12.75 8V11.25H16C16.41 11.25 16.75 11.59 16.75 12C16.75 12.41 16.41 12.75 16 12.75Z" fill="#c6fe59" />
+                    </svg>
+                    </span>
+                    <span className="hidden whitespace-nowrap text-[11px] uppercase tracking-[0.16em] sm:inline">Create post</span>
+                </button>
+
                 <AnimatePresence>
-                    {selectedUserId && (
-                        <div className="xl:hidden fixed inset-0 z-[100] flex items-center justify-center p-4">
-                            <motion.div
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                exit={{ opacity: 0 }}
-                                className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-                                onClick={() => setSelectedUserId(null)}
-                            />
-                            <motion.div
-                                initial={{ y: 20, opacity: 0 }}
-                                animate={{ y: 0, opacity: 1 }}
-                                exit={{ y: 20, opacity: 0 }}
-                                className="relative z-10 w-full max-w-lg"
-                            >
-                                <PublicUserProfile userId={selectedUserId} onClose={() => setSelectedUserId(null)} />
-                            </motion.div>
+                    {postModalOpen && (
+                        <div className="fixed inset-0 z-[150] flex items-center justify-center p-4">
+                            <Motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => !savingPost && setPostModalOpen(false)} />
+                            <Motion.div initial={{ y: 30, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 30, opacity: 0 }} className="relative z-10 max-h-[92vh] w-full overflow-y-auto rounded-t-3xl bg-white p-5 shadow-2xl sm:max-w-xl sm:rounded-3xl sm:p-8">
+                                <div className="mb-6 flex items-center justify-between"><h2 className="text-xl font-black">{editingPost ? 'Edit post' : 'Create post'}</h2><button onClick={() => !savingPost && setPostModalOpen(false)} className="rounded-full px-3 py-2 text-sm text-[#212631]/60 hover:bg-black/5">Close</button></div>
+                                <PostForm onSubmit={async (data) => { const result = await createOrUpdatePost(data); if (result !== false) setPostModalOpen(false); return result; }} loading={savingPost} initialPost={editingPost} onCancelEdit={() => { setEditingPost(null); setPostModalOpen(false); }} onBeforeSubmit={confirmPostSubmit} />
+                            </Motion.div>
                         </div>
                     )}
                 </AnimatePresence>
@@ -224,23 +198,23 @@ const CommunityPage = () => {
                 <AnimatePresence>
                     {selectedPost && (
                         <div className="fixed inset-0 z-[200] flex items-center justify-center p-0 md:p-6">
-                            <motion.div
+                             <Motion.div
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
                                 exit={{ opacity: 0 }}
                                 className="absolute inset-0 bg-black/60 backdrop-blur-md"
                                 onClick={() => setSelectedPost(null)}
                             />
-                            <motion.div
+                             <Motion.div
                                 initial={{ opacity: 0, y: 12 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, y: 12 }}
                                 transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
-                                className="relative z-10 flex flex-col bg-[#ebebeb] border border-[#212631]/20 w-full h-full md:h-auto md:max-w-4xl md:max-h-[85vh] overflow-hidden"
+                                 className="relative z-10 flex flex-col rounded-t-3xl bg-white border border-[#212631]/10 w-full h-full md:h-auto md:max-w-4xl md:max-h-[85vh] overflow-hidden md:rounded-3xl"
                             >
                                 <div className="flex items-center justify-between px-5 py-4 border-b border-[#212631]/15 shrink-0 bg-[#ebebeb]">
                                     <span className="text-[10px] tracking-[0.18em] uppercase font-bold text-[#212631]/70">
-                                        Post Details
+                                        {commentOnly ? 'Comments' : 'Post Details'}
                                     </span>
                                     <button
                                         onClick={() => setSelectedPost(null)}
@@ -254,15 +228,19 @@ const CommunityPage = () => {
                                 </div>
 
                                 <div className="overflow-y-auto flex-1 p-6 md:p-10">
-                                    <div className="flex items-center gap-4 mb-8 cursor-pointer group w-max"
-                                        onClick={() => {
-                                            setSelectedUserId(selectedPost.author.id);
-                                            setSelectedPost(null);
-                                        }}>
+                                    {commentOnly ? (
+                                        <div>
+                                            <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#212631]/50">Community discussion</p>
+                                            <h2 className="mt-2 mb-8 text-3xl font-black tracking-tight">Comments</h2>
+                                            <CommentSection postId={selectedPost.id} currentUser={user} refreshTrigger={0} onRequireConfirmation={confirmCommentAction} />
+                                        </div>
+                                    ) : (
+                                        <>
+                                    <div className="flex items-center gap-4 mb-8 group w-max">
                                         <img
                                             src={getProfileImageUrl(selectedPost.author.profileImage) || 'https://via.placeholder.com/64x64?text=U'}
                                             alt="author"
-                                            className="w-12 h-12 rounded-none object-cover grayscale group-hover:grayscale-0 transition-all border border-[#212631]/20"
+                                             className="w-12 h-12 rounded-full object-cover transition-all border border-[#212631]/20"
                                         />
                                         <div className="flex flex-col">
                                             <span className="font-black uppercase text-[#212631] tracking-tight text-lg group-hover:underline">
@@ -279,7 +257,7 @@ const CommunityPage = () => {
                                     </p>
 
                                     {selectedPost.imageUrl && (
-                                        <div className="w-full overflow-hidden border border-[#212631]/15 mb-10 bg-[#212631]/5 flex justify-center">
+                                         <div className="w-full overflow-hidden rounded-2xl border border-[#212631]/15 mb-10 bg-[#212631]/5 flex justify-center">
                                             <img src={selectedPost.imageUrl} alt="post" className="max-w-full h-auto max-h-[60vh] object-contain" />
                                         </div>
                                     )}
@@ -293,8 +271,10 @@ const CommunityPage = () => {
                                             onRequireConfirmation={confirmCommentAction}
                                         />
                                     </div>
+                                        </>
+                                    )}
                                 </div>
-                            </motion.div>
+                             </Motion.div>
                         </div>
                     )}
                 </AnimatePresence>
