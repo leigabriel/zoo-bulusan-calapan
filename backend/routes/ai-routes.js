@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const crypto = require('crypto');
 const { protect, authorize, optionalAuth } = require('../middleware/auth');
 
 // import models
@@ -8,6 +9,7 @@ const Plant = require('../models/plant-model');
 const Event = require('../models/event-model');
 const Ticket = require('../models/ticket-model');
 const Reservation = require('../models/reservation-model');
+const AIAssistSession = require('../models/ai-assist-model');
 
 // load google ai client
 let GoogleGenerativeAI = null;
@@ -120,9 +122,10 @@ const getDynamicZooData = async () => {
 // payment fields, even though those fields exist on the reservation rows.
 const getCompanionOperationalData = async (dynamicData) => {
     try {
-        const [ticketReservations, eventReservations] = await Promise.all([
+        const [ticketReservations, eventReservations, allEvents] = await Promise.all([
             Reservation.getAllTicketReservations(),
-            Reservation.getAllEventReservations()
+            Reservation.getAllEventReservations(),
+            Event.getAll()
         ]);
 
         const safeDate = (value) => value ? String(value).split('T')[0] : null;
@@ -148,13 +151,14 @@ const getCompanionOperationalData = async (dynamicData) => {
         return {
             tickets: safeTickets,
             eventReservations: safeEvents,
-            events: (dynamicData?.eventCatalog || []).slice(0, 10).map((event) => ({
+            events: (allEvents || dynamicData?.eventCatalog || []).slice(0, 20).map((event) => ({
                 id: event.id,
                 title: event.title,
-                date: event.date,
-                time: event.time,
+                date: event.date || event.event_date,
+                time: event.time || event.start_time,
                 location: event.location,
-                status: event.status
+                status: event.status || 'upcoming',
+                description: event.description?.substring(0, 160) || null
             }))
         };
     } catch (error) {
@@ -165,16 +169,21 @@ const getCompanionOperationalData = async (dynamicData) => {
 
 const buildCompanionCards = (message, dynamicData, operationalData, role = 'staff') => {
     const lowerMsg = String(message || '').toLowerCase();
-    const asksList = /\b(list|show|current|pending|upcoming|all|records|data|status)\b/.test(lowerMsg);
+    const asksList = /\b(list|show|current|existing|pending|upcoming|all|records|data|status)\b/.test(lowerMsg);
+    const asksPending = /\b(pending|awaiting|unconfirmed|to review)\b/.test(lowerMsg);
     const cards = [];
     let action = null;
     const add = (items) => items.slice(0, 6).forEach((item) => cards.push(item));
 
     if (asksList && /\b(ticket|tickets)\b/.test(lowerMsg)) {
-        add(operationalData?.tickets || []);
+        const tickets = asksPending
+            ? (operationalData?.tickets || []).filter(ticket => ticket.status === 'pending')
+            : (operationalData?.tickets || []);
+        add(tickets);
         action = { label: 'Open Reservations', href: `/${role}/reservations`, variant: 'primary' };
     } else if (asksList && /\b(reservation|reservations|booking|bookings)\b/.test(lowerMsg)) {
-        add([...(operationalData?.tickets || []), ...(operationalData?.eventReservations || [])]);
+        const reservations = [...(operationalData?.tickets || []), ...(operationalData?.eventReservations || [])];
+        add(asksPending ? reservations.filter(reservation => reservation.status === 'pending') : reservations);
         action = { label: 'Open Reservations', href: `/${role}/reservations`, variant: 'primary' };
     } else if (asksList && /\b(animal|animals|wildlife|species)\b/.test(lowerMsg)) {
         add((dynamicData?.animalCatalog || []).map((animal) => ({ kind: 'animal', ...animal })));
@@ -550,7 +559,8 @@ const getCompanionFallbackResponse = (role, message, dynamicData = null, languag
     const ticketSoldToday = dynamicData?.ticketStats?.todayTickets ?? 'latest';
     const availability = dynamicData?.ticketStats?.availableSlots || 'unknown';
     const isTagalog = language === 'tagalog';
-    const asksList = /\b(list|show|current|pending|upcoming|all|records|data|status)\b/.test(lowerMsg);
+    const asksList = /\b(list|show|current|existing|pending|upcoming|all|records|data|status)\b/.test(lowerMsg);
+    const asksPending = /\b(pending|awaiting|unconfirmed|to review)\b/.test(lowerMsg);
 
     const formatOperationalList = (items, label) => {
         if (!items || items.length === 0) {
@@ -563,14 +573,19 @@ const getCompanionFallbackResponse = (role, message, dynamicData = null, languag
     };
 
     if (asksList && /\b(ticket|tickets)\b/.test(lowerMsg)) {
-        const tickets = operationalData?.tickets || [];
+        const tickets = asksPending
+            ? (operationalData?.tickets || []).filter(ticket => ticket.status === 'pending')
+            : (operationalData?.tickets || []);
         return isTagalog
             ? `Mga ticket reservation sa system:\n${formatOperationalList(tickets, 'ticket reservation')}\n\nBuksan ang Reservations page para sa susunod na action.`
             : `Ticket reservations in the system:\n${formatOperationalList(tickets, 'ticket reservation')}\n\nOpen the Reservations page for the next action.`;
     }
 
     if (asksList && /\b(reservation|reservations|booking|bookings)\b/.test(lowerMsg)) {
-        const reservations = [...(operationalData?.tickets || []), ...(operationalData?.eventReservations || [])];
+        const allReservations = [...(operationalData?.tickets || []), ...(operationalData?.eventReservations || [])];
+        const reservations = asksPending
+            ? allReservations.filter(reservation => reservation.status === 'pending')
+            : allReservations;
         return isTagalog
             ? `Mga reservation sa system:\n${formatOperationalList(reservations, 'reservation')}\n\nBuksan ang Reservations page para sa susunod na action.`
             : `Reservations in the system:\n${formatOperationalList(reservations, 'reservation')}\n\nOpen the Reservations page for the next action.`;
@@ -867,6 +882,70 @@ mission
 * educate visitors about protecting wildlife and natural habitats
 
 `;
+
+const normalizeSessionMessages = (messages) => (Array.isArray(messages) ? messages : [])
+    .slice(-50)
+    .filter(message => message && ['user', 'assistant'].includes(message.role) && typeof message.content === 'string')
+    .map(message => ({
+        role: message.role,
+        content: message.content.slice(0, 8000),
+        ...(Array.isArray(message.cards) ? { cards: message.cards.slice(0, 10) } : {}),
+        ...(message.action && typeof message.action === 'object' ? { action: message.action } : {})
+    }));
+
+router.get('/companion/sessions', protect, authorize('admin', 'staff'), async (req, res) => {
+    try {
+        const sessions = await AIAssistSession.getByOwner(req.user.id, req.user.role);
+        return res.json({ success: true, sessions });
+    } catch (error) {
+        console.error('AI Assist session list error:', error.message);
+        return res.status(500).json({ success: false, message: 'Could not load AI Assist sessions.' });
+    }
+});
+
+router.post('/companion/sessions', protect, authorize('admin', 'staff'), async (req, res) => {
+    try {
+        const session = await AIAssistSession.create({
+            id: crypto.randomUUID(),
+            userId: req.user.id,
+            role: req.user.role,
+            title: typeof req.body.title === 'string' ? req.body.title.slice(0, 255) : 'New chat',
+            messages: normalizeSessionMessages(req.body.messages)
+        });
+        return res.status(201).json({ success: true, session });
+    } catch (error) {
+        console.error('AI Assist session create error:', error.message);
+        return res.status(500).json({ success: false, message: 'Could not create an AI Assist session.' });
+    }
+});
+
+router.put('/companion/sessions/:sessionId', protect, authorize('admin', 'staff'), async (req, res) => {
+    try {
+        const updated = await AIAssistSession.update({
+            id: req.params.sessionId,
+            userId: req.user.id,
+            role: req.user.role,
+            title: typeof req.body.title === 'string' ? req.body.title.slice(0, 255) : undefined,
+            messages: req.body.messages === undefined ? undefined : normalizeSessionMessages(req.body.messages)
+        });
+        if (!updated) return res.status(404).json({ success: false, message: 'AI Assist session not found.' });
+        return res.json({ success: true });
+    } catch (error) {
+        console.error('AI Assist session update error:', error.message);
+        return res.status(500).json({ success: false, message: 'Could not save the AI Assist session.' });
+    }
+});
+
+router.delete('/companion/sessions/:sessionId', protect, authorize('admin', 'staff'), async (req, res) => {
+    try {
+        const deleted = await AIAssistSession.delete(req.params.sessionId, req.user.id, req.user.role);
+        if (!deleted) return res.status(404).json({ success: false, message: 'AI Assist session not found.' });
+        return res.json({ success: true });
+    } catch (error) {
+        console.error('AI Assist session delete error:', error.message);
+        return res.status(500).json({ success: false, message: 'Could not delete the AI Assist session.' });
+    }
+});
 
 router.post('/chat', optionalAuth, async (req, res) => {
     try {

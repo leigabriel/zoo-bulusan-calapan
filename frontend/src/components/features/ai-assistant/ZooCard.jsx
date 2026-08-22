@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { AI_ASSISTANT_THEME } from '../../../config/ai-assistant-theme';
 
-const THEME = AI_ASSISTANT_THEME;
+const DEFAULT_THEME = AI_ASSISTANT_THEME;
 
 const STATUS_STYLES = {
     healthy: 'bg-emerald-50 text-emerald-700 border-emerald-200',
@@ -44,14 +44,16 @@ const ChevronIcon = () => (
 
 const Row = ({ label, value, strong = false }) => (
     <div className="flex items-center justify-between gap-3 py-2">
-        <span className="text-xs shrink-0 capitalize" style={{ color: THEME.textMuted }}>{label}</span>
-        <span className={`text-right text-sm capitalize ${strong ? 'font-bold' : 'font-semibold'}`} style={{ color: THEME.text }}>{value}</span>
+        <span className="text-xs shrink-0 capitalize" style={{ color: DEFAULT_THEME.textMuted }}>{label}</span>
+        <span className={`text-right text-sm capitalize ${strong ? 'font-bold' : 'font-semibold'}`} style={{ color: DEFAULT_THEME.text }}>{value}</span>
     </div>
 );
 
-const ZooCard = ({ data }) => {
+const ZooCard = ({ data, theme = DEFAULT_THEME }) => {
     const [expanded, setExpanded] = useState(false);
     if (!data) return null;
+
+    const THEME = theme;
 
     const kind = KIND_META[data.kind] ? data.kind : 'animal';
     const meta = KIND_META[kind];

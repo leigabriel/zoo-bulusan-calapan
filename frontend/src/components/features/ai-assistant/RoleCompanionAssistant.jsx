@@ -3,8 +3,14 @@ import { ReactLenis } from 'lenis/react';
 import { useNavigate } from 'react-router-dom';
 import { getAuthHeaders, API_BASE_URL } from '../../../services/api-client';
 import { AI_ASSISTANT_ICON, AI_ASSISTANT_THEME } from '../../../config/ai-assistant-theme';
+import ZooCard from './ZooCard';
 
-const THEME = AI_ASSISTANT_THEME;
+const THEME = {
+    ...AI_ASSISTANT_THEME,
+    accent: '#00cd57',
+    accentDark: '#00b84e',
+    accentSoft: '#e6fbea'
+};
 
 const SendIcon = () => (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
@@ -70,6 +76,35 @@ const AssistantAvatar = ({ role = 'staff' }) => (
     </div>
 );
 
+const OperationalCard = ({ data }) => {
+    const isEventReservation = data.kind === 'event';
+    const label = isEventReservation ? 'Event reservation' : 'Ticket reservation';
+    return (
+        <div className="rounded-2xl p-4" style={{ background: THEME.surface, border: `1px solid ${THEME.border}` }}>
+            <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                    <p className="text-[10px] uppercase tracking-widest font-bold" style={{ color: THEME.accentDark }}>{label}</p>
+                    <p className="mt-1 text-sm font-bold truncate" style={{ color: THEME.text }}>{data.title || 'Reservation'}</p>
+                </div>
+                <span className="shrink-0 rounded-full px-2.5 py-1 text-[10px] uppercase font-bold" style={{ background: THEME.accentSoft, color: THEME.accentDark }}>
+                    {data.status || 'pending'}
+                </span>
+            </div>
+            <div className="mt-3 grid grid-cols-2 gap-2 text-xs" style={{ color: THEME.textMuted }}>
+                {data.reference && <div><span className="block text-[10px] uppercase" style={{ color: THEME.textSoft }}>Reference</span>{data.reference}</div>}
+                {data.date && <div><span className="block text-[10px] uppercase" style={{ color: THEME.textSoft }}>Date</span>{data.date}</div>}
+                {data.visitors !== undefined && <div><span className="block text-[10px] uppercase" style={{ color: THEME.textSoft }}>Visitors</span>{data.visitors}</div>}
+                {data.participants !== undefined && <div><span className="block text-[10px] uppercase" style={{ color: THEME.textSoft }}>Participants</span>{data.participants}</div>}
+            </div>
+        </div>
+    );
+};
+
+const ResponseCard = ({ data }) => {
+    if (['animal', 'plant', 'zoo-event'].includes(data.kind)) return <ZooCard data={data} theme={THEME} />;
+    return <OperationalCard data={data} />;
+};
+
 const ROLE_CONFIG = {
     admin: {
         name: 'AI Assist',
@@ -116,6 +151,20 @@ const createChatSession = () => ({
     messages: [],
     updatedAt: Date.now()
 });
+
+const createConversationTitle = (message = '') => {
+    const text = message.toLowerCase();
+    const titleGroups = [
+        { words: ['reservation', 'booking'], titles: ['Reservation Review', 'Booking Desk', 'Reservation Check'] },
+        { words: ['ticket', 'tickets'], titles: ['Ticket Operations', 'Ticket Review', 'Visitor Tickets'] },
+        { words: ['event', 'events', 'calendar'], titles: ['Event Planning', 'Event Schedule', 'Program Review'] },
+        { words: ['animal', 'animals', 'plant', 'plants'], titles: ['Records Review', 'Zoo Records', 'Collection Notes'] },
+        { words: ['staff', 'shift', 'priority', 'task'], titles: ['Daily Operations', 'Staff Planning', 'Operations Brief'] }
+    ];
+    const group = titleGroups.find(candidate => candidate.words.some(word => text.includes(word)));
+    const titles = group?.titles || ['Operations Notes', 'Zoo Workspace', 'Quick Brief', 'Daily Review'];
+    return titles[Math.floor(Math.random() * titles.length)];
+};
 
 const detectMessageLanguage = (text = '') => {
     const normalized = String(text || '').toLowerCase();
@@ -168,8 +217,6 @@ const RoleCompanionAssistant = ({ onClose, role = 'staff', confirmOnOutside = tr
     const normalizedRole = role === 'admin' ? 'admin' : 'staff';
     const config = ROLE_CONFIG[normalizedRole];
     const navigate = useNavigate();
-    const sessionsKey = `ai_assist_sessions_${normalizedRole}`;
-    const legacySessionKey = `ai_assist_session_${normalizedRole}`;
 
     const [started, setStarted] = useState(false);
     const [messages, setMessages] = useState([]);
@@ -189,34 +236,44 @@ const RoleCompanionAssistant = ({ onClose, role = 'staff', confirmOnOutside = tr
     const panelRef = useRef(null);
 
     useEffect(() => {
-        try {
-            const savedSessions = sessionStorage.getItem(sessionsKey);
-            let parsedSessions = savedSessions ? JSON.parse(savedSessions) : [];
+        const loadSessions = async () => {
+            try {
+                const response = await fetch(`${API_BASE_URL}/ai/companion/sessions`, {
+                    headers: getAuthHeaders(normalizedRole)
+                });
+                const data = await response.json();
+                let parsedSessions = data.success && Array.isArray(data.sessions) ? data.sessions : [];
 
-            if (!Array.isArray(parsedSessions) || parsedSessions.length === 0) {
-                const legacySession = sessionStorage.getItem(legacySessionKey);
-                const parsedLegacy = legacySession ? JSON.parse(legacySession) : null;
-                parsedSessions = parsedLegacy?.messages?.length > 0
-                    ? [{ ...createChatSession(), title: 'Previous chat', messages: parsedLegacy.messages, updatedAt: Date.now() }]
-                    : [createChatSession()];
+                if (parsedSessions.length === 0) {
+                    const createResponse = await fetch(`${API_BASE_URL}/ai/companion/sessions`, {
+                        method: 'POST',
+                        headers: getAuthHeaders(normalizedRole),
+                        body: JSON.stringify({ title: 'New chat', messages: [] })
+                    });
+                    const createData = await createResponse.json();
+                    parsedSessions = createData.success && createData.session ? [createData.session] : [];
+                }
+
+                if (parsedSessions.length > 0) {
+                    const active = parsedSessions[0];
+                    setSessions(parsedSessions);
+                    setActiveSessionId(active.id);
+                    setMessages(active.messages || []);
+                    setStarted((active.messages || []).length > 0);
+                }
+            } catch {
+                const freshSession = createChatSession();
+                setSessions([freshSession]);
+                setActiveSessionId(freshSession.id);
+                setMessages([]);
+                setStarted(false);
+            } finally {
+                setSessionHydrated(true);
             }
+        };
 
-            const activeSession = parsedSessions[0];
-            setSessions(parsedSessions);
-            setActiveSessionId(activeSession.id);
-            setMessages(activeSession.messages || []);
-            setStarted((activeSession.messages || []).length > 0);
-            sessionStorage.removeItem(legacySessionKey);
-        } catch {
-            const freshSession = createChatSession();
-            setSessions([freshSession]);
-            setActiveSessionId(freshSession.id);
-            setMessages([]);
-            setStarted(false);
-        } finally {
-            setSessionHydrated(true);
-        }
-    }, [legacySessionKey, sessionsKey]);
+        loadSessions();
+    }, [normalizedRole]);
 
     useEffect(() => {
         if (!sessionHydrated || !activeSessionId) return;
@@ -225,23 +282,37 @@ const RoleCompanionAssistant = ({ onClose, role = 'staff', confirmOnOutside = tr
             ? { ...session, messages, updatedAt: Date.now() }
             : session
         ));
-    }, [activeSessionId, messages, sessionHydrated]);
 
-    useEffect(() => {
-        if (!sessionHydrated || sessions.length === 0) return;
-        sessionStorage.setItem(sessionsKey, JSON.stringify(sessions));
-    }, [sessions, sessionHydrated, sessionsKey]);
+        fetch(`${API_BASE_URL}/ai/companion/sessions/${activeSessionId}`, {
+            method: 'PUT',
+            headers: getAuthHeaders(normalizedRole),
+            body: JSON.stringify({ messages })
+        }).catch(() => {
+            // Keep the conversation available in the current view if saving is temporarily unavailable.
+        });
+    }, [activeSessionId, messages, normalizedRole, sessionHydrated]);
 
     useEffect(() => {
         if (!sessionHydrated || !activeSessionId) return;
         const firstUserMessage = messages.find(message => message.role === 'user')?.content;
         if (!firstUserMessage) return;
+        const currentSession = sessions.find(session => session.id === activeSessionId);
+        if (currentSession?.title !== 'New chat') return;
+        const title = createConversationTitle(firstUserMessage);
 
         setSessions(prev => prev.map(session => session.id === activeSessionId && session.title === 'New chat'
-            ? { ...session, title: firstUserMessage.slice(0, 34) + (firstUserMessage.length > 34 ? '...' : '') }
+            ? { ...session, title }
             : session
         ));
-    }, [activeSessionId, messages, sessionHydrated]);
+
+        fetch(`${API_BASE_URL}/ai/companion/sessions/${activeSessionId}`, {
+            method: 'PUT',
+            headers: getAuthHeaders(normalizedRole),
+            body: JSON.stringify({ title })
+        }).catch(() => {
+            // The active conversation remains usable if title saving is temporarily unavailable.
+        });
+    }, [activeSessionId, messages, normalizedRole, sessionHydrated, sessions]);
 
     const selectSession = (session) => {
         setActiveSessionId(session.id);
@@ -251,26 +322,51 @@ const RoleCompanionAssistant = ({ onClose, role = 'staff', confirmOnOutside = tr
         setSessionSidebarOpen(false);
     };
 
-    const startNewSession = () => {
-        const newSession = createChatSession();
-        setSessions(prev => [newSession, ...prev]);
-        setActiveSessionId(newSession.id);
-        setMessages([]);
-        setStarted(false);
-        setInput('');
-        setSessionSidebarOpen(false);
+    const startNewSession = async () => {
+        try {
+            const response = await fetch(`${API_BASE_URL}/ai/companion/sessions`, {
+                method: 'POST',
+                headers: getAuthHeaders(normalizedRole),
+                body: JSON.stringify({ title: 'New chat', messages: [] })
+            });
+            const data = await response.json();
+            if (!data.success || !data.session) return;
+            const newSession = data.session;
+            setSessions(prev => [newSession, ...prev]);
+            setActiveSessionId(newSession.id);
+            setMessages([]);
+            setStarted(false);
+            setInput('');
+            setSessionSidebarOpen(false);
+        } catch {
+            // Do not switch away from the current conversation if creation fails.
+        }
     };
 
-    const deleteSession = (sessionId) => {
-        setSessions(prev => {
-            const remaining = prev.filter(session => session.id !== sessionId);
-            const nextSessions = remaining.length > 0 ? remaining : [createChatSession()];
-            const nextActive = nextSessions.find(session => session.id === activeSessionId) || nextSessions[0];
+    const deleteSession = async (sessionId) => {
+        try {
+            await fetch(`${API_BASE_URL}/ai/companion/sessions/${sessionId}`, {
+                method: 'DELETE',
+                headers: getAuthHeaders(normalizedRole)
+            });
+        } catch {
+            return;
+        }
+
+        const remaining = sessions.filter(session => session.id !== sessionId);
+        if (remaining.length === 0) {
+            setSessions([]);
+            await startNewSession();
+            return;
+        }
+
+        setSessions(remaining);
+        if (sessionId === activeSessionId) {
+            const nextActive = remaining[0];
             setActiveSessionId(nextActive.id);
             setMessages(nextActive.messages || []);
             setStarted((nextActive.messages || []).length > 0);
-            return nextSessions;
-        });
+        }
         setInput('');
     };
 
@@ -392,7 +488,7 @@ const RoleCompanionAssistant = ({ onClose, role = 'staff', confirmOnOutside = tr
             {showCloseConfirm && (
                 <Modal
                     title={`Close ${assistantIdentity}?`}
-                    subtitle="Your conversation will not be saved."
+                    subtitle="Your conversation is saved automatically."
                     cancelLabel="Cancel"
                     confirmLabel="Close"
                     onCancel={() => setShowCloseConfirm(false)}
@@ -590,20 +686,7 @@ const RoleCompanionAssistant = ({ onClose, role = 'staff', confirmOnOutside = tr
                                             {msg.cards?.length > 0 && (
                                                 <div className="w-full space-y-2">
                                                     {msg.cards.map((card, cardIndex) => (
-                                                        <div key={`${card.kind}-${card.reference || card.id || cardIndex}`} className="rounded-xl px-4 py-3 text-sm" style={{ background: THEME.surface, border: `1px solid ${THEME.border}` }}>
-                                                            <div className="flex items-center justify-between gap-3">
-                                                                <span className="font-bold" style={{ color: THEME.text }}>{card.title || card.name || 'Record'}</span>
-                                                                {card.status && <span className="text-xs font-semibold uppercase" style={{ color: THEME.accentDark }}>{card.status}</span>}
-                                                            </div>
-                                                            <div className="mt-1 text-xs space-y-0.5" style={{ color: THEME.textMuted }}>
-                                                                {card.reference && <p>Reference: {card.reference}</p>}
-                                                                {card.date && <p>Date: {card.date}{card.time ? ` at ${card.time}` : ''}</p>}
-                                                                {card.visitors !== undefined && <p>Visitors: {card.visitors}</p>}
-                                                                {card.participants !== undefined && <p>Participants: {card.participants}</p>}
-                                                                {card.species && <p>Species: {card.species}</p>}
-                                                                {card.location && <p>Location: {card.location}</p>}
-                                                            </div>
-                                                        </div>
+                                                        <ResponseCard key={`${card.kind}-${card.reference || card.id || cardIndex}`} data={card} />
                                                     ))}
                                                 </div>
                                             )}
