@@ -8,8 +8,8 @@
     "background_color": "#c6fe69",
     "icons": [
         {
-            "src": "https://cdn-icons-png.flaticon.com/128/12801/12801273.png",
-            "sizes": "128x128",
+            "src": "/bz-url-logo.png",
+            "sizes": "1003x1003",
             "type": "image/png"
         }
     ]

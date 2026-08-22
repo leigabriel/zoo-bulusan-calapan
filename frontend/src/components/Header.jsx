@@ -447,7 +447,7 @@ const Header = () => {
                     <div className="flex items-center h-full">
                         <div className="flex items-center flex-shrink-0 w-[180px]">
                             <Link to="/" className="flex items-center" onClick={(e) => { e.preventDefault(); setIsMenuOpen(false); handleTransitionNavigate(e, '/'); }}>
-                                <img src="https://cdn-icons-png.flaticon.com/128/12801/12801273.png" alt="Logo" className="w-7 h-7 object-contain mr-2" />
+                                <img src="/bz-url-logo.png" alt="Logo" className="w-7 h-7 object-contain mr-2" />
                                 <span className="text-[18px] font-bold text-[#212631] tracking-tight">
                                     BULUSAN ZOO
                                 </span>

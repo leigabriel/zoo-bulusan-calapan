@@ -17,35 +17,33 @@ const SocialIcon = ({ children, label }) => (
 const GiantTitle = () => {
     const ref = useRef(null);
     const isInView = useInView(ref, { once: false, margin: "0px" });
-    const word = "bulusan".split("");
 
     return (
-        <div ref={ref} className="relative w-full flex justify-center items-end mt-8 pointer-events-none">
-            <div className="flex w-full justify-between items-end overflow-hidden">
-                {word.map((char, i) => (
-                    <motion.span
-                        key={i}
-                        className="inline-block lowercase select-none"
-                        style={{
-                            fontFamily: "'DM Sans', 'Inter', sans-serif",
-                            fontSize: "clamp(4rem, 17vw, 22vw)",
-                            fontWeight: 900,
-                            lineHeight: 0.78,
-                            letterSpacing: "-0.05em",
-                            color: "#ffffff",
-                        }}
-                        initial={{ y: "100%", opacity: 0 }}
-                        animate={isInView ? { y: "0%", opacity: 1 } : { y: "100%", opacity: 0 }}
-                        transition={{
-                            duration: 0.8,
-                            delay: i * 0.07,
-                            ease: [0.16, 1, 0.3, 1],
-                        }}
-                    >
-                        {char}
-                    </motion.span>
-                ))}
-            </div>
+        <div ref={ref} className="relative w-full mt-8 pointer-events-none overflow-hidden flex items-end justify-between gap-4">
+            <motion.span
+                className="block text-left select-none"
+                style={{
+                    fontFamily: "'Mistral', 'Brush Script MT', cursive",
+                    fontSize: "clamp(3.5rem, 16vw, 20vw)",
+                    fontWeight: 400,
+                    lineHeight: 1,
+                    letterSpacing: 0,
+                    color: "#ffffff",
+                }}
+                initial={{ y: "100%", opacity: 0 }}
+                animate={isInView ? { y: "0%", opacity: 1 } : { y: "100%", opacity: 0 }}
+                transition={{
+                    duration: 0.8,
+                    ease: [0.16, 1, 0.3, 1],
+                }}
+            >
+                Bulusan Zoo
+            </motion.span>
+            <img
+                src="/bz-url-logo.png"
+                alt="Bulusan Zoo logo"
+                className="w-14 h-14 md:w-20 md:h-20 object-contain select-none flex-shrink-0 mb-2"
+            />
         </div>
     );
 };
@@ -89,7 +87,7 @@ const Footer = () => {
                                 <li key={link.label} className="border-b border-white/[0.06] last:border-b-0">
                                     <Link
                                         to={link.path}
-                                        className="text-[2rem] font-bold tracking-tight leading-[1.1] lowercase block py-1 hover:text-white/40 transition-colors"
+                                        className="text-[2rem] font-bold tracking-tight leading-[1.1] lowercase block py-1 hover:text-[#c6fe69] transition-colors"
                                     >
                                         {link.label}
                                     </Link>
@@ -129,9 +127,9 @@ const Footer = () => {
                         <PillBadge text="contact" />
                         <div className="text-[2rem] font-bold tracking-tight leading-[1.1] lowercase">
                             <a href="mailto:info@bulusanwildlife.com" className="hover:text-white/40 transition-colors block">
-                                info@bulusan<br />wildlife.com
+                                Not available yet
                             </a>
-                            <p className="mt-3 text-[1.4rem] text-white/60 font-bold">(043) 123-4567</p>
+                            <p className="mt-3 text-[1.4rem] text-white/60 font-bold"></p>
                         </div>
                         <p className="text-[11px] mt-4 text-white/30 italic leading-relaxed">
                             *we're nature lovers: please leave a message.
@@ -167,7 +165,7 @@ const Footer = () => {
                         className="mt-4 flex justify-between items-center"
                     >
                         <span className="text-[11px] font-medium text-white/30 uppercase tracking-widest">
-                            © {currentYear} bwci.
+                            © {currentYear} Bulusan Zoo. All rights reserved.
                         </span>
                         <button
                             onClick={scrollToTop}
