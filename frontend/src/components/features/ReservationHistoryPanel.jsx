@@ -47,7 +47,7 @@ const Icons = {
     )
 };
 
-const ReservationHistoryPanel = ({ isOpen, onClose }) => {
+const ReservationHistoryPanel = ({ isOpen, onClose, paymentReturn = false }) => {
     const navigate = useNavigate();
     const { isAuthenticated } = useAuth();
     const [activeTab, setActiveTab] = useState('all');
@@ -268,6 +268,16 @@ const ReservationHistoryPanel = ({ isOpen, onClose }) => {
             fetchReservations();
         }
     }, [isOpen, isAuthenticated]);
+
+    useEffect(() => {
+        if (!isOpen || !isAuthenticated || !paymentReturn) return undefined;
+        const interval = window.setInterval(fetchReservations, 2000);
+        const timeout = window.setTimeout(() => window.clearInterval(interval), 15000);
+        return () => {
+            window.clearInterval(interval);
+            window.clearTimeout(timeout);
+        };
+    }, [isOpen, isAuthenticated, paymentReturn]);
 
     const fetchReservations = async () => {
         try {

@@ -103,13 +103,16 @@ class Reservation {
         return rows;
     }
 
-    static async findEventReservationByPaymentReference(checkoutSessionId, reservationReference) {
+    static async findEventReservationByPaymentReference(checkoutSessionId, reservationReference, paymentId, reservationId) {
         const [rows] = await db.query(
             `SELECT * FROM event_reservations
              WHERE (paymongo_checkout_session_id = ? AND ? IS NOT NULL)
                 OR (reservation_reference = ? AND ? IS NOT NULL)
+                OR (paymongo_payment_id = ? AND ? IS NOT NULL)
+                OR (id = ? AND ? IS NOT NULL)
              LIMIT 1`,
-            [checkoutSessionId || null, checkoutSessionId || null, reservationReference || null, reservationReference || null]
+            [checkoutSessionId || null, checkoutSessionId || null, reservationReference || null, reservationReference || null,
+                paymentId || null, paymentId || null, reservationId || null, reservationId || null]
         );
         return rows[0];
     }

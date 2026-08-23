@@ -123,7 +123,7 @@ const HeroSection = () => {
                     </div>
                     <button
                         onClick={() => navigate('/reservations')}
-                        className="hero-btn group pointer-events-auto bg-[#c6fe69] text-black p-1 sm:p-1.5 rounded-xl cursor-pointer transition-all duration-300 ease-out hover:scale-110 hover:drop-shadow-xl active:scale-95 focus:outline-none drop-shadow-md transform-gpu"
+                        className="hero-btn group pointer-events-auto bg-green-400 text-black p-1 sm:p-1.5 rounded-xl cursor-pointer transition-all duration-300 ease-out hover:scale-110 hover:drop-shadow-xl active:scale-95 focus:outline-none drop-shadow-md transform-gpu"
                         style={ticketMaskStyle}
                     >
                         <div className="w-full h-full rounded-lg flex items-center justify-center py-1.5 sm:py-0.5 px-7 sm:px-9">
@@ -145,7 +145,7 @@ const HeroSection = () => {
 
 const AboutSection = () => (
     <section className="relative w-full h-[100svh] p-4 sm:p-8 overflow-hidden bg-[#fff]">
-        <div className="w-full h-full flex justify-center items-center text-center rounded-[1.5rem] sm:rounded-[2rem] bg-[#c6fe69] px-4">
+        <div className="w-full h-full flex justify-center items-center text-center rounded-[1.5rem] sm:rounded-[2rem] bg-green-400 px-4">
             <h1 className="w-full sm:w-[90%] md:w-[90%] text-[#000] text-3xl sm:text-[2rem] md:text-[5rem] font-black leading-[1.1] md:leading-[1]">
                 Bulusan Zoo Nature Park is more than a destination, it is a place where nature,
                 wildlife, and serenity meet, inviting every visitor to slow down, appreciate,

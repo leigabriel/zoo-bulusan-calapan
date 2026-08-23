@@ -28,14 +28,18 @@ const paymongoRequest = async (body) => {
     return payload.data;
 };
 
+const extractPaymentResource = (event) => event?.data?.data || event?.data?.attributes?.data || event?.data?.attributes?.resource || event?.data;
+
 const extractCheckout = (event) => {
-    const resource = event?.data?.data || event?.data?.attributes?.data || event?.data?.attributes?.resource || event?.data;
+    const resource = extractPaymentResource(event);
     const attributes = resource?.attributes || {};
     const payment = Array.isArray(attributes.payments) ? attributes.payments[0] : null;
     return {
         id: resource?.id || null,
-        paymentId: payment?.id || attributes.payment_id || attributes.payment_intent?.id || null,
-        metadata: attributes.metadata || {},
+        checkoutSessionId: attributes.checkout_session_id || attributes.checkout_session?.id || null,
+        paymentId: payment?.id || attributes.payment_id || attributes.payment_intent?.id ||
+            (resource?.type === 'payment' || resource?.type === 'qr' ? resource.id : null),
+        metadata: { ...(attributes.metadata || {}), ...(attributes.payment_intent?.attributes?.metadata || {}) },
         referenceNumber: attributes.reference_number || null
     };
 };
@@ -46,27 +50,39 @@ const verifyWebhook = (req) => {
 
     const signature = req.headers['paymongo-signature'];
     if (!signature) return false;
-    const parts = Object.fromEntries(signature.split(',').map(part => part.split('=')));
-    const timestamp = parts.te;
+    const parts = Object.fromEntries(signature.split(',').map(part => {
+        const separator = part.indexOf('=');
+        return separator === -1 ? [part, ''] : [part.slice(0, separator), part.slice(separator + 1)];
+    }));
+    const timestamp = parts.t;
+    if (!timestamp || !Buffer.isBuffer(req.body)) return false;
     const signedPayload = `${timestamp}.${req.body.toString('utf8')}`;
     const expected = crypto.createHmac('sha256', secret).update(signedPayload).digest('hex');
-    const provided = parts.li || parts.h1;
-    if (!provided || provided.length !== expected.length) return false;
-    return crypto.timingSafeEqual(Buffer.from(provided), Buffer.from(expected));
+    return [parts.li, parts.te].some(provided => {
+        if (!provided || provided.length !== expected.length) return false;
+        return crypto.timingSafeEqual(Buffer.from(provided, 'utf8'), Buffer.from(expected, 'utf8'));
+    });
 };
 
 const updatePaymentFromWebhook = async (event) => {
     const eventType = event?.data?.type || event?.data?.attributes?.type || event?.type || '';
     const checkout = extractCheckout(event);
-    if (!checkout.id) return;
+    const metadata = checkout.metadata || {};
+    const checkoutId = checkout.checkoutSessionId || (event?.data?.type === 'checkout_session' ? checkout.id : null);
 
     const reservation = await Reservation.findEventReservationByPaymentReference(
-        checkout.id,
-        checkout.referenceNumber || checkout.metadata.reservation_reference
+        checkoutId,
+        checkout.referenceNumber || metadata.reservation_reference,
+        checkout.paymentId,
+        metadata.reservation_id
     );
-    if (!reservation) return;
+    if (!reservation) {
+        console.warn('PayMongo webhook reservation mismatch:', eventType, checkout.id || checkout.paymentId || 'unknown');
+        return;
+    }
 
-    if (eventType.includes('paid')) {
+    if (eventType === 'qr.paid' || eventType === 'payment.paid' || eventType.endsWith('.paid')) {
+        if (reservation.payment_status === 'paid') return;
         await Reservation.updateEventPayment(reservation.id, {
             paymentStatus: 'paid',
             paymentId: checkout.paymentId,
@@ -207,17 +223,24 @@ exports.createEventCheckout = async (req, res) => {
 
 exports.handleWebhook = async (req, res) => {
     try {
-        if (!verifyWebhook(req)) return res.status(400).json({ success: false, message: 'Invalid webhook signature.' });
-        const event = JSON.parse(req.body.toString('utf8'));
-        const eventId = event?.id || event?.data?.id || `${event?.data?.type || 'event'}:${event?.data?.data?.id || event?.data?.attributes?.data?.id || Date.now()}`;
-        if (eventId) {
-            const [result] = await db.query('INSERT IGNORE INTO paymongo_webhook_events (event_id) VALUES (?)', [eventId]);
-            if (result.affectedRows === 0) return res.json({ success: true });
+        if (!verifyWebhook(req)) {
+            console.warn('PayMongo webhook signature validation failed.');
+            return res.status(400).json({ success: false, message: 'Invalid webhook signature.' });
         }
+        let event;
+        try {
+            event = JSON.parse(req.body.toString('utf8'));
+        } catch {
+            console.warn('PayMongo webhook contained invalid JSON.');
+            return res.status(400).json({ success: false, message: 'Invalid webhook body.' });
+        }
+        const eventId = event?.id || event?.data?.id || crypto.createHash('sha256').update(req.body).digest('hex');
+        const [claim] = await db.query('INSERT IGNORE INTO paymongo_webhook_events (event_id) VALUES (?)', [eventId]);
+        if (claim.affectedRows === 0) return res.status(200).json({ success: true });
         await updatePaymentFromWebhook(event);
-        res.json({ success: true });
+        return res.status(200).json({ success: true });
     } catch (error) {
         console.error('Error handling PayMongo webhook:', error);
-        res.status(500).json({ success: false, message: 'Webhook processing failed.' });
+        return res.status(200).json({ success: true });
     }
 };

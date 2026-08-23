@@ -68,7 +68,7 @@ const SectionLabel = ({ label }) => (
 
 const MenuItem = ({ iconUrl, label, badge, danger, to, onClick, onClose, isLast, onNavigate }) => {
     const inner = (
-        <span className={`flex items-center gap-3 px-4 py-3 transition-colors group ${danger ? 'hover:bg-red-50/60' : 'hover:bg-gray-50'} ${!isLast ? 'border-b border-gray-50' : ''}`}>
+        <span className={`flex items-center gap-3 px-4 py-3 transition-colors group ${danger ? 'hover:bg-red-50/60' : 'hover:bg-green-400'} ${!isLast ? 'border-b border-gray-50' : ''}`}>
             <span className={`w-8 h-8 flex items-center justify-center rounded-xl flex-shrink-0 ${danger ? 'bg-red-50' : 'bg-gray-50'}`}>
                 <img
                     src={iconUrl}
@@ -451,7 +451,7 @@ const Header = () => {
                         </div>
 
                         <nav className="hidden md:flex flex-1 items-center justify-center">
-                            <div className="flex items-center border border-gray-500 shadow-md shadow-gray-400 gap-0.5 bg-[#c6fe69] rounded-full px-1.5 py-1.5">
+                            <div className="flex items-center border border-gray-500 shadow-md shadow-gray-400 gap-0.5 bg-green-400 rounded-full px-1.5 py-1.5">
                                 {NAV_LINKS.map((link) => (
                                     <Link
                                         key={link.path}
@@ -459,7 +459,7 @@ const Header = () => {
                                         onClick={(e) => { e.preventDefault(); handleTransitionNavigate(e, link.path); }}
                                         className={`px-4 py-1.5 rounded-full text-[13px] font-medium transition-all duration-150 whitespace-nowrap ${location.pathname === link.path
                                             ? 'bg-[#000] text-gray-100 shadow-sm'
-                                            : 'text-[#000]/50 hover:text-gray-600'
+                                            : 'text-[#000]/50 hover:text-gray-800'
                                             }`}
                                     >
                                         {link.label}
@@ -484,7 +484,7 @@ const Header = () => {
                             ) : user ? (
                                 <button
                                     onClick={() => setShowSidePanel(true)}
-                                    className="flex items-center gap-2 pl-1 pr-3 py-1 rounded-full border border-gray-200 bg-white hover:border-gray-500 hover:bg-[#c6fe69] transition-all"
+                                    className="flex items-center gap-2 pl-1 pr-3 py-1 rounded-full border border-gray-200 bg-white hover:border-gray-500 hover:bg-green-400 transition-all"
                                 >
                                     <img
                                         src={avatarSrc}
@@ -545,7 +545,7 @@ const Header = () => {
                                     key={link.path}
                                     to={link.path}
                                     onClick={(e) => { e.preventDefault(); setIsMenuOpen(false); handleTransitionNavigate(e, link.path); }}
-                                    className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${active ? 'bg-[#c6fe69]' : 'hover:bg-gray-50'}`}
+                                     className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${active ? 'bg-green-400' : 'hover:bg-gray-50'}`}
                                 >
                                     <img
                                         src={link.iconUrl}
@@ -659,7 +659,7 @@ const Header = () => {
                             <Link
                                 to={getProfilePath()}
                                 onClick={(e) => { e.preventDefault(); closeSidePanel(); handleTransitionNavigate(e, getProfilePath()); }}
-                                className="group flex items-center gap-3 rounded-2xl border border-emerald-100 bg-gradient-to-br from-emerald-50 to-lime-50 p-3 transition-all hover:-translate-y-0.5 hover:border-emerald-200 hover:shadow-md hover:shadow-emerald-100/70"
+                                 className="group flex items-center gap-3 rounded-2xl border border-emerald-100 bg-gradient-to-br from-emerald-50 to-lime-50 p-3 transition-all hover:-translate-y-0.5 hover:border-green-400 hover:shadow-md hover:shadow-emerald-100/70"
                                 aria-label={`Open profile for ${displayName}`}
                             >
                                 <img
@@ -672,12 +672,12 @@ const Header = () => {
                                 <span className="min-w-0 flex-1">
                                     <span className="block text-[13px] font-bold text-[#172018] truncate">{displayName}</span>
                                     <span className="mt-0.5 block truncate text-[11px] text-gray-500">{profileEmail}</span>
-                                    <span className="mt-1 block text-[10px] font-semibold uppercase tracking-wider text-emerald-700">View profile</span>
+                                     <span className="mt-1 block text-[10px] font-semibold uppercase tracking-wider text-green-400">View profile</span>
                                 </span>
-                                <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-white text-gray-400 shadow-sm transition-colors group-hover:text-emerald-700" aria-hidden="true">›</span>
+                                 <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-white text-gray-400 shadow-sm transition-colors group-hover:text-green-400" aria-hidden="true">›</span>
                             </Link>
                         ) : (
-                            <Link to="/login" onClick={closeSidePanel} className="block rounded-2xl bg-[#172018] px-4 py-3 text-center text-[13px] font-semibold text-white transition-colors hover:bg-emerald-900">
+                             <Link to="/login" onClick={closeSidePanel} className="block rounded-2xl bg-[#172018] px-4 py-3 text-center text-[13px] font-semibold text-white transition-colors hover:bg-green-400">
                                 Sign in to your account
                             </Link>
                         )}

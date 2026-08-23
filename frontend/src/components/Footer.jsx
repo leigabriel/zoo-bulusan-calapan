@@ -28,7 +28,7 @@ const GiantTitle = () => {
                     fontWeight: 400,
                     lineHeight: 1,
                     letterSpacing: 0,
-                    color: "#c6fe69",
+                    color: "#05df72",
                 }}
                 initial={{ y: "100%", opacity: 0 }}
                 animate={isInView ? { y: "0%", opacity: 1 } : { y: "100%", opacity: 0 }}
@@ -87,7 +87,7 @@ const Footer = () => {
                                 <li key={link.label} className="border-b border-white/[0.06] last:border-b-0">
                                     <Link
                                         to={link.path}
-                                        className="text-[2rem] font-bold tracking-tight leading-[1.1] lowercase block py-1 hover:text-[#c6fe69] transition-colors"
+                                        className="text-[2rem] font-bold tracking-tight leading-[1.1] lowercase block py-1 hover:text-green-400 transition-colors"
                                     >
                                         {link.label}
                                     </Link>

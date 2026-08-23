@@ -88,6 +88,7 @@ const Reservations = () => {
     const [idUploadError, setIdUploadError] = useState('');
     const [eventForm, setEventForm] = useState({ venueEventName: '', venueEventDate: '', venueEventStartTime: '', venueEventEndTime: '', venueEventDescription: '', numberOfParticipants: 1, participantName: '', participantEmail: '', participantPhone: '', notes: '' });
     const [showHistoryPanel, setShowHistoryPanel] = useState(false);
+    const [paymentReturn, setPaymentReturn] = useState(false);
     const [ticketAvailability, setTicketAvailability] = useState([]);
     const [eventAvailability, setEventAvailability] = useState([]);
     const [loadingSlots, setLoadingSlots] = useState(false);
@@ -113,6 +114,7 @@ const Reservations = () => {
 
         if (paymentResult === 'success') {
             notify.success('Payment submitted. Your reservation will update after PayMongo confirms it.');
+            setPaymentReturn(true);
         } else if (paymentResult === 'cancelled') {
             notify.info('Payment was cancelled. You can try again from reservation history.');
         }
@@ -846,7 +848,7 @@ const Reservations = () => {
                     )}
                 </AnimatePresence>
 
-                <ReservationHistoryPanel isOpen={showHistoryPanel} onClose={() => setShowHistoryPanel(false)} />
+                <ReservationHistoryPanel isOpen={showHistoryPanel} paymentReturn={paymentReturn} onClose={() => setShowHistoryPanel(false)} />
                 <Footer />
                 <AIFloatingButton />
             </div>
