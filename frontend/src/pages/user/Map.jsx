@@ -26,21 +26,24 @@ const animalHabitats = [
 ];
 
 const regionColors = {
-    'Africa': '#879f35',
-    'Asia': '#658b27',
-    'Australia & Oceania': '#4d7a35',
-    'The Americas': '#789c2b',
-    'Polar Regions': '#526f3c',
-    'Europe': '#6f8f37'
+    'Africa': '#b8784e',
+    'Asia': '#5f8065',
+    'Australia & Oceania': '#7a9b86',
+    'The Americas': '#6d8592',
+    'Polar Regions': '#8098ad',
+    'Europe': '#987c66'
 };
 
 const DiscoveryList = memo(({ isMobile, filterRegion, setFilterRegion, selectedAnimal, onSelect, onClose }) => (
-    <div className={`flex flex-col h-full bg-white ${!isMobile && 'border-l border-[#c6fe69]/60 shadow-2xl'}`}>
-        <div className="p-5 md:p-8 border-b border-[#c6fe69]/50 bg-[#c6fe69]/20">
-            <div className="flex items-center justify-between mb-6">
-                <h1 className="text-xl md:text-2xl font-black tracking-tight text-[#212631]">Wildlife Origins</h1>
+    <div className={`flex flex-col h-full bg-[#fffdf8] ${!isMobile && 'border-l border-[#dce5dc] shadow-2xl'}`}>
+        <div className="p-5 md:p-8 border-b border-[#dce5dc] bg-[#f1f5ed]">
+            <div className="flex items-start justify-between mb-5">
+                <div>
+                    <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[#6d8572]">Field guide</p>
+                    <h1 className="mt-1 text-xl md:text-2xl font-black tracking-tight text-[#1f3328]">Wildlife Origins</h1>
+                </div>
                 {isMobile && (
-                    <button onClick={onClose} className="p-2 text-teal-400">
+                    <button onClick={onClose} className="p-2 text-[#52675a] hover:bg-white rounded-xl transition-colors" aria-label="Close wildlife origins">
                         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
                     </button>
                 )}
@@ -50,26 +53,26 @@ const DiscoveryList = memo(({ isMobile, filterRegion, setFilterRegion, selectedA
                     <button
                         key={region}
                         onClick={() => setFilterRegion(region)}
-                        className={`whitespace-nowrap px-4 py-2 rounded-full text-[10px] font-bold transition-all border ${filterRegion === region ? 'bg-[#212631] text-[#c6fe69] border-[#212631] shadow-md' : 'bg-white text-[#526f3c] border-[#c6fe69]/70 hover:border-[#526f3c]'}`}
+                        className={`whitespace-nowrap px-3.5 py-2 rounded-full text-[10px] font-bold transition-all border ${filterRegion === region ? 'bg-[#1f3328] text-white border-[#1f3328] shadow-sm' : 'bg-[#fffdf8] text-[#52675a] border-[#d5e1d5] hover:border-[#78927e]'}`}
                     >
                         {region}
                     </button>
                 ))}
             </div>
         </div>
-        <div className="flex-1 overflow-y-auto p-4 space-y-2 hide-scrollbar">
+        <div className="flex-1 min-h-0 overflow-y-auto p-3 md:p-4 space-y-2 hide-scrollbar">
             {animalHabitats.filter(a => filterRegion === 'All' || a.region === filterRegion).map(animal => (
                 <div
                     key={animal.id}
                     onClick={() => onSelect(animal)}
-                     className={`flex items-center gap-4 p-4 rounded-2xl transition-all cursor-pointer ${selectedAnimal?.id === animal.id ? 'bg-[#212631] text-white shadow-lg scale-[1.02]' : 'hover:bg-[#c6fe69]/30 hover:translate-x-1'}`}
+                      className={`flex items-center gap-4 p-3.5 rounded-2xl transition-all cursor-pointer ${selectedAnimal?.id === animal.id ? 'bg-[#1f3328] text-white shadow-lg' : 'hover:bg-[#edf3eb] hover:translate-x-1'}`}
                 >
                     <div className="w-12 h-12 rounded-xl bg-white shadow-sm flex items-center justify-center text-2xl flex-shrink-0">
                         {animal.icon}
                     </div>
                     <div className="flex-1 min-w-0">
                         <h4 className="font-bold text-sm truncate">{animal.name}</h4>
-                         <p className={`text-[9px] font-bold uppercase tracking-widest ${selectedAnimal?.id === animal.id ? 'text-[#c6fe69]' : 'text-[#658b27]'}`}>{animal.region}</p>
+                     <p className={`text-[9px] font-bold uppercase tracking-widest ${selectedAnimal?.id === animal.id ? 'text-[#b9d5bb]' : 'text-[#6d8572]'}`}>{animal.region}</p>
                     </div>
                 </div>
             ))}
@@ -193,20 +196,20 @@ const MapPage = () => {
     }, [filterRegion, isMapReady, handleSelect]);
 
     return (
-        <div className="wildlife-origins flex flex-col md:flex-row h-[100dvh] w-full bg-[#f4f7ed] overflow-hidden text-[#212631] antialiased">
+        <div className="wildlife-origins flex flex-col md:flex-row h-[100dvh] w-full bg-[#eef3ed] overflow-hidden text-[#1f3328] antialiased">
             <style>{`
-                .leaflet-container { background: #eef3e5 !important; }
+                .leaflet-container { background: #e8eee8 !important; }
                 .hide-scrollbar::-webkit-scrollbar { display: none; }
                 .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
             `}</style>
 
             <div className="flex-1 relative h-full">
                 <div className="absolute top-4 md:top-6 left-4 md:left-6 z-[1000] flex gap-2">
-                    <button onClick={() => setShowExitConfirm(true)} className="h-12 w-12 md:h-14 md:w-14 bg-white rounded-2xl shadow-xl flex items-center justify-center hover:bg-[#c6fe69] transition-all border border-[#c6fe69]">
-                        <svg className="w-6 h-6 text-[#212631]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+                    <button onClick={() => setShowExitConfirm(true)} className="h-12 w-12 md:h-14 md:w-14 bg-[#fffdf8] rounded-2xl shadow-lg flex items-center justify-center hover:bg-[#edf3eb] transition-all border border-[#dce5dc]" aria-label="Back">
+                        <svg className="w-6 h-6 text-[#1f3328]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
                     </button>
-                     <button onClick={() => setIsMobileListOpen(true)} className="md:hidden h-12 w-12 bg-white rounded-2xl shadow-xl flex items-center justify-center border border-[#c6fe69]">
-                         <svg className="w-6 h-6 text-[#212631]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16m-7 6h7" /></svg>
+                     <button onClick={() => setIsMobileListOpen(true)} className="md:hidden h-12 w-12 bg-[#fffdf8] rounded-2xl shadow-lg flex items-center justify-center border border-[#dce5dc]" aria-label="Open wildlife list">
+                         <svg className="w-6 h-6 text-[#1f3328]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16m-7 6h7" /></svg>
                     </button>
                 </div>
                 <div ref={mapContainerRef} className="h-full w-full" />
@@ -218,8 +221,8 @@ const MapPage = () => {
 
             {isMobileListOpen && (
                 <div className="fixed inset-0 z-[2000] md:hidden">
-                     <div className="absolute inset-0 bg-[#212631]/50 backdrop-blur-sm" onClick={() => setIsMobileListOpen(false)} />
-                    <div className="absolute bottom-0 left-0 right-0 h-[80dvh] rounded-t-[2.5rem] overflow-hidden animate-in slide-in-from-bottom duration-300">
+                     <div className="absolute inset-0 bg-[#1f3328]/45 backdrop-blur-sm" onClick={() => setIsMobileListOpen(false)} />
+                    <div className="absolute bottom-0 left-0 right-0 h-[min(80dvh,42rem)] rounded-t-[2.5rem] overflow-hidden animate-in slide-in-from-bottom duration-300 shadow-2xl">
                         <DiscoveryList isMobile={true} filterRegion={filterRegion} setFilterRegion={setFilterRegion} selectedAnimal={selectedAnimal} onSelect={handleSelect} onClose={() => setIsMobileListOpen(false)} />
                     </div>
                 </div>
@@ -227,32 +230,32 @@ const MapPage = () => {
 
             {selectedAnimal && (
                 <div className="fixed inset-0 z-[2001] flex items-center justify-center p-0 md:p-8">
-                     <div className="absolute inset-0 bg-[#212631]/70 backdrop-blur-md animate-in fade-in duration-300" onClick={() => setSelectedAnimal(null)} />
-                    <div className="relative w-full h-full md:h-auto md:max-w-4xl bg-white md:rounded-[3rem] shadow-2xl overflow-hidden flex flex-col md:flex-row animate-in zoom-in-95 duration-300">
-                        <div className="w-full md:w-1/2 h-[45dvh] md:h-auto relative">
+                     <div className="absolute inset-0 bg-[#1f3328]/70 backdrop-blur-md animate-in fade-in duration-300" onClick={() => setSelectedAnimal(null)} />
+                    <div className="relative w-full h-full md:h-[min(82dvh,48rem)] md:max-w-4xl bg-[#fffdf8] md:rounded-[2rem] shadow-2xl overflow-hidden flex flex-col md:flex-row animate-in zoom-in-95 duration-300">
+                        <div className="w-full md:w-1/2 h-[38dvh] md:h-auto relative shrink-0">
                             <img src={selectedAnimal.image} alt={selectedAnimal.name} className="w-full h-full object-cover" />
                             <button onClick={() => setSelectedAnimal(null)} className="absolute top-6 right-6 w-12 h-12 bg-black/30 backdrop-blur-xl rounded-full text-white flex items-center justify-center border border-white/20">
                                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12" /></svg>
                             </button>
                         </div>
                         <div className="flex-1 p-8 md:p-12 overflow-y-auto hide-scrollbar">
-                             <span className="px-4 py-2 rounded-full text-[9px] font-bold uppercase tracking-widest text-[#212631] mb-6 inline-block shadow-md bg-[#c6fe69]">{selectedAnimal.region}</span>
-                             <h2 className="text-4xl md:text-5xl font-black text-[#212631] mb-1 leading-tight">{selectedAnimal.name}</h2>
-                             <p className="text-xl italic text-[#658b27] mb-8 font-medium">{selectedAnimal.species}</p>
+                             <span className="px-3.5 py-2 rounded-full text-[9px] font-bold uppercase tracking-widest text-[#31533b] mb-5 inline-block bg-[#e5f0e3] border border-[#cfe0cc]">{selectedAnimal.region}</span>
+                             <h2 className="text-4xl md:text-5xl font-black text-[#1f3328] mb-1 leading-tight break-words">{selectedAnimal.name}</h2>
+                             <p className="text-lg italic text-[#6d8572] mb-7 font-medium break-words">{selectedAnimal.species}</p>
                             <div className="grid grid-cols-2 gap-4 mb-8">
-                                 <div className="p-5 bg-[#c6fe69]/25 rounded-2xl border border-[#c6fe69]/60">
-                                     <p className="text-[9px] uppercase font-black text-[#658b27] mb-1">Native Zone</p>
-                                     <p className="font-bold text-[#212631] text-sm">{selectedAnimal.habitat}</p>
-                                 </div>
-                                 <div className="p-5 bg-[#c6fe69]/25 rounded-2xl border border-[#c6fe69]/60">
-                                     <p className="text-[9px] uppercase font-black text-[#658b27] mb-1">GPS Mark</p>
-                                     <p className="font-bold text-[#212631] text-sm font-mono">{selectedAnimal.coordinates[0]}°, {selectedAnimal.coordinates[1]}°</p>
+                                  <div className="p-4 bg-[#f1f5ed] rounded-2xl border border-[#dce5dc]">
+                                      <p className="text-[9px] uppercase font-black text-[#6d8572] mb-1">Native Zone</p>
+                                      <p className="font-bold text-[#1f3328] text-sm">{selectedAnimal.habitat}</p>
+                                  </div>
+                                  <div className="p-4 bg-[#f1f5ed] rounded-2xl border border-[#dce5dc]">
+                                      <p className="text-[9px] uppercase font-black text-[#6d8572] mb-1">GPS Mark</p>
+                                      <p className="font-bold text-[#1f3328] text-sm font-mono break-words">{selectedAnimal.coordinates[0]}°, {selectedAnimal.coordinates[1]}°</p>
                                  </div>
                              </div>
                              <div className="space-y-4">
-                                 <h4 className="text-xs font-black text-[#212631] uppercase tracking-widest border-b border-[#c6fe69] pb-2">Ecological Note</h4>
-                                 {animalInfoLoading ? <div className="h-20 animate-pulse rounded-2xl bg-[#c6fe69]/25" /> : <p className="text-[#526f3c] leading-relaxed text-lg font-medium italic">"{selectedAnimal.description}"</p>}
-                                 {selectedAnimal.sourceUrl && <a href={selectedAnimal.sourceUrl} target="_blank" rel="noreferrer" className="inline-flex text-xs font-bold uppercase tracking-widest text-[#658b27] underline underline-offset-4">Read source on Wikipedia</a>}
+                                  <h4 className="text-xs font-black text-[#1f3328] uppercase tracking-widest border-b border-[#dce5dc] pb-2">Ecological Note</h4>
+                                  {animalInfoLoading ? <div className="h-20 animate-pulse rounded-2xl bg-[#edf3eb]" /> : <p className="text-[#52675a] leading-relaxed text-base font-medium italic">"{selectedAnimal.description}"</p>}
+                                  {selectedAnimal.sourceUrl && <a href={selectedAnimal.sourceUrl} target="_blank" rel="noreferrer" className="inline-flex text-xs font-bold uppercase tracking-widest text-[#52745a] underline underline-offset-4">Read source on Wikipedia</a>}
                              </div>
                         </div>
                     </div>
@@ -261,23 +264,23 @@ const MapPage = () => {
 
             {showExitConfirm && (
                 <div className="fixed inset-0 z-[3000] flex items-center justify-center p-6">
-                     <div className="absolute inset-0 bg-[#212631]/70 backdrop-blur-lg" onClick={() => setShowExitConfirm(false)} />
-                    <div className="relative bg-white p-10 rounded-4xl shadow-2xl max-w-sm w-full text-center animate-in zoom-in-95 duration-200">
+                     <div className="absolute inset-0 bg-[#1f3328]/70 backdrop-blur-lg" onClick={() => setShowExitConfirm(false)} />
+                    <div className="relative bg-[#fffdf8] p-8 rounded-3xl shadow-2xl max-w-sm w-full text-center animate-in zoom-in-95 duration-200">
                         {/* <div className="w-24 h-24 bg-teal-50 rounded-[2rem] flex items-center justify-center text-5xl mx-auto mb-6 shadow-inner">🌏</div> */}
-                         <h3 className="text-2xl font-black text-[#212631] mb-2">Close Expedition?</h3>
-                         <p className="text-[#526f3c] mb-8 font-medium leading-relaxed">Your curated discovery view will be cleared.</p>
+                         <h3 className="text-2xl font-black text-[#1f3328] mb-2">Close Expedition?</h3>
+                         <p className="text-[#52675a] mb-8 font-medium leading-relaxed">Your curated discovery view will be cleared.</p>
                         <div className="flex flex-col gap-3">
-                            <button onClick={() => navigate(-1)} className="w-full py-4 bg-red-700 text-white rounded-2xl font-bold hover:bg-red-800 transition-all shadow-lg active:scale-95">Leave</button>
-                             <button onClick={() => setShowExitConfirm(false)} className="w-full py-4 bg-[#c6fe69] text-[#212631] rounded-2xl font-bold hover:bg-[#b5ed58] transition-all">Keep Browsing</button>
+                             <button onClick={() => navigate(-1)} className="w-full py-4 bg-[#1f3328] text-white rounded-2xl font-bold hover:bg-[#294536] transition-all shadow-lg active:scale-95">Leave</button>
+                              <button onClick={() => setShowExitConfirm(false)} className="w-full py-4 bg-[#e5f0e3] text-[#1f3328] rounded-2xl font-bold hover:bg-[#d8e8d7] transition-all">Keep Browsing</button>
                         </div>
                     </div>
                 </div>
             )}
 
             {!isMapReady && (
-                 <div className="fixed inset-0 bg-[#f4f7ed] z-[5000] flex flex-col items-center justify-center gap-6">
-                     <div className="w-12 h-12 border-4 border-[#c6fe69] border-t-[#212631] rounded-full animate-spin" />
-                     <p className="text-[#212631] font-bold text-[10px] uppercase tracking-[0.3em] animate-pulse">Synchronizing Globe...</p>
+                  <div className="fixed inset-0 bg-[#eef3ed] z-[5000] flex flex-col items-center justify-center gap-6">
+                      <div className="w-12 h-12 border-4 border-[#d5e1d5] border-t-[#1f3328] rounded-full animate-spin" />
+                      <p className="text-[#1f3328] font-bold text-[10px] uppercase tracking-[0.3em] animate-pulse">Synchronizing Globe...</p>
                 </div>
             )}
         </div>

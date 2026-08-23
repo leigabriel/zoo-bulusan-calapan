@@ -60,10 +60,12 @@ const AnimalClassifier = ({ embedded = false }) => {
     const [isMobile, setIsMobile] = useState(isMobileDevice());
     const videoRef = useRef(null);
     const streamRef = useRef(null);
+    const cameraRequestRef = useRef(0);
 
     const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
     const stopCameraStream = useCallback(() => {
+        cameraRequestRef.current += 1;
         if (streamRef.current) {
             streamRef.current.getTracks().forEach(track => track.stop());
             streamRef.current = null;
@@ -128,6 +130,9 @@ const AnimalClassifier = ({ embedded = false }) => {
     };
 
     const startCameraStream = useCallback(async (facingMode) => {
+        const requestId = cameraRequestRef.current + 1;
+        cameraRequestRef.current = requestId;
+
         try {
             setCameraError(null);
             setCameraReady(false);
@@ -139,26 +144,32 @@ const AnimalClassifier = ({ embedded = false }) => {
             const constraints = {
                 video: {
                     facingMode: facingMode,
-                    width: { ideal: isMobile ? 1080 : 640 },
-                    height: { ideal: isMobile ? 1920 : 480 }
+                    width: { ideal: isMobile ? 1280 : 960 },
+                    height: { ideal: isMobile ? 720 : 540 },
+                    resizeMode: 'crop-and-scale'
                 },
                 audio: false
             };
 
             const stream = await navigator.mediaDevices.getUserMedia(constraints);
+
+            if (cameraRequestRef.current !== requestId) {
+                stream.getTracks().forEach(track => track.stop());
+                return;
+            }
+
             streamRef.current = stream;
 
             if (videoRef.current) {
-                videoRef.current.srcObject = stream;
-                videoRef.current.onloadedmetadata = () => {
-                    videoRef.current.play()
-                        .then(() => setCameraReady(true))
-                        .catch(() => {
-                            setCameraError('Failed to start video preview');
-                        });
-                };
+                const video = videoRef.current;
+                video.srcObject = stream;
+                video.muted = true;
+                video.playsInline = true;
+                await video.play();
+                if (cameraRequestRef.current === requestId) setCameraReady(true);
             }
         } catch (err) {
+            if (cameraRequestRef.current !== requestId) return;
             setCameraError(
                 err.name === 'NotAllowedError'
                     ? 'Camera access denied. Please allow camera permission.'
@@ -176,10 +187,13 @@ const AnimalClassifier = ({ embedded = false }) => {
             document.body.style.overflow = 'hidden';
         }
 
-        setTimeout(() => {
-            startCameraStream(cameraFacing);
-        }, 150);
-    }, [cameraFacing, startCameraStream, isMobile]);
+    }, [isMobile]);
+
+    useEffect(() => {
+        if (!showCameraModal) return undefined;
+        const timer = window.setTimeout(() => startCameraStream(cameraFacing), 0);
+        return () => window.clearTimeout(timer);
+    }, [showCameraModal, cameraFacing, startCameraStream]);
 
     const closeCameraModal = useCallback(() => {
         stopCameraStream();
@@ -192,23 +206,32 @@ const AnimalClassifier = ({ embedded = false }) => {
     const switchCamera = useCallback(async () => {
         const newFacing = cameraFacing === 'environment' ? 'user' : 'environment';
         setCameraFacing(newFacing);
-        await startCameraStream(newFacing);
-    }, [cameraFacing, startCameraStream]);
+    }, [cameraFacing]);
 
     const capturePhoto = useCallback(() => {
         if (!videoRef.current || !cameraReady) return;
 
         const video = videoRef.current;
+        const sourceWidth = video.videoWidth || 960;
+        const sourceHeight = video.videoHeight || 540;
+        const sourceIsPortrait = sourceHeight > sourceWidth;
+        const deviceIsPortrait = isMobile && window.matchMedia('(orientation: portrait)').matches;
+        const rotateToDevice = isMobile && deviceIsPortrait !== sourceIsPortrait;
         const canvas = document.createElement('canvas');
-        canvas.width = video.videoWidth || 640;
-        canvas.height = video.videoHeight || 480;
+        canvas.width = rotateToDevice ? sourceHeight : sourceWidth;
+        canvas.height = rotateToDevice ? sourceWidth : sourceHeight;
         const ctx = canvas.getContext('2d');
 
-        if (cameraFacing === 'user') {
+        if (rotateToDevice) {
             ctx.translate(canvas.width, 0);
+            ctx.rotate(Math.PI / 2);
+        }
+
+        if (cameraFacing === 'user') {
+            ctx.translate(sourceWidth, 0);
             ctx.scale(-1, 1);
         }
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        ctx.drawImage(video, 0, 0, sourceWidth, sourceHeight);
 
         const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
 
@@ -218,7 +241,7 @@ const AnimalClassifier = ({ embedded = false }) => {
         setMessages(prev => [...prev, { id: `${Date.now()}-${messageIdRef.current++}`, role: 'user', type: 'image', content: dataUrl }]);
         setIsProcessing(true);
         setAnalysisImage(dataUrl);
-    }, [cameraReady, cameraFacing, closeCameraModal]);
+    }, [cameraReady, cameraFacing, closeCameraModal, isMobile]);
 
     const addBotMessage = (text, meta = null) => {
         setMessages(prev => [...prev, { id: `${Date.now()}-${messageIdRef.current++}`, role: 'bot', type: meta ? 'result' : 'text', content: text, meta }]);
@@ -341,14 +364,14 @@ const AnimalClassifier = ({ embedded = false }) => {
     };
 
     const containerClass = embedded
-        ? "h-full min-h-0 w-full flex flex-col bg-[#f7faf7] overflow-hidden"
-        : "flex flex-col h-[100dvh] min-h-0 bg-[#f7faf7] w-full md:w-3/5 lg:w-1/2 md:mx-auto md:border-x border-emerald-100 md:shadow-xl relative";
+        ? "h-full min-h-0 w-full flex flex-col bg-[#f3f6ef] overflow-hidden"
+        : "flex flex-col h-[100dvh] min-h-0 bg-[#f3f6ef] w-full md:w-3/5 lg:w-1/2 md:mx-auto md:border-x border-[#dfe8dc] md:shadow-xl relative";
 
     return (
         <div className={containerClass}>
             {!embedded && <Header />}
 
-            <main className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-3 py-4 sm:px-6 sm:py-5 space-y-4 custom-scrollbar overscroll-contain">
+            <main className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-3 py-5 sm:px-7 sm:py-7 space-y-4 custom-scrollbar overscroll-contain">
 
                 {analysisImage && (
                     <img
@@ -369,22 +392,21 @@ const AnimalClassifier = ({ embedded = false }) => {
                             variants={messageVariants}
                             initial="hidden"
                             animate="visible"
-                            layout
                         >
                             <div className={`flex min-w-0 ${embedded ? 'max-w-[96%]' : 'max-w-[90%] md:max-w-[78%]'} ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'} gap-2.5 items-end`}>
 
-                                <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 shadow-sm overflow-hidden ${msg.role === 'user' ? 'bg-[#212631] text-white' : 'bg-emerald-50 border border-emerald-100'}`}>
+                                <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 overflow-hidden ${msg.role === 'user' ? 'bg-[#1f3328] text-white' : 'bg-[#e5f0e3] border border-[#cfe0cc]'}`}>
                                     {msg.role === 'user' ? <UserIcon /> : <img src="/animal-scan.svg" alt="" className="w-7 h-7 object-contain" />}
                                 </div>
 
-                                <div className={`min-w-0 max-w-full p-3.5 sm:p-4 shadow-sm text-sm ${msg.role === 'user'
-                                    ? 'bg-[#212631] text-white rounded-2xl rounded-br-sm'
-                                    : 'bg-white text-gray-700 rounded-2xl rounded-bl-sm shadow-md border border-gray-200'
+                                <div className={`min-w-0 max-w-full p-3.5 sm:p-4 text-sm ${msg.role === 'user'
+                                    ? 'bg-[#1f3328] text-white rounded-2xl rounded-br-md shadow-[0_8px_22px_rgba(31,51,40,0.12)]'
+                                    : 'bg-[#fffefa] text-[#405047] rounded-2xl rounded-bl-md shadow-[0_8px_22px_rgba(31,51,40,0.06)] border border-[#dfe8dc]'
                                     }`}>
                                     {msg.type === 'image' && (
                                         <div className="relative">
-                                            <img src={msg.content} alt="Uploaded animal" className={`w-auto max-w-full rounded-xl ${embedded ? 'max-h-40' : 'max-h-56'} object-contain border border-white/20 mb-2`} />
-                                            <span className="absolute bottom-4 left-2 rounded-full bg-black/60 px-2 py-1 text-[10px] font-semibold text-white backdrop-blur-sm">Photo sent</span>
+                                             <img src={msg.content} alt="Uploaded animal" className={`block w-auto max-w-full rounded-xl ${embedded ? 'max-h-48' : 'max-h-64'} object-contain border border-white/30 mb-2`} />
+                                             <span className="absolute bottom-4 left-2 rounded-full bg-[#1f3328]/80 px-2.5 py-1 text-[10px] font-semibold text-white backdrop-blur-sm">Photo sent</span>
                                         </div>
                                     )}
 
@@ -392,8 +414,8 @@ const AnimalClassifier = ({ embedded = false }) => {
 
                                     {msg.type === 'result' && (
                                         <div className="w-full min-w-0 max-w-md">
-                                            <div className="flex items-start gap-3 mb-4 pb-4 border-b border-gray-200">
-                                                <div className="p-2.5 bg-[#eef5e9] rounded-xl shrink-0 text-[#315b37]">
+                                            <div className="flex items-start gap-3 mb-4 pb-4 border-b border-[#dfe8dc]">
+                                                <div className="p-2.5 bg-[#e5f0e3] rounded-xl shrink-0 text-[#315b37]">
                                                     <PawIcon className="w-6 h-6" />
                                                 </div>
                                                 <div className="min-w-0 flex-1">
@@ -402,22 +424,22 @@ const AnimalClassifier = ({ embedded = false }) => {
                                                             <p className="text-[10px] uppercase tracking-widest font-bold text-[#6a7b6d]">Animal identified</p>
                                                             <h3 className="mt-1 font-bold text-lg text-[#17251b] break-words">{msg.meta.animal}</h3>
                                                         </div>
-                                                        <span className="shrink-0 rounded-full px-2.5 py-1 text-[10px] uppercase font-bold bg-[#eef5e9] text-[#315b37]">{msg.meta.category || 'Animal'}</span>
+                                                         <span className="shrink-0 rounded-full px-2.5 py-1 text-[10px] uppercase font-bold bg-[#e5f0e3] text-[#315b37]">{msg.meta.category || 'Animal'}</span>
                                                     </div>
                                                     <div className="flex items-center gap-2 mt-3">
                                                         <div className="h-2 flex-1 bg-gray-200 rounded-full overflow-hidden">
-                                                            <div className="h-full bg-[#315b37] transition-all" style={{ width: `${msg.meta.confidence}%` }}></div>
+                                                        <div className="h-full bg-[#4e8354] transition-all" style={{ width: `${msg.meta.confidence}%` }}></div>
                                                         </div>
                                                         <span className="text-xs text-[#315b37] font-bold shrink-0">{msg.meta.confidence}% match</span>
                                                     </div>
                                                 </div>
                                             </div>
-                                            <p className="text-gray-600 leading-relaxed text-sm [overflow-wrap:anywhere]">{msg.content}</p>
+                                             <p className="text-[#506057] leading-relaxed text-sm [overflow-wrap:anywhere]">{msg.content}</p>
                                             {msg.meta.wikipediaData?.scientificName && (
-                                                <p className="mt-3 text-xs text-gray-500"><span className="font-semibold text-gray-700">Scientific name:</span> {msg.meta.wikipediaData.scientificName}</p>
+                                                 <p className="mt-3 text-xs text-[#718078]"><span className="font-semibold text-[#405047]">Scientific name:</span> {msg.meta.wikipediaData.scientificName}</p>
                                             )}
-                                            {msg.meta.wikipediaData?.pageUrl && (
-                                                <a href={msg.meta.wikipediaData.pageUrl} target="_blank" rel="noreferrer" className="inline-flex mt-4 text-xs font-bold text-[#315b37] hover:underline">Learn more about {msg.meta.animal}</a>
+                                             {msg.meta.wikipediaData?.pageUrl && (
+                                                 <a href={msg.meta.wikipediaData.pageUrl} target="_blank" rel="noreferrer" className="inline-flex mt-4 text-xs font-bold text-[#315b37] hover:text-[#1f3328] hover:underline">Learn more about {msg.meta.animal}</a>
                                             )}
                                         </div>
                                     )}
@@ -434,14 +456,14 @@ const AnimalClassifier = ({ embedded = false }) => {
                         animate={{ opacity: 1, y: 0 }}
                     >
                         <div className="flex gap-2.5 items-end">
-                            <div className="w-8 h-8 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center shadow-sm overflow-hidden">
+                            <div className="w-8 h-8 rounded-xl bg-[#e5f0e3] border border-[#cfe0cc] flex items-center justify-center overflow-hidden">
                                 <img src="/animal-scan.svg" alt="" className="w-7 h-7 object-contain" />
                             </div>
-                            <div className="bg-white px-4 py-3 rounded-2xl rounded-bl-sm shadow-sm border border-emerald-100 flex items-center gap-3">
+                            <div className="bg-[#fffefa] px-4 py-3 rounded-2xl rounded-bl-md shadow-[0_8px_22px_rgba(31,51,40,0.06)] border border-[#dfe8dc] flex items-center gap-3">
                                 <span className="flex items-center gap-1.5">
-                                    <span className="w-1.5 h-1.5 bg-emerald-600 rounded-full animate-bounce"></span>
-                                    <span className="w-1.5 h-1.5 bg-emerald-600 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></span>
-                                    <span className="w-1.5 h-1.5 bg-emerald-600 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></span>
+                                     <span className="w-1.5 h-1.5 bg-[#4e8354] rounded-full animate-bounce"></span>
+                                     <span className="w-1.5 h-1.5 bg-[#4e8354] rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></span>
+                                     <span className="w-1.5 h-1.5 bg-[#4e8354] rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></span>
                                 </span>
                                 <span className="text-xs font-medium text-slate-500">Analyzing image...</span>
                             </div>
@@ -452,12 +474,12 @@ const AnimalClassifier = ({ embedded = false }) => {
                 <div ref={messagesEndRef} />
             </main>
 
-            <div className="p-3 sm:p-5 pb-[max(0.75rem,env(safe-area-inset-bottom))] bg-white border-t border-emerald-100">
+            <div className="p-3 sm:p-5 pb-[max(0.75rem,env(safe-area-inset-bottom))] bg-[#fffefa] border-t border-[#dfe8dc]">
                 <div className="max-w-4xl mx-auto">
                     <div className="flex items-center justify-between gap-3 mb-3">
                         <div>
-                            <p className="text-sm font-bold text-slate-900">Scan an animal</p>
-                            <p className="text-[11px] text-slate-500">Upload a photo or use your camera</p>
+                            <p className="text-sm font-bold text-[#1f3328]">Scan an animal</p>
+                            <p className="text-[11px] text-[#718078]">Upload a photo or use your camera</p>
                         </div>
                         <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-bold ${isModelLoading ? 'bg-amber-50 text-amber-700' : isProcessing ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-600'}`}>
                             <span className={`h-1.5 w-1.5 rounded-full ${isModelLoading ? 'bg-amber-500 animate-pulse' : isProcessing ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`} />
@@ -473,15 +495,15 @@ const AnimalClassifier = ({ embedded = false }) => {
                     />
 
                     <div className="grid grid-cols-2 gap-2 sm:gap-3">
-                        <MotionButton
+                         <MotionButton
                             type="button"
                             onClick={() => fileInputRef.current?.click()}
                             disabled={isProcessing || isModelLoading}
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
-                            className={`min-h-12 py-2.5 px-3 rounded-xl font-semibold text-white flex items-center justify-center gap-2 transition-all text-sm shadow-sm ${isProcessing || isModelLoading
-                                ? 'bg-slate-300 cursor-not-allowed opacity-80'
-                                : 'bg-slate-900 hover:bg-slate-800'
+                             className={`min-h-12 py-2.5 px-3 rounded-xl font-semibold text-white flex items-center justify-center gap-2 transition-all text-sm shadow-sm ${isProcessing || isModelLoading
+                                 ? 'bg-[#c8d1ca] cursor-not-allowed opacity-80'
+                                 : 'bg-[#1f3328] hover:bg-[#294536]'
                                 }`}
                         >
                             {isModelLoading ? (
@@ -500,9 +522,9 @@ const AnimalClassifier = ({ embedded = false }) => {
                             disabled={isProcessing || isModelLoading}
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
-                            className={`min-h-12 py-2.5 px-3 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all text-sm shadow-sm ${isProcessing || isModelLoading
-                                ? 'bg-slate-300 text-white cursor-not-allowed'
-                                : 'bg-emerald-700 text-white hover:bg-emerald-800'
+                             className={`min-h-12 py-2.5 px-3 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all text-sm shadow-sm ${isProcessing || isModelLoading
+                                 ? 'bg-[#c8d1ca] text-white cursor-not-allowed'
+                                 : 'bg-[#4e8354] text-white hover:bg-[#3f7046]'
                                 }`}
                         >
                             <CameraIcon />
@@ -510,7 +532,7 @@ const AnimalClassifier = ({ embedded = false }) => {
                         </MotionButton>
                     </div>
 
-                    <p className="text-center text-[11px] text-slate-500 mt-2.5 font-medium">
+                     <p className="text-center text-[11px] text-[#718078] mt-2.5 font-medium">
                         Best results come from a clear, well-lit photo
                     </p>
                 </div>

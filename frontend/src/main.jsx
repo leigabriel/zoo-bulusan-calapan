@@ -15,7 +15,16 @@ try {
         });
         sessionStorage.setItem(TAB_ID_KEY, uuid);
     }
-} catch (e) {
+} catch {
+    // Storage can be unavailable in private browsing or restricted contexts.
+}
+
+if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').catch(() => {
+            // The app remains usable when service-worker storage is unavailable.
+        });
+    });
 }
 
 createRoot(document.getElementById('root')).render(
