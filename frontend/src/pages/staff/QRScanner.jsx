@@ -6,7 +6,7 @@ import { notify } from '../../utils/toast';
 
 const Icons = {
     Scan: () => (
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-10 h-10">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-7 w-7 sm:h-8 sm:w-8">
             <path d="M3 7V5a2 2 0 0 1 2-2h2" />
             <path d="M17 3h2a2 2 0 0 1 2 2v2" />
             <path d="M21 17v2a2 2 0 0 1-2 2h-2" />
@@ -15,14 +15,8 @@ const Icons = {
         </svg>
     ),
     Check: () => (
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-8 h-8">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
             <path fillRule="evenodd" d="M19.916 4.626a.75.75 0 01.208 1.04l-9 13.5a.75.75 0 01-1.154.114l-6-6a.75.75 0 011.06-1.06l5.353 5.353 8.493-12.739a.75.75 0 011.04-.208z" clipRule="evenodd" />
-        </svg>
-    ),
-    User: () => (
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8">
-            <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
-            <circle cx="12" cy="7" r="4" />
         </svg>
     ),
     Camera: () => (
@@ -38,6 +32,111 @@ const Icons = {
             <line x1="12" y1="3" x2="12" y2="15" />
         </svg>
     )
+};
+
+const ResultModal = ({ scanResult, loading, onClose, onConfirm }) => {
+    if (!scanResult) return null;
+
+    const statusClass = scanResult.scanStatus === 'used'
+        ? 'bg-gray-100 text-gray-700 border-gray-200'
+        : scanResult.scanStatus === 'expired'
+            ? 'bg-red-50 text-red-700 border-red-200'
+            : 'bg-emerald-50 text-emerald-700 border-emerald-200';
+
+    return (
+        <div
+            className="fixed inset-0 z-[120] flex items-end sm:items-center justify-center bg-slate-950/55 p-0 sm:p-4 backdrop-blur-sm"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="scan-result-title"
+        >
+            <button type="button" className="absolute inset-0 cursor-default" onClick={onClose} aria-label="Close scan result" />
+            <div className="relative flex max-h-[92dvh] w-full max-w-2xl flex-col overflow-hidden rounded-t-[1.75rem] bg-white shadow-2xl sm:max-h-[90dvh] sm:rounded-[1.75rem]">
+            <div className="flex items-start justify-between gap-4 border-b border-emerald-100 bg-emerald-50/50 px-4 py-4 sm:px-6">
+                    <div className="min-w-0">
+                        <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-emerald-700">Verified reservation</p>
+                        <h2 id="scan-result-title" className="mt-1 truncate text-xl font-extrabold tracking-tight text-gray-900 sm:text-2xl">Ticket details</h2>
+                    </div>
+                    <button type="button" onClick={onClose} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-xl text-gray-500 shadow-sm ring-1 ring-gray-200 transition hover:bg-emerald-50 hover:text-emerald-700" aria-label="Close ticket details">
+                        &times;
+                    </button>
+                </div>
+
+                <div className="overflow-y-auto p-4 sm:p-6">
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                        <div className="min-w-0">
+                            <span className="mb-2 inline-flex rounded-full bg-gray-900 px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-[0.14em] text-white sm:text-xs">
+                                {scanResult.type} reservation
+                            </span>
+                            <h3 className="break-all text-2xl font-extrabold tracking-tight text-gray-900 sm:text-3xl">{scanResult.reference}</h3>
+                        </div>
+                        <span className={`inline-flex w-fit shrink-0 rounded-xl border px-3 py-2 text-xs font-bold uppercase tracking-wider ${statusClass}`}>
+                            {scanResult.scanStatus === 'used' ? 'Checked In' : scanResult.scanStatus}
+                        </span>
+                    </div>
+
+                    <div className="mt-5 grid grid-cols-1 gap-5 rounded-2xl border border-gray-100 bg-gray-50 p-4 sm:grid-cols-2 sm:p-5">
+                        <div className="sm:col-span-2">
+                            <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-gray-400">Guest name</p>
+                            <p className="mt-1 break-words text-xl font-extrabold text-gray-900 sm:text-2xl">{scanResult.name}</p>
+                            {scanResult.email && <p className="mt-1 break-all text-sm text-gray-500">{scanResult.email}</p>}
+                        </div>
+
+                        {scanResult.type === 'event' && scanResult.eventName && (
+                            <div className="sm:col-span-2">
+                                <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-gray-400">Event</p>
+                                <p className="mt-1 text-base font-bold text-gray-900 sm:text-lg">{scanResult.eventName}</p>
+                                {scanResult.eventDescription && <p className="mt-1 text-sm leading-relaxed text-gray-500">{scanResult.eventDescription}</p>}
+                            </div>
+                        )}
+
+                        <div>
+                            <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-gray-400">Date</p>
+                            <p className="mt-1 text-sm font-bold text-gray-900 sm:text-base">{new Date(scanResult.date).toLocaleDateString(undefined, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}</p>
+                        </div>
+                        <div>
+                            <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-gray-400">Time</p>
+                            <p className="mt-1 text-sm font-bold text-gray-900 sm:text-base">{scanResult.time || 'Anytime'}</p>
+                        </div>
+                        <div className="sm:col-span-2">
+                            <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-gray-400">Admissions</p>
+                            <p className="mt-1 flex items-center gap-2 text-sm font-bold text-gray-900 sm:text-base">
+                                <span className="rounded-lg bg-gray-900 px-2.5 py-1 text-white">{scanResult.totalVisitors}</span>
+                                {scanResult.totalVisitors === 1 ? 'Person' : 'People'}
+                            </p>
+                        </div>
+
+                        {scanResult.type === 'ticket' ? (
+                            <div className="grid grid-cols-2 gap-4 border-t border-gray-200 pt-4 sm:col-span-2 sm:grid-cols-4">
+                                <div><p className="text-[10px] font-bold uppercase text-gray-400">Adults</p><p className="mt-1 font-bold text-gray-900">{scanResult.adultQuantity || 0}</p></div>
+                                <div><p className="text-[10px] font-bold uppercase text-gray-400">Children</p><p className="mt-1 font-bold text-gray-900">{scanResult.childQuantity || 0}</p></div>
+                                <div><p className="text-[10px] font-bold uppercase text-gray-400">Residents</p><p className="mt-1 font-bold text-gray-900">{scanResult.residentQuantity || 0}</p></div>
+                                <div><p className="text-[10px] font-bold uppercase text-gray-400">Amount</p><p className="mt-1 font-bold text-gray-900">&#8369;{Number(scanResult.ticketAmount || 0).toLocaleString()}</p></div>
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-2 gap-4 border-t border-gray-200 pt-4 sm:col-span-2">
+                                <div><p className="text-[10px] font-bold uppercase text-gray-400">Payment</p><p className="mt-1 font-bold text-gray-900">&#8369;{Number(scanResult.paymentAmount || 0).toLocaleString()}</p></div>
+                                <div><p className="text-[10px] font-bold uppercase text-gray-400">Payment status</p><p className="mt-1 font-bold uppercase text-gray-900">{scanResult.paymentStatus || 'unpaid'}</p></div>
+                                {scanResult.eventEndTime && <div><p className="text-[10px] font-bold uppercase text-gray-400">End time</p><p className="mt-1 font-bold text-gray-900">{scanResult.eventEndTime}</p></div>}
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                <div className="flex flex-col-reverse gap-3 border-t border-gray-100 bg-white p-4 sm:flex-row sm:p-6">
+                    <button type="button" onClick={onClose} disabled={loading} className="min-h-12 flex-1 rounded-xl border-2 border-gray-200 px-4 text-sm font-bold text-gray-700 transition hover:bg-gray-50 disabled:opacity-50">Scan another</button>
+                    <button
+                        type="button"
+                        onClick={onConfirm}
+                        disabled={loading || scanResult.scanStatus === 'used' || scanResult.scanStatus === 'expired'}
+                        className={`min-h-12 flex-[2] rounded-xl border-2 px-4 text-sm font-extrabold transition ${scanResult.scanStatus === 'used' || scanResult.scanStatus === 'expired' ? 'cursor-not-allowed border-gray-200 bg-gray-100 text-gray-400' : 'border-emerald-700 bg-emerald-700 text-white hover:bg-emerald-800'}`}
+                    >
+                        {loading ? <span className="mx-auto block h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" /> : scanResult.scanStatus === 'used' ? 'Already checked in' : scanResult.scanStatus === 'expired' ? 'Ticket expired' : <span className="inline-flex items-center justify-center gap-2"><Icons.Check /><span>Confirm check-in</span></span>}
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
 };
 
 const QRScanner = () => {
@@ -175,6 +274,23 @@ const QRScanner = () => {
         };
     }, [isAuthenticated, scanMethod, scanResult]);
 
+    useEffect(() => {
+        if (!scanResult) return undefined;
+
+        const previousOverflow = document.body.style.overflow;
+        const handleKeyDown = (event) => {
+            if (event.key === 'Escape' && !loading) setScanResult(null);
+        };
+
+        document.body.style.overflow = 'hidden';
+        document.addEventListener('keydown', handleKeyDown);
+
+        return () => {
+            document.body.style.overflow = previousOverflow;
+            document.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [scanResult, loading]);
+
     const handleFileUpload = async (event) => {
         const file = event.target.files[0];
         if (!file) return;
@@ -237,29 +353,39 @@ const QRScanner = () => {
     if (!isAuthenticated) return null;
 
     return (
-        <div className="max-w-[1400px] mx-auto space-y-10 p-4 sm:p-8">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
+        <div className="mx-auto w-full max-w-5xl space-y-6 p-3 sm:space-y-8 sm:p-6 lg:p-8">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                 <div>
-                    <h1 className="text-4xl sm:text-5xl font-extrabold text-gray-900 tracking-tight">QR Ticket Scanner</h1>
-                    <p className="text-lg sm:text-xl text-gray-500 mt-3">Scan visitor and event reservations to view details and authorize entry</p>
+                    <h1 className="text-3xl font-extrabold tracking-tight text-gray-900 sm:text-5xl">QR Ticket Scanner</h1>
+                    <p className="mt-2 max-w-2xl text-sm leading-relaxed text-gray-500 sm:text-base">Scan visitor and event reservations to view details and authorize entry.</p>
+                </div>
+                <div className="inline-flex w-fit items-center gap-2 rounded-full border border-emerald-100 bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-700">
+                    <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-500" />
+                    Scanner ready
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
-                <div className="bg-white rounded-[2rem] shadow-2xl shadow-gray-200/50 flex flex-col h-full min-h-[700px] overflow-hidden border border-gray-100">
-                    <div className="p-6 sm:p-8 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
-                        <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-4">
-                            <Icons.Scan />
-                            Scan Ticket
-                        </h2>
+            <div className="w-full overflow-hidden rounded-[1.5rem] border border-gray-100 bg-white shadow-xl shadow-gray-200/50 sm:rounded-[2rem]">
+                    <div className="flex flex-col gap-4 border-b border-gray-100 bg-gray-50/60 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-6">
+                        <div className="flex items-center gap-3">
+                            <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-700 text-white shadow-sm shadow-emerald-700/20 sm:h-12 sm:w-12">
+                                <Icons.Scan />
+                            </span>
+                            <div>
+                                <h2 className="text-xl font-bold text-gray-900 sm:text-2xl">Scan ticket</h2>
+                                <p className="mt-0.5 text-xs text-gray-500 sm:text-sm">Choose a method to verify entry</p>
+                            </div>
+                        </div>
 
-                        <div className="flex bg-gray-200/50 rounded-2xl p-1.5 shadow-inner">
+                        <div className="grid w-full grid-cols-2 rounded-xl bg-gray-200/50 p-1 shadow-inner sm:w-auto sm:rounded-2xl sm:p-1.5">
                             <button
+                                type="button"
                                 onClick={() => {
                                     setError(null);
                                     setScanMethod('camera');
                                 }}
-                                className={`flex items-center gap-2 px-5 py-3 rounded-xl text-base font-bold transition-all ${scanMethod === 'camera'
+                                aria-pressed={scanMethod === 'camera'}
+                                className={`flex min-h-11 items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-bold transition-all sm:rounded-xl sm:px-5 sm:py-3 sm:text-base ${scanMethod === 'camera'
                                         ? 'bg-white text-gray-900 shadow-md'
                                         : 'text-gray-500 hover:text-gray-800'
                                     }`}
@@ -268,11 +394,13 @@ const QRScanner = () => {
                                 <span className="hidden sm:inline">Camera</span>
                             </button>
                             <button
+                                type="button"
                                 onClick={() => {
                                     setError(null);
                                     setScanMethod('upload');
                                 }}
-                                className={`flex items-center gap-2 px-5 py-3 rounded-xl text-base font-bold transition-all ${scanMethod === 'upload'
+                                aria-pressed={scanMethod === 'upload'}
+                                className={`flex min-h-11 items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-bold transition-all sm:rounded-xl sm:px-5 sm:py-3 sm:text-base ${scanMethod === 'upload'
                                         ? 'bg-white text-gray-900 shadow-md'
                                         : 'text-gray-500 hover:text-gray-800'
                                     }`}
@@ -283,16 +411,26 @@ const QRScanner = () => {
                         </div>
                     </div>
 
-                    <div className="p-8 sm:p-12 flex-1 flex flex-col items-center justify-center relative bg-white">
+                    <div className="relative flex min-h-[min(70dvh,42rem)] flex-col items-center justify-center bg-white p-4 sm:min-h-[36rem] sm:p-10">
                         {scanMethod === 'camera' && (
-                            <div className="w-full max-w-xl flex flex-col items-center">
+                            <div className="flex w-full max-w-xl flex-col items-center">
+                                <div className="mb-3 flex w-full items-center justify-between gap-3 px-1">
+                                    <div>
+                                        <p className="text-sm font-bold text-gray-900">Live camera</p>
+                                        <p className="text-xs text-gray-500">Center the QR code inside the frame</p>
+                                    </div>
+                                    <span className="inline-flex items-center gap-1.5 rounded-full bg-gray-100 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-gray-500">
+                                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                                        Auto scan
+                                    </span>
+                                </div>
                                 <div
                                     id="qr-reader-camera"
-                                    className="w-full aspect-square rounded-[2.5rem] overflow-hidden shadow-inner border-[6px] border-gray-100 bg-black"
+                                    className="aspect-square w-full overflow-hidden rounded-[1.5rem] border-4 border-gray-100 bg-slate-950 shadow-[0_16px_35px_rgba(15,23,42,0.12)] sm:rounded-[2rem] sm:border-[6px]"
                                 ></div>
 
                                 {error && (
-                                    <div className="mt-8 p-5 bg-red-50 text-red-700 rounded-2xl text-lg font-bold w-full text-center border-2 border-red-100">
+                                    <div role="alert" className="mt-5 w-full rounded-xl border border-red-100 bg-red-50 p-4 text-center text-sm font-bold text-red-700 sm:text-base">
                                         {error}
                                     </div>
                                 )}
@@ -300,7 +438,11 @@ const QRScanner = () => {
                         )}
 
                         {scanMethod === 'upload' && (
-                            <div className="w-full max-w-xl flex flex-col items-center justify-center gap-6">
+                            <div className="flex w-full max-w-xl flex-col items-center justify-center gap-5">
+                                <div className="mb-1 w-full px-1">
+                                    <p className="text-sm font-bold text-gray-900">Upload an image</p>
+                                    <p className="mt-0.5 text-xs text-gray-500">Use a clear QR code image for the best result</p>
+                                </div>
                                 <input
                                     type="file"
                                     accept="image/*"
@@ -311,19 +453,19 @@ const QRScanner = () => {
 
                                 <div
                                     onClick={() => fileInputRef.current?.click()}
-                                    className="w-full aspect-square rounded-[2.5rem] border-4 border-dashed border-gray-200 bg-gray-50/50 flex flex-col items-center justify-center gap-6 cursor-pointer hover:bg-gray-50 hover:border-gray-400 transition-all p-12 text-center"
-                                >
-                                    <div className="w-24 h-24 bg-white shadow-sm rounded-full flex items-center justify-center text-gray-400 mb-2">
+                                     className="group flex aspect-square w-full cursor-pointer flex-col items-center justify-center gap-4 rounded-[1.5rem] border-2 border-dashed border-emerald-200 bg-emerald-50/30 p-6 text-center transition-all hover:border-emerald-400 hover:bg-emerald-50 sm:rounded-[2rem] sm:border-4 sm:p-12"
+                                 >
+                                    <div className="mb-1 flex h-16 w-16 items-center justify-center rounded-full bg-white text-emerald-700 shadow-sm transition-transform group-hover:scale-105 sm:h-24 sm:w-24">
                                         <Icons.Upload />
                                     </div>
                                     <div>
-                                        <p className="font-bold text-gray-900 text-2xl">Upload QR Image</p>
-                                        <p className="text-gray-500 text-lg mt-3">Click to browse your files</p>
+                                         <p className="text-lg font-bold text-gray-900 sm:text-2xl">Upload QR Image</p>
+                                         <p className="mt-2 text-sm text-gray-500 sm:mt-3 sm:text-lg">Tap to browse your files</p>
                                     </div>
                                 </div>
 
                                 {error && (
-                                    <div className="mt-4 p-5 bg-red-50 text-red-700 rounded-2xl text-lg font-bold w-full text-center border-2 border-red-100">
+                                    <div role="alert" className="mt-4 w-full rounded-xl border border-red-100 bg-red-50 p-4 text-center text-sm font-bold text-red-700 sm:text-base">
                                         {error}
                                     </div>
                                 )}
@@ -336,130 +478,14 @@ const QRScanner = () => {
                         ></div>
 
                         {loading && !scanResult && (
-                            <div className="mt-8 p-5 bg-gray-900 text-white rounded-2xl text-xl font-bold w-full max-w-xl text-center shadow-xl flex items-center justify-center gap-4">
-                                <div className="w-8 h-8 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
-                                Processing Scan...
+                            <div className="mt-5 flex w-full max-w-xl items-center justify-center gap-3 rounded-xl bg-gray-900 p-4 text-sm font-bold text-white shadow-xl sm:text-base">
+                                <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                                Processing scan...
                             </div>
                         )}
                     </div>
-                </div>
-
-                <div className="bg-white rounded-[2rem] shadow-2xl shadow-gray-200/50 flex flex-col h-full min-h-[700px] overflow-hidden border border-gray-100">
-                    <div className="p-6 sm:p-8 border-b border-gray-100 bg-gray-50/50">
-                        <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-4">
-                            <Icons.User />
-                            Ticket Details
-                        </h2>
-                    </div>
-                    <div className="p-8 sm:p-12 flex-1 flex flex-col">
-                        {!scanResult ? (
-                            <div className="flex-1 flex flex-col items-center justify-center text-gray-400 border-4 border-dashed border-gray-100 rounded-[2.5rem] p-12 bg-gray-50/50 min-h-[400px]">
-                                <div className="w-28 h-28 bg-white rounded-full flex items-center justify-center text-gray-300 mb-8 shadow-sm">
-                                    <Icons.Scan />
-                                </div>
-                                <p className="text-3xl font-bold text-gray-800">Waiting for scan</p>
-                                <p className="text-lg text-gray-500 mt-4 text-center max-w-md">
-                                    {scanMethod === 'camera'
-                                        ? "Position the QR code clearly within the camera frame to automatically scan."
-                                        : "Upload a high-quality image containing a QR code to view the ticket details."}
-                                </p>
-                            </div>
-                        ) : (
-                            <div className="flex-1 flex flex-col gap-8 animate-in fade-in slide-in-from-bottom-6 duration-500">
-                                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
-                                    <div>
-                                        <span className="inline-block px-5 py-2 bg-gray-900 text-white text-sm font-extrabold uppercase tracking-widest rounded-full mb-4 shadow-md">
-                                            {scanResult.type} Reservation
-                                        </span>
-                                        <h3 className="text-4xl font-extrabold text-gray-900 tracking-tight">{scanResult.reference}</h3>
-                                    </div>
-                                    <span className={`px-6 py-3 rounded-2xl text-lg font-bold uppercase tracking-widest shadow-sm border-2 ${scanResult.scanStatus === 'used' ? 'bg-gray-100 text-gray-700 border-gray-200' :
-                                            scanResult.scanStatus === 'expired' ? 'bg-red-50 text-red-700 border-red-200' :
-                                                'bg-blue-50 text-blue-700 border-blue-200'
-                                        }`}>
-                                        {scanResult.scanStatus === 'used' ? 'Checked In' : scanResult.scanStatus}
-                                    </span>
-                                </div>
-
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-10 gap-x-8 bg-gray-50 p-10 rounded-[2.5rem] border-2 border-gray-100 mt-4">
-                                     <div className="col-span-1 sm:col-span-2">
-                                         <p className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-2">Guest Name</p>
-                                         <p className="font-extrabold text-gray-900 text-4xl">{scanResult.name}</p>
-                                         {scanResult.email && <p className="text-gray-500 text-lg mt-2">{scanResult.email}</p>}
-                                     </div>
-                                     {scanResult.type === 'event' && scanResult.eventName && (
-                                         <div className="col-span-1 sm:col-span-2">
-                                             <p className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-2">Event</p>
-                                             <p className="font-bold text-gray-900 text-2xl">{scanResult.eventName}</p>
-                                             {scanResult.eventDescription && <p className="text-gray-500 mt-2">{scanResult.eventDescription}</p>}
-                                         </div>
-                                     )}
-                                    <div>
-                                        <p className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-2">Date</p>
-                                        <p className="font-bold text-gray-900 text-2xl">{new Date(scanResult.date).toLocaleDateString(undefined, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}</p>
-                                    </div>
-                                    <div>
-                                        <p className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-2">Time</p>
-                                        <p className="font-bold text-gray-900 text-2xl">{scanResult.time || 'Anytime'}</p>
-                                    </div>
-                                     <div className="col-span-1 sm:col-span-2">
-                                         <p className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-2">Admissions</p>
-                                         <p className="font-bold text-gray-900 text-2xl flex items-center gap-3">
-                                             <span className="bg-gray-900 text-white px-4 py-1 rounded-xl font-extrabold shadow-sm">{scanResult.totalVisitors}</span>
-                                             {scanResult.totalVisitors === 1 ? 'Person' : 'People'}
-                                         </p>
-                                     </div>
-                                     {scanResult.type === 'ticket' ? (
-                                         <div className="col-span-1 sm:col-span-2 border-t border-gray-200 pt-6 grid grid-cols-2 sm:grid-cols-4 gap-4">
-                                             <div><p className="text-xs font-bold text-gray-400 uppercase">Adults</p><p className="font-bold text-gray-900 text-xl">{scanResult.adultQuantity || 0}</p></div>
-                                             <div><p className="text-xs font-bold text-gray-400 uppercase">Children</p><p className="font-bold text-gray-900 text-xl">{scanResult.childQuantity || 0}</p></div>
-                                             <div><p className="text-xs font-bold text-gray-400 uppercase">Residents</p><p className="font-bold text-gray-900 text-xl">{scanResult.residentQuantity || 0}</p></div>
-                                             <div><p className="text-xs font-bold text-gray-400 uppercase">Amount</p><p className="font-bold text-gray-900 text-xl">₱{Number(scanResult.ticketAmount || 0).toLocaleString()}</p></div>
-                                         </div>
-                                     ) : (
-                                         <div className="col-span-1 sm:col-span-2 border-t border-gray-200 pt-6 grid grid-cols-2 gap-4">
-                                             <div><p className="text-xs font-bold text-gray-400 uppercase">Payment</p><p className="font-bold text-gray-900 text-xl">₱{Number(scanResult.paymentAmount || 0).toLocaleString()}</p></div>
-                                             <div><p className="text-xs font-bold text-gray-400 uppercase">Payment Status</p><p className="font-bold text-gray-900 text-xl uppercase">{scanResult.paymentStatus || 'unpaid'}</p></div>
-                                             {scanResult.eventEndTime && <div><p className="text-xs font-bold text-gray-400 uppercase">End Time</p><p className="font-bold text-gray-900 text-xl">{scanResult.eventEndTime}</p></div>}
-                                         </div>
-                                     )}
-                                 </div>
-
-                                <div className="mt-auto pt-10 flex flex-col sm:flex-row gap-5">
-                                    <button
-                                        onClick={handleCancel}
-                                        disabled={loading}
-                                        className="flex-1 py-5 px-6 bg-white border-2 border-gray-200 text-gray-700 rounded-2xl text-xl font-bold hover:bg-gray-50 hover:border-gray-300 transition-all disabled:opacity-50"
-                                    >
-                                        Scan Another
-                                    </button>
-                                    <button
-                                        onClick={handleConfirmCheckIn}
-                                        disabled={loading || scanResult.scanStatus === 'used' || scanResult.scanStatus === 'expired'}
-                                        className={`flex-[2] py-5 px-6 rounded-2xl text-xl flex items-center justify-center gap-3 font-extrabold transition-all shadow-lg border-2 ${scanResult.scanStatus === 'used' || scanResult.scanStatus === 'expired'
-                                                ? 'bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed shadow-none'
-                                                : 'bg-gray-900 border-gray-900 text-white hover:bg-black hover:border-black hover:shadow-xl hover:-translate-y-1'
-                                            }`}
-                                    >
-                                        {loading ? (
-                                            <div className="w-8 h-8 border-4 border-white/30 border-t-white rounded-full animate-spin"></div>
-                                        ) : scanResult.scanStatus === 'used' ? (
-                                            'Already Checked In'
-                                        ) : scanResult.scanStatus === 'expired' ? (
-                                            'Ticket Expired'
-                                        ) : (
-                                            <>
-                                                <Icons.Check />
-                                                <span>Confirm Check-in</span>
-                                            </>
-                                        )}
-                                    </button>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                </div>
             </div>
+            <ResultModal scanResult={scanResult} loading={loading} onClose={handleCancel} onConfirm={handleConfirmCheckIn} />
         </div>
     );
 };
