@@ -25,7 +25,7 @@ const CalendarIcon = () => (
 const Row = ({ label, value, strong = false }) => (
     <div className="flex items-center justify-between gap-3 py-2">
         <span className="text-xs shrink-0" style={{ color: THEME.textMuted }}>{label}</span>
-        <span className={`text-right text-sm ${strong ? 'font-bold' : 'font-semibold'}`} style={{ color: THEME.text }}>{value}</span>
+        <span className={`min-w-0 text-right text-sm break-words ${strong ? 'font-bold' : 'font-semibold'}`} style={{ color: THEME.text }}>{value}</span>
     </div>
 );
 

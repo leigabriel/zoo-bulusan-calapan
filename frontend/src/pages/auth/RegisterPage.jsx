@@ -309,7 +309,7 @@ const EmailVerificationModal = ({ isOpen, onClose, email, onNavigateToLogin }) =
                     </p>
                     <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
                         <p className="text-amber-800 text-sm">
-                            Please check your inbox and click the verification link to activate your account. 
+                            Please check your inbox and click the verification link to activate your account.
                             The link will expire in <strong>1 hour</strong>.
                         </p>
                     </div>
@@ -488,7 +488,7 @@ const RegisterPage = () => {
 
     return (
         <div className="flex min-h-screen w-full bg-white">
-            <AuthSuccessModal 
+            <AuthSuccessModal
                 isOpen={showSuccessModal}
                 onClose={() => {
                     setShowSuccessModal(false);

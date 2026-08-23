@@ -1,16 +1,14 @@
-import React, { useEffect, useRef, useState, useLayoutEffect } from 'react';
+import React, { useRef, useLayoutEffect } from 'react';
 import { ReactLenis } from 'lenis/react';
 import { useNavigate } from 'react-router-dom';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { Draggable } from 'gsap/Draggable';
-import * as THREE from 'three';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 import AIFloatingButton from '../../components/common/AIFloatingButton';
 import '../../App.css';
 
-gsap.registerPlugin(ScrollTrigger, Draggable);
+gsap.registerPlugin(ScrollTrigger);
 
 const ticketMaskStyle = {
     WebkitMaskImage: 'radial-gradient(circle at 0px 50%, transparent 5px, black 6px), radial-gradient(circle at 100% 50%, transparent 5px, black 6px)',
@@ -38,9 +36,9 @@ const HeroSection = () => {
         const ctx = gsap.context(() => {
             const tl = gsap.timeline();
 
-            tl.fromTo('.hero-drag-item',
+            tl.fromTo('.hero-deer',
                 { opacity: 0, scale: 0.5, y: 50 },
-                { opacity: 1, scale: 1, y: 0, duration: 1.2, ease: 'back.out(1.5)', stagger: 0.15 }, 0
+                { opacity: 1, scale: 1, y: 0, duration: 1.2, ease: 'back.out(1.5)' }, 0
             )
                 .fromTo('.hero-title',
                     { opacity: 0, y: 50, skewY: 5 },
@@ -79,18 +77,6 @@ const HeroSection = () => {
                 }
             });
 
-            Draggable.create('.hero-drag-item', {
-                type: 'x,y',
-                bounds: containerRef.current,
-                edgeResistance: 0.8,
-                onDragStart: function () {
-                    gsap.to(this.target, { scale: 1.15, duration: 0.3, ease: 'power2.out', zIndex: 50 });
-                },
-                onDragEnd: function () {
-                    gsap.to(this.target, { x: 0, y: 0, scale: 1, zIndex: 0, duration: 0.8, ease: 'elastic.out(1, 0.5)' });
-                }
-            });
-
         }, containerRef);
 
         return () => ctx.revert();
@@ -101,18 +87,14 @@ const HeroSection = () => {
             <section className="relative w-full min-h-[100dvh] flex flex-col items-center justify-center overflow-hidden">
                 <div className="hero-bg-parallax absolute inset-0 bg-white -z-10 origin-bottom" />
 
-                {/* <div className="hero-images absolute inset-0 z-0 flex items-center justify-center overflow-hidden pointer-events-none">
+                <div className="hero-images absolute inset-0 z-0 overflow-hidden pointer-events-none">
                     <img
-                        src="/pixels/deer.png"
-                        alt="Rabbit"
-                        className="hero-drag-item absolute w-20 sm:w-24 md:w-36 lg:w-56 left-[5%] sm:left-[10%] md:left-20%] top-[55%] sm:top-[70%] md:top-[40%] -rotate-12 pointer-events-auto cursor-grab active:cursor-grabbing"
+                        src="/deer.png"
+                        alt=""
+                        aria-hidden="true"
+                        className="hero-deer absolute bottom-0 left-[-3rem] w-[78vw] max-w-[38rem] origin-bottom-left object-contain object-bottom opacity-0 sm:left-[-2rem] sm:w-[48vw] md:left-0 md:w-[43vw]"
                     />
-                    <img
-                        src="/pixels/rabbit.png"
-                        alt="Turtle"
-                        className="hero-drag-item absolute w-20 sm:w-24 md:w-36 lg:w-56 right-[5%] sm:right-[10%] md:right-[14%] top-[57%] sm:top-[70%] md:top-[45%] rotate-12 pointer-events-auto cursor-grab active:cursor-grabbing"
-                    />
-                </div> */}
+                </div>
 
                 <div className="hero-content text-center flex flex-col items-center z-10 px-4 sm:px-5 pointer-events-none">
                     <h2 className="hero-title opacity-0 font-['Mistral',_cursive] text-[clamp(2rem,5vw,5rem)] text-black -mb-1 sm:-mb-2">

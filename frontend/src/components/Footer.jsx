@@ -167,12 +167,6 @@ const Footer = () => {
                         <span className="text-[11px] font-medium text-white/30 uppercase tracking-widest">
                             © {currentYear} Bulusan Zoo. All rights reserved.
                         </span>
-                        <button
-                            onClick={scrollToTop}
-                            className="bg-white text-black px-5 py-1.5 rounded-full text-xs font-bold hover:opacity-70 transition-opacity"
-                        >
-                            back to top ↑
-                        </button>
                     </motion.div>
                 </div>
 

@@ -6,9 +6,7 @@ import Footer from '../../Footer';
 import {
     loadLocalModel,
     isModelReady,
-    detectAnimal,
-    getCurrentSource,
-    getSourceDisplayName
+    detectAnimal
 } from '../../../services/ai-detection-service';
 import { fetchAnimalDescription } from '../../../services/animal-description-service';
 import { ANIMAL_DATABASE, AI_SOURCE } from '../../../config/ai-service-config';
@@ -36,13 +34,15 @@ const SwitchCameraIcon = () => (
 );
 
 const ANIMAL_INFO = ANIMAL_DATABASE;
+const MotionDiv = motion.div;
+const MotionButton = motion.button;
 
 const isMobileDevice = () => {
     return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
         || window.innerWidth < 768;
 };
 
-const AnimalClassifier = ({ embedded = false, expanded: controlledExpanded = false, onExpandChange = () => { } }) => {
+const AnimalClassifier = ({ embedded = false }) => {
     const [messages, setMessages] = useState([
         { id: 1, role: 'bot', type: 'text', content: `Hello! Upload a photo or use Camera to identify animals!` }
     ]);
@@ -65,6 +65,17 @@ const AnimalClassifier = ({ embedded = false, expanded: controlledExpanded = fal
 
     const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
+    const stopCameraStream = useCallback(() => {
+        if (streamRef.current) {
+            streamRef.current.getTracks().forEach(track => track.stop());
+            streamRef.current = null;
+        }
+        if (videoRef.current) {
+            videoRef.current.srcObject = null;
+        }
+        setCameraReady(false);
+    }, []);
+
     useEffect(() => {
         const handleResize = () => setIsMobile(isMobileDevice());
         window.addEventListener('resize', handleResize);
@@ -86,7 +97,7 @@ const AnimalClassifier = ({ embedded = false, expanded: controlledExpanded = fal
             try {
                 await loadLocalModel();
                 setIsModelLoading(false);
-            } catch (err) {
+            } catch {
                 addBotMessage("🐵");
                 setIsModelLoading(false);
             }
@@ -102,7 +113,7 @@ const AnimalClassifier = ({ embedded = false, expanded: controlledExpanded = fal
         return () => {
             stopCameraStream();
         };
-    }, []);
+    }, [stopCameraStream]);
 
     const handleFileSelect = (e) => {
         const file = e.target.files[0];
@@ -117,17 +128,6 @@ const AnimalClassifier = ({ embedded = false, expanded: controlledExpanded = fal
         setAnalysisImage(imageUrl);
         e.target.value = '';
     };
-
-    const stopCameraStream = useCallback(() => {
-        if (streamRef.current) {
-            streamRef.current.getTracks().forEach(track => track.stop());
-            streamRef.current = null;
-        }
-        if (videoRef.current) {
-            videoRef.current.srcObject = null;
-        }
-        setCameraReady(false);
-    }, []);
 
     const startCameraStream = useCallback(async (facingMode) => {
         try {
@@ -251,7 +251,7 @@ const AnimalClassifier = ({ embedded = false, expanded: controlledExpanded = fal
                 return;
             }
 
-            const { animal: animalName, confidence, category, isBulusanAnimal, fallback, source, warning } = result;
+            const { animal: animalName, confidence, category, isBulusanAnimal, fallback } = result;
             const confidencePct = parseFloat(confidence);
 
             if (animalName === 'Unknown' || confidencePct === 0) {
@@ -278,7 +278,7 @@ const AnimalClassifier = ({ embedded = false, expanded: controlledExpanded = fal
                 } else {
                     animalDescription = `A ${animalName.toLowerCase()} has been detected with ${confidencePct}% confidence.`;
                 }
-            } catch (descError) {
+            } catch {
                 animalDescription = `A ${animalName.toLowerCase()} has been detected. Description unavailable at this time.`;
             }
 
@@ -327,7 +327,9 @@ const AnimalClassifier = ({ embedded = false, expanded: controlledExpanded = fal
                     confidence: parseFloat(confidence)
                 })
             });
-        } catch (err) { }
+        } catch {
+            // Prediction history is optional and should not block the scanner.
+        }
     };
 
     const messageVariants = {
@@ -341,14 +343,14 @@ const AnimalClassifier = ({ embedded = false, expanded: controlledExpanded = fal
     };
 
     const containerClass = embedded
-        ? "h-full w-full flex flex-col bg-[#f5f5f5] overflow-hidden"
-        : "flex flex-col h-screen bg-[#f5f5f5] w-full md:w-1/2 md:mx-auto md:border-x border-gray-200 md:shadow-xl relative";
+        ? "h-full min-h-0 w-full flex flex-col bg-[#f5f7f4] overflow-hidden"
+        : "flex flex-col h-[100dvh] min-h-0 bg-[#f5f7f4] w-full md:w-3/5 lg:w-1/2 md:mx-auto md:border-x border-gray-200 md:shadow-xl relative";
 
     return (
         <div className={containerClass}>
             {!embedded && <Header />}
 
-            <main className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar min-h-0">
+            <main className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-3 sm:p-5 space-y-4 custom-scrollbar overscroll-contain">
 
                 {analysisImage && (
                     <img
@@ -363,7 +365,7 @@ const AnimalClassifier = ({ embedded = false, expanded: controlledExpanded = fal
 
                 <AnimatePresence mode="popLayout">
                     {messages.map((msg) => (
-                        <motion.div
+                        <MotionDiv
                             key={msg.id}
                             className={`flex w-full ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                             variants={messageVariants}
@@ -371,51 +373,61 @@ const AnimalClassifier = ({ embedded = false, expanded: controlledExpanded = fal
                             animate="visible"
                             layout
                         >
-                            <div className={`flex ${embedded ? 'max-w-[95%]' : 'max-w-[85%] md:max-w-[70%]'} ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'} gap-2.5 items-end`}>
+                            <div className={`flex min-w-0 ${embedded ? 'max-w-[96%]' : 'max-w-[90%] md:max-w-[78%]'} ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'} gap-2.5 items-end`}>
 
                                 <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 shadow-sm ${msg.role === 'user' ? 'bg-[#212631] text-white' : 'bg-[#ebebeb] text-[#212631]'}`}>
                                     {msg.role === 'user' ? <UserIcon /> : <RobotIcon />}
                                 </div>
 
-                                <div className={`p-3.5 shadow-sm text-sm ${msg.role === 'user'
+                                <div className={`min-w-0 max-w-full p-3.5 sm:p-4 shadow-sm text-sm ${msg.role === 'user'
                                     ? 'bg-[#212631] text-white rounded-2xl rounded-br-sm'
                                     : 'bg-white text-gray-700 rounded-2xl rounded-bl-sm shadow-md border border-gray-200'
                                     }`}>
                                     {msg.type === 'image' && (
-                                        <img src={msg.content} alt="Upload" className={`rounded-lg ${embedded ? 'max-h-32' : 'max-h-48'} border border-white/20 mb-2`} />
+                                        <img src={msg.content} alt="Uploaded animal" className={`w-auto max-w-full rounded-xl ${embedded ? 'max-h-40' : 'max-h-56'} object-contain border border-white/20 mb-2`} />
                                     )}
 
                                     {msg.type === 'text' && <p className="leading-relaxed">{msg.content}</p>}
 
                                     {msg.type === 'result' && (
-                                        <div className={`${embedded ? 'min-w-[180px]' : 'min-w-[280px] md:min-w-[320px]'} w-full md:w-[50vw] lg:w-[40vw] max-w-lg`}>
-                                            <div className="flex items-center gap-3 mb-3 pb-3 border-b border-gray-200">
-                                                <div className="p-2.5 bg-[#ebebeb] rounded-xl">
-                                                    <PawIcon className={`${embedded ? 'w-6 h-6' : 'w-8 h-8'} text-[#212631]`} />
+                                        <div className="w-full min-w-0 max-w-md">
+                                            <div className="flex items-start gap-3 mb-4 pb-4 border-b border-gray-200">
+                                                <div className="p-2.5 bg-[#eef5e9] rounded-xl shrink-0 text-[#315b37]">
+                                                    <PawIcon className="w-6 h-6" />
                                                 </div>
-                                                <div className="flex-1">
-                                                    <h3 className={`font-bold ${embedded ? 'text-base' : 'text-lg'} text-[#212631]`}>{msg.meta.animal}</h3>
-                                                    <div className="flex items-center gap-2 mt-1">
-                                                        <div className="h-2 flex-1 max-w-[100px] bg-gray-200 rounded-full overflow-hidden">
-                                                            <div className="h-full bg-[#212631] transition-all" style={{ width: `${msg.meta.confidence}%` }}></div>
+                                                <div className="min-w-0 flex-1">
+                                                    <div className="flex items-start justify-between gap-3">
+                                                        <div className="min-w-0">
+                                                            <p className="text-[10px] uppercase tracking-widest font-bold text-[#6a7b6d]">Animal identified</p>
+                                                            <h3 className="mt-1 font-bold text-lg text-[#17251b] break-words">{msg.meta.animal}</h3>
                                                         </div>
-                                                        <span className="text-xs text-[#212631] font-semibold">{msg.meta.confidence}%</span>
+                                                        <span className="shrink-0 rounded-full px-2.5 py-1 text-[10px] uppercase font-bold bg-[#eef5e9] text-[#315b37]">{msg.meta.category || 'Animal'}</span>
+                                                    </div>
+                                                    <div className="flex items-center gap-2 mt-3">
+                                                        <div className="h-2 flex-1 bg-gray-200 rounded-full overflow-hidden">
+                                                            <div className="h-full bg-[#315b37] transition-all" style={{ width: `${msg.meta.confidence}%` }}></div>
+                                                        </div>
+                                                        <span className="text-xs text-[#315b37] font-bold shrink-0">{msg.meta.confidence}% match</span>
                                                     </div>
                                                 </div>
                                             </div>
-                                            <p className="text-gray-600 leading-relaxed text-sm">
-                                                {msg.content}
-                                            </p>
+                                            <p className="text-gray-600 leading-relaxed text-sm [overflow-wrap:anywhere]">{msg.content}</p>
+                                            {msg.meta.wikipediaData?.scientificName && (
+                                                <p className="mt-3 text-xs text-gray-500"><span className="font-semibold text-gray-700">Scientific name:</span> {msg.meta.wikipediaData.scientificName}</p>
+                                            )}
+                                            {msg.meta.wikipediaData?.pageUrl && (
+                                                <a href={msg.meta.wikipediaData.pageUrl} target="_blank" rel="noreferrer" className="inline-flex mt-4 text-xs font-bold text-[#315b37] hover:underline">Learn more about {msg.meta.animal}</a>
+                                            )}
                                         </div>
                                     )}
                                 </div>
                             </div>
-                        </motion.div>
+                        </MotionDiv>
                     ))}
                 </AnimatePresence>
 
                 {isProcessing && (
-                    <motion.div
+                    <MotionDiv
                         className="flex w-full justify-start"
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -430,13 +442,13 @@ const AnimalClassifier = ({ embedded = false, expanded: controlledExpanded = fal
                                 <span className="w-2 h-2 bg-[#212631] rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></span>
                             </div>
                         </div>
-                    </motion.div>
+                    </MotionDiv>
                 )}
 
                 <div ref={messagesEndRef} />
             </main>
 
-            <div className="p-4 bg-[#ebebeb] border-t border-gray-200">
+            <div className="p-3 sm:p-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] bg-white border-t border-gray-200">
                 <div className="max-w-4xl mx-auto">
                     <input
                         type="file"
@@ -446,13 +458,14 @@ const AnimalClassifier = ({ embedded = false, expanded: controlledExpanded = fal
                         onChange={handleFileSelect}
                     />
 
-                    <div className="flex gap-2 items-center">
-                        <motion.button
+                    <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                        <MotionButton
+                            type="button"
                             onClick={() => fileInputRef.current?.click()}
                             disabled={isProcessing || isModelLoading}
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
-                            className={`flex-1 py-2.5 px-3 rounded-xl font-medium text-white flex items-center justify-center gap-2 transition-all text-sm shadow-sm ${isProcessing || isModelLoading
+                            className={`min-h-12 py-2.5 px-3 rounded-xl font-semibold text-white flex items-center justify-center gap-2 transition-all text-sm shadow-sm ${isProcessing || isModelLoading
                                 ? 'bg-gray-400 cursor-not-allowed opacity-75'
                                 : 'bg-[#212631] hover:bg-[#2d3341]'
                                 }`}
@@ -465,25 +478,26 @@ const AnimalClassifier = ({ embedded = false, expanded: controlledExpanded = fal
                                     <span>Upload</span>
                                 </>
                             )}
-                        </motion.button>
+                        </MotionButton>
 
-                        <motion.button
+                        <MotionButton
+                            type="button"
                             onClick={openCameraModal}
                             disabled={isProcessing || isModelLoading}
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
-                            className={`flex-1 py-2.5 px-3 rounded-xl font-medium flex items-center justify-center gap-2 transition-all text-sm shadow-sm ${isProcessing || isModelLoading
+                            className={`min-h-12 py-2.5 px-3 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all text-sm shadow-sm ${isProcessing || isModelLoading
                                 ? 'bg-gray-400 text-white cursor-not-allowed'
                                 : 'bg-[#3a4150] text-white hover:bg-[#4a5160]'
                                 }`}
                         >
                             <CameraIcon />
                             <span>Camera</span>
-                        </motion.button>
+                        </MotionButton>
                     </div>
 
-                    <p className="text-center text-xs text-gray-500 mt-2 font-medium">
-                        Upload an image or capture with camera
+                    <p className="text-center text-[11px] text-gray-500 mt-2 font-medium">
+                        Use a clear, well-lit photo with the animal visible
                     </p>
                 </div>
             </div>
@@ -571,13 +585,13 @@ const AnimalClassifier = ({ embedded = false, expanded: controlledExpanded = fal
 
             <AnimatePresence>
                 {showCameraModal && !isMobile && (
-                    <motion.div
+                    <MotionDiv
                         className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                     >
-                        <motion.div
+                        <MotionDiv
                             className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden"
                             initial={{ scale: 0.9, y: 20 }}
                             animate={{ scale: 1, y: 0 }}
@@ -675,8 +689,8 @@ const AnimalClassifier = ({ embedded = false, expanded: controlledExpanded = fal
                                     Point camera at an animal and tap to capture
                                 </p>
                             </div>
-                        </motion.div>
-                    </motion.div>
+                        </MotionDiv>
+                    </MotionDiv>
                 )}
             </AnimatePresence>
 

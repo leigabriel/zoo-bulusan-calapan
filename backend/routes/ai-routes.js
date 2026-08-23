@@ -947,6 +947,60 @@ router.delete('/companion/sessions/:sessionId', protect, authorize('admin', 'sta
     }
 });
 
+router.get('/sessions', protect, authorize('user'), async (req, res) => {
+    try {
+        const sessions = await AIAssistSession.getByOwner(req.user.id, 'user');
+        return res.json({ success: true, sessions });
+    } catch (error) {
+        console.error('User AI session list error:', error.message);
+        return res.status(500).json({ success: false, message: 'Could not load your AI chat history.' });
+    }
+});
+
+router.post('/sessions', protect, authorize('user'), async (req, res) => {
+    try {
+        const session = await AIAssistSession.create({
+            id: crypto.randomUUID(),
+            userId: req.user.id,
+            role: 'user',
+            title: typeof req.body.title === 'string' ? req.body.title.slice(0, 255) : 'New chat',
+            messages: normalizeSessionMessages(req.body.messages)
+        });
+        return res.status(201).json({ success: true, session });
+    } catch (error) {
+        console.error('User AI session create error:', error.message);
+        return res.status(500).json({ success: false, message: 'Could not create a new AI chat.' });
+    }
+});
+
+router.put('/sessions/:sessionId', protect, authorize('user'), async (req, res) => {
+    try {
+        const updated = await AIAssistSession.update({
+            id: req.params.sessionId,
+            userId: req.user.id,
+            role: 'user',
+            title: typeof req.body.title === 'string' ? req.body.title.slice(0, 255) : undefined,
+            messages: req.body.messages === undefined ? undefined : normalizeSessionMessages(req.body.messages)
+        });
+        if (!updated) return res.status(404).json({ success: false, message: 'AI chat not found.' });
+        return res.json({ success: true });
+    } catch (error) {
+        console.error('User AI session update error:', error.message);
+        return res.status(500).json({ success: false, message: 'Could not save your AI chat.' });
+    }
+});
+
+router.delete('/sessions/:sessionId', protect, authorize('user'), async (req, res) => {
+    try {
+        const deleted = await AIAssistSession.delete(req.params.sessionId, req.user.id, 'user');
+        if (!deleted) return res.status(404).json({ success: false, message: 'AI chat not found.' });
+        return res.json({ success: true });
+    } catch (error) {
+        console.error('User AI session delete error:', error.message);
+        return res.status(500).json({ success: false, message: 'Could not delete your AI chat.' });
+    }
+});
+
 router.post('/chat', optionalAuth, async (req, res) => {
     try {
         const { message, history = [] } = req.body;

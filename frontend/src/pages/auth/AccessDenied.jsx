@@ -47,14 +47,14 @@ const AccessDenied = () => {
                         {user ? (
                             <Link
                                 to={getDashboardPath()}
-                                className="block w-full py-3 bg-green-600 text-white font-semibold rounded-xl hover:bg-green-700 transition"
+                                className="block w-full py-3 bg-[#c6fe69] text-black font-semibold rounded-xl hover:bg-[#b5ed58] transition"
                             >
                                 Go to Dashboard
                             </Link>
                         ) : (
                             <Link
                                 to="/login"
-                                className="block w-full py-3 bg-green-600 text-white font-semibold rounded-xl hover:bg-green-700 transition"
+                                className="block w-full py-3 bg-[#c6fe69] text-black font-semibold rounded-xl hover:bg-[#b5ed58] transition"
                             >
                                 Log In
                             </Link>

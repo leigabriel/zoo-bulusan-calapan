@@ -45,7 +45,7 @@ const ChevronIcon = () => (
 const Row = ({ label, value, strong = false }) => (
     <div className="flex items-center justify-between gap-3 py-2">
         <span className="text-xs shrink-0 capitalize" style={{ color: DEFAULT_THEME.textMuted }}>{label}</span>
-        <span className={`text-right text-sm capitalize ${strong ? 'font-bold' : 'font-semibold'}`} style={{ color: DEFAULT_THEME.text }}>{value}</span>
+        <span className={`min-w-0 text-right text-sm capitalize break-words ${strong ? 'font-bold' : 'font-semibold'}`} style={{ color: DEFAULT_THEME.text }}>{value}</span>
     </div>
 );
 
@@ -133,6 +133,7 @@ const ZooCard = ({ data, theme = DEFAULT_THEME }) => {
 
                 {hasDescription && (
                     <button
+                        type="button"
                         onClick={() => setExpanded(v => !v)}
                         className={`w-full flex items-center justify-center gap-1.5 py-2.5 mt-2 rounded-xl text-xs font-bold transition-all active:scale-95 ${expanded ? 'opacity-80' : ''}`}
                         style={{ background: THEME.accentSoft, color: THEME.text }}

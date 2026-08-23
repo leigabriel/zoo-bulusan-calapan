@@ -283,7 +283,7 @@ const LoginPage = () => {
 
     const handleResendVerification = async () => {
         if (!verificationEmail) return;
-        
+
         setResendingVerification(true);
         try {
             const response = await authAPI.resendVerification({ email: verificationEmail });
@@ -325,7 +325,7 @@ const LoginPage = () => {
 
             if (response.success) {
                 login(response.user, response.token);
-                
+
                 // Set user name for success modal
                 const userName = response.user.firstName || response.user.username || 'User';
                 setSuccessUserName(userName);
@@ -337,7 +337,7 @@ const LoginPage = () => {
                 } else if (response.user.role === 'staff') {
                     redirectPath = '/staff/dashboard';
                 }
-                
+
                 // Store pending redirect and show success modal
                 setPendingRedirect(redirectPath);
                 setShowSuccessModal(true);
@@ -408,7 +408,7 @@ const LoginPage = () => {
 
     return (
         <div className="flex min-h-screen w-full bg-white">
-            <AuthSuccessModal 
+            <AuthSuccessModal
                 isOpen={showSuccessModal}
                 onClose={() => {
                     setShowSuccessModal(false);
