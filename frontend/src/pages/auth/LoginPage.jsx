@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { authAPI, messageAPI } from '../../services/api-client';
+import { authAPI } from '../../services/api-client';
 import { sanitizeInput } from '../../utils/sanitize';
 import AuthSuccessModal from '../../components/common/AuthSuccessModal';
 import { notify } from '../../utils/toast';
@@ -173,30 +173,26 @@ Phone: +63 (XXX) XXX-XXXX
 `;
 
 const PolicyModal = ({ isOpen, onClose, title, content }) => {
-    if (!isOpen) return null;
-
     const handleBackdropClick = (e) => {
         if (e.target === e.currentTarget) {
             onClose();
         }
     };
 
-    const handleKeyDown = (e) => {
-        if (e.key === 'Escape') {
-            onClose();
-        }
-    };
-
     useEffect(() => {
-        if (isOpen) {
-            document.addEventListener('keydown', handleKeyDown);
-            document.body.style.overflow = 'hidden';
-        }
+        if (!isOpen) return undefined;
+        const handleKeyDown = (e) => {
+            if (e.key === 'Escape') onClose();
+        };
+        document.addEventListener('keydown', handleKeyDown);
+        document.body.style.overflow = 'hidden';
         return () => {
             document.removeEventListener('keydown', handleKeyDown);
             document.body.style.overflow = 'unset';
         };
-    }, [isOpen]);
+    }, [isOpen, onClose]);
+
+    if (!isOpen) return null;
 
     return (
         <div
@@ -238,6 +234,13 @@ const PolicyModal = ({ isOpen, onClose, title, content }) => {
 const LoginPage = () => {
     const [identifier, setIdentifier] = useState('');
     const [password, setPassword] = useState('');
+    const [rememberMe, setRememberMe] = useState(() => {
+        try {
+            return Boolean(localStorage.getItem('user_token'));
+        } catch {
+            return false;
+        }
+    });
     const [loading, setLoading] = useState(false);
     const [googleLoading, setGoogleLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
@@ -255,6 +258,14 @@ const LoginPage = () => {
     const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [successUserName, setSuccessUserName] = useState('');
     const [pendingRedirect, setPendingRedirect] = useState(null);
+    const [showForgotModal, setShowForgotModal] = useState(false);
+    const [forgotEmail, setForgotEmail] = useState('');
+    const [forgotLoading, setForgotLoading] = useState(false);
+    const [forgotSent, setForgotSent] = useState(false);
+    const [resetToken, setResetToken] = useState('');
+    const [resetData, setResetData] = useState({ newPassword: '', confirmPassword: '' });
+    const [resetError, setResetError] = useState('');
+    const [resetLoading, setResetLoading] = useState(false);
     const { login } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
@@ -279,7 +290,54 @@ const LoginPage = () => {
             notify.error(errorMessage + debugInfo);
             window.history.replaceState(null, '', '/login');
         }
+
+        const resetParam = searchParams.get('resetToken');
+        if (resetParam) {
+            setResetToken(resetParam);
+            setResetError('');
+        }
     }, [location, searchParams]);
+
+    const handleForgotPassword = async (event) => {
+        event.preventDefault();
+        if (!forgotEmail.trim()) return;
+        setForgotLoading(true);
+        try {
+            const response = await authAPI.requestPasswordReset({ email: forgotEmail.trim() });
+            setForgotSent(true);
+            if (!response.success) notify.error(response.message || "Couldn't send reset email.");
+        } catch (error) {
+            notify.error(error.message || "Couldn't send reset email.");
+        } finally {
+            setForgotLoading(false);
+        }
+    };
+
+    const handleResetPassword = async (event) => {
+        event.preventDefault();
+        setResetError('');
+        if (resetData.newPassword !== resetData.confirmPassword) {
+            setResetError('Passwords do not match.');
+            return;
+        }
+
+        setResetLoading(true);
+        try {
+            const response = await authAPI.resetPassword({ token: resetToken, newPassword: resetData.newPassword });
+            if (!response.success) {
+                setResetError(response.message || 'Could not reset your password.');
+                return;
+            }
+            setResetToken('');
+            setResetData({ newPassword: '', confirmPassword: '' });
+            window.history.replaceState(null, '', '/login');
+            notify.success('Password reset. You can now log in.');
+        } catch (error) {
+            setResetError(error.message || 'Could not reset your password.');
+        } finally {
+            setResetLoading(false);
+        }
+    };
 
     const handleResendVerification = async () => {
         if (!verificationEmail) return;
@@ -324,7 +382,7 @@ const LoginPage = () => {
             });
 
             if (response.success) {
-                login(response.user, response.token);
+                 login(response.user, response.token, null, rememberMe);
 
                 // Set user name for success modal
                 const userName = response.user.firstName || response.user.username || 'User';
@@ -434,6 +492,47 @@ const LoginPage = () => {
                 title="Terms of Service"
                 content={TERMS_OF_SERVICE_CONTENT}
             />
+
+            {showForgotModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#102019]/45 backdrop-blur-sm p-4">
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 sm:p-8">
+                        <div className="flex items-start justify-between gap-4 mb-6">
+                            <div>
+                                <p className="text-xs font-bold uppercase tracking-widest text-emerald-700">Account recovery</p>
+                                <h2 className="text-2xl font-bold text-gray-900 mt-1">Forgot password?</h2>
+                            </div>
+                            <button type="button" onClick={() => { setShowForgotModal(false); setForgotSent(false); }} className="p-2 text-gray-400 hover:text-gray-700 rounded-lg" aria-label="Close forgot password dialog"><CloseIcon /></button>
+                        </div>
+                        {forgotSent ? (
+                            <div className="rounded-xl bg-emerald-50 border border-emerald-100 p-4 text-sm leading-relaxed text-emerald-800">
+                                If that email belongs to an account, a password reset link has been sent. Check your inbox and follow the link to create a new password.
+                            </div>
+                        ) : (
+                            <form onSubmit={handleForgotPassword} className="space-y-5">
+                                <p className="text-sm leading-relaxed text-gray-500">Enter the email address on your account. We will send a secure link that expires in one hour.</p>
+                                <input type="email" value={forgotEmail} onChange={event => setForgotEmail(event.target.value)} required autoFocus placeholder="you@example.com" className="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent" />
+                                <button type="submit" disabled={forgotLoading} className="w-full py-3.5 rounded-xl bg-emerald-600 text-white font-semibold hover:bg-emerald-700 disabled:opacity-50">{forgotLoading ? 'Sending...' : 'Send reset link'}</button>
+                            </form>
+                        )}
+                    </div>
+                </div>
+            )}
+
+            {resetToken && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#102019]/45 backdrop-blur-sm p-4">
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 sm:p-8">
+                        <p className="text-xs font-bold uppercase tracking-widest text-emerald-700">Verified reset link</p>
+                        <h2 className="text-2xl font-bold text-gray-900 mt-1 mb-2">Create a new password</h2>
+                        <p className="text-sm leading-relaxed text-gray-500 mb-6">Use a strong password with at least 8 characters, one uppercase letter, one number, and one special character.</p>
+                        {resetError && <div className="mb-4 rounded-xl bg-red-50 border border-red-100 p-3 text-sm text-red-700">{resetError}</div>}
+                        <form onSubmit={handleResetPassword} className="space-y-4">
+                            <input type="password" value={resetData.newPassword} onChange={event => setResetData({ ...resetData, newPassword: event.target.value })} required placeholder="New password" className="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent" />
+                            <input type="password" value={resetData.confirmPassword} onChange={event => setResetData({ ...resetData, confirmPassword: event.target.value })} required placeholder="Confirm new password" className="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent" />
+                            <button type="submit" disabled={resetLoading} className="w-full py-3.5 rounded-xl bg-emerald-600 text-white font-semibold hover:bg-emerald-700 disabled:opacity-50">{resetLoading ? 'Updating...' : 'Set new password'}</button>
+                        </form>
+                    </div>
+                </div>
+            )}
 
             {showSuspendedModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
@@ -641,15 +740,17 @@ const LoginPage = () => {
 
                         <div className="flex flex-row items-center justify-between text-sm py-2">
                             <label className="flex items-center space-x-2 cursor-pointer select-none">
-                                <input
-                                    type="checkbox"
-                                    className="h-4 w-4 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500"
-                                />
+                                 <input
+                                     type="checkbox"
+                                     checked={rememberMe}
+                                     onChange={event => setRememberMe(event.target.checked)}
+                                     className="h-4 w-4 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500"
+                                 />
                                 <span className="text-gray-600 font-medium">Remember Me</span>
                             </label>
-                            <Link to="#" className="text-gray-500 hover:text-gray-900 transition-colors">
-                                Forgot Password?
-                            </Link>
+                             <button type="button" onClick={() => { setForgotEmail(identifier.includes('@') ? identifier : ''); setForgotSent(false); setShowForgotModal(true); }} className="text-gray-500 hover:text-gray-900 transition-colors">
+                                 Forgot Password?
+                             </button>
                         </div>
 
                         <button

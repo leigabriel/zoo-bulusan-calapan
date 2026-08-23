@@ -24,6 +24,7 @@ const paymentRoutes = require('./routes/payment-routes');
 const paymentController = require('./controllers/payment-controller');
 const ensureEventPaymentSchema = require('./database/ensure-event-payment-schema');
 const ensureAIAssistSchema = require('./database/ensure-ai-assist-schema');
+const ensureAuthSchema = require('./database/ensure-auth-schema');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -137,8 +138,8 @@ app.use((err, req, res, next) => {
     });
 });
 
-Promise.all([ensureEventPaymentSchema(), ensureAIAssistSchema()])
-    .catch(error => console.error('Event payment schema initialization failed:', error.message))
+Promise.all([ensureEventPaymentSchema(), ensureAIAssistSchema(), ensureAuthSchema()])
+    .catch(error => console.error('Database schema initialization failed:', error.message))
     .finally(() => {
         app.listen(PORT, HOST, () => {
             console.info(`Server started on ${HOST}:${PORT}`);

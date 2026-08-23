@@ -12,7 +12,9 @@ const {
     deleteProfileImage,
     submitPublicAppeal,
     verifyEmail,
-    resendVerification
+    resendVerification,
+    requestPasswordReset,
+    resetPassword
 } = require('../controllers/auth-controller');
 const { protect } = require('../middleware/auth');
 const { handleCloudinaryProfileUpload } = require('../middleware/cloudinary-upload');
@@ -23,6 +25,8 @@ router.post('/login', login);
 router.post('/appeal', submitPublicAppeal);
 router.get('/verify-email', verifyEmail);
 router.post('/resend-verification', resendVerification);
+router.post('/forgot-password', requestPasswordReset);
+router.post('/reset-password', resetPassword);
 
 // Protected routes (auth required)
 router.get('/me', protect, getMe);

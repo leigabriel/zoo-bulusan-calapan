@@ -418,7 +418,6 @@ const Header = () => {
     ];
 
     const accountItems = [
-        { iconUrl: ICONS.profile, label: 'My Account', path: getProfilePath() },
         { iconUrl: ICONS.ticket, label: 'My Reservation', action: handleOpenReservationHistory },
         { iconUrl: ICONS.events, label: 'My Events', path: '/my-events' },
         { iconUrl: ICONS.messages, label: 'Messages', path: '/my-messages' },
@@ -620,7 +619,7 @@ const Header = () => {
                         )}
                     </div>
 
-                    <div className="flex-1 overflow-y-auto px-4 pb-6">
+                    <div className="flex-1 min-h-0 overflow-y-auto px-4 pb-6">
                         {quickItems.length > 0 && (
                             <>
                                 <SectionLabel label="Quick Access" />
@@ -661,15 +660,26 @@ const Header = () => {
                         <SectionLabel label="Help" />
                         <div className="rounded-xl overflow-hidden border border-gray-200 bg-white">
                             <MenuItem iconUrl={ICONS.help} label="Help Center" to="/help" onClose={closeSidePanel} onNavigate={handleTransitionNavigate} isLast={false} />
-                            <MenuItem iconUrl={ICONS.support} label="Contact Support" onClick={openEmailModal} isLast={false} />
-                            <MenuItem
-                                iconUrl={ICONS.logout}
-                                label="Sign Out"
-                                danger
-                                onClick={() => { closeSidePanel(); setShowLogoutModal(true); }}
-                                isLast={true}
-                            />
+                            <MenuItem iconUrl={ICONS.support} label="Contact Support" onClick={openEmailModal} isLast={true} />
                         </div>
+                    </div>
+                    <div className="flex-shrink-0 border-t border-gray-200 bg-white px-4 py-4 space-y-2">
+                        <div className="rounded-xl overflow-hidden border border-gray-200 bg-white">
+                            <MenuItem iconUrl={ICONS.profile} label="My Account" to={getProfilePath()} onClose={closeSidePanel} onNavigate={handleTransitionNavigate} isLast={true} />
+                        </div>
+                        <button
+                            type="button"
+                            onClick={() => { closeSidePanel(); setShowLogoutModal(true); }}
+                            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-500 hover:bg-red-50 transition-colors"
+                        >
+                            <img
+                                src={ICONS.logout}
+                                alt="Sign Out"
+                                className="w-4 h-4 object-contain flex-shrink-0"
+                                style={{ filter: 'invert(30%) sepia(80%) saturate(700%) hue-rotate(330deg) opacity(0.75)' }}
+                            />
+                            <span className="text-[13px] font-medium">Sign Out</span>
+                        </button>
                     </div>
                 </div>
             </div>

@@ -51,10 +51,12 @@ export const AuthProvider = ({ children }) => {
             // This ensures new tabs don't inherit sessions from other tabs
             for (const [type, keys] of Object.entries(STORAGE_KEYS)) {
                 // Check tab-scoped storage first, then fall back to non-scoped for compatibility
-                const storedToken = sessionStorage.getItem(`${keys.token}_${tabId}`) 
-                    || sessionStorage.getItem(keys.token);
-                const storedUser = sessionStorage.getItem(`${keys.user}_${tabId}`) 
-                    || sessionStorage.getItem(keys.user);
+                const storedToken = sessionStorage.getItem(`${keys.token}_${tabId}`)
+                    || sessionStorage.getItem(keys.token)
+                    || localStorage.getItem(keys.token);
+                const storedUser = sessionStorage.getItem(`${keys.user}_${tabId}`)
+                    || sessionStorage.getItem(keys.user)
+                    || localStorage.getItem(keys.user);
 
                 if (storedToken && storedUser) {
                     try {
@@ -83,7 +85,7 @@ export const AuthProvider = ({ children }) => {
         initAuth();
     }, []);
 
-    const login = useCallback((userData, authToken, type = null) => {
+    const login = useCallback((userData, authToken, type = null, rememberMe = false) => {
         const sessionTypeVal = type || getSessionType(userData.role);
         const keys = getStorageKeys(userData.role);
         const tabId = sessionStorage.getItem(TAB_ID_KEY);
@@ -97,6 +99,14 @@ export const AuthProvider = ({ children }) => {
             // Fallback for edge case where tabId is not set
             sessionStorage.setItem(keys.token, authToken);
             sessionStorage.setItem(keys.user, JSON.stringify(userData));
+        }
+
+        if (rememberMe) {
+            localStorage.setItem(keys.token, authToken);
+            localStorage.setItem(keys.user, JSON.stringify(userData));
+        } else {
+            localStorage.removeItem(keys.token);
+            localStorage.removeItem(keys.user);
         }
         
         setToken(authToken);
@@ -116,6 +126,8 @@ export const AuthProvider = ({ children }) => {
             }
             sessionStorage.removeItem(keys.token);
             sessionStorage.removeItem(keys.user);
+            localStorage.removeItem(keys.token);
+            localStorage.removeItem(keys.user);
         }
 
         setToken(null);
@@ -133,6 +145,10 @@ export const AuthProvider = ({ children }) => {
             sessionStorage.setItem(`${keys.user}_${tabId}`, userDataStr);
         } else {
             sessionStorage.setItem(keys.user, userDataStr);
+        }
+
+        if (localStorage.getItem(keys.token)) {
+            localStorage.setItem(keys.user, userDataStr);
         }
         
         setUser(userData);

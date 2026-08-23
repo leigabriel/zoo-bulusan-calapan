@@ -55,9 +55,12 @@ const getToken = (type = 'user') => {
     const tabId = getTabId();
     // Prefer tab-scoped token; fall back to non-scoped token for compatibility
     if (tabId) {
-        return sessionStorage.getItem(`${keys.token}_${tabId}`) || sessionStorage.getItem(keys.token) || null;
+        return sessionStorage.getItem(`${keys.token}_${tabId}`)
+            || sessionStorage.getItem(keys.token)
+            || localStorage.getItem(keys.token)
+            || null;
     }
-    return sessionStorage.getItem(keys.token) || null;
+    return sessionStorage.getItem(keys.token) || localStorage.getItem(keys.token) || null;
 };
 
 const getAuthHeaders = (type = 'user') => {
@@ -213,6 +216,24 @@ export const authAPI = {
     // Resend email verification (public, no auth required)
     resendVerification: async (data) => {
         const response = await fetch(`${API_BASE_URL}/auth/resend-verification`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        return handleResponse(response);
+    },
+
+    requestPasswordReset: async (data) => {
+        const response = await fetch(`${API_BASE_URL}/auth/forgot-password`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        return handleResponse(response);
+    },
+
+    resetPassword: async (data) => {
+        const response = await fetch(`${API_BASE_URL}/auth/reset-password`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)

@@ -43,6 +43,8 @@ CREATE TABLE users (
     email_verified BOOLEAN DEFAULT FALSE,
     email_verification_token VARCHAR(255) DEFAULT NULL,
     email_verification_token_expiry DATETIME DEFAULT NULL,
+    password_reset_token VARCHAR(255) DEFAULT NULL,
+    password_reset_token_expiry DATETIME DEFAULT NULL,
     google_id VARCHAR(255) DEFAULT NULL,
     auth_provider ENUM('local', 'google') DEFAULT 'local',
     is_suspended BOOLEAN DEFAULT FALSE,

@@ -30,11 +30,16 @@ const VerifiedIcon = () => (
 const UserProfile = () => {
     const { user, logout, updateUser } = useAuth();
     const navigate = useNavigate();
+    const hasPassword = user?.hasPassword !== false && user?.authProvider !== 'google';
     const [isEditing, setIsEditing] = useState(false);
     const [loading, setLoading] = useState(false);
     const [showPasswordModal, setShowPasswordModal] = useState(false);
     const [passwordData, setPasswordData] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
     const [passwordError, setPasswordError] = useState('');
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [deletePassword, setDeletePassword] = useState('');
+    const [deleteError, setDeleteError] = useState('');
+    const [deleteLoading, setDeleteLoading] = useState(false);
     const [showSaveConfirm, setShowSaveConfirm] = useState(false);
     const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
@@ -146,13 +151,18 @@ const UserProfile = () => {
     const handlePasswordChange = async () => {
         setPasswordError('');
         
-        if (!passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword) {
-            setPasswordError('All fields are required');
+        if ((hasPassword && !passwordData.currentPassword) || !passwordData.newPassword || !passwordData.confirmPassword) {
+            setPasswordError(hasPassword ? 'Current password and all new password fields are required' : 'Complete all password fields');
             return;
         }
         
-        if (passwordData.newPassword.length < 6) {
-            setPasswordError('New password must be at least 6 characters');
+        if (passwordData.newPassword.length < 8) {
+            setPasswordError('New password must be at least 8 characters');
+            return;
+        }
+
+        if (!/[A-Z]/.test(passwordData.newPassword) || !/[0-9]/.test(passwordData.newPassword) || !/[^A-Za-z0-9\s]/.test(passwordData.newPassword)) {
+            setPasswordError('Use at least one uppercase letter, one number, and one special character.');
             return;
         }
         
@@ -165,6 +175,7 @@ const UserProfile = () => {
         try {
             const response = await authAPI.updatePassword(passwordData);
             if (response.success) {
+                updateUser({ ...user, hasPassword: true, authProvider: 'local' });
                 setShowPasswordModal(false);
                 setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
                 setPasswordError('');
@@ -174,9 +185,32 @@ const UserProfile = () => {
             }
         } catch (error) {
             console.error(error);
-            setPasswordError('An error occurred while changing password');
+            setPasswordError(error.message || 'Could not change your password. Please try again.');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleDeleteAccount = async () => {
+        setDeleteError('');
+        if (!deletePassword) {
+            setDeleteError('Enter your password to confirm account deletion.');
+            return;
+        }
+
+        setDeleteLoading(true);
+        try {
+            const response = await authAPI.deleteAccount({ password: deletePassword });
+            if (!response.success) {
+                setDeleteError(response.message || 'Could not delete your account.');
+                return;
+            }
+            logout();
+            navigate('/login', { replace: true, state: { message: 'Your account and associated data were deleted.' } });
+        } catch (error) {
+            setDeleteError(error.message || 'Could not delete your account.');
+        } finally {
+            setDeleteLoading(false);
         }
     };
 
@@ -380,18 +414,24 @@ const UserProfile = () => {
                             <div className="pt-8 border-t border-gray-50">
                                 <h3 className="text-sm font-bold text-gray-900 mb-4 uppercase tracking-wider">Security & Session</h3>
                                 <div className="flex flex-wrap gap-4">
-                                    <button
-                                        onClick={() => setShowPasswordModal(true)}
+                                     <button
+                                         onClick={() => setShowPasswordModal(true)}
                                         className="flex-1 sm:flex-none px-6 py-2.5 border border-gray-200 rounded-lg text-sm font-bold text-gray-700 hover:bg-gray-50 transition"
                                     >
-                                        Change Password
+                        {hasPassword ? 'Change Password' : 'Add Password'}
                                     </button>
-                                    <button
+                                     <button
                                         onClick={() => setShowLogoutConfirm(true)}
                                         className="flex-1 sm:flex-none px-6 py-2.5 border border-red-100 rounded-lg text-sm font-bold text-red-600 hover:bg-red-50 transition"
                                     >
-                                        Logout
-                                    </button>
+                                         Logout
+                                     </button>
+                                     <button
+                                         onClick={() => { setDeletePassword(''); setDeleteError(''); setShowDeleteModal(true); }}
+                                         className="flex-1 sm:flex-none px-6 py-2.5 border border-red-200 rounded-lg text-sm font-bold text-red-700 hover:bg-red-50 transition"
+                                     >
+                                         Delete Account
+                                     </button>
                                 </div>
                             </div>
                         </div>
@@ -415,20 +455,40 @@ const UserProfile = () => {
             {showPasswordModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-md p-4">
                     <div className="bg-white rounded-[2rem] p-8 w-full max-w-md shadow-2xl">
-                        <h3 className="text-2xl font-black text-gray-900 mb-6">Security</h3>
+                        <h3 className="text-2xl font-black text-gray-900 mb-2">{hasPassword ? 'Change password' : 'Add a password'}</h3>
+                        {!hasPassword && <p className="text-sm text-gray-500 mb-6">Your account uses Google Sign-In. Add a password so you can also sign in with your email.</p>}
+                        <p className="text-xs text-gray-400 mb-4">Password must be 8+ characters and include an uppercase letter, number, and special character.</p>
                         {passwordError && (
                             <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm font-medium">
                                 {passwordError}
                             </div>
                         )}
                         <div className="space-y-4">
-                            <input type="password" placeholder="Current Password" value={passwordData.currentPassword} onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })} className="w-full px-5 py-3.5 bg-gray-50 border border-transparent rounded-2xl outline-none focus:bg-white focus:border-emerald-500 transition-all" />
+                            {hasPassword && <input type="password" placeholder="Current Password" value={passwordData.currentPassword} onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })} className="w-full px-5 py-3.5 bg-gray-50 border border-transparent rounded-2xl outline-none focus:bg-white focus:border-emerald-500 transition-all" />}
                             <input type="password" placeholder="New Password" value={passwordData.newPassword} onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })} className="w-full px-5 py-3.5 bg-gray-50 border border-transparent rounded-2xl outline-none focus:bg-white focus:border-emerald-500 transition-all" />
                             <input type="password" placeholder="Confirm New Password" value={passwordData.confirmPassword} onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })} className="w-full px-5 py-3.5 bg-gray-50 border border-transparent rounded-2xl outline-none focus:bg-white focus:border-emerald-500 transition-all" />
                         </div>
                         <div className="flex gap-3 mt-10">
                             <button onClick={() => { setShowPasswordModal(false); setPasswordError(''); setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' }); }} className="flex-1 py-3.5 border border-gray-200 rounded-xl font-bold text-gray-400 hover:bg-gray-50 transition">Cancel</button>
                             <button onClick={handlePasswordChange} disabled={loading} className="flex-1 py-3.5 bg-emerald-600 text-white rounded-xl font-bold shadow-xl shadow-emerald-100 hover:bg-emerald-700 transition disabled:opacity-50">{loading ? 'Updating...' : 'Update'}</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {showDeleteModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-red-950/35 backdrop-blur-md p-4">
+                    <div className="bg-white rounded-[2rem] p-8 w-full max-w-md shadow-2xl">
+                        <div className="w-12 h-12 bg-red-50 rounded-2xl flex items-center justify-center mb-4">
+                            <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M9 7V4h6v3m-9 0h12" /></svg>
+                        </div>
+                        <h3 className="text-2xl font-black text-gray-900 mb-2">Delete your account?</h3>
+                        <p className="text-sm leading-relaxed text-gray-500 mb-5">This permanently deletes your profile, messages, reservations, community activity, scans, and account data. This cannot be undone.</p>
+                        {deleteError && <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">{deleteError}</div>}
+                        <input type="password" value={deletePassword} onChange={event => setDeletePassword(event.target.value)} placeholder="Enter your password" className="w-full px-5 py-3.5 bg-gray-50 border border-transparent rounded-2xl outline-none focus:bg-white focus:border-red-500 transition-all" />
+                        <div className="flex gap-3 mt-8">
+                            <button onClick={() => setShowDeleteModal(false)} className="flex-1 py-3.5 border border-gray-200 rounded-xl font-bold text-gray-500 hover:bg-gray-50 transition">Cancel</button>
+                            <button onClick={handleDeleteAccount} disabled={deleteLoading} className="flex-1 py-3.5 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 transition disabled:opacity-50">{deleteLoading ? 'Deleting...' : 'Delete permanently'}</button>
                         </div>
                     </div>
                 </div>

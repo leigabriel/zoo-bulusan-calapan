@@ -357,9 +357,33 @@ If you did not create an account with Zoo Bulusan, please ignore this email.
 © ${new Date().getFullYear()} Zoo Bulusan. All rights reserved.
 `.trim();
 
+const sendPasswordResetEmail = async (email, token, firstName) => {
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const resetLink = `${frontendUrl}/login?resetToken=${encodeURIComponent(token)}`;
+    const mailOptions = {
+        from: `"Zoo Bulusan" <${process.env.SMTP_USER}>`,
+        to: email,
+        subject: 'Reset Your Password - Zoo Bulusan',
+        html: `
+            <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:32px;color:#1f3328">
+                <h1>Zoo Bulusan</h1>
+                <h2>Reset your password</h2>
+                <p>Hello ${firstName || 'there'},</p>
+                <p>We received a request to create a new password for your account. This link expires in 1 hour.</p>
+                <p><a href="${resetLink}" style="display:inline-block;padding:13px 22px;background:#1f3328;color:#fff;text-decoration:none;border-radius:8px;font-weight:bold">Create a new password</a></p>
+                <p style="color:#66756b;font-size:13px">If you did not request this, you can safely ignore this email.</p>
+            </div>
+        `,
+        text: `Hello ${firstName || 'there'},\n\nCreate a new Zoo Bulusan password here: ${resetLink}\n\nThis link expires in 1 hour. If you did not request this, ignore this email.`
+    };
+
+    return sendEmailWithRetry(mailOptions);
+};
+
 module.exports = {
     sendVerificationEmail,
     sendVerificationEmailSync,
+    sendPasswordResetEmail,
     sendEmailWithRetry,
     sendEmailAsync
 };

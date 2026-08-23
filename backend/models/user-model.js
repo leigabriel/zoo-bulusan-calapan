@@ -22,7 +22,7 @@ class User {
     static async findById(id) {
         const [rows] = await db.query(
             `SELECT id, first_name, last_name, username, email, phone_number, gender, birthday, 
-             role, profile_image, is_active, email_verified, notification_settings, created_at, updated_at 
+             role, profile_image, password, auth_provider, google_id, is_active, email_verified, notification_settings, created_at, updated_at
              FROM users WHERE id = ?`,
             [id]
         );
@@ -151,6 +151,72 @@ class User {
             [id]
         );
         return result.affectedRows > 0;
+    }
+
+    static async setPasswordResetToken(id, token, expiresAt) {
+        const [result] = await db.query(
+            `UPDATE users SET password_reset_token = ?, password_reset_token_expiry = ?, updated_at = NOW()
+             WHERE id = ?`,
+            [token, expiresAt, id]
+        );
+        return result.affectedRows > 0;
+    }
+
+    static async findByPasswordResetToken(token) {
+        const [rows] = await db.query(
+            `SELECT id, password_reset_token_expiry FROM users
+             WHERE password_reset_token = ?`,
+            [token]
+        );
+        return rows[0];
+    }
+
+    static async updatePasswordWithResetToken(token, hashedPassword) {
+        const [result] = await db.query(
+            `UPDATE users SET password = ?, password_reset_token = NULL,
+             password_reset_token_expiry = NULL, auth_provider = 'local', updated_at = NOW()
+             WHERE password_reset_token = ? AND password_reset_token_expiry > NOW()`,
+            [hashedPassword, token]
+        );
+        return result.affectedRows > 0;
+    }
+
+    static async deleteAccountData(id) {
+        const connection = await db.getConnection();
+        try {
+            await connection.beginTransaction();
+
+            // Remove rows whose foreign keys preserve historical records with SET NULL.
+            const statements = [
+                'DELETE FROM community_comment_reports WHERE user_id = ?',
+                'DELETE FROM community_comment_hearts WHERE user_id = ?',
+                'DELETE FROM community_post_likes WHERE user_id = ?',
+                'DELETE FROM community_comments WHERE user_id = ?',
+                'DELETE FROM community_posts WHERE user_id = ?',
+                'DELETE FROM user_collections WHERE user_id = ?',
+                'DELETE FROM predictions WHERE user_id = ?',
+                'DELETE FROM ticket_reservations WHERE user_id = ?',
+                'DELETE FROM event_reservations WHERE user_id = ?',
+                'DELETE FROM tickets WHERE user_id = ?',
+                'DELETE FROM user_messages WHERE sender_id = ?',
+                'DELETE FROM user_appeals WHERE user_id = ?',
+                'DELETE FROM notifications WHERE user_id = ?',
+                'DELETE FROM ai_assist_sessions WHERE user_id = ?',
+                'DELETE FROM users WHERE id = ?'
+            ];
+
+            for (const statement of statements) {
+                await connection.query(statement, [id]);
+            }
+
+            await connection.commit();
+            return true;
+        } catch (error) {
+            await connection.rollback();
+            throw error;
+        } finally {
+            connection.release();
+        }
     }
 
     // Google OAuth methods

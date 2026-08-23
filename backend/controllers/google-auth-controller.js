@@ -380,7 +380,8 @@ exports.handleGoogleCallback = async (req, res) => {
             email: user.email,
             role: user.role,
             profileImage: user.profile_image || picture,
-            authProvider: 'google'
+            authProvider: user.auth_provider || 'google',
+            hasPassword: Boolean(user.password)
         };
 
         console.log('Google auth successful for user:', user.id, user.email);

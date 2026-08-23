@@ -5,7 +5,7 @@ const User = require('../models/user-model');
 const StaffActivity = require('../models/staff-activity-model');
 const { deleteOldProfileImage } = require('../middleware/upload-profile-image');
 const { deleteFromCloudinary, extractPublicId } = require('../middleware/cloudinary-upload');
-const { sendVerificationEmail } = require('../utils/email');
+const { sendVerificationEmail, sendPasswordResetEmail } = require('../utils/email');
 
 const VALID_ROLES = ['admin', 'staff', 'user'];
 const VALID_GENDERS = ['male', 'female', 'other', 'prefer_not_to_say'];
@@ -237,7 +237,9 @@ exports.login = async (req, res) => {
                 gender: user.gender,
                 birthday: user.birthday,
                 role: user.role,
-                profileImage: user.profile_image
+                profileImage: user.profile_image,
+                hasPassword: Boolean(user.password),
+                authProvider: user.auth_provider || (user.google_id ? 'google' : 'local')
             }
         });
     } catch (error) {
@@ -355,6 +357,59 @@ exports.resendVerification = async (req, res) => {
     }
 };
 
+exports.requestPasswordReset = async (req, res) => {
+    const genericResponse = {
+        success: true,
+        message: 'If an account exists for that email, a password reset link has been sent.'
+    };
+
+    try {
+        const email = sanitizeInput(req.body.email || '').toLowerCase();
+        if (!email) return res.json(genericResponse);
+
+        const user = await User.findByEmail(email);
+        if (!user || !user.is_active) return res.json(genericResponse);
+
+        const token = crypto.randomBytes(32).toString('hex');
+        await User.setPasswordResetToken(user.id, token, new Date(Date.now() + 60 * 60 * 1000));
+        await sendPasswordResetEmail(user.email, token, user.first_name);
+        return res.json(genericResponse);
+    } catch (error) {
+        console.error('Request password reset error:', error);
+        return res.json(genericResponse);
+    }
+};
+
+exports.resetPassword = async (req, res) => {
+    try {
+        const { token, newPassword } = req.body;
+        if (!token || !newPassword) {
+            return res.status(400).json({ success: false, message: 'Reset token and new password are required' });
+        }
+
+        const passwordErrors = validatePassword(newPassword);
+        if (passwordErrors.length > 0) {
+            return res.status(400).json({ success: false, message: passwordErrors[0] });
+        }
+
+        const resetUser = await User.findByPasswordResetToken(token);
+        if (!resetUser || !resetUser.password_reset_token_expiry || new Date() > new Date(resetUser.password_reset_token_expiry)) {
+            return res.status(400).json({ success: false, message: 'This reset link is invalid or has expired.' });
+        }
+
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        const updated = await User.updatePasswordWithResetToken(token, hashedPassword);
+        if (!updated) {
+            return res.status(400).json({ success: false, message: 'This reset link is invalid or has expired.' });
+        }
+
+        return res.json({ success: true, message: 'Password reset successfully. You can now log in.' });
+    } catch (error) {
+        console.error('Reset password error:', error);
+        return res.status(500).json({ success: false, message: 'Server error while resetting password' });
+    }
+};
+
 exports.getMe = async (req, res) => {
     try {
         const user = await User.findById(req.user.id);
@@ -376,6 +431,8 @@ exports.getMe = async (req, res) => {
                 birthday: user.birthday,
                 role: user.role,
                 profileImage: user.profile_image,
+                hasPassword: Boolean(user.password),
+                authProvider: user.auth_provider || (user.google_id ? 'google' : 'local'),
                 createdAt: user.created_at
             }
         });
@@ -430,8 +487,8 @@ exports.updatePassword = async (req, res) => {
     try {
         const { currentPassword, newPassword } = req.body;
 
-        if (!currentPassword || !newPassword) {
-            return res.status(400).json({ success: false, message: 'Please provide both current and new password' });
+        if (!newPassword) {
+            return res.status(400).json({ success: false, message: 'Please provide a new password' });
         }
 
         // Validate new password strength
@@ -440,11 +497,19 @@ exports.updatePassword = async (req, res) => {
             return res.status(400).json({ success: false, message: passwordErrors[0] });
         }
 
-        const user = await User.findByEmailOrUsername(req.user.email || req.user.username);
+        const user = await User.findById(req.user.id);
+        if (!user) {
+            return res.status(404).json({ success: false, message: 'User not found' });
+        }
 
-        const isMatch = await bcrypt.compare(currentPassword, user.password);
-        if (!isMatch) {
-            return res.status(401).json({ success: false, message: 'Current password is incorrect' });
+        if (user.password) {
+            if (!currentPassword) {
+                return res.status(400).json({ success: false, message: 'Please provide your current password' });
+            }
+            const isMatch = await bcrypt.compare(currentPassword, user.password);
+            if (!isMatch) {
+                return res.status(401).json({ success: false, message: 'Current password is incorrect' });
+            }
         }
 
         const salt = await bcrypt.genSalt(10);
@@ -474,14 +539,29 @@ exports.deleteAccount = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Please provide your password to confirm deletion' });
         }
 
-        const user = await User.findByEmailOrUsername(req.user.email || req.user.username);
+        const user = await User.findById(req.user.id);
+        if (!user) {
+            return res.status(404).json({ success: false, message: 'User not found' });
+        }
+
+        if (!user.password) {
+            return res.status(400).json({ success: false, message: 'Please add a password to your account before deleting it.' });
+        }
 
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
             return res.status(401).json({ success: false, message: 'Password is incorrect' });
         }
 
-        await User.delete(req.user.id);
+        if (user.profile_image && user.profile_image.includes('cloudinary.com')) {
+            try {
+                await deleteFromCloudinary(extractPublicId(user.profile_image));
+            } catch (imageError) {
+                console.error('Could not remove account profile image:', imageError.message);
+            }
+        }
+
+        await User.deleteAccountData(req.user.id);
 
         res.json({
             success: true,
