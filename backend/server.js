@@ -22,6 +22,7 @@ const uploadRoutes = require('./routes/upload-routes');
 const communityRoutes = require('./routes/community-routes');
 const paymentRoutes = require('./routes/payment-routes');
 const paymentController = require('./controllers/payment-controller');
+const { decodeRequestIdentifiers } = require('./middleware/public-identifiers');
 const ensureEventPaymentSchema = require('./database/ensure-event-payment-schema');
 const ensureAIAssistSchema = require('./database/ensure-ai-assist-schema');
 const ensureAuthSchema = require('./database/ensure-auth-schema');
@@ -63,6 +64,7 @@ app.options('*', cors());
 app.post('/api/payments/paymongo/webhook', express.raw({ type: 'application/json' }), paymentController.handleWebhook);
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(decodeRequestIdentifiers);
 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads'), {
     maxAge: process.env.NODE_ENV === 'production' ? '1d' : 0,

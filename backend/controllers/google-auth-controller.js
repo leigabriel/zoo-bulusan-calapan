@@ -49,6 +49,14 @@ const getGoogleConfig = () => {
 // In-memory state store for CSRF protection (use Redis in production for scalability)
 const stateStore = new Map();
 const STATE_EXPIRY_MS = 10 * 60 * 1000; // 10 minutes
+const googleHandoffStore = new Map();
+
+setInterval(() => {
+    const now = Date.now();
+    for (const [handoff, data] of googleHandoffStore.entries()) {
+        if (now > data.expiresAt) googleHandoffStore.delete(handoff);
+    }
+}, 60 * 1000);
 
 // Clean up expired states periodically
 setInterval(() => {
@@ -386,10 +394,18 @@ exports.handleGoogleCallback = async (req, res) => {
 
         console.log('Google auth successful for user:', user.id, user.email);
 
-        // Redirect to frontend with token and user data
-        // Using URL fragment (#) for security - fragments are not sent to server
-        const userDataEncoded = encodeURIComponent(JSON.stringify(userData));
-        const successUrl = `${frontendUrl}/auth/google/success#token=${token}&user=${userDataEncoded}`;
+        // Keep the authentication result out of the redirect URL.
+        const handoff = crypto.randomBytes(32).toString('hex');
+        googleHandoffStore.set(handoff, {
+            expiresAt: Date.now() + 60 * 1000,
+            token,
+            userData
+        });
+
+        const sameSite = process.env.NODE_ENV === 'production' ? 'None' : 'Lax';
+        const secure = process.env.NODE_ENV === 'production' ? '; Secure' : '';
+        res.setHeader('Set-Cookie', `google_auth_handoff=${handoff}; HttpOnly; SameSite=${sameSite}; Path=/; Max-Age=60${secure}`);
+        const successUrl = `${frontendUrl}/auth/google/success`;
         
         res.redirect(successUrl);
 
@@ -403,6 +419,21 @@ exports.handleGoogleCallback = async (req, res) => {
         
         res.redirect(`${loginUrl}?error=${errorMessage}`);
     }
+};
+
+exports.getGoogleHandoff = (req, res) => {
+    const cookies = (req.headers.cookie || '').split(';').map(cookie => cookie.trim());
+    const handoffCookie = cookies.find(cookie => cookie.startsWith('google_auth_handoff='));
+    const handoff = handoffCookie?.slice('google_auth_handoff='.length);
+    const data = handoff ? googleHandoffStore.get(handoff) : null;
+
+    res.setHeader('Set-Cookie', 'google_auth_handoff=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0');
+    if (!data || Date.now() > data.expiresAt) {
+        return res.status(401).json({ success: false, message: 'Google authentication session expired.' });
+    }
+
+    googleHandoffStore.delete(handoff);
+    return res.json({ success: true, token: data.token, user: data.userData });
 };
 
 /**

@@ -5,7 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 /**
  * Google OAuth Success Handler
  * This component processes the authentication data from Google OAuth callback
- * Data is passed via URL fragment (hash) for security - fragments aren't sent to server
+ * Authentication data is retrieved through a one-time HttpOnly-cookie exchange.
  */
 const GoogleAuthSuccess = () => {
     const navigate = useNavigate();
@@ -13,26 +13,22 @@ const GoogleAuthSuccess = () => {
     const [error, setError] = useState(null);
 
     useEffect(() => {
-        const processAuth = () => {
+        const processAuth = async () => {
             try {
-                // Extract token and user data from URL fragment
-                const hash = window.location.hash.substring(1);
-                const params = new URLSearchParams(hash);
+                const backendUrl = import.meta.env.VITE_BACKEND_URL ||
+                    import.meta.env.VITE_API_URL?.replace('/api', '') ||
+                    'http://localhost:5000';
+                const response = await fetch(`${backendUrl}/auth/google/session`, { credentials: 'include' });
+                const data = await response.json();
+                if (!response.ok || !data.success || !data.token || !data.user) throw new Error(data.message || 'Missing authentication data');
 
-                const token = params.get('token');
-                const userDataEncoded = params.get('user');
-
-                if (!token || !userDataEncoded) {
-                    throw new Error('Missing authentication data');
-                }
-
-                const userData = JSON.parse(decodeURIComponent(userDataEncoded));
+                const token = data.token;
+                const userData = data.user;
 
                 if (!userData || !userData.id) {
                     throw new Error('Invalid user data');
                 }
 
-                // Clear the URL fragment for security
                 window.history.replaceState(null, '', window.location.pathname);
 
                 // Store authentication in context
