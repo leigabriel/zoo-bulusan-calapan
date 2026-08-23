@@ -15,6 +15,7 @@ DROP TABLE IF EXISTS community_comment_hearts;
 DROP TABLE IF EXISTS community_comments;
 DROP TABLE IF EXISTS community_posts;
 DROP TABLE IF EXISTS user_appeals;
+DROP TABLE IF EXISTS site_visits;
 DROP TABLE IF EXISTS user_messages;
 DROP TABLE IF EXISTS notifications;
 DROP TABLE IF EXISTS predictions;
@@ -25,6 +26,19 @@ DROP TABLE IF EXISTS events;
 DROP TABLE IF EXISTS plants;
 DROP TABLE IF EXISTS animals;
 DROP TABLE IF EXISTS users;
+
+-- unique public site visitors (one visit per browser per day)
+CREATE TABLE site_visits (
+    id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+    visitor_key_hash CHAR(64) NOT NULL,
+    visit_date DATE NOT NULL,
+    path VARCHAR(255) NOT NULL DEFAULT '/',
+    user_id INT DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uk_site_visits_visitor_date (visitor_key_hash, visit_date),
+    INDEX idx_site_visits_date (visit_date),
+    INDEX idx_site_visits_user (user_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- users
 CREATE TABLE users (

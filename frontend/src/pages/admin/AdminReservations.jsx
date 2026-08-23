@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { reservationAPI, getResidentIdImageUrl } from '../../services/api-client';
+import { formatSafeDate } from '../../utils/format-date';
 
 const SearchIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
@@ -128,8 +129,7 @@ const AdminReservations = ({ globalSearch = '' }) => {
     };
 
     const formatDate = (dateStr) => {
-        if (!dateStr) return '-';
-        return new Date(dateStr).toLocaleDateString('en-US', {
+        return formatSafeDate(dateStr, {
             year: 'numeric',
             month: 'short',
             day: 'numeric'

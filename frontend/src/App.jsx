@@ -1,4 +1,5 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { useEffect } from 'react';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -53,6 +54,7 @@ import AnimalClassifier from './components/features/ai-scanner/AnimalClassifier'
 import MapPage from './pages/user/Map';
 import './App.css';
 import AIAssist from './pages/AIAssist';
+import { trackVisit } from './services/visitor-tracking';
 
 const ProtectedRoute = ({ children, allowedRoles }) => {
     const { isAuthenticated, user, loading } = useAuth();
@@ -86,6 +88,17 @@ const PublicRoute = ({ children }) => {
     }
 
     return children;
+};
+
+const VisitTracker = () => {
+    const location = useLocation();
+
+    useEffect(() => {
+        if (location.pathname.startsWith('/admin') || location.pathname.startsWith('/staff') || location.pathname.startsWith('/auth/')) return;
+        trackVisit(location.pathname);
+    }, [location.pathname]);
+
+    return null;
 };
 
 function AppRoutes() {
@@ -372,6 +385,7 @@ function App() {
     return (
         <AuthProvider>
             <Router>
+                <VisitTracker />
                 <AppRoutes />
                 <ToastContainer
                     position="top-right"

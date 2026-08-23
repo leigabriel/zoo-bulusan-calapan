@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { trackVisit } from '../../services/visitor-tracking';
 import { authAPI, messageAPI } from '../../services/api-client';
 import { sanitizeInput, sanitizeEmail } from '../../utils/sanitize';
 import { notify } from '../../utils/toast';
@@ -447,6 +448,7 @@ const RegisterPage = () => {
             });
 
             if (response.success) {
+                trackVisit('/signup');
                 if (response.requiresVerification) {
                     setRegisteredEmail(formData.email.trim().toLowerCase());
                     setShowVerificationModal(true);

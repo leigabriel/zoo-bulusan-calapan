@@ -126,6 +126,13 @@ const getPresenceDot = (status) => {
     return 'bg-gray-500';
 };
 
+const getListKey = (item, index, prefix) => {
+    const candidate = item?.id ?? item?.activity_id ?? item?.session_id ?? item?.staff_id ?? item?.date;
+    let value = candidate;
+    if (value && typeof value === 'object') value = value.id ?? value.value ?? JSON.stringify(value);
+    return `${prefix}-${String(value ?? 'item')}-${index}`;
+};
+
 const formatTimeAgo = (dateString) => {
     const date = new Date(dateString);
     const now = new Date();
@@ -404,10 +411,10 @@ const AdminStaffMonitoring = () => {
                         {filteredActivities.length === 0 ? (
                             <p className="text-sm text-gray-500 text-center py-8">No activity found for this filter.</p>
                         ) : (
-                            filteredActivities.map((activity) => {
+                            filteredActivities.map((activity, index) => {
                                 const style = getActionPresentation(activity.action_type);
                                 return (
-                                    <div key={activity.id} className="p-4 rounded-xl bg-green-50 border border-green-200 hover:border-green-500/30 transition">
+                                    <div key={getListKey(activity, index, 'activity')} className="p-4 rounded-xl bg-green-50 border border-green-200 hover:border-green-500/30 transition">
                                         <div className="flex items-start gap-3">
                                             <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${style.iconWrap}`}>
                                                 {style.icon}
@@ -455,11 +462,11 @@ const AdminStaffMonitoring = () => {
                         {(dashboardData.dailyActivity || []).length === 0 ? (
                             <p className="text-sm text-gray-500 py-6 text-center">No daily data available.</p>
                         ) : (
-                            dashboardData.dailyActivity.map((day) => {
+                            dashboardData.dailyActivity.map((day, index) => {
                                 const max = Math.max(...(dashboardData.dailyActivity || []).map((d) => Number(d.count) || 0), 1);
                                 const width = `${Math.max(10, Math.round(((Number(day.count) || 0) / max) * 100))}%`;
                                 return (
-                                    <div key={day.date}>
+                                    <div key={getListKey(day, index, 'day')}>
                                         <div className="flex items-center justify-between text-xs mb-1">
                                             <span className="text-gray-700">{new Date(day.date).toLocaleDateString()}</span>
                                             <span className="text-gray-500">{day.count} actions • {day.active_staff} staff</span>
@@ -479,9 +486,9 @@ const AdminStaffMonitoring = () => {
                 <div className="xl:col-span-2 bg-white border border-green-200 rounded-2xl p-6">
                     <h3 className="text-lg font-bold text-gray-900 mb-4">Staff Accountability Board</h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-[430px] overflow-y-auto pr-1">
-                        {(dashboardData.staffMembers || []).map((staff) => (
+                        {(dashboardData.staffMembers || []).map((staff, index) => (
                             <button
-                                key={staff.id}
+                                key={getListKey(staff, index, 'staff')}
                                 type="button"
                                 onClick={() => handleStaffClick(staff)}
                                 className="text-left p-4 rounded-xl border border-green-200 bg-green-50 hover:border-green-500/35 transition"
@@ -513,9 +520,9 @@ const AdminStaffMonitoring = () => {
                         {(dashboardData.activeSessions || []).length === 0 ? (
                             <p className="text-sm text-gray-500 text-center py-8">No active sessions.</p>
                         ) : (
-                            dashboardData.activeSessions.map((session) => (
+                            dashboardData.activeSessions.map((session, index) => (
                                 <button
-                                    key={session.id}
+                                    key={getListKey(session, index, 'session')}
                                     type="button"
                                     onClick={() => handleStaffClick({ id: session.staff_id, ...session })}
                                     className="w-full text-left p-3 rounded-xl bg-green-50 border border-green-200 hover:border-green-500/35 transition"
@@ -576,10 +583,10 @@ const AdminStaffMonitoring = () => {
                             ) : staffTimeline.length === 0 ? (
                                 <p className="text-sm text-gray-500 text-center py-8">No activity recorded.</p>
                             ) : (
-                                staffTimeline.map((activity) => {
+                                staffTimeline.map((activity, index) => {
                                     const style = getActionPresentation(activity.action_type);
                                     return (
-                                        <div key={activity.id} className="p-4 rounded-xl border border-green-200 bg-green-50">
+                                        <div key={getListKey(activity, index, 'timeline')} className="p-4 rounded-xl border border-green-200 bg-green-50">
                                             <div className="flex items-start gap-3">
                                                 <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${style.iconWrap}`}>
                                                     {style.icon}

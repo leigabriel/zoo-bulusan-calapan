@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/use-auth';
 import { reservationAPI } from '../../services/api-client';
+import { formatSafeDate, getDateTimestamp } from '../../utils/format-date';
 import { QRCodeSVG } from 'qrcode.react';
 import { notify } from '../../utils/toast';
 
@@ -194,7 +195,7 @@ const ReservationHistoryPanel = ({ isOpen, onClose }) => {
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-        } catch (err) {
+        } catch {
             notify.error("Couldn't download receipt.");
         } finally {
             setDownloading(false);
@@ -242,8 +243,8 @@ const ReservationHistoryPanel = ({ isOpen, onClose }) => {
             if (paymentConfigRes.success && paymentConfigRes.config) {
                 setEventPaymentConfig(paymentConfigRes.config);
             }
-        } catch (err) {
-
+        } catch {
+            notify.error("Couldn't load reservations.");
         } finally {
             setLoading(false);
         }
@@ -260,8 +261,8 @@ const ReservationHistoryPanel = ({ isOpen, onClose }) => {
                 fetchReservations();
                 setSelectedReservation(null);
             }
-        } catch (err) {
-
+        } catch {
+            notify.error("Couldn't update the reservation.");
         } finally {
             setArchiving(false);
         }
@@ -278,8 +279,8 @@ const ReservationHistoryPanel = ({ isOpen, onClose }) => {
                 fetchReservations();
                 setSelectedReservation(null);
             }
-        } catch (err) {
-
+        } catch {
+            notify.error("Couldn't restore the reservation.");
         } finally {
             setArchiving(false);
         }
@@ -295,11 +296,10 @@ const ReservationHistoryPanel = ({ isOpen, onClose }) => {
             activeTab === 'tickets' ? ticketReservations.map(r => ({ ...r, type: 'ticket' })) :
                 eventReservations.map(r => ({ ...r, type: 'event' }))
     )).filter(r => filter === 'all' || r.status === filter)
-        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        .sort((a, b) => getDateTimestamp(b.created_at) - getDateTimestamp(a.created_at));
 
     const formatDate = (dateStr) => {
-        if (!dateStr) return '-';
-        return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        return formatSafeDate(dateStr, { month: 'short', day: 'numeric', year: 'numeric' });
     };
 
     const getBuyerName = (reservation) => {

@@ -45,6 +45,7 @@ const decodePublicId = value => {
 const decodeNested = value => {
     if (typeof value === 'string') return isOpaqueId(value) ? decodePublicId(value) : value;
     if (Array.isArray(value)) return value.map(decodeNested);
+    if (value instanceof Date) return value;
     if (!value || typeof value !== 'object') return value;
     return Object.fromEntries(Object.entries(value).map(([key, nested]) => [key, decodeNested(nested)]));
 };
@@ -52,6 +53,7 @@ const decodeNested = value => {
 const isIdentifierKey = key => key === 'id' || key.endsWith('Id') || key.endsWith('_id');
 
 const encodeNested = (value, key = '') => {
+    if (value instanceof Date) return value;
     if (isIdentifierKey(key) && ((typeof value === 'number' && Number.isInteger(value)) || (typeof value === 'string' && /^\d+$/.test(value)))) {
         return encodePublicId(value);
     }

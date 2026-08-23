@@ -22,10 +22,12 @@ const uploadRoutes = require('./routes/upload-routes');
 const communityRoutes = require('./routes/community-routes');
 const paymentRoutes = require('./routes/payment-routes');
 const paymentController = require('./controllers/payment-controller');
+const analyticsRoutes = require('./routes/analytics-routes');
 const { decodeRequestIdentifiers } = require('./middleware/public-identifiers');
 const ensureEventPaymentSchema = require('./database/ensure-event-payment-schema');
 const ensureAIAssistSchema = require('./database/ensure-ai-assist-schema');
 const ensureAuthSchema = require('./database/ensure-auth-schema');
+const ensureSiteVisitSchema = require('./database/ensure-site-visit-schema');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -97,6 +99,7 @@ app.use('/api/payments', paymentRoutes);
 app.use('/api/animal-detect', animalDetectRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/community', communityRoutes);
+app.use('/api/analytics', analyticsRoutes);
 
 app.get('/api/health', async (req, res) => {
     const health = {
@@ -140,7 +143,7 @@ app.use((err, req, res, next) => {
     });
 });
 
-Promise.all([ensureEventPaymentSchema(), ensureAIAssistSchema(), ensureAuthSchema()])
+Promise.all([ensureEventPaymentSchema(), ensureAIAssistSchema(), ensureAuthSchema(), ensureSiteVisitSchema()])
     .catch(error => console.error('Database schema initialization failed:', error.message))
     .finally(() => {
         app.listen(PORT, HOST, () => {

@@ -1,5 +1,16 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Link } from 'react-router-dom';
+import {
+    ResponsiveContainer,
+    BarChart,
+    Bar,
+    LineChart,
+    Line,
+    XAxis,
+    YAxis,
+    CartesianGrid,
+    Tooltip
+} from 'recharts';
 import Chart from 'react-apexcharts';
 import { useAuth } from '../../context/AuthContext';
 import { adminAPI, getProfileImageUrl } from '../../services/api-client';
@@ -88,11 +99,24 @@ const AdminDashboard = () => {
 
     const [weeklyData, setWeeklyData] = useState([]);
 
+    const normalizeWeeklyData = (data) => {
+        if (!Array.isArray(data)) return [];
+        return data.map((day, index) => ({
+            day: day.day || day.dayName || ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][index] || '',
+            date: day.date || '',
+            visitors: Number(day.visitors ?? day.totalVisitors ?? day.visitorCount) || 0,
+            revenue: Number(day.revenue ?? day.totalRevenue ?? day.amount) || 0
+        }));
+    };
+
     const maxVisitors = useMemo(() => Math.max(...weeklyData.map(d => d.visitors), 1), [weeklyData]);
 
     const weeklyCategories = useMemo(() => weeklyData.map(d => d.day), [weeklyData]);
-    const weeklyVisitors = useMemo(() => weeklyData.map(d => d.visitors), [weeklyData]);
     const weeklyRevenue = useMemo(() => weeklyData.map(d => d.revenue), [weeklyData]);
+    const hasWeeklyActivity = useMemo(
+        () => weeklyData.some(day => day.visitors > 0 || day.revenue > 0),
+        [weeklyData]
+    );
 
     const weeklyTotals = useMemo(() => {
         if (!weeklyData.length) {
@@ -111,107 +135,6 @@ const AdminDashboard = () => {
 
         return { totalVisitors, avgVisitors, peakDay, totalRevenue };
     }, [weeklyData]);
-
-    const weeklyChartOptions = useMemo(() => ({
-        chart: {
-            type: 'bar',
-            toolbar: { show: false },
-            background: 'transparent',
-            animations: {
-                enabled: true,
-                easing: 'easeinout',
-                speed: 800,
-            },
-        },
-        plotOptions: {
-            bar: {
-                borderRadius: 6,
-                columnWidth: '55%',
-                distributed: false,
-                dataLabels: { position: 'top' },
-            }
-        },
-        colors: ['#22c55e', '#4ade80'],
-        dataLabels: {
-            enabled: false,
-        },
-        stroke: {
-            show: true,
-            width: 2,
-            colors: ['transparent']
-        },
-        xaxis: {
-            categories: weeklyCategories,
-            labels: {
-                style: { colors: '#374151', fontSize: '12px' }
-            },
-            axisBorder: { show: false },
-            axisTicks: { show: false },
-        },
-        yaxis: [
-            {
-                title: { text: 'Visitors', style: { color: '#374151' } },
-                labels: {
-                    style: { colors: '#374151', fontSize: '12px' },
-                    formatter: (val) => Math.round(val)
-                },
-                min: 0
-            },
-            {
-                opposite: true,
-                title: { text: 'Revenue (₱)', style: { color: '#374151' } },
-                labels: {
-                    style: { colors: '#374151', fontSize: '12px' },
-                    formatter: (val) => `₱${Math.round(val).toLocaleString()}`
-                },
-                min: 0
-            }
-        ],
-        fill: {
-            type: 'gradient',
-            gradient: {
-                shade: 'dark',
-                type: 'vertical',
-                shadeIntensity: 0.3,
-                gradientToColors: ['#4ade80'],
-                inverseColors: false,
-                opacityFrom: 1,
-                opacityTo: 0.85,
-                stops: [0, 100]
-            }
-        },
-        tooltip: {
-            theme: 'light',
-            y: {
-                formatter: (val, { seriesIndex }) => 
-                    seriesIndex === 0 ? `${val} visitors` : `₱${val.toLocaleString()}`
-            }
-        },
-        legend: {
-            show: true,
-            position: 'top',
-            horizontalAlign: 'right',
-            labels: { colors: '#374151' },
-            markers: {
-                width: 10,
-                height: 10,
-                radius: 12
-            }
-        },
-        grid: {
-            borderColor: '#e5e7eb',
-            strokeDashArray: 4,
-            xaxis: { lines: { show: false } },
-            yaxis: { lines: { show: true } }
-        },
-        noData: { text: 'No visitor data for this week' },
-        theme: { mode: 'light' }
-    }), [weeklyCategories]);
-
-    const weeklyChartSeries = useMemo(() => ([
-        { name: 'Visitors', data: weeklyVisitors, yAxisIndex: 0 },
-        { name: 'Revenue (₱)', data: weeklyRevenue, yAxisIndex: 1 }
-    ]), [weeklyVisitors, weeklyRevenue]);
 
     const donutSeries = useMemo(() => [{
         data: stats.ticketDistribution.length
@@ -347,12 +270,10 @@ const AdminDashboard = () => {
                 updatedStats.revenueBreakdown = Array.isArray(s.revenueBreakdown) ? s.revenueBreakdown : [];
                 updatedStats.eventOverview = Array.isArray(s.eventOverview) ? s.eventOverview : [];
                 updatedStats.trends = s.trends || {};
-                const liveWeeklyData = s.weeklyData ?? dashboardRes.data?.weeklyData;
-                setWeeklyData(Array.isArray(liveWeeklyData) ? liveWeeklyData.map(day => ({
-                    ...day,
-                    visitors: Number(day.visitors) || 0,
-                    revenue: Number(day.revenue) || 0
-                })) : []);
+                const liveWeeklyData = s.weeklyData ?? dashboardRes.data?.weeklyData ?? dashboardRes.data?.stats?.weeklyData;
+                setWeeklyData(normalizeWeeklyData(liveWeeklyData));
+            } else {
+                setWeeklyData([]);
             }
 
             if (usersRes?.success && Array.isArray(usersRes.users)) {
@@ -586,34 +507,57 @@ const AdminDashboard = () => {
 
             {/* Middle Section - Charts */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Weekly Visitors Chart */}
-                <div className="lg:col-span-2 bg-white border border-green-200 rounded-2xl p-6">
-                    <div className="flex items-center justify-between mb-6">
+                {/* Weekly traffic and revenue are intentionally separate metrics. */}
+                <div className="lg:col-span-2 rounded-2xl border border-green-200 bg-white p-6">
+                    <div className="mb-6 flex items-center justify-between">
                         <div>
                             <h3 className="text-lg font-bold text-gray-900">Weekly Overview</h3>
-                            <p className="text-sm text-gray-500">Visitor statistics for this week</p>
+                            <p className="text-sm text-gray-500">Unique site visitors and revenue for the last 7 days</p>
                         </div>
-                        <div className="flex items-center gap-4 text-sm">
-                            <div className="flex items-center gap-2">
-                                <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                                <span className="text-gray-500">Visitors</span>
+                        <span className="rounded-full bg-emerald-50 px-3 py-1 text-[11px] font-semibold text-emerald-700">Live tracking</span>
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+                        <div className="rounded-2xl border border-emerald-100 bg-emerald-50/40 p-4">
+                            <div className="mb-2 flex items-center justify-between">
+                                <div>
+                                    <p className="text-sm font-bold text-gray-900">Visitor traffic</p>
+                                    <p className="text-xs text-gray-500">Unique visitors per day</p>
+                                </div>
+                                <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
                             </div>
-                            <div className="flex items-center gap-2">
-                                <div className="w-3 h-3 rounded-full bg-green-400"></div>
-                                <span className="text-gray-500">Revenue</span>
+                            <ResponsiveContainer width="100%" height={220}>
+                                <BarChart data={weeklyData} margin={{ top: 10, right: 4, left: -20, bottom: 0 }}>
+                                    <CartesianGrid vertical={false} stroke="#d1fae5" strokeDasharray="4 4" />
+                                    <XAxis dataKey="day" tick={{ fontSize: 11, fill: '#6b7280' }} axisLine={false} tickLine={false} />
+                                    <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: '#6b7280' }} axisLine={false} tickLine={false} />
+                                    <Tooltip formatter={(value) => [`${value} visitors`, 'Visitors']} contentStyle={{ borderRadius: 12, border: '1px solid #d1fae5' }} />
+                                    <Bar dataKey="visitors" name="Visitors" fill="#10b981" radius={[6, 6, 0, 0]} minPointSize={4} />
+                                </BarChart>
+                            </ResponsiveContainer>
+                        </div>
+
+                        <div className="rounded-2xl border border-lime-100 bg-lime-50/40 p-4">
+                            <div className="mb-2 flex items-center justify-between">
+                                <div>
+                                    <p className="text-sm font-bold text-gray-900">Revenue trend</p>
+                                    <p className="text-xs text-gray-500">Ticket revenue per day</p>
+                                </div>
+                                <span className="h-2.5 w-2.5 rounded-full bg-lime-500" />
                             </div>
+                            <ResponsiveContainer width="100%" height={220}>
+                                <LineChart data={weeklyData} margin={{ top: 10, right: 8, left: 4, bottom: 0 }}>
+                                    <CartesianGrid vertical={false} stroke="#ecfccb" strokeDasharray="4 4" />
+                                    <XAxis dataKey="day" tick={{ fontSize: 11, fill: '#6b7280' }} axisLine={false} tickLine={false} />
+                                    <YAxis tick={{ fontSize: 11, fill: '#6b7280' }} axisLine={false} tickLine={false} tickFormatter={(value) => `₱${value}`} />
+                                    <Tooltip formatter={(value) => [`₱${Number(value).toLocaleString()}`, 'Revenue']} contentStyle={{ borderRadius: 12, border: '1px solid #ecfccb' }} />
+                                    <Line type="monotone" dataKey="revenue" name="Revenue" stroke="#84cc16" strokeWidth={3} dot={{ r: 4, fill: '#84cc16', strokeWidth: 2, stroke: '#fff' }} activeDot={{ r: 6 }} />
+                                </LineChart>
+                            </ResponsiveContainer>
                         </div>
                     </div>
 
-                    {/* ApexCharts Weekly Bar Chart */}
-                    <div className="h-72">
-                        <Chart
-                            options={weeklyChartOptions}
-                            series={weeklyChartSeries}
-                            type="bar"
-                            height="100%"
-                        />
-                    </div>
+                    {!hasWeeklyActivity && <p className="mt-3 text-center text-xs text-gray-400">No site visits or revenue have been recorded this week yet.</p>}
 
                     {/* Summary Stats */}
                     <div className="grid grid-cols-3 gap-4 pt-4 border-t border-green-200">

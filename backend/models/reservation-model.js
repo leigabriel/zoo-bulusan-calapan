@@ -3,24 +3,34 @@ const db = require('../config/database');
 class Reservation {
     static async getAllTicketReservations() {
         const [rows] = await db.query(
-            `SELECT tr.*, CONCAT(u.first_name, ' ', u.last_name) as user_name, u.email as user_email 
+            `SELECT tr.*, DATE_FORMAT(tr.reservation_date, '%Y-%m-%d') AS reservation_date_display,
+                    CONCAT(u.first_name, ' ', u.last_name) as user_name, u.email as user_email
              FROM ticket_reservations tr 
              LEFT JOIN users u ON tr.user_id = u.id 
              ORDER BY tr.created_at DESC`
         );
-        return rows;
+        return rows.map(row => ({
+            ...row,
+            reservation_date: row.reservation_date_display || row.reservation_date
+        }));
     }
 
     static async getAllEventReservations() {
         const [rows] = await db.query(
-            `SELECT er.*, e.title as event_title, e.event_date, e.start_time, e.end_time, e.location as event_location,
+            `SELECT er.*, DATE_FORMAT(er.venue_event_date, '%Y-%m-%d') AS venue_event_date_display,
+                    DATE_FORMAT(e.event_date, '%Y-%m-%d') AS event_date_display,
+                    e.title as event_title, e.event_date, e.start_time, e.end_time, e.location as event_location,
                     CONCAT(u.first_name, ' ', u.last_name) as user_name, u.email as user_email 
              FROM event_reservations er 
              LEFT JOIN users u ON er.user_id = u.id 
              LEFT JOIN events e ON er.event_id = e.id
              ORDER BY er.created_at DESC`
         );
-        return rows;
+        return rows.map(row => ({
+            ...row,
+            venue_event_date: row.venue_event_date_display || row.venue_event_date,
+            event_date: row.event_date_display || row.event_date
+        }));
     }
 
     static async findTicketReservationById(id) {

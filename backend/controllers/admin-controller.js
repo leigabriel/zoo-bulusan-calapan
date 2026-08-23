@@ -55,23 +55,29 @@ exports.getDashboardStats = async (req, res) => {
         const validTicket = `tr.status IN ('confirmed', 'completed')`;
         const validEvent = `er.status IN ('confirmed', 'completed') AND er.payment_status = 'paid'`;
 
-        const [summaryRows, previousRows, weeklyRows, distributionRows, breakdownRows, eventRows, totalUsers, totalAnimals, totalPlants] = await Promise.all([
+        const [summaryRows, previousRows, weeklyRows, siteVisitorRows, distributionRows, breakdownRows, eventRows, currentDateRows, totalUsers, totalAnimals, totalPlants] = await Promise.all([
             db.query(`SELECT
                 (SELECT COALESCE(SUM(tr.adult_quantity + tr.child_quantity + tr.bulusan_resident_quantity), 0) FROM ticket_reservations tr WHERE ${validTicket} ${ticketDate}) AS tickets,
-                (SELECT COALESCE(SUM(tr.total_visitors), 0) FROM ticket_reservations tr WHERE ${validTicket} ${ticketDate}) AS visitors,
+                (SELECT COUNT(*) FROM site_visits WHERE visit_date >= ${periodStart} AND visit_date < ${currentEnd}) AS visitors,
                 (SELECT COALESCE(SUM((tr.adult_quantity * 40) + (tr.child_quantity * 20)), 0) FROM ticket_reservations tr WHERE ${validTicket} ${ticketDate}) AS ticketRevenue,
                 (SELECT COALESCE(SUM(er.payment_amount), 0) FROM event_reservations er WHERE ${validEvent} ${eventDate}) AS eventRevenue`),
             db.query(`SELECT
                 COALESCE(SUM(CASE WHEN ${validTicket} AND tr.reservation_date >= ${previousStart} AND tr.reservation_date < ${previousEnd} THEN tr.adult_quantity + tr.child_quantity + tr.bulusan_resident_quantity ELSE 0 END), 0) AS tickets,
-                COALESCE(SUM(CASE WHEN ${validTicket} AND tr.reservation_date >= ${previousStart} AND tr.reservation_date < ${previousEnd} THEN tr.total_visitors ELSE 0 END), 0) AS visitors,
+                 (SELECT COUNT(*) FROM site_visits WHERE visit_date >= ${previousStart} AND visit_date < ${previousEnd}) AS visitors,
                 COALESCE(SUM(CASE WHEN ${validTicket} AND tr.reservation_date >= ${previousStart} AND tr.reservation_date < ${previousEnd} THEN (tr.adult_quantity * 40) + (tr.child_quantity * 20) ELSE 0 END), 0) AS ticketRevenue
              FROM ticket_reservations tr`),
-            db.query(`SELECT DATE(tr.reservation_date) AS date, DAYNAME(tr.reservation_date) AS day,
+            db.query(`SELECT CAST(DATE_FORMAT(tr.reservation_date, '%Y-%m-%d') AS CHAR) AS date, DAYNAME(tr.reservation_date) AS day,
                 COALESCE(SUM(tr.total_visitors), 0) AS visitors,
                 COALESCE(SUM(CASE WHEN tr.status IN ('confirmed', 'completed') THEN (tr.adult_quantity * 40) + (tr.child_quantity * 20) ELSE 0 END), 0) AS revenue
              FROM ticket_reservations tr
              WHERE tr.status NOT IN ('cancelled', 'no_show') AND tr.reservation_date >= DATE_SUB(CURDATE(), INTERVAL 6 DAY)
-             GROUP BY DATE(tr.reservation_date), DAYNAME(tr.reservation_date) ORDER BY date ASC`),
+                GROUP BY CAST(DATE_FORMAT(tr.reservation_date, '%Y-%m-%d') AS CHAR), DAYNAME(tr.reservation_date) ORDER BY date ASC`),
+            db.query(`SELECT CAST(DATE_FORMAT(visit_date, '%Y-%m-%d') AS CHAR) AS date,
+                COUNT(*) AS visitors
+             FROM site_visits
+             WHERE visit_date >= DATE_SUB(CURDATE(), INTERVAL 6 DAY)
+             GROUP BY CAST(DATE_FORMAT(visit_date, '%Y-%m-%d') AS CHAR)
+             ORDER BY date ASC`),
             db.query(`SELECT type, count, revenue FROM (
                 SELECT 'Adult' AS type, COALESCE(SUM(adult_quantity), 0) AS count, COALESCE(SUM(adult_quantity * 40), 0) AS revenue FROM ticket_reservations tr WHERE ${validTicket} ${ticketDate}
                 UNION ALL SELECT 'Child', COALESCE(SUM(child_quantity), 0), COALESCE(SUM(child_quantity * 20), 0) FROM ticket_reservations tr WHERE ${validTicket} ${ticketDate}
@@ -87,28 +93,26 @@ exports.getDashboardStats = async (req, res) => {
              FROM events e LEFT JOIN event_reservations er ON er.event_id = e.id
              WHERE e.event_date >= CURDATE() AND e.status IN ('upcoming', 'ongoing')
              GROUP BY e.id, e.title, e.event_date, e.status ORDER BY e.event_date ASC LIMIT 5`),
+            db.query("SELECT CAST(DATE_FORMAT(CURDATE(), '%Y-%m-%d') AS CHAR) AS today"),
             User.count(), Animal.count(), Plant.count()
         ]);
         const summary = summaryRows[0][0] || {};
         const previous = previousRows[0][0] || {};
         const pct = (current, prior) => prior > 0 ? Number((((current - prior) / prior) * 100).toFixed(1)) : (current > 0 ? 100 : 0);
         const totalRevenue = Number(summary.ticketRevenue || 0) + Number(summary.eventRevenue || 0);
-        const weeklyByDate = new Map(weeklyRows[0].map(row => {
-            const rowDate = row.date instanceof Date
-                ? `${row.date.getFullYear()}-${String(row.date.getMonth() + 1).padStart(2, '0')}-${String(row.date.getDate()).padStart(2, '0')}`
-                : String(row.date).slice(0, 10);
-            return [rowDate, row];
-        }));
+        const weeklyByDate = new Map(weeklyRows[0].map(row => [String(row.date).slice(0, 10), row]));
+        const siteVisitorsByDate = new Map(siteVisitorRows[0].map(row => [String(row.date).slice(0, 10), Number(row.visitors) || 0]));
+        const databaseToday = String(currentDateRows[0][0]?.today || '').slice(0, 10);
+        const today = databaseToday ? new Date(`${databaseToday}T00:00:00Z`) : new Date();
         const weeklyData = Array.from({ length: 7 }, (_, index) => {
-            const date = new Date();
-            date.setHours(0, 0, 0, 0);
-            date.setDate(date.getDate() - (6 - index));
-            const dateKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+            const date = new Date(today);
+            date.setUTCDate(date.getUTCDate() - (6 - index));
+            const dateKey = date.toISOString().slice(0, 10);
             const row = weeklyByDate.get(dateKey);
             return {
                 day: date.toLocaleDateString('en-US', { weekday: 'short' }),
                 date: dateKey,
-                visitors: Number(row?.visitors) || 0,
+                visitors: siteVisitorsByDate.get(dateKey) || 0,
                 revenue: Number(row?.revenue) || 0
             };
         });

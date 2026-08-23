@@ -63,7 +63,7 @@ const CloseBtn = ({ onClick }) => (
 );
 
 const SectionLabel = ({ label }) => (
-    <p className="px-1 pt-5 pb-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-widest">{label}</p>
+    <p className="px-1 pt-5 pb-2 text-[10px] font-bold text-gray-400 uppercase tracking-[0.16em]">{label}</p>
 );
 
 const MenuItem = ({ iconUrl, label, badge, danger, to, onClick, onClose, isLast, onNavigate }) => {
@@ -418,9 +418,9 @@ const Header = () => {
     ];
 
     const accountItems = [
-        { iconUrl: ICONS.ticket, label: 'My Reservation', action: handleOpenReservationHistory },
+        { iconUrl: ICONS.ticket, label: 'Reservations', action: handleOpenReservationHistory },
         { iconUrl: ICONS.events, label: 'My Events', path: '/my-events' },
-        { iconUrl: ICONS.messages, label: 'Messages', path: '/my-messages' },
+        { iconUrl: ICONS.messages, label: 'My Messages', path: '/my-messages' },
     ];
 
     const exploreItems = [
@@ -430,7 +430,8 @@ const Header = () => {
     ];
 
     const avatarSrc = getProfileImageUrl(user?.profileImage || user?.profile_image) || '/profile-img/default-avatar.svg';
-    const displayName = user?.firstName || user?.username;
+    const displayName = user?.fullName || [user?.firstName, user?.lastName].filter(Boolean).join(' ') || user?.username || 'Zoo visitor';
+    const profileEmail = user?.email || 'Update your email address';
 
     return (
         <>
@@ -593,33 +594,23 @@ const Header = () => {
                 />
                 <div
                     ref={sidePanelRef}
-                    className={`w-full h-full md:w-[300px] bg-white shadow-2xl flex flex-col transform transition-transform duration-300 relative ${showSidePanel ? 'translate-x-0' : 'translate-x-full'}`}
+                    className={`w-full h-full sm:max-w-[360px] bg-[#fbfdfb] shadow-2xl flex flex-col transform transition-transform duration-300 relative ${showSidePanel ? 'translate-x-0' : 'translate-x-full'}`}
                     role="dialog"
                     aria-modal="true"
+                    aria-label="User navigation panel"
                 >
-                    <div className="flex-shrink-0 px-5 pt-5 pb-4 bg-[#fff] border-b border-gray-200">
-                        <div className="flex items-center justify-between mb-4">
-                            <span className="text-[13px] font-semibold text-gray-800">Account</span>
+                    <div className="relative flex-shrink-0 overflow-hidden border-b border-emerald-100 bg-white px-5 pb-5 pt-5">
+                        <div className="pointer-events-none absolute -right-8 -top-10 h-28 w-28 rounded-full bg-[#c6fe69]/40 blur-2xl" />
+                        <div className="relative flex items-center justify-between">
+                            <div>
+                                <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-700">Your space</p>
+                                <h2 className="mt-1 text-lg font-bold tracking-tight text-[#172018]">Quick access</h2>
+                            </div>
                             <CloseBtn onClick={closeSidePanel} />
                         </div>
-                        {user && (
-                            <div className="flex items-center gap-3">
-                                <img
-                                    src={avatarSrc}
-                                    alt="Profile"
-                                    className="w-11 h-11 rounded-full object-cover border border-gray-100 flex-shrink-0"
-                                    referrerPolicy="no-referrer"
-                                    onError={(e) => { e.target.onerror = null; e.target.src = '/profile-img/default-avatar.svg'; }}
-                                />
-                                <div className="min-w-0">
-                                    <p className="text-[13px] font-semibold text-gray-900 truncate">{displayName}</p>
-                                    <p className="text-[11px] text-blue-600 truncate mt-0.5">{user.email}</p>
-                                </div>
-                            </div>
-                        )}
                     </div>
 
-                    <div className="flex-1 min-h-0 overflow-y-auto px-4 pb-6">
+                    <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-6">
                         {quickItems.length > 0 && (
                             <>
                                 <SectionLabel label="Quick Access" />
@@ -645,8 +636,8 @@ const Header = () => {
                             ))}
                         </div>
 
-                        <SectionLabel label="Preferences & AI" />
-                        <div className="rounded-xl overflow-hidden border border-gray-200 bg-white">
+                        <SectionLabel label="Tools & Preferences" />
+                        <div className="overflow-hidden rounded-2xl border border-gray-200/80 bg-white shadow-sm shadow-gray-100/70">
                             <MenuItem iconUrl={ICONS.setting} label="Settings" to="/settings" onClose={closeSidePanel} onNavigate={handleTransitionNavigate} isLast={false} />
                             <MenuItem
                                 iconUrl={ICONS.camera}
@@ -657,20 +648,43 @@ const Header = () => {
                             />
                         </div>
 
-                        <SectionLabel label="Help" />
-                        <div className="rounded-xl overflow-hidden border border-gray-200 bg-white">
+                        <SectionLabel label="Support" />
+                        <div className="overflow-hidden rounded-2xl border border-gray-200/80 bg-white shadow-sm shadow-gray-100/70">
                             <MenuItem iconUrl={ICONS.help} label="Help Center" to="/help" onClose={closeSidePanel} onNavigate={handleTransitionNavigate} isLast={false} />
                             <MenuItem iconUrl={ICONS.support} label="Contact Support" onClick={openEmailModal} isLast={true} />
                         </div>
                     </div>
-                    <div className="flex-shrink-0 border-t border-gray-200 bg-white px-4 py-4 space-y-2">
-                        <div className="rounded-xl overflow-hidden border border-gray-200 bg-white">
-                            <MenuItem iconUrl={ICONS.profile} label="My Account" to={getProfilePath()} onClose={closeSidePanel} onNavigate={handleTransitionNavigate} isLast={true} />
-                        </div>
+                    <div className="flex-shrink-0 space-y-3 border-t border-emerald-100 bg-white px-4 py-4">
+                        {user ? (
+                            <Link
+                                to={getProfilePath()}
+                                onClick={(e) => { e.preventDefault(); closeSidePanel(); handleTransitionNavigate(e, getProfilePath()); }}
+                                className="group flex items-center gap-3 rounded-2xl border border-emerald-100 bg-gradient-to-br from-emerald-50 to-lime-50 p-3 transition-all hover:-translate-y-0.5 hover:border-emerald-200 hover:shadow-md hover:shadow-emerald-100/70"
+                                aria-label={`Open profile for ${displayName}`}
+                            >
+                                <img
+                                    src={avatarSrc}
+                                    alt=""
+                                    className="h-11 w-11 flex-shrink-0 rounded-2xl border-2 border-white object-cover shadow-sm"
+                                    referrerPolicy="no-referrer"
+                                    onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/profile-img/default-avatar.svg'; }}
+                                />
+                                <span className="min-w-0 flex-1">
+                                    <span className="block text-[13px] font-bold text-[#172018] truncate">{displayName}</span>
+                                    <span className="mt-0.5 block truncate text-[11px] text-gray-500">{profileEmail}</span>
+                                    <span className="mt-1 block text-[10px] font-semibold uppercase tracking-wider text-emerald-700">View profile</span>
+                                </span>
+                                <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-white text-gray-400 shadow-sm transition-colors group-hover:text-emerald-700" aria-hidden="true">›</span>
+                            </Link>
+                        ) : (
+                            <Link to="/login" onClick={closeSidePanel} className="block rounded-2xl bg-[#172018] px-4 py-3 text-center text-[13px] font-semibold text-white transition-colors hover:bg-emerald-900">
+                                Sign in to your account
+                            </Link>
+                        )}
                         <button
                             type="button"
                             onClick={() => { closeSidePanel(); setShowLogoutModal(true); }}
-                            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-500 hover:bg-red-50 transition-colors"
+                            className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-red-500 transition-colors hover:bg-red-50"
                         >
                             <img
                                 src={ICONS.logout}
