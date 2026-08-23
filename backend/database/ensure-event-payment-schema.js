@@ -6,7 +6,9 @@ const columns = {
     payment_status: "ENUM('unpaid', 'pending', 'paid', 'failed', 'expired', 'refunded') NOT NULL DEFAULT 'unpaid'",
     paymongo_checkout_session_id: 'VARCHAR(100) DEFAULT NULL',
     paymongo_payment_id: 'VARCHAR(100) DEFAULT NULL',
-    payment_paid_at: 'TIMESTAMP NULL DEFAULT NULL'
+    payment_paid_at: 'TIMESTAMP NULL DEFAULT NULL',
+    refund_status: "ENUM('requested', 'approved', 'rejected') DEFAULT NULL",
+    refund_requested_at: 'TIMESTAMP NULL DEFAULT NULL'
 };
 
 const ensureEventPaymentSchema = async () => {

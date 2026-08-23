@@ -119,6 +119,30 @@ exports.setPayAtBulusan = async (req, res) => {
     }
 };
 
+exports.requestEventRefund = async (req, res) => {
+    try {
+        const reservation = await Reservation.findEventReservationById(req.params.id);
+        if (!reservation || String(reservation.user_id) !== String(req.user.id)) {
+            return res.status(404).json({ success: false, message: 'Event reservation not found.' });
+        }
+        if (reservation.payment_status !== 'paid') {
+            return res.status(400).json({ success: false, message: 'Only paid reservations can request a refund.' });
+        }
+        if (reservation.refund_status) {
+            return res.json({ success: true, refundStatus: reservation.refund_status });
+        }
+
+        await Reservation.updateEventPayment(reservation.id, {
+            refundStatus: 'requested',
+            refundRequestedAt: new Date()
+        });
+        return res.json({ success: true, refundStatus: 'requested', message: 'Refund request submitted for review.' });
+    } catch (error) {
+        console.error('Error requesting event refund:', error);
+        return res.status(500).json({ success: false, message: 'Unable to submit refund request.' });
+    }
+};
+
 exports.createEventCheckout = async (req, res) => {
     try {
         const config = readConfig();
@@ -149,7 +173,7 @@ exports.createEventCheckout = async (req, res) => {
                         name: `Event reservation: ${reservation.venue_event_name}`,
                         quantity: 1
                     }],
-                    payment_method_types: ['gcash'],
+                    payment_method_types: ['qrph'],
                     description: `Event reservation ${reservation.reservation_reference}`,
                     reference_number: reservation.reservation_reference,
                     success_url: `${getFrontendUrl()}/reservations?payment=success&reservation=${reservation.id}`,
@@ -164,20 +188,20 @@ exports.createEventCheckout = async (req, res) => {
 
         await Reservation.updateEventPayment(reservation.id, {
             paymentAmount: amount / 100,
-            paymentMethod: 'gcash',
+            paymentMethod: 'qrph',
             paymentStatus: 'pending',
             checkoutSessionId: checkout.id
         });
 
         res.json({
             success: true,
-            paymentMethod: 'gcash',
+            paymentMethod: 'qrph',
             checkoutUrl: checkout.attributes?.checkout_url,
             checkoutSessionId: checkout.id
         });
     } catch (error) {
         console.error('Error creating PayMongo checkout:', error);
-        res.status(500).json({ success: false, message: error.message || 'Unable to start GCash payment.' });
+        res.status(500).json({ success: false, message: error.message || 'Unable to start QR Ph payment.' });
     }
 };
 

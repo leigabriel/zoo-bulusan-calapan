@@ -31,6 +31,7 @@ import AdminUsers from './pages/admin/AdminUsers';
 import AdminAnimals from './pages/admin/AdminAnimals';
 import AdminPlants from './pages/admin/AdminPlants';
 import AdminReservations from './pages/admin/AdminReservations';
+import AdminTransactions from './pages/admin/AdminTransactions';
 import AdminProfile from './pages/admin/AdminProfile';
 import AdminHelpCenter from './pages/admin/AdminHelpCenter';
 import AdminTickets from './pages/admin/AdminTickets';
@@ -253,6 +254,7 @@ function AppRoutes() {
                     </AdminLayout>
                 </ProtectedRoute>
             } />
+            <Route path="/admin/transactions" element={<ProtectedRoute allowedRoles={['admin']}><AdminLayout><AdminTransactions /></AdminLayout></ProtectedRoute>} />
 
             <Route path="/admin/profile" element={
                 <ProtectedRoute allowedRoles={['admin']}>

@@ -189,7 +189,9 @@ class Reservation {
             paymentStatus: 'payment_status',
             checkoutSessionId: 'paymongo_checkout_session_id',
             paymentId: 'paymongo_payment_id',
-            paidAt: 'payment_paid_at'
+            paidAt: 'payment_paid_at',
+            refundStatus: 'refund_status',
+            refundRequestedAt: 'refund_requested_at'
         };
         Object.entries(fields).forEach(([key, column]) => {
             if (Object.prototype.hasOwnProperty.call(data, key)) {

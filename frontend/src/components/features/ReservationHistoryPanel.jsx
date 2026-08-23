@@ -62,9 +62,11 @@ const ReservationHistoryPanel = ({ isOpen, onClose }) => {
     const [selectedReservation, setSelectedReservation] = useState(null);
     const receiptRef = useRef(null);
     const [downloading, setDownloading] = useState(false);
+    const [downloadingPayment, setDownloadingPayment] = useState(false);
     const [showPaymentDemo, setShowPaymentDemo] = useState(false);
     const [paymentOption, setPaymentOption] = useState(null);
     const [paymentLoading, setPaymentLoading] = useState(false);
+    const [refundLoading, setRefundLoading] = useState(false);
     const [showQR, setShowQR] = useState(false);
 
     const handleDownload = async () => {
@@ -160,7 +162,7 @@ const ReservationHistoryPanel = ({ isOpen, onClose }) => {
                 addRow('Participants', selectedReservation.number_of_participants, true);
                 addRow('Organizer', selectedReservation.participant_name, true);
                 addRow('Amount', getEventAmount(selectedReservation) > 0 ? `P${getEventAmount(selectedReservation).toFixed(2)}` : 'Not configured', true);
-                addRow('Payment', selectedReservation.payment_method === 'gcash' ? 'GCash via PayMongo' : selectedReservation.payment_method === 'pay_at_bulusan' ? 'Pay at Bulusan' : 'Not selected', true);
+                addRow('Payment', ['qrph', 'gcash'].includes(selectedReservation.payment_method) ? 'QR Ph via PayMongo' : selectedReservation.payment_method === 'pay_at_bulusan' ? 'Pay at Bulusan' : 'Not selected', true);
                 addRow('Payment Status', (selectedReservation.payment_status || 'unpaid').toUpperCase(), true);
             }
 
@@ -199,6 +201,54 @@ const ReservationHistoryPanel = ({ isOpen, onClose }) => {
             notify.error("Couldn't download receipt.");
         } finally {
             setDownloading(false);
+        }
+    };
+
+    const handleDownloadPaymentReceipt = async () => {
+        if (!selectedReservation || selectedReservation.payment_status !== 'paid') return;
+        try {
+            setDownloadingPayment(true);
+            const canvas = document.createElement('canvas');
+            const width = 700;
+            const scale = Math.min(window.devicePixelRatio || 2, 2);
+            canvas.width = width * scale;
+            canvas.height = 760 * scale;
+            const ctx = canvas.getContext('2d');
+            ctx.scale(scale, scale);
+            ctx.fillStyle = '#f8fafc';
+            ctx.fillRect(0, 0, width, 760);
+            ctx.textAlign = 'center';
+            ctx.fillStyle = '#0f172a';
+            ctx.font = '900 34px sans-serif';
+            ctx.fillText('ZOO BULUSAN', width / 2, 76);
+            ctx.font = 'bold 20px sans-serif';
+            ctx.fillStyle = '#475569';
+            ctx.fillText('Payment Receipt', width / 2, 112);
+            ctx.strokeStyle = '#cbd5e1';
+            ctx.beginPath(); ctx.moveTo(40, 140); ctx.lineTo(width - 40, 140); ctx.stroke();
+            ctx.textAlign = 'left';
+            const rows = [
+                ['Status', 'PAID'],
+                ['Payment method', 'QR Ph via PayMongo'],
+                ['Amount', `P${getEventAmount(selectedReservation).toFixed(2)}`],
+                ['Reservation', selectedReservation.reservation_reference || '-'],
+                ['Payment reference', selectedReservation.paymongo_payment_id || selectedReservation.paymongo_checkout_session_id || '-'],
+                ['Paid on', formatSafeDate(selectedReservation.payment_paid_at, { dateStyle: 'medium', timeStyle: 'short' })]
+            ];
+            rows.forEach(([label, value], index) => {
+                const y = 205 + (index * 58);
+                ctx.fillStyle = '#64748b'; ctx.font = '16px sans-serif'; ctx.fillText(label, 50, y);
+                ctx.fillStyle = label === 'Status' ? '#059669' : '#334155'; ctx.font = 'bold 16px sans-serif'; ctx.textAlign = 'right'; ctx.fillText(value, width - 50, y); ctx.textAlign = 'left';
+            });
+            ctx.fillStyle = '#94a3b8'; ctx.font = '13px sans-serif'; ctx.textAlign = 'center'; ctx.fillText('Keep this receipt for your records.', width / 2, 650);
+            const link = document.createElement('a');
+            link.href = canvas.toDataURL('image/png', 1);
+            link.download = `Payment_Receipt_${selectedReservation.reservation_reference || 'reservation'}.png`;
+            document.body.appendChild(link); link.click(); document.body.removeChild(link);
+        } catch {
+            notify.error("Couldn't download payment receipt.");
+        } finally {
+            setDownloadingPayment(false);
         }
     };
 
@@ -330,7 +380,7 @@ const ReservationHistoryPanel = ({ isOpen, onClose }) => {
             if (paymentOption === 'now') {
                 const response = await reservationAPI.createEventPaymentCheckout(selectedReservation.id);
                 if (!response.success || !response.checkoutUrl) {
-                    throw new Error(response.message || 'Unable to start GCash payment.');
+                throw new Error(response.message || 'Unable to start QR Ph payment.');
                 }
                 window.location.assign(response.checkoutUrl);
                 return;
@@ -346,6 +396,22 @@ const ReservationHistoryPanel = ({ isOpen, onClose }) => {
             notify.error(error.message || 'Unable to process payment.');
         } finally {
             setPaymentLoading(false);
+        }
+    };
+
+    const handleRefundRequest = async () => {
+        if (!selectedReservation || refundLoading) return;
+        try {
+            setRefundLoading(true);
+            const response = await reservationAPI.requestEventRefund(selectedReservation.id);
+            if (!response.success) throw new Error(response.message || 'Unable to request a refund.');
+            notify.success('Refund request submitted for review.');
+            setSelectedReservation(prev => prev ? { ...prev, refund_status: response.refundStatus || 'requested' } : prev);
+            await fetchReservations();
+        } catch (error) {
+            notify.error(error.message || 'Unable to request a refund.');
+        } finally {
+            setRefundLoading(false);
         }
     };
 
@@ -592,21 +658,37 @@ const ReservationHistoryPanel = ({ isOpen, onClose }) => {
                                                 <span className="text-slate-500 flex-shrink-0">Organizer</span>
                                                 <span className="font-semibold text-slate-800 text-right break-words">{selectedReservation.participant_name}</span>
                                             </div>
-                                             <div className="pt-4">
-                                                 <p className="text-xs text-slate-400 uppercase tracking-widest mb-3 font-semibold">Event Payment</p>
-                                                 <div className="space-y-2 text-sm">
+                                              <div className="pt-4">
+                                                  <p className="text-xs text-slate-400 uppercase tracking-widest mb-3 font-semibold">Event Payment</p>
+                                                  {selectedReservation.payment_status === 'paid' && (
+                                                      <div className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3">
+                                                          <p className="text-sm font-bold text-emerald-700">Payment successful</p>
+                                                          <p className="mt-1 text-xs text-emerald-600">Your QR Ph payment has been confirmed and marked as paid.</p>
+                                                      </div>
+                                                  )}
+                                                  <div className="space-y-2 text-sm">
                                                      <div className="flex justify-between gap-3"><span className="text-slate-500">Amount</span><span className="font-bold text-slate-800">{getEventAmount(selectedReservation) > 0 ? `₱${getEventAmount(selectedReservation).toFixed(2)}` : 'Not configured'}</span></div>
-                                                     <div className="flex justify-between gap-3"><span className="text-slate-500">Method</span><span className="font-semibold text-slate-800">{selectedReservation.payment_method === 'gcash' ? 'GCash via PayMongo' : selectedReservation.payment_method === 'pay_at_bulusan' ? 'Pay at Bulusan' : 'Not selected'}</span></div>
-                                                     <div className="flex justify-between gap-3"><span className="text-slate-500">Status</span><span className={`font-bold uppercase ${selectedReservation.payment_status === 'paid' ? 'text-emerald-600' : 'text-amber-600'}`}>{selectedReservation.payment_status || 'unpaid'}</span></div>
+                                             <div className="flex justify-between gap-3"><span className="text-slate-500">Method</span><span className="font-semibold text-slate-800">{['qrph', 'gcash'].includes(selectedReservation.payment_method) ? 'QR Ph via PayMongo' : selectedReservation.payment_method === 'pay_at_bulusan' ? 'Pay at Bulusan' : 'Not selected'}</span></div>
+                                                      <div className="flex justify-between gap-3"><span className="text-slate-500">Status</span><span className={`font-bold uppercase ${selectedReservation.payment_status === 'paid' ? 'text-emerald-600' : 'text-amber-600'}`}>{selectedReservation.payment_status || 'unpaid'}</span></div>
+                                                      {selectedReservation.payment_paid_at && <div className="flex justify-between gap-3"><span className="text-slate-500">Paid on</span><span className="font-semibold text-slate-800">{formatSafeDate(selectedReservation.payment_paid_at, { dateStyle: 'medium', timeStyle: 'short' })}</span></div>}
+                                                      {selectedReservation.paymongo_payment_id && <div className="flex justify-between gap-3"><span className="text-slate-500">Payment reference</span><span className="max-w-[55%] break-all text-right font-semibold text-slate-800">{selectedReservation.paymongo_payment_id}</span></div>}
                                                  </div>
-                                                 {selectedReservation.payment_status !== 'paid' && eventPaymentConfig.enabled && getEventAmount(selectedReservation) > 0 && (
+                                                  {selectedReservation.payment_status === 'paid' ? (
+                                                      <button
+                                                          onClick={handleRefundRequest}
+                                                          disabled={refundLoading || Boolean(selectedReservation.refund_status)}
+                                                          className="mt-4 w-full rounded-xl border border-amber-200 bg-amber-50 py-3 text-xs font-bold uppercase tracking-wider text-amber-700 transition hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-60"
+                                                      >
+                                                          {refundLoading ? 'Submitting...' : selectedReservation.refund_status ? `Refund ${selectedReservation.refund_status}` : 'Request Refund'}
+                                                      </button>
+                                                  ) : eventPaymentConfig.enabled && getEventAmount(selectedReservation) > 0 && (
                                                      <div className="flex flex-col sm:flex-row gap-3 mt-4">
                                                          <button
                                                              onClick={() => { setPaymentOption('now'); setShowPaymentDemo(true); }}
                                                              className="flex-1 py-3 bg-slate-800 text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-slate-900 transition flex items-center justify-center gap-2 shadow-sm"
                                                          >
                                                              <Icons.CreditCard />
-                                                             Pay with GCash
+                                                              Pay with QR Ph
                                                          </button>
                                                          <button
                                                              onClick={() => { setPaymentOption('bulusan'); setShowPaymentDemo(true); }}
@@ -671,6 +753,15 @@ const ReservationHistoryPanel = ({ isOpen, onClose }) => {
                             >
                                 {downloading ? 'Preparing...' : 'Download'}
                             </button>
+                            {selectedReservation.type === 'event' && selectedReservation.payment_status === 'paid' && (
+                                <button
+                                    onClick={handleDownloadPaymentReceipt}
+                                    disabled={downloadingPayment}
+                                    className="flex-1 rounded-xl border border-emerald-200 bg-emerald-50 py-3.5 text-xs font-semibold uppercase tracking-wider text-emerald-700 shadow-sm transition hover:bg-emerald-100 disabled:opacity-50"
+                                >
+                                    {downloadingPayment ? 'Preparing...' : 'Payment Receipt'}
+                                </button>
+                            )}
                             <button
                                 onClick={() => selectedReservation.is_archived ? handleUnarchive(selectedReservation) : handleArchive(selectedReservation)}
                                 disabled={archiving}
@@ -710,7 +801,7 @@ const ReservationHistoryPanel = ({ isOpen, onClose }) => {
                         </h3>
                         <p className="text-sm text-slate-500 mt-3 leading-relaxed">
                             {paymentOption === 'now'
-                                ? 'Pay securely with GCash. Desktop users will see the PayMongo GCash QR code; mobile users can open the GCash app from the checkout page.'
+                                 ? 'Pay securely with QR Ph through PayMongo. The checkout page will display the QR code for scanning.'
                                 : 'Payment will be settled in cash at the Bulusan Zoo admission booth on the day of your visit.'}
                         </p>
                         <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 mt-6 text-left">
@@ -729,7 +820,7 @@ const ReservationHistoryPanel = ({ isOpen, onClose }) => {
                                  disabled={paymentLoading}
                                  className="w-full py-3 bg-slate-800 text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-slate-900 transition"
                              >
-                                 {paymentLoading ? 'Processing...' : paymentOption === 'now' ? 'Proceed to GCash Payment' : 'Confirm Pay at Bulusan'}
+                                  {paymentLoading ? 'Processing...' : paymentOption === 'now' ? 'Proceed to QR Ph Payment' : 'Confirm Pay at Bulusan'}
                             </button>
                             <button
                                 onClick={() => setShowPaymentDemo(false)}

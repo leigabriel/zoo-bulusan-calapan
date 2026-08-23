@@ -412,6 +412,8 @@ CREATE TABLE event_reservations (
     paymongo_checkout_session_id VARCHAR(100) DEFAULT NULL,
     paymongo_payment_id VARCHAR(100) DEFAULT NULL,
     payment_paid_at TIMESTAMP NULL DEFAULT NULL,
+    refund_status ENUM('requested', 'approved', 'rejected') DEFAULT NULL,
+    refund_requested_at TIMESTAMP NULL DEFAULT NULL,
     status ENUM('pending', 'confirmed', 'completed', 'cancelled', 'no_show') DEFAULT 'pending',
     notes TEXT DEFAULT NULL,
     is_archived BOOLEAN DEFAULT FALSE,

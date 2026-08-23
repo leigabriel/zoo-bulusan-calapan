@@ -72,6 +72,7 @@ router.use(protect);
 router.use(authorize('admin'));
 
 router.get('/dashboard', adminController.getDashboardStats);
+router.get('/transactions', adminController.getTransactions);
 router.get('/users', adminController.getAllUsers);
 router.get('/users/role/:role', adminController.getUsersByRole);
 router.post('/users', adminController.createUser);

@@ -243,6 +243,13 @@ export const authAPI = {
 };
 
 export const adminAPI = {
+    getTransactions: async () => {
+        const response = await fetch(`${API_BASE_URL}/admin/transactions`, {
+            headers: getAuthHeaders('admin')
+        });
+        return handleResponse(response);
+    },
+
     getDashboard: async (period = 'today') => {
         const response = await fetch(`${API_BASE_URL}/admin/dashboard?period=${period}`, {
             headers: getAuthHeaders('admin')
@@ -1659,6 +1666,14 @@ export const reservationAPI = {
 
     setEventPayAtBulusan: async (id) => {
         const response = await fetch(`${API_BASE_URL}/payments/event/${id}/pay-at-bulusan`, {
+            method: 'POST',
+            headers: getAuthHeaders('user')
+        });
+        return handleResponse(response);
+    },
+
+    requestEventRefund: async (id) => {
+        const response = await fetch(`${API_BASE_URL}/payments/event/${id}/refund`, {
             method: 'POST',
             headers: getAuthHeaders('user')
         });

@@ -286,7 +286,7 @@ const StaffReservations = ({ globalSearch = '' }) => {
                                 </tr>
                             ) : (
                                 filteredReservations.map(reservation => (
-                                    <tr key={reservation.id} className="hover:bg-green-50/50 transition-colors">
+                                    <tr key={reservation.id} onClick={() => { setSelectedReservation({ ...reservation, type: activeTab === 'tickets' ? 'ticket' : 'event' }); setShowModal(true); }} className="cursor-pointer hover:bg-green-50/50 transition-colors" title="Open reservation details">
                                         <td className="px-6 py-4">
                                             <p className="font-mono text-sm text-green-600">{reservation.reservation_reference || '-'}</p>
                                         </td>
@@ -324,7 +324,7 @@ const StaffReservations = ({ globalSearch = '' }) => {
                                         <td className="px-6 py-4">
                                             <div className="flex items-center justify-end gap-2">
                                                 <button
-                                                    onClick={() => { setSelectedReservation({ ...reservation, type: activeTab === 'tickets' ? 'ticket' : 'event' }); setShowModal(true); }}
+                                                    onClick={(event) => { event.stopPropagation(); setSelectedReservation({ ...reservation, type: activeTab === 'tickets' ? 'ticket' : 'event' }); setShowModal(true); }}
                                                     className="p-2 bg-green-50 hover:bg-green-50 border border-green-200 text-gray-500 hover:text-gray-900 rounded-lg transition-all"
                                                     title="View details"
                                                 >
@@ -332,7 +332,7 @@ const StaffReservations = ({ globalSearch = '' }) => {
                                                 </button>
                                                 {reservation.status === 'pending' && (
                                                     <button
-                                                        onClick={() => handleStatusChange(reservation.id, activeTab === 'tickets' ? 'ticket' : 'event', 'confirmed')}
+                                                         onClick={(event) => { event.stopPropagation(); handleStatusChange(reservation.id, activeTab === 'tickets' ? 'ticket' : 'event', 'confirmed'); }}
                                                         className="p-2 bg-green-50 hover:bg-green-500/10 border border-green-200 hover:border-green-500/50 text-gray-500 hover:text-green-600 rounded-lg transition-all"
                                                         title="Confirm"
                                                     >
@@ -364,7 +364,13 @@ const StaffReservations = ({ globalSearch = '' }) => {
                                 <CloseIcon />
                             </button>
                         </div>
-                        <div className="p-6 space-y-4">
+                                        <div className="p-6 space-y-4">
+                            {selectedReservation.type === 'event' && selectedReservation.payment_status === 'paid' && (
+                                <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3">
+                                    <p className="text-sm font-bold text-emerald-700">Payment successful</p>
+                                    <p className="mt-1 text-xs text-emerald-600">PayMongo QR Ph payment confirmed.</p>
+                                </div>
+                            )}
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <p className="text-xs text-gray-500 uppercase mb-1">Reservation Reference</p>
@@ -442,8 +448,9 @@ const StaffReservations = ({ globalSearch = '' }) => {
                                         <p className="text-xs text-gray-500 uppercase mb-2">Event Payment</p>
                                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
                                             <div><span className="block text-gray-500">Amount</span><strong className="text-gray-900">₱{Number(selectedReservation.payment_amount || 0).toFixed(2)}</strong></div>
-                                            <div><span className="block text-gray-500">Method</span><strong className="text-gray-900">{selectedReservation.payment_method === 'gcash' ? 'GCash via PayMongo' : selectedReservation.payment_method === 'pay_at_bulusan' ? 'Pay at Bulusan' : 'Not selected'}</strong></div>
+                                            <div><span className="block text-gray-500">Method</span><strong className="text-gray-900">{['qrph', 'gcash'].includes(selectedReservation.payment_method) ? 'QR Ph via PayMongo' : selectedReservation.payment_method === 'pay_at_bulusan' ? 'Pay at Bulusan' : 'Not selected'}</strong></div>
                                             <div><span className="block text-gray-500">Status</span><strong className={selectedReservation.payment_status === 'paid' ? 'text-green-600' : 'text-amber-600'}>{(selectedReservation.payment_status || 'unpaid').toUpperCase()}</strong></div>
+                                            {selectedReservation.payment_paid_at && <div><span className="block text-gray-500">Paid on</span><strong className="text-gray-900">{formatDate(selectedReservation.payment_paid_at)}</strong></div>}
                                             <div><span className="block text-gray-500">Reference</span><strong className="text-gray-900 break-all">{selectedReservation.paymongo_payment_id || selectedReservation.paymongo_checkout_session_id || '—'}</strong></div>
                                         </div>
                                     </div>

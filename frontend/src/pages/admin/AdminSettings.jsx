@@ -137,9 +137,9 @@ const AdminSettings = () => {
                     <div className="bg-white border border-emerald-200 rounded-2xl p-5 md:p-6">
                         <div className="flex items-start sm:items-center justify-between gap-4 mb-5">
                             <div>
-                                <h2 className="text-lg font-bold text-emerald-900">Event GCash Payments</h2>
+                                <h2 className="text-lg font-bold text-emerald-900">Event QR Ph Payments</h2>
                                 <p className="text-sm text-emerald-900/60 mt-0.5">
-                                    Enable PayMongo GCash payments for event reservations only. Ticket reservations are not affected.
+                                Enable PayMongo QR Ph payments for event reservations only. Ticket reservations are not affected.
                                 </p>
                             </div>
                             <label className="relative inline-flex items-center cursor-pointer flex-shrink-0">

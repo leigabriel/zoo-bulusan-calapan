@@ -435,7 +435,7 @@ const AdminPlants = ({ globalSearch = '' }) => {
                                 </tr>
                             ) : (
                                 filteredPlants.map(plant => (
-                                    <tr key={plant.id} className="hover:bg-green-50/50 transition-colors">
+                                    <tr key={plant.id} onClick={() => openEditModal(plant)} className="cursor-pointer hover:bg-green-50/50 transition-colors" title="Open plant details">
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-3">
                                                 <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-500 to-green-400 flex items-center justify-center text-white font-bold overflow-hidden">
@@ -464,14 +464,14 @@ const AdminPlants = ({ globalSearch = '' }) => {
                                         <td className="px-6 py-4">
                                             <div className="flex items-center justify-end gap-2">
                                                 <button
-                                                    onClick={() => openEditModal(plant)}
+                                                     onClick={(event) => { event.stopPropagation(); openEditModal(plant); }}
                                                     className="p-2 bg-green-50 hover:bg-green-50 border border-green-200 hover:border-green-500/50 text-gray-500 hover:text-green-600 rounded-lg transition-all"
                                                     title="Edit plant"
                                                 >
                                                     <EditIcon />
                                                 </button>
                                                 <button
-                                                    onClick={() => setDeleteConfirm(plant)}
+                                                     onClick={(event) => { event.stopPropagation(); setDeleteConfirm(plant); }}
                                                     className="p-2 bg-green-50 hover:bg-red-500/10 border border-green-200 hover:border-red-500/50 text-gray-500 hover:text-red-400 rounded-lg transition-all"
                                                     title="Delete plant"
                                                 >

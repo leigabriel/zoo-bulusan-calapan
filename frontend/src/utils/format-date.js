@@ -5,7 +5,10 @@ export const formatSafeDate = (value, options = {}) => {
     const date = typeof normalized === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(normalized)
         ? new Date(`${normalized}T00:00:00`)
         : new Date(normalized);
-    return Number.isNaN(date.getTime()) ? '-' : date.toLocaleDateString('en-US', options);
+    if (Number.isNaN(date.getTime())) return '-';
+    return options.timeStyle || options.hour || options.minute || options.second
+        ? date.toLocaleString('en-US', options)
+        : date.toLocaleDateString('en-US', options);
 };
 
 export const getDateTimestamp = value => {

@@ -313,6 +313,7 @@ const AdminLayout = ({ children }) => {
     const managementItems = [
         { path: '/admin/events', label: 'Events', Icon: EventsIcon },
         { path: '/admin/reservations', label: 'Reservations', Icon: TicketsIcon },
+        { path: '/admin/transactions', label: 'Transactions', Icon: TicketsIcon },
         { path: '/admin/animals', label: 'Manage Animals', Icon: AnimalsIcon },
         { path: '/admin/plants', label: 'Manage Plants', Icon: PlantsIcon },
         { path: '/admin/users', label: 'Manage Users', Icon: UsersIcon },

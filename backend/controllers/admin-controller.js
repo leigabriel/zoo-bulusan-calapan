@@ -4,6 +4,7 @@ const Ticket = require('../models/ticket-model');
 const Event = require('../models/event-model');
 const Notification = require('../models/notification-model');
 const Plant = require('../models/plant-model');
+const Reservation = require('../models/reservation-model');
 const bcrypt = require('bcryptjs');
 const db = require('../config/database');
 
@@ -143,6 +144,33 @@ exports.getDashboardStats = async (req, res) => {
     } catch (error) {
         console.error('Error getting dashboard stats:', error);
         res.status(500).json({ success: false, message: 'Error fetching dashboard stats' });
+    }
+};
+
+exports.getTransactions = async (req, res) => {
+    try {
+        const reservations = await Reservation.getAllEventReservations();
+        return res.json({
+            success: true,
+            transactions: reservations
+                .filter(reservation => reservation.payment_status && reservation.payment_status !== 'unpaid')
+                .map(reservation => ({
+                    id: reservation.id,
+                    reference: reservation.reservation_reference,
+                    customer: reservation.participant_name,
+                    email: reservation.participant_email,
+                    event: reservation.venue_event_name || reservation.event_title || 'Event reservation',
+                    amount: Number(reservation.payment_amount || 0),
+                    method: reservation.payment_method,
+                    status: reservation.payment_status,
+                    refundStatus: reservation.refund_status,
+                    paidAt: reservation.payment_paid_at,
+                    paymentReference: reservation.paymongo_payment_id || reservation.paymongo_checkout_session_id
+                }))
+        });
+    } catch (error) {
+        console.error('Error getting payment transactions:', error);
+        return res.status(500).json({ success: false, message: 'Error fetching transactions.' });
     }
 };
 
