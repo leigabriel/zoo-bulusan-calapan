@@ -101,7 +101,6 @@ const Header = () => {
     const [showLogoutModal, setShowLogoutModal] = useState(false);
     const [showSidePanel, setShowSidePanel] = useState(false);
     const [showAIScanner, setShowAIScanner] = useState(false);
-    const [showScannerConfirm, setShowScannerConfirm] = useState(false);
     const [showHistoryPanel, setShowHistoryPanel] = useState(false);
     const [showNotificationPanel, setShowNotificationPanel] = useState(false);
     const [showMiniZooGame, setShowMiniZooGame] = useState(false);
@@ -129,7 +128,6 @@ const Header = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const sidePanelRef = useRef(null);
-    const aiScannerRef = useRef(null);
     const notificationPanelRef = useRef(null);
     const lastScrollY = useRef(0);
 
@@ -201,16 +199,14 @@ const Header = () => {
         const onKey = (e) => {
             if (e.key === 'Escape') {
                 setShowSidePanel(false);
-                if (showAIScanner && !showScannerConfirm) {
-                    setShowScannerConfirm(true);
-                }
+                if (showAIScanner) setShowAIScanner(false);
                 setShowNotificationPanel(false);
                 setIsMenuOpen(false);
             }
         };
         document.addEventListener('keydown', onKey);
         return () => document.removeEventListener('keydown', onKey);
-    }, [showAIScanner, showScannerConfirm]);
+    }, [showAIScanner]);
 
     const fetchNotifications = useCallback(async (showLoading = true) => {
         if (!user) return;
@@ -681,40 +677,26 @@ const Header = () => {
             <div className={`fixed inset-0 z-[110] flex justify-end transition-all duration-300 ${showAIScanner ? 'visible' : 'invisible'}`}>
                 <div
                     className={`absolute inset-0 bg-black/25 backdrop-blur-[2px] transition-opacity duration-300 ${showAIScanner ? 'opacity-100' : 'opacity-0'}`}
-                    onClick={() => { if (showAIScanner) setShowScannerConfirm(true); }}
+                    onClick={() => setShowAIScanner(false)}
                 />
                 <div
-                    ref={aiScannerRef}
-                    className={`relative w-full md:w-1/2 h-full bg-white shadow-2xl flex flex-col transform transition-transform duration-300 ${showAIScanner ? 'translate-x-0' : 'translate-x-full'}`}
+                    className={`relative w-full max-w-2xl h-full bg-[#f7faf7] shadow-2xl flex flex-col transform transition-transform duration-300 ${showAIScanner ? 'translate-x-0' : 'translate-x-full'}`}
                     role="dialog"
                     aria-modal="true"
                 >
-                    <div className="flex items-center gap-3 px-5 py-4 border-b border-gray-100 flex-shrink-0">
-                        <div className="w-8 h-8 bg-emerald-700 rounded-lg flex items-center justify-center flex-shrink-0">
-                            <img src={ICONS.camera} alt="AI" className="w-4 h-4 object-contain brightness-0 invert" />
+                    <div className="flex items-center gap-3 px-4 sm:px-6 py-4 border-b border-emerald-100/80 bg-white flex-shrink-0">
+                        <div className="w-10 h-10 bg-emerald-50 border border-emerald-100 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden">
+                            <img src="/animal-scan.svg" alt="" className="w-9 h-9 object-contain" />
                         </div>
                         <div className="flex-1 min-w-0">
-                            <p className="text-[13px] font-semibold text-gray-900">AI Animal Scanner</p>
-                            <p className="text-[11px] text-gray-400">Identify animals with AI</p>
+                            <p className="text-sm font-bold text-slate-900">AI Animal Scanner</p>
+                            <p className="text-[11px] text-slate-500">Identify animals from a photo</p>
                         </div>
-                        <CloseBtn onClick={() => setShowScannerConfirm(true)} />
+                        <CloseBtn onClick={() => setShowAIScanner(false)} />
                     </div>
                     <div className="flex-1 overflow-y-auto">
                         {showAIScanner && <AnimalClassifier embedded={true} />}
                     </div>
-
-                    {showScannerConfirm && (
-                        <div className="absolute inset-0 z-[200] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-                            <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl">
-                                <h3 className="text-[15px] font-bold text-gray-900 mb-2">Close AI Scanner?</h3>
-                                <p className="text-[13px] text-gray-500 mb-6">Are you sure you want to close the scanner? Any unsaved captures will be lost.</p>
-                                <div className="flex gap-3">
-                                    <button onClick={() => setShowScannerConfirm(false)} className="flex-1 py-2.5 bg-gray-100 text-gray-700 text-[13px] font-semibold rounded-xl hover:bg-gray-200 transition-colors">Cancel</button>
-                                    <button onClick={() => { setShowScannerConfirm(false); setShowAIScanner(false); }} className="flex-1 py-2.5 bg-red-500 text-white text-[13px] font-semibold rounded-xl hover:bg-red-600 transition-colors">Close</button>
-                                </div>
-                            </div>
-                        </div>
-                    )}
                 </div>
             </div>
 

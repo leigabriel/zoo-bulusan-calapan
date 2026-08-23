@@ -11,9 +11,6 @@ import {
 import { fetchAnimalDescription } from '../../../services/animal-description-service';
 import { ANIMAL_DATABASE, AI_SOURCE } from '../../../config/ai-service-config';
 
-const RobotIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="10" rx="2" /><circle cx="12" cy="5" r="2" /><path d="M12 7v4" /><line x1="8" y1="16" x2="8" y2="16" /><line x1="16" y1="16" x2="16" y2="16" /></svg>
-);
 const UserIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
 );
@@ -53,6 +50,7 @@ const AnimalClassifier = ({ embedded = false }) => {
     const messagesEndRef = useRef(null);
     const fileInputRef = useRef(null);
     const currentFileName = useRef('');
+    const messageIdRef = useRef(1);
     const [analysisImage, setAnalysisImage] = useState(null);
 
     const [showCameraModal, setShowCameraModal] = useState(false);
@@ -122,7 +120,7 @@ const AnimalClassifier = ({ embedded = false }) => {
         currentFileName.current = file.name;
         const imageUrl = URL.createObjectURL(file);
 
-        setMessages(prev => [...prev, { id: Date.now(), role: 'user', type: 'image', content: imageUrl }]);
+        setMessages(prev => [...prev, { id: `${Date.now()}-${messageIdRef.current++}`, role: 'user', type: 'image', content: imageUrl }]);
 
         setIsProcessing(true);
         setAnalysisImage(imageUrl);
@@ -217,13 +215,13 @@ const AnimalClassifier = ({ embedded = false }) => {
         closeCameraModal();
 
         currentFileName.current = `camera-capture-${Date.now()}.jpg`;
-        setMessages(prev => [...prev, { id: Date.now(), role: 'user', type: 'image', content: dataUrl }]);
+        setMessages(prev => [...prev, { id: `${Date.now()}-${messageIdRef.current++}`, role: 'user', type: 'image', content: dataUrl }]);
         setIsProcessing(true);
         setAnalysisImage(dataUrl);
     }, [cameraReady, cameraFacing, closeCameraModal]);
 
     const addBotMessage = (text, meta = null) => {
-        setMessages(prev => [...prev, { id: Date.now(), role: 'bot', type: meta ? 'result' : 'text', content: text, meta }]);
+        setMessages(prev => [...prev, { id: `${Date.now()}-${messageIdRef.current++}`, role: 'bot', type: meta ? 'result' : 'text', content: text, meta }]);
     };
 
     const runPrediction = async () => {
@@ -343,21 +341,21 @@ const AnimalClassifier = ({ embedded = false }) => {
     };
 
     const containerClass = embedded
-        ? "h-full min-h-0 w-full flex flex-col bg-[#f5f7f4] overflow-hidden"
-        : "flex flex-col h-[100dvh] min-h-0 bg-[#f5f7f4] w-full md:w-3/5 lg:w-1/2 md:mx-auto md:border-x border-gray-200 md:shadow-xl relative";
+        ? "h-full min-h-0 w-full flex flex-col bg-[#f7faf7] overflow-hidden"
+        : "flex flex-col h-[100dvh] min-h-0 bg-[#f7faf7] w-full md:w-3/5 lg:w-1/2 md:mx-auto md:border-x border-emerald-100 md:shadow-xl relative";
 
     return (
         <div className={containerClass}>
             {!embedded && <Header />}
 
-            <main className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-3 sm:p-5 space-y-4 custom-scrollbar overscroll-contain">
+            <main className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-3 py-4 sm:px-6 sm:py-5 space-y-4 custom-scrollbar overscroll-contain">
 
                 {analysisImage && (
                     <img
                         ref={imageRef}
                         src={analysisImage}
                         className="hidden"
-                        onLoad={() => setTimeout(runPrediction, 300)}
+                        onLoad={runPrediction}
                         crossOrigin="anonymous"
                         alt="analysis"
                     />
@@ -375,8 +373,8 @@ const AnimalClassifier = ({ embedded = false }) => {
                         >
                             <div className={`flex min-w-0 ${embedded ? 'max-w-[96%]' : 'max-w-[90%] md:max-w-[78%]'} ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'} gap-2.5 items-end`}>
 
-                                <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 shadow-sm ${msg.role === 'user' ? 'bg-[#212631] text-white' : 'bg-[#ebebeb] text-[#212631]'}`}>
-                                    {msg.role === 'user' ? <UserIcon /> : <RobotIcon />}
+                                <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 shadow-sm overflow-hidden ${msg.role === 'user' ? 'bg-[#212631] text-white' : 'bg-emerald-50 border border-emerald-100'}`}>
+                                    {msg.role === 'user' ? <UserIcon /> : <img src="/animal-scan.svg" alt="" className="w-7 h-7 object-contain" />}
                                 </div>
 
                                 <div className={`min-w-0 max-w-full p-3.5 sm:p-4 shadow-sm text-sm ${msg.role === 'user'
@@ -384,7 +382,10 @@ const AnimalClassifier = ({ embedded = false }) => {
                                     : 'bg-white text-gray-700 rounded-2xl rounded-bl-sm shadow-md border border-gray-200'
                                     }`}>
                                     {msg.type === 'image' && (
-                                        <img src={msg.content} alt="Uploaded animal" className={`w-auto max-w-full rounded-xl ${embedded ? 'max-h-40' : 'max-h-56'} object-contain border border-white/20 mb-2`} />
+                                        <div className="relative">
+                                            <img src={msg.content} alt="Uploaded animal" className={`w-auto max-w-full rounded-xl ${embedded ? 'max-h-40' : 'max-h-56'} object-contain border border-white/20 mb-2`} />
+                                            <span className="absolute bottom-4 left-2 rounded-full bg-black/60 px-2 py-1 text-[10px] font-semibold text-white backdrop-blur-sm">Photo sent</span>
+                                        </div>
                                     )}
 
                                     {msg.type === 'text' && <p className="leading-relaxed">{msg.content}</p>}
@@ -433,13 +434,16 @@ const AnimalClassifier = ({ embedded = false }) => {
                         animate={{ opacity: 1, y: 0 }}
                     >
                         <div className="flex gap-2.5 items-end">
-                            <div className="w-8 h-8 rounded-xl bg-[#ebebeb] flex items-center justify-center text-[#212631] shadow-sm">
-                                <RobotIcon />
+                            <div className="w-8 h-8 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center shadow-sm overflow-hidden">
+                                <img src="/animal-scan.svg" alt="" className="w-7 h-7 object-contain" />
                             </div>
-                            <div className="bg-white px-4 py-3 rounded-2xl rounded-bl-sm shadow-md border border-gray-200 flex items-center gap-1.5">
-                                <span className="w-2 h-2 bg-[#212631] rounded-full animate-bounce"></span>
-                                <span className="w-2 h-2 bg-[#212631] rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></span>
-                                <span className="w-2 h-2 bg-[#212631] rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></span>
+                            <div className="bg-white px-4 py-3 rounded-2xl rounded-bl-sm shadow-sm border border-emerald-100 flex items-center gap-3">
+                                <span className="flex items-center gap-1.5">
+                                    <span className="w-1.5 h-1.5 bg-emerald-600 rounded-full animate-bounce"></span>
+                                    <span className="w-1.5 h-1.5 bg-emerald-600 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></span>
+                                    <span className="w-1.5 h-1.5 bg-emerald-600 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></span>
+                                </span>
+                                <span className="text-xs font-medium text-slate-500">Analyzing image...</span>
                             </div>
                         </div>
                     </MotionDiv>
@@ -448,8 +452,18 @@ const AnimalClassifier = ({ embedded = false }) => {
                 <div ref={messagesEndRef} />
             </main>
 
-            <div className="p-3 sm:p-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] bg-white border-t border-gray-200">
+            <div className="p-3 sm:p-5 pb-[max(0.75rem,env(safe-area-inset-bottom))] bg-white border-t border-emerald-100">
                 <div className="max-w-4xl mx-auto">
+                    <div className="flex items-center justify-between gap-3 mb-3">
+                        <div>
+                            <p className="text-sm font-bold text-slate-900">Scan an animal</p>
+                            <p className="text-[11px] text-slate-500">Upload a photo or use your camera</p>
+                        </div>
+                        <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-bold ${isModelLoading ? 'bg-amber-50 text-amber-700' : isProcessing ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-600'}`}>
+                            <span className={`h-1.5 w-1.5 rounded-full ${isModelLoading ? 'bg-amber-500 animate-pulse' : isProcessing ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`} />
+                            {isModelLoading ? 'Preparing AI' : isProcessing ? 'Scanning' : 'Ready'}
+                        </span>
+                    </div>
                     <input
                         type="file"
                         ref={fileInputRef}
@@ -466,12 +480,12 @@ const AnimalClassifier = ({ embedded = false }) => {
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
                             className={`min-h-12 py-2.5 px-3 rounded-xl font-semibold text-white flex items-center justify-center gap-2 transition-all text-sm shadow-sm ${isProcessing || isModelLoading
-                                ? 'bg-gray-400 cursor-not-allowed opacity-75'
-                                : 'bg-[#212631] hover:bg-[#2d3341]'
+                                ? 'bg-slate-300 cursor-not-allowed opacity-80'
+                                : 'bg-slate-900 hover:bg-slate-800'
                                 }`}
                         >
                             {isModelLoading ? (
-                                <span className="text-xs">Loading AI...</span>
+                                <><span className="h-4 w-4 rounded-full border-2 border-white/40 border-t-white animate-spin" /><span className="text-xs">Preparing AI</span></>
                             ) : (
                                 <>
                                     <UploadIcon />
@@ -487,8 +501,8 @@ const AnimalClassifier = ({ embedded = false }) => {
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
                             className={`min-h-12 py-2.5 px-3 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all text-sm shadow-sm ${isProcessing || isModelLoading
-                                ? 'bg-gray-400 text-white cursor-not-allowed'
-                                : 'bg-[#3a4150] text-white hover:bg-[#4a5160]'
+                                ? 'bg-slate-300 text-white cursor-not-allowed'
+                                : 'bg-emerald-700 text-white hover:bg-emerald-800'
                                 }`}
                         >
                             <CameraIcon />
@@ -496,8 +510,8 @@ const AnimalClassifier = ({ embedded = false }) => {
                         </MotionButton>
                     </div>
 
-                    <p className="text-center text-[11px] text-gray-500 mt-2 font-medium">
-                        Use a clear, well-lit photo with the animal visible
+                    <p className="text-center text-[11px] text-slate-500 mt-2.5 font-medium">
+                        Best results come from a clear, well-lit photo
                     </p>
                 </div>
             </div>
@@ -516,7 +530,7 @@ const AnimalClassifier = ({ embedded = false }) => {
                         {!cameraReady && !cameraError && (
                             <div className="absolute inset-0 flex items-center justify-center bg-black">
                                 <div className="text-center">
-                                    <div className="w-12 h-12 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                                    <div className="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
                                     <p className="text-gray-300 text-sm">Starting camera...</p>
                                 </div>
                             </div>
@@ -542,11 +556,11 @@ const AnimalClassifier = ({ embedded = false }) => {
                         )}
 
                         {cameraReady && (
-                            <div className="absolute inset-6 border-2 border-purple-400/50 rounded-2xl pointer-events-none">
-                                <div className="absolute -top-px -left-px w-10 h-10 border-t-3 border-l-3 border-purple-400 rounded-tl-2xl"></div>
-                                <div className="absolute -top-px -right-px w-10 h-10 border-t-3 border-r-3 border-purple-400 rounded-tr-2xl"></div>
-                                <div className="absolute -bottom-px -left-px w-10 h-10 border-b-3 border-l-3 border-purple-400 rounded-bl-2xl"></div>
-                                <div className="absolute -bottom-px -right-px w-10 h-10 border-b-3 border-r-3 border-purple-400 rounded-br-2xl"></div>
+                            <div className="absolute inset-6 border-2 border-emerald-400/60 rounded-2xl pointer-events-none">
+                                <div className="absolute -top-px -left-px w-10 h-10 border-t-3 border-l-3 border-emerald-400 rounded-tl-2xl"></div>
+                                <div className="absolute -top-px -right-px w-10 h-10 border-t-3 border-r-3 border-emerald-400 rounded-tr-2xl"></div>
+                                <div className="absolute -bottom-px -left-px w-10 h-10 border-b-3 border-l-3 border-emerald-400 rounded-bl-2xl"></div>
+                                <div className="absolute -bottom-px -right-px w-10 h-10 border-b-3 border-r-3 border-emerald-400 rounded-br-2xl"></div>
                             </div>
                         )}
 
@@ -574,9 +588,9 @@ const AnimalClassifier = ({ embedded = false }) => {
                         <button
                             onClick={capturePhoto}
                             disabled={!cameraReady}
-                            className="w-20 h-20 bg-white hover:bg-gray-100 rounded-full transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center shadow-lg active:scale-95 border-4 border-purple-300"
+                            className="w-20 h-20 bg-white hover:bg-gray-100 rounded-full transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center shadow-lg active:scale-95 border-4 border-emerald-300"
                         >
-                            <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-full"></div>
+                            <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-full"></div>
                         </button>
                     </div>
                 </div>,
@@ -597,7 +611,7 @@ const AnimalClassifier = ({ embedded = false }) => {
                             animate={{ scale: 1, y: 0 }}
                             exit={{ scale: 0.9, y: 20 }}
                         >
-                            <div className="flex items-center justify-between p-4 border-b border-purple-100 bg-gradient-to-r from-purple-600 to-indigo-600">
+                            <div className="flex items-center justify-between p-4 border-b border-emerald-100 bg-gradient-to-r from-emerald-700 to-teal-700">
                                 <div className="flex items-center gap-2 text-white">
                                     <CameraIcon />
                                     <h3 className="font-bold">Camera Capture</h3>
@@ -622,7 +636,7 @@ const AnimalClassifier = ({ embedded = false }) => {
                                 {!cameraReady && !cameraError && (
                                     <div className="absolute inset-0 flex items-center justify-center bg-slate-900">
                                         <div className="text-center">
-                                            <div className="w-10 h-10 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+                                            <div className="w-10 h-10 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
                                             <p className="text-gray-400 text-sm">Starting camera...</p>
                                         </div>
                                     </div>
@@ -648,11 +662,11 @@ const AnimalClassifier = ({ embedded = false }) => {
                                 )}
 
                                 {cameraReady && (
-                                    <div className="absolute inset-4 border-2 border-purple-400/40 rounded-xl pointer-events-none">
-                                        <div className="absolute -top-px -left-px w-6 h-6 border-t-2 border-l-2 border-purple-400 rounded-tl-lg"></div>
-                                        <div className="absolute -top-px -right-px w-6 h-6 border-t-2 border-r-2 border-purple-400 rounded-tr-lg"></div>
-                                        <div className="absolute -bottom-px -left-px w-6 h-6 border-b-2 border-l-2 border-purple-400 rounded-bl-lg"></div>
-                                        <div className="absolute -bottom-px -right-px w-6 h-6 border-b-2 border-r-2 border-purple-400 rounded-br-lg"></div>
+                                    <div className="absolute inset-4 border-2 border-emerald-400/50 rounded-xl pointer-events-none">
+                                        <div className="absolute -top-px -left-px w-6 h-6 border-t-2 border-l-2 border-emerald-400 rounded-tl-lg"></div>
+                                        <div className="absolute -top-px -right-px w-6 h-6 border-t-2 border-r-2 border-emerald-400 rounded-tr-lg"></div>
+                                        <div className="absolute -bottom-px -left-px w-6 h-6 border-b-2 border-l-2 border-emerald-400 rounded-bl-lg"></div>
+                                        <div className="absolute -bottom-px -right-px w-6 h-6 border-b-2 border-r-2 border-emerald-400 rounded-br-lg"></div>
                                     </div>
                                 )}
                             </div>
@@ -662,7 +676,7 @@ const AnimalClassifier = ({ embedded = false }) => {
                                     <button
                                         onClick={switchCamera}
                                         disabled={!cameraReady}
-                                        className="p-3 bg-slate-200 hover:bg-slate-300 rounded-full transition disabled:opacity-50 disabled:cursor-not-allowed text-purple-600"
+                                        className="p-3 bg-slate-200 hover:bg-slate-300 rounded-full transition disabled:opacity-50 disabled:cursor-not-allowed text-emerald-700"
                                         title="Switch Camera"
                                     >
                                         <SwitchCameraIcon />
@@ -671,10 +685,10 @@ const AnimalClassifier = ({ embedded = false }) => {
                                     <button
                                         onClick={capturePhoto}
                                         disabled={!cameraReady}
-                                        className="w-16 h-16 bg-white hover:bg-gray-50 rounded-full transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center shadow-lg active:scale-95 border-4 border-purple-200"
+                                        className="w-16 h-16 bg-white hover:bg-gray-50 rounded-full transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center shadow-lg active:scale-95 border-4 border-emerald-200"
                                         title="Capture Photo"
                                     >
-                                        <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-full"></div>
+                                        <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-full"></div>
                                     </button>
 
                                     <button
