@@ -6,6 +6,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import Home from './pages/user/Home';
 import Animals from './pages/user/Animals';
 import Plants from './pages/user/Plants';
+import { AnimalDetail, PlantDetail } from './pages/user/CollectionDetail';
 import Events from './pages/user/Events';
 import Reservations from './pages/user/Reservations';
 import AboutUs from './pages/user/AboutUs';
@@ -108,7 +109,9 @@ function AppRoutes() {
             {/* Public Routes - accessible to everyone */}
             <Route path="/" element={<Home />} />
             <Route path="/animals" element={<Animals />} />
+            <Route path="/animals/:id" element={<AnimalDetail />} />
             <Route path="/plants" element={<Plants />} />
+            <Route path="/plants/:id" element={<PlantDetail />} />
             <Route path="/events" element={<Events />} />
             <Route path="/about" element={<AboutUs />} />
             <Route path="/animaldex" element={<AnimalClassifier />} />

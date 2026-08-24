@@ -38,19 +38,19 @@ const HeroSection = () => {
 
             tl.fromTo('.hero-deer',
                 { opacity: 0, scale: 0.5, y: 50 },
-                { opacity: 1, scale: 1, y: 0, duration: 1.2, ease: 'back.out(1.5)' }, 0
+                { opacity: 1, scale: 1, y: 0, duration: 1, ease: 'back.out(1.5)' }, 0
             )
                 .fromTo('.hero-title',
                     { opacity: 0, y: 50, skewY: 5 },
-                    { opacity: 1, y: 0, skewY: 0, duration: 1.2, ease: 'expo.out' }, 0.2
+                    { opacity: 1, y: 0, skewY: 0, duration: 1, ease: 'expo.out' }, 0.15
                 )
                 .fromTo('.hero-line',
                     { clipPath: 'inset(100% 0% 0% 0%)', y: 50 },
-                    { clipPath: 'inset(0% 0% 0% 0%)', y: 0, duration: 1.5, ease: 'expo.out', stagger: 0.15 }, 0.3
+                    { clipPath: 'inset(0% 0% 0% 0%)', y: 0, duration: 1.25, ease: 'expo.out', stagger: 0.12 }, 0.25
                 )
                 .fromTo('.hero-btn',
                     { opacity: 0, scale: 0.9, y: 30 },
-                    { opacity: 1, scale: 1, y: 0, duration: 1.2, ease: 'elastic.out(1, 0.5)' }, 0.7
+                    { opacity: 1, scale: 1, y: 0, duration: 1, ease: 'elastic.out(1, 0.5)' }, 0.6
                 );
 
             gsap.to('.hero-bg-parallax', {
@@ -168,11 +168,11 @@ const AboutSection = () => {
             });
 
             timeline
-                .fromTo('.about-copy', { opacity: 0, y: 70 }, { opacity: 1, y: 0, duration: 0.8, ease: 'power3.out' })
+                .fromTo('.about-copy', { opacity: 0, y: 70 }, { opacity: 1, y: 0, duration: 0.7, ease: 'power3.out' })
                 .fromTo('.about-letter',
                     { opacity: 0, y: '0.7em', rotateX: -80 },
-                    { opacity: 1, y: 0, rotateX: 0, duration: 0.7, stagger: 0.012, ease: 'power3.out' },
-                    '-=0.45'
+                    { opacity: 1, y: 0, rotateX: 0, duration: 0.6, stagger: 0.01, ease: 'power3.out' },
+                    '-=0.4'
                 );
         }, sectionRef);
 
@@ -228,16 +228,16 @@ const ProjectSection = () => {
             });
 
             timeline
-                .fromTo('.project-anim', { opacity: 0, y: 55 }, { opacity: 1, y: 0, duration: 0.75, stagger: 0.1, ease: 'power3.out' })
+                .fromTo('.project-anim', { opacity: 0, y: 55 }, { opacity: 1, y: 0, duration: 0.65, stagger: 0.08, ease: 'power3.out' })
                 .fromTo('.project-letter',
                     { opacity: 0, y: '0.8em', rotateX: -70 },
-                    { opacity: 1, y: 0, rotateX: 0, duration: 0.7, stagger: 0.012, ease: 'power3.out' },
-                    '-=0.45'
+                    { opacity: 1, y: 0, rotateX: 0, duration: 0.6, stagger: 0.01, ease: 'power3.out' },
+                    '-=0.4'
                 )
                 .fromTo('.project-phrase',
                     { opacity: 0, clipPath: 'inset(0 100% 0 0)' },
-                    { opacity: 1, clipPath: 'inset(0 0% 0 0)', duration: 0.7, ease: 'power3.inOut' },
-                    '-=0.4'
+                    { opacity: 1, clipPath: 'inset(0 0% 0 0)', duration: 0.6, ease: 'power3.inOut' },
+                    '-=0.35'
                 );
         }, sectionRef);
 
@@ -371,11 +371,11 @@ const EventsSection = () => {
             });
 
             timeline
-                .fromTo('.events-anim', { opacity: 0, y: 55 }, { opacity: 1, y: 0, duration: 0.75, stagger: 0.1, ease: 'power3.out' })
+                .fromTo('.events-anim', { opacity: 0, y: 55 }, { opacity: 1, y: 0, duration: 0.65, stagger: 0.08, ease: 'power3.out' })
                 .fromTo('.events-letter',
                     { opacity: 0, y: '0.8em', rotateX: -70 },
-                    { opacity: 1, y: 0, rotateX: 0, duration: 0.7, stagger: 0.012, ease: 'power3.out' },
-                    '-=0.45'
+                    { opacity: 1, y: 0, rotateX: 0, duration: 0.6, stagger: 0.01, ease: 'power3.out' },
+                    '-=0.4'
                 );
         }, sectionRef);
 
@@ -429,16 +429,16 @@ const ZootopiaSection = () => {
             });
 
             timeline
-                .fromTo('.zootopia-anim', { opacity: 0, y: 55 }, { opacity: 1, y: 0, duration: 0.75, stagger: 0.1, ease: 'power3.out' })
+                .fromTo('.zootopia-anim', { opacity: 0, y: 55 }, { opacity: 1, y: 0, duration: 0.65, stagger: 0.08, ease: 'power3.out' })
                 .fromTo('.zootopia-letter',
                     { opacity: 0, y: '0.8em', rotateX: -70 },
-                    { opacity: 1, y: 0, rotateX: 0, duration: 0.7, stagger: 0.012, ease: 'power3.out' },
-                    '-=0.45'
+                    { opacity: 1, y: 0, rotateX: 0, duration: 0.6, stagger: 0.01, ease: 'power3.out' },
+                    '-=0.4'
                 )
                 .fromTo('.zootopia-phrase',
                     { opacity: 0, clipPath: 'inset(0 100% 0 0)' },
-                    { opacity: 1, clipPath: 'inset(0 0% 0 0)', duration: 0.7, ease: 'power3.inOut' },
-                    '-=0.4'
+                    { opacity: 1, clipPath: 'inset(0 0% 0 0)', duration: 0.6, ease: 'power3.inOut' },
+                    '-=0.35'
                 );
         }, sectionRef);
 

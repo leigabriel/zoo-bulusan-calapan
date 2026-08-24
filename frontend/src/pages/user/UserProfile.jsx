@@ -7,6 +7,7 @@ import { isDefaultAvatar, getDefaultAvatarSvg, getInitials } from '../../utils/p
 import { notify } from '../../utils/toast';
 import LogoutModal from '../../components/common/LogoutModal';
 import AvatarSelector from '../../components/common/AvatarSelector';
+import LetterHoverTitle from '../../components/common/LetterHoverTitle';
 
 const UserIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-16 h-16 text-gray-300">
@@ -27,7 +28,7 @@ const VerifiedIcon = () => (
     </svg>
 );
 
-const UserProfile = () => {
+const UserProfile = ({ embedded = false, onClose }) => {
     const { user, logout, updateUser } = useAuth();
     const navigate = useNavigate();
     const hasPassword = user?.hasPassword !== false && user?.authProvider !== 'google';
@@ -275,31 +276,28 @@ const UserProfile = () => {
     if (!user) return null;
 
     return (
-        <div className="min-h-screen w-full bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 flex flex-col items-center">
-            <div className="w-full min-h-screen bg-white flex flex-col">
+        <div className={`${embedded ? 'min-h-full' : 'min-h-screen'} w-full bg-[#f7faf7] flex flex-col items-center`}>
+            <div className={`${embedded ? 'min-h-full' : 'min-h-screen'} w-full flex flex-col`}>
 
-                <div className="relative h-48 sm:h-64 bg-[#ebebeb] overflow-hidden">
-                    <img
-                        src="https://i.pinimg.com/736x/cf/be/f7/cfbef7ee6088cac3e2e6c01cfe57bfed.jpg"
-                        className="w-full h-full object-cover opacity-40"
-                        alt="Header"
-                    />
-                    <div className="absolute top-6 left-6 z-10">
-                        <button
-                            onClick={() => navigate(-1)}
-                            className="flex items-center gap-2 px-4 py-2 bg-white shadow-sm rounded-full text-sm font-bold text-gray-700 hover:bg-gray-50 transition active:scale-95"
-                        >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 19l-7-7 7-7" /></svg>
-                            Back
-                        </button>
+                <div className="flex items-center justify-between border-b border-[#dce5dc] bg-white px-5 py-4 sm:px-8">
+                    <div>
+                        <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-700">Your account</p>
+                        <h2 className="mt-1 text-lg font-bold tracking-tight text-[#172018]">Profile</h2>
                     </div>
+                    <button
+                        onClick={() => embedded ? onClose?.() : navigate(-1)}
+                        className="flex items-center gap-2 rounded-full border border-gray-200 px-3.5 py-2 text-xs font-bold text-gray-600 transition hover:border-gray-300 hover:bg-gray-50"
+                    >
+                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 19l-7-7 7-7" /></svg>
+                        {embedded ? 'Close' : 'Back'}
+                    </button>
                 </div>
 
-                <div className="w-full max-w-5xl mx-auto px-6 sm:px-10 flex-grow">
-                    <div className="flex flex-col sm:flex-row justify-between items-start -mt-16 sm:-mt-20 mb-12 gap-6 relative z-10">
+                <div className="w-full max-w-5xl mx-auto px-5 py-8 sm:px-8 lg:px-10 flex-grow">
+                    <div className="flex flex-col sm:flex-row justify-between items-start mb-10 gap-6">
                         <div className="flex flex-col sm:flex-row items-center sm:items-end gap-6">
-                            <div className="relative group">
-                                <div className="w-32 h-32 sm:w-40 sm:h-40 rounded-full border-[6px] border-white shadow-xl overflow-hidden bg-gray-100">
+                             <div className="relative group">
+                                 <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-full border-4 border-white shadow-lg overflow-hidden bg-gray-100">
                                     {getProfileImageUrl() && !imageLoadError ? (
                                         <img 
                                             src={getProfileImageUrl()} 
@@ -339,11 +337,11 @@ const UserProfile = () => {
                                 </div>
                                 <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileSelect} className="hidden" />
                             </div>
-                            <div className="pb-2 text-center sm:text-left">
+                             <div className="pb-1 text-center sm:text-left">
                                 <div className="flex items-center justify-center sm:justify-start gap-2 mb-1">
-                                    <h1 className="text-3xl sm:text-4xl font-extrabold text-[#212631] tracking-tight">
-                                        {user.firstName} {user.lastName}
-                                    </h1>
+                                         <LetterHoverTitle className="text-2xl sm:text-3xl font-extrabold text-[#212631] tracking-tight">
+                                             {user.firstName} {user.lastName}
+                                         </LetterHoverTitle>
                                     <VerifiedIcon/>
                                 </div>
                                 <p className="text-lg text-gray-400 font-medium">@{user.username}</p>
@@ -352,7 +350,7 @@ const UserProfile = () => {
                                 )}
                             </div>
                         </div>
-                        <div className="sm:mt-24 w-full sm:w-auto">
+                         <div className="w-full sm:w-auto">
                             <button
                                 onClick={() => setIsEditing(!isEditing)}
                                 className="w-full sm:w-auto px-8 py-2.5 bg-white border border-gray-200 rounded-lg text-sm font-bold text-gray-700 shadow-sm hover:bg-gray-50 transition"
@@ -362,17 +360,17 @@ const UserProfile = () => {
                         </div>
                     </div>
 
-                    <div className="h-px bg-gray-100 mb-12 w-full"></div>
+                     <div className="h-px bg-[#dce5dc] mb-10 w-full"></div>
 
-                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 pb-20">
-                        <div className="lg:col-span-4">
+                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 pb-14">
+                         <div className="lg:col-span-4 lg:pt-1">
                             <h3 className="text-lg font-bold text-gray-900">Personal information</h3>
                             <p className="text-sm text-gray-400 mt-2 leading-relaxed">
                                 Manage your personal details and account settings to keep your profile up to date.
                             </p>
                         </div>
 
-                        <div className="lg:col-span-8 space-y-10">
+                         <div className="lg:col-span-8 space-y-8 rounded-2xl border border-[#dce5dc] bg-white p-5 shadow-sm sm:p-7">
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                                 <div className="space-y-2">
                                     <label className="text-sm font-bold text-gray-700 ml-1">First name</label>
@@ -436,8 +434,6 @@ const UserProfile = () => {
                             </div>
                         </div>
                     </div>
-
-                    <div className="h-px bg-gray-100 my-12 w-full"></div>
 
                 </div>
             </div>

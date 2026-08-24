@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useNavigate } from 'react-router-dom';
@@ -7,6 +7,7 @@ import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 import { ReactLenis } from 'lenis/react';
 import AIFloatingButton from '../../components/common/AIFloatingButton';
+import LetterHoverTitle from '../../components/common/LetterHoverTitle';
 import { userAPI, reservationAPI } from '../../services/api-client';
 import { useAuth } from '../../hooks/use-auth';
 import { sanitizeInput, sanitizeEmail, sanitizePhone } from '../../utils/sanitize';
@@ -74,7 +75,7 @@ const Events = () => {
 
     const [events, setEvents] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState('');
+    const [, setError] = useState('');
     const [selectedEvent, setSelectedEvent] = useState(null);
     const [filter, setFilter] = useState('all');
     const [calendarDate, setCalendarDate] = useState(new Date());
@@ -298,9 +299,7 @@ const Events = () => {
                 <Header />
 
                 <div className="w-full min-h-[40vh] md:min-h-[60vh] flex flex-col items-center justify-center px-4 pt-24 pb-8">
-                    <h1 className="text-[3.5rem] sm:text-[6rem] md:text-[9rem] lg:text-[11rem] leading-none tracking-tight text-black text-center break-words w-full">
-                        Events
-                    </h1>
+                    <LetterHoverTitle className="text-[3.5rem] sm:text-[6rem] md:text-[9rem] lg:text-[11rem] leading-none tracking-tight text-black text-center break-words w-full">Events</LetterHoverTitle>
                 </div>
 
                 <div className="max-w-8xl mx-auto px-4 md:px-8 pb-20 md:pb-32">

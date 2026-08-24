@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { notify } from '../../utils/toast';
 import { userAPI } from '../../services/api-client';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
+import LetterHoverTitle from '../../components/common/LetterHoverTitle';
 
 // Icons
 const Icons = {
@@ -54,7 +55,7 @@ const Icons = {
     )
 };
 
-const Settings = () => {
+const Settings = ({ embedded = false, onClose }) => {
     const { user } = useAuth();
     const navigate = useNavigate();
     const [activeSection, setActiveSection] = useState('notifications');
@@ -364,9 +365,9 @@ const Settings = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50/50 flex flex-col">
+        <div className={`${embedded ? 'min-h-full' : 'min-h-screen'} bg-gray-50/50 flex flex-col`}>
             {/* Floating Navigation */}
-            <div className="fixed top-4 left-4 right-4 z-50 flex justify-between items-center pointer-events-none">
+            {!embedded && <div className="fixed top-4 left-4 right-4 z-50 flex justify-between items-center pointer-events-none">
                 <button
                     onClick={() => navigate(-1)}
                     className="pointer-events-auto flex items-center gap-2 px-4 py-2 bg-white/90 backdrop-blur-md text-gray-700 rounded-full shadow-sm border border-gray-200 hover:bg-gray-50 hover:shadow-md transition-all duration-300 font-medium text-sm"
@@ -381,19 +382,26 @@ const Settings = () => {
                     <Icons.Home />
                     <span className="hidden sm:inline">Home</span>
                 </Link>
-            </div>
+            </div>}
+
+            {embedded && <div className="flex items-center justify-between border-b border-gray-100 bg-white px-5 py-4">
+                <div>
+                    <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-700">Tools & preferences</p>
+                    <h2 className="mt-1 text-lg font-bold text-gray-900">Account settings</h2>
+                </div>
+                <button onClick={onClose} className="rounded-full p-2 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700" aria-label="Close settings">×</button>
+            </div>}
 
             {/* Hero Section */}
-            <section className="relative text-white pt-28 pb-16 text-center bg-emerald-600">
-                <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1564349683136-77e08dba1ef7')] bg-cover bg-center mix-blend-overlay opacity-20"></div>
+            <section className={`relative border-b border-[#dce5dc] bg-[#e8f1e6] text-[#172018] ${embedded ? 'px-4 pb-8 pt-8' : 'pt-28 pb-14'} text-center`}>
                 <div className="relative z-10 px-4">
-                    <h1 className="text-3xl md:text-4xl font-extrabold mb-3 tracking-tight">Account Settings</h1>
-                    <p className="text-emerald-100 max-w-md mx-auto text-sm md:text-base">Manage your notifications and view your activity history.</p>
+                    <LetterHoverTitle className="text-3xl md:text-4xl font-extrabold mb-3 tracking-tight">Account Settings</LetterHoverTitle>
+                    <p className="text-[#56705a] max-w-md mx-auto text-sm md:text-base">Manage your notifications and view your activity history.</p>
                 </div>
             </section>
 
             {/* Main Content */}
-            <div className="flex-grow container mx-auto px-4 py-8 max-w-5xl -mt-8 relative z-20">
+            <div className={`flex-grow container mx-auto px-4 ${embedded ? 'py-6' : 'py-8'} max-w-5xl`}>
                 <div className="flex flex-col md:flex-row gap-6 lg:gap-8">
                     {/* Left Sidebar Menu */}
                     <div className="md:w-64 lg:w-72 flex-shrink-0">
@@ -447,7 +455,7 @@ const Settings = () => {
 
                     {/* Right Content Panel */}
                     <div className="flex-grow">
-                        <div className="bg-white rounded-2xl shadow-sm p-5 sm:p-8 border border-gray-100 min-h-[500px]">
+                         <div className="bg-white rounded-2xl shadow-sm p-5 sm:p-8 border border-[#dce5dc] min-h-[500px]">
                             {renderContent()}
                         </div>
                     </div>

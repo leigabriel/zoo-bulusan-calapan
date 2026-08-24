@@ -68,6 +68,7 @@ const ReservationHistoryPanel = ({ isOpen, onClose, paymentReturn = false }) => 
     const [paymentLoading, setPaymentLoading] = useState(false);
     const [refundLoading, setRefundLoading] = useState(false);
     const [showQR, setShowQR] = useState(false);
+    const [isMounted, setIsMounted] = useState(isOpen);
 
     const handleDownload = async () => {
         if (!selectedReservation || !receiptRef.current) return;
@@ -254,6 +255,16 @@ const ReservationHistoryPanel = ({ isOpen, onClose, paymentReturn = false }) => 
 
     useEffect(() => {
         if (isOpen) {
+            setIsMounted(true);
+            return undefined;
+        }
+
+        const timeout = window.setTimeout(() => setIsMounted(false), 300);
+        return () => window.clearTimeout(timeout);
+    }, [isOpen]);
+
+    useEffect(() => {
+        if (isOpen) {
             document.body.style.overflow = 'hidden';
         } else {
             document.body.style.overflow = '';
@@ -425,23 +436,23 @@ const ReservationHistoryPanel = ({ isOpen, onClose, paymentReturn = false }) => 
         }
     };
 
-    if (!isOpen) return null;
+    if (!isMounted) return null;
 
     return (
         <>
             <div
-                className="fixed inset-0 bg-slate-900/40 z-[90] backdrop-blur-sm transition-opacity duration-300 ease-out"
+                 className={`fixed inset-0 bg-slate-900/40 z-[90] backdrop-blur-sm transition-opacity duration-300 ease-out ${isOpen ? 'opacity-100' : 'opacity-0'}`}
                 onClick={onClose}
             />
-            <div className="fixed right-0 top-0 h-full w-full sm:w-[400px] md:w-[500px] lg:max-w-xl bg-slate-50 shadow-2xl z-[100] flex flex-col transform transition-transform duration-300 ease-out">
-                <div className="p-6 border-b border-slate-200 flex items-center justify-between bg-white">
-                    <div>
-                        <h2 className="text-xl font-semibold text-slate-800">Reservation History</h2>
-                        <p className="text-sm text-slate-500 mt-1">Manage your past bookings</p>
-                    </div>
-                    <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition">
-                        <Icons.Close />
-                    </button>
+            <div className={`fixed right-0 top-0 h-full w-full sm:w-[480px] md:w-[600px] lg:w-[680px] bg-slate-50 shadow-2xl z-[100] flex flex-col transform transition-transform duration-300 ease-out ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+                 <div className="p-5 sm:p-6 border-b border-slate-200 flex items-center justify-between bg-white gap-4">
+                     <div>
+                         <h2 className="text-xl font-semibold text-slate-800">Reservation History</h2>
+                         <p className="text-sm text-slate-500 mt-1">Review bookings, payment status, and archived reservations.</p>
+                     </div>
+                     <button onClick={onClose} aria-label="Close reservation history" title="Close" className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-400 transition hover:border-slate-300 hover:bg-slate-100 hover:text-slate-700">
+                         <Icons.Close />
+                     </button>
                 </div>
 
                 {!isAuthenticated ? (
@@ -512,12 +523,12 @@ const ReservationHistoryPanel = ({ isOpen, onClose, paymentReturn = false }) => 
                             ) : (
                                 <div className="space-y-3">
                                     {filteredReservations.map(reservation => (
-                                        <div
-                                            key={`${reservation.type}-${reservation.id}`}
-                                            onClick={() => { setShowQR(false); setSelectedReservation(reservation); }}
-                                            className="bg-white border border-slate-200 shadow-sm hover:shadow-md rounded-xl p-4 cursor-pointer transition-all duration-200 group"
-                                        >
-                                            <div className="flex items-start gap-4">
+                                         <div
+                                             key={`${reservation.type}-${reservation.id}`}
+                                             onClick={() => { setShowQR(false); setSelectedReservation(reservation); }}
+                                             className="relative bg-white border border-slate-200 shadow-sm hover:shadow-md rounded-xl p-4 cursor-pointer transition-all duration-200 group"
+                                         >
+                                             <div className="flex items-start gap-4 pr-10">
                                                 <div className={`w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 ${reservation.type === 'ticket' ? 'bg-indigo-50 text-indigo-500' : 'bg-teal-50 text-teal-500'
                                                     }`}>
                                                     {reservation.type === 'ticket' ? <Icons.Ticket /> : <Icons.Calendar />}
@@ -551,8 +562,9 @@ const ReservationHistoryPanel = ({ isOpen, onClose, paymentReturn = false }) => 
                                                         showArchived ? handleUnarchive(reservation) : handleArchive(reservation);
                                                     }}
                                                     disabled={archiving}
-                                                    className="p-2 text-slate-300 hover:text-slate-600 hover:bg-slate-50 rounded-full transition opacity-0 group-hover:opacity-100 absolute right-4 top-4"
-                                                    title={showArchived ? 'Restore' : 'Archive'}
+                                                     className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-400 transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-700 sm:opacity-0 sm:group-hover:opacity-100"
+                                                     title={showArchived ? 'Restore' : 'Archive'}
+                                                     aria-label={showArchived ? 'Restore reservation' : 'Archive reservation'}
                                                 >
                                                     {showArchived ? <Icons.Restore /> : <Icons.Archive />}
                                                 </button>
@@ -572,7 +584,7 @@ const ReservationHistoryPanel = ({ isOpen, onClose, paymentReturn = false }) => 
                     onClick={() => setSelectedReservation(null)}
                 >
                     <div
-                        className="w-full max-w-xl relative flex flex-col my-auto"
+                         className="w-full max-w-2xl relative flex flex-col my-auto"
                         onClick={(e) => e.stopPropagation()}
                     >
                         <div
@@ -585,7 +597,9 @@ const ReservationHistoryPanel = ({ isOpen, onClose, paymentReturn = false }) => 
                             <div className="px-5 sm:px-6 py-6 text-center bg-slate-50 border-b border-slate-100 relative">
                                 <button
                                     onClick={() => setSelectedReservation(null)}
-                                    className="absolute right-3 top-3 sm:right-4 sm:top-4 p-1.5 text-slate-400 hover:bg-slate-200 hover:text-slate-700 rounded-full transition"
+                                     aria-label="Close reservation details"
+                                     title="Close"
+                                     className="absolute right-3 top-3 z-10 flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-400 shadow-sm hover:bg-slate-200 hover:text-slate-700 transition sm:right-4 sm:top-4"
                                 >
                                     <Icons.Close />
                                 </button>

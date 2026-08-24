@@ -5,6 +5,8 @@ import { getProfileImageUrl, messageAPI, userAPI, reservationAPI } from '../serv
 import LogoutModal from './common/LogoutModal';
 import AnimalClassifier from './features/ai-scanner/AnimalClassifier';
 import ReservationHistoryPanel from './features/ReservationHistoryPanel';
+import Settings from '../pages/user/Settings';
+import UserProfile from '../pages/user/UserProfile';
 
 const MINIZOO_GAME_URL = (typeof process !== 'undefined' && process.env && process.env.VITE_MINIZOO_GAME_URL) ? process.env.VITE_MINIZOO_GAME_URL : 'https://bulusanzootopia.vercel.app';
 
@@ -102,6 +104,8 @@ const Header = () => {
     const [showSidePanel, setShowSidePanel] = useState(false);
     const [showAIScanner, setShowAIScanner] = useState(false);
     const [showHistoryPanel, setShowHistoryPanel] = useState(false);
+    const [showSettingsPanel, setShowSettingsPanel] = useState(false);
+    const [showProfilePanel, setShowProfilePanel] = useState(false);
     const [showNotificationPanel, setShowNotificationPanel] = useState(false);
     const [showMiniZooGame, setShowMiniZooGame] = useState(false);
     const [notifications, setNotifications] = useState([]);
@@ -398,14 +402,9 @@ const Header = () => {
         }
     };
 
-    const getProfilePath = () => {
-        if (!user) return '/login';
-        if (user.role === 'admin') return '/admin/profile';
-        if (user.role === 'staff') return '/staff/profile';
-        return '/profile';
-    };
-
     const handleOpenReservationHistory = () => { closeSidePanel(); setShowHistoryPanel(true); };
+    const handleOpenSettings = () => { closeSidePanel(); setShowSettingsPanel(true); };
+    const handleOpenProfile = () => { closeSidePanel(); setShowProfilePanel(true); };
     const handleOpenMiniZooGame = () => { closeSidePanel(); setShowMiniZooGame(true); };
     const handleConfirmMiniZooGame = () => {
         setShowMiniZooGame(false);
@@ -638,7 +637,7 @@ const Header = () => {
 
                         <SectionLabel label="Tools & Preferences" />
                         <div className="overflow-hidden rounded-2xl border border-gray-200/80 bg-white shadow-sm shadow-gray-100/70">
-                            <MenuItem iconUrl={ICONS.setting} label="Settings" to="/settings" onClose={closeSidePanel} onNavigate={handleTransitionNavigate} isLast={false} />
+                            <MenuItem iconUrl={ICONS.setting} label="Settings" onClick={handleOpenSettings} isLast={false} />
                             <MenuItem
                                 iconUrl={ICONS.camera}
                                 label="AI Animal Scanner"
@@ -655,10 +654,10 @@ const Header = () => {
                          </div>
                          <div className="mt-5 space-y-3 border-t border-emerald-100 pt-5">
                              {user ? (
-                                 <Link
-                                     to={getProfilePath()}
-                                     onClick={(e) => { e.preventDefault(); closeSidePanel(); handleTransitionNavigate(e, getProfilePath()); }}
-                                      className="group flex items-center gap-3 rounded-2xl border border-green-500 bg-green-400 p-3 transition-all hover:-translate-y-0.5 hover:border-green-600 hover:bg-green-500 hover:shadow-md hover:shadow-emerald-100/70"
+                                  <button
+                                      type="button"
+                                      onClick={handleOpenProfile}
+                                  className="group flex w-full items-center gap-3 rounded-2xl border border-gray-200 bg-white p-3 text-left transition-all hover:-translate-y-0.5 hover:border-emerald-300 hover:bg-emerald-50/50 hover:shadow-md hover:shadow-emerald-100/70"
                                      aria-label={`Open profile for ${displayName}`}
                                  >
                                      <img
@@ -671,10 +670,10 @@ const Header = () => {
                                      <span className="min-w-0 flex-1">
                                          <span className="block truncate text-[13px] font-bold text-[#172018]">{displayName}</span>
                                          <span className="mt-0.5 block truncate text-[11px] text-gray-500">{profileEmail}</span>
-                                          <span className="mt-1 block text-[10px] font-bold uppercase tracking-wider text-[#172018]">View profile</span>
+                                           <span className="mt-1 block text-[10px] font-bold uppercase tracking-wider text-emerald-700">View profile</span>
                                      </span>
                                      <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-white text-gray-400 shadow-sm transition-colors group-hover:text-green-400" aria-hidden="true">›</span>
-                                 </Link>
+                                  </button>
                              ) : (
                                  <Link to="/login" onClick={closeSidePanel} className="block rounded-2xl bg-[#172018] px-4 py-3 text-center text-[13px] font-semibold text-white transition-colors hover:bg-green-400">
                                      Sign in to your account
@@ -695,10 +694,24 @@ const Header = () => {
                              </button>
                          </div>
                      </div>
-             </div>
-             </div>
+              </div>
+              </div>
 
-             <div className={`fixed inset-0 z-[110] flex justify-end transition-all duration-300 ${showAIScanner ? 'visible' : 'invisible'}`}>
+              <div className={`fixed inset-0 z-[125] flex justify-end transition-all duration-300 ${showSettingsPanel ? 'visible' : 'invisible'}`}>
+                  <div className={`absolute inset-0 bg-black/25 backdrop-blur-[2px] transition-opacity duration-300 ${showSettingsPanel ? 'opacity-100' : 'opacity-0'}`} onClick={() => setShowSettingsPanel(false)} />
+                  <div className={`relative h-full w-full overflow-y-auto bg-white shadow-2xl transition-transform duration-300 ease-out sm:w-1/2 sm:min-w-[420px] sm:max-w-[720px] ${showSettingsPanel ? 'translate-x-0' : 'translate-x-full'}`} role="dialog" aria-modal="true" aria-label="Account settings">
+                      <Settings embedded onClose={() => setShowSettingsPanel(false)} />
+                  </div>
+              </div>
+
+              <div className={`fixed inset-0 z-[125] flex justify-end transition-all duration-300 ${showProfilePanel ? 'visible' : 'invisible'}`}>
+                  <div className={`absolute inset-0 bg-black/25 backdrop-blur-[2px] transition-opacity duration-300 ${showProfilePanel ? 'opacity-100' : 'opacity-0'}`} onClick={() => setShowProfilePanel(false)} />
+                  <div className={`relative h-full w-full overflow-y-auto bg-white shadow-2xl transition-transform duration-300 ease-out sm:w-1/2 sm:min-w-[420px] sm:max-w-[720px] ${showProfilePanel ? 'translate-x-0' : 'translate-x-full'}`} role="dialog" aria-modal="true" aria-label="User profile">
+                      <UserProfile embedded onClose={() => setShowProfilePanel(false)} />
+                  </div>
+              </div>
+
+              <div className={`fixed inset-0 z-[110] flex justify-end transition-all duration-300 ${showAIScanner ? 'visible' : 'invisible'}`}>
                 <div
                     className={`absolute inset-0 bg-black/25 backdrop-blur-[2px] transition-opacity duration-300 ${showAIScanner ? 'opacity-100' : 'opacity-0'}`}
                     onClick={() => setShowAIScanner(false)}
