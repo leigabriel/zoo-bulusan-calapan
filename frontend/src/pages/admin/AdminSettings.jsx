@@ -157,7 +157,7 @@ const AdminSettings = () => {
                                 {eventPayment.enabled ? 'Enabled' : 'Disabled'}
                             </span>
                             <div className="w-full max-w-xs">
-                                <label className="block text-sm font-medium text-emerald-900 mb-2">Fee per participant (PHP)</label>
+                                 <label className="block text-sm font-medium text-emerald-900 mb-2">Fixed event reservation fee (PHP)</label>
                                 <input
                                     type="number"
                                     min="0"

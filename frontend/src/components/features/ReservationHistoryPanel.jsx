@@ -676,22 +676,31 @@ const ReservationHistoryPanel = ({ isOpen, onClose, paymentReturn = false }) => 
                                                           <p className="mt-1 text-xs text-emerald-600">Your QR Ph payment has been confirmed and marked as paid.</p>
                                                       </div>
                                                   )}
-                                                  <div className="space-y-2 text-sm">
-                                                     <div className="flex justify-between gap-3"><span className="text-slate-500">Amount</span><span className="font-bold text-slate-800">{getEventAmount(selectedReservation) > 0 ? `₱${getEventAmount(selectedReservation).toFixed(2)}` : 'Not configured'}</span></div>
-                                             <div className="flex justify-between gap-3"><span className="text-slate-500">Method</span><span className="font-semibold text-slate-800">{['qrph', 'gcash'].includes(selectedReservation.payment_method) ? 'QR Ph via PayMongo' : selectedReservation.payment_method === 'pay_at_bulusan' ? 'Pay at Bulusan' : 'Not selected'}</span></div>
-                                                      <div className="flex justify-between gap-3"><span className="text-slate-500">Status</span><span className={`font-bold uppercase ${selectedReservation.payment_status === 'paid' ? 'text-emerald-600' : 'text-amber-600'}`}>{selectedReservation.payment_status || 'unpaid'}</span></div>
-                                                      {selectedReservation.payment_paid_at && <div className="flex justify-between gap-3"><span className="text-slate-500">Paid on</span><span className="font-semibold text-slate-800">{formatSafeDate(selectedReservation.payment_paid_at, { dateStyle: 'medium', timeStyle: 'short' })}</span></div>}
-                                                      {selectedReservation.paymongo_payment_id && <div className="flex justify-between gap-3"><span className="text-slate-500">Payment reference</span><span className="max-w-[55%] break-all text-right font-semibold text-slate-800">{selectedReservation.paymongo_payment_id}</span></div>}
-                                                 </div>
-                                                  {selectedReservation.payment_status === 'paid' ? (
-                                                      <button
-                                                          onClick={handleRefundRequest}
-                                                          disabled={refundLoading || Boolean(selectedReservation.refund_status)}
-                                                          className="mt-4 w-full rounded-xl border border-amber-200 bg-amber-50 py-3 text-xs font-bold uppercase tracking-wider text-amber-700 transition hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-60"
-                                                      >
-                                                          {refundLoading ? 'Submitting...' : selectedReservation.refund_status ? `Refund ${selectedReservation.refund_status}` : 'Request Refund'}
-                                                      </button>
-                                                  ) : eventPaymentConfig.enabled && getEventAmount(selectedReservation) > 0 && (
+                                                   <div className="space-y-2 text-sm">
+                                                      <div className="flex justify-between gap-3"><span className="text-slate-500">Amount</span><span className="font-bold text-slate-800">{getEventAmount(selectedReservation) > 0 ? `₱${getEventAmount(selectedReservation).toFixed(2)}` : 'Not configured'}</span></div>
+                                              <div className="flex justify-between gap-3"><span className="text-slate-500">Method</span><span className="font-semibold text-slate-800">{['qrph', 'gcash'].includes(selectedReservation.payment_method) ? 'QR Ph via PayMongo' : selectedReservation.payment_method === 'pay_at_bulusan' ? 'Pay at Bulusan' : 'Not selected'}</span></div>
+                                                       <div className="flex justify-between gap-3"><span className="text-slate-500">Status</span><span className={`font-bold uppercase ${selectedReservation.payment_status === 'paid' ? 'text-emerald-600' : 'text-amber-600'}`}>{selectedReservation.payment_status || 'unpaid'}</span></div>
+                                                       {selectedReservation.payment_paid_at && <div className="flex justify-between gap-3"><span className="text-slate-500">Paid on</span><span className="font-semibold text-slate-800">{formatSafeDate(selectedReservation.payment_paid_at, { dateStyle: 'medium', timeStyle: 'short' })}</span></div>}
+                                                       {selectedReservation.paymongo_payment_id && <div className="flex justify-between gap-3"><span className="text-slate-500">Payment reference</span><span className="max-w-[55%] break-all text-right font-semibold text-slate-800">{selectedReservation.paymongo_payment_id}</span></div>}
+                                                  </div>
+                                                   {selectedReservation.payment_status === 'paid' ? (
+                                                       <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                                                           <button
+                                                               onClick={handleDownloadPaymentReceipt}
+                                                               disabled={downloadingPayment}
+                                                               className="rounded-xl border border-emerald-200 bg-emerald-50 py-3 text-xs font-bold uppercase tracking-wider text-emerald-700 transition hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-60"
+                                                           >
+                                                               {downloadingPayment ? 'Preparing...' : 'Download Receipt'}
+                                                           </button>
+                                                           <button
+                                                               onClick={handleRefundRequest}
+                                                               disabled={refundLoading || Boolean(selectedReservation.refund_status)}
+                                                               className="rounded-xl border border-amber-200 bg-amber-50 py-3 text-xs font-bold uppercase tracking-wider text-amber-700 transition hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-60"
+                                                           >
+                                                               {refundLoading ? 'Submitting...' : selectedReservation.refund_status ? `Refund ${selectedReservation.refund_status}` : 'Request Refund'}
+                                                           </button>
+                                                       </div>
+                                                   ) : eventPaymentConfig.enabled && getEventAmount(selectedReservation) > 0 && (
                                                      <div className="flex flex-col sm:flex-row gap-3 mt-4">
                                                          <button
                                                              onClick={() => { setPaymentOption('now'); setShowPaymentDemo(true); }}
@@ -763,15 +772,6 @@ const ReservationHistoryPanel = ({ isOpen, onClose, paymentReturn = false }) => 
                             >
                                 {downloading ? 'Preparing...' : 'Download'}
                             </button>
-                            {selectedReservation.type === 'event' && selectedReservation.payment_status === 'paid' && (
-                                <button
-                                    onClick={handleDownloadPaymentReceipt}
-                                    disabled={downloadingPayment}
-                                    className="flex-1 rounded-xl border border-emerald-200 bg-emerald-50 py-3.5 text-xs font-semibold uppercase tracking-wider text-emerald-700 shadow-sm transition hover:bg-emerald-100 disabled:opacity-50"
-                                >
-                                    {downloadingPayment ? 'Preparing...' : 'Payment Receipt'}
-                                </button>
-                            )}
                             <button
                                 onClick={() => selectedReservation.is_archived ? handleUnarchive(selectedReservation) : handleArchive(selectedReservation)}
                                 disabled={archiving}

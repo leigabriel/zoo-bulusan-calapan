@@ -648,57 +648,57 @@ const Header = () => {
                             />
                         </div>
 
-                        <SectionLabel label="Support" />
-                        <div className="overflow-hidden rounded-2xl border border-gray-200/80 bg-white shadow-sm shadow-gray-100/70">
-                            <MenuItem iconUrl={ICONS.help} label="Help Center" to="/help" onClose={closeSidePanel} onNavigate={handleTransitionNavigate} isLast={false} />
-                            <MenuItem iconUrl={ICONS.support} label="Contact Support" onClick={openEmailModal} isLast={true} />
-                        </div>
-                    </div>
-                    <div className="flex-shrink-0 space-y-3 border-t border-emerald-100 bg-white px-4 py-4">
-                        {user ? (
-                            <Link
-                                to={getProfilePath()}
-                                onClick={(e) => { e.preventDefault(); closeSidePanel(); handleTransitionNavigate(e, getProfilePath()); }}
-                                 className="group flex items-center gap-3 rounded-2xl border border-emerald-100 bg-gradient-to-br from-emerald-50 to-lime-50 p-3 transition-all hover:-translate-y-0.5 hover:border-green-400 hover:shadow-md hover:shadow-emerald-100/70"
-                                aria-label={`Open profile for ${displayName}`}
-                            >
-                                <img
-                                    src={avatarSrc}
-                                    alt=""
-                                    className="h-11 w-11 flex-shrink-0 rounded-2xl border-2 border-white object-cover shadow-sm"
-                                    referrerPolicy="no-referrer"
-                                    onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/profile-img/default-avatar.svg'; }}
-                                />
-                                <span className="min-w-0 flex-1">
-                                    <span className="block text-[13px] font-bold text-[#172018] truncate">{displayName}</span>
-                                    <span className="mt-0.5 block truncate text-[11px] text-gray-500">{profileEmail}</span>
-                                     <span className="mt-1 block text-[10px] font-semibold uppercase tracking-wider text-green-400">View profile</span>
-                                </span>
-                                 <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-white text-gray-400 shadow-sm transition-colors group-hover:text-green-400" aria-hidden="true">›</span>
-                            </Link>
-                        ) : (
-                             <Link to="/login" onClick={closeSidePanel} className="block rounded-2xl bg-[#172018] px-4 py-3 text-center text-[13px] font-semibold text-white transition-colors hover:bg-green-400">
-                                Sign in to your account
-                            </Link>
-                        )}
-                        <button
-                            type="button"
-                            onClick={() => { closeSidePanel(); setShowLogoutModal(true); }}
-                            className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-red-500 transition-colors hover:bg-red-50"
-                        >
-                            <img
-                                src={ICONS.logout}
-                                alt="Sign Out"
-                                className="w-4 h-4 object-contain flex-shrink-0"
-                                style={{ filter: 'invert(30%) sepia(80%) saturate(700%) hue-rotate(330deg) opacity(0.75)' }}
-                            />
-                            <span className="text-[13px] font-medium">Sign Out</span>
-                        </button>
-                    </div>
-                </div>
-            </div>
+                         <SectionLabel label="Support" />
+                         <div className="overflow-hidden rounded-2xl border border-gray-200/80 bg-white shadow-sm shadow-gray-100/70">
+                             <MenuItem iconUrl={ICONS.help} label="Help Center" to="/help" onClose={closeSidePanel} onNavigate={handleTransitionNavigate} isLast={false} />
+                             <MenuItem iconUrl={ICONS.support} label="Contact Support" onClick={openEmailModal} isLast={true} />
+                         </div>
+                         <div className="mt-5 space-y-3 border-t border-emerald-100 pt-5">
+                             {user ? (
+                                 <Link
+                                     to={getProfilePath()}
+                                     onClick={(e) => { e.preventDefault(); closeSidePanel(); handleTransitionNavigate(e, getProfilePath()); }}
+                                      className="group flex items-center gap-3 rounded-2xl border border-green-500 bg-green-400 p-3 transition-all hover:-translate-y-0.5 hover:border-green-600 hover:bg-green-500 hover:shadow-md hover:shadow-emerald-100/70"
+                                     aria-label={`Open profile for ${displayName}`}
+                                 >
+                                     <img
+                                         src={avatarSrc}
+                                         alt=""
+                                         className="h-11 w-11 flex-shrink-0 rounded-2xl border-2 border-white object-cover shadow-sm"
+                                         referrerPolicy="no-referrer"
+                                         onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/profile-img/default-avatar.svg'; }}
+                                     />
+                                     <span className="min-w-0 flex-1">
+                                         <span className="block truncate text-[13px] font-bold text-[#172018]">{displayName}</span>
+                                         <span className="mt-0.5 block truncate text-[11px] text-gray-500">{profileEmail}</span>
+                                          <span className="mt-1 block text-[10px] font-bold uppercase tracking-wider text-[#172018]">View profile</span>
+                                     </span>
+                                     <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-white text-gray-400 shadow-sm transition-colors group-hover:text-green-400" aria-hidden="true">›</span>
+                                 </Link>
+                             ) : (
+                                 <Link to="/login" onClick={closeSidePanel} className="block rounded-2xl bg-[#172018] px-4 py-3 text-center text-[13px] font-semibold text-white transition-colors hover:bg-green-400">
+                                     Sign in to your account
+                                 </Link>
+                             )}
+                             <button
+                                 type="button"
+                                 onClick={() => { closeSidePanel(); setShowLogoutModal(true); }}
+                                  className="flex w-full items-center gap-3 rounded-xl bg-red-300 px-3 py-2.5 text-red-900 transition-colors hover:bg-red-400"
+                             >
+                                 <img
+                                     src={ICONS.logout}
+                                     alt="Sign Out"
+                                     className="w-4 h-4 object-contain flex-shrink-0"
+                                     style={{ filter: 'invert(30%) sepia(80%) saturate(700%) hue-rotate(330deg) opacity(0.75)' }}
+                                 />
+                                 <span className="text-[13px] font-medium">Sign Out</span>
+                             </button>
+                         </div>
+                     </div>
+             </div>
+             </div>
 
-            <div className={`fixed inset-0 z-[110] flex justify-end transition-all duration-300 ${showAIScanner ? 'visible' : 'invisible'}`}>
+             <div className={`fixed inset-0 z-[110] flex justify-end transition-all duration-300 ${showAIScanner ? 'visible' : 'invisible'}`}>
                 <div
                     className={`absolute inset-0 bg-black/25 backdrop-blur-[2px] transition-opacity duration-300 ${showAIScanner ? 'opacity-100' : 'opacity-0'}`}
                     onClick={() => setShowAIScanner(false)}

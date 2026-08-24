@@ -36,7 +36,8 @@ const extractCheckout = (event) => {
     const payment = Array.isArray(attributes.payments) ? attributes.payments[0] : null;
     return {
         id: resource?.id || null,
-        checkoutSessionId: attributes.checkout_session_id || attributes.checkout_session?.id || null,
+        checkoutSessionId: attributes.checkout_session_id || attributes.checkout_session?.id ||
+            (resource?.type === 'checkout_session' ? resource.id : null),
         paymentId: payment?.id || attributes.payment_id || attributes.payment_intent?.id ||
             (resource?.type === 'payment' || resource?.type === 'qr' ? resource.id : null),
         metadata: { ...(attributes.metadata || {}), ...(attributes.payment_intent?.attributes?.metadata || {}) },
@@ -65,7 +66,9 @@ const verifyWebhook = (req) => {
 };
 
 const updatePaymentFromWebhook = async (event) => {
-    const eventType = event?.data?.type || event?.data?.attributes?.type || event?.type || '';
+    // PayMongo wraps webhook events in a resource with type "event". The
+    // actual event name is stored in data.attributes.type.
+    const eventType = event?.data?.attributes?.type || event?.type || event?.data?.type || '';
     const checkout = extractCheckout(event);
     const metadata = checkout.metadata || {};
     const checkoutId = checkout.checkoutSessionId || (event?.data?.type === 'checkout_session' ? checkout.id : null);
@@ -77,24 +80,24 @@ const updatePaymentFromWebhook = async (event) => {
         metadata.reservation_id
     );
     if (!reservation) {
-        console.warn('PayMongo webhook reservation mismatch:', eventType, checkout.id || checkout.paymentId || 'unknown');
-        return;
+        throw new Error(`PayMongo webhook reservation mismatch: ${eventType}`);
     }
 
     if (eventType === 'qr.paid' || eventType === 'payment.paid' || eventType.endsWith('.paid')) {
-        if (reservation.payment_status === 'paid') return;
-        await Reservation.updateEventPayment(reservation.id, {
+        if (reservation.payment_status === 'paid') return true;
+        return Reservation.updateEventPayment(reservation.id, {
             paymentStatus: 'paid',
             paymentId: checkout.paymentId,
             paidAt: new Date()
         });
     } else if (eventType.includes('failed')) {
-        await Reservation.updateEventPayment(reservation.id, { paymentStatus: 'failed' });
+        return Reservation.updateEventPayment(reservation.id, { paymentStatus: 'failed' });
     } else if (eventType.includes('expired')) {
-        await Reservation.updateEventPayment(reservation.id, { paymentStatus: 'expired' });
+        return Reservation.updateEventPayment(reservation.id, { paymentStatus: 'expired' });
     } else if (eventType.includes('refunded')) {
-        await Reservation.updateEventPayment(reservation.id, { paymentStatus: 'refunded' });
+        return Reservation.updateEventPayment(reservation.id, { paymentStatus: 'refunded' });
     }
+    return true;
 };
 
 exports.getEventPaymentConfig = (req, res) => {
@@ -234,13 +237,12 @@ exports.handleWebhook = async (req, res) => {
             console.warn('PayMongo webhook contained invalid JSON.');
             return res.status(400).json({ success: false, message: 'Invalid webhook body.' });
         }
-        const eventId = event?.id || event?.data?.id || crypto.createHash('sha256').update(req.body).digest('hex');
-        const [claim] = await db.query('INSERT IGNORE INTO paymongo_webhook_events (event_id) VALUES (?)', [eventId]);
-        if (claim.affectedRows === 0) return res.status(200).json({ success: true });
         await updatePaymentFromWebhook(event);
+        const eventId = event?.id || event?.data?.id || crypto.createHash('sha256').update(req.body).digest('hex');
+        await db.query('INSERT IGNORE INTO paymongo_webhook_events (event_id) VALUES (?)', [eventId]);
         return res.status(200).json({ success: true });
     } catch (error) {
         console.error('Error handling PayMongo webhook:', error);
-        return res.status(200).json({ success: true });
+        return res.status(500).json({ success: false, message: 'Webhook processing failed.' });
     }
 };

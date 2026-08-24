@@ -386,7 +386,7 @@ const AdminReservations = ({ globalSearch = '' }) => {
 
             {showModal && selectedReservation && (
                 <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-white border border-green-200 rounded-2xl w-full max-w-lg">
+                    <div className="bg-white border border-green-200 rounded-2xl w-full max-w-3xl">
                         <div className="p-6 border-b border-green-200 flex items-center justify-between">
                             <h3 className="text-xl font-bold text-gray-900">Reservation Details</h3>
                             <button onClick={() => { setShowModal(false); setSelectedReservation(null); }} className="p-2 hover:bg-green-50 rounded-lg text-gray-500 hover:text-gray-900 transition">
