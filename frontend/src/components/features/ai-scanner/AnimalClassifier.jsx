@@ -9,7 +9,7 @@ import {
     detectAnimal
 } from '../../../services/ai-detection-service';
 import { fetchAnimalDescription } from '../../../services/animal-description-service';
-import { ANIMAL_DATABASE, AI_SOURCE } from '../../../config/ai-service-config';
+import { ANIMAL_DATABASE } from '../../../config/ai-service-config';
 
 const UserIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
@@ -51,6 +51,7 @@ const AnimalClassifier = ({ embedded = false }) => {
     const fileInputRef = useRef(null);
     const currentFileName = useRef('');
     const messageIdRef = useRef(1);
+    const objectUrlsRef = useRef([]);
     const [analysisImage, setAnalysisImage] = useState(null);
 
     const [showCameraModal, setShowCameraModal] = useState(false);
@@ -84,11 +85,6 @@ const AnimalClassifier = ({ embedded = false }) => {
 
     useEffect(() => {
         const initModel = async () => {
-            if (AI_SOURCE === 'animaldetect') {
-                setIsModelLoading(false);
-                return;
-            }
-
             if (isModelReady()) {
                 setIsModelLoading(false);
                 return;
@@ -98,7 +94,7 @@ const AnimalClassifier = ({ embedded = false }) => {
                 await loadLocalModel();
                 setIsModelLoading(false);
             } catch {
-                addBotMessage("🐵");
+                addBotMessage('The local AI model could not be loaded. Please refresh and try again.');
                 setIsModelLoading(false);
             }
         };
@@ -110,8 +106,10 @@ const AnimalClassifier = ({ embedded = false }) => {
     }, [messages, isProcessing]);
 
     useEffect(() => {
+        const objectUrls = objectUrlsRef.current;
         return () => {
             stopCameraStream();
+            objectUrls.forEach((url) => URL.revokeObjectURL(url));
         };
     }, [stopCameraStream]);
 
@@ -121,6 +119,7 @@ const AnimalClassifier = ({ embedded = false }) => {
 
         currentFileName.current = file.name;
         const imageUrl = URL.createObjectURL(file);
+        objectUrlsRef.current.push(imageUrl);
 
         setMessages(prev => [...prev, { id: `${Date.now()}-${messageIdRef.current++}`, role: 'user', type: 'image', content: imageUrl }]);
 
@@ -244,16 +243,13 @@ const AnimalClassifier = ({ embedded = false }) => {
     }, [cameraReady, cameraFacing, closeCameraModal, isMobile]);
 
     const addBotMessage = (text, meta = null) => {
-        setMessages(prev => [...prev, { id: `${Date.now()}-${messageIdRef.current++}`, role: 'bot', type: meta ? 'result' : 'text', content: text, meta }]);
+        const id = `${Date.now()}-${messageIdRef.current++}`;
+        setMessages(prev => [...prev, { id, role: 'bot', type: meta ? 'result' : 'text', content: text, meta }]);
+        return id;
     };
 
     const runPrediction = async () => {
         if (!imageRef.current) {
-            return;
-        }
-
-        if (AI_SOURCE === 'local' && !isModelReady()) {
-            addBotMessage("Please wait, AI model is still loading...");
             return;
         }
 
@@ -264,15 +260,13 @@ const AnimalClassifier = ({ embedded = false }) => {
                 const errorMessage = result.error || "Sorry, I couldn't identify the animal in this image.";
                 if (result.errorType === 'EMPTY_RESULT' || result.errorType === 'NO_ANIMAL_DETECTED') {
                     addBotMessage("I couldn't detect any animal in this image. Please try a clearer photo with the animal more visible.");
-                } else if (result.fallbackAttempted) {
-                    addBotMessage(`${errorMessage} (Both AI services were tried)`);
                 } else {
                     addBotMessage(errorMessage);
                 }
                 return;
             }
 
-            const { animal: animalName, confidence, category, isBulusanAnimal, fallback } = result;
+            const { animal: animalName, confidence, category, isBulusanAnimal } = result;
             const confidencePct = parseFloat(confidence);
 
             if (animalName === 'Unknown' || confidencePct === 0) {
@@ -280,47 +274,53 @@ const AnimalClassifier = ({ embedded = false }) => {
                 return;
             }
 
-            let animalDescription = "";
-            let animalCategory = category || "Animal";
-            let wikipediaData = null;
-
-            try {
-                const descriptionResult = await fetchAnimalDescription(animalName);
-
-                if (descriptionResult.success && descriptionResult.description) {
-                    animalDescription = descriptionResult.description;
-                    animalCategory = descriptionResult.category || category || "Animal";
-                    wikipediaData = {
-                        title: descriptionResult.title,
-                        thumbnail: descriptionResult.thumbnail,
-                        pageUrl: descriptionResult.pageUrl,
-                        scientificName: descriptionResult.scientificName
-                    };
-                } else {
-                    animalDescription = `A ${animalName.toLowerCase()} has been detected with ${confidencePct}% confidence.`;
-                }
-            } catch {
-                animalDescription = `A ${animalName.toLowerCase()} has been detected. Description unavailable at this time.`;
-            }
-
             const bulusanInfo = ANIMAL_INFO[animalName];
             const isInBulusan = bulusanInfo?.bulusan || isBulusanAnimal || false;
 
             saveToDatabase(animalName, confidencePct);
 
-            let resultMessage = animalDescription;
-            if (fallback) {
-                resultMessage += '';
-            }
-
-            addBotMessage(resultMessage, {
+            const resultMessageId = addBotMessage(`A ${animalName.toLowerCase()} has been identified with ${confidencePct}% confidence.`, {
                 animal: animalName,
                 confidence: confidencePct,
                 icon: animalName.toLowerCase(),
                 isBulusanAnimal: isInBulusan,
-                category: animalCategory,
-                wikipediaData
+                category: category || "Animal",
+                wikipediaData: null,
+                wikipediaLoading: true
             });
+
+            fetchAnimalDescription(animalName)
+                .then((descriptionResult) => {
+                    if (!descriptionResult.success || !descriptionResult.description) {
+                        setMessages(prev => prev.map(message => message.id === resultMessageId
+                            ? { ...message, meta: { ...message.meta, wikipediaLoading: false } }
+                            : message));
+                        return;
+                    }
+
+                    setMessages(prev => prev.map(message => message.id === resultMessageId
+                        ? {
+                            ...message,
+                            content: descriptionResult.description,
+                            meta: {
+                                ...message.meta,
+                                category: descriptionResult.category || category || "Animal",
+                                wikipediaLoading: false,
+                                wikipediaData: {
+                                    title: descriptionResult.title,
+                                    thumbnail: descriptionResult.thumbnail,
+                                    pageUrl: descriptionResult.pageUrl,
+                                    scientificName: descriptionResult.scientificName
+                                }
+                            }
+                        }
+                        : message));
+                })
+                .catch(() => {
+                    setMessages(prev => prev.map(message => message.id === resultMessageId
+                        ? { ...message, meta: { ...message.meta, wikipediaLoading: false } }
+                        : message));
+                });
 
         } catch (error) {
             const userMessage = error.message || "Sorry, I encountered an error analyzing that image. Please try again.";
@@ -424,7 +424,7 @@ const AnimalClassifier = ({ embedded = false }) => {
                                                             <p className="text-[10px] uppercase tracking-widest font-bold text-[#6a7b6d]">Animal identified</p>
                                                             <h3 className="mt-1 font-bold text-lg text-[#17251b] break-words">{msg.meta.animal}</h3>
                                                         </div>
-                                                         <span className="shrink-0 rounded-full px-2.5 py-1 text-[10px] uppercase font-bold bg-[#e5f0e3] text-[#315b37]">{msg.meta.category || 'Animal'}</span>
+                                                         {/* <span className="shrink-0 rounded-full px-2.5 py-1 text-[10px] uppercase font-bold bg-[#e5f0e3] text-[#315b37]">{msg.meta.category || 'Animal'}</span> */}
                                                     </div>
                                                     <div className="flex items-center gap-2 mt-3">
                                                         <div className="h-2 flex-1 bg-gray-200 rounded-full overflow-hidden">
@@ -435,6 +435,9 @@ const AnimalClassifier = ({ embedded = false }) => {
                                                 </div>
                                             </div>
                                              <p className="text-[#506057] leading-relaxed text-sm [overflow-wrap:anywhere]">{msg.content}</p>
+                                            {msg.meta.wikipediaLoading && (
+                                                <p className="mt-2 text-[11px] font-medium text-[#718078]">Loading Wikipedia details...</p>
+                                            )}
                                             {msg.meta.wikipediaData?.scientificName && (
                                                  <p className="mt-3 text-xs text-[#718078]"><span className="font-semibold text-[#405047]">Scientific name:</span> {msg.meta.wikipediaData.scientificName}</p>
                                             )}

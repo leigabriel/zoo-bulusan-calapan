@@ -440,16 +440,16 @@ const Header = () => {
             >
                 <div className="mx-auto px-4 sm:px-6 lg:px-10 max-w-[1800px]" style={{ height: '56px' }}>
                     <div className="flex items-center h-full">
-                        <div className="flex items-center flex-shrink-0 w-[180px]">
-                            <Link to="/" className="flex items-center" onClick={(e) => { e.preventDefault(); setIsMenuOpen(false); handleTransitionNavigate(e, '/'); }}>
+                        <div className="flex min-w-0 flex-shrink-0 items-center lg:w-[180px]">
+                            <Link to="/" className="flex min-w-0 items-center" onClick={(e) => { e.preventDefault(); setIsMenuOpen(false); handleTransitionNavigate(e, '/'); }}>
                                 <img src="/bz-url-logo.png" alt="Logo" className="w-7 h-7 object-contain mr-2" />
-                                <span className="text-[18px] font-bold text-[#212631] tracking-tight">
+                                <span className="whitespace-nowrap text-[18px] font-bold text-[#212631] tracking-tight">
                                     BULUSAN ZOO
                                 </span>
                             </Link>
                         </div>
 
-                        <nav className="hidden md:flex flex-1 items-center justify-center">
+                        <nav className="hidden lg:flex flex-1 items-center justify-center">
                             <div className="flex items-center border border-gray-500 shadow-md shadow-gray-400 gap-0.5 bg-green-400 rounded-full px-1.5 py-1.5">
                                 {NAV_LINKS.map((link) => (
                                     <Link
@@ -467,7 +467,7 @@ const Header = () => {
                             </div>
                         </nav>
 
-                        <div className="hidden md:flex items-center justify-end gap-2 flex-shrink-0 w-[180px]">
+                        <div className="hidden w-[180px] flex-shrink-0 items-center justify-end gap-2 lg:flex xl:w-[260px]">
                             <Link to="/reservations" onClick={(e) => { e.preventDefault(); handleTransitionNavigate(e, '/reservations'); }}>
                                 <button className="px-4 py-1.5 rounded-full bg-gray-900 text-white text-[13px] font-medium hover:bg-gray-700 transition-colors whitespace-nowrap">
                                     Reserve
@@ -492,7 +492,7 @@ const Header = () => {
                                         referrerPolicy="no-referrer"
                                         onError={(e) => { e.target.onerror = null; e.target.src = '/profile-img/default-avatar.svg'; }}
                                     />
-                                    <span className="text-[13px] font-medium text-gray-700 hidden lg:block max-w-[80px] truncate">
+                                    <span className="hidden max-w-[80px] truncate text-[13px] font-medium text-gray-700 xl:block">
                                         {displayName}
                                     </span>
                                 </button>
@@ -505,7 +505,7 @@ const Header = () => {
                             )}
                         </div>
 
-                        <div className="flex md:hidden items-center gap-1 ml-auto">
+                        <div className="ml-auto flex flex-shrink-0 items-center gap-1 lg:hidden">
                             <Link to="/reservations" onClick={(e) => { e.preventDefault(); handleTransitionNavigate(e, '/reservations'); }} className="flex items-center justify-center w-9 h-9 rounded-full hover:bg-gray-100 transition-colors flex-shrink-0">
                                 <img src={ICONS.ticket} alt="Reserve" className="w-[18px] h-[18px] object-contain opacity-55" />
                             </Link>
@@ -516,7 +516,7 @@ const Header = () => {
                 </div>
 
                 <div
-                    className={`md:hidden absolute top-full left-0 w-full bg-white border-t border-gray-100 shadow-xl overflow-hidden transition-all duration-300 ease-in-out origin-top flex flex-col ${isMenuOpen ? 'max-h-[80vh] opacity-100' : 'max-h-0 opacity-0 pointer-events-none'}`}
+                    className={`absolute left-0 top-full flex w-full origin-top flex-col overflow-y-auto border-t border-gray-100 bg-white shadow-xl transition-all duration-300 ease-in-out lg:hidden ${isMenuOpen ? 'max-h-[calc(100dvh-56px)] opacity-100' : 'max-h-0 opacity-0 pointer-events-none'}`}
                 >
                     <div className="flex flex-col p-4 gap-1">
                         {user && (

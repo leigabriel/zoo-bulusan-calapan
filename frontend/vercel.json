@@ -1,7 +1,7 @@
 {
   "rewrites": [
     {
-      "source": "/((?!assets|models|profile-img|favicon|.*\\..*).*)",
+      "source": "/((?!assets|model|profile-img|favicon|.*\\..*).*)",
       "destination": "/index.html"
     }
   ],
@@ -16,11 +16,11 @@
       ]
     },
     {
-      "source": "/models/(.*)",
+      "source": "/model/(.*)",
       "headers": [
         {
           "key": "Cache-Control",
-          "value": "public, max-age=86400"
+          "value": "public, max-age=0, must-revalidate"
         }
       ]
     }

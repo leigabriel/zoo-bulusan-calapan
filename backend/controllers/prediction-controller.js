@@ -1,5 +1,8 @@
 const db = require('../config/database');
 
+const MODEL_CLASSES = ['Monkey', 'Tiger', 'Parrot', 'Deer', 'Dove', 'Rabbit', 'Horse', 'Ostrich', 'Owl', 'Eagle', 'Human'];
+const emptyModelStats = () => Object.fromEntries(MODEL_CLASSES.map(animal => [animal, 0]));
+
 exports.getPredictions = async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
@@ -19,11 +22,7 @@ exports.getPredictions = async (req, res) => {
             GROUP BY animal_name
         `);
             
-        const stats = {
-            Bear: 0, Bird: 0, Cat: 0, Cow: 0, Deer: 0, Dog: 0, Dolphin: 0,
-            Elephant: 0, Giraffe: 0, Horse: 0, Kangaroo: 0, Lion: 0,
-            Panda: 0, Tiger: 0, Zebra: 0
-        };
+        const stats = emptyModelStats();
 
         statsResult.forEach(row => {
             if (Object.prototype.hasOwnProperty.call(stats, row.animal_name)) {
@@ -60,11 +59,7 @@ exports.getStats = async (req, res) => {
             GROUP BY animal_name
         `);
             
-        const stats = {
-            Bear: 0, Bird: 0, Cat: 0, Cow: 0, Deer: 0, Dog: 0, Dolphin: 0,
-            Elephant: 0, Giraffe: 0, Horse: 0, Kangaroo: 0, Lion: 0,
-            Panda: 0, Tiger: 0, Zebra: 0
-        };
+        const stats = emptyModelStats();
 
         statsResult.forEach(row => {
             if (Object.prototype.hasOwnProperty.call(stats, row.animal_name)) {

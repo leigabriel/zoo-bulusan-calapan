@@ -6,7 +6,6 @@ import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 import { ReactLenis } from 'lenis/react';
 import AIFloatingButton from '../../components/common/AIFloatingButton';
-import LetterHoverTitle from '../../components/common/LetterHoverTitle';
 import { userAPI } from '../../services/api-client';
 
 gsap.registerPlugin(ScrollTrigger);
@@ -76,7 +75,7 @@ const Plants = () => {
             <div className="relative min-h-screen bg-white text-black">
                 <Header />
                 <div className="flex min-h-[50vh] w-full flex-col items-center justify-center px-4 pt-20 md:min-h-[60vh]">
-                    <LetterHoverTitle className="text-center text-[4rem] leading-none tracking-tight sm:text-[6rem] md:text-[8rem] lg:text-[10rem]">Discover Our Plants</LetterHoverTitle>
+                    <h1 className="w-full max-w-full text-center text-[clamp(3rem,11vw,10rem)] font-bold leading-[1.05] tracking-tight">Discover Our Plants</h1>
                 </div>
                 <main ref={gridRef} className="relative z-10 mx-auto min-h-screen w-full max-w-[1800px] bg-white px-4 pb-32 md:px-8">
                     {loading && <div className="flex items-center justify-center py-40"><div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-200 border-t-black" /></div>}

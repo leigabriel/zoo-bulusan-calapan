@@ -1,7 +1,10 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { STORAGE_KEYS, predictionAPI } from '../../services/api-client';
 import Chart from 'react-apexcharts';
 import { notify } from '../../utils/toast';
+import { ANIMAL_CLASSES } from '../../config/ai-service-config';
+
+const EMPTY_MODEL_STATS = Object.fromEntries(ANIMAL_CLASSES.map(animal => [animal, 0]));
 
 const Icons = {
     Chart: () => (
@@ -74,7 +77,7 @@ const Icons = {
 
 const AnimalAnalytics = () => {
     const [records, setRecords] = useState([]);
-    const [stats, setStats] = useState({ Bear: 0, Bird: 0, Cat: 0, Cow: 0, Deer: 0, Dog: 0, Dolphin: 0, Elephant: 0, Giraffe: 0, Horse: 0, Kangaroo: 0, Lion: 0, Panda: 0, Tiger: 0, Zebra: 0 });
+    const [stats, setStats] = useState(EMPTY_MODEL_STATS);
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [totalRecords, setTotalRecords] = useState(0);
@@ -94,13 +97,7 @@ const AnimalAnalytics = () => {
     const weightsInputRef = useRef(null);
 
     const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-    const maxStatValue = Math.max(...Object.values(stats), 1);
-
-    useEffect(() => {
-        fetchPredictions();
-    }, [page]);
-
-    const fetchPredictions = async () => {
+    const fetchPredictions = useCallback(async () => {
         try {
             setLoading(true);
             setError(null);
@@ -111,7 +108,7 @@ const AnimalAnalytics = () => {
                 setRecords(Array.isArray(data.predictions) ? data.predictions : []);
                 setTotalRecords(data.total || 0);
                 setTotalPages(data.totalPages || 1);
-                setStats(data.stats || stats);
+                setStats(data.stats || EMPTY_MODEL_STATS);
             } else {
                 throw new Error((data && data.message) || 'Failed to fetch predictions');
             }
@@ -122,7 +119,11 @@ const AnimalAnalytics = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [page]);
+
+    useEffect(() => {
+        fetchPredictions();
+    }, [fetchPredictions]);
 
     const handleDelete = async () => {
         if (selectedIds.length === 0) {
@@ -665,9 +666,9 @@ const AnimalAnalytics = () => {
                                     <div className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-medium">
                                         Active
                                     </div>
-                                    <span className="text-gray-500 text-sm">/models/model.json</span>
+                                    <span className="text-gray-500 text-sm">/model/bulusanzoo_machine_learning/model.json</span>
                                 </div>
-                                <p className="text-xs text-gray-500 mt-2">15 animal classes • 19 weight shards</p>
+                                <p className="text-xs text-gray-500 mt-2">11 classes • 3 weight shards</p>
                             </div>
 
                             {/* Upload Success State */}

@@ -6,7 +6,6 @@ import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 import { ReactLenis } from 'lenis/react';
 import AIFloatingButton from '../../components/common/AIFloatingButton';
-import LetterHoverTitle from '../../components/common/LetterHoverTitle';
 import { userAPI } from '../../services/api-client';
 
 gsap.registerPlugin(ScrollTrigger);
@@ -139,7 +138,7 @@ const Animals = () => {
 
                 {/* Hero Section - Clean Style */}
                 <div className="w-full min-h-[50vh] md:min-h-[60vh] flex flex-col items-center justify-center px-4 pt-20">
-                    <LetterHoverTitle className="text-[4rem] sm:text-[6rem] md:text-[9rem] lg:text-[11rem] leading-none tracking-tight text-black text-center">Meet Our Animals</LetterHoverTitle>
+                    <h1 className="w-full max-w-full text-center text-[clamp(3rem,12vw,11rem)] font-bold leading-[1.05] tracking-tight text-black">Meet Our Animals</h1>
                 </div>
 
                 {/* Grid Section */}

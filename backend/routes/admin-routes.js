@@ -14,8 +14,7 @@ const { isConfigured: isCloudinaryConfigured } = require('../config/cloudinary')
 // multer for model uploads
 const modelStorage = multer.diskStorage({
     destination: function (req, file, cb) {
-        // Upload to frontend public/models directory
-        const modelsPath = path.join(__dirname, '../../frontend/public/models');
+        const modelsPath = path.join(__dirname, '../../frontend/public/model/bulusanzoo_machine_learning');
         cb(null, modelsPath);
     },
     filename: function (req, file, cb) {

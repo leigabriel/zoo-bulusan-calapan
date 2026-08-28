@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, motion as Motion } from 'framer-motion';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useNavigate } from 'react-router-dom';
@@ -7,7 +7,6 @@ import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 import { ReactLenis } from 'lenis/react';
 import AIFloatingButton from '../../components/common/AIFloatingButton';
-import LetterHoverTitle from '../../components/common/LetterHoverTitle';
 import { userAPI, reservationAPI } from '../../services/api-client';
 import { useAuth } from '../../hooks/use-auth';
 import { sanitizeInput, sanitizeEmail, sanitizePhone } from '../../utils/sanitize';
@@ -299,7 +298,7 @@ const Events = () => {
                 <Header />
 
                 <div className="w-full min-h-[40vh] md:min-h-[60vh] flex flex-col items-center justify-center px-4 pt-24 pb-8">
-                    <LetterHoverTitle className="text-[3.5rem] sm:text-[6rem] md:text-[9rem] lg:text-[11rem] leading-none tracking-tight text-black text-center break-words w-full">Events</LetterHoverTitle>
+                    <h1 className="w-full max-w-full text-center text-[clamp(3.5rem,12vw,11rem)] font-bold leading-[1.05] tracking-tight text-black">Events</h1>
                 </div>
 
                 <div className="max-w-8xl mx-auto px-4 md:px-8 pb-20 md:pb-32">
@@ -351,7 +350,7 @@ const Events = () => {
 
                             <div className="grid grid-cols-7 bg-[#F2F0EB]">
                                 <AnimatePresence mode="wait">
-                                    <motion.div
+                                     <Motion.div
                                         key={`${calYear}-${calMonth}-${filter}`}
                                         className="contents"
                                         initial={{ opacity: 0 }}
@@ -412,7 +411,7 @@ const Events = () => {
                                                 </div>
                                             );
                                         })}
-                                    </motion.div>
+                                     </Motion.div>
                                 </AnimatePresence>
                             </div>
 
@@ -547,7 +546,7 @@ const Events = () => {
 
                 <AnimatePresence>
                     {selectedEvent && (
-                        <motion.div
+                        <Motion.div
                             key="modal-backdrop"
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
@@ -556,7 +555,7 @@ const Events = () => {
                             className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 md:p-8"
                             onClick={(e) => e.target === e.currentTarget && setSelectedEvent(null)}
                         >
-                            <motion.div
+                            <Motion.div
                                 key="modal-panel"
                                 initial={{ opacity: 0, y: 30 }}
                                 animate={{ opacity: 1, y: 0 }}
@@ -620,16 +619,16 @@ const Events = () => {
                                         </div>
                                     )}
                                 </div>
-                            </motion.div>
-                        </motion.div>
+                            </Motion.div>
+                        </Motion.div>
                     )}
                 </AnimatePresence>
 
                 <AnimatePresence>
                     {showSubmitConfirm && (
                         <div className="fixed inset-0 z-[250] flex items-center justify-center p-4">
-                            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-                            <motion.div
+                            <Motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+                            <Motion.div
                                 initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
                                 className="bg-white rounded-2xl w-full max-w-md relative z-10 overflow-hidden shadow-2xl p-6 md:p-8 text-center"
                             >
@@ -666,7 +665,7 @@ const Events = () => {
                                         {isSubmitting ? 'Wait...' : 'Confirm'}
                                     </button>
                                 </div>
-                            </motion.div>
+                            </Motion.div>
                         </div>
                     )}
                 </AnimatePresence>
@@ -674,8 +673,8 @@ const Events = () => {
                 <AnimatePresence>
                     {showConfirmation && confirmationData && (
                         <div className="fixed inset-0 z-[300] flex items-center justify-center p-4">
-                            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-                            <motion.div
+                            <Motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+                            <Motion.div
                                 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }}
                                 className="bg-white rounded-2xl w-full max-w-md p-8 md:p-10 relative z-10 text-center shadow-2xl"
                             >
@@ -696,7 +695,7 @@ const Events = () => {
                                         Dismiss
                                     </button>
                                 </div>
-                            </motion.div>
+                            </Motion.div>
                         </div>
                     )}
                 </AnimatePresence>

@@ -439,18 +439,18 @@ const UserProfile = ({ embedded = false, onClose }) => {
             </div>
 
             {selectedFile && (
-                <div className="fixed bottom-10 left-1/2 -translate-x-1/2 flex items-center gap-6 px-8 py-4 bg-white rounded-full shadow-2xl border border-gray-100 z-50 animate-in slide-in-from-bottom-10">
-                    <p className="text-sm font-extrabold text-gray-900">Update photo?</p>
-                    <div className="flex gap-2">
+                <div className="fixed bottom-4 left-4 right-4 z-50 flex items-center justify-between gap-3 rounded-2xl border border-gray-100 bg-white px-4 py-3 shadow-2xl animate-in slide-in-from-bottom-10 sm:bottom-10 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:gap-6 sm:rounded-full sm:px-8 sm:py-4">
+                    <p className="whitespace-nowrap text-sm font-extrabold text-gray-900">Update photo?</p>
+                    <div className="flex min-w-0 gap-1 sm:gap-2">
                         <button onClick={() => { setSelectedFile(null); setImagePreview(null); }} className="px-4 py-2 text-sm font-bold text-gray-400">Cancel</button>
-                        <button onClick={handleImageUpload} disabled={uploadingImage} className="bg-emerald-600 text-white px-6 py-2 rounded-full text-sm font-bold shadow-lg shadow-emerald-100">Update</button>
+                        <button onClick={handleImageUpload} disabled={uploadingImage} className="rounded-full bg-emerald-600 px-4 py-2 text-sm font-bold text-white shadow-lg shadow-emerald-100 sm:px-6">Update</button>
                     </div>
                 </div>
             )}
 
             {showPasswordModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-md p-4">
-                    <div className="bg-white rounded-[2rem] p-8 w-full max-w-md shadow-2xl">
+                    <div className="max-h-[calc(100dvh-2rem)] w-full max-w-md overflow-y-auto rounded-[2rem] bg-white p-5 shadow-2xl sm:p-8">
                         <h3 className="text-2xl font-black text-gray-900 mb-2">{hasPassword ? 'Change password' : 'Add a password'}</h3>
                         {!hasPassword && <p className="text-sm text-gray-500 mb-6">Your account uses Google Sign-In. Add a password so you can also sign in with your email.</p>}
                         <p className="text-xs text-gray-400 mb-4">Password must be 8+ characters and include an uppercase letter, number, and special character.</p>
@@ -474,7 +474,7 @@ const UserProfile = ({ embedded = false, onClose }) => {
 
             {showDeleteModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-red-950/35 backdrop-blur-md p-4">
-                    <div className="bg-white rounded-[2rem] p-8 w-full max-w-md shadow-2xl">
+                    <div className="max-h-[calc(100dvh-2rem)] w-full max-w-md overflow-y-auto rounded-[2rem] bg-white p-5 shadow-2xl sm:p-8">
                         <div className="w-12 h-12 bg-red-50 rounded-2xl flex items-center justify-center mb-4">
                             <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M9 7V4h6v3m-9 0h12" /></svg>
                         </div>

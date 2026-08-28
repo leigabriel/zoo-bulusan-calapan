@@ -153,7 +153,7 @@ const UserMessages = () => {
 
     if (loading) {
         return (
-            <div className="h-screen w-full flex items-center justify-center bg-white">
+            <div className="h-[100dvh] w-full flex items-center justify-center bg-white">
                 <div className="flex flex-col items-center gap-4">
                     <div className="w-12 h-12 border-4 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin"></div>
                     <p className="text-gray-400 font-medium animate-pulse">Loading inbox...</p>
@@ -164,7 +164,7 @@ const UserMessages = () => {
 
     return (
         <ReactLenis root>
-            <div className="flex h-screen w-full overflow-hidden bg-white">
+            <div className="flex h-[100dvh] w-full overflow-hidden bg-white">
                 <div className={`h-full flex flex-col relative border-r border-gray-100 shadow-xl overflow-hidden bg-slate-50/30 transition-all duration-500 ${showDetail ? 'hidden md:flex md:w-1/2' : 'w-full'}`}>
                     <header className="flex-shrink-0 px-6 lg:px-8 py-4 lg:py-6 flex items-center justify-between bg-white border-b border-gray-100 z-20">
                         <div className="flex items-center gap-3 lg:gap-4">
@@ -354,7 +354,7 @@ const UserMessages = () => {
             {/* New Message Modal */}
             {showNewMessageModal && (
                 <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-white rounded-2xl lg:rounded-3xl w-full max-w-lg shadow-2xl animate-in zoom-in-95 fade-in duration-300">
+                    <div className="max-h-[calc(100dvh-2rem)] w-full max-w-lg overflow-y-auto rounded-2xl bg-white shadow-2xl animate-in zoom-in-95 fade-in duration-300 lg:rounded-3xl">
                         {sendSuccess ? (
                             <div className="p-8 text-center">
                                 <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
