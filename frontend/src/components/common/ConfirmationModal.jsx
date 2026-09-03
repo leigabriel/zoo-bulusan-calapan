@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import useScrollLock from '../../hooks/use-scroll-lock';
 
 const ConfirmationModal = ({
     isOpen,
@@ -20,6 +21,7 @@ const ConfirmationModal = ({
 }) => {
     const cancelButtonRef = useRef(null);
     const isModerationVariant = variant === 'moderation';
+    useScrollLock(isOpen);
 
     useEffect(() => {
         if (!isOpen) return;
@@ -30,12 +32,10 @@ const ConfirmationModal = ({
             }
         };
 
-        document.body.style.overflow = 'hidden';
         cancelButtonRef.current?.focus();
         document.addEventListener('keydown', handleKeyDown);
 
         return () => {
-            document.body.style.overflow = '';
             document.removeEventListener('keydown', handleKeyDown);
         };
     }, [isOpen, loading, onClose]);

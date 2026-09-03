@@ -9,6 +9,7 @@ import { reservationAPI } from '../../services/api-client';
 import { useAuth } from '../../hooks/use-auth';
 import { sanitizeInput, sanitizePhone } from '../../utils/sanitize';
 import { notify } from '../../utils/toast';
+import useScrollLock from '../../hooks/use-scroll-lock';
 
 const Icons = {
     Close: () => (
@@ -67,14 +68,7 @@ const MyEvents = () => {
         fetchHostedEvents();
     }, []);
 
-    useEffect(() => {
-        if (editingEvent || showConfirm) {
-            document.body.style.overflow = 'hidden';
-        } else {
-            document.body.style.overflow = 'unset';
-        }
-        return () => { document.body.style.overflow = 'unset'; };
-    }, [editingEvent, showConfirm]);
+    useScrollLock(Boolean(editingEvent || showConfirm));
 
     const fetchHostedEvents = async (showLoading = true) => {
         try {
@@ -358,7 +352,7 @@ const MyEvents = () => {
                                     </button>
                                 </div>
 
-                                <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-6">
+                                <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-6 md:p-8 space-y-6" data-lenis-prevent>
                                     <div className="flex flex-col gap-2">
                                         <label className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-gray-500">Event Name *</label>
                                         <input

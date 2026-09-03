@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import useScrollLock from '../../hooks/use-scroll-lock';
 
 const LogoutIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-7 h-7" aria-hidden="true">
@@ -11,6 +12,7 @@ const LogoutIcon = () => (
 const LogoutModal = ({ isOpen, onClose, onConfirm, userName = 'User' }) => {
     const [loading, setLoading] = useState(false);
     const cancelButtonRef = useRef(null);
+    useScrollLock(isOpen);
 
     useEffect(() => {
         if (!isOpen) return;
@@ -23,11 +25,9 @@ const LogoutModal = ({ isOpen, onClose, onConfirm, userName = 'User' }) => {
 
         cancelButtonRef.current?.focus();
 
-        document.body.style.overflow = 'hidden';
         document.addEventListener('keydown', handleKeyDown);
 
         return () => {
-            document.body.style.overflow = '';
             document.removeEventListener('keydown', handleKeyDown);
         };
     }, [isOpen, loading, onClose]);

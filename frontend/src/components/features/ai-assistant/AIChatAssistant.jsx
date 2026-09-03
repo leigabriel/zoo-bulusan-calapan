@@ -299,7 +299,7 @@ const AIChatAssistant = ({ onClose }) => {
 
     return (
         <>
-            <div ref={panelRef} className="relative h-full min-h-0 flex overflow-hidden" style={{ background: THEME.base, color: THEME.text }}>
+            <div ref={panelRef} className="relative h-full min-h-0 flex overflow-hidden" style={{ background: THEME.base, color: THEME.text }} data-lenis-prevent>
                 {sessionSidebarOpen && <button type="button" aria-label="Close chat history" onClick={() => setSessionSidebarOpen(false)} className="fixed inset-0 z-20 bg-slate-950/20 md:hidden" />}
 
                 <aside className={`${sessionSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'} fixed md:relative inset-y-0 left-0 z-30 w-72 shrink-0 flex flex-col transition-transform duration-200 md:transition-none`} style={{ background: '#f7f8f6', borderRight: `1px solid ${THEME.border}` }} aria-label="Chat history">
@@ -315,7 +315,7 @@ const AIChatAssistant = ({ onClose }) => {
                             <PlusIcon /> New chat
                         </button>
                     </div>
-                    <div className="flex-1 overflow-y-auto px-2 py-4 space-y-1 overscroll-contain">
+                    <div className="flex-1 overflow-y-auto px-2 py-4 space-y-1 overscroll-contain" data-lenis-prevent>
                         {sortSessions(sessions).map(session => (
                             <div key={session.id} className="group flex items-center gap-1 rounded-xl" style={{ background: session.id === activeSessionId ? THEME.accentSoft : 'transparent' }}>
                                 <button type="button" onClick={() => selectSession(session)} className="min-w-0 flex-1 text-left px-3 py-3 text-sm truncate" style={{ color: THEME.text }}>
@@ -351,7 +351,7 @@ const AIChatAssistant = ({ onClose }) => {
                     {!sessionHydrated ? (
                         <div className="flex-1 flex items-center justify-center p-6" style={{ color: THEME.textMuted }}>Loading your chats...</div>
                     ) : !started ? (
-                        <div className="flex-1 min-h-0 flex flex-col px-4 sm:px-7 py-6 sm:py-10 overflow-y-auto overscroll-contain">
+                        <div className="flex-1 min-h-0 flex flex-col px-4 sm:px-7 py-6 sm:py-10 overflow-y-auto overscroll-contain" data-lenis-prevent>
                             <div className="flex-1 flex flex-col gap-7 sm:gap-10">
                                 <div className="w-16 h-16 rounded-2xl overflow-hidden shrink-0" style={{ background: THEME.accentSoft }}><img src="/zusan-ai.svg" alt="Zusan" className="w-full h-full object-contain p-2" /></div>
                                 <div className="flex flex-col gap-3">
@@ -367,7 +367,7 @@ const AIChatAssistant = ({ onClose }) => {
                         </div>
                     ) : (
                         <div className="flex-1 min-h-0 overflow-hidden relative">
-                            <ReactLenis isChild className="h-full overflow-y-auto overscroll-contain px-4 sm:px-7 py-6 sm:py-8">
+                            <ReactLenis isChild className="h-full overflow-y-auto overscroll-contain px-4 sm:px-7 py-6 sm:py-8" data-lenis-prevent>
                                 <div className="flex flex-col gap-5 sm:gap-6 max-w-2xl mx-auto min-w-0 pb-28">
                                     {messages.map((message, index) => {
                                         const isUser = message.role === 'user';

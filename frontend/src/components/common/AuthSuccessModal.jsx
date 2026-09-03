@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import ReactDOM from 'react-dom';
+import useScrollLock from '../../hooks/use-scroll-lock';
 
 const SuccessCheckIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" className="w-16 h-16">
@@ -26,12 +27,11 @@ const AuthSuccessModal = ({
     const [isVisible, setIsVisible] = useState(false);
     const modalRef = useRef(null);
     const timerRef = useRef(null);
+    useScrollLock(isOpen);
 
     useEffect(() => {
         if (isOpen) {
             setIsVisible(true);
-            document.body.style.overflow = 'hidden';
-
             // Auto-close timer
             if (autoCloseDelay > 0) {
                 timerRef.current = setTimeout(() => {
@@ -46,11 +46,9 @@ const AuthSuccessModal = ({
             };
         } else {
             setIsVisible(false);
-            document.body.style.overflow = '';
         }
 
         return () => {
-            document.body.style.overflow = '';
         };
     }, [isOpen, autoCloseDelay]);
 

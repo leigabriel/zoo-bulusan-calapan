@@ -11,6 +11,7 @@ import { userAPI, reservationAPI } from '../../services/api-client';
 import { useAuth } from '../../hooks/use-auth';
 import { sanitizeInput, sanitizeEmail, sanitizePhone } from '../../utils/sanitize';
 import { notify } from '../../utils/toast';
+import useScrollLock from '../../hooks/use-scroll-lock';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -96,14 +97,7 @@ const Events = () => {
         }
     }, [user]);
 
-    useEffect(() => {
-        if (selectedEvent || showSubmitConfirm || showConfirmation) {
-            document.body.style.overflow = 'hidden';
-        } else {
-            document.body.style.overflow = 'unset';
-        }
-        return () => { document.body.style.overflow = 'unset'; };
-    }, [selectedEvent, showSubmitConfirm, showConfirmation]);
+    useScrollLock(Boolean(selectedEvent || showSubmitConfirm || showConfirmation));
 
     const formatDateFromDB = (dateValue) => {
         if (!dateValue) return '';
@@ -566,7 +560,7 @@ const Events = () => {
                                 <div className="w-full md:w-1/2 h-48 sm:h-64 md:h-auto relative bg-gray-100 flex-shrink-0">
                                     <img src={selectedEvent.imageUrl} alt={selectedEvent.title} className="absolute inset-0 w-full h-full object-cover" />
                                 </div>
-                                <div className="w-full md:w-1/2 p-6 md:p-12 flex flex-col overflow-y-auto">
+                                <div className="w-full md:w-1/2 p-6 md:p-12 flex flex-col overflow-y-auto overscroll-contain" data-lenis-prevent>
                                     <div className="flex justify-between items-start mb-6 md:mb-8">
                                         <StatusBadge status={selectedEvent.status} />
                                         <button

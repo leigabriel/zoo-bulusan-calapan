@@ -43,33 +43,6 @@ const TrashIcon = () => (
     </svg>
 );
 
-const VoiceIcon = () => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
-        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
-        <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
-        <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
-    </svg>
-);
-
-const Modal = ({ title, subtitle, cancelLabel, confirmLabel, onCancel, onConfirm }) => (
-    <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: 'rgba(20, 57, 36, 0.18)', backdropFilter: 'blur(6px)' }} onClick={onCancel}>
-        <div className="rounded-2xl p-8 w-80 flex flex-col gap-6" style={{ background: THEME.surface, border: `1px solid ${THEME.border}` }} onClick={e => e.stopPropagation()}>
-            <div className="flex flex-col gap-1">
-                <p className="text-xl font-bold" style={{ color: THEME.text }}>{title}</p>
-                <p className="text-base" style={{ color: THEME.textMuted }}>{subtitle}</p>
-            </div>
-            <div className="flex gap-3">
-                <button onClick={onCancel} className="flex-1 py-3 rounded-xl text-base font-semibold transition-all active:scale-95" style={{ background: THEME.accentSoft, color: THEME.text }}>
-                    {cancelLabel}
-                </button>
-                <button onClick={onConfirm} className="flex-1 py-3 rounded-xl text-base font-semibold transition-all active:scale-95" style={{ background: THEME.accentDark, color: '#f7fff9' }}>
-                    {confirmLabel}
-                </button>
-            </div>
-        </div>
-    </div>
-);
-
 const AssistantAvatar = ({ role = 'staff' }) => (
     <div className="w-9 h-9 rounded-xl overflow-hidden flex-shrink-0" style={{ background: role === 'admin' ? THEME.accentSoft : THEME.surfaceMuted }}>
         <img src={AI_ASSISTANT_ICON} alt="Companion" className="w-full h-full object-contain p-1.5" />
@@ -166,54 +139,7 @@ const createConversationTitle = (message = '') => {
     return titles[Math.floor(Math.random() * titles.length)];
 };
 
-const detectMessageLanguage = (text = '') => {
-    const normalized = String(text || '').toLowerCase();
-    const tagalogSignals = [
-        'ang', 'mga', 'sa', 'ng', 'si', 'namin', 'natin', 'ako', 'ikaw', 'kayo',
-        'paki', 'pwede', 'maaari', 'salamat', 'kamusta', 'kumusta', 'ano', 'saan',
-        'kailan', 'paano', 'bakit', 'gusto', 'kailangan', 'tulong', 'opo', 'po'
-    ];
-
-    const hitCount = tagalogSignals.reduce((count, word) => {
-        const regex = new RegExp(`\\b${word}\\b`, 'i');
-        return regex.test(normalized) ? count + 1 : count;
-    }, 0);
-
-    return hitCount >= 2 ? 'tl-PH' : 'en-US';
-};
-
-const pickPreferredVoice = (voices, langTag = 'en-US') => {
-    if (!voices || voices.length === 0) return null;
-
-    const femaleHints = ['female', 'zira', 'aria', 'jenny', 'samantha', 'hazel', 'katya', 'rose'];
-    const accentHints = langTag === 'tl-PH'
-        ? ['philippine', 'filipino', 'tagalog', 'tl-ph']
-        : ['uk', 'british', 'australia', 'india', 'english'];
-
-    const byLang = voices.filter(v => (v.lang || '').toLowerCase().startsWith(langTag.slice(0, 2).toLowerCase()));
-    const voicePool = byLang.length > 0 ? byLang : voices;
-
-    const exactAccentFemale = voicePool.find(v => {
-        const name = (v.name || '').toLowerCase();
-        const lang = (v.lang || '').toLowerCase();
-        return accentHints.some(h => name.includes(h) || lang.includes(h)) && femaleHints.some(h => name.includes(h));
-    });
-    if (exactAccentFemale) return exactAccentFemale;
-
-    const femaleByName = voicePool.find(v => femaleHints.some(h => (v.name || '').toLowerCase().includes(h)));
-    if (femaleByName) return femaleByName;
-
-    const accentByName = voicePool.find(v => {
-        const name = (v.name || '').toLowerCase();
-        const lang = (v.lang || '').toLowerCase();
-        return accentHints.some(h => name.includes(h) || lang.includes(h));
-    });
-    if (accentByName) return accentByName;
-
-    return voicePool[0] || voices[0] || null;
-};
-
-const RoleCompanionAssistant = ({ onClose, role = 'staff', confirmOnOutside = true }) => {
+const RoleCompanionAssistant = ({ onClose, role = 'staff' }) => {
     const normalizedRole = role === 'admin' ? 'admin' : 'staff';
     const config = ROLE_CONFIG[normalizedRole];
     const navigate = useNavigate();
@@ -225,15 +151,9 @@ const RoleCompanionAssistant = ({ onClose, role = 'staff', confirmOnOutside = tr
     const [sessionHydrated, setSessionHydrated] = useState(false);
     const [input, setInput] = useState('');
     const [loading, setLoading] = useState(false);
-    const [showCloseConfirm, setShowCloseConfirm] = useState(false);
-    const [showSidebarModal, setShowSidebarModal] = useState(false);
     const [sessionSidebarOpen, setSessionSidebarOpen] = useState(false);
-    const [speakingMessageIndex, setSpeakingMessageIndex] = useState(null);
-    const [ttsSupported, setTtsSupported] = useState(false);
-    const [availableVoices, setAvailableVoices] = useState([]);
 
     const messagesEndRef = useRef(null);
-    const panelRef = useRef(null);
 
     useEffect(() => {
         const loadSessions = async () => {
@@ -374,72 +294,8 @@ const RoleCompanionAssistant = ({ onClose, role = 'staff', confirmOnOutside = tr
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages, loading]);
 
-    useEffect(() => {
-        const handleOutside = (e) => {
-            if (confirmOnOutside && panelRef.current && !panelRef.current.contains(e.target) && !showCloseConfirm && !showSidebarModal && window.innerWidth >= 768) {
-                setShowSidebarModal(true);
-            }
-        };
-        document.addEventListener('mousedown', handleOutside);
-        return () => document.removeEventListener('mousedown', handleOutside);
-    }, [confirmOnOutside, showCloseConfirm, showSidebarModal]);
-
-    useEffect(() => {
-        const hasSupport = typeof window !== 'undefined' && 'speechSynthesis' in window && typeof window.SpeechSynthesisUtterance !== 'undefined';
-        setTtsSupported(hasSupport);
-        if (!hasSupport) return undefined;
-
-        const updateVoices = () => {
-            setAvailableVoices(window.speechSynthesis.getVoices() || []);
-        };
-
-        updateVoices();
-        window.speechSynthesis.onvoiceschanged = updateVoices;
-
-        return () => {
-            window.speechSynthesis.onvoiceschanged = null;
-            window.speechSynthesis.cancel();
-            setSpeakingMessageIndex(null);
-        };
-    }, []);
-
     const assistantIdentity = useMemo(() => config.name, [config.name]);
     const activeSession = sessions.find(session => session.id === activeSessionId);
-
-    const stopSpeech = () => {
-        if (!ttsSupported) return;
-        window.speechSynthesis.cancel();
-        setSpeakingMessageIndex(null);
-    };
-
-    const speakMessage = (content, index) => {
-        if (!ttsSupported || !content) return;
-
-        if (speakingMessageIndex === index && window.speechSynthesis.speaking) {
-            stopSpeech();
-            return;
-        }
-
-        window.speechSynthesis.cancel();
-
-        const utterance = new window.SpeechSynthesisUtterance(content);
-        const langTag = detectMessageLanguage(content);
-        utterance.lang = langTag;
-
-        const selectedVoice = pickPreferredVoice(availableVoices, langTag);
-        if (selectedVoice) utterance.voice = selectedVoice;
-
-        const expressive = /!|\?|important|urgent|salamat|mabuhay|mahalaga/i.test(content);
-        utterance.pitch = expressive ? 1.25 : 1.15;
-        utterance.rate = expressive ? 0.98 : 0.92;
-        utterance.volume = 1;
-
-        utterance.onstart = () => setSpeakingMessageIndex(index);
-        utterance.onend = () => setSpeakingMessageIndex(null);
-        utterance.onerror = () => setSpeakingMessageIndex(null);
-
-        window.speechSynthesis.speak(utterance);
-    };
 
     const sendToAPI = async (msg, history) => {
         setLoading(true);
@@ -485,34 +341,7 @@ const RoleCompanionAssistant = ({ onClose, role = 'staff', confirmOnOutside = tr
 
     return (
         <>
-            {showCloseConfirm && (
-                <Modal
-                    title={`Close ${assistantIdentity}?`}
-                    subtitle="Your conversation is saved automatically."
-                    cancelLabel="Cancel"
-                    confirmLabel="Close"
-                    onCancel={() => setShowCloseConfirm(false)}
-                    onConfirm={() => {
-                        stopSpeech();
-                        onClose();
-                    }}
-                />
-            )}
-            {showSidebarModal && (
-                <Modal
-                    title={`Leave ${assistantIdentity}?`}
-                    subtitle="You clicked outside the chat."
-                    cancelLabel="Stay"
-                    confirmLabel="Close"
-                    onCancel={() => setShowSidebarModal(false)}
-                    onConfirm={() => {
-                        stopSpeech();
-                        onClose();
-                    }}
-                />
-            )}
-
-            <div ref={panelRef} className="relative h-full flex overflow-hidden" style={{ background: THEME.base, color: THEME.text }}>
+            <div className="relative h-full min-h-0 flex overflow-hidden" style={{ background: THEME.base, color: THEME.text }} data-lenis-prevent>
                 {sessionSidebarOpen && (
                     <button
                         type="button"
@@ -550,7 +379,7 @@ const RoleCompanionAssistant = ({ onClose, role = 'staff', confirmOnOutside = tr
                             New chat
                         </button>
                     </div>
-                    <div className="flex-1 overflow-y-auto px-2 py-4 space-y-1">
+                    <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-2 py-4 space-y-1" data-lenis-prevent>
                         {[...sessions].sort((a, b) => b.updatedAt - a.updatedAt).map(session => (
                             <div
                                 key={session.id}
@@ -585,7 +414,7 @@ const RoleCompanionAssistant = ({ onClose, role = 'staff', confirmOnOutside = tr
                     </div>
                 </aside>
 
-                <div className="min-w-0 flex-1 flex flex-col overflow-hidden">
+                <div className="min-w-0 min-h-0 flex-1 flex flex-col overflow-hidden">
 
                 <div className="px-4 sm:px-7 pt-5 sm:pt-8 pb-5 sm:pb-6 flex items-center justify-between shrink-0" style={{ borderBottom: `1px solid ${THEME.border}` }}>
                     <div className="flex items-center gap-3">
@@ -609,13 +438,13 @@ const RoleCompanionAssistant = ({ onClose, role = 'staff', confirmOnOutside = tr
                             <p className="text-sm truncate max-w-[12rem]" style={{ color: THEME.textMuted }}>{activeSession?.title || config.status}</p>
                         </div>
                     </div>
-                    <button onClick={() => setShowCloseConfirm(true)} className="w-9 h-9 rounded-xl flex items-center justify-center transition-all active:scale-90" style={{ background: THEME.accentSoft, color: THEME.textMuted }}>
+                    <button onClick={() => onClose?.()} className="w-9 h-9 rounded-xl flex items-center justify-center transition-all active:scale-90" style={{ background: THEME.accentSoft, color: THEME.textMuted }} aria-label={`Close ${assistantIdentity}`}>
                         <CloseIcon />
                     </button>
                 </div>
 
                 {!started ? (
-                    <div className="flex-1 flex flex-col px-7 py-10 overflow-y-auto">
+                    <div className="min-h-0 flex-1 flex flex-col px-7 py-10 overflow-y-auto overscroll-contain" data-lenis-prevent>
                         <div className="flex-1 flex flex-col gap-10">
                             <div className="w-16 h-16 rounded-2xl overflow-hidden" style={{ background: THEME.accentSoft }}>
                                 <img src={AI_ASSISTANT_ICON} alt={assistantIdentity} className="w-full h-full object-contain p-2" />
@@ -666,8 +495,8 @@ const RoleCompanionAssistant = ({ onClose, role = 'staff', confirmOnOutside = tr
                         </div>
                     </div>
                 ) : (
-                    <div className="flex-1 overflow-hidden relative">
-                        <ReactLenis isChild className="h-full overflow-y-auto px-7 py-8">
+                    <div className="min-h-0 flex-1 overflow-hidden relative" data-lenis-prevent>
+                        <ReactLenis isChild className="h-full overflow-y-auto overscroll-contain px-7 py-8" data-lenis-prevent>
                             <div className="flex flex-col gap-6 max-w-2xl mx-auto">
                                 {messages.map((msg, i) => (
                                     <div key={i} className={`flex gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : 'items-end'}`}>
@@ -704,22 +533,6 @@ const RoleCompanionAssistant = ({ onClose, role = 'staff', confirmOnOutside = tr
                                                 </button>
                                             )}
 
-                                            {msg.role === 'assistant' && (
-                                                <button
-                                                    type="button"
-                                                    onClick={() => speakMessage(msg.content, i)}
-                                                    disabled={!ttsSupported}
-                                                    className="mt-2 inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all disabled:opacity-40"
-                                                    style={{
-                                                        background: speakingMessageIndex === i ? THEME.accentDark : THEME.surface,
-                                                        color: speakingMessageIndex === i ? '#f7fff9' : THEME.text,
-                                                        borderColor: THEME.border
-                                                    }}
-                                                >
-                                                    <VoiceIcon />
-                                                    {speakingMessageIndex === i ? 'Stop Voice' : 'Text to Voice'}
-                                                </button>
-                                            )}
                                         </div>
                                     </div>
                                 ))}

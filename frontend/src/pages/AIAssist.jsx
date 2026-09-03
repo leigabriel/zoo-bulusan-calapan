@@ -7,7 +7,7 @@ const AIAssist = ({ role }) => {
 
     return (
         <section className="h-full min-h-[calc(100vh-8rem)] overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
-            <RoleCompanionAssistant role={role} onClose={() => navigate(homePath)} confirmOnOutside={false} />
+            <RoleCompanionAssistant role={role} onClose={() => navigate(homePath)} />
         </section>
     );
 };

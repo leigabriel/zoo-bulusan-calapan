@@ -5,7 +5,9 @@ import { authAPI, staffAPI, reservationAPI, communityAPI, getProfileImageUrl } f
 import { sanitizeInput } from '../../utils/sanitize';
 import { notify } from '../../utils/toast';
 import LogoutModal from '../common/LogoutModal';
-import AIAssistIcon from '../common/AIAssistIcon';
+import CollapsibleNavGroup from '../common/CollapsibleNavGroup';
+import RoleCompanionFloatingButton from '../common/RoleCompanionFloatingButton';
+import useScrollLock from '../../hooks/use-scroll-lock';
 
 // Icons matching Admin design system
 const OverviewIcon = () => (
@@ -158,6 +160,8 @@ const StaffLayout = ({ children }) => {
     const [profileLoading, setProfileLoading] = useState(false);
     const [profileSaving, setProfileSaving] = useState(false);
     const [previewImage, setPreviewImage] = useState(null);
+    const [aiAssistOpen, setAiAssistOpen] = useState(false);
+    const [openNavGroups, setOpenNavGroups] = useState({ main: true, management: true, communication: true });
 
     // Real notifications state
     const [notifications, setNotifications] = useState([]);
@@ -454,7 +458,6 @@ const StaffLayout = ({ children }) => {
 
     const menuItems = [
         { path: '/staff/dashboard', label: 'Overview', Icon: OverviewIcon },
-        { path: '/staff/ai-assist', label: 'AI Assist', Icon: AIAssistIcon },
         { path: '/staff/qr-scanner', label: 'QR Scanner', Icon: ScannerIcon },
     ];
 
@@ -471,6 +474,15 @@ const StaffLayout = ({ children }) => {
     ];
 
     const allMenuItems = [...menuItems, ...managementItems, ...communicationItems];
+    const navGroups = [
+        { key: 'main', label: 'Main', items: menuItems },
+        { key: 'management', label: 'Management', items: managementItems },
+        { key: 'communication', label: 'Communication', items: communicationItems },
+    ];
+    const hasOpenOverlay = sidebarOpen || notificationPanelOpen || dailyTaskPanelOpen
+        || showProfileModal || showLogoutModal || aiAssistOpen;
+
+    useScrollLock(hasOpenOverlay);
 
     const handleNavClick = () => {
         if (window.innerWidth < 1024) {
@@ -550,70 +562,16 @@ const StaffLayout = ({ children }) => {
 
                 {/* Navigation Menu */}
                 <nav className="flex-1 px-3 py-4 overflow-y-auto" role="navigation">
-                    <p className="px-3 mb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                        Main
-                    </p>
-                    {menuItems.map(item => (
-                        <Link
-                            key={item.path}
-                            to={item.path}
-                            onClick={handleNavClick}
-                            className={`flex items-center gap-3 px-3 py-2.5 mb-1 rounded-xl transition-all duration-200 group ${location.pathname === item.path
-                                    ? 'bg-green-50 text-green-700 border-l-2 border-green-500'
-                                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                                }`}
-                            aria-current={location.pathname === item.path ? 'page' : undefined}
-                        >
-                            <span className={`transition-colors ${location.pathname === item.path ? 'text-green-600' : 'text-gray-400 group-hover:text-gray-900'
-                                }`}>
-                                <item.Icon />
-                            </span>
-                            <span className="font-medium">{item.label}</span>
-                        </Link>
-                    ))}
-
-                    <p className="px-3 mt-4 mb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                        Management
-                    </p>
-                    {managementItems.map(item => (
-                        <Link
-                            key={item.path}
-                            to={item.path}
-                            onClick={handleNavClick}
-                            className={`flex items-center gap-3 px-3 py-2.5 mb-1 rounded-xl transition-all duration-200 group ${location.pathname === item.path
-                                    ? 'bg-green-50 text-green-700 border-l-2 border-green-500'
-                                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                                }`}
-                            aria-current={location.pathname === item.path ? 'page' : undefined}
-                        >
-                            <span className={`transition-colors ${location.pathname === item.path ? 'text-green-600' : 'text-gray-400 group-hover:text-gray-900'
-                                }`}>
-                                <item.Icon />
-                            </span>
-                            <span className="font-medium">{item.label}</span>
-                        </Link>
-                    ))}
-
-                    <p className="px-3 mt-4 mb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                        Communication
-                    </p>
-                    {communicationItems.map(item => (
-                        <Link
-                            key={item.path}
-                            to={item.path}
-                            onClick={handleNavClick}
-                            className={`flex items-center gap-3 px-3 py-2.5 mb-1 rounded-xl transition-all duration-200 group ${location.pathname === item.path
-                                    ? 'bg-green-50 text-green-700 border-l-2 border-green-500'
-                                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                                }`}
-                            aria-current={location.pathname === item.path ? 'page' : undefined}
-                        >
-                            <span className={`transition-colors ${location.pathname === item.path ? 'text-green-600' : 'text-gray-400 group-hover:text-gray-900'
-                                }`}>
-                                <item.Icon />
-                            </span>
-                            <span className="font-medium">{item.label}</span>
-                        </Link>
+                    {navGroups.map((group) => (
+                        <CollapsibleNavGroup
+                            key={group.key}
+                            label={group.label}
+                            items={group.items}
+                            open={openNavGroups[group.key]}
+                            onToggle={() => setOpenNavGroups((current) => ({ ...current, [group.key]: !current[group.key] }))}
+                            pathname={location.pathname}
+                            onNavigate={handleNavClick}
+                        />
                     ))}
                 </nav>
 
@@ -679,6 +637,15 @@ const StaffLayout = ({ children }) => {
                     </div>
 
                     <div className="flex items-center gap-3">
+                        <button
+                            type="button"
+                            onClick={() => setAiAssistOpen(true)}
+                            className="flex items-center gap-2 rounded-xl bg-[#c6fe69] px-3 py-2 text-sm font-semibold text-gray-900 transition hover:bg-[#b6ef58]"
+                            aria-label="Open AI Assist"
+                        >
+                            <img src="/admin-staff-icon-ai.svg" alt="" className="h-6 w-6 object-contain" />
+                            <span className="hidden sm:inline">AI Assist</span>
+                        </button>
                         {/* Notification Bell */}
                         <button
                             onClick={() => setNotificationPanelOpen(!notificationPanelOpen)}
@@ -721,7 +688,7 @@ const StaffLayout = ({ children }) => {
                 </header>
 
                 {/* Main Content */}
-                <main className="flex-1 overflow-auto p-4 lg:p-6 bg-gray-50">
+                <main className={`flex-1 p-4 lg:p-6 bg-gray-50 ${hasOpenOverlay ? 'overflow-hidden' : 'overflow-auto'}`}>
                     {typeof children === 'function' ? children({ globalSearch: searchQuery }) :
                         React.Children.map(children, child =>
                             React.isValidElement(child) ? React.cloneElement(child, { globalSearch: searchQuery }) : child
@@ -730,7 +697,7 @@ const StaffLayout = ({ children }) => {
             </div>
 
             <aside
-                className={`daily-task-panel fixed right-0 top-0 z-50 w-80 sm:w-96 h-full bg-white border-l border-gray-200 
+                className={`daily-task-panel fixed right-0 top-0 z-50 w-80 sm:w-96 h-full bg-white border-l border-gray-200 flex flex-col overscroll-contain
                     transform transition-transform duration-300 ease-in-out ${dailyTaskPanelOpen ? 'translate-x-0' : 'translate-x-full'
                     }`}
                 aria-label="Daily tasks panel"
@@ -761,7 +728,7 @@ const StaffLayout = ({ children }) => {
                     </div>
                 </div>
 
-                <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-4 space-y-3">
                     {dailyTaskLoading && (
                         <div className="text-sm text-gray-500 p-4 bg-gray-50 rounded-xl border border-gray-200">
                             Loading daily task data...
@@ -809,7 +776,7 @@ const StaffLayout = ({ children }) => {
 
             {/* Slide-in Notification Panel */}
             <aside
-                className={`notification-panel fixed right-0 top-0 z-50 w-80 sm:w-96 h-full bg-white border-l border-gray-200 
+                className={`notification-panel fixed right-0 top-0 z-50 w-full sm:w-[420px] max-w-lg h-full bg-white border-l border-gray-200 flex flex-col overscroll-contain
                     transform transition-transform duration-300 ease-in-out ${notificationPanelOpen ? 'translate-x-0' : 'translate-x-full'
                     }`}
                 aria-label="Notifications panel"
@@ -834,7 +801,7 @@ const StaffLayout = ({ children }) => {
                 </div>
 
                 {/* Notifications List */}
-                <div className="flex-1 overflow-y-auto p-4 space-y-3" style={{ maxHeight: 'calc(100vh - 280px)' }}>
+                <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-4 space-y-3">
                     {notifications.length === 0 ? (
                         <div className="text-center py-8 text-gray-500">
                             <BellIcon />
@@ -896,7 +863,7 @@ const StaffLayout = ({ children }) => {
             {/* Profile Modal */}
             {showProfileModal && (
                 <div className="fixed inset-0 bg-gray-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-white border border-gray-200 rounded-2xl w-full max-w-md max-h-[90vh] overflow-y-auto shadow-xl">
+                    <div className="bg-white border border-gray-200 rounded-2xl w-full max-w-md max-h-[90vh] overflow-y-auto overscroll-contain shadow-xl">
                         {/* Modal Header */}
                         <div className="flex items-center justify-between p-5 border-b border-gray-200">
                             <h2 className="text-xl font-bold text-gray-900">Staff Profile</h2>
@@ -1022,6 +989,8 @@ const StaffLayout = ({ children }) => {
                 onClose={() => setShowLogoutModal(false)}
                 onConfirm={handleLogout}
             />
+
+            <RoleCompanionFloatingButton role="staff" open={aiAssistOpen} onOpenChange={setAiAssistOpen} hideTrigger />
 
         </div>
     );

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import AIChatAssistant from '../features/ai-assistant/AIChatAssistant';
+import useScrollLock from '../../hooks/use-scroll-lock';
 
 const MotionDiv = motion.div;
 
@@ -9,13 +10,15 @@ const AIFloatingButton = () => {
 
     const closePanels = () => setAssistantOpen(false);
 
+    useScrollLock(assistantOpen);
+
     useEffect(() => {
-        if (assistantOpen) {
-            document.body.style.overflow = 'hidden';
-        } else {
-            document.body.style.overflow = '';
-        }
-        return () => { document.body.style.overflow = ''; };
+        if (!assistantOpen) return undefined;
+        const handleKeyDown = (event) => {
+            if (event.key === 'Escape') closePanels();
+        };
+        document.addEventListener('keydown', handleKeyDown);
+        return () => document.removeEventListener('keydown', handleKeyDown);
     }, [assistantOpen]);
 
     const panelVariants = {
@@ -50,7 +53,7 @@ const AIFloatingButton = () => {
 
             <AnimatePresence>
                 {assistantOpen && (
-                    <div className="fixed inset-0 z-[100] flex justify-end">
+                    <div className="fixed inset-0 z-[100] flex justify-end overscroll-none">
                         <MotionDiv
                             className="absolute inset-0 bg-emerald-900/15 backdrop-blur-md"
                             initial={{ opacity: 0 }}
@@ -59,12 +62,13 @@ const AIFloatingButton = () => {
                             onClick={closePanels}
                         />
                         <MotionDiv
-                            className="relative w-full md:w-3/5 h-[100dvh] min-h-0 bg-white shadow-2xl flex flex-col overflow-hidden"
+                            className="relative w-full md:w-3/5 h-[100dvh] min-h-0 bg-white shadow-2xl flex flex-col overflow-hidden overscroll-contain"
                             variants={panelVariants}
                             initial="hidden"
                             animate="visible"
                             exit="exit"
                             onClick={(e) => e.stopPropagation()}
+                            data-lenis-prevent
                         >
                             <AIChatAssistant onClose={closePanels} />
                         </MotionDiv>

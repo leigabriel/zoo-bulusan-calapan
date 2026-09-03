@@ -5,6 +5,7 @@ import { reservationAPI } from '../../services/api-client';
 import { formatSafeDate, getDateTimestamp } from '../../utils/format-date';
 import { QRCodeSVG } from 'qrcode.react';
 import { notify } from '../../utils/toast';
+import useScrollLock from '../../hooks/use-scroll-lock';
 
 const Icons = {
     Ticket: () => (
@@ -263,16 +264,7 @@ const ReservationHistoryPanel = ({ isOpen, onClose, paymentReturn = false }) => 
         return () => window.clearTimeout(timeout);
     }, [isOpen]);
 
-    useEffect(() => {
-        if (isOpen) {
-            document.body.style.overflow = 'hidden';
-        } else {
-            document.body.style.overflow = '';
-        }
-        return () => {
-            document.body.style.overflow = '';
-        };
-    }, [isOpen]);
+    useScrollLock(isMounted);
 
     useEffect(() => {
         if (isOpen && isAuthenticated) {
@@ -444,7 +436,7 @@ const ReservationHistoryPanel = ({ isOpen, onClose, paymentReturn = false }) => 
                  className={`fixed inset-0 bg-slate-900/40 z-[90] backdrop-blur-sm transition-opacity duration-300 ease-out ${isOpen ? 'opacity-100' : 'opacity-0'}`}
                 onClick={onClose}
             />
-            <div className={`fixed right-0 top-0 h-full w-full sm:w-[480px] md:w-[600px] lg:w-[680px] bg-slate-50 shadow-2xl z-[100] flex flex-col transform transition-transform duration-300 ease-out ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+            <div className={`fixed right-0 top-0 h-full w-full sm:w-[480px] md:w-[600px] lg:w-[680px] bg-slate-50 shadow-2xl z-[100] flex flex-col transform transition-transform duration-300 ease-out ${isOpen ? 'translate-x-0' : 'translate-x-full'}`} data-lenis-prevent>
                  <div className="p-5 sm:p-6 border-b border-slate-200 flex items-center justify-between bg-white gap-4">
                      <div>
                          <h2 className="text-xl font-semibold text-slate-800">Reservation History</h2>
@@ -507,7 +499,7 @@ const ReservationHistoryPanel = ({ isOpen, onClose, paymentReturn = false }) => 
                             </select>
                         </div>
 
-                        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-4 space-y-4" data-lenis-prevent>
                             {loading ? (
                                 <div className="flex items-center justify-center py-12">
                                     <div className="w-6 h-6 border-2 border-slate-300 border-t-slate-700 rounded-full animate-spin" />
@@ -580,7 +572,8 @@ const ReservationHistoryPanel = ({ isOpen, onClose, paymentReturn = false }) => 
 
             {selectedReservation && (
                 <div
-                    className="fixed inset-0 bg-slate-900/60 z-[110] flex items-start sm:items-center justify-center p-3 sm:p-6 overflow-y-auto backdrop-blur-sm"
+                    className="fixed inset-0 bg-slate-900/60 z-[110] flex items-start sm:items-center justify-center p-3 sm:p-6 overflow-y-auto overscroll-contain backdrop-blur-sm"
+                    data-lenis-prevent
                     onClick={() => setSelectedReservation(null)}
                 >
                     <div
@@ -804,7 +797,8 @@ const ReservationHistoryPanel = ({ isOpen, onClose, paymentReturn = false }) => 
 
             {showPaymentDemo && (
                 <div
-                    className="fixed inset-0 bg-slate-900/60 z-[120] flex items-start sm:items-center justify-center p-4 overflow-y-auto backdrop-blur-sm"
+                    className="fixed inset-0 bg-slate-900/60 z-[120] flex items-start sm:items-center justify-center p-4 overflow-y-auto overscroll-contain backdrop-blur-sm"
+                    data-lenis-prevent
                     onClick={() => setShowPaymentDemo(false)}
                 >
                     <div

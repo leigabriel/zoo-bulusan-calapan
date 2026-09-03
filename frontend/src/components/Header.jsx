@@ -7,6 +7,7 @@ import AnimalClassifier from './features/ai-scanner/AnimalClassifier';
 import ReservationHistoryPanel from './features/ReservationHistoryPanel';
 import Settings from '../pages/user/Settings';
 import UserProfile from '../pages/user/UserProfile';
+import useScrollLock from '../hooks/use-scroll-lock';
 
 const MINIZOO_GAME_URL = (typeof process !== 'undefined' && process.env && process.env.VITE_MINIZOO_GAME_URL) ? process.env.VITE_MINIZOO_GAME_URL : 'https://bulusanzootopia.vercel.app';
 
@@ -134,6 +135,11 @@ const Header = () => {
     const sidePanelRef = useRef(null);
     const notificationPanelRef = useRef(null);
     const lastScrollY = useRef(0);
+    const hasOpenOverlay = isMenuOpen || showSidePanel || showAIScanner || showHistoryPanel
+        || showSettingsPanel || showProfilePanel || showNotificationPanel || showMiniZooGame
+        || showEmailModal || showLogoutModal;
+
+    useScrollLock(hasOpenOverlay);
 
     const handleTransitionNavigate = (e, path) => {
         if (e) e.preventDefault();
@@ -187,11 +193,9 @@ const Header = () => {
             const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setter(false); };
             if (isOpen) {
                 document.addEventListener('mousedown', handler);
-                document.body.style.overflow = 'hidden';
             }
             return () => {
                 document.removeEventListener('mousedown', handler);
-                document.body.style.overflow = 'unset';
             }
         }, [isOpen, ref, setter]);
     };
@@ -516,7 +520,8 @@ const Header = () => {
                 </div>
 
                 <div
-                    className={`absolute left-0 top-full flex w-full origin-top flex-col overflow-y-auto border-t border-gray-100 bg-white shadow-xl transition-all duration-300 ease-in-out lg:hidden ${isMenuOpen ? 'max-h-[calc(100dvh-56px)] opacity-100' : 'max-h-0 opacity-0 pointer-events-none'}`}
+                    className={`absolute left-0 top-full flex w-full origin-top flex-col overflow-y-auto overscroll-contain border-t border-gray-100 bg-white shadow-xl transition-all duration-300 ease-in-out lg:hidden ${isMenuOpen ? 'max-h-[calc(100dvh-56px)] opacity-100' : 'max-h-0 opacity-0 pointer-events-none'}`}
+                    data-lenis-prevent
                 >
                     <div className="flex flex-col p-4 gap-1">
                         {user && (
@@ -609,7 +614,7 @@ const Header = () => {
                         </div>
                     </div>
 
-                    <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-6">
+                    <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-6" data-lenis-prevent>
                         {quickItems.length > 0 && (
                             <>
                                 <SectionLabel label="Quick Access" />
@@ -699,14 +704,14 @@ const Header = () => {
 
               <div className={`fixed inset-0 z-[125] flex justify-end transition-all duration-300 ${showSettingsPanel ? 'visible' : 'invisible'}`}>
                   <div className={`absolute inset-0 bg-black/25 backdrop-blur-[2px] transition-opacity duration-300 ${showSettingsPanel ? 'opacity-100' : 'opacity-0'}`} onClick={() => setShowSettingsPanel(false)} />
-                  <div className={`relative h-full w-full overflow-y-auto bg-white shadow-2xl transition-transform duration-300 ease-out sm:w-1/2 sm:min-w-[420px] sm:max-w-[720px] ${showSettingsPanel ? 'translate-x-0' : 'translate-x-full'}`} role="dialog" aria-modal="true" aria-label="Account settings">
+                  <div className={`relative h-full w-full overflow-y-auto overscroll-contain bg-white shadow-2xl transition-transform duration-300 ease-out sm:w-1/2 sm:min-w-[420px] sm:max-w-[720px] ${showSettingsPanel ? 'translate-x-0' : 'translate-x-full'}`} role="dialog" aria-modal="true" aria-label="Account settings" data-lenis-prevent>
                       <Settings embedded onClose={() => setShowSettingsPanel(false)} />
                   </div>
               </div>
 
               <div className={`fixed inset-0 z-[125] flex justify-end transition-all duration-300 ${showProfilePanel ? 'visible' : 'invisible'}`}>
                   <div className={`absolute inset-0 bg-black/25 backdrop-blur-[2px] transition-opacity duration-300 ${showProfilePanel ? 'opacity-100' : 'opacity-0'}`} onClick={() => setShowProfilePanel(false)} />
-                  <div className={`relative h-full w-full overflow-y-auto bg-white shadow-2xl transition-transform duration-300 ease-out sm:w-1/2 sm:min-w-[420px] sm:max-w-[720px] ${showProfilePanel ? 'translate-x-0' : 'translate-x-full'}`} role="dialog" aria-modal="true" aria-label="User profile">
+                  <div className={`relative h-full w-full overflow-y-auto overscroll-contain bg-white shadow-2xl transition-transform duration-300 ease-out sm:w-1/2 sm:min-w-[420px] sm:max-w-[720px] ${showProfilePanel ? 'translate-x-0' : 'translate-x-full'}`} role="dialog" aria-modal="true" aria-label="User profile" data-lenis-prevent>
                       <UserProfile embedded onClose={() => setShowProfilePanel(false)} />
                   </div>
               </div>
@@ -731,7 +736,7 @@ const Header = () => {
                         </div>
                         <CloseBtn onClick={() => setShowAIScanner(false)} />
                     </div>
-                    <div className="flex-1 overflow-y-auto">
+                    <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain" data-lenis-prevent>
                         {showAIScanner && <AnimalClassifier embedded={true} />}
                     </div>
                 </div>
@@ -742,7 +747,7 @@ const Header = () => {
                     className={`absolute inset-0 bg-black/25 backdrop-blur-[2px] transition-opacity duration-300 ${showEmailModal ? 'opacity-100' : 'opacity-0'}`}
                     onClick={() => { setShowEmailModal(false); setEmailSubject(''); setEmailMessage(''); setEmailError(''); }}
                 />
-                <div className={`bg-white rounded-2xl shadow-xl w-full max-w-sm relative transform transition-all duration-300 ${showEmailModal ? 'scale-100 translate-y-0 opacity-100' : 'scale-95 translate-y-4 opacity-0'}`}>
+                <div className={`max-h-[calc(100dvh-2rem)] overflow-y-auto overscroll-contain bg-white rounded-2xl shadow-xl w-full max-w-sm relative transform transition-all duration-300 ${showEmailModal ? 'scale-100 translate-y-0 opacity-100' : 'scale-95 translate-y-4 opacity-0'}`} data-lenis-prevent>
                     <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
                         <span className="text-[13px] font-semibold text-gray-900">Contact Support</span>
                         <CloseBtn onClick={() => { setShowEmailModal(false); setEmailSubject(''); setEmailMessage(''); setEmailError(''); }} />
@@ -809,7 +814,7 @@ const Header = () => {
                 />
                 <div
                     ref={notificationPanelRef}
-                    className={`absolute right-0 top-0 h-full w-full max-w-sm bg-white shadow-2xl flex flex-col transform transition-transform duration-300 ${showNotificationPanel ? 'translate-x-0' : 'translate-x-full'}`}
+                    className={`absolute right-0 top-0 h-full w-full max-w-lg bg-white shadow-2xl flex flex-col transform transition-transform duration-300 ${showNotificationPanel ? 'translate-x-0' : 'translate-x-full'}`}
                 >
                     <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 flex-shrink-0">
                         <div className="flex items-center gap-3">
@@ -832,7 +837,7 @@ const Header = () => {
                             <CloseBtn onClick={() => setShowNotificationPanel(false)} />
                         </div>
                     </div>
-                    <div className="flex-1 overflow-y-auto p-4">
+                    <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-4" data-lenis-prevent>
                         {notificationLoading ? (
                             <div className="flex items-center justify-center py-12">
                                 <span className="text-[13px] text-gray-400">Loading…</span>

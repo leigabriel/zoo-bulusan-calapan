@@ -10,6 +10,7 @@ import {
 } from '../../../services/ai-detection-service';
 import { fetchAnimalDescription } from '../../../services/animal-description-service';
 import { ANIMAL_DATABASE } from '../../../config/ai-service-config';
+import useScrollLock from '../../../hooks/use-scroll-lock';
 
 const UserIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
@@ -62,6 +63,7 @@ const AnimalClassifier = ({ embedded = false }) => {
     const videoRef = useRef(null);
     const streamRef = useRef(null);
     const cameraRequestRef = useRef(0);
+    useScrollLock(showCameraModal);
 
     const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
@@ -182,11 +184,7 @@ const AnimalClassifier = ({ embedded = false }) => {
         setCameraError(null);
         setCameraReady(false);
 
-        if (isMobile) {
-            document.body.style.overflow = 'hidden';
-        }
-
-    }, [isMobile]);
+    }, []);
 
     useEffect(() => {
         if (!showCameraModal) return undefined;
@@ -199,7 +197,6 @@ const AnimalClassifier = ({ embedded = false }) => {
         setShowCameraModal(false);
         setCameraError(null);
 
-        document.body.style.overflow = '';
     }, [stopCameraStream]);
 
     const switchCamera = useCallback(async () => {

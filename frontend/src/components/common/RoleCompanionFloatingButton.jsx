@@ -2,24 +2,29 @@ import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import RoleCompanionAssistant from '../features/ai-assistant/RoleCompanionAssistant';
 import { AI_ASSISTANT_ICON } from '../../config/ai-assistant-theme';
+import useScrollLock from '../../hooks/use-scroll-lock';
 
-const RoleCompanionFloatingButton = ({ role = 'staff' }) => {
+const MotionDiv = motion.div;
+
+const RoleCompanionFloatingButton = ({ role = 'staff', open, onOpenChange, hideTrigger = false }) => {
     const normalizedRole = role === 'admin' ? 'admin' : 'staff';
 
-    const [assistantOpen, setAssistantOpen] = useState(false);
+    const [internalOpen, setInternalOpen] = useState(false);
+    const assistantOpen = open ?? internalOpen;
+    const setAssistantOpen = onOpenChange ?? setInternalOpen;
 
     const closePanels = () => setAssistantOpen(false);
 
+    useScrollLock(assistantOpen);
+
     useEffect(() => {
-        if (assistantOpen) {
-            document.body.style.overflow = 'hidden';
-        } else {
-            document.body.style.overflow = '';
-        }
-        return () => {
-            document.body.style.overflow = '';
+        if (!assistantOpen) return undefined;
+        const handleKeyDown = (event) => {
+            if (event.key === 'Escape') setAssistantOpen(false);
         };
-    }, [assistantOpen]);
+        document.addEventListener('keydown', handleKeyDown);
+        return () => document.removeEventListener('keydown', handleKeyDown);
+    }, [assistantOpen, setAssistantOpen]);
 
 
     const panelVariants = {
@@ -30,7 +35,7 @@ const RoleCompanionFloatingButton = ({ role = 'staff' }) => {
 
     return (
         <>
-            {!assistantOpen && (
+            {!hideTrigger && !assistantOpen && (
                 <div className="fixed bottom-0 right-0 z-50 flex items-end justify-end p-3 sm:p-4">
                     <div className="relative">
                         <button
@@ -56,24 +61,25 @@ const RoleCompanionFloatingButton = ({ role = 'staff' }) => {
 
             <AnimatePresence>
                 {assistantOpen && (
-                    <div className="fixed inset-0 z-[120] flex justify-end">
-                        <motion.div
+                    <div className="fixed inset-0 z-[120] flex justify-end overscroll-none">
+                        <MotionDiv
                             className="absolute inset-0 bg-emerald-900/15 backdrop-blur-md"
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
                             onClick={closePanels}
                         />
-                        <motion.div
-                            className="relative w-full md:w-3/4 lg:w-1/2 h-full bg-white shadow-2xl flex flex-col"
+                        <MotionDiv
+                            className="relative w-full md:w-3/4 lg:w-1/2 h-[100dvh] min-h-0 bg-white shadow-2xl flex flex-col overflow-hidden overscroll-contain"
                             variants={panelVariants}
                             initial="hidden"
                             animate="visible"
                             exit="exit"
                             onClick={(e) => e.stopPropagation()}
+                            data-lenis-prevent
                         >
                             <RoleCompanionAssistant role={normalizedRole} onClose={closePanels} />
-                        </motion.div>
+                        </MotionDiv>
                     </div>
                 )}
             </AnimatePresence>

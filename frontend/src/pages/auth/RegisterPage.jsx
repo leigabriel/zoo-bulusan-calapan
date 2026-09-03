@@ -6,6 +6,7 @@ import { authAPI, messageAPI } from '../../services/api-client';
 import { sanitizeInput, sanitizeEmail } from '../../utils/sanitize';
 import { notify } from '../../utils/toast';
 import AuthSuccessModal from '../../components/common/AuthSuccessModal';
+import useScrollLock from '../../hooks/use-scroll-lock';
 
 const EyeIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
@@ -208,7 +209,7 @@ Phone: +63 (XXX) XXX-XXXX
 `;
 
 const PolicyModal = ({ isOpen, onClose, title, content }) => {
-    if (!isOpen) return null;
+    useScrollLock(isOpen);
 
     const handleBackdropClick = (e) => {
         if (e.target === e.currentTarget) {
@@ -225,13 +226,13 @@ const PolicyModal = ({ isOpen, onClose, title, content }) => {
     useEffect(() => {
         if (isOpen) {
             document.addEventListener('keydown', handleKeyDown);
-            document.body.style.overflow = 'hidden';
         }
         return () => {
             document.removeEventListener('keydown', handleKeyDown);
-            document.body.style.overflow = 'unset';
         };
-    }, [isOpen]);
+    }, [isOpen, onClose]);
+
+    if (!isOpen) return null;
 
     return (
         <div
@@ -252,7 +253,7 @@ const PolicyModal = ({ isOpen, onClose, title, content }) => {
                         <CloseIcon />
                     </button>
                 </div>
-                <div className="flex-1 overflow-y-auto p-4 sm:p-6">
+                <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-4 sm:p-6" data-lenis-prevent>
                     <div className="prose prose-sm max-w-none text-gray-600 whitespace-pre-line text-sm sm:text-base leading-relaxed">
                         {content}
                     </div>
@@ -278,6 +279,8 @@ const EmailIcon = () => (
 );
 
 const EmailVerificationModal = ({ isOpen, onClose, email, onNavigateToLogin }) => {
+    useScrollLock(isOpen);
+
     if (!isOpen) return null;
 
     const handleBackdropClick = (e) => {
