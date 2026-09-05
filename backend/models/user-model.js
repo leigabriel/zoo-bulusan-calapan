@@ -22,7 +22,8 @@ class User {
     static async findById(id) {
         const [rows] = await db.query(
             `SELECT id, first_name, last_name, username, email, phone_number, gender, birthday, 
-             role, profile_image, password, auth_provider, google_id, is_active, email_verified, notification_settings, created_at, updated_at
+             role, profile_image, password, auth_provider, google_id, is_active, is_suspended, 
+             suspension_reason, suspended_at, email_verified, notification_settings, created_at, updated_at
              FROM users WHERE id = ?`,
             [id]
         );

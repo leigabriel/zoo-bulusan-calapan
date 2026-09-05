@@ -98,8 +98,8 @@ exports.register = async (req, res) => {
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
-        // Validate role - accept role from registration if valid, otherwise default to 'user'
-        const userRole = role && VALID_ROLES.includes(role) ? role : 'user';
+        // Force role to 'user' for public registration - admins must be created via admin panel
+        const userRole = 'user';
         const userGender = gender && VALID_GENDERS.includes(gender) ? gender : 'prefer_not_to_say';
         
         const userId = await User.create({
@@ -138,10 +138,10 @@ exports.register = async (req, res) => {
         if (userRole === 'user') {
             const ipAddress = req.ip || req.connection?.remoteAddress || 'unknown';
             const userAgent = req.headers['user-agent'] || 'unknown';
-            UserActivity.logActivity({
+            await UserActivity.logActivity({
                 userId,
                 actionType: 'register',
-                actionDescription: `${sanitizedFirstName} ${sanitizedLastName} created an account`,
+                actionDescription: 'Created an account',
                 entityType: 'user',
                 entityId: userId,
                 ipAddress,
@@ -244,7 +244,7 @@ exports.login = async (req, res) => {
             await UserActivity.logActivity({
                 userId: user.id,
                 actionType: 'login',
-                actionDescription: `${user.first_name} ${user.last_name} logged in`,
+                actionDescription: 'Logged in',
                 entityType: 'user',
                 entityId: user.id,
                 ipAddress,
@@ -511,10 +511,10 @@ exports.updateProfile = async (req, res) => {
         if (req.user.role === 'user') {
             const ipAddress = req.ip || req.connection?.remoteAddress || 'unknown';
             const userAgent = req.headers['user-agent'] || 'unknown';
-            UserActivity.logActivity({
+            await UserActivity.logActivity({
                 userId: req.user.id,
                 actionType: 'profile_update',
-                actionDescription: `${user.first_name} ${user.last_name} updated their profile`,
+                actionDescription: 'Updated profile',
                 entityType: 'user',
                 entityId: req.user.id,
                 ipAddress,
@@ -574,10 +574,10 @@ exports.updatePassword = async (req, res) => {
         if (req.user.role === 'user') {
             const ipAddress = req.ip || req.connection?.remoteAddress || 'unknown';
             const userAgent = req.headers['user-agent'] || 'unknown';
-            UserActivity.logActivity({
+            await UserActivity.logActivity({
                 userId: req.user.id,
                 actionType: 'password_change',
-                actionDescription: `${user.first_name} ${user.last_name} changed their password`,
+                actionDescription: 'Changed password',
                 entityType: 'user',
                 entityId: req.user.id,
                 ipAddress,
@@ -626,7 +626,7 @@ exports.deleteAccount = async (req, res) => {
             await UserActivity.logActivity({
                 userId: req.user.id,
                 actionType: 'account_delete',
-                actionDescription: `${user.first_name} ${user.last_name} deleted their account`,
+                actionDescription: 'Deleted account',
                 entityType: 'user',
                 entityId: req.user.id,
                 ipAddress,
@@ -671,7 +671,7 @@ exports.logout = async (req, res) => {
             await UserActivity.logActivity({
                 userId: req.user.id,
                 actionType: 'logout',
-                actionDescription: `${req.user.first_name || 'User'} logged out`,
+                actionDescription: 'Logged out',
                 entityType: 'user',
                 entityId: req.user.id,
                 ipAddress,

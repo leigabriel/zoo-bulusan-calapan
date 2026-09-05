@@ -50,7 +50,7 @@ exports.sendMessage = async (req, res) => {
 
         // Log user message sent
         if (req.user.role === 'user') {
-            logUserActivity(req, 'message_sent', `${req.user.first_name || 'User'} sent a message: ${subject}`, 'message', messageId);
+            await logUserActivity(req, 'message_sent', 'Sent a message', 'message', messageId);
         }
     } catch (error) {
         console.error('Error sending message:', error);
@@ -203,7 +203,7 @@ exports.respondToMessage = async (req, res) => {
         // Track staff/admin activity
         if (['admin', 'staff'].includes(req.user.role)) {
             try {
-                await logStaffActivity(req, 'message_reply', `Responded to message: ${message.subject}`);
+                await logStaffActivity(req, 'message_reply', 'Replied to message', 'message', parseInt(id));
             } catch (activityError) {
                 console.error('Error logging activity:', activityError);
             }

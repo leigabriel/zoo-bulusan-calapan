@@ -80,11 +80,24 @@ const ensureUserActivitySchema = async () => {
         `);
     }
 
+    // Ensure staff_activity_logs uses VARCHAR(64) instead of ENUM so new
+    // action types don't silently fail.
+    const [staffColumns] = await db.query(`
+        SELECT COLUMN_TYPE
+        FROM information_schema.COLUMNS
+        WHERE TABLE_SCHEMA = DATABASE()
+          AND TABLE_NAME = 'staff_activity_logs'
+          AND COLUMN_NAME = 'action_type'
+    `);
+    if (staffColumns.length > 0 && staffColumns[0].COLUMN_TYPE.startsWith('enum')) {
+        await db.query(`ALTER TABLE staff_activity_logs MODIFY action_type VARCHAR(64) NOT NULL`);
+    }
+
     // Backfill only actions that can be proven from persisted records.
     await db.query(`
         INSERT IGNORE INTO user_activity_logs
             (user_id, action_type, action_description, entity_type, entity_id, source_key, actor_name, actor_email, created_at)
-        SELECT id, 'register', CONCAT(first_name, ' ', last_name, ' created an account'),
+        SELECT id, 'register', 'Created an account',
                'user', id, CONCAT('register:user:', id), CONCAT(first_name, ' ', last_name), email, created_at
         FROM users
         WHERE role = 'user'
@@ -93,7 +106,7 @@ const ensureUserActivitySchema = async () => {
         INSERT IGNORE INTO user_activity_logs
             (user_id, action_type, action_description, entity_type, entity_id, source_key, actor_name, actor_email, created_at)
         SELECT tr.user_id, 'ticket_reservation',
-               CONCAT(tr.visitor_name, ' booked ticket ', tr.reservation_reference),
+               'Reserved a ticket',
                'ticket_reservation', tr.id, CONCAT('ticket_reservation:ticket_reservation:', tr.id),
                CONCAT(u.first_name, ' ', u.last_name), u.email, tr.created_at
         FROM ticket_reservations tr
@@ -104,7 +117,7 @@ const ensureUserActivitySchema = async () => {
         INSERT IGNORE INTO user_activity_logs
             (user_id, action_type, action_description, entity_type, entity_id, source_key, actor_name, actor_email, created_at)
         SELECT er.user_id, 'event_reservation',
-               CONCAT(er.participant_name, ' reserved ', COALESCE(er.venue_event_name, 'an event')),
+               'Reserved an event',
                'event_reservation', er.id, CONCAT('event_reservation:event_reservation:', er.id),
                CONCAT(u.first_name, ' ', u.last_name), u.email, er.created_at
         FROM event_reservations er
@@ -114,7 +127,7 @@ const ensureUserActivitySchema = async () => {
     await db.query(`
         INSERT IGNORE INTO user_activity_logs
             (user_id, action_type, action_description, entity_type, entity_id, source_key, actor_name, actor_email, created_at)
-        SELECT um.sender_id, 'message_sent', CONCAT('Sent message: ', um.subject),
+        SELECT um.sender_id, 'message_sent', 'Sent a message',
                'message', um.id, CONCAT('message_sent:message:', um.id),
                CONCAT(u.first_name, ' ', u.last_name), u.email, um.created_at
         FROM user_messages um

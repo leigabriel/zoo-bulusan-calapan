@@ -28,8 +28,8 @@ router.get('/tickets', userController.getMyTickets);
 router.get('/tickets/active', userController.getActiveTickets);
 router.get('/tickets/archived', userController.getArchivedTickets);
 router.get('/tickets/:id', userController.getTicketById);
-router.post('/tickets/:id/archive', trackActivity('ticket_archive', (req) => `Archived ticket #${req.params.id}`), userController.archiveTicket);
-router.post('/tickets/:id/unarchive', trackActivity('ticket_unarchive', (req) => `Unarchived ticket #${req.params.id}`), userController.unarchiveTicket);
+router.post('/tickets/:id/archive', trackActivity('ticket_archive', (req) => 'Archived ticket'), userController.archiveTicket);
+router.post('/tickets/:id/unarchive', trackActivity('ticket_unarchive', (req) => 'Unarchived ticket'), userController.unarchiveTicket);
 router.post('/tickets/archive-multiple', trackActivity('ticket_archive', 'Archived multiple tickets'), userController.archiveMultipleTickets);
 
 // appeal routes

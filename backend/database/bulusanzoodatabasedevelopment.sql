@@ -451,7 +451,7 @@ CREATE TABLE paymongo_webhook_events (
 CREATE TABLE staff_activity_logs (
     id INT PRIMARY KEY AUTO_INCREMENT,
     staff_id INT NOT NULL,
-    action_type ENUM('login', 'logout', 'message_reply', 'reservation_update', 'ticket_update', 'animal_update', 'plant_update', 'event_update', 'user_update', 'other') NOT NULL,
+    action_type VARCHAR(64) NOT NULL,
     action_description TEXT DEFAULT NULL,
     entity_type VARCHAR(50) DEFAULT NULL,
     entity_id INT DEFAULT NULL,

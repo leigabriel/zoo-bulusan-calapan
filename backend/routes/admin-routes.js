@@ -76,27 +76,27 @@ router.get('/dashboard', adminController.getDashboardStats);
 router.get('/transactions', adminController.getTransactions);
 router.get('/users', adminController.getAllUsers);
 router.get('/users/role/:role', adminController.getUsersByRole);
-router.post('/users', trackActivity('user_update', (req) => `Created user`), adminController.createUser);
-router.put('/users/:id', trackActivity('user_update', (req) => `Updated user #${req.params.id}`), adminController.updateUser);
-router.delete('/users/:id', trackActivity('user_update', (req) => `Deleted user #${req.params.id}`), adminController.deleteUser);
+router.post('/users', trackActivity('user_update', (req) => 'Created user'), adminController.createUser);
+router.put('/users/:id', trackActivity('user_update', (req) => 'Updated user'), adminController.updateUser);
+router.delete('/users/:id', trackActivity('user_update', (req) => 'Deleted user'), adminController.deleteUser);
 router.get('/animals', adminController.getAllAnimals);
-router.post('/animals', trackActivity('animal_update', (req) => `Created animal`), adminController.createAnimal);
-router.put('/animals/:id', trackActivity('animal_update', (req) => `Updated animal #${req.params.id}`), adminController.updateAnimal);
-router.delete('/animals/:id', trackActivity('animal_update', (req) => `Deleted animal #${req.params.id}`), adminController.deleteAnimal);
+router.post('/animals', trackActivity('animal_update', (req) => 'Created animal'), adminController.createAnimal);
+router.put('/animals/:id', trackActivity('animal_update', (req) => 'Updated animal'), adminController.updateAnimal);
+router.delete('/animals/:id', trackActivity('animal_update', (req) => 'Deleted animal'), adminController.deleteAnimal);
 router.get('/plants', adminController.getAllPlants);
-router.post('/plants', trackActivity('plant_update', (req) => `Created plant`), adminController.createPlant);
-router.put('/plants/:id', trackActivity('plant_update', (req) => `Updated plant #${req.params.id}`), adminController.updatePlant);
-router.delete('/plants/:id', trackActivity('plant_update', (req) => `Deleted plant #${req.params.id}`), adminController.deletePlant);
+router.post('/plants', trackActivity('plant_update', (req) => 'Created plant'), adminController.createPlant);
+router.put('/plants/:id', trackActivity('plant_update', (req) => 'Updated plant'), adminController.updatePlant);
+router.delete('/plants/:id', trackActivity('plant_update', (req) => 'Deleted plant'), adminController.deletePlant);
 router.get('/events', adminController.getAllEvents);
-router.post('/events', trackActivity('event_update', (req) => `Created event`), adminController.createEvent);
-router.put('/events/:id', trackActivity('event_update', (req) => `Updated event #${req.params.id}`), adminController.updateEvent);
-router.delete('/events/:id', trackActivity('event_update', (req) => `Deleted event #${req.params.id}`), adminController.deleteEvent);
+router.post('/events', trackActivity('event_update', (req) => 'Created event'), adminController.createEvent);
+router.put('/events/:id', trackActivity('event_update', (req) => 'Updated event'), adminController.updateEvent);
+router.delete('/events/:id', trackActivity('event_update', (req) => 'Deleted event'), adminController.deleteEvent);
 router.get('/tickets', adminController.getAllTickets);
 router.get('/tickets/export', adminController.exportTickets);
 router.get('/tickets/:id', adminController.getTicketById);
-router.put('/tickets/:id/status', trackActivity('ticket_update', (req) => `Updated ticket #${req.params.id} status`), adminController.updateTicketStatus);
-router.put('/tickets/:id/mark-paid', trackActivity('ticket_update', (req) => `Marked ticket #${req.params.id} as paid`), adminController.markTicketAsPaid);
-router.put('/tickets/:id/verification', trackActivity('ticket_update', (req) => `Updated ticket #${req.params.id} verification`), adminController.updateVerificationStatus);
+router.put('/tickets/:id/status', trackActivity('ticket_update', (req) => 'Updated ticket status'), adminController.updateTicketStatus);
+router.put('/tickets/:id/mark-paid', trackActivity('ticket_update', (req) => 'Marked ticket as paid'), adminController.markTicketAsPaid);
+router.put('/tickets/:id/verification', trackActivity('ticket_update', (req) => 'Updated ticket verification'), adminController.updateVerificationStatus);
 router.get('/reports/revenue', adminController.getRevenueReport);
 router.get('/reports/data', adminController.getReportData);
 router.get('/reports/quick-stats', adminController.getQuickStats);
@@ -104,13 +104,13 @@ router.get('/analytics', adminController.getAnalytics);
 
 // user management
 router.get('/users/:id', adminController.getUserById);
-router.put('/users/:id/suspend', trackActivity('user_update', (req) => `Suspended user #${req.params.id}`), adminController.suspendUser);
-router.put('/users/:id/unsuspend', trackActivity('user_update', (req) => `Unsuspended user #${req.params.id}`), adminController.unsuspendUser);
+router.put('/users/:id/suspend', trackActivity('user_update', (req) => 'Suspended user'), adminController.suspendUser);
+router.put('/users/:id/unsuspend', trackActivity('user_update', (req) => 'Unsuspended user'), adminController.unsuspendUser);
 router.get('/users-suspended', adminController.getSuspendedUsers);
 
 // appeal management
 router.get('/appeals', adminController.getPendingAppeals);
-router.put('/appeals/:id/review', trackActivity('other', (req) => `Reviewed appeal #${req.params.id}`), adminController.reviewAppeal);
+router.put('/appeals/:id/review', trackActivity('other', (req) => 'Reviewed appeal'), adminController.reviewAppeal);
 
 // Notification routes
 router.get('/notifications', adminController.getNotifications);
@@ -164,9 +164,7 @@ router.get('/messages/:id', messageController.getMessageById);
 router.put('/messages/:id/read', messageController.markAsRead);
 router.put('/messages/read-all', messageController.markAllAsRead);
 router.post('/messages/:id/respond', messageController.respondToMessage);
-router.delete('/messages/:id', trackActivity('other', (req) => `Deleted message #${req.params.id}`), messageController.deleteMessage);
-router.get('/appeals', messageController.getAppeals);
-
+router.delete('/messages/:id', trackActivity('other', (req) => 'Deleted message'), messageController.deleteMessage);
 // staff monitoring
 router.get('/monitoring/dashboard', monitoringController.getMonitoringDashboard);
 router.get('/monitoring/sessions', monitoringController.getActiveSessions);

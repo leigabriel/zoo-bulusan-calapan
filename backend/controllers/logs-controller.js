@@ -1,11 +1,17 @@
 const db = require('../config/database');
 
+const MAX_LIMIT = 100;
+
 /**
  * Get staff activity logs with pagination and filters
  */
 exports.getStaffLogs = async (req, res) => {
     try {
-        const { limit = 50, offset = 0, actionType, startDate, endDate, staffId } = req.query;
+        const rawLimit = parseInt(req.query.limit, 10) || 50;
+        const rawOffset = parseInt(req.query.offset, 10) || 0;
+        const limit = Math.min(Math.max(rawLimit, 1), MAX_LIMIT);
+        const offset = Math.max(rawOffset, 0);
+        const { actionType, startDate, endDate, staffId } = req.query;
 
         let query = `SELECT
             sal.id,
@@ -14,11 +20,9 @@ exports.getStaffLogs = async (req, res) => {
             sal.action_description,
             sal.entity_type,
             sal.entity_id,
-            sal.ip_address,
             sal.created_at,
             u.first_name,
             u.last_name,
-            u.email,
             u.role
          FROM staff_activity_logs sal
          JOIN users u ON sal.staff_id = u.id
@@ -47,7 +51,7 @@ exports.getStaffLogs = async (req, res) => {
         const [countResult] = await db.query(countQuery, params);
 
         query += ` ORDER BY sal.created_at DESC LIMIT ? OFFSET ?`;
-        params.push(parseInt(limit), parseInt(offset));
+        params.push(limit, offset);
 
         const [rows] = await db.query(query, params);
 
@@ -55,8 +59,8 @@ exports.getStaffLogs = async (req, res) => {
             success: true,
             logs: rows,
             total: countResult[0]?.total || 0,
-            limit: parseInt(limit),
-            offset: parseInt(offset)
+            limit,
+            offset
         });
     } catch (error) {
         console.error('Error getting staff logs:', error);
@@ -69,7 +73,11 @@ exports.getStaffLogs = async (req, res) => {
  */
 exports.getUserLogs = async (req, res) => {
     try {
-        const { limit = 50, offset = 0, actionType, startDate, endDate, userId } = req.query;
+        const rawLimit = parseInt(req.query.limit, 10) || 50;
+        const rawOffset = parseInt(req.query.offset, 10) || 0;
+        const limit = Math.min(Math.max(rawLimit, 1), MAX_LIMIT);
+        const offset = Math.max(rawOffset, 0);
+        const { actionType, startDate, endDate, userId } = req.query;
 
         let query = `SELECT
             ual.id,
@@ -78,12 +86,9 @@ exports.getUserLogs = async (req, res) => {
             ual.action_description,
             ual.entity_type,
             ual.entity_id,
-            ual.ip_address,
             ual.created_at,
-            u.first_name,
-            u.last_name,
-            COALESCE(u.email, ual.actor_email) AS email,
-            COALESCE(CONCAT(u.first_name, ' ', u.last_name), ual.actor_name) AS actor_name
+            COALESCE(u.first_name, ual.actor_name) AS first_name,
+            COALESCE(u.last_name, '') AS last_name
          FROM user_activity_logs ual
          LEFT JOIN users u ON ual.user_id = u.id
          WHERE 1=1`;
@@ -111,7 +116,7 @@ exports.getUserLogs = async (req, res) => {
         const [countResult] = await db.query(countQuery, params);
 
         query += ` ORDER BY ual.created_at DESC LIMIT ? OFFSET ?`;
-        params.push(parseInt(limit), parseInt(offset));
+        params.push(limit, offset);
 
         const [rows] = await db.query(query, params);
 
@@ -119,8 +124,8 @@ exports.getUserLogs = async (req, res) => {
             success: true,
             logs: rows,
             total: countResult[0]?.total || 0,
-            limit: parseInt(limit),
-            offset: parseInt(offset)
+            limit,
+            offset
         });
     } catch (error) {
         console.error('Error getting user logs:', error);

@@ -251,7 +251,7 @@ exports.deletePost = async (req, res) => {
         }
 
         if (isModerator) {
-            await logStaffActivity(req, 'other', `Deleted community post #${postId}`, 'community', postId);
+            await logStaffActivity(req, 'other', 'Deleted community post', 'community', postId);
         } else if (req.user.role === 'user') {
             await logUserActivity(req, 'post_delete', 'Deleted a community post', 'community', postId);
         }
@@ -330,7 +330,7 @@ exports.reviewPost = async (req, res) => {
             console.error('Error notifying post owner after moderation:', error);
         }
 
-        await logStaffActivity(req, 'other', `${action === 'approved' ? 'Approved' : 'Declined'} community post #${postId}`, 'community', postId);
+        await logStaffActivity(req, 'other', `${action === 'approved' ? 'Approved' : 'Declined'} community post`, 'community', postId);
 
         return res.json({
             success: true,
@@ -409,7 +409,7 @@ exports.createComment = async (req, res) => {
         }
 
         if (req.user.role === 'user') {
-            await logUserActivity(req, 'comment_create', `Commented on community post #${postId}`, 'comment', commentId);
+            await logUserActivity(req, 'comment_create', 'Created a comment', 'comment', commentId);
         }
 
         return res.status(201).json({ success: true, message: 'Comment added successfully.', commentId });
@@ -441,7 +441,7 @@ exports.togglePostLike = async (req, res) => {
             await logUserActivity(
                 req,
                 'post_like',
-                `${result.liked ? 'Liked' : 'Unliked'} community post #${postId}`,
+                result.liked ? 'Liked a post' : 'Unliked a post',
                 'community',
                 postId
             );
@@ -510,7 +510,7 @@ exports.deleteComment = async (req, res) => {
         }
 
         if (isModerator) {
-            await logStaffActivity(req, 'other', `Deleted community comment #${commentId}`, 'comment', commentId);
+            await logStaffActivity(req, 'other', 'Deleted community comment', 'comment', commentId);
         } else if (req.user.role === 'user') {
             await logUserActivity(req, 'comment_delete', 'Deleted a community comment', 'comment', commentId);
         }
@@ -540,7 +540,7 @@ exports.toggleCommentHeart = async (req, res) => {
             await logUserActivity(
                 req,
                 'comment_heart',
-                `${result.hearted ? 'Hearted' : 'Removed heart from'} comment #${commentId}`,
+                result.hearted ? 'Hearted a comment' : 'Removed heart from a comment',
                 'comment',
                 commentId
             );
@@ -581,7 +581,7 @@ exports.reportComment = async (req, res) => {
         });
 
         if (req.user.role === 'user') {
-            await logUserActivity(req, 'comment_report', `Reported comment #${commentId}`, 'comment', commentId);
+            await logUserActivity(req, 'comment_report', 'Reported a comment', 'comment', commentId);
         }
 
         return res.json({ success: true, message: 'Thanks for reporting. We will review this comment.' });
@@ -616,7 +616,7 @@ exports.reviewCommentReport = async (req, res) => {
             return res.status(404).json({ success: false, message: 'Report not found.' });
         }
 
-        await logStaffActivity(req, 'other', `${action === 'reviewed' ? 'Reviewed' : 'Dismissed'} community report #${reportId}`, 'comment_report', reportId);
+        await logStaffActivity(req, 'other', `${action === 'reviewed' ? 'Reviewed' : 'Dismissed'} community report`, 'comment_report', reportId);
 
         return res.json({ success: true, message: 'Report updated successfully.' });
     } catch (error) {

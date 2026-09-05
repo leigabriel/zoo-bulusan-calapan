@@ -51,7 +51,7 @@ router.post('/monitoring/heartbeat', monitoringController.heartbeat);
 // Animals - Full CRUD for staff
 router.get('/animals', staffController.getAnimals);
 router.get('/animals/:id', staffController.getAnimalById);
-router.post('/animals', trackActivity('animal_update', (req) => `Created animal record: ${req.body?.name || 'Unnamed animal'}`), adminController.createAnimal);
+router.post('/animals', trackActivity('animal_update', (req) => 'Created animal record'), adminController.createAnimal);
 router.put('/animals/:id', trackActivity('animal_update', (req) => `Updated animal record #${req.params.id}`), adminController.updateAnimal);
 router.put('/animals/:id/status', staffController.updateAnimalStatus);
 router.delete('/animals/:id', trackActivity('animal_update', (req) => `Deleted animal record #${req.params.id}`), adminController.deleteAnimal);
@@ -59,7 +59,7 @@ router.delete('/animals/:id', trackActivity('animal_update', (req) => `Deleted a
 // Plants - Full CRUD for staff
 router.get('/plants', staffController.getPlants);
 router.get('/plants/:id', staffController.getPlantById);
-router.post('/plants', trackActivity('plant_update', (req) => `Created plant record: ${req.body?.name || 'Unnamed plant'}`), adminController.createPlant);
+router.post('/plants', trackActivity('plant_update', (req) => 'Created plant record'), adminController.createPlant);
 router.put('/plants/:id', trackActivity('plant_update', (req) => `Updated plant record #${req.params.id}`), adminController.updatePlant);
 router.delete('/plants/:id', trackActivity('plant_update', (req) => `Deleted plant record #${req.params.id}`), adminController.deletePlant);
 
@@ -69,8 +69,8 @@ router.get('/tickets/active', staffController.getActiveTickets);
 router.get('/tickets/today', staffController.getTodayTickets);
 router.get('/tickets/:id', staffController.getTicketById);
 router.put('/tickets/:id/status', staffController.updateTicketStatus);
-router.put('/tickets/:id/mark-paid', trackActivity('ticket_update', (req) => `Marked ticket #${req.params.id} as paid`), staffController.markTicketAsPaid);
-router.put('/tickets/:id/verification', trackActivity('ticket_update', (req) => `Updated ticket #${req.params.id} verification`), staffController.updateVerificationStatus);
+router.put('/tickets/:id/mark-paid', trackActivity('ticket_update', (req) => 'Marked ticket as paid'), staffController.markTicketAsPaid);
+router.put('/tickets/:id/verification', trackActivity('ticket_update', (req) => 'Updated ticket verification'), staffController.updateVerificationStatus);
 router.post('/tickets/validate', staffController.validateTicket);
 router.post('/tickets/check', staffController.checkTicket);
 router.post('/tickets/mark-used', staffController.markTicketUsed);
@@ -78,15 +78,15 @@ router.post('/tickets/mark-used', staffController.markTicketUsed);
 // Events - Full CRUD for staff
 router.get('/events', staffController.getAllEvents);
 router.get('/events/upcoming', staffController.getUpcomingEvents);
-router.post('/events', trackActivity('event_update', (req) => `Created event: ${req.body?.title || req.body?.venueEventName || 'Untitled event'}`), adminController.createEvent);
-router.put('/events/:id', trackActivity('event_update', (req) => `Updated event #${req.params.id}`), adminController.updateEvent);
-router.delete('/events/:id', trackActivity('event_update', (req) => `Deleted event #${req.params.id}`), adminController.deleteEvent);
+router.post('/events', trackActivity('event_update', (req) => 'Created event'), adminController.createEvent);
+router.put('/events/:id', trackActivity('event_update', (req) => 'Updated event'), adminController.updateEvent);
+router.delete('/events/:id', trackActivity('event_update', (req) => 'Deleted event'), adminController.deleteEvent);
 
 
 
 // Appeals management
 router.get('/appeals', staffController.getPendingAppeals);
-router.put('/appeals/:id/review', trackActivity('other', (req) => `Reviewed appeal #${req.params.id}`), staffController.reviewAppeal);
+router.put('/appeals/:id/review', trackActivity('other', (req) => 'Reviewed appeal'), staffController.reviewAppeal);
 
 // Notifications
 router.get('/notifications', staffController.getNotifications);
@@ -98,8 +98,7 @@ router.get('/messages', messageController.getAllMessages);
 router.put('/messages/:id/read', messageController.markAsRead);
 router.put('/messages/read-all', messageController.markAllAsRead);
 router.put('/messages/:id/respond', messageController.respondToMessage);
-router.delete('/messages/:id', trackActivity('other', (req) => `Deleted message #${req.params.id}`), messageController.deleteMessage);
-router.get('/appeals', messageController.getAppeals);
+router.delete('/messages/:id', trackActivity('other', (req) => 'Deleted message'), messageController.deleteMessage);
 
 // dynamic middleware - checks cloudinary at request time
 const createDynamicUploadMiddleware = (type, fieldName) => {

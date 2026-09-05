@@ -345,7 +345,7 @@ exports.createTicketReservation = async (req, res) => {
 
         // Log user ticket reservation
         if (userId) {
-            logUserActivity(req, 'ticket_reservation', `${visitorName} booked a ticket for ${reservationDate}`, 'ticket_reservation', reservationId);
+            await logUserActivity(req, 'ticket_reservation', 'Reserved a ticket', 'reservation', reservationId);
         }
     } catch (error) {
         console.error('Error creating ticket reservation:', error);
@@ -453,7 +453,7 @@ exports.createEventReservation = async (req, res) => {
 
         // Log user event reservation
         if (userId) {
-            logUserActivity(req, 'event_reservation', `${participantName} reserved for ${venueEventName}`, 'event_reservation', reservationId);
+            await logUserActivity(req, 'event_reservation', 'Reserved an event', 'reservation', reservationId);
         }
     } catch (error) {
         console.error('Error creating event reservation:', error);
@@ -487,13 +487,12 @@ exports.updateTicketReservationStatus = async (req, res) => {
         }
 
         if (req.user && ['staff', 'admin'].includes(req.user.role)) {
-            const ref = existingReservation?.reservation_reference || `#${id}`;
             await logStaffActivity(
                 req,
                 'reservation_update',
-                `Updated ticket reservation ${ref} to ${status}`,
+                'Updated ticket reservation status',
                 'reservation',
-                id
+                parseInt(id)
             );
         }
 
@@ -554,13 +553,12 @@ exports.updateEventReservationStatus = async (req, res) => {
         }
 
         if (req.user && ['staff', 'admin'].includes(req.user.role)) {
-            const ref = existingReservation?.reservation_reference || `#${id}`;
             await logStaffActivity(
                 req,
                 'reservation_update',
-                `Updated event reservation ${ref} to ${status}`,
-                'event',
-                id
+                'Updated event reservation status',
+                'reservation',
+                parseInt(id)
             );
         }
 

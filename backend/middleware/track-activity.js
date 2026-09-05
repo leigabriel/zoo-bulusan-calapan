@@ -2,6 +2,21 @@ const StaffActivity = require('../models/staff-activity-model');
 const UserActivity = require('../models/user-activity-model');
 
 /**
+ * Strip sensitive content from log descriptions to avoid PII leakage.
+ * Replaces names, message subjects, and arbitrary user input with
+ * neutral placeholders.
+ */
+const sanitizeDescription = (text) => {
+    if (typeof text !== 'string') return text;
+    // Remove quoted strings that likely contain user-supplied content
+    return text
+        .replace(/"([^"]*)"/g, '"***"')
+        .replace(/'([^']*)'/g, "'***'")
+        .replace(/:\s*.{3,60}$/m, '')
+        .trim();
+};
+
+/**
  * Middleware to track staff/admin activities
  * Usage: router.post('/endpoint', trackActivity('action_type', 'description'), controller)
  */
