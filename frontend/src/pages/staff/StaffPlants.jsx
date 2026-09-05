@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { plantAPI, staffAPI } from '../../services/api-client';
 import { sanitizeInput } from '../../utils/sanitize';
 import { notify } from '../../utils/toast';
@@ -24,8 +24,8 @@ const EditIcon = () => (
     </svg>
 );
 
-const TrashIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+const TrashIcon = ({ className = 'w-4 h-4' }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
         <polyline points="3 6 5 6 21 6" />
         <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
         <line x1="10" y1="11" x2="10" y2="17" />
@@ -76,10 +76,12 @@ const StaffPlants = ({ globalSearch = '' }) => {
         imageUrl: ''
     });
     const [saving, setSaving] = useState(false);
-    const [deleteConfirm, setDeleteConfirm] = useState(null);
     const [imageInputMode, setImageInputMode] = useState('upload');
     const [imageFile, setImageFile] = useState(null);
     const [imagePreview, setImagePreview] = useState(null);
+
+    const [undoItem, setUndoItem] = useState(null);
+    const undoTimeoutRef = useRef(null);
 
     const categoryOptions = ['trees', 'shrubs', 'flowers', 'ferns', 'palms', 'succulents', 'aquatic', 'medicinal'];
     const statusOptions = ['healthy', 'growing', 'dormant', 'sick', 'treatment'];
@@ -96,6 +98,32 @@ const StaffPlants = ({ globalSearch = '' }) => {
             console.error(err);
             setError(err.message || 'Error');
         } finally { setLoading(false); }
+    };
+
+    const trashPlant = async (plant) => {
+        try {
+            const res = await staffAPI.deletePlant(plant.id);
+            if (res.success) {
+                setPlants(plants.filter(p => p.id !== plant.id));
+                setUndoItem({ type: 'plant', data: plant });
+                if (undoTimeoutRef.current) clearTimeout(undoTimeoutRef.current);
+                undoTimeoutRef.current = setTimeout(() => setUndoItem(null), 5000);
+            }
+        } catch {
+            notify.error('Failed to move plant to trash');
+        }
+    };
+
+    const handleUndoTrash = async () => {
+        if (!undoItem) return;
+        try {
+            await staffAPI.restorePlant(undoItem.data.id);
+            setPlants(prev => [undoItem.data, ...prev]);
+            setUndoItem(null);
+            if (undoTimeoutRef.current) clearTimeout(undoTimeoutRef.current);
+        } catch {
+            notify.error('Failed to restore plant');
+        }
     };
 
     const openCreateModal = () => {
@@ -203,20 +231,6 @@ const StaffPlants = ({ globalSearch = '' }) => {
             notify.error(err.message || "Couldn't save plant. Please try again.");
         } finally {
             setSaving(false);
-        }
-    };
-
-    const removePlant = async (id) => {
-        try {
-            const res = await plantAPI.delete(id, 'staff');
-            if (res.success) {
-                setPlants(plants.filter(p => p.id !== id));
-                notify.success('Plant removed.');
-                setDeleteConfirm(null);
-            } else throw new Error(res.message || 'Delete failed');
-        } catch (err) {
-            console.error(err);
-            notify.error(err.message || "Couldn't remove plant. Please try again.");
         }
     };
 
@@ -390,13 +404,15 @@ const StaffPlants = ({ globalSearch = '' }) => {
                         </div>
                     </div>
 
-                    <button
-                        onClick={openCreateModal}
-                        className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-green-500 to-green-400 text-white font-semibold rounded-xl hover:from-green-400 hover:to-green-500 transition-all shadow-lg shadow-green-300/50"
-                    >
-                        <PlusIcon />
-                        Add Plant
-                    </button>
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={openCreateModal}
+                            className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-green-500 to-green-400 text-white font-semibold rounded-xl hover:from-green-400 hover:to-green-500 transition-all shadow-lg shadow-green-300/50"
+                        >
+                            <PlusIcon />
+                            Add Plant
+                        </button>
+                    </div>
                 </div>
 
                 <div className="overflow-x-auto">
@@ -435,8 +451,8 @@ const StaffPlants = ({ globalSearch = '' }) => {
                                 </tr>
                             ) : (
                                 filteredPlants.map(plant => (
-                                    <tr key={plant.id} onClick={() => openEditModal(plant)} className="cursor-pointer hover:bg-green-50/50 transition-colors" title="Open plant details">
-                                        <td className="px-6 py-4">
+                                    <tr key={plant.id} className="cursor-pointer hover:bg-green-50/50 transition-colors" title="Open plant details">
+                                        <td className="px-6 py-4" onClick={() => openEditModal(plant)}>
                                             <div className="flex items-center gap-3">
                                                 <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-500 to-green-400 flex items-center justify-center text-white font-bold overflow-hidden">
                                                     {plant.image_url ? (
@@ -453,10 +469,10 @@ const StaffPlants = ({ globalSearch = '' }) => {
                                                 </div>
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4 text-gray-500 italic">{plant.scientific_name || '-'}</td>
-                                        <td className="px-6 py-4 text-gray-700">{plant.category || '-'}</td>
-                                        <td className="px-6 py-4 text-gray-700">{plant.location || '-'}</td>
-                                        <td className="px-6 py-4">
+                                        <td className="px-6 py-4 text-gray-500 italic" onClick={() => openEditModal(plant)}>{plant.scientific_name || '-'}</td>
+                                        <td className="px-6 py-4 text-gray-700" onClick={() => openEditModal(plant)}>{plant.category || '-'}</td>
+                                        <td className="px-6 py-4 text-gray-700" onClick={() => openEditModal(plant)}>{plant.location || '-'}</td>
+                                        <td className="px-6 py-4" onClick={() => openEditModal(plant)}>
                                             <span className={`inline-flex px-3 py-1 text-xs font-medium rounded-full border capitalize ${getStatusBadgeColor(plant.status)}`}>
                                                 {plant.status?.replace('_', ' ') || 'unknown'}
                                             </span>
@@ -464,16 +480,16 @@ const StaffPlants = ({ globalSearch = '' }) => {
                                         <td className="px-6 py-4">
                                             <div className="flex items-center justify-end gap-2">
                                                 <button
-                                                     onClick={(event) => { event.stopPropagation(); openEditModal(plant); }}
+                                                    onClick={(event) => { event.stopPropagation(); openEditModal(plant); }}
                                                     className="p-2 bg-green-50 hover:bg-green-50 border border-green-200 hover:border-green-500/50 text-gray-500 hover:text-green-600 rounded-lg transition-all"
                                                     title="Edit plant"
                                                 >
                                                     <EditIcon />
                                                 </button>
                                                 <button
-                                                     onClick={(event) => { event.stopPropagation(); setDeleteConfirm(plant); }}
+                                                    onClick={(event) => { event.stopPropagation(); trashPlant(plant); }}
                                                     className="p-2 bg-green-50 hover:bg-red-500/10 border border-green-200 hover:border-red-500/50 text-gray-500 hover:text-red-400 rounded-lg transition-all"
-                                                    title="Delete plant"
+                                                    title="Move to trash"
                                                 >
                                                     <TrashIcon />
                                                 </button>
@@ -488,10 +504,17 @@ const StaffPlants = ({ globalSearch = '' }) => {
 
                 <div className="px-6 py-4 border-t border-green-200 flex items-center justify-between">
                     <p className="text-sm text-gray-500">
-                        Showing {filteredPlants.length} of {plants.length} plants
+                        Showing {filteredPlants.length} of {plants.length} plant{plants.length !== 1 ? 's' : ''}
                     </p>
                 </div>
             </div>
+
+            {undoItem && (
+                <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-gray-900 text-white px-5 py-3 rounded-xl shadow-2xl flex items-center gap-4 animate-slide-up">
+                    <span className="text-sm">Plant moved to trash</span>
+                    <button onClick={handleUndoTrash} className="text-sm font-semibold text-green-400 hover:text-green-300 transition-colors">Undo</button>
+                </div>
+            )}
 
             {showModal && (
                 <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
@@ -634,34 +657,6 @@ const StaffPlants = ({ globalSearch = '' }) => {
                                 </button>
                             </div>
                         </form>
-                    </div>
-                </div>
-            )}
-
-            {deleteConfirm && (
-                <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-white border border-green-200 rounded-2xl w-full max-w-sm p-6 text-center">
-                        <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4 text-red-400">
-                            <TrashIcon />
-                        </div>
-                        <h3 className="text-xl font-bold text-gray-900 mb-2">Delete Plant?</h3>
-                        <p className="text-gray-500 mb-6">
-                            Are you sure you want to delete <span className="text-gray-900 font-medium">{deleteConfirm.name}</span>? This action cannot be undone.
-                        </p>
-                        <div className="flex gap-3">
-                            <button
-                                onClick={() => setDeleteConfirm(null)}
-                                className="flex-1 py-3 bg-green-50 hover:bg-green-50 text-gray-700 font-medium rounded-xl transition-all"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                onClick={() => removePlant(deleteConfirm.id)}
-                                className="flex-1 py-3 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-gray-900 font-semibold rounded-xl transition-all"
-                            >
-                                Delete
-                            </button>
-                        </div>
                     </div>
                 </div>
             )}

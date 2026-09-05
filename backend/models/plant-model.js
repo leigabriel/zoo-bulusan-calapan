@@ -3,7 +3,7 @@ const db = require('../config/database');
 class Plant {
     static async getAll() {
         const [rows] = await db.query(
-            'SELECT * FROM plants ORDER BY name ASC'
+            'SELECT * FROM plants WHERE (is_deleted IS NULL OR is_deleted = FALSE) ORDER BY name ASC'
         );
         return rows;
     }
@@ -15,7 +15,7 @@ class Plant {
 
     static async findByCategory(category) {
         const [rows] = await db.query(
-            'SELECT * FROM plants WHERE category = ? ORDER BY name ASC',
+            'SELECT * FROM plants WHERE category = ? AND (is_deleted IS NULL OR is_deleted = FALSE) ORDER BY name ASC',
             [category]
         );
         return rows;
@@ -72,13 +72,13 @@ class Plant {
     }
 
     static async count() {
-        const [rows] = await db.query('SELECT COUNT(*) as total FROM plants');
+        const [rows] = await db.query('SELECT COUNT(*) as total FROM plants WHERE (is_deleted IS NULL OR is_deleted = FALSE)');
         return rows[0].total;
     }
 
     static async countByStatus(status) {
         const [rows] = await db.query(
-            'SELECT COUNT(*) as total FROM plants WHERE status = ?',
+            'SELECT COUNT(*) as total FROM plants WHERE status = ? AND (is_deleted IS NULL OR is_deleted = FALSE)',
             [status]
         );
         return rows[0].total;
@@ -86,7 +86,7 @@ class Plant {
 
     static async countByCategory(category) {
         const [rows] = await db.query(
-            'SELECT COUNT(*) as total FROM plants WHERE category = ?',
+            'SELECT COUNT(*) as total FROM plants WHERE category = ? AND (is_deleted IS NULL OR is_deleted = FALSE)',
             [category]
         );
         return rows[0].total;
@@ -102,7 +102,7 @@ class Plant {
 
     static async getByLocation(location) {
         const [rows] = await db.query(
-            'SELECT * FROM plants WHERE location = ? ORDER BY name ASC',
+            'SELECT * FROM plants WHERE location = ? AND (is_deleted IS NULL OR is_deleted = FALSE) ORDER BY name ASC',
             [location]
         );
         return rows;
@@ -110,9 +110,66 @@ class Plant {
 
     static async getEndangered() {
         const [rows] = await db.query(
-            'SELECT * FROM plants WHERE is_endangered = TRUE ORDER BY name ASC'
+            'SELECT * FROM plants WHERE is_endangered = TRUE AND (is_deleted IS NULL OR is_deleted = FALSE) ORDER BY name ASC'
         );
         return rows;
+    }
+
+    // Trash methods
+    static async softDelete(id, deletedBy) {
+        const [result] = await db.query(
+            'UPDATE plants SET is_deleted = TRUE, deleted_at = NOW(), deleted_by = ? WHERE id = ?',
+            [deletedBy, id]
+        );
+        return result.affectedRows > 0;
+    }
+
+    static async softDeleteMultiple(ids, deletedBy) {
+        if (!ids || ids.length === 0) return false;
+        const [result] = await db.query(
+            'UPDATE plants SET is_deleted = TRUE, deleted_at = NOW(), deleted_by = ? WHERE id IN (?)',
+            [deletedBy, ids]
+        );
+        return result.affectedRows > 0;
+    }
+
+    static async restore(id) {
+        const [result] = await db.query(
+            'UPDATE plants SET is_deleted = FALSE, deleted_at = NULL, deleted_by = NULL WHERE id = ?',
+            [id]
+        );
+        return result.affectedRows > 0;
+    }
+
+    static async restoreMultiple(ids) {
+        if (!ids || ids.length === 0) return false;
+        const [result] = await db.query(
+            'UPDATE plants SET is_deleted = FALSE, deleted_at = NULL, deleted_by = NULL WHERE id IN (?)',
+            [ids]
+        );
+        return result.affectedRows > 0;
+    }
+
+    static async getDeleted() {
+        const [rows] = await db.query(
+            `SELECT p.*, CONCAT(d.first_name, ' ', d.last_name) as deleted_by_name
+             FROM plants p
+             LEFT JOIN users d ON p.deleted_by = d.id
+             WHERE p.is_deleted = TRUE
+             ORDER BY p.deleted_at DESC`
+        );
+        return rows;
+    }
+
+    static async permanentDelete(id) {
+        const [result] = await db.query('DELETE FROM plants WHERE id = ?', [id]);
+        return result.affectedRows > 0;
+    }
+
+    static async permanentDeleteMultiple(ids) {
+        if (!ids || ids.length === 0) return false;
+        const [result] = await db.query('DELETE FROM plants WHERE id IN (?)', [ids]);
+        return result.affectedRows > 0;
     }
 }
 

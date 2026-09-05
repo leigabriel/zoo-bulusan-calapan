@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { staffAPI, getProfileImageUrl } from '../../services/api-client';
 import { sanitizeInput } from '../../utils/sanitize';
 import { notify } from '../../utils/toast';
@@ -34,8 +34,8 @@ const EditIcon = () => (
     </svg>
 );
 
-const TrashIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+const TrashIcon = ({ className = 'w-4 h-4' }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
         <polyline points="3 6 5 6 21 6" />
         <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
         <line x1="10" y1="11" x2="10" y2="17" />
@@ -100,7 +100,7 @@ const StaffUsers = ({ globalSearch = '' }) => {
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
-    const [roleFilter, setRoleFilter] = useState('user');
+    const [roleFilter] = useState('user');
     const [selectedUser, setSelectedUser] = useState(null);
     const [showModal, setShowModal] = useState(false);
     const [editingUser, setEditingUser] = useState(null);
@@ -112,6 +112,9 @@ const StaffUsers = ({ globalSearch = '' }) => {
         firstName: '', lastName: '', email: '', username: '', password: '', phone: '', address: ''
     });
 
+    const [undoItem, setUndoItem] = useState(null);
+    const undoTimeoutRef = useRef(null);
+
     useEffect(() => {
         fetchUsers();
     }, []);
@@ -121,7 +124,6 @@ const StaffUsers = ({ globalSearch = '' }) => {
             setLoading(true);
             const res = await staffAPI.getUsers();
             if (res.success && res.users) {
-                // Filter out admin and staff users - staff can only manage regular users
                 const regularUsers = res.users.filter(u => u.role === 'user');
                 setUsers(regularUsers);
             }
@@ -169,7 +171,7 @@ const StaffUsers = ({ globalSearch = '' }) => {
                 username: form.username,
                 phone: form.phone,
                 address: form.address,
-                role: 'user' // Staff can only create regular users
+                role: 'user'
             };
             if (form.password) userData.password = form.password;
 
@@ -188,7 +190,6 @@ const StaffUsers = ({ globalSearch = '' }) => {
             closeModal();
             fetchUsers();
         } catch (err) {
-            console.error('Error saving user:', err);
             notify.error(err.message || "Couldn't save user.");
         } finally {
             setSaving(false);
@@ -208,7 +209,6 @@ const StaffUsers = ({ globalSearch = '' }) => {
             setSuspendReason('');
             fetchUsers();
         } catch (err) {
-            console.error('Error suspending user:', err);
             notify.error(err.message || "Couldn't update account.");
         } finally {
             setSuspending(false);
@@ -222,8 +222,35 @@ const StaffUsers = ({ globalSearch = '' }) => {
             notify.success('Account restored.');
             fetchUsers();
         } catch (err) {
-            console.error('Error unsuspending user:', err);
             notify.error(err.message || "Couldn't restore account.");
+        }
+    };
+
+    // ==================== TRASH HANDLERS ====================
+
+    const trashUser = async (user) => {
+        try {
+            const res = await staffAPI.softDeleteUser(user.id);
+            if (res.success) {
+                setUsers(users.filter(u => u.id !== user.id));
+                setUndoItem({ type: 'user', data: user });
+                if (undoTimeoutRef.current) clearTimeout(undoTimeoutRef.current);
+                undoTimeoutRef.current = setTimeout(() => setUndoItem(null), 5000);
+            }
+        } catch {
+            notify.error('Failed to move user to trash');
+        }
+    };
+
+    const handleUndoTrash = async () => {
+        if (!undoItem) return;
+        try {
+            await staffAPI.restoreUser(undoItem.data.id);
+            setUsers(prev => [undoItem.data, ...prev]);
+            setUndoItem(null);
+            if (undoTimeoutRef.current) clearTimeout(undoTimeoutRef.current);
+        } catch {
+            notify.error('Failed to restore user');
         }
     };
 
@@ -238,14 +265,11 @@ const StaffUsers = ({ globalSearch = '' }) => {
 
     const formatDate = (dateStr) => {
         if (!dateStr) return '-';
-        return new Date(dateStr).toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric'
-        });
+        return new Date(dateStr).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
     };
 
     const effectiveSearch = globalSearch || searchQuery;
+
     const filteredUsers = users.filter(user => {
         const matchesSearch = user.first_name?.toLowerCase().includes(effectiveSearch.toLowerCase()) ||
             user.last_name?.toLowerCase().includes(effectiveSearch.toLowerCase()) ||
@@ -312,12 +336,14 @@ const StaffUsers = ({ globalSearch = '' }) => {
                             className="ml-2 bg-transparent border-none outline-none text-gray-900 placeholder-gray-500 w-full"
                         />
                     </div>
-                    <button
-                        onClick={openCreateModal}
-                        className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-green-500 to-green-400 text-white font-semibold rounded-xl hover:from-green-400 hover:to-green-500 transition-all shadow-lg shadow-green-300/50"
-                    >
-                        <PlusIcon /> Add User
-                    </button>
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={openCreateModal}
+                            className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-green-500 to-green-400 text-white font-semibold rounded-xl hover:from-green-400 hover:to-green-500 transition-all shadow-lg shadow-green-300/50"
+                        >
+                            <PlusIcon /> Add User
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -338,109 +364,103 @@ const StaffUsers = ({ globalSearch = '' }) => {
                         </thead>
                         <tbody>
                             {filteredUsers.length > 0 ? (
-                                filteredUsers.map(user => (
-                                    <tr key={user.id} className="border-b border-green-200 hover:bg-green-50/50 transition">
-                                        <td className="px-6 py-4">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 rounded-full overflow-hidden bg-white flex items-center justify-center border border-green-200">
-                                                    {user.profile_image ? (
-                                                        <img
-                                                            src={getProfileImageUrl(user.profile_image)}
-                                                            alt={user.first_name}
-                                                            className="w-full h-full object-cover"
-                                                        />
+                                    filteredUsers.map(user => (
+                                        <tr key={user.id} className="border-b border-green-200 hover:bg-green-50/50 transition">
+                                            <td className="px-6 py-4">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-10 h-10 rounded-full overflow-hidden bg-white flex items-center justify-center border border-green-200">
+                                                        {user.profile_image ? (
+                                                            <img src={getProfileImageUrl(user.profile_image)} alt={user.first_name} className="w-full h-full object-cover" />
+                                                        ) : (
+                                                            <span className="text-green-600 font-medium">{user.first_name?.charAt(0)}{user.last_name?.charAt(0)}</span>
+                                                        )}
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-gray-900 font-medium">{user.first_name} {user.last_name}</p>
+                                                        <p className="text-gray-500 text-sm">@{user.username}</p>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <div className="flex items-center gap-2 text-gray-500">
+                                                    <MailIcon />
+                                                    <span>{user.email}</span>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <span className={`px-3 py-1 rounded-lg text-xs font-medium border capitalize ${getRoleBadge(user.role)}`}>
+                                                    {user.role}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <span className={`px-3 py-1 rounded-lg text-xs font-medium border ${user.is_suspended ? 'bg-red-500/20 text-red-400 border-red-500/30' : 'bg-green-500/20 text-green-600 border-green-500/30'}`}>
+                                                    {user.is_suspended ? 'Suspended' : 'Active'}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <div className="flex items-center gap-2 text-gray-500">
+                                                    <CalendarIcon />
+                                                    <span>{formatDate(user.created_at)}</span>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <div className="flex items-center gap-2 text-gray-500">
+                                                    <TicketIcon />
+                                                    <span>{user.ticket_count || 0}</span>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <div className="flex items-center gap-2">
+                                                    <button onClick={() => setSelectedUser(user)} className="p-2 bg-blue-500/10 border border-blue-500/30 rounded-lg text-blue-400 hover:bg-blue-500/20 transition" title="View Details">
+                                                        <UserIcon />
+                                                    </button>
+                                                    <button onClick={() => openEditModal(user)} className="p-2 bg-green-500/10 border border-green-500/30 rounded-lg text-green-600 hover:bg-green-500/20 transition" title="Edit User">
+                                                        <EditIcon />
+                                                    </button>
+                                                    {user.is_suspended ? (
+                                                        <button onClick={() => handleUnsuspendUser(user.id)} className="p-2 bg-green-500/10 border border-green-500/30 rounded-lg text-green-400 hover:bg-green-500/20 transition" title="Unsuspend User">
+                                                            <UnbanIcon />
+                                                        </button>
                                                     ) : (
-                                                        <span className="text-green-600 font-medium">
-                                                            {user.first_name?.charAt(0)}{user.last_name?.charAt(0)}
-                                                        </span>
+                                                        <button onClick={() => setSuspendUser(user)} className="p-2 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 hover:bg-red-500/20 transition" title="Suspend User">
+                                                            <BanIcon />
+                                                        </button>
                                                     )}
-                                                </div>
-                                                <div>
-                                                    <p className="text-gray-900 font-medium">{user.first_name} {user.last_name}</p>
-                                                    <p className="text-gray-500 text-sm">@{user.username}</p>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <div className="flex items-center gap-2 text-gray-500">
-                                                <MailIcon />
-                                                <span>{user.email}</span>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <span className={`px-3 py-1 rounded-lg text-xs font-medium border capitalize ${getRoleBadge(user.role)}`}>
-                                                {user.role}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <span className={`px-3 py-1 rounded-lg text-xs font-medium border ${user.is_suspended ? 'bg-red-500/20 text-red-400 border-red-500/30' : 'bg-green-500/20 text-green-600 border-green-500/30'}`}>
-                                                {user.is_suspended ? 'Suspended' : 'Active'}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <div className="flex items-center gap-2 text-gray-500">
-                                                <CalendarIcon />
-                                                <span>{formatDate(user.created_at)}</span>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <div className="flex items-center gap-2 text-gray-500">
-                                                <TicketIcon />
-                                                <span>{user.ticket_count || 0}</span>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <div className="flex items-center gap-2">
-                                                <button
-                                                    onClick={() => setSelectedUser(user)}
-                                                    className="p-2 bg-blue-500/10 border border-blue-500/30 rounded-lg text-blue-400 hover:bg-blue-500/20 transition"
-                                                    title="View Details"
-                                                >
-                                                    <UserIcon />
-                                                </button>
-                                                <button
-                                                    onClick={() => openEditModal(user)}
-                                                    className="p-2 bg-green-500/10 border border-green-500/30 rounded-lg text-green-600 hover:bg-green-500/20 transition"
-                                                    title="Edit User"
-                                                >
-                                                    <EditIcon />
-                                                </button>
-                                                {user.is_suspended ? (
-                                                    <button
-                                                        onClick={() => handleUnsuspendUser(user.id)}
-                                                        className="p-2 bg-green-500/10 border border-green-500/30 rounded-lg text-green-400 hover:bg-green-500/20 transition"
-                                                        title="Unsuspend User"
-                                                    >
-                                                        <UnbanIcon />
+                                                    <button onClick={() => trashUser(user)} className="p-2 bg-green-50 hover:bg-red-500/10 border border-green-200 hover:border-red-500/50 text-gray-500 hover:text-red-400 rounded-lg transition-all" title="Move to trash">
+                                                        <TrashIcon />
                                                     </button>
-                                                ) : (
-                                                    <button
-                                                        onClick={() => setSuspendUser(user)}
-                                                        className="p-2 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 hover:bg-red-500/20 transition"
-                                                        title="Suspend User"
-                                                    >
-                                                        <BanIcon />
-                                                    </button>
-                                                )}
-                                            </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))
+                                ) : (
+                                    <tr>
+                                        <td colSpan={7} className="text-center py-12 text-gray-500">
+                                            No users found
                                         </td>
                                     </tr>
-                                ))
-                            ) : (
-                                <tr>
-                                    <td colSpan={7} className="text-center py-12 text-gray-500">
-                                        No users found
-                                    </td>
-                                </tr>
-                            )}
+                                )
+                            }
                         </tbody>
                     </table>
                 </div>
-                {/* Table Footer */}
                 <div className="px-6 py-3 border-t border-green-200 text-sm text-gray-500">
                     Showing {filteredUsers.length} of {users.length} users
                 </div>
             </div>
+
+            {/* Undo Toast */}
+            {undoItem && (
+                <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-gray-900 text-white px-5 py-3 rounded-xl shadow-2xl flex items-center gap-4 animate-slide-up">
+                    <span className="text-sm">User moved to trash</span>
+                    <button
+                        onClick={handleUndoTrash}
+                        className="text-sm font-semibold text-green-400 hover:text-green-300 transition-colors"
+                    >
+                        Undo
+                    </button>
+                </div>
+            )}
 
             {/* User Detail Modal */}
             {selectedUser && (
@@ -448,10 +468,7 @@ const StaffUsers = ({ globalSearch = '' }) => {
                     <div className="bg-white border border-green-200 rounded-2xl w-full max-w-md">
                         <div className="p-6 border-b border-green-200 flex items-center justify-between">
                             <h3 className="text-xl font-bold text-gray-900">User Details</h3>
-                            <button
-                                onClick={() => setSelectedUser(null)}
-                                className="p-2 hover:bg-green-50 rounded-lg text-gray-500 hover:text-gray-900 transition"
-                            >
+                            <button onClick={() => setSelectedUser(null)} className="p-2 hover:bg-green-50 rounded-lg text-gray-500 hover:text-gray-900 transition">
                                 <CloseIcon />
                             </button>
                         </div>
@@ -459,59 +476,31 @@ const StaffUsers = ({ globalSearch = '' }) => {
                             <div className="flex items-center gap-4">
                                 <div className="w-16 h-16 rounded-full overflow-hidden bg-white flex items-center justify-center border border-green-200">
                                     {selectedUser.profile_image ? (
-                                        <img
-                                            src={getProfileImageUrl(selectedUser.profile_image)}
-                                            alt={selectedUser.first_name}
-                                            className="w-full h-full object-cover"
-                                        />
+                                        <img src={getProfileImageUrl(selectedUser.profile_image)} alt={selectedUser.first_name} className="w-full h-full object-cover" />
                                     ) : (
-                                        <span className="text-green-600 font-bold text-xl">
-                                            {selectedUser.first_name?.charAt(0)}{selectedUser.last_name?.charAt(0)}
-                                        </span>
+                                        <span className="text-green-600 font-bold text-xl">{selectedUser.first_name?.charAt(0)}{selectedUser.last_name?.charAt(0)}</span>
                                     )}
                                 </div>
                                 <div>
                                     <h4 className="text-gray-900 font-bold text-lg">{selectedUser.first_name} {selectedUser.last_name}</h4>
                                     <p className="text-gray-500">@{selectedUser.username}</p>
-                                    <span className={`px-3 py-1 rounded-lg text-xs font-medium border capitalize inline-block mt-2 ${getRoleBadge(selectedUser.role)}`}>
-                                        {selectedUser.role}
-                                    </span>
+                                    <span className={`px-3 py-1 rounded-lg text-xs font-medium border capitalize inline-block mt-2 ${getRoleBadge(selectedUser.role)}`}>{selectedUser.role}</span>
                                 </div>
                             </div>
                             <div className="space-y-4">
-                                <div className="flex items-center gap-3 text-gray-500">
-                                    <MailIcon />
-                                    <span>{selectedUser.email}</span>
-                                </div>
-                                <div className="flex items-center gap-3 text-gray-500">
-                                    <CalendarIcon />
-                                    <span>Joined {formatDate(selectedUser.created_at)}</span>
-                                </div>
-                                <div className="flex items-center gap-3 text-gray-500">
-                                    <TicketIcon />
-                                    <span>{selectedUser.ticket_count || 0} ticket purchases</span>
-                                </div>
+                                <div className="flex items-center gap-3 text-gray-500"><MailIcon /><span>{selectedUser.email}</span></div>
+                                <div className="flex items-center gap-3 text-gray-500"><CalendarIcon /><span>Joined {formatDate(selectedUser.created_at)}</span></div>
+                                <div className="flex items-center gap-3 text-gray-500"><TicketIcon /><span>{selectedUser.ticket_count || 0} ticket purchases</span></div>
                             </div>
                             {selectedUser.address && (
-                                <div>
-                                    <p className="text-gray-500 text-sm mb-1">Address</p>
-                                    <p className="text-gray-700">{selectedUser.address}</p>
-                                </div>
+                                <div><p className="text-gray-500 text-sm mb-1">Address</p><p className="text-gray-700">{selectedUser.address}</p></div>
                             )}
                             {selectedUser.phone && (
-                                <div>
-                                    <p className="text-gray-500 text-sm mb-1">Phone</p>
-                                    <p className="text-gray-700">{selectedUser.phone}</p>
-                                </div>
+                                <div><p className="text-gray-500 text-sm mb-1">Phone</p><p className="text-gray-700">{selectedUser.phone}</p></div>
                             )}
                         </div>
                         <div className="p-6 border-t border-green-200">
-                            <button
-                                onClick={() => setSelectedUser(null)}
-                                className="w-full py-3 bg-green-50 rounded-xl text-gray-900 hover:bg-green-50 transition"
-                            >
-                                Close
-                            </button>
+                            <button onClick={() => setSelectedUser(null)} className="w-full py-3 bg-green-50 rounded-xl text-gray-900 hover:bg-green-50 transition">Close</button>
                         </div>
                     </div>
                 </div>
@@ -522,97 +511,42 @@ const StaffUsers = ({ globalSearch = '' }) => {
                 <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
                     <div className="bg-white border border-green-200 rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
                         <div className="p-6 border-b border-green-200 flex items-center justify-between sticky top-0 bg-white">
-                            <h3 className="text-xl font-bold text-gray-900">
-                                {editingUser ? 'Edit User' : 'Add New User'}
-                            </h3>
-                            <button onClick={closeModal} className="p-2 hover:bg-green-50 rounded-lg text-gray-500 hover:text-gray-900 transition">
-                                <CloseIcon />
-                            </button>
+                            <h3 className="text-xl font-bold text-gray-900">{editingUser ? 'Edit User' : 'Add New User'}</h3>
+                            <button onClick={closeModal} className="p-2 hover:bg-green-50 rounded-lg text-gray-500 hover:text-gray-900 transition"><CloseIcon /></button>
                         </div>
                         <form onSubmit={saveUser} className="p-6 space-y-4">
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-500 mb-2">First Name *</label>
-                                    <input
-                                        type="text"
-                                        value={form.firstName}
-                                        onChange={(e) => setForm({ ...form, firstName: sanitizeInput(e.target.value) })}
-                                        required
-                                        className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-500"
-                                        placeholder="First name"
-                                    />
+                                    <input type="text" value={form.firstName} onChange={(e) => setForm({ ...form, firstName: sanitizeInput(e.target.value) })} required className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-500" placeholder="First name" />
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-500 mb-2">Last Name *</label>
-                                    <input
-                                        type="text"
-                                        value={form.lastName}
-                                        onChange={(e) => setForm({ ...form, lastName: sanitizeInput(e.target.value) })}
-                                        required
-                                        className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-500"
-                                        placeholder="Last name"
-                                    />
+                                    <input type="text" value={form.lastName} onChange={(e) => setForm({ ...form, lastName: sanitizeInput(e.target.value) })} required className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-500" placeholder="Last name" />
                                 </div>
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-500 mb-2">Username *</label>
-                                <input
-                                    type="text"
-                                    value={form.username}
-                                    onChange={(e) => setForm({ ...form, username: sanitizeInput(e.target.value) })}
-                                    required
-                                    className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-500"
-                                    placeholder="Username"
-                                />
+                                <input type="text" value={form.username} onChange={(e) => setForm({ ...form, username: sanitizeInput(e.target.value) })} required className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-500" placeholder="Username" />
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-500 mb-2">Email *</label>
-                                <input
-                                    type="email"
-                                    value={form.email}
-                                    onChange={(e) => setForm({ ...form, email: e.target.value })}
-                                    required
-                                    className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-500"
-                                    placeholder="Email address"
-                                />
+                                <input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} required className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-500" placeholder="Email address" />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-500 mb-2">
-                                    Password {editingUser ? '(leave blank to keep current)' : '*'}
-                                </label>
-                                <input
-                                    type="password"
-                                    value={form.password}
-                                    onChange={(e) => setForm({ ...form, password: e.target.value })}
-                                    required={!editingUser}
-                                    className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-500"
-                                    placeholder={editingUser ? 'Leave blank to keep current' : 'Password'}
-                                />
+                                <label className="block text-sm font-medium text-gray-500 mb-2">Password {editingUser ? '(leave blank to keep current)' : '*'}</label>
+                                <input type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} required={!editingUser} className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-500" placeholder={editingUser ? 'Leave blank to keep current' : 'Password'} />
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-500 mb-2">Phone</label>
-                                <input
-                                    type="tel"
-                                    value={form.phone}
-                                    onChange={(e) => setForm({ ...form, phone: sanitizeInput(e.target.value) })}
-                                    className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-500"
-                                    placeholder="Phone number"
-                                />
+                                <input type="tel" value={form.phone} onChange={(e) => setForm({ ...form, phone: sanitizeInput(e.target.value) })} className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-500" placeholder="Phone number" />
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-500 mb-2">Address</label>
-                                <textarea
-                                    value={form.address}
-                                    onChange={(e) => setForm({ ...form, address: sanitizeInput(e.target.value) })}
-                                    rows="2"
-                                    className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-500 resize-none"
-                                    placeholder="Address"
-                                />
+                                <textarea value={form.address} onChange={(e) => setForm({ ...form, address: sanitizeInput(e.target.value) })} rows="2" className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-500 resize-none" placeholder="Address" />
                             </div>
                             <div className="flex gap-3 pt-4">
-                                <button type="button" onClick={closeModal} className="flex-1 px-4 py-3 bg-green-50 hover:bg-green-50 text-gray-900 rounded-xl font-medium transition">
-                                    Cancel
-                                </button>
+                                <button type="button" onClick={closeModal} className="flex-1 px-4 py-3 bg-green-50 hover:bg-green-50 text-gray-900 rounded-xl font-medium transition">Cancel</button>
                                 <button type="submit" disabled={saving} className="flex-1 px-4 py-3 bg-green-500 hover:bg-green-600 text-white rounded-xl font-medium transition disabled:opacity-50">
                                     {saving ? 'Saving...' : (editingUser ? 'Update User' : 'Add User')}
                                 </button>
@@ -627,31 +561,14 @@ const StaffUsers = ({ globalSearch = '' }) => {
                 <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
                     <div className="bg-white border border-green-200 rounded-2xl w-full max-w-md p-6">
                         <h3 className="text-xl font-bold text-gray-900 mb-2">Suspend User</h3>
-                        <p className="text-gray-500 mb-4">
-                            Are you sure you want to suspend <span className="text-gray-900 font-medium">{suspendUser.first_name} {suspendUser.last_name}</span>?
-                        </p>
+                        <p className="text-gray-500 mb-4">Are you sure you want to suspend <span className="text-gray-900 font-medium">{suspendUser.first_name} {suspendUser.last_name}</span>?</p>
                         <div className="mb-4">
                             <label className="block text-sm text-gray-500 mb-2">Reason for suspension *</label>
-                            <textarea
-                                value={suspendReason}
-                                onChange={(e) => setSuspendReason(e.target.value)}
-                                placeholder="Enter the reason for suspending this user..."
-                                className="w-full px-4 py-3 bg-white border border-green-200 rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-500/50 resize-none"
-                                rows={3}
-                            />
+                            <textarea value={suspendReason} onChange={(e) => setSuspendReason(e.target.value)} placeholder="Enter the reason for suspending this user..." className="w-full px-4 py-3 bg-white border border-green-200 rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-500/50 resize-none" rows={3} />
                         </div>
                         <div className="flex gap-3">
-                            <button 
-                                onClick={() => { setSuspendUser(null); setSuspendReason(''); }} 
-                                className="flex-1 px-4 py-3 bg-green-50 hover:bg-green-50 text-gray-900 rounded-xl font-medium transition"
-                            >
-                                Cancel
-                            </button>
-                            <button 
-                                onClick={handleSuspendUser} 
-                                disabled={suspending || !suspendReason.trim()}
-                                className="flex-1 px-4 py-3 bg-red-500 hover:bg-red-600 text-gray-900 rounded-xl font-medium transition disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
+                            <button onClick={() => { setSuspendUser(null); setSuspendReason(''); }} className="flex-1 px-4 py-3 bg-green-50 hover:bg-green-50 text-gray-900 rounded-xl font-medium transition">Cancel</button>
+                            <button onClick={handleSuspendUser} disabled={suspending || !suspendReason.trim()} className="flex-1 px-4 py-3 bg-red-500 hover:bg-red-600 text-gray-900 rounded-xl font-medium transition disabled:opacity-50 disabled:cursor-not-allowed">
                                 {suspending ? 'Suspending...' : 'Suspend'}
                             </button>
                         </div>

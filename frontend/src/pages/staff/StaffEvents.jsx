@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { staffAPI } from '../../services/api-client';
 import { sanitizeInput } from '../../utils/sanitize';
 import { notify } from '../../utils/toast';
@@ -54,8 +54,8 @@ const EditIcon = () => (
     </svg>
 );
 
-const TrashIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+const TrashIcon = ({ className = 'w-4 h-4' }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
         <polyline points="3 6 5 6 21 6" />
         <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
     </svg>
@@ -86,7 +86,6 @@ const StaffEvents = ({ globalSearch = '' }) => {
     const [statusFilter, setStatusFilter] = useState('all');
     const [showModal, setShowModal] = useState(false);
     const [editingEvent, setEditingEvent] = useState(null);
-    const [deleteConfirm, setDeleteConfirm] = useState(null);
     const [showSaveConfirm, setShowSaveConfirm] = useState(false);
     const [confirmData, setConfirmData] = useState(null);
     const [saving, setSaving] = useState(false);
@@ -98,6 +97,10 @@ const StaffEvents = ({ globalSearch = '' }) => {
         title: '', description: '', eventDate: '', startTime: '', endTime: '',
         status: 'upcoming', imageUrl: '', color: '#22c55e'
     });
+
+    // Undo state
+    const [undoItem, setUndoItem] = useState(null);
+    const undoTimeoutRef = useRef(null);
 
     useEffect(() => {
         fetchEvents();
@@ -184,7 +187,6 @@ const StaffEvents = ({ globalSearch = '' }) => {
             setError('Title and date are required.');
             return;
         }
-        // Show confirmation modal instead of directly saving
         setConfirmData({
             isUpdate: !!editingEvent,
             title: form.title,
@@ -198,7 +200,6 @@ const StaffEvents = ({ globalSearch = '' }) => {
         setSaving(true);
         setError('');
         try {
-            // Handle image upload if file mode selected
             let imageUrl = form.imageUrl;
             if (imageInputMode === 'upload' && imageFile) {
                 const uploadRes = await staffAPI.uploadEventImage(imageFile);
@@ -248,22 +249,6 @@ const StaffEvents = ({ globalSearch = '' }) => {
         }
     };
 
-    const removeEvent = async (id) => {
-        try {
-            const res = await staffAPI.deleteEvent(id);
-            if (res.success) {
-                setEvents(events.filter(e => e.id !== id));
-                notify.success('Event removed.');
-                setDeleteConfirm(null);
-            } else {
-                notify.error(res.message || "Couldn't remove event.");
-            }
-        } catch (err) {
-            console.error(err);
-            notify.error("Couldn't remove event. Please try again.");
-        }
-    };
-
     const getStatusBadge = (status) => {
         switch (status?.toLowerCase()) {
             case 'upcoming': return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
@@ -310,6 +295,32 @@ const StaffEvents = ({ globalSearch = '' }) => {
         completed: events.filter(e => e.status === 'completed').length,
     };
 
+    const trashEvent = async (event) => {
+        try {
+            const res = await staffAPI.deleteEvent(event.id);
+            if (res.success) {
+                setEvents(events.filter(e => e.id !== event.id));
+                setUndoItem({ type: 'event', data: event });
+                if (undoTimeoutRef.current) clearTimeout(undoTimeoutRef.current);
+                undoTimeoutRef.current = setTimeout(() => setUndoItem(null), 5000);
+            }
+        } catch (err) {
+            notify.error('Failed to move event to trash');
+        }
+    };
+
+    const handleUndoTrash = async () => {
+        if (!undoItem) return;
+        try {
+            await staffAPI.restoreEvent(undoItem.data.id);
+            setEvents(prev => [undoItem.data, ...prev]);
+            setUndoItem(null);
+            if (undoTimeoutRef.current) clearTimeout(undoTimeoutRef.current);
+        } catch (err) {
+            notify.error('Failed to restore event');
+        }
+    };
+
     if (loading) {
         return (
             <div className="flex items-center justify-center h-64">
@@ -325,30 +336,30 @@ const StaffEvents = ({ globalSearch = '' }) => {
         <div className="space-y-6">
             {/* Stats Cards */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="bg-green-50 border border-green-200 rounded-2xl p-4">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <p className="text-gray-500 text-sm">Total Events</p>
-                            <p className="text-2xl font-bold text-gray-900">{eventStats.total}</p>
-                        </div>
-                        <div className="w-10 h-10 bg-green-500/10 rounded-xl flex items-center justify-center text-green-600">
-                            <CalendarIcon />
+                    <div className="bg-green-50 border border-green-200 rounded-2xl p-4">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-gray-500 text-sm">Total Events</p>
+                                <p className="text-2xl font-bold text-gray-900">{eventStats.total}</p>
+                            </div>
+                            <div className="w-10 h-10 bg-green-500/10 rounded-xl flex items-center justify-center text-green-600">
+                                <CalendarIcon />
+                            </div>
                         </div>
                     </div>
+                    <div className="bg-green-50 border border-green-200 rounded-2xl p-4">
+                        <p className="text-gray-500 text-sm">Upcoming</p>
+                        <p className="text-2xl font-bold text-blue-400">{eventStats.upcoming}</p>
+                    </div>
+                    <div className="bg-green-50 border border-green-200 rounded-2xl p-4">
+                        <p className="text-gray-500 text-sm">Ongoing</p>
+                        <p className="text-2xl font-bold text-green-600">{eventStats.ongoing}</p>
+                    </div>
+                    <div className="bg-green-50 border border-green-200 rounded-2xl p-4">
+                        <p className="text-gray-500 text-sm">Completed</p>
+                        <p className="text-2xl font-bold text-gray-500">{eventStats.completed}</p>
+                    </div>
                 </div>
-                <div className="bg-green-50 border border-green-200 rounded-2xl p-4">
-                    <p className="text-gray-500 text-sm">Upcoming</p>
-                    <p className="text-2xl font-bold text-blue-400">{eventStats.upcoming}</p>
-                </div>
-                <div className="bg-green-50 border border-green-200 rounded-2xl p-4">
-                    <p className="text-gray-500 text-sm">Ongoing</p>
-                    <p className="text-2xl font-bold text-green-600">{eventStats.ongoing}</p>
-                </div>
-                <div className="bg-green-50 border border-green-200 rounded-2xl p-4">
-                    <p className="text-gray-500 text-sm">Completed</p>
-                    <p className="text-2xl font-bold text-gray-500">{eventStats.completed}</p>
-                </div>
-            </div>
 
             {/* Filters */}
             <div className="bg-white border border-green-200 rounded-2xl p-4">
@@ -376,83 +387,85 @@ const StaffEvents = ({ globalSearch = '' }) => {
                             <option value="cancelled">Cancelled</option>
                         </select>
                     </div>
-                    <button
-                        onClick={openCreateModal}
-                        className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-green-500 to-green-400 text-white font-semibold rounded-xl hover:from-green-400 hover:to-green-500 transition-all shadow-lg shadow-green-300/50"
-                    >
-                        <PlusIcon /> Add Event
-                    </button>
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={openCreateModal}
+                            className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-green-500 to-green-400 text-white font-semibold rounded-xl hover:from-green-400 hover:to-green-500 transition-all shadow-lg shadow-green-300/50"
+                        >
+                            <PlusIcon /> Add Event
+                        </button>
+                    </div>
                 </div>
             </div>
 
             {/* Events Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredEvents.length > 0 ? (
-                    filteredEvents.map(event => (
-                        <div key={event.id} className="bg-white border border-green-200 rounded-2xl overflow-hidden hover:border-green-500/30 transition group">
-                            {event.image_url && (
-                                <div className="h-40 bg-white overflow-hidden">
-                                    <img
-                                        src={event.image_url}
-                                        alt={event.title}
-                                        className="w-full h-full object-cover"
-                                    />
-                                </div>
-                            )}
-                            <div className="p-5">
-                                <div className="flex items-start justify-between mb-3">
-                                    <h3 className="text-lg font-bold text-gray-900">{event.title}</h3>
-                                    <span className={`px-2 py-1 rounded-lg text-xs font-medium border ${getStatusBadge(event.status)}`}>
-                                        {event.status}
-                                    </span>
-                                </div>
-                                <p className="text-gray-500 text-sm mb-4 line-clamp-2">{event.description}</p>
-                                <div className="space-y-2 text-sm">
-                                    <div className="flex items-center gap-2 text-gray-500">
-                                        <CalendarIcon />
-                                        <span>{formatDate(event.event_date)}</span>
+                    {filteredEvents.length > 0 ? (
+                        filteredEvents.map(event => (
+                            <div key={event.id} className="bg-white border border-green-200 rounded-2xl overflow-hidden hover:border-green-500/30 transition group">
+                                {event.image_url && (
+                                    <div className="h-40 bg-white overflow-hidden">
+                                        <img
+                                            src={event.image_url}
+                                            alt={event.title}
+                                            className="w-full h-full object-cover"
+                                        />
                                     </div>
-                                    {event.start_time && (
-                                        <div className="flex items-center gap-2 text-gray-500">
-                                            <ClockIcon />
-                                            <span>{formatTime(event.start_time)} - {formatTime(event.end_time)}</span>
-                                        </div>
-                                    )}
-                                    {event.location && (
-                                        <div className="flex items-center gap-2 text-gray-500">
-                                            <MapPinIcon />
-                                            <span>{event.location}</span>
-                                        </div>
-                                    )}
-                                    <div className="flex items-center gap-2 text-gray-500">
-                                        <UsersIcon />
-                                        <span>{event.registered_count || 0} / {event.capacity || '∞'} registered</span>
+                                )}
+                                <div className="p-5">
+                                    <div className="flex items-start justify-between mb-3">
+                                        <h3 className="text-lg font-bold text-gray-900">{event.title}</h3>
+                                        <span className={`px-2 py-1 rounded-lg text-xs font-medium border ${getStatusBadge(event.status)}`}>
+                                            {event.status}
+                                        </span>
                                     </div>
-                                </div>
-                                {/* Action Buttons */}
-                                <div className="flex items-center gap-2 mt-4 pt-4 border-t border-green-200">
-                                    <button
-                                        onClick={() => openEditModal(event)}
-                                        className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-green-50 hover:bg-green-50 border border-green-200 hover:border-green-500/50 text-gray-500 hover:text-green-600 rounded-lg transition-all text-sm"
-                                    >
-                                        <EditIcon /> Edit
-                                    </button>
-                                    <button
-                                        onClick={() => setDeleteConfirm(event)}
-                                        className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-green-50 hover:bg-red-500/10 border border-green-200 hover:border-red-500/50 text-gray-500 hover:text-red-400 rounded-lg transition-all text-sm"
-                                    >
-                                        <TrashIcon /> Delete
-                                    </button>
+                                    <p className="text-gray-500 text-sm mb-4 line-clamp-2">{event.description}</p>
+                                    <div className="space-y-2 text-sm">
+                                        <div className="flex items-center gap-2 text-gray-500">
+                                            <CalendarIcon />
+                                            <span>{formatDate(event.event_date)}</span>
+                                        </div>
+                                        {event.start_time && (
+                                            <div className="flex items-center gap-2 text-gray-500">
+                                                <ClockIcon />
+                                                <span>{formatTime(event.start_time)} - {formatTime(event.end_time)}</span>
+                                            </div>
+                                        )}
+                                        {event.location && (
+                                            <div className="flex items-center gap-2 text-gray-500">
+                                                <MapPinIcon />
+                                                <span>{event.location}</span>
+                                            </div>
+                                        )}
+                                        <div className="flex items-center gap-2 text-gray-500">
+                                            <UsersIcon />
+                                            <span>{event.registered_count || 0} / {event.capacity || '∞'} registered</span>
+                                        </div>
+                                    </div>
+                                    {/* Action Buttons */}
+                                    <div className="flex items-center gap-2 mt-4 pt-4 border-t border-green-200">
+                                        <button
+                                            onClick={() => openEditModal(event)}
+                                            className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-green-50 hover:bg-green-50 border border-green-200 hover:border-green-500/50 text-gray-500 hover:text-green-600 rounded-lg transition-all text-sm"
+                                        >
+                                            <EditIcon /> Edit
+                                        </button>
+                                        <button
+                                            onClick={() => trashEvent(event)}
+                                            className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-green-50 hover:bg-red-500/10 border border-green-200 hover:border-red-500/50 text-gray-500 hover:text-red-400 rounded-lg transition-all text-sm"
+                                        >
+                                            <TrashIcon /> Delete
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
+                        ))
+                    ) : (
+                        <div className="col-span-full text-center py-12 text-gray-500">
+                            No events found
                         </div>
-                    ))
-                ) : (
-                    <div className="col-span-full text-center py-12 text-gray-500">
-                        No events found
-                    </div>
-                )}
-            </div>
+                    )}
+                </div>
 
             {/* Create/Edit Modal */}
             {showModal && (
@@ -644,26 +657,6 @@ const StaffEvents = ({ globalSearch = '' }) => {
                 </div>
             )}
 
-            {/* Delete Confirmation Modal */}
-            {deleteConfirm && (
-                <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-white border border-green-200 rounded-2xl w-full max-w-md p-6">
-                        <h3 className="text-xl font-bold text-gray-900 mb-2">Delete Event</h3>
-                        <p className="text-gray-500 mb-6">
-                            Are you sure you want to delete <span className="text-gray-900 font-medium">{deleteConfirm.title}</span>? This action cannot be undone.
-                        </p>
-                        <div className="flex gap-3">
-                            <button onClick={() => setDeleteConfirm(null)} className="flex-1 px-4 py-3 bg-green-50 hover:bg-green-50 text-gray-900 rounded-xl font-medium transition">
-                                Cancel
-                            </button>
-                            <button onClick={() => removeEvent(deleteConfirm.id)} className="flex-1 px-4 py-3 bg-red-500 hover:bg-red-600 text-gray-900 rounded-xl font-medium transition">
-                                Delete
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
             {/* Save Confirmation Modal */}
             {showSaveConfirm && confirmData && (
                 <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
@@ -720,6 +713,14 @@ const StaffEvents = ({ globalSearch = '' }) => {
                             </button>
                         </div>
                     </div>
+                </div>
+            )}
+
+            {/* Undo Toast */}
+            {undoItem && (
+                <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-gray-900 text-white px-5 py-3 rounded-xl shadow-2xl flex items-center gap-4 animate-slide-up">
+                    <span className="text-sm">Event moved to trash</span>
+                    <button onClick={handleUndoTrash} className="text-sm font-semibold text-green-400 hover:text-green-300 transition-colors">Undo</button>
                 </div>
             )}
         </div>

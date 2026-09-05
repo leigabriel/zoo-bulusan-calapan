@@ -11,7 +11,7 @@ import useScrollLock from '../../hooks/use-scroll-lock';
 import {
     Search, Home, Calendar, Ticket, People, Pet, Leaf,
     Message, Messages, ShieldCheck, ChartBar, DocumentText, ClipboardList,
-    Setting, Logout, Menu, Bell, CloseCircle, Lifebuoy, Sparkles, User
+    Setting, Logout, Menu, Bell, CloseCircle, Lifebuoy, Sparkles, User, Trash
 } from 'reicon-react';
 
 const AdminLayout = ({ children }) => {
@@ -389,7 +389,7 @@ const AdminLayout = ({ children }) => {
                 aria-label="Admin navigation"
             >
                 {/* Logo Section */}
-                <div className="p-5 flex items-center gap-3 border-b border-gray-300">
+                <div className="p-3.5 flex items-center gap-3 border-b border-gray-300">
                     <div className="w-12 h-12 rounded-xl flex items-center justify-center text-white">
                         <img src="/bz-url-logo.png" alt="Bz Logo" className="w-12 h-12 object-contain" />
                     </div>
@@ -526,6 +526,14 @@ const AdminLayout = ({ children }) => {
                                             <span className="text-sm text-gray-700">Settings</span>
                                         </Link>
                                     )}
+                                    <Link
+                                        to="/admin/trash"
+                                        onClick={() => setMobileHeaderMenuOpen(false)}
+                                        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-left"
+                                    >
+                                        <Trash size={18} className="text-gray-400" />
+                                        <span className="text-sm text-gray-700">Trash</span>
+                                    </Link>
                                     <button
                                         onClick={() => { setMobileHeaderMenuOpen(false); openProfileModal(); }}
                                         className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-left"
@@ -681,6 +689,13 @@ const AdminLayout = ({ children }) => {
                                         {unreadCount > 99 ? '99+' : unreadCount}
                                     </span>
                                 )}
+                            </button>
+                            <button
+                                onClick={() => navigate('/admin/trash')}
+                                className="p-2.5 hover:bg-gray-100 rounded-xl text-gray-500 hover:text-gray-900 transition"
+                                aria-label="Trash"
+                            >
+                                <Trash size={20} />
                             </button>
                             <button
                                 onClick={openProfileModal}

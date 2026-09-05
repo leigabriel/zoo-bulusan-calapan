@@ -178,4 +178,34 @@ router.get('/logs/staff', logsController.getStaffLogs);
 router.get('/logs/users', logsController.getUserLogs);
 router.get('/logs/summary', logsController.getLogsSummary);
 
+// ==================== TRASH ROUTES ====================
+
+// Users trash
+router.get('/users-trash', adminController.getTrashUsers);
+router.put('/users/:id/restore', adminController.restoreUser);
+router.put('/users-restore-multiple', adminController.restoreMultipleUsers);
+router.delete('/users/:id/permanent', adminController.permanentDeleteUser);
+router.delete('/users-permanent-multiple', adminController.permanentDeleteMultipleUsers);
+
+// Animals trash
+router.get('/animals-trash', adminController.getTrashAnimals);
+router.put('/animals/:id/restore', adminController.restoreAnimal);
+router.put('/animals-restore-multiple', adminController.restoreMultipleAnimals);
+router.delete('/animals/:id/permanent', adminController.permanentDeleteAnimal);
+router.delete('/animals-permanent-multiple', adminController.permanentDeleteMultipleAnimals);
+
+// Plants trash
+router.get('/plants-trash', adminController.getTrashPlants);
+router.put('/plants/:id/restore', adminController.restorePlant);
+router.put('/plants-restore-multiple', adminController.restoreMultiplePlants);
+router.delete('/plants/:id/permanent', adminController.permanentDeletePlant);
+router.delete('/plants-permanent-multiple', adminController.permanentDeleteMultiplePlants);
+
+// Events trash
+router.get('/events-trash', adminController.getTrashEvents);
+router.put('/events/:id/restore', adminController.restoreEvent);
+router.put('/events-restore-multiple', adminController.restoreMultipleEvents);
+router.delete('/events/:id/permanent', adminController.permanentDeleteEvent);
+router.delete('/events-permanent-multiple', adminController.permanentDeleteMultipleEvents);
+
 module.exports = router;

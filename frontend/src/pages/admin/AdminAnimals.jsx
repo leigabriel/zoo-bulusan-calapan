@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { adminAPI } from '../../services/api-client';
 import { sanitizeInput } from '../../utils/sanitize';
 import { notify } from '../../utils/toast';
@@ -25,8 +25,8 @@ const EditIcon = () => (
     </svg>
 );
 
-const TrashIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+const TrashIcon = ({ className = 'w-4 h-4' }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
         <polyline points="3 6 5 6 21 6" />
         <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
         <line x1="10" y1="11" x2="10" y2="17" />
@@ -82,10 +82,14 @@ const AdminAnimals = ({ globalSearch = '' }) => {
         animalInformation: ''
     });
     const [saving, setSaving] = useState(false);
-    const [deleteConfirm, setDeleteConfirm] = useState(null);
     const [imageInputMode, setImageInputMode] = useState('upload');
     const [imageFile, setImageFile] = useState(null);
     const [imagePreview, setImagePreview] = useState(null);
+
+    const [undoItem, setUndoItem] = useState(null);
+    const undoTimeoutRef = useRef(null);
+
+    const effectiveSearch = globalSearch || searchQuery;
 
     useEffect(() => { fetchAnimals(); }, []);
 
@@ -144,7 +148,6 @@ const AdminAnimals = ({ globalSearch = '' }) => {
         const file = e.target.files[0];
         if (file) {
             setImageFile(file);
-            // Create preview URL
             const reader = new FileReader();
             reader.onloadend = () => {
                 setImagePreview(reader.result);
@@ -158,8 +161,6 @@ const AdminAnimals = ({ globalSearch = '' }) => {
         setSaving(true);
         try {
             let imageUrl = form.imageUrl;
-
-            // If file was selected for upload, upload it first
             if (imageInputMode === 'upload' && imageFile) {
                 const uploadRes = await adminAPI.uploadImage(imageFile);
                 if (uploadRes.success) {
@@ -168,9 +169,7 @@ const AdminAnimals = ({ globalSearch = '' }) => {
                     throw new Error(uploadRes.message || 'Failed to upload image');
                 }
             }
-
             const animalData = { ...form, imageUrl };
-
             let res;
             if (editingAnimal) {
                 res = await adminAPI.updateAnimal(editingAnimal.id, animalData);
@@ -189,16 +188,31 @@ const AdminAnimals = ({ globalSearch = '' }) => {
         }
     };
 
-    const removeAnimal = async (id) => {
+    // ==================== TRASH HANDLERS ====================
+
+    const trashAnimal = async (animal) => {
         try {
-            const res = await adminAPI.deleteAnimal(id);
+            const res = await adminAPI.deleteAnimal(animal.id);
             if (res.success) {
-                setAnimals(animals.filter(a => a.id !== id));
-                notify.success('Animal removed.');
-                setDeleteConfirm(null);
-            } else throw new Error(res.message || 'Delete failed');
-        } catch (err) {
-            notify.error(err.message || "Couldn't remove animal. Please try again.");
+                setAnimals(animals.filter(a => a.id !== animal.id));
+                setUndoItem({ type: 'animal', data: animal, action: 'trash' });
+                if (undoTimeoutRef.current) clearTimeout(undoTimeoutRef.current);
+                undoTimeoutRef.current = setTimeout(() => setUndoItem(null), 5000);
+            }
+        } catch {
+            notify.error('Failed to move animal to trash');
+        }
+    };
+
+    const handleUndoTrash = async () => {
+        if (!undoItem) return;
+        try {
+            await adminAPI.restoreAnimal(undoItem.data.id);
+            setAnimals(prev => [undoItem.data, ...prev]);
+            setUndoItem(null);
+            if (undoTimeoutRef.current) clearTimeout(undoTimeoutRef.current);
+        } catch {
+            notify.error('Failed to restore animal');
         }
     };
 
@@ -212,13 +226,8 @@ const AdminAnimals = ({ globalSearch = '' }) => {
         }
     };
 
-    // Get unique species for filter
     const uniqueSpecies = [...new Set(animals.map(a => a.species).filter(Boolean))];
 
-    // Use globalSearch or local searchQuery
-    const effectiveSearch = globalSearch || searchQuery;
-
-    // Filter and sort animals
     const filteredAnimals = animals
         .filter(animal => {
             const matchesSearch =
@@ -238,9 +247,7 @@ const AdminAnimals = ({ globalSearch = '' }) => {
                 aVal = (a[sortField] || '').toString().toLowerCase();
                 bVal = (b[sortField] || '').toString().toLowerCase();
             }
-            if (sortOrder === 'asc') {
-                return aVal.localeCompare(bVal);
-            }
+            if (sortOrder === 'asc') return aVal.localeCompare(bVal);
             return bVal.localeCompare(aVal);
         });
 
@@ -334,7 +341,6 @@ const AdminAnimals = ({ globalSearch = '' }) => {
                 {/* Toolbar */}
                 <div className="p-4 border-b border-green-200 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
                     <div className="flex items-center gap-3 flex-1 flex-wrap">
-                        {/* Search */}
                         <div className="relative flex-1 min-w-[200px] max-w-sm">
                             <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
                                 <SearchIcon />
@@ -386,14 +392,15 @@ const AdminAnimals = ({ globalSearch = '' }) => {
                         </div>
                     </div>
 
-                    {/* Add Animal Button */}
-                    <button
-                        onClick={openCreateModal}
-                        className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-green-500 to-green-400 text-white font-semibold rounded-xl hover:from-green-400 hover:to-green-500 transition-all shadow-lg shadow-green-300/50"
-                    >
-                        <PlusIcon />
-                        Add Animal
-                    </button>
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={openCreateModal}
+                            className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-green-500 to-green-400 text-white font-semibold rounded-xl hover:from-green-400 hover:to-green-500 transition-all shadow-lg shadow-green-300/50"
+                        >
+                            <PlusIcon />
+                            Add Animal
+                        </button>
+                    </div>
                 </div>
 
                 {/* Animals Table */}
@@ -448,8 +455,8 @@ const AdminAnimals = ({ globalSearch = '' }) => {
                                 </tr>
                             ) : (
                                 filteredAnimals.map(animal => (
-                                    <tr key={animal.id} onClick={() => openEditModal(animal)} className="cursor-pointer hover:bg-green-50/50 transition-colors" title="Open animal details">
-                                        <td className="px-6 py-4">
+                                    <tr key={animal.id} className="hover:bg-green-50/50 transition-colors">
+                                        <td className="px-6 py-4 cursor-pointer" onClick={() => openEditModal(animal)}>
                                             <div className="flex items-center gap-3">
                                                 <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-500 to-green-400 flex items-center justify-center text-white font-bold overflow-hidden">
                                                     {animal.image_url ? (
@@ -461,10 +468,10 @@ const AdminAnimals = ({ globalSearch = '' }) => {
                                                 <p className="font-medium text-gray-900">{animal.name}</p>
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4 text-gray-700">{animal.species}</td>
-                                        <td className="px-6 py-4 text-gray-700">{animal.habitat || animal.exhibit}</td>
-                                        <td className="px-6 py-4 text-gray-500 max-w-xs truncate">{animal.description}</td>
-                                        <td className="px-6 py-4">
+                                        <td className="px-6 py-4 text-gray-700 cursor-pointer" onClick={() => openEditModal(animal)}>{animal.species}</td>
+                                        <td className="px-6 py-4 text-gray-700 cursor-pointer" onClick={() => openEditModal(animal)}>{animal.habitat || animal.exhibit}</td>
+                                        <td className="px-6 py-4 text-gray-500 max-w-xs truncate cursor-pointer" onClick={() => openEditModal(animal)}>{animal.description}</td>
+                                        <td className="px-6 py-4 cursor-pointer" onClick={() => openEditModal(animal)}>
                                             <span className={`inline-flex px-3 py-1 text-xs font-medium rounded-full border capitalize ${getStatusBadgeColor(animal.status)}`}>
                                                 {animal.status}
                                             </span>
@@ -472,16 +479,16 @@ const AdminAnimals = ({ globalSearch = '' }) => {
                                         <td className="px-6 py-4">
                                             <div className="flex items-center justify-end gap-2">
                                                 <button
-                                                     onClick={(event) => { event.stopPropagation(); openEditModal(animal); }}
+                                                    onClick={(event) => { event.stopPropagation(); openEditModal(animal); }}
                                                     className="p-2 bg-green-50 hover:bg-green-50 border border-green-200 hover:border-green-500/50 text-gray-500 hover:text-green-600 rounded-lg transition-all"
                                                     title="Edit animal"
                                                 >
                                                     <EditIcon />
                                                 </button>
                                                 <button
-                                                     onClick={(event) => { event.stopPropagation(); setDeleteConfirm(animal); }}
+                                                    onClick={(event) => { event.stopPropagation(); trashAnimal(animal); }}
                                                     className="p-2 bg-green-50 hover:bg-red-500/10 border border-green-200 hover:border-red-500/50 text-gray-500 hover:text-red-400 rounded-lg transition-all"
-                                                    title="Delete animal"
+                                                    title="Move to trash"
                                                 >
                                                     <TrashIcon />
                                                 </button>
@@ -501,6 +508,19 @@ const AdminAnimals = ({ globalSearch = '' }) => {
                     </p>
                 </div>
             </div>
+
+            {/* Undo Toast */}
+            {undoItem && (
+                <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-gray-900 text-white px-5 py-3 rounded-xl shadow-2xl flex items-center gap-4 animate-slide-up">
+                    <span className="text-sm">Animal moved to trash</span>
+                    <button
+                        onClick={handleUndoTrash}
+                        className="text-sm font-semibold text-green-400 hover:text-green-300 transition-colors"
+                    >
+                        Undo
+                    </button>
+                </div>
+            )}
 
             {/* Create/Edit Modal */}
             {showModal && (
@@ -638,7 +658,6 @@ const AdminAnimals = ({ globalSearch = '' }) => {
 
                             <div>
                                 <label className="block text-sm font-medium text-gray-500 mb-2">Image</label>
-
                                 <div className="space-y-3">
                                     <input
                                         type="file"
@@ -710,34 +729,6 @@ const AdminAnimals = ({ globalSearch = '' }) => {
                 </div>
             )}
 
-            {/* Delete Confirmation Modal */}
-            {deleteConfirm && (
-                <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-white border border-green-200 rounded-2xl w-full max-w-sm p-6 text-center">
-                        <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4 text-red-400">
-                            <TrashIcon />
-                        </div>
-                        <h3 className="text-xl font-bold text-gray-900 mb-2">Delete Animal?</h3>
-                        <p className="text-gray-500 mb-6">
-                            Are you sure you want to delete <span className="text-gray-900 font-medium">{deleteConfirm.name}</span>? This action cannot be undone.
-                        </p>
-                        <div className="flex gap-3">
-                            <button
-                                onClick={() => setDeleteConfirm(null)}
-                                className="flex-1 py-3 bg-green-50 hover:bg-green-50 text-gray-700 font-medium rounded-xl transition-all"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                onClick={() => removeAnimal(deleteConfirm.id)}
-                                className="flex-1 py-3 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-gray-900 font-semibold rounded-xl transition-all"
-                            >
-                                Delete
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
         </div>
     );
 };

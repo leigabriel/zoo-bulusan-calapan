@@ -274,13 +274,13 @@ exports.updateUser = async (req, res) => {
 exports.deleteUser = async (req, res) => {
     try {
         const { id } = req.params;
-        const deleted = await User.delete(id);
+        const deleted = await User.softDelete(id, req.user.id);
 
         if (!deleted) {
             return res.status(404).json({ success: false, message: 'User not found' });
         }
 
-        res.json({ success: true, message: 'User deleted successfully' });
+        res.json({ success: true, message: 'User moved to trash' });
     } catch (error) {
         console.error('Error deleting user:', error);
         res.status(500).json({ success: false, message: 'Error deleting user' });
@@ -330,13 +330,13 @@ exports.updateAnimal = async (req, res) => {
 exports.deleteAnimal = async (req, res) => {
     try {
         const { id } = req.params;
-        const deleted = await Animal.delete(id);
+        const deleted = await Animal.softDelete(id, req.user.id);
 
         if (!deleted) {
             return res.status(404).json({ success: false, message: 'Animal not found' });
         }
 
-        res.json({ success: true, message: 'Animal deleted successfully' });
+        res.json({ success: true, message: 'Animal moved to trash' });
     } catch (error) {
         console.error('Error deleting animal:', error);
         res.status(500).json({ success: false, message: 'Error deleting animal' });
@@ -386,13 +386,13 @@ exports.updateEvent = async (req, res) => {
 exports.deleteEvent = async (req, res) => {
     try {
         const { id } = req.params;
-        const deleted = await Event.delete(id);
+        const deleted = await Event.softDelete(id, req.user.id);
 
         if (!deleted) {
             return res.status(404).json({ success: false, message: 'Event not found' });
         }
 
-        res.json({ success: true, message: 'Event deleted successfully' });
+        res.json({ success: true, message: 'Event moved to trash' });
     } catch (error) {
         console.error('Error deleting event:', error);
         res.status(500).json({ success: false, message: 'Error deleting event' });
@@ -443,13 +443,13 @@ exports.updatePlant = async (req, res) => {
 exports.deletePlant = async (req, res) => {
     try {
         const { id } = req.params;
-        const deleted = await Plant.delete(id);
+        const deleted = await Plant.softDelete(id, req.user.id);
 
         if (!deleted) {
             return res.status(404).json({ success: false, message: 'Plant not found' });
         }
 
-        res.json({ success: true, message: 'Plant deleted successfully' });
+        res.json({ success: true, message: 'Plant moved to trash' });
     } catch (error) {
         console.error('Error deleting plant:', error);
         res.status(500).json({ success: false, message: 'Error deleting plant' });
@@ -1254,5 +1254,310 @@ exports.getUserById = async (req, res) => {
     } catch (error) {
         console.error('Error getting user:', error);
         res.status(500).json({ success: false, message: 'Error fetching user' });
+    }
+};
+
+// ==================== TRASH HANDLERS ====================
+
+// Helper: verify password for permanent delete
+const verifyPassword = async (userId, password) => {
+    const user = await User.findById(userId);
+    if (!user || !user.password) return false;
+    return bcrypt.compare(password, user.password);
+};
+
+// --- Users Trash ---
+exports.getTrashUsers = async (req, res) => {
+    try {
+        const users = await User.getDeleted();
+        res.json({ success: true, users });
+    } catch (error) {
+        console.error('Error getting trashed users:', error);
+        res.status(500).json({ success: false, message: 'Error fetching trashed users' });
+    }
+};
+
+exports.restoreUser = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const restored = await User.restore(id);
+        if (!restored) return res.status(404).json({ success: false, message: 'User not found in trash' });
+        res.json({ success: true, message: 'User restored successfully' });
+    } catch (error) {
+        console.error('Error restoring user:', error);
+        res.status(500).json({ success: false, message: 'Error restoring user' });
+    }
+};
+
+exports.restoreMultipleUsers = async (req, res) => {
+    try {
+        const { ids } = req.body;
+        if (!ids || !Array.isArray(ids) || ids.length === 0) {
+            return res.status(400).json({ success: false, message: 'No user IDs provided' });
+        }
+        await User.restoreMultiple(ids);
+        res.json({ success: true, message: `${ids.length} user(s) restored successfully` });
+    } catch (error) {
+        console.error('Error restoring users:', error);
+        res.status(500).json({ success: false, message: 'Error restoring users' });
+    }
+};
+
+exports.permanentDeleteUser = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { password } = req.body;
+        if (!password) return res.status(400).json({ success: false, message: 'Password required for permanent deletion' });
+
+        const valid = await verifyPassword(req.user.id, password);
+        if (!valid) return res.status(401).json({ success: false, message: 'Incorrect password' });
+
+        const deleted = await User.permanentDelete(id);
+        if (!deleted) return res.status(404).json({ success: false, message: 'User not found' });
+        res.json({ success: true, message: 'User permanently deleted' });
+    } catch (error) {
+        console.error('Error permanently deleting user:', error);
+        res.status(500).json({ success: false, message: 'Error permanently deleting user' });
+    }
+};
+
+exports.permanentDeleteMultipleUsers = async (req, res) => {
+    try {
+        const { ids, password } = req.body;
+        if (!ids || !Array.isArray(ids) || ids.length === 0) {
+            return res.status(400).json({ success: false, message: 'No user IDs provided' });
+        }
+        if (!password) return res.status(400).json({ success: false, message: 'Password required for permanent deletion' });
+
+        const valid = await verifyPassword(req.user.id, password);
+        if (!valid) return res.status(401).json({ success: false, message: 'Incorrect password' });
+
+        await User.permanentDeleteMultiple(ids);
+        res.json({ success: true, message: `${ids.length} user(s) permanently deleted` });
+    } catch (error) {
+        console.error('Error permanently deleting users:', error);
+        res.status(500).json({ success: false, message: 'Error permanently deleting users' });
+    }
+};
+
+// --- Animals Trash ---
+exports.getTrashAnimals = async (req, res) => {
+    try {
+        const animals = await Animal.getDeleted();
+        res.json({ success: true, animals });
+    } catch (error) {
+        console.error('Error getting trashed animals:', error);
+        res.status(500).json({ success: false, message: 'Error fetching trashed animals' });
+    }
+};
+
+exports.restoreAnimal = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const restored = await Animal.restore(id);
+        if (!restored) return res.status(404).json({ success: false, message: 'Animal not found in trash' });
+        res.json({ success: true, message: 'Animal restored successfully' });
+    } catch (error) {
+        console.error('Error restoring animal:', error);
+        res.status(500).json({ success: false, message: 'Error restoring animal' });
+    }
+};
+
+exports.restoreMultipleAnimals = async (req, res) => {
+    try {
+        const { ids } = req.body;
+        if (!ids || !Array.isArray(ids) || ids.length === 0) {
+            return res.status(400).json({ success: false, message: 'No animal IDs provided' });
+        }
+        await Animal.restoreMultiple(ids);
+        res.json({ success: true, message: `${ids.length} animal(s) restored successfully` });
+    } catch (error) {
+        console.error('Error restoring animals:', error);
+        res.status(500).json({ success: false, message: 'Error restoring animals' });
+    }
+};
+
+exports.permanentDeleteAnimal = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { password } = req.body;
+        if (!password) return res.status(400).json({ success: false, message: 'Password required for permanent deletion' });
+
+        const valid = await verifyPassword(req.user.id, password);
+        if (!valid) return res.status(401).json({ success: false, message: 'Incorrect password' });
+
+        const deleted = await Animal.permanentDelete(id);
+        if (!deleted) return res.status(404).json({ success: false, message: 'Animal not found' });
+        res.json({ success: true, message: 'Animal permanently deleted' });
+    } catch (error) {
+        console.error('Error permanently deleting animal:', error);
+        res.status(500).json({ success: false, message: 'Error permanently deleting animal' });
+    }
+};
+
+exports.permanentDeleteMultipleAnimals = async (req, res) => {
+    try {
+        const { ids, password } = req.body;
+        if (!ids || !Array.isArray(ids) || ids.length === 0) {
+            return res.status(400).json({ success: false, message: 'No animal IDs provided' });
+        }
+        if (!password) return res.status(400).json({ success: false, message: 'Password required for permanent deletion' });
+
+        const valid = await verifyPassword(req.user.id, password);
+        if (!valid) return res.status(401).json({ success: false, message: 'Incorrect password' });
+
+        await Animal.permanentDeleteMultiple(ids);
+        res.json({ success: true, message: `${ids.length} animal(s) permanently deleted` });
+    } catch (error) {
+        console.error('Error permanently deleting animals:', error);
+        res.status(500).json({ success: false, message: 'Error permanently deleting animals' });
+    }
+};
+
+// --- Plants Trash ---
+exports.getTrashPlants = async (req, res) => {
+    try {
+        const plants = await Plant.getDeleted();
+        res.json({ success: true, plants });
+    } catch (error) {
+        console.error('Error getting trashed plants:', error);
+        res.status(500).json({ success: false, message: 'Error fetching trashed plants' });
+    }
+};
+
+exports.restorePlant = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const restored = await Plant.restore(id);
+        if (!restored) return res.status(404).json({ success: false, message: 'Plant not found in trash' });
+        res.json({ success: true, message: 'Plant restored successfully' });
+    } catch (error) {
+        console.error('Error restoring plant:', error);
+        res.status(500).json({ success: false, message: 'Error restoring plant' });
+    }
+};
+
+exports.restoreMultiplePlants = async (req, res) => {
+    try {
+        const { ids } = req.body;
+        if (!ids || !Array.isArray(ids) || ids.length === 0) {
+            return res.status(400).json({ success: false, message: 'No plant IDs provided' });
+        }
+        await Plant.restoreMultiple(ids);
+        res.json({ success: true, message: `${ids.length} plant(s) restored successfully` });
+    } catch (error) {
+        console.error('Error restoring plants:', error);
+        res.status(500).json({ success: false, message: 'Error restoring plants' });
+    }
+};
+
+exports.permanentDeletePlant = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { password } = req.body;
+        if (!password) return res.status(400).json({ success: false, message: 'Password required for permanent deletion' });
+
+        const valid = await verifyPassword(req.user.id, password);
+        if (!valid) return res.status(401).json({ success: false, message: 'Incorrect password' });
+
+        const deleted = await Plant.permanentDelete(id);
+        if (!deleted) return res.status(404).json({ success: false, message: 'Plant not found' });
+        res.json({ success: true, message: 'Plant permanently deleted' });
+    } catch (error) {
+        console.error('Error permanently deleting plant:', error);
+        res.status(500).json({ success: false, message: 'Error permanently deleting plant' });
+    }
+};
+
+exports.permanentDeleteMultiplePlants = async (req, res) => {
+    try {
+        const { ids, password } = req.body;
+        if (!ids || !Array.isArray(ids) || ids.length === 0) {
+            return res.status(400).json({ success: false, message: 'No plant IDs provided' });
+        }
+        if (!password) return res.status(400).json({ success: false, message: 'Password required for permanent deletion' });
+
+        const valid = await verifyPassword(req.user.id, password);
+        if (!valid) return res.status(401).json({ success: false, message: 'Incorrect password' });
+
+        await Plant.permanentDeleteMultiple(ids);
+        res.json({ success: true, message: `${ids.length} plant(s) permanently deleted` });
+    } catch (error) {
+        console.error('Error permanently deleting plants:', error);
+        res.status(500).json({ success: false, message: 'Error permanently deleting plants' });
+    }
+};
+
+// --- Events Trash ---
+exports.getTrashEvents = async (req, res) => {
+    try {
+        const events = await Event.getDeleted();
+        res.json({ success: true, events });
+    } catch (error) {
+        console.error('Error getting trashed events:', error);
+        res.status(500).json({ success: false, message: 'Error fetching trashed events' });
+    }
+};
+
+exports.restoreEvent = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const restored = await Event.restore(id);
+        if (!restored) return res.status(404).json({ success: false, message: 'Event not found in trash' });
+        res.json({ success: true, message: 'Event restored successfully' });
+    } catch (error) {
+        console.error('Error restoring event:', error);
+        res.status(500).json({ success: false, message: 'Error restoring event' });
+    }
+};
+
+exports.restoreMultipleEvents = async (req, res) => {
+    try {
+        const { ids } = req.body;
+        if (!ids || !Array.isArray(ids) || ids.length === 0) {
+            return res.status(400).json({ success: false, message: 'No event IDs provided' });
+        }
+        await Event.restoreMultiple(ids);
+        res.json({ success: true, message: `${ids.length} event(s) restored successfully` });
+    } catch (error) {
+        console.error('Error restoring events:', error);
+        res.status(500).json({ success: false, message: 'Error restoring events' });
+    }
+};
+
+exports.permanentDeleteEvent = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { password } = req.body;
+        if (!password) return res.status(400).json({ success: false, message: 'Password required for permanent deletion' });
+
+        const valid = await verifyPassword(req.user.id, password);
+        if (!valid) return res.status(401).json({ success: false, message: 'Incorrect password' });
+
+        const deleted = await Event.permanentDelete(id);
+        if (!deleted) return res.status(404).json({ success: false, message: 'Event not found' });
+        res.json({ success: true, message: 'Event permanently deleted' });
+    } catch (error) {
+        console.error('Error permanently deleting event:', error);
+        res.status(500).json({ success: false, message: 'Error permanently deleting event' });
+    }
+};
+
+exports.permanentDeleteMultipleEvents = async (req, res) => {
+    try {
+        const { ids, password } = req.body;
+        if (!ids || !Array.isArray(ids) || ids.length === 0) {
+            return res.status(400).json({ success: false, message: 'No event IDs provided' });
+        }
+        if (!password) return res.status(400).json({ success: false, message: 'Password required for permanent deletion' });
+
+        const valid = await verifyPassword(req.user.id, password);
+        if (!valid) return res.status(401).json({ success: false, message: 'Incorrect password' });
+
+        await Event.permanentDeleteMultiple(ids);
+        res.json({ success: true, message: `${ids.length} event(s) permanently deleted` });
+    } catch (error) {
+        console.error('Error permanently deleting events:', error);
+        res.status(500).json({ success: false, message: 'Error permanently deleting events' });
     }
 };

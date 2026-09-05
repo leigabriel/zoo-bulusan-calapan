@@ -2,8 +2,8 @@ const Animal = require('../models/animal-model');
 const Ticket = require('../models/ticket-model');
 const Event = require('../models/event-model');
 const User = require('../models/user-model');
-const Notification = require('../models/notification-model');
 const Plant = require('../models/plant-model');
+const Notification = require('../models/notification-model');
 const StaffActivity = require('../models/staff-activity-model');
 const { logStaffActivity } = require('../middleware/track-activity');
 
@@ -679,5 +679,157 @@ exports.getPlantById = async (req, res) => {
     } catch (error) {
         console.error('Error getting plant:', error);
         res.status(500).json({ success: false, message: 'Error fetching plant' });
+    }
+};
+
+// ==================== TRASH HANDLERS ====================
+
+// --- Users Trash (staff can only manage regular users) ---
+exports.getTrashUsers = async (req, res) => {
+    try {
+        const users = await User.getDeleted();
+        const regularUsers = users.filter(u => u.role === 'user');
+        res.json({ success: true, users: regularUsers });
+    } catch (error) {
+        console.error('Error getting trashed users:', error);
+        res.status(500).json({ success: false, message: 'Error fetching trashed users' });
+    }
+};
+
+exports.restoreUser = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const user = await User.findById(id);
+        if (user && user.role !== 'user') {
+            return res.status(403).json({ success: false, message: 'Staff can only restore regular users' });
+        }
+        const restored = await User.restore(id);
+        if (!restored) return res.status(404).json({ success: false, message: 'User not found in trash' });
+        res.json({ success: true, message: 'User restored successfully' });
+    } catch (error) {
+        console.error('Error restoring user:', error);
+        res.status(500).json({ success: false, message: 'Error restoring user' });
+    }
+};
+
+exports.softDeleteUser = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const user = await User.findById(id);
+        if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+        if (user.role !== 'user') {
+            return res.status(403).json({ success: false, message: 'Staff can only delete regular users' });
+        }
+        const deleted = await User.softDelete(id, req.user.id);
+        if (!deleted) return res.status(404).json({ success: false, message: 'User not found' });
+        res.json({ success: true, message: 'User moved to trash' });
+    } catch (error) {
+        console.error('Error deleting user:', error);
+        res.status(500).json({ success: false, message: 'Error deleting user' });
+    }
+};
+
+// --- Animals Trash ---
+exports.getTrashAnimals = async (req, res) => {
+    try {
+        const animals = await Animal.getDeleted();
+        res.json({ success: true, animals });
+    } catch (error) {
+        console.error('Error getting trashed animals:', error);
+        res.status(500).json({ success: false, message: 'Error fetching trashed animals' });
+    }
+};
+
+exports.restoreAnimal = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const restored = await Animal.restore(id);
+        if (!restored) return res.status(404).json({ success: false, message: 'Animal not found in trash' });
+        res.json({ success: true, message: 'Animal restored successfully' });
+    } catch (error) {
+        console.error('Error restoring animal:', error);
+        res.status(500).json({ success: false, message: 'Error restoring animal' });
+    }
+};
+
+exports.softDeleteAnimal = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const deleted = await Animal.softDelete(id, req.user.id);
+        if (!deleted) return res.status(404).json({ success: false, message: 'Animal not found' });
+        res.json({ success: true, message: 'Animal moved to trash' });
+    } catch (error) {
+        console.error('Error deleting animal:', error);
+        res.status(500).json({ success: false, message: 'Error deleting animal' });
+    }
+};
+
+// --- Plants Trash ---
+exports.getTrashPlants = async (req, res) => {
+    try {
+        const plants = await Plant.getDeleted();
+        res.json({ success: true, plants });
+    } catch (error) {
+        console.error('Error getting trashed plants:', error);
+        res.status(500).json({ success: false, message: 'Error fetching trashed plants' });
+    }
+};
+
+exports.restorePlant = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const restored = await Plant.restore(id);
+        if (!restored) return res.status(404).json({ success: false, message: 'Plant not found in trash' });
+        res.json({ success: true, message: 'Plant restored successfully' });
+    } catch (error) {
+        console.error('Error restoring plant:', error);
+        res.status(500).json({ success: false, message: 'Error restoring plant' });
+    }
+};
+
+exports.softDeletePlant = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const deleted = await Plant.softDelete(id, req.user.id);
+        if (!deleted) return res.status(404).json({ success: false, message: 'Plant not found' });
+        res.json({ success: true, message: 'Plant moved to trash' });
+    } catch (error) {
+        console.error('Error deleting plant:', error);
+        res.status(500).json({ success: false, message: 'Error deleting plant' });
+    }
+};
+
+// --- Events Trash ---
+exports.getTrashEvents = async (req, res) => {
+    try {
+        const events = await Event.getDeleted();
+        res.json({ success: true, events });
+    } catch (error) {
+        console.error('Error getting trashed events:', error);
+        res.status(500).json({ success: false, message: 'Error fetching trashed events' });
+    }
+};
+
+exports.restoreEvent = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const restored = await Event.restore(id);
+        if (!restored) return res.status(404).json({ success: false, message: 'Event not found in trash' });
+        res.json({ success: true, message: 'Event restored successfully' });
+    } catch (error) {
+        console.error('Error restoring event:', error);
+        res.status(500).json({ success: false, message: 'Error restoring event' });
+    }
+};
+
+exports.softDeleteEvent = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const deleted = await Event.softDelete(id, req.user.id);
+        if (!deleted) return res.status(404).json({ success: false, message: 'Event not found' });
+        res.json({ success: true, message: 'Event moved to trash' });
+    } catch (error) {
+        console.error('Error deleting event:', error);
+        res.status(500).json({ success: false, message: 'Error deleting event' });
     }
 };

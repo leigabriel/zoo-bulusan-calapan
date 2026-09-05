@@ -65,11 +65,8 @@ const LogoutModal = ({ isOpen, onClose, onConfirm, userName = 'User' }) => {
                     <h2 id="logout-modal-title" className="text-xl font-extrabold text-gray-900 mb-2">
                         Logout Confirmation
                     </h2>
-                    <p className="text-gray-500 text-[15px]">
-                        Hey <span className="font-bold text-gray-800">{userName}</span>,
-                    </p>
                     <p className="text-gray-500 text-[15px] mt-1 leading-relaxed">
-                        Are you sure you want to logout from your account?
+                        Are you sure you want to logout?
                     </p>
                 </div>
 

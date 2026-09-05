@@ -26,7 +26,7 @@ const formatEventRow = (row) => {
 class Event {
     static async getAll() {
         const [rows] = await db.query(
-            'SELECT * FROM events ORDER BY event_date ASC'
+            'SELECT * FROM events WHERE (is_deleted IS NULL OR is_deleted = FALSE) ORDER BY event_date ASC'
         );
         return rows.map(formatEventRow);
     }
@@ -52,6 +52,7 @@ class Event {
             `SELECT * FROM events 
              WHERE event_date >= CURDATE() 
              AND status IN ('upcoming', 'ongoing')
+             AND (is_deleted IS NULL OR is_deleted = FALSE)
              ORDER BY event_date ASC`
         );
         return rows.map(formatEventRow);
@@ -59,7 +60,7 @@ class Event {
 
     static async getPast() {
         const [rows] = await db.query(
-            'SELECT * FROM events WHERE event_date < CURDATE() ORDER BY event_date DESC'
+            'SELECT * FROM events WHERE event_date < CURDATE() AND (is_deleted IS NULL OR is_deleted = FALSE) ORDER BY event_date DESC'
         );
         return rows.map(formatEventRow);
     }
@@ -98,15 +99,72 @@ class Event {
     }
 
     static async count() {
-        const [rows] = await db.query('SELECT COUNT(*) as total FROM events');
+        const [rows] = await db.query('SELECT COUNT(*) as total FROM events WHERE (is_deleted IS NULL OR is_deleted = FALSE)');
         return rows[0].total;
     }
 
     static async countUpcoming() {
         const [rows] = await db.query(
-            'SELECT COUNT(*) as total FROM events WHERE event_date >= CURDATE()'
+            'SELECT COUNT(*) as total FROM events WHERE event_date >= CURDATE() AND (is_deleted IS NULL OR is_deleted = FALSE)'
         );
         return rows[0].total;
+    }
+
+    // Trash methods
+    static async softDelete(id, deletedBy) {
+        const [result] = await db.query(
+            'UPDATE events SET is_deleted = TRUE, deleted_at = NOW(), deleted_by = ? WHERE id = ?',
+            [deletedBy, id]
+        );
+        return result.affectedRows > 0;
+    }
+
+    static async softDeleteMultiple(ids, deletedBy) {
+        if (!ids || ids.length === 0) return false;
+        const [result] = await db.query(
+            'UPDATE events SET is_deleted = TRUE, deleted_at = NOW(), deleted_by = ? WHERE id IN (?)',
+            [deletedBy, ids]
+        );
+        return result.affectedRows > 0;
+    }
+
+    static async restore(id) {
+        const [result] = await db.query(
+            'UPDATE events SET is_deleted = FALSE, deleted_at = NULL, deleted_by = NULL WHERE id = ?',
+            [id]
+        );
+        return result.affectedRows > 0;
+    }
+
+    static async restoreMultiple(ids) {
+        if (!ids || ids.length === 0) return false;
+        const [result] = await db.query(
+            'UPDATE events SET is_deleted = FALSE, deleted_at = NULL, deleted_by = NULL WHERE id IN (?)',
+            [ids]
+        );
+        return result.affectedRows > 0;
+    }
+
+    static async getDeleted() {
+        const [rows] = await db.query(
+            `SELECT e.*, CONCAT(d.first_name, ' ', d.last_name) as deleted_by_name
+             FROM events e
+             LEFT JOIN users d ON e.deleted_by = d.id
+             WHERE e.is_deleted = TRUE
+             ORDER BY e.deleted_at DESC`
+        );
+        return rows.map(formatEventRow);
+    }
+
+    static async permanentDelete(id) {
+        const [result] = await db.query('DELETE FROM events WHERE id = ?', [id]);
+        return result.affectedRows > 0;
+    }
+
+    static async permanentDeleteMultiple(ids) {
+        if (!ids || ids.length === 0) return false;
+        const [result] = await db.query('DELETE FROM events WHERE id IN (?)', [ids]);
+        return result.affectedRows > 0;
     }
 }
 

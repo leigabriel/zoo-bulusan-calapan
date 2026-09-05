@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { staffAPI } from '../../services/api-client';
 import { sanitizeInput } from '../../utils/sanitize';
 import { notify } from '../../utils/toast';
@@ -35,8 +35,8 @@ const EditIcon = () => (
     </svg>
 );
 
-const TrashIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+const TrashIcon = ({ className = 'w-4 h-4' }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
         <polyline points="3 6 5 6 21 6" />
         <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
     </svg>
@@ -58,6 +58,7 @@ const SortIcon = () => (
     </svg>
 );
 
+
 const StaffAnimals = ({ globalSearch = '' }) => {
     const [animals, setAnimals] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -68,7 +69,6 @@ const StaffAnimals = ({ globalSearch = '' }) => {
     const [sortOrder, setSortOrder] = useState('asc');
     const [showModal, setShowModal] = useState(false);
     const [editingAnimal, setEditingAnimal] = useState(null);
-    const [deleteConfirm, setDeleteConfirm] = useState(null);
     const [saving, setSaving] = useState(false);
     const [imageInputMode, setImageInputMode] = useState('upload');
     const [imageFile, setImageFile] = useState(null);
@@ -76,6 +76,9 @@ const StaffAnimals = ({ globalSearch = '' }) => {
     const [form, setForm] = useState({
         name: '', species: '', exhibit: '', description: '', imageUrl: '', status: 'healthy', lifespan: '', weight: '', length: '', habitat: '', diet: '', animalInformation: ''
     });
+
+    const [undoItem, setUndoItem] = useState(null);
+    const undoTimeoutRef = useRef(null);
 
     useEffect(() => { fetchAnimals(); }, []);
 
@@ -87,9 +90,7 @@ const StaffAnimals = ({ globalSearch = '' }) => {
             else throw new Error(res.message || 'Failed to fetch animals');
         } catch (err) {
             setError(err.message || 'Error');
-        } finally {
-            setLoading(false);
-        }
+        } finally { setLoading(false); }
     };
 
     const openCreateModal = () => {
@@ -137,9 +138,7 @@ const StaffAnimals = ({ globalSearch = '' }) => {
         if (file) {
             setImageFile(file);
             const reader = new FileReader();
-            reader.onloadend = () => {
-                setImagePreview(reader.result);
-            };
+            reader.onloadend = () => { setImagePreview(reader.result); };
             reader.readAsDataURL(file);
         }
     };
@@ -149,16 +148,11 @@ const StaffAnimals = ({ globalSearch = '' }) => {
         setSaving(true);
         try {
             let imageUrl = form.imageUrl;
-
             if (imageInputMode === 'upload' && imageFile) {
                 const uploadRes = await staffAPI.uploadImage(imageFile);
-                if (uploadRes.success) {
-                    imageUrl = uploadRes.imageUrl;
-                } else {
-                    throw new Error(uploadRes.message || 'Failed to upload image');
-                }
+                if (uploadRes.success) { imageUrl = uploadRes.imageUrl; }
+                else { throw new Error(uploadRes.message || 'Failed to upload image'); }
             }
-
             const animalData = { ...form, imageUrl, image_url: imageUrl };
             let res;
             if (editingAnimal) {
@@ -173,21 +167,34 @@ const StaffAnimals = ({ globalSearch = '' }) => {
             } else throw new Error(res.message || 'Save failed');
         } catch (err) {
             notify.error(err.message || "Couldn't save animal. Please try again.");
-        } finally {
-            setSaving(false);
+        } finally { setSaving(false); }
+    };
+
+    // ==================== TRASH HANDLERS ====================
+
+    const trashAnimal = async (animal) => {
+        try {
+            const res = await staffAPI.deleteAnimal(animal.id);
+            if (res.success) {
+                setAnimals(animals.filter(a => a.id !== animal.id));
+                setUndoItem({ type: 'animal', data: animal });
+                if (undoTimeoutRef.current) clearTimeout(undoTimeoutRef.current);
+                undoTimeoutRef.current = setTimeout(() => setUndoItem(null), 5000);
+            }
+        } catch {
+            notify.error('Failed to move animal to trash');
         }
     };
 
-    const removeAnimal = async (id) => {
+    const handleUndoTrash = async () => {
+        if (!undoItem) return;
         try {
-            const res = await staffAPI.deleteAnimal(id);
-            if (res.success) {
-                setAnimals(animals.filter(a => a.id !== id));
-                notify.success('Animal removed.');
-                setDeleteConfirm(null);
-            } else throw new Error(res.message || 'Delete failed');
-        } catch (err) {
-            notify.error(err.message || "Couldn't remove animal. Please try again.");
+            await staffAPI.restoreAnimal(undoItem.data.id);
+            setAnimals(prev => [undoItem.data, ...prev]);
+            setUndoItem(null);
+            if (undoTimeoutRef.current) clearTimeout(undoTimeoutRef.current);
+        } catch {
+            notify.error('Failed to restore animal');
         }
     };
 
@@ -226,6 +233,7 @@ const StaffAnimals = ({ globalSearch = '' }) => {
             if (sortOrder === 'asc') return aVal.localeCompare(bVal);
             return bVal.localeCompare(aVal);
         });
+
 
     const toggleSort = (field) => {
         if (sortField === field) {
@@ -314,14 +322,10 @@ const StaffAnimals = ({ globalSearch = '' }) => {
 
             {/* Main Content Card */}
             <div className="bg-white border border-green-200 rounded-2xl overflow-hidden">
-                {/* Toolbar */}
                 <div className="p-4 border-b border-green-200 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
                     <div className="flex items-center gap-3 flex-1 flex-wrap">
-                        {/* Search */}
                         <div className="relative flex-1 min-w-[200px] max-w-sm">
-                            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
-                                <SearchIcon />
-                            </div>
+                            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"><SearchIcon /></div>
                             <input
                                 type="text"
                                 placeholder="Search animals..."
@@ -330,32 +334,14 @@ const StaffAnimals = ({ globalSearch = '' }) => {
                                 className="w-full bg-green-50 border border-green-200 rounded-xl py-2.5 pl-10 pr-4 text-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-200 transition-all"
                             />
                         </div>
-
-                        {/* Species Filter */}
                         <div className="relative">
-                            <select
-                                value={speciesFilter}
-                                onChange={(e) => setSpeciesFilter(e.target.value)}
-                                className="appearance-none bg-green-50 border border-green-200 rounded-xl py-2.5 px-4 pr-8 text-sm text-gray-900 focus:outline-none focus:border-green-500 cursor-pointer"
-                            >
+                            <select value={speciesFilter} onChange={(e) => setSpeciesFilter(e.target.value)} className="appearance-none bg-green-50 border border-green-200 rounded-xl py-2.5 px-4 pr-8 text-sm text-gray-900 focus:outline-none focus:border-green-500 cursor-pointer">
                                 <option value="all">All Species</option>
-                                {uniqueSpecies.map(species => (
-                                    <option key={species} value={species}>{species}</option>
-                                ))}
+                                {uniqueSpecies.map(species => (<option key={species} value={species}>{species}</option>))}
                             </select>
                         </div>
-
-                        {/* Sort Dropdown */}
                         <div className="relative">
-                            <select
-                                value={`${sortField}-${sortOrder}`}
-                                onChange={(e) => {
-                                    const [field, order] = e.target.value.split('-');
-                                    setSortField(field);
-                                    setSortOrder(order);
-                                }}
-                                className="appearance-none bg-green-50 border border-green-200 rounded-xl py-2.5 pl-10 pr-8 text-sm text-gray-900 focus:outline-none focus:border-green-500 cursor-pointer"
-                            >
+                            <select value={`${sortField}-${sortOrder}`} onChange={(e) => { const [field, order] = e.target.value.split('-'); setSortField(field); setSortOrder(order); }} className="appearance-none bg-green-50 border border-green-200 rounded-xl py-2.5 pl-10 pr-8 text-sm text-gray-900 focus:outline-none focus:border-green-500 cursor-pointer">
                                 <option value="name-asc">Name (A-Z)</option>
                                 <option value="name-desc">Name (Z-A)</option>
                                 <option value="species-asc">Species (A-Z)</option>
@@ -363,59 +349,29 @@ const StaffAnimals = ({ globalSearch = '' }) => {
                                 <option value="exhibit-asc">Exhibit (A-Z)</option>
                                 <option value="exhibit-desc">Exhibit (Z-A)</option>
                             </select>
-                            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none">
-                                <SortIcon />
-                            </div>
+                            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none"><SortIcon /></div>
                         </div>
                     </div>
-
-                    {/* Add Animal Button */}
-                    <button
-                        onClick={openCreateModal}
-                        className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-green-500 to-green-400 text-white font-semibold rounded-xl hover:from-green-400 hover:to-green-500 transition-all shadow-lg shadow-green-300/50"
-                    >
-                        <PlusIcon />
-                        Add Animal
-                    </button>
+                    <div className="flex items-center gap-2">
+                        <button onClick={openCreateModal} className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-green-500 to-green-400 text-white font-semibold rounded-xl hover:from-green-400 hover:to-green-500 transition-all shadow-lg shadow-green-300/50">
+                            <PlusIcon /> Add Animal
+                        </button>
+                    </div>
                 </div>
 
-                {/* Animals Table */}
+
                 <div className="overflow-x-auto">
                     <table className="w-full">
                         <thead className="bg-green-50">
                             <tr>
-                                <th
-                                    className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-900"
-                                    onClick={() => toggleSort('name')}
-                                >
-                                    <div className="flex items-center gap-2">
-                                        Name
-                                        {sortField === 'name' && (
-                                            <span className="text-green-600">{sortOrder === 'asc' ? '↑' : '↓'}</span>
-                                        )}
-                                    </div>
+                                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-900" onClick={() => toggleSort('name')}>
+                                    <div className="flex items-center gap-2">Name {sortField === 'name' && <span className="text-green-600">{sortOrder === 'asc' ? '↑' : '↓'}</span>}</div>
                                 </th>
-                                <th
-                                    className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-900"
-                                    onClick={() => toggleSort('species')}
-                                >
-                                    <div className="flex items-center gap-2">
-                                        Species
-                                        {sortField === 'species' && (
-                                            <span className="text-green-600">{sortOrder === 'asc' ? '↑' : '↓'}</span>
-                                        )}
-                                    </div>
+                                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-900" onClick={() => toggleSort('species')}>
+                                    <div className="flex items-center gap-2">Species {sortField === 'species' && <span className="text-green-600">{sortOrder === 'asc' ? '↑' : '↓'}</span>}</div>
                                 </th>
-                                <th
-                                    className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-900"
-                                    onClick={() => toggleSort('exhibit')}
-                                >
-                                    <div className="flex items-center gap-2">
-                                        Exhibit/Habitat
-                                        {sortField === 'exhibit' && (
-                                            <span className="text-green-600">{sortOrder === 'asc' ? '↑' : '↓'}</span>
-                                        )}
-                                    </div>
+                                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-900" onClick={() => toggleSort('exhibit')}>
+                                    <div className="flex items-center gap-2">Exhibit/Habitat {sortField === 'exhibit' && <span className="text-green-600">{sortOrder === 'asc' ? '↑' : '↓'}</span>}</div>
                                 </th>
                                 <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Description</th>
                                 <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
@@ -424,48 +380,30 @@ const StaffAnimals = ({ globalSearch = '' }) => {
                         </thead>
                         <tbody className="divide-y divide-green-200">
                             {filteredAnimals.length === 0 ? (
-                                <tr>
-                                    <td colSpan="6" className="px-6 py-12 text-center text-gray-500">
-                                        {effectiveSearch || speciesFilter !== 'all' ? 'No animals match your filters' : 'No animals found'}
-                                    </td>
-                                </tr>
+                                <tr><td colSpan="6" className="px-6 py-12 text-center text-gray-500">{effectiveSearch || speciesFilter !== 'all' ? 'No animals match your filters' : 'No animals found'}</td></tr>
                             ) : (
                                 filteredAnimals.map(animal => (
-                                    <tr key={animal.id} onClick={() => openEditModal(animal)} className="cursor-pointer hover:bg-green-50/50 transition-colors" title="Open animal details">
-                                        <td className="px-6 py-4">
+                                    <tr key={animal.id} className="cursor-pointer hover:bg-green-50/50 transition-colors" title="Open animal details">
+                                        <td className="px-6 py-4 cursor-pointer" onClick={() => openEditModal(animal)}>
                                             <div className="flex items-center gap-3">
                                                 <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-500 to-green-400 flex items-center justify-center text-white font-bold overflow-hidden">
-                                                    {animal.image_url ? (
-                                                        <img src={animal.image_url} alt={animal.name} className="w-full h-full object-cover" />
-                                                    ) : (
-                                                        (animal.name || 'A').charAt(0).toUpperCase()
-                                                    )}
+                                                    {animal.image_url ? (<img src={animal.image_url} alt={animal.name} className="w-full h-full object-cover" />) : ((animal.name || 'A').charAt(0).toUpperCase())}
                                                 </div>
                                                 <p className="font-medium text-gray-900">{animal.name}</p>
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4 text-gray-700">{animal.species}</td>
-                                        <td className="px-6 py-4 text-gray-700">{animal.habitat || animal.exhibit}</td>
-                                        <td className="px-6 py-4 text-gray-500 max-w-xs truncate">{animal.description}</td>
-                                        <td className="px-6 py-4">
-                                            <span className={`inline-flex px-3 py-1 text-xs font-medium rounded-full border capitalize ${getStatusBadgeColor(animal.status)}`}>
-                                                {animal.status}
-                                            </span>
+                                        <td className="px-6 py-4 text-gray-700 cursor-pointer" onClick={() => openEditModal(animal)}>{animal.species}</td>
+                                        <td className="px-6 py-4 text-gray-700 cursor-pointer" onClick={() => openEditModal(animal)}>{animal.habitat || animal.exhibit}</td>
+                                        <td className="px-6 py-4 text-gray-500 max-w-xs truncate cursor-pointer" onClick={() => openEditModal(animal)}>{animal.description}</td>
+                                        <td className="px-6 py-4 cursor-pointer" onClick={() => openEditModal(animal)}>
+                                            <span className={`inline-flex px-3 py-1 text-xs font-medium rounded-full border capitalize ${getStatusBadgeColor(animal.status)}`}>{animal.status}</span>
                                         </td>
                                         <td className="px-6 py-4">
                                             <div className="flex items-center justify-end gap-2">
-                                                <button
-                                                     onClick={(event) => { event.stopPropagation(); openEditModal(animal); }}
-                                                    className="p-2 bg-green-50 hover:bg-green-50 border border-green-200 hover:border-green-500/50 text-gray-500 hover:text-green-600 rounded-lg transition-all"
-                                                    title="Edit animal"
-                                                >
+                                                <button onClick={(event) => { event.stopPropagation(); openEditModal(animal); }} className="p-2 bg-green-50 hover:bg-green-50 border border-green-200 hover:border-green-500/50 text-gray-500 hover:text-green-600 rounded-lg transition-all" title="Edit animal">
                                                     <EditIcon />
                                                 </button>
-                                                <button
-                                                     onClick={(event) => { event.stopPropagation(); setDeleteConfirm(animal); }}
-                                                    className="p-2 bg-green-50 hover:bg-red-500/10 border border-green-200 hover:border-red-500/50 text-gray-500 hover:text-red-400 rounded-lg transition-all"
-                                                    title="Delete animal"
-                                                >
+                                                <button onClick={(event) => { event.stopPropagation(); trashAnimal(animal); }} className="p-2 bg-green-50 hover:bg-red-500/10 border border-green-200 hover:border-red-500/50 text-gray-500 hover:text-red-400 rounded-lg transition-all" title="Move to trash">
                                                     <TrashIcon />
                                                 </button>
                                             </div>
@@ -476,8 +414,6 @@ const StaffAnimals = ({ globalSearch = '' }) => {
                         </tbody>
                     </table>
                 </div>
-
-                {/* Table Footer */}
                 <div className="px-6 py-4 border-t border-green-200 flex items-center justify-between">
                     <p className="text-sm text-gray-500">
                         Showing {filteredAnimals.length} of {animals.length} animals
@@ -485,227 +421,92 @@ const StaffAnimals = ({ globalSearch = '' }) => {
                 </div>
             </div>
 
+            {/* Undo Toast */}
+            {undoItem && (
+                <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-gray-900 text-white px-5 py-3 rounded-xl shadow-2xl flex items-center gap-4 animate-slide-up">
+                    <span className="text-sm">Animal moved to trash</span>
+                    <button onClick={handleUndoTrash} className="text-sm font-semibold text-green-400 hover:text-green-300 transition-colors">Undo</button>
+                </div>
+            )}
+
             {/* Create/Edit Modal */}
             {showModal && (
                 <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
                     <div className="bg-white border border-green-200 rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-                        {/* Modal Header */}
                         <div className="p-6 border-b border-green-200 flex items-center justify-between sticky top-0 bg-white">
-                            <h3 className="text-xl font-bold text-gray-900">
-                                {editingAnimal ? 'Edit Animal' : 'Add New Animal'}
-                            </h3>
-                            <button
-                                onClick={closeModal}
-                                className="p-2 hover:bg-green-50 rounded-lg text-gray-500 hover:text-gray-900 transition"
-                            >
-                                <CloseIcon />
-                            </button>
+                            <h3 className="text-xl font-bold text-gray-900">{editingAnimal ? 'Edit Animal' : 'Add New Animal'}</h3>
+                            <button onClick={closeModal} className="p-2 hover:bg-green-50 rounded-lg text-gray-500 hover:text-gray-900 transition"><CloseIcon /></button>
                         </div>
-
-                        {/* Modal Form */}
                         <form onSubmit={saveAnimal} className="p-6 space-y-5">
-                            {/* Name */}
                             <div>
                                 <label className="block text-sm font-medium text-gray-500 mb-2">Name *</label>
-                                <input
-                                    type="text"
-                                    value={form.name}
-                                    onChange={(e) => setForm({ ...form, name: sanitizeInput(e.target.value) })}
-                                    required
-                                    className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-200 transition-all"
-                                    placeholder="Animal name"
-                                />
+                                <input type="text" value={form.name} onChange={(e) => setForm({ ...form, name: sanitizeInput(e.target.value) })} required className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-200 transition-all" placeholder="Animal name" />
                             </div>
-
-                            {/* Species & Exhibit */}
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-500 mb-2">Species *</label>
-                                    <input
-                                        type="text"
-                                        value={form.species}
-                                        onChange={(e) => setForm({ ...form, species: sanitizeInput(e.target.value) })}
-                                        required
-                                        className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-200 transition-all"
-                                        placeholder="e.g. Lion"
-                                    />
+                                    <input type="text" value={form.species} onChange={(e) => setForm({ ...form, species: sanitizeInput(e.target.value) })} required className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-200 transition-all" placeholder="e.g. Lion" />
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-500 mb-2">Exhibit/Habitat</label>
-                                    <input
-                                        type="text"
-                                        value={form.exhibit}
-                                        onChange={(e) => setForm({ ...form, exhibit: sanitizeInput(e.target.value) })}
-                                        className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-200 transition-all"
-                                        placeholder="e.g. Savanna"
-                                    />
+                                    <input type="text" value={form.exhibit} onChange={(e) => setForm({ ...form, exhibit: sanitizeInput(e.target.value) })} className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-200 transition-all" placeholder="e.g. Savanna" />
                                 </div>
                             </div>
-
-                            {/* Status */}
                             <div>
                                 <label className="block text-sm font-medium text-gray-500 mb-2">Status</label>
-                                <select
-                                    value={form.status}
-                                    onChange={(e) => setForm({ ...form, status: e.target.value })}
-                                    className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:border-green-500 cursor-pointer"
-                                >
+                                <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })} className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:border-green-500 cursor-pointer">
                                     <option value="healthy">Healthy</option>
                                     <option value="sick">Sick</option>
                                     <option value="recovering">Recovering</option>
                                     <option value="quarantine">Quarantine</option>
                                 </select>
                             </div>
-
-                            {/* Description */}
                             <div>
                                 <label className="block text-sm font-medium text-gray-500 mb-2">Description</label>
-                                <textarea
-                                    value={form.description}
-                                    onChange={(e) => setForm({ ...form, description: sanitizeInput(e.target.value) })}
-                                    rows="3"
-                                    className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-200 transition-all resize-none"
-                                    placeholder="Brief description of the animal..."
-                                />
+                                <textarea value={form.description} onChange={(e) => setForm({ ...form, description: sanitizeInput(e.target.value) })} rows="3" className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-200 transition-all resize-none" placeholder="Brief description of the animal..." />
                             </div>
-
-                            {/* Lifespan, Weight, Length */}
                             <div className="grid grid-cols-3 gap-4">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-500 mb-2">Lifespan</label>
-                                    <input
-                                        type="text"
-                                        value={form.lifespan}
-                                        onChange={(e) => setForm({ ...form, lifespan: sanitizeInput(e.target.value) })}
-                                        className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-500 transition-all"
-                                        placeholder="e.g., 10-15 years"
-                                    />
+                                    <input type="text" value={form.lifespan} onChange={(e) => setForm({ ...form, lifespan: sanitizeInput(e.target.value) })} className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-500 transition-all" placeholder="e.g., 10-15 years" />
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-500 mb-2">Weight</label>
-                                    <input
-                                        type="text"
-                                        value={form.weight}
-                                        onChange={(e) => setForm({ ...form, weight: sanitizeInput(e.target.value) })}
-                                        className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-500 transition-all"
-                                        placeholder="e.g., 200 kg"
-                                    />
+                                    <input type="text" value={form.weight} onChange={(e) => setForm({ ...form, weight: sanitizeInput(e.target.value) })} className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-500 transition-all" placeholder="e.g., 200 kg" />
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-500 mb-2">Length</label>
-                                    <input
-                                        type="text"
-                                        value={form.length}
-                                        onChange={(e) => setForm({ ...form, length: sanitizeInput(e.target.value) })}
-                                        className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-500 transition-all"
-                                        placeholder="e.g., 2.5 m"
-                                    />
+                                    <input type="text" value={form.length} onChange={(e) => setForm({ ...form, length: sanitizeInput(e.target.value) })} className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-500 transition-all" placeholder="e.g., 2.5 m" />
                                 </div>
                             </div>
-
-                            {/* Habitat & Diet */}
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-500 mb-2">Natural Habitat</label>
-                                    <input
-                                        type="text"
-                                        value={form.habitat}
-                                        onChange={(e) => setForm({ ...form, habitat: sanitizeInput(e.target.value) })}
-                                        className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-500 transition-all"
-                                        placeholder="e.g., African Savanna"
-                                    />
+                                    <input type="text" value={form.habitat} onChange={(e) => setForm({ ...form, habitat: sanitizeInput(e.target.value) })} className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-500 transition-all" placeholder="e.g., African Savanna" />
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-500 mb-2">Diet</label>
-                                    <input
-                                        type="text"
-                                        value={form.diet}
-                                        onChange={(e) => setForm({ ...form, diet: sanitizeInput(e.target.value) })}
-                                        className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-500 transition-all"
-                                        placeholder="e.g., Carnivore"
-                                    />
+                                    <input type="text" value={form.diet} onChange={(e) => setForm({ ...form, diet: sanitizeInput(e.target.value) })} className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-500 transition-all" placeholder="e.g., Carnivore" />
                                 </div>
                             </div>
-
-                            {/* Additional Information */}
                             <div>
                                 <label className="block text-sm font-medium text-gray-500 mb-2">Additional Information</label>
-                                <textarea
-                                    value={form.animalInformation}
-                                    onChange={(e) => setForm({ ...form, animalInformation: sanitizeInput(e.target.value) })}
-                                    rows="3"
-                                    className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-500 transition-all resize-none"
-                                    placeholder="Enter additional details about the animal..."
-                                />
+                                <textarea value={form.animalInformation} onChange={(e) => setForm({ ...form, animalInformation: sanitizeInput(e.target.value) })} rows="3" className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-200 transition-all resize-none" placeholder="Enter additional details about the animal..." />
                             </div>
-
-                            {/* Image Upload */}
                             <div>
                                 <label className="block text-sm font-medium text-gray-500 mb-2">Image</label>
-
-                                <input
-                                    type="file"
-                                    accept="image/*"
-                                    onChange={handleImageFileChange}
-                                    className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-green-500/20 file:text-green-600 hover:file:bg-green-500/30"
-                                />
-
-                                {/* Image Preview */}
+                                <input type="file" accept="image/*" onChange={handleImageFileChange} className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-green-500/20 file:text-green-600 hover:file:bg-green-500/30" />
                                 {(imagePreview || form.imageUrl) && (
-                                    <div className="mt-3">
-                                        <img
-                                            src={imagePreview || form.imageUrl}
-                                            alt="Preview"
-                                            className="w-24 h-24 rounded-xl object-cover border border-green-200"
-                                        />
-                                    </div>
+                                    <div className="mt-3"><img src={imagePreview || form.imageUrl} alt="Preview" className="w-24 h-24 rounded-xl object-cover border border-green-200" /></div>
                                 )}
                             </div>
-
-                            {/* Actions */}
                             <div className="flex gap-3 pt-4">
-                                <button
-                                    type="button"
-                                    onClick={closeModal}
-                                    className="flex-1 px-4 py-3 bg-green-50 hover:bg-green-50 text-gray-900 rounded-xl font-medium transition"
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    type="submit"
-                                    disabled={saving}
-                                    className="flex-1 px-4 py-3 bg-green-500 hover:bg-green-600 text-white rounded-xl font-medium transition disabled:opacity-50"
-                                >
+                                <button type="button" onClick={closeModal} className="flex-1 px-4 py-3 bg-green-50 hover:bg-green-50 text-gray-900 rounded-xl font-medium transition">Cancel</button>
+                                <button type="submit" disabled={saving} className="flex-1 px-4 py-3 bg-green-500 hover:bg-green-600 text-white rounded-xl font-medium transition disabled:opacity-50">
                                     {saving ? 'Saving...' : (editingAnimal ? 'Update Animal' : 'Add Animal')}
                                 </button>
                             </div>
                         </form>
-                    </div>
-                </div>
-            )}
-
-            {/* Delete Confirmation Modal */}
-            {deleteConfirm && (
-                <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-white border border-green-200 rounded-2xl w-full max-w-md p-6">
-                        <h3 className="text-xl font-bold text-gray-900 mb-2">Delete Animal</h3>
-                        <p className="text-gray-500 mb-6">
-                            Are you sure you want to delete <span className="text-gray-900 font-medium">{deleteConfirm.name}</span>? This action cannot be undone.
-                        </p>
-                        <div className="flex gap-3">
-                            <button
-                                onClick={() => setDeleteConfirm(null)}
-                                className="flex-1 px-4 py-3 bg-green-50 hover:bg-green-50 text-gray-900 rounded-xl font-medium transition"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                onClick={() => removeAnimal(deleteConfirm.id)}
-                                className="flex-1 px-4 py-3 bg-red-500 hover:bg-red-600 text-gray-900 rounded-xl font-medium transition"
-                            >
-                                Delete
-                            </button>
-                        </div>
                     </div>
                 </div>
             )}

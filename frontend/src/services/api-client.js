@@ -727,6 +727,180 @@ export const adminAPI = {
             body: JSON.stringify({ config })
         });
         return handleResponse(response);
+    },
+
+    // ==================== TRASH API ====================
+
+    // Users trash
+    getTrashUsers: async () => {
+        const response = await fetch(`${API_BASE_URL}/admin/users-trash`, {
+            headers: getAuthHeaders('admin')
+        });
+        return handleResponse(response);
+    },
+
+    restoreUser: async (id) => {
+        const response = await fetch(`${API_BASE_URL}/admin/users/${id}/restore`, {
+            method: 'PUT',
+            headers: getAuthHeaders('admin')
+        });
+        return handleResponse(response);
+    },
+
+    restoreMultipleUsers: async (ids) => {
+        const response = await fetch(`${API_BASE_URL}/admin/users-restore-multiple`, {
+            method: 'PUT',
+            headers: getAuthHeaders('admin'),
+            body: JSON.stringify({ ids })
+        });
+        return handleResponse(response);
+    },
+
+    permanentDeleteUser: async (id, password) => {
+        const response = await fetch(`${API_BASE_URL}/admin/users/${id}/permanent`, {
+            method: 'DELETE',
+            headers: getAuthHeaders('admin'),
+            body: JSON.stringify({ password })
+        });
+        return handleResponse(response);
+    },
+
+    permanentDeleteMultipleUsers: async (ids, password) => {
+        const response = await fetch(`${API_BASE_URL}/admin/users-permanent-multiple`, {
+            method: 'DELETE',
+            headers: getAuthHeaders('admin'),
+            body: JSON.stringify({ ids, password })
+        });
+        return handleResponse(response);
+    },
+
+    // Animals trash
+    getTrashAnimals: async () => {
+        const response = await fetch(`${API_BASE_URL}/admin/animals-trash`, {
+            headers: getAuthHeaders('admin')
+        });
+        return handleResponse(response);
+    },
+
+    restoreAnimal: async (id) => {
+        const response = await fetch(`${API_BASE_URL}/admin/animals/${id}/restore`, {
+            method: 'PUT',
+            headers: getAuthHeaders('admin')
+        });
+        return handleResponse(response);
+    },
+
+    restoreMultipleAnimals: async (ids) => {
+        const response = await fetch(`${API_BASE_URL}/admin/animals-restore-multiple`, {
+            method: 'PUT',
+            headers: getAuthHeaders('admin'),
+            body: JSON.stringify({ ids })
+        });
+        return handleResponse(response);
+    },
+
+    permanentDeleteAnimal: async (id, password) => {
+        const response = await fetch(`${API_BASE_URL}/admin/animals/${id}/permanent`, {
+            method: 'DELETE',
+            headers: getAuthHeaders('admin'),
+            body: JSON.stringify({ password })
+        });
+        return handleResponse(response);
+    },
+
+    permanentDeleteMultipleAnimals: async (ids, password) => {
+        const response = await fetch(`${API_BASE_URL}/admin/animals-permanent-multiple`, {
+            method: 'DELETE',
+            headers: getAuthHeaders('admin'),
+            body: JSON.stringify({ ids, password })
+        });
+        return handleResponse(response);
+    },
+
+    // Plants trash
+    getTrashPlants: async () => {
+        const response = await fetch(`${API_BASE_URL}/admin/plants-trash`, {
+            headers: getAuthHeaders('admin')
+        });
+        return handleResponse(response);
+    },
+
+    restorePlant: async (id) => {
+        const response = await fetch(`${API_BASE_URL}/admin/plants/${id}/restore`, {
+            method: 'PUT',
+            headers: getAuthHeaders('admin')
+        });
+        return handleResponse(response);
+    },
+
+    restoreMultiplePlants: async (ids) => {
+        const response = await fetch(`${API_BASE_URL}/admin/plants-restore-multiple`, {
+            method: 'PUT',
+            headers: getAuthHeaders('admin'),
+            body: JSON.stringify({ ids })
+        });
+        return handleResponse(response);
+    },
+
+    permanentDeletePlant: async (id, password) => {
+        const response = await fetch(`${API_BASE_URL}/admin/plants/${id}/permanent`, {
+            method: 'DELETE',
+            headers: getAuthHeaders('admin'),
+            body: JSON.stringify({ password })
+        });
+        return handleResponse(response);
+    },
+
+    permanentDeleteMultiplePlants: async (ids, password) => {
+        const response = await fetch(`${API_BASE_URL}/admin/plants-permanent-multiple`, {
+            method: 'DELETE',
+            headers: getAuthHeaders('admin'),
+            body: JSON.stringify({ ids, password })
+        });
+        return handleResponse(response);
+    },
+
+    // Events trash
+    getTrashEvents: async () => {
+        const response = await fetch(`${API_BASE_URL}/admin/events-trash`, {
+            headers: getAuthHeaders('admin')
+        });
+        return handleResponse(response);
+    },
+
+    restoreEvent: async (id) => {
+        const response = await fetch(`${API_BASE_URL}/admin/events/${id}/restore`, {
+            method: 'PUT',
+            headers: getAuthHeaders('admin')
+        });
+        return handleResponse(response);
+    },
+
+    restoreMultipleEvents: async (ids) => {
+        const response = await fetch(`${API_BASE_URL}/admin/events-restore-multiple`, {
+            method: 'PUT',
+            headers: getAuthHeaders('admin'),
+            body: JSON.stringify({ ids })
+        });
+        return handleResponse(response);
+    },
+
+    permanentDeleteEvent: async (id, password) => {
+        const response = await fetch(`${API_BASE_URL}/admin/events/${id}/permanent`, {
+            method: 'DELETE',
+            headers: getAuthHeaders('admin'),
+            body: JSON.stringify({ password })
+        });
+        return handleResponse(response);
+    },
+
+    permanentDeleteMultipleEvents: async (ids, password) => {
+        const response = await fetch(`${API_BASE_URL}/admin/events-permanent-multiple`, {
+            method: 'DELETE',
+            headers: getAuthHeaders('admin'),
+            body: JSON.stringify({ ids, password })
+        });
+        return handleResponse(response);
     }
 };
 
@@ -761,6 +935,14 @@ export const staffAPI = {
 
     getPlants: async () => {
         const response = await fetch(`${API_BASE_URL}/staff/plants`, {
+            headers: getAuthHeaders('staff')
+        });
+        return handleResponse(response);
+    },
+
+    deletePlant: async (id) => {
+        const response = await fetch(`${API_BASE_URL}/staff/plants/${id}`, {
+            method: 'DELETE',
             headers: getAuthHeaders('staff')
         });
         return handleResponse(response);
@@ -1103,6 +1285,80 @@ export const staffAPI = {
                 'Authorization': `Bearer ${token}`
             },
             body: formData
+        });
+        return handleResponse(response);
+    },
+
+    // ==================== TRASH API ====================
+
+    // Users trash (staff can only manage regular users)
+    getTrashUsers: async () => {
+        const response = await fetch(`${API_BASE_URL}/staff/users-trash`, {
+            headers: getAuthHeaders('staff')
+        });
+        return handleResponse(response);
+    },
+
+    restoreUser: async (id) => {
+        const response = await fetch(`${API_BASE_URL}/staff/users/${id}/restore`, {
+            method: 'PUT',
+            headers: getAuthHeaders('staff')
+        });
+        return handleResponse(response);
+    },
+
+    softDeleteUser: async (id) => {
+        const response = await fetch(`${API_BASE_URL}/staff/users/${id}`, {
+            method: 'DELETE',
+            headers: getAuthHeaders('staff')
+        });
+        return handleResponse(response);
+    },
+
+    // Animals trash
+    getTrashAnimals: async () => {
+        const response = await fetch(`${API_BASE_URL}/staff/animals-trash`, {
+            headers: getAuthHeaders('staff')
+        });
+        return handleResponse(response);
+    },
+
+    restoreAnimal: async (id) => {
+        const response = await fetch(`${API_BASE_URL}/staff/animals/${id}/restore`, {
+            method: 'PUT',
+            headers: getAuthHeaders('staff')
+        });
+        return handleResponse(response);
+    },
+
+    // Plants trash
+    getTrashPlants: async () => {
+        const response = await fetch(`${API_BASE_URL}/staff/plants-trash`, {
+            headers: getAuthHeaders('staff')
+        });
+        return handleResponse(response);
+    },
+
+    restorePlant: async (id) => {
+        const response = await fetch(`${API_BASE_URL}/staff/plants/${id}/restore`, {
+            method: 'PUT',
+            headers: getAuthHeaders('staff')
+        });
+        return handleResponse(response);
+    },
+
+    // Events trash
+    getTrashEvents: async () => {
+        const response = await fetch(`${API_BASE_URL}/staff/events-trash`, {
+            headers: getAuthHeaders('staff')
+        });
+        return handleResponse(response);
+    },
+
+    restoreEvent: async (id) => {
+        const response = await fetch(`${API_BASE_URL}/staff/events/${id}/restore`, {
+            method: 'PUT',
+            headers: getAuthHeaders('staff')
         });
         return handleResponse(response);
     }

@@ -117,4 +117,23 @@ router.post('/upload-animal-image', createDynamicUploadMiddleware('animal', 'ima
 router.post('/upload-plant-image', createDynamicUploadMiddleware('plant', 'image'), adminController.uploadImage);
 router.post('/upload-event-image', createDynamicUploadMiddleware('event', 'image'), adminController.uploadImage);
 
+// ==================== TRASH ROUTES ====================
+
+// Users trash (staff can only manage regular users)
+router.get('/users-trash', staffController.getTrashUsers);
+router.put('/users/:id/restore', staffController.restoreUser);
+router.delete('/users/:id', staffController.softDeleteUser);
+
+// Animals trash
+router.get('/animals-trash', staffController.getTrashAnimals);
+router.put('/animals/:id/restore', staffController.restoreAnimal);
+
+// Plants trash
+router.get('/plants-trash', staffController.getTrashPlants);
+router.put('/plants/:id/restore', staffController.restorePlant);
+
+// Events trash
+router.get('/events-trash', staffController.getTrashEvents);
+router.put('/events/:id/restore', staffController.restoreEvent);
+
 module.exports = router;

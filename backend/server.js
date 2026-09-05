@@ -28,6 +28,7 @@ const ensureAIAssistSchema = require('./database/ensure-ai-assist-schema');
 const ensureAuthSchema = require('./database/ensure-auth-schema');
 const ensureSiteVisitSchema = require('./database/ensure-site-visit-schema');
 const ensureUserActivitySchema = require('./database/ensure-user-activity-schema');
+const ensureTrashSchema = require('./database/ensure-trash-schema');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -142,7 +143,7 @@ app.use((err, req, res, next) => {
     });
 });
 
-Promise.all([ensureEventPaymentSchema(), ensureAIAssistSchema(), ensureAuthSchema(), ensureSiteVisitSchema(), ensureUserActivitySchema()])
+Promise.all([ensureEventPaymentSchema(), ensureAIAssistSchema(), ensureAuthSchema(), ensureSiteVisitSchema(), ensureUserActivitySchema(), ensureTrashSchema()])
     .catch(error => console.error('Database schema initialization failed:', error.message))
     .finally(() => {
         app.listen(PORT, HOST, () => {

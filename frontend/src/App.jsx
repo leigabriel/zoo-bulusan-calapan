@@ -40,6 +40,7 @@ import AdminMessages from './pages/admin/AdminMessages';
 import AdminLogs from './pages/admin/AdminLogs';
 import AdminCommunityModeration from './pages/admin/AdminCommunityModeration';
 import AdminSettings from './pages/admin/AdminSettings';
+import AdminTrash from './pages/admin/AdminTrash';
 import StaffDashboard from './pages/staff/StaffDashboard';
 import QRScanner from './pages/staff/QRScanner';
 import StaffEvents from './pages/staff/StaffEvents';
@@ -50,6 +51,7 @@ import StaffPlants from './pages/staff/StaffPlants';
 import StaffHelpCenter from './pages/staff/StaffHelpCenter';
 import StaffMessages from './pages/staff/StaffMessages';
 import StaffCommunityModeration from './pages/staff/StaffCommunityModeration';
+import StaffTrash from './pages/staff/StaffTrash';
 import AdminLayout from './components/layout/AdminLayout';
 import StaffLayout from './components/layout/StaffLayout';
 import AnimalClassifier from './components/features/ai-scanner/AnimalClassifier';
@@ -301,6 +303,13 @@ function AppRoutes() {
                     </AdminLayout>
                 </ProtectedRoute>
             } />
+            <Route path="/admin/trash" element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                    <AdminLayout>
+                        <AdminTrash />
+                    </AdminLayout>
+                </ProtectedRoute>
+            } />
 
             {/* Staff Routes */}
             <Route path="/staff/dashboard" element={
@@ -377,6 +386,13 @@ function AppRoutes() {
                 <ProtectedRoute allowedRoles={['admin', 'staff']}>
                     <StaffLayout>
                         <StaffCommunityModeration />
+                    </StaffLayout>
+                </ProtectedRoute>
+            } />
+            <Route path="/staff/trash" element={
+                <ProtectedRoute allowedRoles={['admin', 'staff']}>
+                    <StaffLayout>
+                        <StaffTrash />
                     </StaffLayout>
                 </ProtectedRoute>
             } />

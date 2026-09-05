@@ -11,7 +11,7 @@ import useScrollLock from '../../hooks/use-scroll-lock';
 import {
     Home, Calendar, Ticket, Pet, Leaf, Message, Messages, ShieldCheck,
     Scan, Logout, Menu, Bell, CloseCircle, Lifebuoy, Checklist, Search, Setting, People,
-    Sparkles, User
+    Sparkles, User, Trash
 } from 'reicon-react';
 
 const StaffLayout = ({ children }) => {
@@ -521,7 +521,7 @@ const StaffLayout = ({ children }) => {
                 aria-label="Staff navigation"
             >
                 {/* Logo Section */}
-                <div className="p-5 flex items-center gap-3 border-b border-gray-300">
+                <div className="p-3.5 flex items-center gap-3 border-b border-gray-300">
                     <div className="w-12 h-12 rounded-xl flex items-center justify-center text-white">
                         <img src="/bz-url-logo.png" alt="Bz Logo" className="w-12 h-12 object-contain" />
                     </div>
@@ -567,7 +567,7 @@ const StaffLayout = ({ children }) => {
                     </Link>
 
                     <div className="flex gap-2">
-                        <Link
+                        {/* <Link
                             to="/staff/settings"
                             className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-medium transition-all duration-200 ${location.pathname === '/staff/settings'
                                     ? 'bg-green-100 text-green-700'
@@ -575,7 +575,7 @@ const StaffLayout = ({ children }) => {
                                 }`}
                         >
                             <Setting size={20} />
-                        </Link>
+                        </Link> */}
 
                         <button
                             onClick={() => setShowLogoutModal(true)}
@@ -653,6 +653,14 @@ const StaffLayout = ({ children }) => {
                                         <span className="text-sm text-gray-700">Daily Tasks</span>
                                         <span className="ml-auto text-[10px] px-1.5 py-0.5 bg-green-100 text-green-700 rounded-full font-medium">{completedTaskCount}/{dailyTasks.length}</span>
                                     </button>
+                                    <Link
+                                        to="/staff/trash"
+                                        onClick={() => setMobileHeaderMenuOpen(false)}
+                                        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-left"
+                                    >
+                                        <Trash size={18} className="text-gray-400" />
+                                        <span className="text-sm text-gray-700">Trash</span>
+                                    </Link>
                                     <button
                                         onClick={() => { setMobileHeaderMenuOpen(false); openProfileModal(); }}
                                         className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-left"
@@ -807,6 +815,13 @@ const StaffLayout = ({ children }) => {
                                         {unreadCount > 99 ? '99+' : unreadCount}
                                     </span>
                                 )}
+                            </button>
+                            <button
+                                onClick={() => navigate('/staff/trash')}
+                                className="p-2.5 hover:bg-gray-100 rounded-xl text-gray-500 hover:text-gray-900 transition"
+                                aria-label="Trash"
+                            >
+                                <Trash size={20} />
                             </button>
                             <button
                                 onClick={() => setDailyTaskPanelOpen(!dailyTaskPanelOpen)}

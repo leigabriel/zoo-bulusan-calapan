@@ -48,7 +48,7 @@ class User {
         const [rows] = await db.query(
             `SELECT id, first_name, last_name, username, email, phone_number, gender, birthday, 
              role, profile_image, is_active, is_suspended, suspension_reason, suspended_at, created_at 
-             FROM users ORDER BY created_at DESC`
+             FROM users WHERE (is_deleted IS NULL OR is_deleted = FALSE) ORDER BY created_at DESC`
         );
         return rows;
     }
@@ -56,7 +56,7 @@ class User {
     static async getByRole(role) {
         const [rows] = await db.query(
             `SELECT id, first_name, last_name, username, email, phone_number, role, is_active, created_at 
-             FROM users WHERE role = ? ORDER BY created_at DESC`,
+             FROM users WHERE role = ? AND (is_deleted IS NULL OR is_deleted = FALSE) ORDER BY created_at DESC`,
             [role]
         );
         return rows;
@@ -96,12 +96,12 @@ class User {
     }
 
     static async count() {
-        const [rows] = await db.query('SELECT COUNT(*) as total FROM users');
+        const [rows] = await db.query('SELECT COUNT(*) as total FROM users WHERE (is_deleted IS NULL OR is_deleted = FALSE)');
         return rows[0].total;
     }
 
     static async countByRole(role) {
-        const [rows] = await db.query('SELECT COUNT(*) as total FROM users WHERE role = ?', [role]);
+        const [rows] = await db.query('SELECT COUNT(*) as total FROM users WHERE role = ? AND (is_deleted IS NULL OR is_deleted = FALSE)', [role]);
         return rows[0].total;
     }
 
@@ -218,6 +218,65 @@ class User {
         } finally {
             connection.release();
         }
+    }
+
+    // Trash methods
+    static async softDelete(id, deletedBy) {
+        const [result] = await db.query(
+            'UPDATE users SET is_deleted = TRUE, deleted_at = NOW(), deleted_by = ?, updated_at = NOW() WHERE id = ?',
+            [deletedBy, id]
+        );
+        return result.affectedRows > 0;
+    }
+
+    static async softDeleteMultiple(ids, deletedBy) {
+        if (!ids || ids.length === 0) return false;
+        const [result] = await db.query(
+            'UPDATE users SET is_deleted = TRUE, deleted_at = NOW(), deleted_by = ?, updated_at = NOW() WHERE id IN (?)',
+            [deletedBy, ids]
+        );
+        return result.affectedRows > 0;
+    }
+
+    static async restore(id) {
+        const [result] = await db.query(
+            'UPDATE users SET is_deleted = FALSE, deleted_at = NULL, deleted_by = NULL, updated_at = NOW() WHERE id = ?',
+            [id]
+        );
+        return result.affectedRows > 0;
+    }
+
+    static async restoreMultiple(ids) {
+        if (!ids || ids.length === 0) return false;
+        const [result] = await db.query(
+            'UPDATE users SET is_deleted = FALSE, deleted_at = NULL, deleted_by = NULL, updated_at = NOW() WHERE id IN (?)',
+            [ids]
+        );
+        return result.affectedRows > 0;
+    }
+
+    static async getDeleted() {
+        const [rows] = await db.query(
+            `SELECT u.id, u.first_name, u.last_name, u.username, u.email, u.role, u.profile_image,
+                    u.is_suspended, u.created_at, u.deleted_at, u.deleted_by,
+                    CONCAT(d.first_name, ' ', d.last_name) as deleted_by_name
+             FROM users u
+             LEFT JOIN users d ON u.deleted_by = d.id
+             WHERE u.is_deleted = TRUE
+             ORDER BY u.deleted_at DESC`
+        );
+        return rows;
+    }
+
+    static async permanentDelete(id) {
+        const [result] = await db.query('DELETE FROM users WHERE id = ?', [id]);
+        return result.affectedRows > 0;
+    }
+
+    static async permanentDeleteMultiple(ids) {
+        if (!ids || ids.length === 0) return false;
+        const [result] = await db.query('DELETE FROM users WHERE id IN (?)', [ids]);
+        return result.affectedRows > 0;
     }
 
     // Google OAuth methods
