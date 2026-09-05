@@ -1,5 +1,6 @@
-import { useEffect, useRef } from 'react';
+import { useContext, useEffect, useRef } from 'react';
 import useScrollLock from '../../hooks/use-scroll-lock';
+import WorkspaceThemeContext from './WorkspaceThemeContext';
 
 const ConfirmationModal = ({
     isOpen,
@@ -20,7 +21,8 @@ const ConfirmationModal = ({
     variant = 'default'
 }) => {
     const cancelButtonRef = useRef(null);
-    const isModerationVariant = variant === 'moderation';
+    const workspaceTheme = useContext(WorkspaceThemeContext);
+    const isModerationVariant = variant === 'moderation' && !workspaceTheme;
     useScrollLock(isOpen);
 
     useEffect(() => {
@@ -68,7 +70,9 @@ const ConfirmationModal = ({
                             onChange={(event) => onInputChange?.(event.target.value)}
                             className={`w-full px-3 py-2 text-sm outline-none rounded-lg transition-colors ${isModerationVariant
                                 ? 'border border-emerald-900/70 bg-black/30 text-white placeholder:text-emerald-100/35 focus:border-emerald-500'
-                                : 'border border-gray-300 text-gray-900 focus:border-gray-700'
+                                : workspaceTheme
+                                    ? 'border border-gray-300 bg-green-50 text-gray-900 focus:border-green-400'
+                                    : 'border border-gray-300 text-gray-900 focus:border-gray-700'
                                 }`}
                             rows={3}
                             placeholder={inputPlaceholder}
@@ -98,6 +102,8 @@ const ConfirmationModal = ({
                             ? (isModerationVariant
                                 ? 'bg-red-600 border-red-600 text-white hover:bg-red-700'
                                 : 'bg-red-600 border-red-600 text-white hover:bg-red-700')
+                            : workspaceTheme
+                                ? 'bg-green-400 border-green-400 text-gray-900 hover:bg-green-300'
                             : (isModerationVariant
                                 ? 'bg-emerald-600 border-emerald-600 text-white hover:bg-emerald-700'
                                 : 'bg-[#212631] border-[#212631] text-white hover:bg-black')

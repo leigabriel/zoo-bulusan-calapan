@@ -1,61 +1,37 @@
+import { Activity as ReiconActivity, Clock as ReiconClock, Envelope as ReiconEnvelope, Login as ReiconLogin, Refresh as ReiconRefresh, Shield as ReiconShield, Ticket as ReiconTicket, Users as ReiconUsers, X as ReiconX } from 'reicon-react';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { adminAPI, reservationAPI } from '../../services/api-client';
 
 const UsersIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
-        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-        <circle cx="9" cy="7" r="4" />
-        <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-    </svg>
+    <ReiconUsers strokeWidth="2" className="w-5 h-5" />
 );
 
 const ActivityIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
-        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
-    </svg>
+    <ReiconActivity strokeWidth="2" className="w-5 h-5" />
 );
 
 const ClockIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
-        <circle cx="12" cy="12" r="10" />
-        <polyline points="12 6 12 12 16 14" />
-    </svg>
+    <ReiconClock strokeWidth="2" className="w-4 h-4" />
 );
 
 const RefreshIcon = ({ className = '' }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`w-4 h-4 ${className}`}>
-        <polyline points="23 4 23 10 17 10" />
-        <polyline points="1 20 1 14 7 14" />
-        <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
-    </svg>
+    <ReiconRefresh strokeWidth="2" className={`w-4 h-4 ${className}`} />
 );
 
 const ShieldIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
-        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z" />
-    </svg>
+    <ReiconShield strokeWidth="2" className="w-5 h-5" />
 );
 
 const LoginIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
-        <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
-        <polyline points="10 17 15 12 10 7" />
-        <line x1="15" y1="12" x2="3" y2="12" />
-    </svg>
+    <ReiconLogin strokeWidth="2" className="w-4 h-4" />
 );
 
 const MessageIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
-        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
-        <polyline points="22,6 12,13 2,6" />
-    </svg>
+    <ReiconEnvelope strokeWidth="2" className="w-4 h-4" />
 );
 
 const TicketIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
-        <path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z" />
-    </svg>
+    <ReiconTicket strokeWidth="2" className="w-4 h-4" />
 );
 
 const getActionPresentation = (actionType) => {
@@ -63,8 +39,8 @@ const getActionPresentation = (actionType) => {
         case 'login':
             return {
                 icon: <LoginIcon />,
-                chip: 'bg-emerald-500/10 text-green-600 border border-emerald-500/30',
-                iconWrap: 'bg-emerald-500/15 text-green-600',
+                chip: 'bg-green-400/10 text-green-800 border border-green-400/30',
+                iconWrap: 'bg-green-400/15 text-green-800',
                 label: 'Login',
                 responsibility: 'Access Control'
             };
@@ -79,8 +55,8 @@ const getActionPresentation = (actionType) => {
         case 'message_reply':
             return {
                 icon: <MessageIcon />,
-                chip: 'bg-sky-500/10 text-sky-300 border border-sky-500/30',
-                iconWrap: 'bg-sky-500/15 text-sky-300',
+                chip: 'bg-sky-500/10 text-sky-700 border border-sky-500/30',
+                iconWrap: 'bg-sky-500/15 text-sky-700',
                 label: 'Message Reply',
                 responsibility: 'Support Desk'
             };
@@ -88,24 +64,24 @@ const getActionPresentation = (actionType) => {
         case 'ticket_update':
             return {
                 icon: <TicketIcon />,
-                chip: 'bg-violet-500/10 text-violet-300 border border-violet-500/30',
-                iconWrap: 'bg-violet-500/15 text-violet-300',
+                chip: 'bg-violet-500/10 text-violet-700 border border-violet-500/30',
+                iconWrap: 'bg-violet-500/15 text-violet-700',
                 label: 'Reservation Action',
                 responsibility: 'Reservation Confirmation Desk'
             };
         case 'animal_update':
             return {
                 icon: <ActivityIcon />,
-                chip: 'bg-emerald-500/10 text-green-600 border border-emerald-500/30',
-                iconWrap: 'bg-emerald-500/15 text-green-600',
+                chip: 'bg-green-400/10 text-green-800 border border-green-400/30',
+                iconWrap: 'bg-green-400/15 text-green-800',
                 label: 'Animal Update',
                 responsibility: 'Animal Records'
             };
         case 'plant_update':
             return {
                 icon: <ActivityIcon />,
-                chip: 'bg-green-500/10 text-green-300 border border-green-500/30',
-                iconWrap: 'bg-green-500/15 text-green-300',
+                chip: 'bg-green-400/10 text-green-800 border border-green-400/30',
+                iconWrap: 'bg-green-400/15 text-green-800',
                 label: 'Plant Update',
                 responsibility: 'Plant Records'
             };
@@ -121,7 +97,7 @@ const getActionPresentation = (actionType) => {
 };
 
 const getPresenceDot = (status) => {
-    if (status === 'active') return 'bg-emerald-400';
+    if (status === 'active') return 'bg-green-400';
     if (status === 'away') return 'bg-amber-400';
     return 'bg-gray-500';
 };
@@ -320,7 +296,7 @@ const AdminStaffMonitoring = () => {
             <div className="flex items-center justify-center h-64">
                 <div className="relative w-16 h-16">
                     <div className="absolute inset-0 rounded-full border-4 border-green-200"></div>
-                    <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-green-500 animate-spin"></div>
+                    <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-green-400 animate-spin"></div>
                 </div>
             </div>
         );
@@ -330,7 +306,7 @@ const AdminStaffMonitoring = () => {
         <div className="space-y-6">
             <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4">
                 <div className="flex items-center gap-3">
-                    <div className="w-11 h-11 rounded-xl bg-green-500/15 text-green-600 flex items-center justify-center">
+                    <div className="w-11 h-11 rounded-xl bg-green-400/15 text-green-800 flex items-center justify-center">
                         <ShieldIcon />
                     </div>
                     <div>
@@ -349,14 +325,14 @@ const AdminStaffMonitoring = () => {
                             type="checkbox"
                             checked={autoRefresh}
                             onChange={(e) => setAutoRefresh(e.target.checked)}
-                            className="w-4 h-4 rounded border-gray-600 bg-green-50 text-green-600 focus:ring-green-300"
+                            className="w-4 h-4 rounded border-gray-600 bg-green-50 accent-green-400 focus:ring-green-400"
                         />
                         Auto-refresh
                     </label>
                     <button
                         onClick={() => fetchDashboardData(true)}
                         disabled={refreshing}
-                        className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-green-500 text-black font-semibold hover:bg-green-400 disabled:bg-gray-600 disabled:text-gray-700 transition"
+                        className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-green-400 text-gray-900 font-semibold hover:bg-green-400 disabled:bg-gray-200 disabled:text-gray-700 transition"
                     >
                         <RefreshIcon className={refreshing ? 'animate-spin' : ''} />
                         Refresh
@@ -365,7 +341,7 @@ const AdminStaffMonitoring = () => {
             </div>
 
             {error && (
-                <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 text-red-300">
+                <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 text-red-700">
                     {error}
                 </div>
             )}
@@ -399,7 +375,7 @@ const AdminStaffMonitoring = () => {
                         <select
                             value={filterActionType}
                             onChange={(e) => setFilterActionType(e.target.value)}
-                            className="bg-green-50 border border-green-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:border-green-500"
+                            className="bg-green-50 border border-green-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:border-green-400"
                         >
                             {actionTypeOptions.map((opt) => (
                                 <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -414,7 +390,7 @@ const AdminStaffMonitoring = () => {
                             filteredActivities.map((activity, index) => {
                                 const style = getActionPresentation(activity.action_type);
                                 return (
-                                    <div key={getListKey(activity, index, 'activity')} className="p-4 rounded-xl bg-green-50 border border-green-200 hover:border-green-500/30 transition">
+                                    <div key={getListKey(activity, index, 'activity')} className="p-4 rounded-xl bg-green-50 border border-green-200 hover:border-green-400/30 transition">
                                         <div className="flex items-start gap-3">
                                             <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${style.iconWrap}`}>
                                                 {style.icon}
@@ -440,7 +416,7 @@ const AdminStaffMonitoring = () => {
                                                         </span>
                                                     )}
                                                     {getReservationContext(activity) && (
-                                                        <span className="px-2 py-1 rounded-full bg-[#253021] text-green-700 border border-emerald-700/40">
+                                                        <span className="px-2 py-1 rounded-full bg-green-50 text-green-700 border border-green-400/40">
                                                             Responsible: {getReservationContext(activity).responsible}
                                                         </span>
                                                     )}
@@ -472,7 +448,7 @@ const AdminStaffMonitoring = () => {
                                             <span className="text-gray-500">{day.count} actions • {day.active_staff} staff</span>
                                         </div>
                                         <div className="h-2 rounded-full bg-green-50 overflow-hidden">
-                                            <div className="h-full rounded-full bg-gradient-to-r from-green-500 to-emerald-500" style={{ width }} />
+                                            <div className="h-full rounded-full bg-gradient-to-r from-green-300 via-green-400 to-green-500 " style={{ width }} />
                                         </div>
                                     </div>
                                 );
@@ -491,14 +467,14 @@ const AdminStaffMonitoring = () => {
                                 key={getListKey(staff, index, 'staff')}
                                 type="button"
                                 onClick={() => handleStaffClick(staff)}
-                                className="text-left p-4 rounded-xl border border-green-200 bg-green-50 hover:border-green-500/35 transition"
+                                className="text-left p-4 rounded-xl border border-green-200 bg-green-50 hover:border-green-400/35 transition"
                             >
                                 <div className="flex items-center gap-3 mb-3">
                                     <div className="relative">
                                         <div className="w-11 h-11 rounded-full bg-green-50 flex items-center justify-center text-gray-700 font-semibold">
                                             {staff.firstName?.[0]}{staff.lastName?.[0]}
                                         </div>
-                                        <span className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white ${onlineStaffIds.has(Number(staff.id)) ? 'bg-emerald-400' : 'bg-gray-500'}`}></span>
+                                        <span className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white ${onlineStaffIds.has(Number(staff.id)) ? 'bg-green-400' : 'bg-gray-500'}`}></span>
                                     </div>
                                     <div className="min-w-0">
                                         <p className="text-sm font-semibold text-gray-900 truncate">{staff.firstName} {staff.lastName}</p>
@@ -507,7 +483,7 @@ const AdminStaffMonitoring = () => {
                                 </div>
                                 <div className="flex items-center justify-between text-xs">
                                     <span className="text-gray-500">Actions this week</span>
-                                    <span className="text-green-600 font-semibold">{staff.actionsThisWeek || 0}</span>
+                                    <span className="text-green-800 font-semibold">{staff.actionsThisWeek || 0}</span>
                                 </div>
                             </button>
                         ))}
@@ -525,7 +501,7 @@ const AdminStaffMonitoring = () => {
                                     key={getListKey(session, index, 'session')}
                                     type="button"
                                     onClick={() => handleStaffClick({ id: session.staff_id, ...session })}
-                                    className="w-full text-left p-3 rounded-xl bg-green-50 border border-green-200 hover:border-green-500/35 transition"
+                                    className="w-full text-left p-3 rounded-xl bg-green-50 border border-green-200 hover:border-green-400/35 transition"
                                 >
                                     <div className="flex items-center gap-3">
                                         <div className="relative">
@@ -567,10 +543,7 @@ const AdminStaffMonitoring = () => {
                                 onClick={() => setSelectedStaff(null)}
                                 className="text-gray-500 hover:text-gray-900 transition"
                             >
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-6 h-6">
-                                    <line x1="18" y1="6" x2="6" y2="18" />
-                                    <line x1="6" y1="6" x2="18" y2="18" />
-                                </svg>
+                                <ReiconX strokeWidth="2" className="w-6 h-6" />
                             </button>
                         </div>
 
@@ -578,7 +551,7 @@ const AdminStaffMonitoring = () => {
                         <div className="space-y-3 max-h-[58vh] overflow-y-auto pr-1">
                             {loadingTimeline ? (
                                 <div className="flex justify-center py-8">
-                                    <div className="w-8 h-8 border-2 border-green-500 border-t-transparent rounded-full animate-spin" />
+                                    <div className="w-8 h-8 border-2 border-green-400 border-t-transparent rounded-full animate-spin" />
                                 </div>
                             ) : staffTimeline.length === 0 ? (
                                 <p className="text-sm text-gray-500 text-center py-8">No activity recorded.</p>
@@ -609,7 +582,7 @@ const AdminStaffMonitoring = () => {
                                                             </span>
                                                         )}
                                                         {getReservationContext(activity) && (
-                                                            <span className="text-xs px-2 py-1 rounded-full bg-[#253021] text-green-700 border border-emerald-700/40">
+                                                            <span className="text-xs px-2 py-1 rounded-full bg-green-50 text-green-700 border border-green-400/40">
                                                                 Responsible: {getReservationContext(activity).responsible}
                                                             </span>
                                                         )}

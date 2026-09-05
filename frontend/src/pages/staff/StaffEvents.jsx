@@ -1,71 +1,9 @@
+import { Calendar as CalendarIcon, Search as SearchIcon, Plus as PlusIcon, Clock as ClockIcon, MapPoint as MapPinIcon, Users as UsersIcon, Edit as EditIcon, Trash as TrashIcon, X as CloseIcon, Image as ImageIcon } from 'reicon-react';
 import { useState, useEffect, useRef } from 'react';
 import { staffAPI } from '../../services/api-client';
 import { sanitizeInput } from '../../utils/sanitize';
 import { notify } from '../../utils/toast';
 
-// Icons
-const CalendarIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
-        <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-        <line x1="16" y1="2" x2="16" y2="6" />
-        <line x1="8" y1="2" x2="8" y2="6" />
-        <line x1="3" y1="10" x2="21" y2="10" />
-    </svg>
-);
-
-const ClockIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
-        <circle cx="12" cy="12" r="10" />
-        <polyline points="12 6 12 12 16 14" />
-    </svg>
-);
-
-const MapPinIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
-        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-        <circle cx="12" cy="10" r="3" />
-    </svg>
-);
-
-const UsersIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
-        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-        <circle cx="9" cy="7" r="4" />
-    </svg>
-);
-
-const SearchIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
-        <circle cx="11" cy="11" r="8" />
-        <path d="m21 21-4.3-4.3" />
-    </svg>
-);
-
-const PlusIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
-        <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
-    </svg>
-);
-
-const EditIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
-        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-    </svg>
-);
-
-const TrashIcon = ({ className = 'w-4 h-4' }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-        <polyline points="3 6 5 6 21 6" />
-        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-    </svg>
-);
-
-const CloseIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
-        <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-    </svg>
-);
 
 // Tag colors for events
 const TAG_COLORS = [
@@ -251,10 +189,10 @@ const StaffEvents = ({ globalSearch = '' }) => {
 
     const getStatusBadge = (status) => {
         switch (status?.toLowerCase()) {
-            case 'upcoming': return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
-            case 'ongoing': return 'bg-green-500/20 text-green-600 border-green-500/30';
+            case 'upcoming': return 'bg-blue-500/20 text-blue-700 border-blue-500/30';
+            case 'ongoing': return 'bg-green-400/20 text-green-800 border-green-400/30';
             case 'completed': return 'bg-gray-500/20 text-gray-500 border-gray-500/30';
-            case 'cancelled': return 'bg-red-500/20 text-red-400 border-red-500/30';
+            case 'cancelled': return 'bg-red-500/20 text-red-700 border-red-500/30';
             default: return 'bg-gray-500/20 text-gray-500 border-gray-500/30';
         }
     };
@@ -325,7 +263,7 @@ const StaffEvents = ({ globalSearch = '' }) => {
         return (
             <div className="flex items-center justify-center h-64">
                 <div className="flex flex-col items-center gap-3">
-                    <div className="w-10 h-10 border-4 border-green-500 border-t-transparent rounded-full animate-spin"></div>
+                    <div className="w-10 h-10 border-4 border-green-400 border-t-transparent rounded-full animate-spin"></div>
                     <span className="text-gray-500">Loading events...</span>
                 </div>
             </div>
@@ -342,18 +280,18 @@ const StaffEvents = ({ globalSearch = '' }) => {
                                 <p className="text-gray-500 text-sm">Total Events</p>
                                 <p className="text-2xl font-bold text-gray-900">{eventStats.total}</p>
                             </div>
-                            <div className="w-10 h-10 bg-green-500/10 rounded-xl flex items-center justify-center text-green-600">
-                                <CalendarIcon />
+                            <div className="w-10 h-10 bg-green-400/10 rounded-xl flex items-center justify-center text-green-800">
+                                <CalendarIcon className="w-5 h-5" />
                             </div>
                         </div>
                     </div>
                     <div className="bg-green-50 border border-green-200 rounded-2xl p-4">
                         <p className="text-gray-500 text-sm">Upcoming</p>
-                        <p className="text-2xl font-bold text-blue-400">{eventStats.upcoming}</p>
+                        <p className="text-2xl font-bold text-blue-700">{eventStats.upcoming}</p>
                     </div>
                     <div className="bg-green-50 border border-green-200 rounded-2xl p-4">
                         <p className="text-gray-500 text-sm">Ongoing</p>
-                        <p className="text-2xl font-bold text-green-600">{eventStats.ongoing}</p>
+                        <p className="text-2xl font-bold text-green-800">{eventStats.ongoing}</p>
                     </div>
                     <div className="bg-green-50 border border-green-200 rounded-2xl p-4">
                         <p className="text-gray-500 text-sm">Completed</p>
@@ -366,7 +304,7 @@ const StaffEvents = ({ globalSearch = '' }) => {
                 <div className="flex flex-wrap gap-4 items-center justify-between">
                     <div className="flex flex-wrap gap-4 items-center flex-1">
                         <div className="flex items-center bg-green-50 border border-green-200 rounded-xl px-4 py-2 flex-1 min-w-[200px] max-w-sm">
-                            <SearchIcon />
+                            <SearchIcon className="w-4 h-4" />
                             <input
                                 type="text"
                                 placeholder="Search events..."
@@ -390,9 +328,9 @@ const StaffEvents = ({ globalSearch = '' }) => {
                     <div className="flex items-center gap-2">
                         <button
                             onClick={openCreateModal}
-                            className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-green-500 to-green-400 text-white font-semibold rounded-xl hover:from-green-400 hover:to-green-500 transition-all shadow-lg shadow-green-300/50"
+                            className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-green-300 via-green-400 to-green-500 text-gray-900 font-semibold rounded-xl hover:from-green-300 hover:via-green-400 hover:to-green-500 transition-all shadow-lg shadow-green-300/50"
                         >
-                            <PlusIcon /> Add Event
+                            <PlusIcon className="w-5 h-5" /> Add Event
                         </button>
                     </div>
                 </div>
@@ -402,7 +340,7 @@ const StaffEvents = ({ globalSearch = '' }) => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {filteredEvents.length > 0 ? (
                         filteredEvents.map(event => (
-                            <div key={event.id} className="bg-white border border-green-200 rounded-2xl overflow-hidden hover:border-green-500/30 transition group">
+                            <div key={event.id} className="bg-white border border-green-200 rounded-2xl overflow-hidden hover:border-green-400/30 transition group">
                                 {event.image_url && (
                                     <div className="h-40 bg-white overflow-hidden">
                                         <img
@@ -422,23 +360,23 @@ const StaffEvents = ({ globalSearch = '' }) => {
                                     <p className="text-gray-500 text-sm mb-4 line-clamp-2">{event.description}</p>
                                     <div className="space-y-2 text-sm">
                                         <div className="flex items-center gap-2 text-gray-500">
-                                            <CalendarIcon />
+                                            <CalendarIcon className="w-5 h-5" />
                                             <span>{formatDate(event.event_date)}</span>
                                         </div>
                                         {event.start_time && (
                                             <div className="flex items-center gap-2 text-gray-500">
-                                                <ClockIcon />
+                                                <ClockIcon className="w-4 h-4" />
                                                 <span>{formatTime(event.start_time)} - {formatTime(event.end_time)}</span>
                                             </div>
                                         )}
                                         {event.location && (
                                             <div className="flex items-center gap-2 text-gray-500">
-                                                <MapPinIcon />
+                                                <MapPinIcon className="w-4 h-4" />
                                                 <span>{event.location}</span>
                                             </div>
                                         )}
                                         <div className="flex items-center gap-2 text-gray-500">
-                                            <UsersIcon />
+                                            <UsersIcon className="w-4 h-4" />
                                             <span>{event.registered_count || 0} / {event.capacity || '∞'} registered</span>
                                         </div>
                                     </div>
@@ -446,15 +384,15 @@ const StaffEvents = ({ globalSearch = '' }) => {
                                     <div className="flex items-center gap-2 mt-4 pt-4 border-t border-green-200">
                                         <button
                                             onClick={() => openEditModal(event)}
-                                            className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-green-50 hover:bg-green-50 border border-green-200 hover:border-green-500/50 text-gray-500 hover:text-green-600 rounded-lg transition-all text-sm"
+                                            className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-green-50 hover:bg-green-50 border border-green-200 hover:border-green-400/50 text-gray-500 hover:text-green-800 rounded-lg transition-all text-sm"
                                         >
-                                            <EditIcon /> Edit
+                                            <EditIcon className="w-4 h-4" /> Edit
                                         </button>
                                         <button
                                             onClick={() => trashEvent(event)}
-                                            className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-green-50 hover:bg-red-500/10 border border-green-200 hover:border-red-500/50 text-gray-500 hover:text-red-400 rounded-lg transition-all text-sm"
+                                            className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-green-50 hover:bg-red-500/10 border border-green-200 hover:border-red-500/50 text-gray-500 hover:text-red-700 rounded-lg transition-all text-sm"
                                         >
-                                            <TrashIcon /> Delete
+                                            <TrashIcon className="w-4 h-4" /> Delete
                                         </button>
                                     </div>
                                 </div>
@@ -479,25 +417,25 @@ const StaffEvents = ({ globalSearch = '' }) => {
                                 onClick={closeModal}
                                 className="text-gray-500 hover:text-gray-900 transition"
                             >
-                                <CloseIcon />
+                                <CloseIcon className="w-5 h-5" />
                             </button>
                         </div>
                         <form onSubmit={saveEvent} className="p-5 space-y-4">
                             {error && (
-                                <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 text-sm">
+                                <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-xl text-red-700 text-sm">
                                     {error}
                                 </div>
                             )}
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Title <span className="text-red-400">*</span>
+                                    Title <span className="text-red-700">*</span>
                                 </label>
                                 <input
                                     type="text"
                                     value={form.title}
                                     onChange={(e) => setForm({ ...form, title: sanitizeInput(e.target.value) })}
                                     required
-                                    className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-500 transition"
+                                    className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-400 transition"
                                     placeholder="Add title here"
                                 />
                             </div>
@@ -509,15 +447,15 @@ const StaffEvents = ({ globalSearch = '' }) => {
                                     value={form.description}
                                     onChange={(e) => setForm({ ...form, description: sanitizeInput(e.target.value) })}
                                     rows={3}
-                                    className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-500 transition resize-none"
+                                    className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-400 transition resize-none"
                                     placeholder="Enter event description here"
                                 />
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
                                     <span className="flex items-center gap-2">
-                                        <CalendarIcon />
-                                        Date <span className="text-red-400">*</span>
+                                        <CalendarIcon className="w-5 h-5" />
+                                        Date <span className="text-red-700">*</span>
                                     </span>
                                 </label>
                                 <input
@@ -525,7 +463,7 @@ const StaffEvents = ({ globalSearch = '' }) => {
                                     value={form.eventDate}
                                     onChange={(e) => setForm({ ...form, eventDate: e.target.value })}
                                     required
-                                    className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:border-green-500 transition"
+                                    className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:border-green-400 transition"
                                 />
                             </div>
                             <div className="grid grid-cols-2 gap-4">
@@ -537,7 +475,7 @@ const StaffEvents = ({ globalSearch = '' }) => {
                                         type="time"
                                         value={form.startTime}
                                         onChange={(e) => setForm({ ...form, startTime: e.target.value })}
-                                        className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:border-green-500 transition"
+                                        className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:border-green-400 transition"
                                     />
                                 </div>
                                 <div>
@@ -548,18 +486,14 @@ const StaffEvents = ({ globalSearch = '' }) => {
                                         type="time"
                                         value={form.endTime}
                                         onChange={(e) => setForm({ ...form, endTime: e.target.value })}
-                                        className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:border-green-500 transition"
+                                        className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:border-green-400 transition"
                                     />
                                 </div>
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
                                     <span className="flex items-center gap-2">
-                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
-                                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-                                            <circle cx="8.5" cy="8.5" r="1.5" />
-                                            <polyline points="21 15 16 10 5 21" />
-                                        </svg>
+                                        <ImageIcon strokeWidth="2" className="w-5 h-5" />
                                         Event Image
                                     </span>
                                 </label>
@@ -567,7 +501,7 @@ const StaffEvents = ({ globalSearch = '' }) => {
                                     type="file"
                                     accept="image/*"
                                     onChange={handleImageFileChange}
-                                    className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-green-500 file:text-white file:font-medium file:cursor-pointer hover:file:bg-green-600 transition"
+                                    className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-green-400 file:text-gray-900 file:font-medium file:cursor-pointer hover:file:bg-green-400 transition"
                                 />
                                 {(imagePreview || form.imageUrl) && (
                                     <div className="mt-2 rounded-lg overflow-hidden h-24 relative">
@@ -584,11 +518,9 @@ const StaffEvents = ({ globalSearch = '' }) => {
                                                     setImageFile(null);
                                                     setImagePreview(null);
                                                 }}
-                                                className="absolute top-1 right-1 bg-red-500 text-gray-900 rounded-full p-1 hover:bg-red-600 transition"
+                                                className="absolute top-1 right-1 bg-red-600 text-white rounded-full p-1 hover:bg-red-700 transition"
                                             >
-                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                                </svg>
+                                                <CloseIcon className="h-4 w-4" />
                                             </button>
                                         )}
                                     </div>
@@ -616,7 +548,7 @@ const StaffEvents = ({ globalSearch = '' }) => {
                                 <select
                                     value={form.status}
                                     onChange={(e) => setForm({ ...form, status: e.target.value })}
-                                    className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:border-green-500 transition"
+                                    className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:border-green-400 transition"
                                 >
                                     <option value="upcoming">Upcoming</option>
                                     <option value="ongoing">Ongoing</option>
@@ -635,18 +567,18 @@ const StaffEvents = ({ globalSearch = '' }) => {
                                 <button
                                     type="submit"
                                     disabled={saving}
-                                    className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-green-500 hover:bg-green-600 text-black rounded-xl font-medium transition disabled:opacity-50"
+                                    className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-green-400 hover:bg-green-400 text-black rounded-xl font-medium transition disabled:opacity-50"
                                 >
                                     {saving ? (
                                         <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin"></div>
                                     ) : editingEvent ? (
                                         <>
-                                            <EditIcon />
+                                            <EditIcon className="w-4 h-4" />
                                             Update
                                         </>
                                     ) : (
                                         <>
-                                            <PlusIcon />
+                                            <PlusIcon className="w-5 h-5" />
                                             Add Event
                                         </>
                                     )}
@@ -661,8 +593,8 @@ const StaffEvents = ({ globalSearch = '' }) => {
             {showSaveConfirm && confirmData && (
                 <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
                     <div className="bg-white border border-green-200 rounded-2xl w-full max-w-md p-6">
-                        <div className={`w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 bg-green-500/20`}>
-                            {confirmData.isUpdate ? <EditIcon /> : <PlusIcon />}
+                        <div className={`w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 bg-green-400/20`}>
+                            {confirmData.isUpdate ? <EditIcon className="w-4 h-4" /> : <PlusIcon className="w-5 h-5" />}
                         </div>
                         <h3 className="text-xl font-bold text-gray-900 text-center mb-2">
                             {confirmData.isUpdate ? 'Update Event' : 'Create Event'}
@@ -707,7 +639,7 @@ const StaffEvents = ({ globalSearch = '' }) => {
                             <button
                                 onClick={executeSave}
                                 disabled={saving}
-                                className="flex-1 px-4 py-3 bg-green-500 hover:bg-green-600 text-black rounded-xl font-medium transition disabled:opacity-50"
+                                className="flex-1 px-4 py-3 bg-green-400 hover:bg-green-400 text-black rounded-xl font-medium transition disabled:opacity-50"
                             >
                                 {saving ? 'Processing...' : 'Confirm'}
                             </button>

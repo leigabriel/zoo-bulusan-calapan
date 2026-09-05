@@ -1,3 +1,4 @@
+import { Edit as ReiconEdit, Paw as ReiconPaw, Plus as ReiconPlus, Search as ReiconSearch, Sort as ReiconSort, Trash as ReiconTrash, X as ReiconX } from 'reicon-react';
 import { useEffect, useState, useRef } from 'react';
 import { adminAPI } from '../../services/api-client';
 import { sanitizeInput } from '../../utils/sanitize';
@@ -5,56 +6,31 @@ import { notify } from '../../utils/toast';
 
 // Icons
 const SearchIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
-        <circle cx="11" cy="11" r="8" />
-        <path d="m21 21-4.3-4.3" />
-    </svg>
+    <ReiconSearch strokeWidth="2" className="w-4 h-4" />
 );
 
 const PlusIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
-        <line x1="12" y1="5" x2="12" y2="19" />
-        <line x1="5" y1="12" x2="19" y2="12" />
-    </svg>
+    <ReiconPlus strokeWidth="2" className="w-5 h-5" />
 );
 
 const EditIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
-        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-    </svg>
+    <ReiconEdit strokeWidth="2" className="w-4 h-4" />
 );
 
 const TrashIcon = ({ className = 'w-4 h-4' }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-        <polyline points="3 6 5 6 21 6" />
-        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-        <line x1="10" y1="11" x2="10" y2="17" />
-        <line x1="14" y1="11" x2="14" y2="17" />
-    </svg>
+    <ReiconTrash strokeWidth="2" className={className} />
 );
 
 const CloseIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
-        <line x1="18" y1="6" x2="6" y2="18" />
-        <line x1="6" y1="6" x2="18" y2="18" />
-    </svg>
+    <ReiconX strokeWidth="2" className="w-5 h-5" />
 );
 
 const AnimalsHeaderIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="currentColor" className="w-6 h-6">
-        <path d="M226.5 92.9c14.3 42.9-.3 86.2-32.6 96.8s-70.1-15.6-84.4-58.5s.3-86.2 32.6-96.8s70.1 15.6 84.4 58.5zM100.4 198.6c18.9 32.4 14.3 70.1-10.2 84.1s-59.7-.9-78.5-33.3S-2.7 179.3 21.8 165.3s59.7 .9 78.5 33.3zM69.2 401.2C121.6 259.9 214.7 224 256 224s134.4 35.9 186.8 177.2c3.6 9.7 5.2 20.1 5.2 30.5v1.6c0 25.8-20.9 46.7-46.7 46.7c-11.5 0-22.9-1.4-34-4.2l-88-22c-15.3-3.8-31.3-3.8-46.6 0l-88 22c-11.1 2.8-22.5 4.2-34 4.2C84.9 480 64 459.1 64 433.3v-1.6c0-10.4 1.6-20.8 5.2-30.5zM421.8 282.7c-24.5-14-29.1-51.7-10.2-84.1s54-47.3 78.5-33.3s29.1 51.7 10.2 84.1s-54 47.3-78.5 33.3zM310.1 189.7c-32.3-10.6-46.9-53.9-32.6-96.8s52.1-69.1 84.4-58.5s46.9 53.9 32.6 96.8s-52.1 69.1-84.4 58.5z" />
-    </svg>
+    <ReiconPaw className="w-6 h-6" weight="Filled" />
 );
 
 const SortIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
-        <path d="M11 5h10" />
-        <path d="M11 9h7" />
-        <path d="M11 13h4" />
-        <path d="m3 17 3 3 3-3" />
-        <path d="M6 18V4" />
-    </svg>
+    <ReiconSort strokeWidth="2" className="w-4 h-4" />
 );
 
 const AdminAnimals = ({ globalSearch = '' }) => {
@@ -218,10 +194,10 @@ const AdminAnimals = ({ globalSearch = '' }) => {
 
     const getStatusBadgeColor = (status) => {
         switch (status?.toLowerCase()) {
-            case 'healthy': return 'bg-green-500/20 text-green-600 border-green-500/30';
-            case 'sick': return 'bg-red-500/20 text-red-400 border-red-500/30';
-            case 'recovering': return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
-            case 'quarantine': return 'bg-purple-500/20 text-purple-400 border-purple-500/30';
+            case 'healthy': return 'bg-green-400/20 text-green-800 border-green-400/30';
+            case 'sick': return 'bg-red-500/20 text-red-700 border-red-500/30';
+            // case 'recovering': return 'bg-yellow-500/20 text-yellow-700 border-yellow-500/30';
+            case 'quarantine': return 'bg-purple-500/20 text-purple-700 border-purple-500/30';
             default: return 'bg-gray-500/20 text-gray-500 border-gray-500/30';
         }
     };
@@ -271,7 +247,7 @@ const AdminAnimals = ({ globalSearch = '' }) => {
         return (
             <div className="flex items-center justify-center h-64">
                 <div className="flex flex-col items-center gap-3">
-                    <div className="w-10 h-10 border-4 border-green-500 border-t-transparent rounded-full animate-spin"></div>
+                    <div className="w-10 h-10 border-4 border-green-400 border-t-transparent rounded-full animate-spin"></div>
                     <span className="text-gray-500">Loading animals...</span>
                 </div>
             </div>
@@ -280,7 +256,7 @@ const AdminAnimals = ({ globalSearch = '' }) => {
 
     if (error) {
         return (
-            <div className="p-6 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400">
+            <div className="p-6 bg-red-500/10 border border-red-500/30 rounded-xl text-red-700">
                 {error}
             </div>
         );
@@ -292,7 +268,7 @@ const AdminAnimals = ({ globalSearch = '' }) => {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="bg-white border border-green-200 rounded-xl p-4">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-green-500/10 rounded-xl flex items-center justify-center text-green-600">
+                        <div className="w-10 h-10 bg-green-400/10 rounded-xl flex items-center justify-center text-green-800">
                             <AnimalsHeaderIcon />
                         </div>
                         <div>
@@ -303,7 +279,7 @@ const AdminAnimals = ({ globalSearch = '' }) => {
                 </div>
                 <div className="bg-white border border-green-200 rounded-xl p-4">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-green-500/10 rounded-xl flex items-center justify-center text-green-600">
+                        <div className="w-10 h-10 bg-green-400/10 rounded-xl flex items-center justify-center text-green-800">
                             <span className="text-lg font-bold">H</span>
                         </div>
                         <div>
@@ -314,7 +290,7 @@ const AdminAnimals = ({ globalSearch = '' }) => {
                 </div>
                 <div className="bg-white border border-green-200 rounded-xl p-4">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-red-500/10 rounded-xl flex items-center justify-center text-red-400">
+                        <div className="w-10 h-10 bg-red-500/10 rounded-xl flex items-center justify-center text-red-700">
                             <span className="text-lg font-bold">S</span>
                         </div>
                         <div>
@@ -325,7 +301,7 @@ const AdminAnimals = ({ globalSearch = '' }) => {
                 </div>
                 <div className="bg-white border border-green-200 rounded-xl p-4">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-yellow-500/10 rounded-xl flex items-center justify-center text-yellow-400">
+                        <div className="w-10 h-10 bg-yellow-500/10 rounded-xl flex items-center justify-center text-yellow-700">
                             <span className="text-lg font-bold">O</span>
                         </div>
                         <div>
@@ -350,7 +326,7 @@ const AdminAnimals = ({ globalSearch = '' }) => {
                                 placeholder="Search animals..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full bg-green-50 border border-green-200 rounded-xl py-2.5 pl-10 pr-4 text-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-200 transition-all"
+                                className="w-full bg-green-50 border border-green-200 rounded-xl py-2.5 pl-10 pr-4 text-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-400 focus:ring-1 focus:ring-green-200 transition-all"
                             />
                         </div>
 
@@ -359,7 +335,7 @@ const AdminAnimals = ({ globalSearch = '' }) => {
                             <select
                                 value={speciesFilter}
                                 onChange={(e) => setSpeciesFilter(e.target.value)}
-                                className="appearance-none bg-green-50 border border-green-200 rounded-xl py-2.5 px-4 pr-8 text-sm text-gray-900 focus:outline-none focus:border-green-500 cursor-pointer"
+                                className="appearance-none bg-green-50 border border-green-200 rounded-xl py-2.5 px-4 pr-8 text-sm text-gray-900 focus:outline-none focus:border-green-400 cursor-pointer"
                             >
                                 <option value="all">All Species</option>
                                 {uniqueSpecies.map(species => (
@@ -377,7 +353,7 @@ const AdminAnimals = ({ globalSearch = '' }) => {
                                     setSortField(field);
                                     setSortOrder(order);
                                 }}
-                                className="appearance-none bg-green-50 border border-green-200 rounded-xl py-2.5 pl-10 pr-8 text-sm text-gray-900 focus:outline-none focus:border-green-500 cursor-pointer"
+                                className="appearance-none bg-green-50 border border-green-200 rounded-xl py-2.5 pl-10 pr-8 text-sm text-gray-900 focus:outline-none focus:border-green-400 cursor-pointer"
                             >
                                 <option value="name-asc">Name (A-Z)</option>
                                 <option value="name-desc">Name (Z-A)</option>
@@ -395,7 +371,7 @@ const AdminAnimals = ({ globalSearch = '' }) => {
                     <div className="flex items-center gap-2">
                         <button
                             onClick={openCreateModal}
-                            className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-green-500 to-green-400 text-white font-semibold rounded-xl hover:from-green-400 hover:to-green-500 transition-all shadow-lg shadow-green-300/50"
+                            className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-green-300 via-green-400 to-green-500 text-gray-900 font-semibold rounded-xl transition-all shadow-lg shadow-green-300/50"
                         >
                             <PlusIcon />
                             Add Animal
@@ -415,7 +391,7 @@ const AdminAnimals = ({ globalSearch = '' }) => {
                                     <div className="flex items-center gap-2">
                                         Name
                                         {sortField === 'name' && (
-                                            <span className="text-green-600">{sortOrder === 'asc' ? '↑' : '↓'}</span>
+                                            <span className="text-green-800">{sortOrder === 'asc' ? '↑' : '↓'}</span>
                                         )}
                                     </div>
                                 </th>
@@ -426,7 +402,7 @@ const AdminAnimals = ({ globalSearch = '' }) => {
                                     <div className="flex items-center gap-2">
                                         Species
                                         {sortField === 'species' && (
-                                            <span className="text-green-600">{sortOrder === 'asc' ? '↑' : '↓'}</span>
+                                            <span className="text-green-800">{sortOrder === 'asc' ? '↑' : '↓'}</span>
                                         )}
                                     </div>
                                 </th>
@@ -437,7 +413,7 @@ const AdminAnimals = ({ globalSearch = '' }) => {
                                     <div className="flex items-center gap-2">
                                         Exhibit/Habitat
                                         {sortField === 'exhibit' && (
-                                            <span className="text-green-600">{sortOrder === 'asc' ? '↑' : '↓'}</span>
+                                            <span className="text-green-800">{sortOrder === 'asc' ? '↑' : '↓'}</span>
                                         )}
                                     </div>
                                 </th>
@@ -458,7 +434,7 @@ const AdminAnimals = ({ globalSearch = '' }) => {
                                     <tr key={animal.id} className="hover:bg-green-50/50 transition-colors">
                                         <td className="px-6 py-4 cursor-pointer" onClick={() => openEditModal(animal)}>
                                             <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-500 to-green-400 flex items-center justify-center text-white font-bold overflow-hidden">
+                                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-300 via-green-400 to-green-500 flex items-center justify-center text-gray-900 font-bold overflow-hidden">
                                                     {animal.image_url ? (
                                                         <img src={animal.image_url} alt={animal.name} className="w-full h-full object-cover" />
                                                     ) : (
@@ -480,14 +456,14 @@ const AdminAnimals = ({ globalSearch = '' }) => {
                                             <div className="flex items-center justify-end gap-2">
                                                 <button
                                                     onClick={(event) => { event.stopPropagation(); openEditModal(animal); }}
-                                                    className="p-2 bg-green-50 hover:bg-green-50 border border-green-200 hover:border-green-500/50 text-gray-500 hover:text-green-600 rounded-lg transition-all"
+                                                    className="p-2 bg-green-50 hover:bg-green-50 border border-green-200 hover:border-green-400/50 text-gray-500 hover:text-green-800 rounded-lg transition-all"
                                                     title="Edit animal"
                                                 >
                                                     <EditIcon />
                                                 </button>
                                                 <button
                                                     onClick={(event) => { event.stopPropagation(); trashAnimal(animal); }}
-                                                    className="p-2 bg-green-50 hover:bg-red-500/10 border border-green-200 hover:border-red-500/50 text-gray-500 hover:text-red-400 rounded-lg transition-all"
+                                                    className="p-2 bg-green-50 hover:bg-red-500/10 border border-green-200 hover:border-red-500/50 text-gray-500 hover:text-red-700 rounded-lg transition-all"
                                                     title="Move to trash"
                                                 >
                                                     <TrashIcon />
@@ -547,7 +523,7 @@ const AdminAnimals = ({ globalSearch = '' }) => {
                                     type="text"
                                     value={form.name}
                                     onChange={e => setForm({ ...form, name: sanitizeInput(e.target.value) })}
-                                    className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-500 transition-all"
+                                    className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-400 transition-all"
                                     placeholder="e.g., African Lion"
                                     required
                                 />
@@ -560,7 +536,7 @@ const AdminAnimals = ({ globalSearch = '' }) => {
                                         type="text"
                                         value={form.species}
                                         onChange={e => setForm({ ...form, species: sanitizeInput(e.target.value) })}
-                                        className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-500 transition-all"
+                                        className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-400 transition-all"
                                         placeholder="e.g., Panthera leo"
                                         required
                                     />
@@ -571,7 +547,7 @@ const AdminAnimals = ({ globalSearch = '' }) => {
                                         type="text"
                                         value={form.exhibit}
                                         onChange={e => setForm({ ...form, exhibit: sanitizeInput(e.target.value) })}
-                                        className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-500 transition-all"
+                                        className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-400 transition-all"
                                         placeholder="e.g., Savanna Zone"
                                         required
                                     />
@@ -583,7 +559,7 @@ const AdminAnimals = ({ globalSearch = '' }) => {
                                 <textarea
                                     value={form.description}
                                     onChange={e => setForm({ ...form, description: sanitizeInput(e.target.value) })}
-                                    className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-500 transition-all resize-none"
+                                    className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-400 transition-all resize-none"
                                     placeholder="Enter animal description..."
                                     rows={3}
                                 />
@@ -596,7 +572,7 @@ const AdminAnimals = ({ globalSearch = '' }) => {
                                         type="text"
                                         value={form.lifespan}
                                         onChange={e => setForm({ ...form, lifespan: sanitizeInput(e.target.value) })}
-                                        className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-500 transition-all"
+                                        className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-400 transition-all"
                                         placeholder="e.g., 10-15 years"
                                     />
                                 </div>
@@ -606,7 +582,7 @@ const AdminAnimals = ({ globalSearch = '' }) => {
                                         type="text"
                                         value={form.weight}
                                         onChange={e => setForm({ ...form, weight: sanitizeInput(e.target.value) })}
-                                        className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-500 transition-all"
+                                        className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-400 transition-all"
                                         placeholder="e.g., 200 kg"
                                     />
                                 </div>
@@ -616,7 +592,7 @@ const AdminAnimals = ({ globalSearch = '' }) => {
                                         type="text"
                                         value={form.length}
                                         onChange={e => setForm({ ...form, length: sanitizeInput(e.target.value) })}
-                                        className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-500 transition-all"
+                                        className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-400 transition-all"
                                         placeholder="e.g., 2.5 m"
                                     />
                                 </div>
@@ -629,7 +605,7 @@ const AdminAnimals = ({ globalSearch = '' }) => {
                                         type="text"
                                         value={form.habitat}
                                         onChange={e => setForm({ ...form, habitat: sanitizeInput(e.target.value) })}
-                                        className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-500 transition-all"
+                                        className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-400 transition-all"
                                         placeholder="e.g., African Savanna"
                                     />
                                 </div>
@@ -639,7 +615,7 @@ const AdminAnimals = ({ globalSearch = '' }) => {
                                         type="text"
                                         value={form.diet}
                                         onChange={e => setForm({ ...form, diet: sanitizeInput(e.target.value) })}
-                                        className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-500 transition-all"
+                                        className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-400 transition-all"
                                         placeholder="e.g., Carnivore"
                                     />
                                 </div>
@@ -650,7 +626,7 @@ const AdminAnimals = ({ globalSearch = '' }) => {
                                 <textarea
                                     value={form.animalInformation}
                                     onChange={e => setForm({ ...form, animalInformation: sanitizeInput(e.target.value) })}
-                                    className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-500 transition-all resize-none"
+                                    className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-400 transition-all resize-none"
                                     placeholder="Enter additional details about the animal..."
                                     rows={3}
                                 />
@@ -663,7 +639,7 @@ const AdminAnimals = ({ globalSearch = '' }) => {
                                         type="file"
                                         accept="image/*"
                                         onChange={handleImageFileChange}
-                                        className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-green-500 file:text-white file:font-medium file:cursor-pointer hover:file:bg-green-600"
+                                        className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-green-400 file:text-gray-900 file:font-medium file:cursor-pointer hover:file:bg-green-400"
                                     />
                                     {(imagePreview || form.imageUrl) && (
                                         <div className="relative">
@@ -683,10 +659,7 @@ const AdminAnimals = ({ globalSearch = '' }) => {
                                                     }}
                                                     className="absolute top-2 right-2 p-1.5 bg-red-500 rounded-lg text-gray-900 hover:bg-red-600"
                                                 >
-                                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4">
-                                                        <line x1="18" y1="6" x2="6" y2="18" />
-                                                        <line x1="6" y1="6" x2="18" y2="18" />
-                                                    </svg>
+                                                    <ReiconX strokeWidth="2" className="w-4 h-4" />
                                                 </button>
                                             )}
                                         </div>
@@ -699,11 +672,11 @@ const AdminAnimals = ({ globalSearch = '' }) => {
                                 <select
                                     value={form.status}
                                     onChange={e => setForm({ ...form, status: e.target.value })}
-                                    className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:border-green-500 transition-all cursor-pointer"
+                                    className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:border-green-400 transition-all cursor-pointer"
                                 >
                                     <option value="healthy">Healthy</option>
                                     <option value="sick">Sick</option>
-                                    <option value="recovering">Recovering</option>
+                                    {/* <option value="recovering">Recovering</option> */}
                                     <option value="quarantine">Quarantine</option>
                                 </select>
                             </div>
@@ -719,7 +692,7 @@ const AdminAnimals = ({ globalSearch = '' }) => {
                                 <button
                                     type="submit"
                                     disabled={saving}
-                                    className="flex-1 py-3 bg-gradient-to-r from-green-500 to-green-400 text-white font-semibold rounded-xl hover:from-green-400 hover:to-green-500 transition-all disabled:opacity-50"
+                                    className="flex-1 py-3 bg-gradient-to-r from-green-300 via-green-400 to-green-500 text-gray-900 font-semibold rounded-xl transition-all disabled:opacity-50"
                                 >
                                     {saving ? 'Saving...' : (editingAnimal ? 'Update' : 'Add Animal')}
                                 </button>

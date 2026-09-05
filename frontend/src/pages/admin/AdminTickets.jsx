@@ -1,84 +1,8 @@
+import { AlertTriangle as ReiconAlertTriangle, Calendar as ReiconCalendar, CheckCircle as ReiconCheckCircle, Clock as ReiconClock, DollarSign as ReiconDollarSign, Download as ReiconDownload, Eye as ReiconEye, Filter as ReiconFilter, Qr as ReiconQr, Refresh as ReiconRefresh, Search as ReiconSearch, Ticket as ReiconTicket, UserId as ReiconUserId, X as ReiconX } from 'reicon-react';
 import { useState, useEffect } from 'react';
 import { adminAPI, getResidentIdImageUrl } from '../../services/api-client';
 import { notify } from '../../utils/toast';
 
-// Icons
-const SearchIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
-        <circle cx="11" cy="11" r="8" />
-        <path d="m21 21-4.3-4.3" />
-    </svg>
-);
-
-const TicketIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
-        <path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z" />
-        <path d="M13 5v2" />
-        <path d="M13 17v2" />
-        <path d="M13 11v2" />
-    </svg>
-);
-
-const FilterIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
-        <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
-    </svg>
-);
-
-const EyeIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
-        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-        <circle cx="12" cy="12" r="3" />
-    </svg>
-);
-
-const CheckCircleIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
-        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-        <polyline points="22 4 12 14.01 9 11.01" />
-    </svg>
-);
-
-const CloseIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
-        <line x1="18" y1="6" x2="6" y2="18" />
-        <line x1="6" y1="6" x2="18" y2="18" />
-    </svg>
-);
-
-const RefreshIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
-        <path d="M23 4v6h-6" />
-        <path d="M1 20v-6h6" />
-        <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
-    </svg>
-);
-
-const CalendarIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
-        <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-        <line x1="16" y1="2" x2="16" y2="6" />
-        <line x1="8" y1="2" x2="8" y2="6" />
-        <line x1="3" y1="10" x2="21" y2="10" />
-    </svg>
-);
-
-const DownloadIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
-        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-        <polyline points="7 10 12 15 17 10" />
-        <line x1="12" y1="15" x2="12" y2="3" />
-    </svg>
-);
-
-const QRCodeIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
-        <rect x="3" y="3" width="7" height="7" />
-        <rect x="14" y="3" width="7" height="7" />
-        <rect x="3" y="14" width="7" height="7" />
-        <rect x="14" y="14" width="4" height="4" />
-    </svg>
-);
 
 const AdminTickets = ({ globalSearch = '' }) => {
     const [tickets, setTickets] = useState([]);
@@ -148,22 +72,22 @@ const AdminTickets = ({ globalSearch = '' }) => {
     const getStatusBadge = (status) => {
         switch (status?.toLowerCase()) {
             case 'confirmed':
-            case 'active': return 'bg-green-500/20 text-green-600 border-green-500/30';
-            case 'pending': return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
-            case 'used': return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
+            case 'active': return 'bg-green-400/20 text-green-800 border-green-400/30';
+            case 'pending': return 'bg-yellow-500/20 text-yellow-700 border-yellow-500/30';
+            case 'used': return 'bg-blue-500/20 text-blue-700 border-blue-500/30';
             case 'expired': return 'bg-gray-500/20 text-gray-500 border-gray-500/30';
-            case 'cancelled': return 'bg-red-500/20 text-red-400 border-red-500/30';
+            case 'cancelled': return 'bg-red-500/20 text-red-700 border-red-500/30';
             default: return 'bg-gray-500/20 text-gray-500 border-gray-500/30';
         }
     };
 
     const getPaymentBadge = (status) => {
         switch (status?.toLowerCase()) {
-            case 'paid': return 'bg-green-500/20 text-green-600 border-green-500/30';
-            case 'pending': return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
-            case 'not paid': return 'bg-orange-500/20 text-orange-400 border-orange-500/30';
-            case 'free': return 'bg-teal-500/20 text-teal-400 border-teal-500/30';
-            case 'refunded': return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
+            case 'paid': return 'bg-green-400/20 text-green-800 border-green-400/30';
+            case 'pending': return 'bg-yellow-500/20 text-yellow-700 border-yellow-500/30';
+            case 'not paid': return 'bg-orange-500/20 text-orange-700 border-orange-500/30';
+            case 'free': return 'bg-green-400/20 text-green-800 border-green-400/30';
+            case 'refunded': return 'bg-blue-500/20 text-blue-700 border-blue-500/30';
             default: return 'bg-gray-500/20 text-gray-500 border-gray-500/30';
         }
     };
@@ -363,7 +287,7 @@ const AdminTickets = ({ globalSearch = '' }) => {
         return (
             <div className="flex items-center justify-center h-64">
                 <div className="flex flex-col items-center gap-3">
-                    <div className="w-10 h-10 border-4 border-green-500 border-t-transparent rounded-full animate-spin"></div>
+                    <div className="w-10 h-10 border-4 border-green-400 border-t-transparent rounded-full animate-spin"></div>
                     <span className="text-gray-500">Loading tickets...</span>
                 </div>
             </div>
@@ -372,7 +296,7 @@ const AdminTickets = ({ globalSearch = '' }) => {
 
     if (error) {
         return (
-            <div className="p-6 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400">
+            <div className="p-6 bg-red-500/10 border border-red-500/30 rounded-xl text-red-700">
                 {error}
             </div>
         );
@@ -382,10 +306,10 @@ const AdminTickets = ({ globalSearch = '' }) => {
         <div className="space-y-6">
             {/* Stats Cards */}
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                <div className="bg-white border border-green-200 rounded-xl p-4">
+                <div className="bg-white border border-green-300 rounded-xl p-4">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-green-500/10 rounded-xl flex items-center justify-center text-green-600">
-                            <TicketIcon />
+                        <div className="w-10 h-10 bg-green-400/10 rounded-xl flex items-center justify-center text-green-800">
+                            <ReiconTicket className="w-6 h-6" />
                         </div>
                         <div>
                             <p className="text-2xl font-bold text-gray-900">{ticketStats.total}</p>
@@ -393,12 +317,10 @@ const AdminTickets = ({ globalSearch = '' }) => {
                         </div>
                     </div>
                 </div>
-                <div className="bg-white border border-green-200 rounded-xl p-4">
+                <div className="bg-white border border-green-300 rounded-xl p-4">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-yellow-500/10 rounded-xl flex items-center justify-center text-yellow-400">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4">
-                                <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
-                            </svg>
+                        <div className="w-10 h-10 bg-yellow-500/10 rounded-xl flex items-center justify-center text-yellow-700">
+                            <ReiconClock strokeWidth="2" className="w-4 h-4" />
                         </div>
                         <div>
                             <p className="text-2xl font-bold text-gray-900">{ticketStats.pending}</p>
@@ -406,10 +328,10 @@ const AdminTickets = ({ globalSearch = '' }) => {
                         </div>
                     </div>
                 </div>
-                <div className="bg-white border border-green-200 rounded-xl p-4">
+                <div className="bg-white border border-green-300 rounded-xl p-4">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-green-500/10 rounded-xl flex items-center justify-center text-green-600">
-                            <CheckCircleIcon />
+                        <div className="w-10 h-10 bg-green-400/10 rounded-xl flex items-center justify-center text-green-800">
+                            <ReiconCheckCircle className="w-4 h-4" />
                         </div>
                         <div>
                             <p className="text-2xl font-bold text-gray-900">{ticketStats.confirmed}</p>
@@ -417,10 +339,10 @@ const AdminTickets = ({ globalSearch = '' }) => {
                         </div>
                     </div>
                 </div>
-                <div className="bg-white border border-green-200 rounded-xl p-4">
+                <div className="bg-white border border-green-300 rounded-xl p-4">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-blue-500/10 rounded-xl flex items-center justify-center text-blue-400">
-                            <EyeIcon />
+                        <div className="w-10 h-10 bg-blue-500/10 rounded-xl flex items-center justify-center text-blue-700">
+                            <ReiconEye className="w-4 h-4" />
                         </div>
                         <div>
                             <p className="text-2xl font-bold text-gray-900">{ticketStats.used}</p>
@@ -428,10 +350,10 @@ const AdminTickets = ({ globalSearch = '' }) => {
                         </div>
                     </div>
                 </div>
-                <div className="bg-white border border-green-200 rounded-xl p-4">
+                <div className="bg-white border border-green-300 rounded-xl p-4">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-red-500/10 rounded-xl flex items-center justify-center text-red-400">
-                            <CloseIcon />
+                        <div className="w-10 h-10 bg-red-500/10 rounded-xl flex items-center justify-center text-red-700">
+                            <ReiconX className="w-5 h-5" />
                         </div>
                         <div>
                             <p className="text-2xl font-bold text-gray-900">{ticketStats.cancelled}</p>
@@ -442,21 +364,21 @@ const AdminTickets = ({ globalSearch = '' }) => {
             </div>
 
             {/* Main Content Card */}
-            <div className="bg-white border border-green-200 rounded-2xl overflow-hidden">
+            <div className="bg-white border border-green-300 rounded-2xl overflow-hidden">
                 {/* Toolbar */}
-                <div className="p-4 border-b border-green-200">
+                <div className="p-4 border-b border-green-300">
                     <div className="flex flex-col lg:flex-row gap-4">
                         {/* Search */}
                         <div className="relative flex-1">
                             <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
-                                <SearchIcon />
+                                <ReiconSearch className="w-4 h-4" />
                             </div>
                             <input
                                 type="text"
                                 placeholder="Search by code, name, or email..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full bg-green-50 border border-green-200 rounded-xl py-2.5 pl-10 pr-4 text-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-500 transition-all"
+                                className="w-full bg-green-50 border border-green-300 rounded-xl py-2.5 pl-10 pr-4 text-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-400 transition-all"
                             />
                         </div>
 
@@ -467,7 +389,7 @@ const AdminTickets = ({ globalSearch = '' }) => {
                                 <select
                                     value={statusFilter}
                                     onChange={(e) => setStatusFilter(e.target.value)}
-                                    className="appearance-none bg-green-50 border border-green-200 rounded-xl py-2.5 pl-10 pr-8 text-sm text-gray-900 focus:outline-none focus:border-green-500 cursor-pointer"
+                                    className="appearance-none bg-green-50 border border-green-300 rounded-xl py-2.5 pl-10 pr-8 text-sm text-gray-900 focus:outline-none focus:border-green-400 cursor-pointer"
                                 >
                                     <option value="all">All Status</option>
                                     <option value="pending">Pending</option>
@@ -477,7 +399,7 @@ const AdminTickets = ({ globalSearch = '' }) => {
                                     <option value="cancelled">Cancelled</option>
                                 </select>
                                 <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none">
-                                    <FilterIcon />
+                                    <ReiconFilter className="w-4 h-4" />
                                 </div>
                             </div>
 
@@ -486,7 +408,7 @@ const AdminTickets = ({ globalSearch = '' }) => {
                                 <select
                                     value={paymentFilter}
                                     onChange={(e) => setPaymentFilter(e.target.value)}
-                                    className="appearance-none bg-green-50 border border-green-200 rounded-xl py-2.5 pl-10 pr-8 text-sm text-gray-900 focus:outline-none focus:border-green-500 cursor-pointer"
+                                    className="appearance-none bg-green-50 border border-green-300 rounded-xl py-2.5 pl-10 pr-8 text-sm text-gray-900 focus:outline-none focus:border-green-400 cursor-pointer"
                                 >
                                     <option value="all">All Payments</option>
                                     <option value="pending">Payment Pending</option>
@@ -494,7 +416,7 @@ const AdminTickets = ({ globalSearch = '' }) => {
                                     <option value="refunded">Refunded</option>
                                 </select>
                                 <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none">
-                                    <CalendarIcon />
+                                    <ReiconCalendar className="w-4 h-4" />
                                 </div>
                             </div>
 
@@ -503,25 +425,25 @@ const AdminTickets = ({ globalSearch = '' }) => {
                                 type="date"
                                 value={dateFilter}
                                 onChange={(e) => setDateFilter(e.target.value)}
-                                className="bg-green-50 border border-green-200 rounded-xl py-2.5 px-4 text-sm text-gray-900 focus:outline-none focus:border-green-500 cursor-pointer"
+                                className="bg-green-50 border border-green-300 rounded-xl py-2.5 px-4 text-sm text-gray-900 focus:outline-none focus:border-green-400 cursor-pointer"
                             />
 
                             {/* Refresh Button */}
                             <button
                                 onClick={fetchTickets}
-                                className="p-2.5 bg-green-50 border border-green-200 rounded-xl text-gray-500 hover:text-gray-900 hover:border-green-500/50 transition-all"
+                                className="p-2.5 bg-green-50 border border-green-300 rounded-xl text-gray-500 hover:text-gray-900 hover:border-green-400/50 transition-all"
                                 title="Refresh"
                             >
-                                <RefreshIcon />
+                                <ReiconRefresh className="w-4 h-4" />
                             </button>
 
                             {/* Export Button */}
                             <button
                                 onClick={handleExport}
                                 disabled={exportLoading}
-                                className="flex items-center gap-2 px-4 py-2.5 bg-green-500/10 border border-green-500/30 text-green-600 rounded-xl hover:bg-green-500/20 transition-all disabled:opacity-50"
+                                className="flex items-center gap-2 px-4 py-2.5 bg-green-400/10 border border-green-400/30 text-green-800 rounded-xl hover:bg-green-400/20 transition-all disabled:opacity-50"
                             >
-                                <DownloadIcon />
+                                <ReiconDownload className="w-4 h-4" />
                                 {exportLoading ? 'Exporting...' : 'Export'}
                             </button>
                         </div>
@@ -543,7 +465,7 @@ const AdminTickets = ({ globalSearch = '' }) => {
                                 <th className="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-green-200">
+                        <tbody className="divide-y divide-green-300">
                             {filteredTickets.length === 0 ? (
                                 <tr>
                                     <td colSpan="8" className="px-6 py-12 text-center text-gray-500">
@@ -555,8 +477,8 @@ const AdminTickets = ({ globalSearch = '' }) => {
                                     <tr key={ticket.id} className="hover:bg-green-50/50 transition-colors">
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-2">
-                                                <QRCodeIcon className="text-gray-500" />
-                                                <span className="font-mono text-green-600 font-medium">{ticket.code}</span>
+                                                <ReiconQr className="w-5 h-5 text-gray-500" />
+                                                <span className="font-mono text-green-800 font-medium">{ticket.code}</span>
                                             </div>
                                         </td>
                                         <td className="px-6 py-4">
@@ -566,7 +488,7 @@ const AdminTickets = ({ globalSearch = '' }) => {
                                             </div>
                                         </td>
                                         <td className="px-6 py-4">
-                                            <span className="px-2 py-1 bg-green-50 border border-green-200 text-gray-700 text-xs rounded-lg capitalize">
+                                            <span className="px-2 py-1 bg-green-50 border border-green-300 text-gray-700 text-xs rounded-lg capitalize">
                                                 {ticket.type} × {ticket.quantity}
                                             </span>
                                         </td>
@@ -591,39 +513,36 @@ const AdminTickets = ({ globalSearch = '' }) => {
                                             <div className="flex items-center justify-end gap-2">
                                                 <button
                                                     onClick={() => openTicketDetails(ticket)}
-                                                    className="p-2 bg-green-50 hover:bg-green-50 border border-green-200 hover:border-green-500/50 text-gray-500 hover:text-green-600 rounded-lg transition-all"
+                                                    className="p-2 bg-green-50 hover:bg-green-50 border border-green-300 hover:border-green-400/50 text-gray-500 hover:text-green-800 rounded-lg transition-all"
                                                     title="View details"
                                                 >
-                                                    <EyeIcon />
+                                                    <ReiconEye className="w-4 h-4" />
                                                 </button>
                                                 {(ticket.paymentStatus === 'pending' || ticket.paymentStatus === 'not_paid' || ticket.paymentStatus === 'not paid') && (
                                                     <button
                                                         onClick={() => handleMarkAsPaid(ticket.id)}
-                                                        className="p-2 bg-green-50 hover:bg-teal-500/10 border border-green-200 hover:border-teal-500/50 text-gray-500 hover:text-teal-400 rounded-lg transition-all"
+                                                        className="p-2 bg-green-50 hover:bg-green-400/10 border border-green-300 hover:border-green-400/50 text-gray-500 hover:text-green-800 rounded-lg transition-all"
                                                         title="Mark as paid"
                                                     >
-                                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
-                                                            <line x1="12" y1="1" x2="12" y2="23" />
-                                                            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-                                                        </svg>
+                                                        <ReiconDollarSign strokeWidth="2" className="w-4 h-4" />
                                                     </button>
                                                 )}
                                                 {ticket.status === 'pending' && (
                                                     <button
                                                         onClick={() => handleStatusChange(ticket.id, 'confirmed')}
-                                                        className="p-2 bg-green-50 hover:bg-green-500/10 border border-green-200 hover:border-green-500/50 text-gray-500 hover:text-green-600 rounded-lg transition-all"
+                                                        className="p-2 bg-green-50 hover:bg-green-400/10 border border-green-300 hover:border-green-400/50 text-gray-500 hover:text-green-800 rounded-lg transition-all"
                                                         title="Confirm ticket"
                                                     >
-                                                        <CheckCircleIcon />
+                                                        <ReiconCheckCircle className="w-4 h-4" />
                                                     </button>
                                                 )}
                                                 {(ticket.status === 'confirmed' || ticket.status === 'active') && (
                                                     <button
                                                         onClick={() => handleStatusChange(ticket.id, 'used')}
-                                                        className="p-2 bg-green-50 hover:bg-blue-500/10 border border-green-200 hover:border-blue-500/50 text-gray-500 hover:text-blue-400 rounded-lg transition-all"
+                                                        className="p-2 bg-green-50 hover:bg-blue-500/10 border border-green-300 hover:border-blue-500/50 text-gray-500 hover:text-blue-700 rounded-lg transition-all"
                                                         title="Mark as used"
                                                     >
-                                                        <CheckCircleIcon />
+                                                        <ReiconCheckCircle className="w-4 h-4" />
                                                     </button>
                                                 )}
                                             </div>
@@ -636,7 +555,7 @@ const AdminTickets = ({ globalSearch = '' }) => {
                 </div>
 
                 {/* Table Footer */}
-                <div className="px-6 py-4 border-t border-green-200 flex items-center justify-between">
+                <div className="px-6 py-4 border-t border-green-300 flex items-center justify-between">
                     <p className="text-sm text-gray-500">
                         Showing {filteredTickets.length} of {tickets.length} tickets
                     </p>
@@ -646,12 +565,12 @@ const AdminTickets = ({ globalSearch = '' }) => {
             {/* Ticket Detail Modal */}
             {showModal && selectedTicket && (
                 <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-white border border-green-200 rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+                    <div className="bg-white border border-green-300 rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
                         {/* Modal Header */}
-                        <div className="p-6 border-b border-green-200 flex items-center justify-between">
+                        <div className="p-6 border-b border-green-300 flex items-center justify-between">
                             <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 bg-green-500/10 rounded-xl flex items-center justify-center text-green-600">
-                                    <TicketIcon />
+                                <div className="w-10 h-10 bg-green-400/10 rounded-xl flex items-center justify-center text-green-800">
+                                    <ReiconTicket className="w-6 h-6" />
                                 </div>
                                 <div>
                                     <h3 className="text-xl font-bold text-gray-900">Ticket Details</h3>
@@ -662,7 +581,7 @@ const AdminTickets = ({ globalSearch = '' }) => {
                                 onClick={() => setShowModal(false)}
                                 className="p-2 hover:bg-green-50 rounded-lg text-gray-500 hover:text-gray-900 transition"
                             >
-                                <CloseIcon />
+                                <ReiconX className="w-5 h-5" />
                             </button>
                         </div>
 
@@ -724,7 +643,7 @@ const AdminTickets = ({ globalSearch = '' }) => {
                                     </div>
                                     <div>
                                         <p className="text-xs text-gray-500">Total Price</p>
-                                        <p className="text-green-600 font-medium">
+                                        <p className="text-green-800 font-medium">
                                             {selectedTicket.price === 0 ? 'FREE' : `₱${selectedTicket.price?.toLocaleString()}`}
                                         </p>
                                     </div>
@@ -745,15 +664,9 @@ const AdminTickets = ({ globalSearch = '' }) => {
 
                             {/* Resident ID Verification Section */}
                             {selectedTicket.type?.toLowerCase() === 'resident' && (
-                                <div className="p-4 bg-teal-500/10 border border-teal-500/30 rounded-xl space-y-3">
-                                    <h4 className="text-sm font-semibold text-teal-400 uppercase tracking-wider flex items-center gap-2">
-                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4">
-                                            <rect x="3" y="4" width="18" height="16" rx="2" />
-                                            <circle cx="9" cy="10" r="2" />
-                                            <path d="M15 8h2" />
-                                            <path d="M15 12h2" />
-                                            <path d="M7 16h10" />
-                                        </svg>
+                                <div className="p-4 bg-green-400/10 border border-green-400/30 rounded-xl space-y-3">
+                                    <h4 className="text-sm font-semibold text-green-800 uppercase tracking-wider flex items-center gap-2">
+                                        <ReiconUserId strokeWidth="2" className="w-4 h-4" />
                                         Resident ID Verification Required
                                     </h4>
                                     {selectedTicket.residentIdImage ? (
@@ -771,15 +684,15 @@ const AdminTickets = ({ globalSearch = '' }) => {
                                                     }}
                                                 />
                                             </div>
-                                            <p className="text-xs text-teal-400">Click image to view in full size</p>
+                                            <p className="text-xs text-green-800">Click image to view in full size</p>
                                             <div className="flex items-center gap-2 text-sm">
                                                 <span className="text-gray-500">Verification Status:</span>
                                                 <span className={`px-2 py-1 rounded-full text-xs font-medium border ${
                                                     selectedTicket.verificationStatus === 'approved' 
-                                                        ? 'bg-green-500/20 text-green-600 border-green-500/30' 
+                                                        ? 'bg-green-400/20 text-green-800 border-green-400/30'
                                                         : selectedTicket.verificationStatus === 'rejected'
-                                                            ? 'bg-red-500/20 text-red-400 border-red-500/30'
-                                                            : 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30'
+                                                            ? 'bg-red-500/20 text-red-700 border-red-500/30'
+                                                            : 'bg-yellow-500/20 text-yellow-700 border-yellow-500/30'
                                                 }`}>
                                                     {selectedTicket.verificationStatus || 'Pending'}
                                                 </span>
@@ -790,14 +703,14 @@ const AdminTickets = ({ globalSearch = '' }) => {
                                                     <button
                                                         onClick={() => handleUpdateVerificationStatus(selectedTicket.id, 'approved')}
                                                         disabled={actionLoading}
-                                                        className="flex-1 py-2 bg-green-500/20 border border-green-500/30 text-green-600 text-sm font-medium rounded-lg hover:bg-green-500/30 transition-all disabled:opacity-50"
+                                                        className="flex-1 py-2 bg-green-400/20 border border-green-400/30 text-green-800 text-sm font-medium rounded-lg hover:bg-green-400/30 transition-all disabled:opacity-50"
                                                     >
                                                         Approve ID
                                                     </button>
                                                     <button
                                                         onClick={() => handleUpdateVerificationStatus(selectedTicket.id, 'rejected')}
                                                         disabled={actionLoading}
-                                                        className="flex-1 py-2 bg-red-500/20 border border-red-500/30 text-red-400 text-sm font-medium rounded-lg hover:bg-red-500/30 transition-all disabled:opacity-50"
+                                                        className="flex-1 py-2 bg-red-500/20 border border-red-500/30 text-red-700 text-sm font-medium rounded-lg hover:bg-red-500/30 transition-all disabled:opacity-50"
                                                     >
                                                         Reject ID
                                                     </button>
@@ -806,12 +719,8 @@ const AdminTickets = ({ globalSearch = '' }) => {
                                         </div>
                                     ) : (
                                         <div className="p-4 bg-green-50 rounded-xl text-center">
-                                            <p className="text-yellow-400 text-sm">
-                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-5 h-5 inline mr-2">
-                                                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-                                                    <line x1="12" y1="9" x2="12" y2="13" />
-                                                    <line x1="12" y1="17" x2="12.01" y2="17" />
-                                                </svg>
+                                            <p className="text-yellow-700 text-sm">
+                                                <ReiconAlertTriangle strokeWidth="2" className="w-5 h-5 inline mr-2" />
                                                 No ID image uploaded. Please contact the visitor to submit their ID.
                                             </p>
                                         </div>
@@ -824,12 +733,9 @@ const AdminTickets = ({ globalSearch = '' }) => {
                                 <button
                                     onClick={() => handleMarkAsPaid(selectedTicket.id)}
                                     disabled={actionLoading}
-                                    className="w-full py-3 bg-teal-500/20 border border-teal-500/30 text-teal-400 font-semibold rounded-xl hover:bg-teal-500/30 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                                    className="w-full py-3 bg-green-400/20 border border-green-400/30 text-green-800 font-semibold rounded-xl hover:bg-green-400/30 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                                 >
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
-                                        <line x1="12" y1="1" x2="12" y2="23" />
-                                        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-                                    </svg>
+                                    <ReiconDollarSign strokeWidth="2" className="w-5 h-5" />
                                     Mark as Paid
                                 </button>
                             )}
@@ -840,7 +746,7 @@ const AdminTickets = ({ globalSearch = '' }) => {
                                     <button
                                         onClick={() => handleStatusChange(selectedTicket.id, 'confirmed')}
                                         disabled={actionLoading}
-                                        className="flex-1 py-3 bg-gradient-to-r from-green-500 to-green-400 text-white font-semibold rounded-xl hover:from-green-400 hover:to-green-500 transition-all disabled:opacity-50"
+                                        className="flex-1 py-3 bg-gradient-to-r from-green-300 via-green-400 to-green-500 text-gray-900 font-semibold rounded-xl hover:shadow-lg hover:shadow-green-400/25 transition-all disabled:opacity-50"
                                     >
                                         Confirm Ticket
                                     </button>
@@ -849,7 +755,7 @@ const AdminTickets = ({ globalSearch = '' }) => {
                                     <button
                                         onClick={() => handleStatusChange(selectedTicket.id, 'used')}
                                         disabled={actionLoading}
-                                        className="flex-1 py-3 bg-blue-500/20 border border-blue-500/30 text-blue-400 font-semibold rounded-xl hover:bg-blue-500/30 transition-all disabled:opacity-50"
+                                        className="flex-1 py-3 bg-blue-500/20 border border-blue-500/30 text-blue-700 font-semibold rounded-xl hover:bg-blue-500/30 transition-all disabled:opacity-50"
                                     >
                                         Mark as Used
                                     </button>
@@ -858,7 +764,7 @@ const AdminTickets = ({ globalSearch = '' }) => {
                                     <button
                                         onClick={() => setShowCancelModal(true)}
                                         disabled={actionLoading}
-                                        className="flex-1 py-3 bg-red-500/10 border border-red-500/30 text-red-400 font-semibold rounded-xl hover:bg-red-500/20 transition-all disabled:opacity-50"
+                                        className="flex-1 py-3 bg-red-500/10 border border-red-500/30 text-red-700 font-semibold rounded-xl hover:bg-red-500/20 transition-all disabled:opacity-50"
                                     >
                                         Cancel Ticket
                                     </button>
@@ -887,8 +793,8 @@ const AdminTickets = ({ globalSearch = '' }) => {
             {/* Cancel Ticket Modal */}
             {showCancelModal && (
                 <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
-                    <div className="bg-white border border-green-200 rounded-2xl w-full max-w-md">
-                        <div className="p-6 border-b border-green-200">
+                    <div className="bg-white border border-green-300 rounded-2xl w-full max-w-md">
+                        <div className="p-6 border-b border-green-300">
                             <h3 className="text-xl font-bold text-gray-900">Cancel Ticket</h3>
                             <p className="text-gray-500 text-sm mt-1">Please provide a reason for cancellation</p>
                         </div>
@@ -898,7 +804,7 @@ const AdminTickets = ({ globalSearch = '' }) => {
                                 onChange={(e) => setCancelReason(e.target.value)}
                                 placeholder="Enter cancellation reason..."
                                 rows={4}
-                                className="w-full px-4 py-3 bg-green-50 border border-green-200 rounded-xl text-gray-900 placeholder:text-gray-500 focus:outline-none focus:border-green-500/50 resize-none"
+                                className="w-full px-4 py-3 bg-green-50 border border-green-300 rounded-xl text-gray-900 placeholder:text-gray-500 focus:outline-none focus:border-green-400/50 resize-none"
                             />
                             <div className="flex gap-3">
                                 <button
@@ -917,7 +823,7 @@ const AdminTickets = ({ globalSearch = '' }) => {
                                         setCancelReason('');
                                     }}
                                     disabled={actionLoading}
-                                    className="flex-1 py-3 bg-red-500/20 border border-red-500/30 text-red-400 font-semibold rounded-xl hover:bg-red-500/30 transition-all disabled:opacity-50"
+                                    className="flex-1 py-3 bg-red-500/20 border border-red-500/30 text-red-700 font-semibold rounded-xl hover:bg-red-500/30 transition-all disabled:opacity-50"
                                 >
                                     {actionLoading ? 'Cancelling...' : 'Confirm Cancel'}
                                 </button>
@@ -930,8 +836,8 @@ const AdminTickets = ({ globalSearch = '' }) => {
             {/* Confirmation Modal */}
             {showConfirmModal && (
                 <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
-                    <div className="bg-white border border-green-200 rounded-2xl w-full max-w-md">
-                        <div className="p-6 border-b border-green-200">
+                    <div className="bg-white border border-green-300 rounded-2xl w-full max-w-md">
+                        <div className="p-6 border-b border-green-300">
                             <h3 className="text-xl font-bold text-gray-900">{confirmTitle}</h3>
                         </div>
                         <div className="p-6 space-y-4">
@@ -949,7 +855,7 @@ const AdminTickets = ({ globalSearch = '' }) => {
                                 <button
                                     onClick={handleConfirmAction}
                                     disabled={actionLoading}
-                                    className="flex-1 py-3 bg-gradient-to-r from-green-500 to-green-400 text-white font-semibold rounded-xl hover:from-green-400 hover:to-green-500 transition-all disabled:opacity-50"
+                                    className="flex-1 py-3 bg-gradient-to-r from-green-300 via-green-400 to-green-500 text-gray-900 font-semibold rounded-xl hover:shadow-lg hover:shadow-green-400/25 transition-all disabled:opacity-50"
                                 >
                                     {actionLoading ? 'Processing...' : 'Confirm'}
                                 </button>
@@ -973,7 +879,7 @@ const AdminTickets = ({ globalSearch = '' }) => {
                             onClick={() => setShowImageModal(false)}
                             className="absolute -top-12 right-0 p-2 bg-white/10 hover:bg-white/40 rounded-full text-gray-900 transition-all"
                         >
-                            <CloseIcon />
+                            <ReiconX className="w-5 h-5" />
                         </button>
                         <img 
                             src={previewImageUrl} 

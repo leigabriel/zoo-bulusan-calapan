@@ -1,3 +1,4 @@
+import { Check as ReiconCheck, Filter as ReiconFilter, Folder as ReiconFolder, Layers as ReiconLayers, Paw as ReiconPaw, Refresh as ReiconRefresh, Settings as ReiconSettings, Trash as ReiconTrash, Upload as ReiconUpload, Warning as ReiconWarning, X as ReiconX } from 'reicon-react';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { STORAGE_KEYS, predictionAPI } from '../../services/api-client';
 import Chart from 'react-apexcharts';
@@ -5,75 +6,6 @@ import { notify } from '../../utils/toast';
 import { ANIMAL_CLASSES } from '../../config/ai-service-config';
 
 const EMPTY_MODEL_STATS = Object.fromEntries(ANIMAL_CLASSES.map(animal => [animal, 0]));
-
-const Icons = {
-    Chart: () => (
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
-            <line x1="18" y1="20" x2="18" y2="10" />
-            <line x1="12" y1="20" x2="12" y2="4" />
-            <line x1="6" y1="20" x2="6" y2="14" />
-        </svg>
-    ),
-    Paw: () => (
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-8 h-8">
-            <path d="M19 5c-1.1 0-2 .9-2 2v.5c-.85-.18-1.78-.17-2.5 0V7c0-1.1-.9-2-2-2s-2 .9-2 2v1.07c-1.07.6-2.06 1.34-3 2.18V9c0-1.1-.9-2-2-2s-2 .9-2 2v5.18c0 3.2 3.52 5.82 8.5 5.82s8.5-2.62 8.5-5.82V7c0-1.1-.9-2-2-2zm-6.5 2c.28 0 .5.22.5.5v1.23c-.32.06-.65.14-.97.24V7.5c0-.28.22-.5.5-.5zM5.5 9c.28 0 .5.22.5.5v3.13c-1.18.96-1.5 2.15-1.5 3.19 0 1.07 1.43 2.18 4.5 2.18s4.5-1.11 4.5-2.18c0-1.04-.32-2.23-1.5-3.19V9.5c0-.28.22-.5.5-.5s.5.22.5.5v5.03c.87.5 1.74.83 2.5 1.02V9.5c0-.28.22-.5.5-.5s.5.22.5.5v6.5c0 1.93-3.13 3.5-7 3.5s-7-1.57-7-3.5v-6c0-.28.22-.5.5-.5z" />
-        </svg>
-    ),
-    Trash: () => (
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
-            <polyline points="3 6 5 6 21 6" />
-            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-        </svg>
-    ),
-    Warning: () => (
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
-            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-            <line x1="12" y1="9" x2="12" y2="13" />
-            <line x1="12" y1="17" x2="12.01" y2="17" />
-        </svg>
-    ),
-    Refresh: () => (
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
-            <path d="M23 4v6h-6" />
-            <path d="M1 20v-6h6" />
-            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
-        </svg>
-    ),
-    Filter: () => (
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
-            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
-        </svg>
-    ),
-    Brain: () => (
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
-            <path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 1.98-3A2.5 2.5 0 0 1 9.5 2Z" />
-            <path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-1.98-3A2.5 2.5 0 0 0 14.5 2Z" />
-        </svg>
-    ),
-    Upload: () => (
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-            <polyline points="17 8 12 3 7 8" />
-            <line x1="12" y1="3" x2="12" y2="15" />
-        </svg>
-    ),
-    Check: () => (
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
-            <polyline points="20 6 9 17 4 12" />
-        </svg>
-    ),
-    Folder: () => (
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
-            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
-        </svg>
-    ),
-    Settings: () => (
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
-            <circle cx="12" cy="12" r="3" />
-            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
-        </svg>
-    )
-};
 
 const AnimalAnalytics = () => {
     const [records, setRecords] = useState([]);
@@ -190,7 +122,7 @@ const AnimalAnalytics = () => {
     };
 
     const getConfidenceColor = (confidence) => {
-        if (confidence > 90) return 'text-green-600 bg-green-100';
+        if (confidence > 90) return 'text-green-800 bg-green-100';
         if (confidence > 75) return 'text-blue-600 bg-blue-100';
         return 'text-amber-600 bg-amber-100';
     };
@@ -309,7 +241,7 @@ const AnimalAnalytics = () => {
         return (
             <div className="flex items-center justify-center h-64">
                 <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-400 mx-auto mb-4"></div>
                     <p className="text-gray-500 font-medium">Loading analytics...</p>
                 </div>
             </div>
@@ -320,14 +252,14 @@ const AnimalAnalytics = () => {
         return (
             <div className="bg-red-50 border border-red-200 rounded-xl p-8 text-center max-w-lg mx-auto mt-10">
                 <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4 text-red-500">
-                    <Icons.Warning />
+                    <ReiconWarning strokeWidth="2" className="w-4 h-4" />
                 </div>
                 <h3 className="text-xl font-bold text-red-700 mb-2">Error Loading Data</h3>
                 <p className="text-red-600 mb-6">{error}</p>
                 <button
                     onClick={fetchPredictions}
                     className="px-6 py-2.5 bg-red-600 text-gray-900 rounded-lg hover:bg-red-700 transition font-medium flex items-center gap-2 mx-auto">
-                    <Icons.Refresh />
+                    <ReiconRefresh strokeWidth="2" className="w-4 h-4" />
                     Retry Connection
                 </button>
             </div>
@@ -341,21 +273,8 @@ const AnimalAnalytics = () => {
                 {/* Line Chart with ApexCharts */}
                 <div className="lg:col-span-2 relative flex flex-col rounded-xl bg-white bg-clip-border text-gray-700 shadow-md">
                     <div className="relative mx-4 mt-4 flex flex-col gap-4 overflow-hidden rounded-none bg-transparent bg-clip-border text-gray-700 shadow-none md:flex-row md:items-center">
-                        <div className="w-max rounded-lg bg-gradient-to-br from-green-600 to-teal-600 p-5 text-gray-900">
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                strokeWidth="1.5"
-                                stroke="currentColor"
-                                className="h-6 w-6"
-                            >
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    d="M6.429 9.75L2.25 12l4.179 2.25m0-4.5l5.571 3 5.571-3m-11.142 0L2.25 7.5 12 2.25l9.75 5.25-4.179 2.25m0 0L21.75 12l-4.179 2.25m0 0l4.179 2.25L12 21.75 2.25 16.5l4.179-2.25m11.142 0l-5.571 3-5.571-3"
-                                />
-                            </svg>
+                        <div className="w-max rounded-lg bg-gradient-to-br from-green-300 via-green-400 to-green-500 p-5 text-gray-900">
+                            <ReiconLayers strokeWidth="1.5" className="h-6 w-6" />
                         </div>
                         <div>
                             <h6 className="block font-sans text-base font-semibold leading-relaxed tracking-normal text-gray-900 antialiased">
@@ -382,7 +301,7 @@ const AnimalAnalytics = () => {
                                 dataLabels: {
                                     enabled: false,
                                 },
-                                colors: ['#059669'],
+                                colors: ['#4ade80'],
                                 stroke: {
                                     lineCap: 'round',
                                     curve: 'smooth',
@@ -390,7 +309,7 @@ const AnimalAnalytics = () => {
                                 },
                                 markers: {
                                     size: 4,
-                                    colors: ['#059669'],
+                                    colors: ['#4ade80'],
                                     strokeColors: '#fff',
                                     strokeWidth: 2,
                                     hover: {
@@ -470,20 +389,18 @@ const AnimalAnalytics = () => {
                     </div>
                 </div>
 
-                <div className="bg-gradient-to-br from-green-600 to-teal-600 rounded-3xl p-8 shadow-xl text-gray-900 flex flex-col justify-between relative overflow-hidden">
+                <div className="bg-gradient-to-br from-green-300 via-green-400 to-green-500 rounded-3xl p-8 shadow-xl text-gray-900 flex flex-col justify-between relative overflow-hidden">
                     <div className="absolute top-0 right-0 p-8 opacity-10 transform translate-x-1/4 -translate-y-1/4">
-                        <svg viewBox="0 0 24 24" fill="currentColor" className="w-64 h-64">
-                            <path d="M19 5c-1.1 0-2 .9-2 2v.5c-.85-.18-1.78-.17-2.5 0V7c0-1.1-.9-2-2-2s-2 .9-2 2v1.07c-1.07.6-2.06 1.34-3 2.18V9c0-1.1-.9-2-2-2s-2 .9-2 2v5.18c0 3.2 3.52 5.82 8.5 5.82s8.5-2.62 8.5-5.82V7c0-1.1-.9-2-2-2z" />
-                        </svg>
+                        <ReiconPaw className="w-64 h-64" weight="Filled" />
                     </div>
 
                     <div className="relative z-10">
                         <div className="bg-white/40 w-fit p-3 rounded-2xl mb-6 backdrop-blur-sm">
-                            <Icons.Paw />
+                            <ReiconPaw className="w-8 h-8" weight="Filled" />
                         </div>
                         <h3 className="text-lg font-medium text-green-50 mb-1">Total Classifications</h3>
                         <div className="text-6xl font-bold mb-2 tracking-tight">{totalRecords}</div>
-                        <p className="text-sm text-green-100 opacity-80">All time records processed</p>
+                        <p className="text-sm text-green-800 opacity-80">All time records processed</p>
                     </div>
 
                     <div className="relative z-10 mt-8 pt-6 border-t border-white/20">
@@ -511,21 +428,21 @@ const AnimalAnalytics = () => {
                             onClick={handleDelete}
                             disabled={selectedIds.length === 0}
                             className="flex-1 sm:flex-none px-4 py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 bg-white text-red-500 border border-red-200 hover:bg-red-50 hover:border-red-300 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-sm">
-                            <Icons.Trash />
+                            <ReiconTrash strokeWidth="2" className="w-4 h-4" />
                             Delete Selected
                         </button>
 
                         <button
                             onClick={handleClearAll}
                             className="flex-1 sm:flex-none px-4 py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 bg-gray-100 text-gray-500 hover:bg-red-600 hover:text-gray-900 transition shadow-sm group">
-                            <Icons.Warning />
+                            <ReiconWarning strokeWidth="2" className="w-4 h-4" />
                             Clear Database
                         </button>
 
                         <button
                             onClick={() => setShowModelManager(true)}
-                            className="flex-1 sm:flex-none px-4 py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 bg-gradient-to-r from-purple-500 to-indigo-600 text-gray-900 hover:from-purple-600 hover:to-indigo-700 transition shadow-sm">
-                            <Icons.Settings />
+                            className="flex-1 sm:flex-none px-4 py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 bg-gradient-to-r from-green-300 via-green-400 to-green-500 text-gray-900 transition shadow-sm">
+                            <ReiconSettings strokeWidth="2" className="w-5 h-5" />
                             AI Model
                         </button>
                     </div>
@@ -540,7 +457,7 @@ const AnimalAnalytics = () => {
                                         type="checkbox"
                                         checked={selectAll}
                                         onChange={toggleSelectAll}
-                                        className="w-4 h-4 rounded border-gray-300 text-green-600 focus:ring-green-500 cursor-pointer"
+                                        className="w-4 h-4 rounded border-gray-300 text-green-800 focus:ring-green-400 cursor-pointer"
                                     />
                                 </th>
                                 <th className="p-5 text-left font-semibold">ID</th>
@@ -559,7 +476,7 @@ const AnimalAnalytics = () => {
                                                 type="checkbox"
                                                 checked={selectedIds.includes(record.id)}
                                                 onChange={() => toggleSelect(record.id)}
-                                                className="w-4 h-4 rounded border-gray-300 text-green-600 focus:ring-green-500 cursor-pointer"
+                                                className="w-4 h-4 rounded border-gray-300 text-green-800 focus:ring-green-400 cursor-pointer"
                                             />
                                         </td>
                                         <td className="p-5 text-gray-500 font-mono text-xs">#{record.id}</td>
@@ -592,7 +509,7 @@ const AnimalAnalytics = () => {
                                 <tr>
                                     <td colSpan="6" className="p-16 text-center">
                                         <div className="flex flex-col items-center justify-center text-gray-500 gap-3">
-                                            <Icons.Filter />
+                                            <ReiconFilter strokeWidth="2" className="w-4 h-4" />
                                             <p className="text-lg font-medium">No records found</p>
                                             <p className="text-sm">Start classifying images to see data here.</p>
                                         </div>
@@ -617,7 +534,7 @@ const AnimalAnalytics = () => {
                         <button
                             onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                             disabled={page >= totalPages}
-                            className="px-5 py-2.5 rounded-xl text-sm font-bold bg-green-600 text-gray-900 hover:bg-green-700 shadow-md hover:shadow-lg transition disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none">
+                            className="px-5 py-2.5 rounded-xl text-sm font-bold bg-green-400 text-gray-900 hover:bg-green-400 shadow-md hover:shadow-lg transition disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none">
                             Next
                         </button>
                     </div>
@@ -629,11 +546,11 @@ const AnimalAnalytics = () => {
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
                     <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
                         {/* Header */}
-                        <div className="bg-gradient-to-r from-purple-600 to-indigo-600 p-6 text-gray-900">
+                        <div className="bg-gradient-to-r from-green-300 via-green-400 to-green-500 p-6 text-gray-900">
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-3">
                                     <div className="bg-white/40 p-2 rounded-xl">
-                                        <Icons.Settings />
+                                        <ReiconSettings strokeWidth="2" className="w-5 h-5" />
                                     </div>
                                     <div>
                                         <h2 className="text-xl font-bold">AI Model Manager</h2>
@@ -647,9 +564,7 @@ const AnimalAnalytics = () => {
                                     }}
                                     className="p-2 hover:bg-white/40 rounded-xl transition"
                                 >
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                    </svg>
+                                    <ReiconX className="w-5 h-5" />
                                 </button>
                             </div>
                         </div>
@@ -659,7 +574,7 @@ const AnimalAnalytics = () => {
                             {/* Current Model Info */}
                             <div className="bg-gray-50 rounded-2xl p-4 mb-6 border border-gray-100">
                                 <h3 className="font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                                    <Icons.Folder />
+                                    <ReiconFolder strokeWidth="2" className="w-5 h-5" />
                                     Current Model
                                 </h3>
                                 <div className="flex items-center gap-3">
@@ -675,12 +590,10 @@ const AnimalAnalytics = () => {
                             {uploadSuccess && (
                                 <div className="bg-green-50 border border-green-200 rounded-2xl p-6 text-center mb-6">
                                     <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                        <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                        </svg>
+                                        <ReiconCheck className="w-8 h-8 text-green-800" />
                                     </div>
                                     <h3 className="text-lg font-bold text-green-700 mb-1">Model Uploaded Successfully!</h3>
-                                    <p className="text-green-600 text-sm">The new model is now active</p>
+                                    <p className="text-green-800 text-sm">The new model is now active</p>
                                 </div>
                             )}
 
@@ -706,7 +619,7 @@ const AnimalAnalytics = () => {
                                             disabled={isUploading}
                                             className="w-full border-2 border-dashed border-gray-200 rounded-xl p-4 hover:border-purple-400 hover:bg-purple-50/50 transition flex items-center justify-center gap-2 text-gray-500 hover:text-purple-600 disabled:opacity-50"
                                         >
-                                            <Icons.Upload />
+                                            <ReiconUpload strokeWidth="2" className="w-5 h-5" />
                                             {modelFiles.find(f => f.name === 'model.json')
                                                 ? modelFiles.find(f => f.name === 'model.json').name
                                                 : 'Click to select model.json'}
@@ -731,7 +644,7 @@ const AnimalAnalytics = () => {
                                             disabled={isUploading}
                                             className="w-full border-2 border-dashed border-gray-200 rounded-xl p-4 hover:border-purple-400 hover:bg-purple-50/50 transition flex items-center justify-center gap-2 text-gray-500 hover:text-purple-600 disabled:opacity-50"
                                         >
-                                            <Icons.Upload />
+                                            <ReiconUpload strokeWidth="2" className="w-5 h-5" />
                                             Click to select weight files
                                         </button>
                                     </div>
@@ -747,9 +660,9 @@ const AnimalAnalytics = () => {
                                                         <button
                                                             onClick={() => removeModelFile(file.name)}
                                                             disabled={isUploading}
-                                                            className="text-red-400 hover:text-red-600 disabled:opacity-50"
+                                                            className="text-red-700 hover:text-red-600 disabled:opacity-50"
                                                         >
-                                                            <Icons.Trash />
+                                                            <ReiconTrash strokeWidth="2" className="w-4 h-4" />
                                                         </button>
                                                     </div>
                                                 ))}
@@ -766,7 +679,7 @@ const AnimalAnalytics = () => {
                                             </div>
                                             <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
                                                 <div
-                                                    className="h-full bg-gradient-to-r from-purple-500 to-indigo-600 transition-all duration-300"
+                                                    className="h-full bg-gradient-to-r from-green-300 via-green-400 to-green-500 transition-all duration-300"
                                                     style={{ width: `${uploadProgress}%` }}
                                                 />
                                             </div>
@@ -776,7 +689,7 @@ const AnimalAnalytics = () => {
                                     {/* Error Message */}
                                     {uploadError && (
                                         <div className="bg-red-50 border border-red-200 rounded-xl p-3 mb-4 flex items-center gap-2 text-red-600 text-sm">
-                                            <Icons.Warning />
+                                            <ReiconWarning strokeWidth="2" className="w-4 h-4" />
                                             {uploadError}
                                         </div>
                                     )}
@@ -799,7 +712,7 @@ const AnimalAnalytics = () => {
                                 <button
                                     onClick={handleModelUpload}
                                     disabled={modelFiles.length === 0 || isUploading}
-                                    className="px-5 py-2.5 rounded-xl text-sm font-bold bg-gradient-to-r from-purple-600 to-indigo-600 text-gray-900 hover:from-purple-700 hover:to-indigo-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                    className="px-5 py-2.5 rounded-xl text-sm font-bold bg-gradient-to-r from-green-300 via-green-400 to-green-500 text-gray-900 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                                 >
                                     {isUploading ? (
                                         <>
@@ -808,7 +721,7 @@ const AnimalAnalytics = () => {
                                         </>
                                     ) : (
                                         <>
-                                            <Icons.Upload />
+                                            <ReiconUpload strokeWidth="2" className="w-5 h-5" />
                                             Upload Model
                                         </>
                                     )}

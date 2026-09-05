@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Pet, Leaf, Calendar, ChevronDown } from 'reicon-react';
 import { AI_ASSISTANT_THEME } from '../../../config/ai-assistant-theme';
 
 const DEFAULT_THEME = AI_ASSISTANT_THEME;
@@ -17,30 +18,6 @@ const KIND_META = {
     plant: { color: '#0d9488', label: 'Plant', icon: 'leaf' },
     'zoo-event': { color: '#6366f1', label: 'Event', icon: 'calendar' }
 };
-
-const PawIcon = () => (
-    <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
-        <path d="M9.75 8.25a3.75 3.75 0 100-7.5 3.75 3.75 0 000 7.5zm4.5 0a3.75 3.75 0 100-7.5 3.75 3.75 0 000 7.5zM2.25 9.5a2.75 2.75 0 100-5.5 2.75 2.75 0 000 5.5zm19.5 0a2.75 2.75 0 100-5.5 2.75 2.75 0 000 5.5zM12 11.5c-3.313 0-6.3 1.743-8.15 4.356A6.931 6.931 0 0012 23a6.931 6.931 0 008.15-7.144C18.3 13.243 15.313 11.5 12 11.5z" />
-    </svg>
-);
-
-const LeafIcon = () => (
-    <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
-        <path d="M20.904 2.204a.75.75 0 00-.808-.098C14.1 4.62 8.3 7.1 5.4 10.85c-2.9 3.75-2.7 7.9-.6 10.55a.75.75 0 001.2.1c2.1-2.5 5.5-4.85 8.4-6.2.95-.44 1.75-1 2.5-1.6 4.9-3.75 5.9-9.85 4-11.5zM9.2 18.25c1.2-2.3 3-4.15 5.1-5.5-1.5 2.05-3 3.7-5.1 5.5z" />
-    </svg>
-);
-
-const CalendarIcon = () => (
-    <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
-        <path fillRule="evenodd" d="M6.75 2.25A.75.75 0 017.5 3v1.5h9V3A.75.75 0 0118 3v1.5h.75a3 3 0 013 3v11.25a3 3 0 01-3 3H5.25a3 3 0 01-3-3V7.5a3 3 0 013-3H6V3a.75.75 0 01.75-.75zm13.5 9a1.5 1.5 0 00-1.5-1.5H5.25a1.5 1.5 0 00-1.5 1.5v7.5a1.5 1.5 0 001.5 1.5h13.5a1.5 1.5 0 001.5-1.5v-7.5z" clipRule="evenodd" />
-    </svg>
-);
-
-const ChevronIcon = () => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
-        <path d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
-    </svg>
-);
 
 const Row = ({ label, value, strong = false }) => (
     <div className="flex items-center justify-between gap-3 py-2">
@@ -67,7 +44,7 @@ const ZooCard = ({ data, theme = DEFAULT_THEME }) => {
     const statusClass = isPlant
         ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
         : STATUS_STYLES[status] || STATUS_STYLES.healthy;
-    const Icon = isAnimal ? PawIcon : isPlant ? LeafIcon : CalendarIcon;
+    const Icon = isAnimal ? Pet : isPlant ? Leaf : Calendar;
 
     const hasDescription = Boolean(data.description);
 
@@ -101,7 +78,7 @@ const ZooCard = ({ data, theme = DEFAULT_THEME }) => {
                         className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
                         style={{ background: THEME.accentSoft, color: meta.color }}
                     >
-                        <Icon />
+                        <Icon size={16} className="w-4 h-4" aria-hidden="true" />
                     </div>
                     <div className="min-w-0">
                         <p className="text-sm font-bold truncate leading-tight" style={{ color: THEME.text }}>{title}</p>
@@ -139,7 +116,7 @@ const ZooCard = ({ data, theme = DEFAULT_THEME }) => {
                         style={{ background: THEME.accentSoft, color: THEME.text }}
                     >
                         {expanded ? 'Show Less' : 'Show More'}
-                        <ChevronIcon />
+                        <ChevronDown size={14} className="w-3.5 h-3.5" aria-hidden="true" />
                     </button>
                 )}
             </div>

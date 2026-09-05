@@ -80,7 +80,7 @@ const SectionLabel = ({ label }) => (
 const MenuItem = ({ iconKey, label, badge, danger, to, onClick, onClose, isLast, onNavigate }) => {
     const IconComponent = ICON_COMPONENTS[iconKey];
     const inner = (
-        <span className={`flex items-center gap-3 px-4 py-3 transition-colors group ${danger ? 'hover:bg-red-50/60' : 'hover:bg-green-400'} ${!isLast ? 'border-b border-gray-50' : ''}`}>
+        <span className={`flex items-center gap-3 px-4 py-3 transition-colors group ${danger ? 'hover:bg-red-50/60' : 'hover:bg-[#ebebeb]'} ${!isLast ? 'border-b border-gray-50' : ''}`}>
             <span className={`w-8 h-8 flex items-center justify-center rounded-xl flex-shrink-0 ${danger ? 'bg-red-50' : 'bg-gray-50'}`}>
                 {IconComponent && (
                     <IconComponent
@@ -556,7 +556,7 @@ const Header = () => {
                                             key={link.path}
                                             to={link.path}
                                             onClick={(e) => { e.preventDefault(); setIsMenuOpen(false); handleTransitionNavigate(e, link.path); }}
-                                            className={`flex items-center gap-3 px-4 py-3 transition-colors ${active ? 'bg-green-400' : 'hover:bg-gray-50'}`}
+                                            className={`flex items-center gap-3 px-4 py-3 transition-colors ${active ? 'bg-[#ebebeb]' : 'hover:bg-gray-50'}`}
                                         >
                                             {LinkIcon && (
                                                 <LinkIcon

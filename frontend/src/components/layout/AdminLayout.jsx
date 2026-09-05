@@ -8,10 +8,11 @@ import LogoutModal from '../common/LogoutModal';
 import CollapsibleNavGroup from '../common/CollapsibleNavGroup';
 import RoleCompanionFloatingButton from '../common/RoleCompanionFloatingButton';
 import useScrollLock from '../../hooks/use-scroll-lock';
+import WorkspaceThemeContext from '../common/WorkspaceThemeContext';
 import {
     Search, Home, Calendar, Ticket, People, Pet, Leaf,
     Message, Messages, ShieldCheck, ChartBar, DocumentText, ClipboardList,
-    Setting, Logout, Menu, Bell, CloseCircle, Lifebuoy, Sparkles, User, Trash
+    Setting, Logout, Menu, Bell, CloseCircle, Lifebuoy, Sparkles, User, Trash, ChevronRight
 } from 'reicon-react';
 
 const AdminLayout = ({ children }) => {
@@ -362,6 +363,7 @@ const AdminLayout = ({ children }) => {
     const unreadCount = notifications.filter(n => !n.read).length;
 
     return (
+        <WorkspaceThemeContext value={true}>
         <div className="flex h-screen bg-gray-50 overflow-hidden font-['JetBrains']">
             {/* Mobile overlay for left sidebar */}
             {sidebarOpen && (
@@ -487,11 +489,11 @@ const AdminLayout = ({ children }) => {
                                 className="relative p-2 hover:bg-gray-100 rounded-xl transition flex-shrink-0"
                                 aria-label="Open menu"
                             >
-                                <div className="w-8 h-8 bg-gradient-to-br from-green-500 to-green-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                                <div className="w-8 h-8 bg-gradient-to-br from-green-300 via-green-400 to-green-500 rounded-full flex items-center justify-center text-gray-900 font-bold text-sm">
                                     {(user?.firstName || user?.lastName || user?.fullName)?.charAt(0) || 'A'}
                                 </div>
                                 {unreadCount > 0 && (
-                                    <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center text-[9px] font-bold text-white">
+                                    <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-green-400 rounded-full flex items-center justify-center text-[9px] font-bold text-gray-900">
                                         {unreadCount > 9 ? '9+' : unreadCount}
                                     </span>
                                 )}
@@ -568,7 +570,7 @@ const AdminLayout = ({ children }) => {
                         {/* Centered Search */}
                         <div className="flex-1 flex justify-center px-4">
                             <div className="relative w-full max-w-md" ref={searchRef}>
-                                <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-3 py-2 focus-within:border-green-500 focus-within:ring-1 focus-within:ring-green-500/20 transition-all">
+                                <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-3 py-2 focus-within:border-green-400 focus-within:ring-1 focus-within:ring-green-400/20 transition-all">
                                     <Search size={16} className="text-gray-400 flex-shrink-0" />
                                     <input
                                         ref={searchInputRef}
@@ -605,7 +607,7 @@ const AdminLayout = ({ children }) => {
                                     <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-lg z-[60] max-h-80 overflow-y-auto w-96">
                                         {searchDataLoading && filteredSearchItems.length === 0 ? (
                                             <div className="px-4 py-6 text-center text-gray-500">
-                                                <div className="w-6 h-6 border-2 border-green-500 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+                                                <div className="w-6 h-6 border-2 border-green-400 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
                                                 <p className="text-sm">Searching...</p>
                                             </div>
                                         ) : filteredSearchItems.length > 0 ? (
@@ -685,7 +687,7 @@ const AdminLayout = ({ children }) => {
                             >
                                 <Bell size={20} />
                                 {unreadCount > 0 && (
-                                    <span className="absolute top-1 right-1 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center text-[10px] font-bold text-white">
+                                    <span className="absolute top-1 right-1 w-5 h-5 bg-green-400 rounded-full flex items-center justify-center text-[10px] font-bold text-gray-900">
                                         {unreadCount > 99 ? '99+' : unreadCount}
                                     </span>
                                 )}
@@ -702,7 +704,7 @@ const AdminLayout = ({ children }) => {
                                 className="p-1 hover:bg-gray-100 rounded-xl transition"
                                 aria-label="Open profile"
                             >
-                                <div className="w-9 h-9 bg-gradient-to-br from-green-500 to-green-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                                <div className="w-9 h-9 bg-gradient-to-br from-green-300 via-green-400 to-green-500 rounded-full flex items-center justify-center text-gray-900 font-bold text-sm">
                                     {(user?.firstName || user?.lastName || user?.fullName)?.charAt(0) || 'A'}
                                 </div>
                             </button>
@@ -749,7 +751,7 @@ const AdminLayout = ({ children }) => {
                 <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-4 space-y-3">
                     {notificationsLoading ? (
                         <div className="flex items-center justify-center py-8">
-                            <div className="w-8 h-8 border-2 border-green-500 border-t-transparent rounded-full animate-spin"></div>
+                            <div className="w-8 h-8 border-2 border-green-400 border-t-transparent rounded-full animate-spin"></div>
                         </div>
                     ) : notifications.length === 0 ? (
                         <div className="text-center py-8 text-gray-500">
@@ -778,13 +780,13 @@ const AdminLayout = ({ children }) => {
                                         navigate(notification.link);
                                     }
                                 }}
-                                className={`p-4 rounded-xl border transition-all cursor-pointer hover:border-green-300 ${notification.read
+                                className={`p-4 rounded-xl border transition-all cursor-pointer hover:border-green-400 ${notification.read
                                         ? 'bg-gray-50 border-gray-100'
                                         : 'bg-green-50 border-green-200'
                                     }`}
                             >
                                 <div className="flex items-start gap-3">
-                                    <div className={`w-2 h-2 mt-2 rounded-full flex-shrink-0 ${notification.read ? 'bg-gray-300' : 'bg-green-500'
+                                    <div className={`w-2 h-2 mt-2 rounded-full flex-shrink-0 ${notification.read ? 'bg-gray-300' : 'bg-green-400'
                                         }`}></div>
                                     <div className="flex-1 min-w-0">
                                         {notification.title && (
@@ -798,9 +800,7 @@ const AdminLayout = ({ children }) => {
                                         <p className="text-xs text-gray-500 mt-1">{notification.time}</p>
                                     </div>
                                     {notification.link && (
-                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4 text-gray-400 flex-shrink-0">
-                                            <polyline points="9 18 15 12 9 6" />
-                                        </svg>
+                                        <ChevronRight size={16} className="w-4 h-4 text-gray-400 flex-shrink-0" aria-hidden="true" />
                                     )}
                                 </div>
                             </div>
@@ -865,13 +865,13 @@ const AdminLayout = ({ children }) => {
 
                         {profileLoading ? (
                             <div className="flex items-center justify-center p-12">
-                                <div className="w-10 h-10 border-4 border-green-500 border-t-transparent rounded-full animate-spin"></div>
+                                <div className="w-10 h-10 border-4 border-green-400 border-t-transparent rounded-full animate-spin"></div>
                             </div>
                         ) : (
                             <div className="p-5 space-y-5">
                                 {/* Avatar */}
                                 <div className="flex justify-center">
-                                    <div className="w-24 h-24 bg-gradient-to-br from-green-500 to-green-600 rounded-full flex items-center justify-center overflow-hidden">
+                                    <div className="w-24 h-24 bg-gradient-to-br from-green-300 via-green-400 to-green-500 rounded-full flex items-center justify-center overflow-hidden">
                                         {previewImage ? (
                                             <img
                                                 src={previewImage}
@@ -881,7 +881,7 @@ const AdminLayout = ({ children }) => {
                                                 onError={(e) => { e.target.onerror = null; e.target.style.display = 'none'; }}
                                             />
                                         ) : (
-                                            <span className="text-4xl font-bold text-white">
+                                            <span className="text-4xl font-bold text-gray-900">
                                                 {profileForm.firstName?.charAt(0) || 'A'}
                                             </span>
                                         )}
@@ -902,7 +902,7 @@ const AdminLayout = ({ children }) => {
                                         type="text"
                                         value={profileForm.firstName}
                                         onChange={(e) => setProfileForm({ ...profileForm, firstName: sanitizeInput(e.target.value) })}
-                                        className="w-full bg-gray-50 border border-gray-300 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500/20 transition-all"
+                                        className="w-full bg-gray-50 border border-gray-300 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-green-400 focus:ring-1 focus:ring-green-400/20 transition-all"
                                         placeholder="Enter first name"
                                     />
                                 </div>
@@ -914,7 +914,7 @@ const AdminLayout = ({ children }) => {
                                         type="text"
                                         value={profileForm.lastName}
                                         onChange={(e) => setProfileForm({ ...profileForm, lastName: sanitizeInput(e.target.value) })}
-                                        className="w-full bg-gray-50 border border-gray-300 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500/20 transition-all"
+                                        className="w-full bg-gray-50 border border-gray-300 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-green-400 focus:ring-1 focus:ring-green-400/20 transition-all"
                                         placeholder="Enter last name"
                                     />
                                 </div>
@@ -936,7 +936,7 @@ const AdminLayout = ({ children }) => {
                                     <div className="flex items-center justify-between text-sm">
                                         <span className="text-gray-600">Status</span>
                                         <span className="flex items-center gap-1.5 text-green-600">
-                                            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                                            <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
                                             Active
                                         </span>
                                     </div>
@@ -957,10 +957,10 @@ const AdminLayout = ({ children }) => {
                                     <button
                                         onClick={saveProfile}
                                         disabled={profileSaving}
-                                        className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-green-500 hover:bg-green-600 text-white rounded-xl font-medium transition disabled:opacity-50"
+                                        className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-green-400 hover:bg-green-300 text-gray-900 rounded-xl font-medium transition disabled:opacity-50"
                                     >
                                         {profileSaving ? (
-                                            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                                            <div role="status" aria-label="Saving profile" className="w-5 h-5 border-2 border-gray-900/30 border-t-gray-900 rounded-full animate-spin"></div>
                                         ) : (
                                             'Save Changes'
                                         )}
@@ -981,6 +981,7 @@ const AdminLayout = ({ children }) => {
             <RoleCompanionFloatingButton role="admin" open={aiAssistOpen} onOpenChange={setAiAssistOpen} hideTrigger />
 
         </div>
+        </WorkspaceThemeContext>
     );
 };
 

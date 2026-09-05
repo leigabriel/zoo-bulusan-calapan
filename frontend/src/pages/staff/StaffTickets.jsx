@@ -1,67 +1,9 @@
+import { Ticket as TicketIcon, Search as SearchIcon, Refresh as RefreshIcon, Eye as EyeIcon, DollarSign as DollarSignIcon, CheckCircle as CheckCircleIcon, X as CloseIcon, Qr as QRCodeIcon, UserId as UserIdIcon, AlertTriangle as AlertTriangleIcon } from 'reicon-react';
 import { useState, useEffect } from 'react';
 import { staffAPI, getResidentIdImageUrl } from '../../services/api-client';
 import { notify } from '../../utils/toast';
 
 // Icons
-const SearchIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
-        <circle cx="11" cy="11" r="8" />
-        <path d="m21 21-4.3-4.3" />
-    </svg>
-);
-
-const TicketIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
-        <path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z" />
-        <path d="M13 5v2" />
-        <path d="M13 17v2" />
-        <path d="M13 11v2" />
-    </svg>
-);
-
-const FilterIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
-        <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
-    </svg>
-);
-
-const EyeIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
-        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-        <circle cx="12" cy="12" r="3" />
-    </svg>
-);
-
-const CheckCircleIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
-        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-        <polyline points="22 4 12 14.01 9 11.01" />
-    </svg>
-);
-
-const CloseIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
-        <line x1="18" y1="6" x2="6" y2="18" />
-        <line x1="6" y1="6" x2="18" y2="18" />
-    </svg>
-);
-
-const RefreshIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
-        <path d="M23 4v6h-6" />
-        <path d="M1 20v-6h6" />
-        <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
-    </svg>
-);
-
-const QRCodeIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
-        <rect x="3" y="3" width="7" height="7" />
-        <rect x="14" y="3" width="7" height="7" />
-        <rect x="3" y="14" width="7" height="7" />
-        <rect x="14" y="14" width="4" height="4" />
-    </svg>
-);
 
 const StaffTickets = () => {
     const [tickets, setTickets] = useState([]);
@@ -127,22 +69,22 @@ const StaffTickets = () => {
 
     const getStatusBadge = (status) => {
         switch (status?.toLowerCase()) {
-            case 'pending': return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
-            case 'confirmed': return 'bg-green-500/20 text-green-600 border-green-500/30';
-            case 'used': return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
+            case 'pending': return 'bg-yellow-500/20 text-yellow-700 border-yellow-500/30';
+            case 'confirmed': return 'bg-green-400/20 text-green-800 border-green-400/30';
+            case 'used': return 'bg-blue-500/20 text-blue-700 border-blue-500/30';
             case 'expired': return 'bg-gray-500/20 text-gray-500 border-gray-500/30';
-            case 'cancelled': return 'bg-red-500/20 text-red-400 border-red-500/30';
+            case 'cancelled': return 'bg-red-500/20 text-red-700 border-red-500/30';
             default: return 'bg-gray-500/20 text-gray-500 border-gray-500/30';
         }
     };
 
     const getPaymentBadge = (paymentStatus) => {
         switch (paymentStatus?.toLowerCase()) {
-            case 'paid': return 'bg-green-500/20 text-green-600 border-green-500/30';
-            case 'pending': return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
-            case 'not paid': return 'bg-orange-500/20 text-orange-400 border-orange-500/30';
-            case 'free': return 'bg-teal-500/20 text-teal-400 border-teal-500/30';
-            case 'refunded': return 'bg-purple-500/20 text-purple-400 border-purple-500/30';
+            case 'paid': return 'bg-green-400/20 text-green-800 border-green-400/30';
+            case 'pending': return 'bg-yellow-500/20 text-yellow-700 border-yellow-500/30';
+            case 'not paid': return 'bg-orange-500/20 text-orange-700 border-orange-500/30';
+            case 'free': return 'bg-green-400/20 text-green-800 border-green-400/30';
+            case 'refunded': return 'bg-purple-500/20 text-purple-700 border-purple-500/30';
             default: return 'bg-gray-500/20 text-gray-500 border-gray-500/30';
         }
     };
@@ -296,7 +238,7 @@ const StaffTickets = () => {
         return (
             <div className="flex items-center justify-center h-64">
                 <div className="flex flex-col items-center gap-3">
-                    <div className="w-10 h-10 border-4 border-green-500 border-t-transparent rounded-full animate-spin"></div>
+                    <div className="w-10 h-10 border-4 border-green-400 border-t-transparent rounded-full animate-spin"></div>
                     <span className="text-gray-500">Loading tickets...</span>
                 </div>
             </div>
@@ -305,7 +247,7 @@ const StaffTickets = () => {
 
     if (error) {
         return (
-            <div className="p-6 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400">
+            <div className="p-6 bg-red-500/10 border border-red-500/30 rounded-xl text-red-700">
                 {error}
                 <button onClick={fetchTickets} className="ml-4 underline hover:no-underline">
                     Retry
@@ -324,26 +266,26 @@ const StaffTickets = () => {
                             <p className="text-gray-500 text-sm">Total</p>
                             <p className="text-2xl font-bold text-gray-900">{ticketStats.total}</p>
                         </div>
-                        <div className="w-10 h-10 bg-green-500/10 rounded-xl flex items-center justify-center text-green-600">
-                            <TicketIcon />
+                        <div className="w-10 h-10 bg-green-400/10 rounded-xl flex items-center justify-center text-green-800">
+                            <TicketIcon className="w-6 h-6" />
                         </div>
                     </div>
                 </div>
                 <div className="bg-green-50 border border-green-200 rounded-2xl p-4">
                     <p className="text-gray-500 text-sm">Pending</p>
-                    <p className="text-2xl font-bold text-yellow-400">{ticketStats.pending}</p>
+                    <p className="text-2xl font-bold text-yellow-700">{ticketStats.pending}</p>
                 </div>
                 <div className="bg-green-50 border border-green-200 rounded-2xl p-4">
                     <p className="text-gray-500 text-sm">Confirmed</p>
-                    <p className="text-2xl font-bold text-green-600">{ticketStats.confirmed}</p>
+                    <p className="text-2xl font-bold text-green-800">{ticketStats.confirmed}</p>
                 </div>
                 <div className="bg-green-50 border border-green-200 rounded-2xl p-4">
                     <p className="text-gray-500 text-sm">Used</p>
-                    <p className="text-2xl font-bold text-blue-400">{ticketStats.used}</p>
+                    <p className="text-2xl font-bold text-blue-700">{ticketStats.used}</p>
                 </div>
                 <div className="bg-green-50 border border-green-200 rounded-2xl p-4">
                     <p className="text-gray-500 text-sm">Cancelled</p>
-                    <p className="text-2xl font-bold text-red-400">{ticketStats.cancelled}</p>
+                    <p className="text-2xl font-bold text-red-700">{ticketStats.cancelled}</p>
                 </div>
             </div>
 
@@ -351,7 +293,7 @@ const StaffTickets = () => {
             <div className="bg-green-50 border border-green-200 rounded-2xl p-4">
                 <div className="flex flex-wrap gap-4 items-center">
                     <div className="flex items-center bg-white border border-green-200 rounded-xl px-4 py-2 flex-1 min-w-[200px]">
-                        <SearchIcon />
+                        <SearchIcon className="w-4 h-4" />
                         <input
                             type="text"
                             placeholder="Search by code, name, or email..."
@@ -384,9 +326,9 @@ const StaffTickets = () => {
                     </select>
                     <button
                         onClick={fetchTickets}
-                        className="flex items-center gap-2 px-4 py-2 bg-green-500/10 border border-green-500/30 rounded-xl text-green-600 hover:bg-green-500/20 transition"
+                        className="flex items-center gap-2 px-4 py-2 bg-green-400/10 border border-green-400/30 rounded-xl text-green-800 hover:bg-green-400/20 transition"
                     >
-                        <RefreshIcon />
+                        <RefreshIcon className="w-4 h-4" />
                         Refresh
                     </button>
                 </div>
@@ -413,7 +355,7 @@ const StaffTickets = () => {
                                 filteredTickets.map(ticket => (
                                     <tr key={ticket.id} className="border-b border-green-200 hover:bg-white/5">
                                         <td className="p-4">
-                                            <span className="font-mono text-green-600">{ticket.booking_reference}</span>
+                                            <span className="font-mono text-green-800">{ticket.booking_reference}</span>
                                         </td>
                                         <td className="p-4">
                                             <div>
@@ -425,7 +367,7 @@ const StaffTickets = () => {
                                         <td className="p-4 text-gray-700">{formatDate(ticket.visit_date)}</td>
                                         <td className="p-4 text-gray-900 font-medium">
                                             {ticket.total_amount === 0 ? (
-                                                <span className="text-green-600">FREE</span>
+                                                <span className="text-green-800">FREE</span>
                                             ) : (
                                                 formatCurrency(ticket.total_amount)
                                             )}
@@ -450,27 +392,24 @@ const StaffTickets = () => {
                                                     className="p-2 hover:bg-white/10 rounded-lg text-gray-500 hover:text-gray-900 transition"
                                                     title="View Details"
                                                 >
-                                                    <EyeIcon />
+                                                    <EyeIcon className="w-4 h-4" />
                                                 </button>
                                                 {(ticket.payment_status === 'pending' || ticket.payment_status === 'not_paid' || ticket.payment_status === 'not paid') && (
                                                     <button
                                                         onClick={() => handleMarkAsPaid(ticket.id)}
-                                                        className="p-2 hover:bg-teal-500/10 rounded-lg text-teal-400 transition"
+                                                        className="p-2 hover:bg-green-400/10 rounded-lg text-green-800 transition"
                                                         title="Mark as Paid"
                                                     >
-                                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
-                                                            <line x1="12" y1="1" x2="12" y2="23" />
-                                                            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-                                                        </svg>
+                                                        <DollarSignIcon strokeWidth="2" className="w-4 h-4" />
                                                     </button>
                                                 )}
                                                 {ticket.status === 'pending' && (
                                                     <button
                                                         onClick={() => handleStatusChange(ticket.id, 'confirmed')}
-                                                        className="p-2 hover:bg-green-500/10 rounded-lg text-green-600 transition"
+                                                        className="p-2 hover:bg-green-400/10 rounded-lg text-green-800 transition"
                                                         title="Confirm Ticket"
                                                     >
-                                                        <CheckCircleIcon />
+                                                        <CheckCircleIcon className="w-4 h-4" />
                                                     </button>
                                                 )}
                                             </div>
@@ -496,7 +435,7 @@ const StaffTickets = () => {
                         <div className="p-6 border-b border-green-200 flex items-center justify-between">
                             <h3 className="text-xl font-bold text-gray-900">Ticket Details</h3>
                             <button onClick={() => setShowModal(false)} className="text-gray-500 hover:text-gray-900">
-                                <CloseIcon />
+                                <CloseIcon className="w-5 h-5" />
                             </button>
                         </div>
                         <div className="p-6 space-y-4">
@@ -505,7 +444,7 @@ const StaffTickets = () => {
                                     <div className="w-32 h-32 bg-white rounded-lg flex items-center justify-center">
                                         <QRCodeIcon className="w-16 h-16 text-gray-500" />
                                     </div>
-                                    <p className="text-center text-green-600 font-mono mt-2 text-sm">
+                                    <p className="text-center text-green-800 font-mono mt-2 text-sm">
                                         {selectedTicket.qr_code || selectedTicket.booking_reference}
                                     </p>
                                 </div>
@@ -562,15 +501,9 @@ const StaffTickets = () => {
 
                             {/* Resident ID Verification Section */}
                             {selectedTicket.type?.toLowerCase() === 'resident' && (
-                                <div className="p-4 bg-teal-500/10 border border-teal-500/30 rounded-xl space-y-3">
-                                    <h4 className="text-sm font-semibold text-teal-400 uppercase tracking-wider flex items-center gap-2">
-                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4">
-                                            <rect x="3" y="4" width="18" height="16" rx="2" />
-                                            <circle cx="9" cy="10" r="2" />
-                                            <path d="M15 8h2" />
-                                            <path d="M15 12h2" />
-                                            <path d="M7 16h10" />
-                                        </svg>
+                                <div className="p-4 bg-green-400/10 border border-green-400/30 rounded-xl space-y-3">
+                                    <h4 className="text-sm font-semibold text-green-800 uppercase tracking-wider flex items-center gap-2">
+                                        <UserIdIcon strokeWidth="2" className="w-4 h-4" />
                                         Resident ID Verification Required
                                     </h4>
                                     {selectedTicket.residentIdImage ? (
@@ -588,15 +521,15 @@ const StaffTickets = () => {
                                                     }}
                                                 />
                                             </div>
-                                            <p className="text-xs text-teal-400">Click image to view in full size</p>
+                                            <p className="text-xs text-green-800">Click image to view in full size</p>
                                             <div className="flex items-center gap-2 text-sm">
                                                 <span className="text-gray-500">Verification Status:</span>
                                                 <span className={`px-2 py-1 rounded-full text-xs font-medium border ${
                                                     selectedTicket.verificationStatus === 'approved' 
-                                                        ? 'bg-green-500/20 text-green-600 border-green-500/30' 
+                                                        ? 'bg-green-400/20 text-green-800 border-green-400/30'
                                                         : selectedTicket.verificationStatus === 'rejected'
-                                                            ? 'bg-red-500/20 text-red-400 border-red-500/30'
-                                                            : 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30'
+                                                            ? 'bg-red-500/20 text-red-700 border-red-500/30'
+                                                            : 'bg-yellow-500/20 text-yellow-700 border-yellow-500/30'
                                                 }`}>
                                                     {selectedTicket.verificationStatus || 'Pending'}
                                                 </span>
@@ -607,14 +540,14 @@ const StaffTickets = () => {
                                                     <button
                                                         onClick={() => handleUpdateVerificationStatus(selectedTicket.id, 'approved')}
                                                         disabled={updating}
-                                                        className="flex-1 py-2 bg-green-500/20 border border-green-500/30 text-green-600 text-sm font-medium rounded-lg hover:bg-green-500/30 transition disabled:opacity-50"
+                                                        className="flex-1 py-2 bg-green-400/20 border border-green-400/30 text-green-800 text-sm font-medium rounded-lg hover:bg-green-400/30 transition disabled:opacity-50"
                                                     >
                                                         Approve ID
                                                     </button>
                                                     <button
                                                         onClick={() => handleUpdateVerificationStatus(selectedTicket.id, 'rejected')}
                                                         disabled={updating}
-                                                        className="flex-1 py-2 bg-red-500/20 border border-red-500/30 text-red-400 text-sm font-medium rounded-lg hover:bg-red-500/30 transition disabled:opacity-50"
+                                                        className="flex-1 py-2 bg-red-500/20 border border-red-500/30 text-red-700 text-sm font-medium rounded-lg hover:bg-red-500/30 transition disabled:opacity-50"
                                                     >
                                                         Reject ID
                                                     </button>
@@ -623,12 +556,8 @@ const StaffTickets = () => {
                                         </div>
                                     ) : (
                                         <div className="p-4 bg-green-50 rounded-xl text-center">
-                                            <p className="text-yellow-400 text-sm">
-                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-5 h-5 inline mr-2">
-                                                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-                                                    <line x1="12" y1="9" x2="12" y2="13" />
-                                                    <line x1="12" y1="17" x2="12.01" y2="17" />
-                                                </svg>
+                                            <p className="text-yellow-700 text-sm">
+                                                <AlertTriangleIcon strokeWidth="2" className="w-5 h-5 inline mr-2" />
                                                 No ID image uploaded. Please contact the visitor to submit their ID.
                                             </p>
                                         </div>
@@ -641,12 +570,9 @@ const StaffTickets = () => {
                                 <button
                                     onClick={() => handleMarkAsPaid(selectedTicket.id)}
                                     disabled={updating}
-                                    className="w-full py-3 bg-teal-500/20 border border-teal-500/30 text-teal-400 font-semibold rounded-xl hover:bg-teal-500/30 transition disabled:opacity-50 flex items-center justify-center gap-2"
+                                    className="w-full py-3 bg-green-400/20 border border-green-400/30 text-green-800 font-semibold rounded-xl hover:bg-green-400/30 transition disabled:opacity-50 flex items-center justify-center gap-2"
                                 >
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
-                                        <line x1="12" y1="1" x2="12" y2="23" />
-                                        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-                                    </svg>
+                                    <DollarSignIcon strokeWidth="2" className="w-5 h-5" />
                                     Mark as Paid
                                 </button>
                             )}
@@ -659,7 +585,7 @@ const StaffTickets = () => {
                                         <button
                                             onClick={() => handleStatusChange(selectedTicket.id, 'confirmed')}
                                             disabled={updating}
-                                            className="px-4 py-2 bg-green-500/20 border border-green-500/30 rounded-xl text-green-600 hover:bg-green-500/30 transition disabled:opacity-50"
+                                            className="px-4 py-2 bg-green-400/20 border border-green-400/30 rounded-xl text-green-800 hover:bg-green-400/30 transition disabled:opacity-50"
                                         >
                                             Confirm
                                         </button>
@@ -668,7 +594,7 @@ const StaffTickets = () => {
                                         <button
                                             onClick={() => setShowCancelModal(true)}
                                             disabled={updating}
-                                            className="px-4 py-2 bg-red-500/20 border border-red-500/30 rounded-xl text-red-400 hover:bg-red-500/30 transition disabled:opacity-50"
+                                            className="px-4 py-2 bg-red-500/20 border border-red-500/30 rounded-xl text-red-700 hover:bg-red-500/30 transition disabled:opacity-50"
                                         >
                                             Cancel Ticket
                                         </button>
@@ -718,7 +644,7 @@ const StaffTickets = () => {
                                 <button
                                     onClick={() => updateTicketStatus(selectedTicket.id, 'cancelled', cancellationReason)}
                                     disabled={!cancellationReason.trim() || updating}
-                                    className="px-4 py-2 bg-red-500/20 border border-red-500/30 rounded-xl text-red-400 hover:bg-red-500/30 transition disabled:opacity-50"
+                                    className="px-4 py-2 bg-red-500/20 border border-red-500/30 rounded-xl text-red-700 hover:bg-red-500/30 transition disabled:opacity-50"
                                 >
                                     {updating ? 'Cancelling...' : 'Confirm Cancellation'}
                                 </button>
@@ -750,7 +676,7 @@ const StaffTickets = () => {
                                 <button
                                     onClick={handleConfirmAction}
                                     disabled={updating}
-                                    className="px-4 py-2 bg-green-500/20 border border-green-500/30 rounded-xl text-green-600 hover:bg-green-500/30 transition disabled:opacity-50"
+                                    className="px-4 py-2 bg-green-400/20 border border-green-400/30 rounded-xl text-green-800 hover:bg-green-400/30 transition disabled:opacity-50"
                                 >
                                     {updating ? 'Processing...' : 'Confirm'}
                                 </button>
@@ -774,7 +700,7 @@ const StaffTickets = () => {
                             onClick={() => setShowImageModal(false)}
                             className="absolute -top-12 right-0 p-2 bg-white/10 hover:bg-white/40 rounded-full text-gray-900 transition-all"
                         >
-                            <CloseIcon />
+                            <CloseIcon className="w-5 h-5" />
                         </button>
                         <img 
                             src={previewImageUrl} 

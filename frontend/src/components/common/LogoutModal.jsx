@@ -1,13 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import useScrollLock from '../../hooks/use-scroll-lock';
-
-const LogoutIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-7 h-7" aria-hidden="true">
-        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-        <polyline points="16 17 21 12 16 7" />
-        <line x1="21" y1="12" x2="9" y2="12" />
-    </svg>
-);
+import { Logout, Loader } from 'reicon-react';
 
 const LogoutModal = ({ isOpen, onClose, onConfirm, userName = 'User' }) => {
     const [loading, setLoading] = useState(false);
@@ -58,7 +51,7 @@ const LogoutModal = ({ isOpen, onClose, onConfirm, userName = 'User' }) => {
 
             <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-md mx-4 p-6 sm:p-8 overflow-hidden animate-scale-in border border-gray-100">
                 <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-red-50 text-red-500 mb-6">
-                    <LogoutIcon />
+                    <Logout size={28} className="w-7 h-7" aria-hidden="true" />
                 </div>
 
                 <div className="text-center mb-8">
@@ -86,10 +79,7 @@ const LogoutModal = ({ isOpen, onClose, onConfirm, userName = 'User' }) => {
                     >
                         {loading ? (
                             <>
-                                <svg className="animate-spin h-5 w-5 text-white" viewBox="0 0 24 24">
-                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                                </svg>
+                                <Loader size={20} className="animate-spin h-5 w-5 text-white" aria-hidden="true" />
                                 <span>Logging out...</span>
                             </>
                         ) : (

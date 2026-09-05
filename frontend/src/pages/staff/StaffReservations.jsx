@@ -1,50 +1,7 @@
+import { Ticket as TicketIcon, Calendar as CalendarIcon, Search as SearchIcon, Eye as EyeIcon, Check as CheckIcon, X as CloseIcon } from 'reicon-react';
 import { useState, useEffect } from 'react';
 import { reservationAPI, getResidentIdImageUrl } from '../../services/api-client';
 
-const SearchIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
-        <circle cx="11" cy="11" r="8" />
-        <path d="m21 21-4.3-4.3" />
-    </svg>
-);
-
-const TicketIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
-        <path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z" />
-        <path d="M13 5v2" />
-        <path d="M13 17v2" />
-        <path d="M13 11v2" />
-    </svg>
-);
-
-const CalendarIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
-        <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-        <line x1="16" y1="2" x2="16" y2="6" />
-        <line x1="8" y1="2" x2="8" y2="6" />
-        <line x1="3" y1="10" x2="21" y2="10" />
-    </svg>
-);
-
-const EyeIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
-        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-        <circle cx="12" cy="12" r="3" />
-    </svg>
-);
-
-const CheckIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
-        <polyline points="20 6 9 17 4 12" />
-    </svg>
-);
-
-const CloseIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
-        <line x1="18" y1="6" x2="6" y2="18" />
-        <line x1="6" y1="6" x2="18" y2="18" />
-    </svg>
-);
 
 const StaffReservations = ({ globalSearch = '' }) => {
     const [activeTab, setActiveTab] = useState('tickets');
@@ -80,10 +37,10 @@ const StaffReservations = ({ globalSearch = '' }) => {
 
     const getStatusBadge = (status) => {
         switch (status?.toLowerCase()) {
-            case 'confirmed': return 'bg-green-500/20 text-green-600 border-green-500/30';
-            case 'pending': return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
-            case 'cancelled': return 'bg-red-500/20 text-red-400 border-red-500/30';
-            case 'completed': return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
+            case 'confirmed': return 'bg-green-400/20 text-green-800 border-green-400/30';
+            case 'pending': return 'bg-yellow-500/20 text-yellow-700 border-yellow-500/30';
+            case 'cancelled': return 'bg-red-500/20 text-red-700 border-red-500/30';
+            case 'completed': return 'bg-blue-500/20 text-blue-700 border-blue-500/30';
             default: return 'bg-gray-500/20 text-gray-500 border-gray-500/30';
         }
     };
@@ -149,7 +106,7 @@ const StaffReservations = ({ globalSearch = '' }) => {
         return (
             <div className="flex items-center justify-center h-64">
                 <div className="flex flex-col items-center gap-3">
-                    <div className="w-10 h-10 border-4 border-green-500 border-t-transparent rounded-full animate-spin"></div>
+                    <div className="w-10 h-10 border-4 border-green-400 border-t-transparent rounded-full animate-spin"></div>
                     <span className="text-gray-500">Loading reservations...</span>
                 </div>
             </div>
@@ -158,7 +115,7 @@ const StaffReservations = ({ globalSearch = '' }) => {
 
     if (error) {
         return (
-            <div className="p-6 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400">
+            <div className="p-6 bg-red-500/10 border border-red-500/30 rounded-xl text-red-700">
                 {error}
             </div>
         );
@@ -167,10 +124,10 @@ const StaffReservations = ({ globalSearch = '' }) => {
     return (
         <div className="space-y-6">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="bg-white border border-green-200 rounded-xl p-4">
+                <div className="bg-white border border-green-300 rounded-xl p-4">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-green-500/10 rounded-xl flex items-center justify-center text-green-600">
-                            <TicketIcon />
+                        <div className="w-10 h-10 bg-green-400/10 rounded-xl flex items-center justify-center text-green-800">
+                            <TicketIcon className="w-6 h-6" />
                         </div>
                         <div>
                             <p className="text-2xl font-bold text-gray-900">{stats.totalTicket}</p>
@@ -178,10 +135,10 @@ const StaffReservations = ({ globalSearch = '' }) => {
                         </div>
                     </div>
                 </div>
-                <div className="bg-white border border-green-200 rounded-xl p-4">
+                <div className="bg-white border border-green-300 rounded-xl p-4">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-purple-500/10 rounded-xl flex items-center justify-center text-purple-400">
-                            <CalendarIcon />
+                        <div className="w-10 h-10 bg-purple-500/10 rounded-xl flex items-center justify-center text-purple-700">
+                            <CalendarIcon className="w-6 h-6" />
                         </div>
                         <div>
                             <p className="text-2xl font-bold text-gray-900">{stats.totalEvent}</p>
@@ -189,9 +146,9 @@ const StaffReservations = ({ globalSearch = '' }) => {
                         </div>
                     </div>
                 </div>
-                <div className="bg-white border border-green-200 rounded-xl p-4">
+                <div className="bg-white border border-green-300 rounded-xl p-4">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-yellow-500/10 rounded-xl flex items-center justify-center text-yellow-400">
+                        <div className="w-10 h-10 bg-yellow-500/10 rounded-xl flex items-center justify-center text-yellow-700">
                             <span className="text-lg font-bold">P</span>
                         </div>
                         <div>
@@ -200,9 +157,9 @@ const StaffReservations = ({ globalSearch = '' }) => {
                         </div>
                     </div>
                 </div>
-                <div className="bg-white border border-green-200 rounded-xl p-4">
+                <div className="bg-white border border-green-300 rounded-xl p-4">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-green-500/10 rounded-xl flex items-center justify-center text-green-600">
+                        <div className="w-10 h-10 bg-green-400/10 rounded-xl flex items-center justify-center text-green-800">
                             <span className="text-lg font-bold">C</span>
                         </div>
                         <div>
@@ -213,18 +170,18 @@ const StaffReservations = ({ globalSearch = '' }) => {
                 </div>
             </div>
 
-            <div className="bg-white border border-green-200 rounded-2xl overflow-hidden">
-                <div className="p-4 border-b border-green-200">
+            <div className="bg-white border border-green-300 rounded-2xl overflow-hidden">
+                <div className="p-4 border-b border-green-300">
                     <div className="flex gap-4 mb-4">
                         <button
                             onClick={() => setActiveTab('tickets')}
-                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'tickets' ? 'bg-green-500 text-black' : 'bg-green-50 text-gray-500 hover:text-gray-900'}`}
+                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'tickets' ? 'bg-green-400 text-black' : 'bg-green-50 text-gray-500 hover:text-gray-900'}`}
                         >
                             Ticket Reservations ({ticketReservations.length})
                         </button>
                         <button
                             onClick={() => setActiveTab('events')}
-                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'events' ? 'bg-green-500 text-black' : 'bg-green-50 text-gray-500 hover:text-gray-900'}`}
+                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'events' ? 'bg-green-400 text-black' : 'bg-green-50 text-gray-500 hover:text-gray-900'}`}
                         >
                             Event Reservations ({eventReservations.length})
                         </button>
@@ -234,20 +191,20 @@ const StaffReservations = ({ globalSearch = '' }) => {
                         <div className="flex items-center gap-3 flex-1 flex-wrap">
                             <div className="relative flex-1 min-w-[200px] max-w-sm">
                                 <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
-                                    <SearchIcon />
+                                    <SearchIcon className="w-4 h-4" />
                                 </div>
                                 <input
                                     type="text"
                                     placeholder="Search reservations..."
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
-                                    className="w-full bg-green-50 border border-green-200 rounded-xl py-2.5 pl-10 pr-4 text-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-500 transition-all"
+                                    className="w-full bg-green-50 border border-green-300 rounded-xl py-2.5 pl-10 pr-4 text-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-400 transition-all"
                                 />
                             </div>
                             <select
                                 value={statusFilter}
                                 onChange={(e) => setStatusFilter(e.target.value)}
-                                className="appearance-none bg-green-50 border border-green-200 rounded-xl py-2.5 px-4 pr-8 text-sm text-gray-900 focus:outline-none focus:border-green-500 cursor-pointer"
+                                className="appearance-none bg-green-50 border border-green-300 rounded-xl py-2.5 px-4 pr-8 text-sm text-gray-900 focus:outline-none focus:border-green-400 cursor-pointer"
                             >
                                 <option value="all">All Status</option>
                                 <option value="pending">Pending</option>
@@ -258,7 +215,7 @@ const StaffReservations = ({ globalSearch = '' }) => {
                         </div>
                         <button
                             onClick={fetchReservations}
-                            className="px-4 py-2.5 bg-green-50 border border-green-200 text-gray-500 hover:text-gray-900 rounded-xl transition-all"
+                            className="px-4 py-2.5 bg-green-50 border border-green-300 text-gray-500 hover:text-gray-900 rounded-xl transition-all"
                         >
                             Refresh
                         </button>
@@ -277,7 +234,7 @@ const StaffReservations = ({ globalSearch = '' }) => {
                                 <th className="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-green-200">
+                        <tbody className="divide-y divide-green-300">
                             {filteredReservations.length === 0 ? (
                                 <tr>
                                     <td colSpan="6" className="px-6 py-12 text-center text-gray-500">
@@ -288,7 +245,7 @@ const StaffReservations = ({ globalSearch = '' }) => {
                                 filteredReservations.map(reservation => (
                                     <tr key={reservation.id} onClick={() => { setSelectedReservation({ ...reservation, type: activeTab === 'tickets' ? 'ticket' : 'event' }); setShowModal(true); }} className="cursor-pointer hover:bg-green-50/50 transition-colors" title="Open reservation details">
                                         <td className="px-6 py-4">
-                                            <p className="font-mono text-sm text-green-600">{reservation.reservation_reference || '-'}</p>
+                                            <p className="font-mono text-sm text-green-800">{reservation.reservation_reference || '-'}</p>
                                         </td>
                                         <td className="px-6 py-4">
                                             <p className="font-medium text-gray-900">{reservation.user_name || reservation.visitor_name || reservation.participant_name || 'Guest'}</p>
@@ -298,9 +255,9 @@ const StaffReservations = ({ globalSearch = '' }) => {
                                             {activeTab === 'tickets' 
                                                 ? (
                                                     <div className="flex flex-wrap gap-1.5">
-                                                        {reservation.adult_quantity > 0 && <span className="px-2 py-0.5 bg-blue-500/20 text-blue-400 text-xs rounded">Adult: {reservation.adult_quantity}</span>}
-                                                        {reservation.child_quantity > 0 && <span className="px-2 py-0.5 bg-purple-500/20 text-purple-400 text-xs rounded">Child: {reservation.child_quantity}</span>}
-                                                        {reservation.bulusan_resident_quantity > 0 && <span className="px-2 py-0.5 bg-green-500/20 text-green-600 text-xs rounded">Resident: {reservation.bulusan_resident_quantity}</span>}
+                                                        {reservation.adult_quantity > 0 && <span className="px-2 py-0.5 bg-blue-500/20 text-blue-700 text-xs rounded">Adult: {reservation.adult_quantity}</span>}
+                                                        {reservation.child_quantity > 0 && <span className="px-2 py-0.5 bg-purple-500/20 text-purple-700 text-xs rounded">Child: {reservation.child_quantity}</span>}
+                                                        {reservation.bulusan_resident_quantity > 0 && <span className="px-2 py-0.5 bg-green-400/20 text-green-800 text-xs rounded">Resident: {reservation.bulusan_resident_quantity}</span>}
                                                     </div>
                                                 )
                                                 : (
@@ -325,18 +282,18 @@ const StaffReservations = ({ globalSearch = '' }) => {
                                             <div className="flex items-center justify-end gap-2">
                                                 <button
                                                     onClick={(event) => { event.stopPropagation(); setSelectedReservation({ ...reservation, type: activeTab === 'tickets' ? 'ticket' : 'event' }); setShowModal(true); }}
-                                                    className="p-2 bg-green-50 hover:bg-green-50 border border-green-200 text-gray-500 hover:text-gray-900 rounded-lg transition-all"
+                                                    className="p-2 bg-green-50 hover:bg-green-50 border border-green-300 text-gray-500 hover:text-gray-900 rounded-lg transition-all"
                                                     title="View details"
                                                 >
-                                                    <EyeIcon />
+                                                    <EyeIcon className="w-4 h-4" />
                                                 </button>
                                                 {reservation.status === 'pending' && (
                                                     <button
                                                          onClick={(event) => { event.stopPropagation(); handleStatusChange(reservation.id, activeTab === 'tickets' ? 'ticket' : 'event', 'confirmed'); }}
-                                                        className="p-2 bg-green-50 hover:bg-green-500/10 border border-green-200 hover:border-green-500/50 text-gray-500 hover:text-green-600 rounded-lg transition-all"
+                                                        className="p-2 bg-green-50 hover:bg-green-400/10 border border-green-300 hover:border-green-400/50 text-gray-500 hover:text-green-800 rounded-lg transition-all"
                                                         title="Confirm"
                                                     >
-                                                        <CheckIcon />
+<CheckIcon className="w-4 h-4" />
                                                     </button>
                                                 )}
                                             </div>
@@ -348,7 +305,7 @@ const StaffReservations = ({ globalSearch = '' }) => {
                     </table>
                 </div>
 
-                <div className="px-6 py-4 border-t border-green-200 flex items-center justify-between">
+                <div className="px-6 py-4 border-t border-green-300 flex items-center justify-between">
                     <p className="text-sm text-gray-500">
                         Showing {filteredReservations.length} of {currentReservations.length} reservations
                     </p>
@@ -357,24 +314,24 @@ const StaffReservations = ({ globalSearch = '' }) => {
 
             {showModal && selectedReservation && (
                 <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-white border border-green-200 rounded-2xl w-full max-w-3xl">
-                        <div className="p-6 border-b border-green-200 flex items-center justify-between">
+                    <div className="bg-white border border-green-300 rounded-2xl w-full max-w-3xl">
+                        <div className="p-6 border-b border-green-300 flex items-center justify-between">
                             <h3 className="text-xl font-bold text-gray-900">Reservation Details</h3>
                             <button onClick={() => { setShowModal(false); setSelectedReservation(null); }} className="p-2 hover:bg-green-50 rounded-lg text-gray-500 hover:text-gray-900 transition">
-                                <CloseIcon />
+                                <CloseIcon className="w-5 h-5" />
                             </button>
                         </div>
                                         <div className="p-6 space-y-4">
                             {selectedReservation.type === 'event' && selectedReservation.payment_status === 'paid' && (
-                                <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3">
-                                    <p className="text-sm font-bold text-emerald-700">Payment successful</p>
-                                    <p className="mt-1 text-xs text-emerald-600">PayMongo QR Ph payment confirmed.</p>
+                                <div className="rounded-xl border border-green-300 bg-green-50 px-4 py-3">
+                                    <p className="text-sm font-bold text-green-800">Payment successful</p>
+                                    <p className="mt-1 text-xs text-green-800">PayMongo QR Ph payment confirmed.</p>
                                 </div>
                             )}
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <p className="text-xs text-gray-500 uppercase mb-1">Reservation Reference</p>
-                                    <p className="font-mono text-green-600">{selectedReservation.reservation_reference}</p>
+                                    <p className="font-mono text-green-800">{selectedReservation.reservation_reference}</p>
                                 </div>
                                 <div>
                                     <p className="text-xs text-gray-500 uppercase mb-1">Status</p>
@@ -426,7 +383,7 @@ const StaffReservations = ({ globalSearch = '' }) => {
                                 {selectedReservation.type === 'ticket' && selectedReservation.bulusan_resident_quantity > 0 && selectedReservation.resident_id_image && (
                                     <div className="col-span-2">
                                         <p className="text-xs text-gray-500 uppercase mb-2">Bulusan Resident ID</p>
-                                        <div className="bg-green-50 border border-green-200 rounded-xl p-2">
+                                        <div className="bg-green-50 border border-green-300 rounded-xl p-2">
                                             <img 
                                                 src={getResidentIdImageUrl(selectedReservation.resident_id_image)} 
                                                 alt="Bulusan Resident ID" 
@@ -440,7 +397,7 @@ const StaffReservations = ({ globalSearch = '' }) => {
                                 {selectedReservation.total_amount > 0 && (
                                     <div>
                                         <p className="text-xs text-gray-500 uppercase mb-1">Total Amount</p>
-                                        <p className="text-green-600 font-bold">₱{selectedReservation.total_amount}</p>
+                                        <p className="text-green-800 font-bold">₱{selectedReservation.total_amount}</p>
                                     </div>
                                 )}
                                 {selectedReservation.type === 'event' && (
@@ -449,7 +406,7 @@ const StaffReservations = ({ globalSearch = '' }) => {
                                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
                                             <div><span className="block text-gray-500">Amount</span><strong className="text-gray-900">₱{Number(selectedReservation.payment_amount || 0).toFixed(2)}</strong></div>
                                             <div><span className="block text-gray-500">Method</span><strong className="text-gray-900">{['qrph', 'gcash'].includes(selectedReservation.payment_method) ? 'QR Ph via PayMongo' : selectedReservation.payment_method === 'pay_at_bulusan' ? 'Pay at Bulusan' : 'Not selected'}</strong></div>
-                                            <div><span className="block text-gray-500">Status</span><strong className={selectedReservation.payment_status === 'paid' ? 'text-green-600' : 'text-amber-600'}>{(selectedReservation.payment_status || 'unpaid').toUpperCase()}</strong></div>
+                                            <div><span className="block text-gray-500">Status</span><strong className={selectedReservation.payment_status === 'paid' ? 'text-green-800' : 'text-amber-600'}>{(selectedReservation.payment_status || 'unpaid').toUpperCase()}</strong></div>
                                             {selectedReservation.payment_paid_at && <div><span className="block text-gray-500">Paid on</span><strong className="text-gray-900">{formatDate(selectedReservation.payment_paid_at)}</strong></div>}
                                             <div><span className="block text-gray-500">Reference</span><strong className="text-gray-900 break-all">{selectedReservation.paymongo_payment_id || selectedReservation.paymongo_checkout_session_id || '—'}</strong></div>
                                         </div>
@@ -468,14 +425,14 @@ const StaffReservations = ({ globalSearch = '' }) => {
                                     <button
                                         onClick={() => handleStatusChange(selectedReservation.id, selectedReservation.type, 'confirmed')}
                                         disabled={actionLoading}
-                                        className="flex-1 py-3 bg-gradient-to-r from-green-500 to-green-400 text-white font-semibold rounded-xl hover:from-green-400 hover:to-green-500 transition-all disabled:opacity-50"
+                                        className="flex-1 py-3 bg-gradient-to-r from-green-300 via-green-400 to-green-500 text-gray-900 font-semibold rounded-xl hover:from-green-300 hover:via-green-400 hover:to-green-500 transition-all disabled:opacity-50"
                                     >
                                         {actionLoading ? 'Processing...' : 'Confirm Reservation'}
                                     </button>
                                     <button
                                         onClick={() => handleStatusChange(selectedReservation.id, selectedReservation.type, 'cancelled')}
                                         disabled={actionLoading}
-                                        className="flex-1 py-3 bg-red-500/20 hover:bg-red-500/30 text-red-400 font-semibold rounded-xl transition-all disabled:opacity-50"
+                                        className="flex-1 py-3 bg-red-500/20 hover:bg-red-500/30 text-red-700 font-semibold rounded-xl transition-all disabled:opacity-50"
                                     >
                                         Cancel
                                     </button>
@@ -488,9 +445,9 @@ const StaffReservations = ({ globalSearch = '' }) => {
 
             {confirmAction && (
                 <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-white border border-green-200 rounded-2xl w-full max-w-sm p-6 text-center">
-                        <div className={`w-16 h-16 ${confirmAction.status === 'confirmed' ? 'bg-green-500/10' : 'bg-red-500/10'} rounded-full flex items-center justify-center mx-auto mb-4 ${confirmAction.status === 'confirmed' ? 'text-green-600' : 'text-red-400'}`}>
-                            {confirmAction.status === 'confirmed' ? <CheckIcon /> : <CloseIcon />}
+                    <div className="bg-white border border-green-300 rounded-2xl w-full max-w-sm p-6 text-center">
+                        <div className={`w-16 h-16 ${confirmAction.status === 'confirmed' ? 'bg-green-400/10' : 'bg-red-500/10'} rounded-full flex items-center justify-center mx-auto mb-4 ${confirmAction.status === 'confirmed' ? 'text-green-800' : 'text-red-700'}`}>
+                            {confirmAction.status === 'confirmed' ? <CheckIcon className="w-4 h-4" /> : <CloseIcon className="w-5 h-5" />}
                         </div>
                         <h3 className="text-xl font-bold text-gray-900 mb-2">
                             {confirmAction.status === 'confirmed' ? 'Confirm Reservation?' : 'Cancel Reservation?'}
@@ -511,7 +468,7 @@ const StaffReservations = ({ globalSearch = '' }) => {
                             <button
                                 onClick={executeStatusChange}
                                 disabled={actionLoading}
-                                className={`flex-1 py-3 font-semibold rounded-xl transition-all disabled:opacity-50 ${confirmAction.status === 'confirmed' ? 'bg-gradient-to-r from-green-500 to-green-400 text-white hover:from-green-400 hover:to-green-500' : 'bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-gray-900'}`}
+                                className={`flex-1 py-3 font-semibold rounded-xl transition-all disabled:opacity-50 ${confirmAction.status === 'confirmed' ? 'bg-gradient-to-r from-green-300 via-green-400 to-green-500 text-gray-900 hover:from-green-300 hover:via-green-400 hover:to-green-500' : 'bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-gray-900'}`}
                             >
                                 {actionLoading ? 'Processing...' : (confirmAction.status === 'confirmed' ? 'Confirm' : 'Cancel Reservation')}
                             </button>

@@ -1,29 +1,13 @@
+import { Trash as TrashIcon, Undo as RestoreIcon, X as CloseIcon } from 'reicon-react';
 import { useState, useEffect, useRef } from 'react';
 import { staffAPI } from '../../services/api-client';
 import { notify } from '../../utils/toast';
 
-const RestoreIcon = () => (
-  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h5M20 20v-5h-5M4 9a9 9 0 0116.36-5.36M20 15a9 9 0 01-16.36 5.36" />
-  </svg>
-);
-
-const TrashIcon = () => (
-  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-  </svg>
-);
-
-const CloseCircle = ({ onClick }) => (
-  <svg className="w-5 h-5 cursor-pointer hover:text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" onClick={onClick}>
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-  </svg>
-);
 
 const TYPE_BADGES = {
   User: 'bg-blue-100 text-blue-700',
   Animal: 'bg-amber-100 text-amber-700',
-  Plant: 'bg-emerald-100 text-emerald-700',
+  Plant: 'bg-green-100 text-green-700',
   Event: 'bg-purple-100 text-purple-700',
 };
 
@@ -213,7 +197,7 @@ const StaffTrash = () => {
       <div className="max-w-6xl mx-auto">
         <div className="flex items-center gap-3 mb-6">
           <div className="text-gray-400">
-            <TrashIcon />
+            <TrashIcon className="w-5 h-5" />
           </div>
           <h1 className="text-2xl font-bold text-gray-800">Trash</h1>
           <span className="ml-2 text-sm text-gray-500">{trashItems.length} items</span>
@@ -227,7 +211,7 @@ const StaffTrash = () => {
               onClick={() => { setActiveTab(tab); setSelected(new Set()); }}
               className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-colors ${
                 activeTab === tab
-                  ? 'bg-green-600 text-white shadow'
+                  ? 'bg-green-400 text-gray-900 shadow'
                   : 'text-gray-600 hover:bg-gray-100'
               }`}
             >
@@ -247,16 +231,16 @@ const StaffTrash = () => {
             </span>
             <button
               onClick={restoreSelected}
-              className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+              className="flex items-center gap-2 bg-green-400 hover:bg-green-400 text-gray-900 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
             >
-              <RestoreIcon />
+              <RestoreIcon className="w-4 h-4" />
               Restore Selected
             </button>
             <button
               onClick={() => setSelected(new Set())}
               className="flex items-center gap-2 text-gray-500 hover:text-gray-700 px-3 py-2 rounded-lg text-sm font-medium transition-colors"
             >
-              <CloseCircle onClick={() => setSelected(new Set())} />
+              <CloseIcon className="w-5 h-5 cursor-pointer hover:text-red-500" onClick={() => setSelected(new Set())} />
               Cancel
             </button>
           </div>
@@ -266,12 +250,12 @@ const StaffTrash = () => {
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
           {loading ? (
             <div className="p-12 text-center text-gray-400">
-              <div className="inline-block w-8 h-8 border-4 border-green-200 border-t-green-600 rounded-full animate-spin mb-3" />
+              <div className="inline-block w-8 h-8 border-4 border-green-200 border-t-green-400 rounded-full animate-spin mb-3" />
               <p>Loading trash...</p>
             </div>
           ) : filtered.length === 0 ? (
             <div className="p-12 text-center text-gray-400">
-              <TrashIcon />
+              <TrashIcon className="w-5 h-5" />
               <p className="mt-3 text-lg font-medium">Trash is empty</p>
               <p className="text-sm">No deleted items to show.</p>
             </div>
@@ -284,7 +268,7 @@ const StaffTrash = () => {
                       type="checkbox"
                       checked={selected.size === filtered.length && filtered.length > 0}
                       onChange={toggleSelectAll}
-                      className="rounded border-gray-300 text-green-600 focus:ring-green-500"
+                      className="rounded border-gray-300 accent-green-400 focus:ring-green-400"
                     />
                   </th>
                   <th className="px-4 py-3">Name</th>
@@ -304,7 +288,7 @@ const StaffTrash = () => {
                           type="checkbox"
                           checked={selected.has(key)}
                           onChange={() => toggleSelect(key)}
-                          className="rounded border-gray-300 text-green-600 focus:ring-green-500"
+                          className="rounded border-gray-300 accent-green-400 focus:ring-green-400"
                         />
                       </td>
                       <td className="px-4 py-3">
@@ -327,7 +311,7 @@ const StaffTrash = () => {
                           className="inline-flex items-center gap-1.5 bg-green-50 hover:bg-green-100 text-green-700 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
                           title="Restore"
                         >
-                          <RestoreIcon />
+                          <RestoreIcon className="w-4 h-4" />
                           Restore
                         </button>
                       </td>

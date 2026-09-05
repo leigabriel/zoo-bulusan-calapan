@@ -4,44 +4,14 @@ import { useNavigate } from 'react-router-dom';
 import { getAuthHeaders, API_BASE_URL } from '../../../services/api-client';
 import { AI_ASSISTANT_ICON, AI_ASSISTANT_THEME } from '../../../config/ai-assistant-theme';
 import ZooCard from './ZooCard';
+import { Send, CloseCircle, Menu, Plus, Trash } from 'reicon-react';
 
 const THEME = {
     ...AI_ASSISTANT_THEME,
-    accent: '#00cd57',
-    accentDark: '#00b84e',
-    accentSoft: '#e6fbea'
+    accent: 'var(--color-green-400)',
+    accentDark: 'var(--color-green-700)',
+    accentSoft: 'var(--color-green-50)'
 };
-
-const SendIcon = () => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
-        <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" />
-    </svg>
-);
-
-const CloseIcon = () => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
-        <line x1="18" y1="6" x2="6" y2="18" />
-        <line x1="6" y1="6" x2="18" y2="18" />
-    </svg>
-);
-
-const MenuIcon = () => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="w-5 h-5">
-        <path d="M4 6h16M4 12h16M4 18h16" />
-    </svg>
-);
-
-const PlusIcon = () => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="w-4 h-4">
-        <path d="M12 5v14M5 12h14" />
-    </svg>
-);
-
-const TrashIcon = () => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
-        <path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3" />
-    </svg>
-);
 
 const AssistantAvatar = ({ role = 'staff' }) => (
     <div className="w-9 h-9 rounded-xl overflow-hidden flex-shrink-0" style={{ background: role === 'admin' ? THEME.accentSoft : THEME.surfaceMuted }}>
@@ -365,7 +335,7 @@ const RoleCompanionAssistant = ({ onClose, role = 'staff' }) => {
                             style={{ color: THEME.textMuted }}
                             aria-label="Close chat history"
                         >
-                            <CloseIcon />
+                            <CloseCircle size={16} className="w-4 h-4" aria-hidden="true" />
                         </button>
                     </div>
                     <div className="px-3">
@@ -373,9 +343,9 @@ const RoleCompanionAssistant = ({ onClose, role = 'staff' }) => {
                             type="button"
                             onClick={startNewSession}
                             className="w-full flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors"
-                            style={{ background: THEME.accentDark, color: '#f7fff9' }}
+                            style={{ background: THEME.accent, color: THEME.text }}
                         >
-                            <PlusIcon />
+                            <Plus size={16} className="w-4 h-4" aria-hidden="true" />
                             New chat
                         </button>
                     </div>
@@ -404,7 +374,7 @@ const RoleCompanionAssistant = ({ onClose, role = 'staff' }) => {
                                     style={{ color: THEME.textMuted }}
                                     aria-label={`Delete ${session.title || 'chat'}`}
                                 >
-                                    <TrashIcon />
+                                    <Trash size={16} className="w-4 h-4" aria-hidden="true" />
                                 </button>
                             </div>
                         ))}
@@ -425,7 +395,7 @@ const RoleCompanionAssistant = ({ onClose, role = 'staff' }) => {
                             style={{ color: THEME.textMuted }}
                             aria-label="Open chat history"
                         >
-                            <MenuIcon />
+                            <Menu size={20} className="w-5 h-5" aria-hidden="true" />
                         </button>
                         <div className="relative">
                             <div className="w-10 h-10 rounded-xl overflow-hidden" style={{ background: THEME.accentSoft }}>
@@ -439,7 +409,7 @@ const RoleCompanionAssistant = ({ onClose, role = 'staff' }) => {
                         </div>
                     </div>
                     <button onClick={() => onClose?.()} className="w-9 h-9 rounded-xl flex items-center justify-center transition-all active:scale-90" style={{ background: THEME.accentSoft, color: THEME.textMuted }} aria-label={`Close ${assistantIdentity}`}>
-                        <CloseIcon />
+                        <CloseCircle size={16} className="w-4 h-4" aria-hidden="true" />
                     </button>
                 </div>
 
@@ -488,9 +458,10 @@ const RoleCompanionAssistant = ({ onClose, role = 'staff' }) => {
                                 onClick={() => handleSend()}
                                 disabled={!input.trim() || loading}
                                 className="w-9 h-9 rounded-xl flex items-center justify-center transition-all active:scale-90 disabled:opacity-25"
-                                style={{ background: THEME.accentDark, color: '#f7fff9' }}
+                                style={{ background: THEME.accent, color: THEME.text }}
+                                aria-label="Send message"
                             >
-                                <SendIcon />
+                                <Send size={16} className="w-4 h-4" aria-hidden="true" />
                             </button>
                         </div>
                     </div>
@@ -505,7 +476,7 @@ const RoleCompanionAssistant = ({ onClose, role = 'staff' }) => {
                                             <div
                                                 className="px-5 py-4 text-base leading-relaxed font-medium whitespace-pre-wrap break-words"
                                                 style={msg.role === 'user'
-                                                    ? { background: THEME.accentDark, color: '#f7fff9', borderRadius: '1rem 1rem 0.25rem 1rem' }
+                                                    ? { background: THEME.accent, color: THEME.text, borderRadius: '1rem 1rem 0.25rem 1rem' }
                                                     : { background: THEME.surface, color: THEME.text, border: `1px solid ${THEME.border}`, borderRadius: '0.25rem 1rem 1rem 1rem' }
                                                 }
                                             >
@@ -527,7 +498,7 @@ const RoleCompanionAssistant = ({ onClose, role = 'staff' }) => {
                                                     className="inline-flex items-center px-4 py-2.5 rounded-xl text-sm font-semibold transition-all active:scale-95"
                                                     style={msg.action.variant === 'ghost'
                                                         ? { background: THEME.surface, color: THEME.text, border: `1px solid ${THEME.border}` }
-                                                        : { background: THEME.accentDark, color: '#f7fff9' }}
+                                                        : { background: THEME.accent, color: THEME.text }}
                                                 >
                                                     {msg.action.label}
                                                 </button>
@@ -567,9 +538,10 @@ const RoleCompanionAssistant = ({ onClose, role = 'staff' }) => {
                                     onClick={() => handleSend()}
                                     disabled={!input.trim() || loading}
                                     className="w-9 h-9 rounded-xl flex items-center justify-center transition-all active:scale-90 disabled:opacity-25"
-                                    style={{ background: THEME.accentDark, color: '#f7fff9' }}
+                                    style={{ background: THEME.accent, color: THEME.text }}
+                                    aria-label="Send message"
                                 >
-                                    <SendIcon />
+                                    <Send size={16} className="w-4 h-4" aria-hidden="true" />
                                 </button>
                             </div>
                         </div>

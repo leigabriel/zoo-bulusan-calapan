@@ -51,9 +51,9 @@ const userActionLabels = {
 };
 
 const actionTypeColors = {
-    login: 'bg-emerald-50 text-emerald-700 border border-emerald-200',
+    login: 'bg-green-50 text-green-700 border border-green-200',
     logout: 'bg-gray-50 text-gray-600 border border-gray-200',
-    register: 'bg-teal-50 text-teal-700 border border-teal-200',
+    register: 'bg-green-50 text-green-700 border border-green-200',
     message_reply: 'bg-sky-50 text-sky-700 border border-sky-200',
     message_sent: 'bg-cyan-50 text-cyan-700 border border-cyan-200',
     reservation_update: 'bg-violet-50 text-violet-700 border border-violet-200',
@@ -199,7 +199,7 @@ const AdminLogs = () => {
             <div className="flex items-center justify-center h-64">
                 <div className="relative w-16 h-16">
                     <div className="absolute inset-0 rounded-full border-4 border-green-200"></div>
-                    <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-green-500 animate-spin"></div>
+                    <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-green-400 animate-spin"></div>
                 </div>
             </div>
         );
@@ -210,7 +210,7 @@ const AdminLogs = () => {
             {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div className="flex items-center gap-3">
-                    <div className="w-11 h-11 rounded-xl bg-green-500/15 text-green-600 flex items-center justify-center">
+                    <div className="w-11 h-11 rounded-xl bg-green-400/15 text-green-800 flex items-center justify-center">
                         <ClipboardList size={22} />
                     </div>
                     <div>
@@ -222,7 +222,7 @@ const AdminLogs = () => {
                     <button
                         onClick={handleRefresh}
                         disabled={refreshing}
-                        className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-green-500 text-black font-semibold hover:bg-green-400 disabled:bg-gray-300 transition"
+                        className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-green-400 text-black font-semibold hover:bg-green-400 disabled:bg-gray-300 transition"
                     >
                         <Refresh size={16} className={refreshing ? 'animate-spin' : ''} />
                         Refresh
@@ -283,7 +283,7 @@ const AdminLogs = () => {
                     <select
                         value={currentFilter}
                         onChange={(e) => { setFilter(e.target.value); setOffset(0); }}
-                        className="bg-white border border-green-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:border-green-500"
+                        className="bg-white border border-green-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:border-green-400"
                     >
                         {actionTypes.map((type) => (
                             <option key={type} value={type}>
@@ -296,13 +296,13 @@ const AdminLogs = () => {
                     type="date"
                     value={startDate}
                     onChange={(e) => setStartDate(e.target.value)}
-                    className="bg-white border border-green-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:border-green-500"
+                    className="bg-white border border-green-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:border-green-400"
                 />
                 <input
                     type="date"
                     value={endDate}
                     onChange={(e) => setEndDate(e.target.value)}
-                    className="bg-white border border-green-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:border-green-500"
+                    className="bg-white border border-green-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:border-green-400"
                 />
                 {(startDate || endDate || currentFilter !== 'all') && (
                     <button
