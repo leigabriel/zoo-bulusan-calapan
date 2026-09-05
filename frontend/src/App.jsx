@@ -1,7 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useEffect } from 'react';
-import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { GooeyToaster } from 'goey-toast';
+import 'goey-toast/styles.css';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Home from './pages/user/Home';
 import Animals from './pages/user/Animals';
@@ -408,15 +408,13 @@ function App() {
             <Router>
                 <VisitTracker />
                 <AppRoutes />
-                <ToastContainer
+                <GooeyToaster
                     position="top-right"
-                    autoClose={3000}
-                    hideProgressBar={false}
-                    newestOnTop
-                    closeOnClick
-                    pauseOnHover
-                    draggable
-                    theme="colored"
+                    duration={3000}
+                    closeButton="top-right"
+                    showProgress
+                    visibleToasts={3}
+                    maxQueue={8}
                 />
             </Router>
         </AuthProvider>

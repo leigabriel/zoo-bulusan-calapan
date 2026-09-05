@@ -229,8 +229,12 @@ const Events = () => {
     const handleSubmitAttempt = (e) => {
         e.preventDefault();
         if (!isAuthenticated) {
-            notify.warning('Login required to reserve.');
-            navigate('/login');
+            notify.warning('Log in to reserve this event.', {
+                action: {
+                    label: 'Log in',
+                    onClick: () => navigate('/login')
+                }
+            });
             return;
         }
         if (!eventForm.venueEventName || !eventForm.venueEventDate) {

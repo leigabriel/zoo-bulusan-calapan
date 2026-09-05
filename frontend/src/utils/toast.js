@@ -1,4 +1,4 @@
-import { toast } from 'react-toastify';
+import { gooeyToast } from 'goey-toast';
 
 const fallbackMessages = {
     saved: 'Changes saved.',
@@ -13,7 +13,6 @@ const friendlyMessage = (message, fallbackKey = 'retry') => {
         return fallbackMessages[fallbackKey] || fallbackMessages.retry;
     }
 
-    // Modern polished app style: short, natural, no technical jargon
     const lowerMessage = message.toLowerCase();
 
     if (lowerMessage.includes('network error') || lowerMessage.includes('offline')) {
@@ -28,14 +27,6 @@ const friendlyMessage = (message, fallbackKey = 'retry') => {
         return "We couldn't find what you're looking for.";
     }
 
-    if (lowerMessage.includes('already exists') || lowerMessage.includes('duplicate')) {
-        return "This already exists.";
-    }
-
-    if (lowerMessage.includes('invalid') || lowerMessage.includes('validation')) {
-        return "Please check your information and try again.";
-    }
-
     if (lowerMessage.includes('file too large') || lowerMessage.includes('size limit')) {
         return "File is too large. Please try a smaller one.";
     }
@@ -44,29 +35,31 @@ const friendlyMessage = (message, fallbackKey = 'retry') => {
         .replace(/request failed with status \d+/i, 'Something went wrong.')
         .replace(/server error/ig, 'Something went wrong.')
         .replace(/upload error/ig, "Couldn't upload your file.")
-        .replace(/failed/ig, 'could not be completed')
-        .replace(/error/ig, 'issue')
         .trim();
 
     return cleaned || fallbackMessages[fallbackKey] || fallbackMessages.retry;
 };
 
+const showToast = (type, message, options) => {
+    const title = friendlyMessage(message, type === 'error' ? 'retry' : type === 'warning' ? 'required' : 'saved');
+    return type === 'default' ? gooeyToast(title, options) : gooeyToast[type](title, options);
+};
+
 export const notify = {
-    success: (message, options) => toast.success(friendlyMessage(message, 'saved'), options),
-    error: (message, options) => toast.error(friendlyMessage(message, 'retry'), options),
-    info: (message, options) => toast.info(friendlyMessage(message, 'loading'), options),
-    warning: (message, options) => toast.warning(friendlyMessage(message, 'required'), options),
-    loading: (message, options) => toast.loading(friendlyMessage(message, 'loading'), options),
-    update: (id, { type = 'default', message, isLoading = false, autoClose = 3000 } = {}) => {
-        toast.update(id, {
-            render: friendlyMessage(message, type === 'error' ? 'retry' : 'saved'),
-            type,
-            isLoading,
-            autoClose,
-            closeButton: true
+    success: (message, options) => showToast('success', message, options),
+    error: (message, options) => showToast('error', message, options),
+    info: (message, options) => showToast('info', message, options),
+    warning: (message, options) => showToast('warning', message, options),
+    loading: (message, options) => showToast('info', message, { ...options, duration: Infinity }),
+    promise: (promise, config) => gooeyToast.promise(promise, config),
+    update: (id, { type = 'default', message, title, isLoading = false, ...options } = {}) => {
+        gooeyToast.update(id, {
+            ...options,
+            title: friendlyMessage(title || message, type === 'error' ? 'retry' : 'saved'),
+            type: isLoading ? 'info' : type
         });
     },
-    dismiss: (id) => toast.dismiss(id)
+    dismiss: (id) => gooeyToast.dismiss(id)
 };
 
 export { friendlyMessage };
