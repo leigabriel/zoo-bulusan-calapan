@@ -3,9 +3,11 @@ const router = express.Router();
 const adminController = require('../controllers/admin-controller');
 const messageController = require('../controllers/message-controller');
 const monitoringController = require('../controllers/monitoring-controller');
+const logsController = require('../controllers/logs-controller');
 const donationController = require('../controllers/donation-controller');
 const { readConfig: readEventPaymentConfig, writeConfig: writeEventPaymentConfig } = require('../config/event-payment-config');
 const { protect, authorize } = require('../middleware/auth');
+const { trackActivity } = require('../middleware/track-activity');
 const multer = require('multer');
 const path = require('path');
 const { handleCloudinaryImageUpload } = require('../middleware/cloudinary-upload');
@@ -74,27 +76,27 @@ router.get('/dashboard', adminController.getDashboardStats);
 router.get('/transactions', adminController.getTransactions);
 router.get('/users', adminController.getAllUsers);
 router.get('/users/role/:role', adminController.getUsersByRole);
-router.post('/users', adminController.createUser);
-router.put('/users/:id', adminController.updateUser);
-router.delete('/users/:id', adminController.deleteUser);
+router.post('/users', trackActivity('user_update', (req) => `Created user`), adminController.createUser);
+router.put('/users/:id', trackActivity('user_update', (req) => `Updated user #${req.params.id}`), adminController.updateUser);
+router.delete('/users/:id', trackActivity('user_update', (req) => `Deleted user #${req.params.id}`), adminController.deleteUser);
 router.get('/animals', adminController.getAllAnimals);
-router.post('/animals', adminController.createAnimal);
-router.put('/animals/:id', adminController.updateAnimal);
-router.delete('/animals/:id', adminController.deleteAnimal);
+router.post('/animals', trackActivity('animal_update', (req) => `Created animal`), adminController.createAnimal);
+router.put('/animals/:id', trackActivity('animal_update', (req) => `Updated animal #${req.params.id}`), adminController.updateAnimal);
+router.delete('/animals/:id', trackActivity('animal_update', (req) => `Deleted animal #${req.params.id}`), adminController.deleteAnimal);
 router.get('/plants', adminController.getAllPlants);
-router.post('/plants', adminController.createPlant);
-router.put('/plants/:id', adminController.updatePlant);
-router.delete('/plants/:id', adminController.deletePlant);
+router.post('/plants', trackActivity('plant_update', (req) => `Created plant`), adminController.createPlant);
+router.put('/plants/:id', trackActivity('plant_update', (req) => `Updated plant #${req.params.id}`), adminController.updatePlant);
+router.delete('/plants/:id', trackActivity('plant_update', (req) => `Deleted plant #${req.params.id}`), adminController.deletePlant);
 router.get('/events', adminController.getAllEvents);
-router.post('/events', adminController.createEvent);
-router.put('/events/:id', adminController.updateEvent);
-router.delete('/events/:id', adminController.deleteEvent);
+router.post('/events', trackActivity('event_update', (req) => `Created event`), adminController.createEvent);
+router.put('/events/:id', trackActivity('event_update', (req) => `Updated event #${req.params.id}`), adminController.updateEvent);
+router.delete('/events/:id', trackActivity('event_update', (req) => `Deleted event #${req.params.id}`), adminController.deleteEvent);
 router.get('/tickets', adminController.getAllTickets);
 router.get('/tickets/export', adminController.exportTickets);
 router.get('/tickets/:id', adminController.getTicketById);
-router.put('/tickets/:id/status', adminController.updateTicketStatus);
-router.put('/tickets/:id/mark-paid', adminController.markTicketAsPaid);
-router.put('/tickets/:id/verification', adminController.updateVerificationStatus);
+router.put('/tickets/:id/status', trackActivity('ticket_update', (req) => `Updated ticket #${req.params.id} status`), adminController.updateTicketStatus);
+router.put('/tickets/:id/mark-paid', trackActivity('ticket_update', (req) => `Marked ticket #${req.params.id} as paid`), adminController.markTicketAsPaid);
+router.put('/tickets/:id/verification', trackActivity('ticket_update', (req) => `Updated ticket #${req.params.id} verification`), adminController.updateVerificationStatus);
 router.get('/reports/revenue', adminController.getRevenueReport);
 router.get('/reports/data', adminController.getReportData);
 router.get('/reports/quick-stats', adminController.getQuickStats);
@@ -102,13 +104,13 @@ router.get('/analytics', adminController.getAnalytics);
 
 // user management
 router.get('/users/:id', adminController.getUserById);
-router.put('/users/:id/suspend', adminController.suspendUser);
-router.put('/users/:id/unsuspend', adminController.unsuspendUser);
+router.put('/users/:id/suspend', trackActivity('user_update', (req) => `Suspended user #${req.params.id}`), adminController.suspendUser);
+router.put('/users/:id/unsuspend', trackActivity('user_update', (req) => `Unsuspended user #${req.params.id}`), adminController.unsuspendUser);
 router.get('/users-suspended', adminController.getSuspendedUsers);
 
 // appeal management
 router.get('/appeals', adminController.getPendingAppeals);
-router.put('/appeals/:id/review', adminController.reviewAppeal);
+router.put('/appeals/:id/review', trackActivity('other', (req) => `Reviewed appeal #${req.params.id}`), adminController.reviewAppeal);
 
 // Notification routes
 router.get('/notifications', adminController.getNotifications);
@@ -117,11 +119,11 @@ router.put('/notifications/read-all', adminController.markAllNotificationsRead);
 
 // Donation settings
 router.get('/donation-config', donationController.getConfig);
-router.put('/donation-config', donationController.updateConfig);
+router.put('/donation-config', trackActivity('other', 'Updated donation settings'), donationController.updateConfig);
 router.get('/event-payment-config', (req, res) => {
     res.json({ success: true, config: readEventPaymentConfig() });
 });
-router.put('/event-payment-config', (req, res) => {
+router.put('/event-payment-config', trackActivity('other', 'Updated event payment settings'), (req, res) => {
     try {
         const updated = writeEventPaymentConfig(req.body.config || {});
         res.json({ success: true, message: 'Event payment settings updated successfully', config: updated });
@@ -135,7 +137,7 @@ router.put('/event-payment-config', (req, res) => {
 router.post('/upload-model', modelUpload.fields([
     { name: 'modelJson', maxCount: 1 },
     { name: 'weights', maxCount: 50 }
-]), adminController.uploadModel);
+]), trackActivity('other', 'Uploaded a machine-learning model'), adminController.uploadModel);
 
 router.get('/model-info', adminController.getModelInfo);
 
@@ -162,7 +164,7 @@ router.get('/messages/:id', messageController.getMessageById);
 router.put('/messages/:id/read', messageController.markAsRead);
 router.put('/messages/read-all', messageController.markAllAsRead);
 router.post('/messages/:id/respond', messageController.respondToMessage);
-router.delete('/messages/:id', messageController.deleteMessage);
+router.delete('/messages/:id', trackActivity('other', (req) => `Deleted message #${req.params.id}`), messageController.deleteMessage);
 router.get('/appeals', messageController.getAppeals);
 
 // staff monitoring
@@ -172,5 +174,10 @@ router.get('/monitoring/activities', monitoringController.getRecentActivities);
 router.get('/monitoring/staff-stats', monitoringController.getStaffStats);
 router.get('/monitoring/staff/:staffId/timeline', monitoringController.getStaffTimeline);
 router.post('/monitoring/heartbeat', monitoringController.heartbeat);
+
+// logs
+router.get('/logs/staff', logsController.getStaffLogs);
+router.get('/logs/users', logsController.getUserLogs);
+router.get('/logs/summary', logsController.getLogsSummary);
 
 module.exports = router;

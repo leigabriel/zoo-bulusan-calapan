@@ -69,8 +69,8 @@ router.get('/tickets/active', staffController.getActiveTickets);
 router.get('/tickets/today', staffController.getTodayTickets);
 router.get('/tickets/:id', staffController.getTicketById);
 router.put('/tickets/:id/status', staffController.updateTicketStatus);
-router.put('/tickets/:id/mark-paid', staffController.markTicketAsPaid);
-router.put('/tickets/:id/verification', staffController.updateVerificationStatus);
+router.put('/tickets/:id/mark-paid', trackActivity('ticket_update', (req) => `Marked ticket #${req.params.id} as paid`), staffController.markTicketAsPaid);
+router.put('/tickets/:id/verification', trackActivity('ticket_update', (req) => `Updated ticket #${req.params.id} verification`), staffController.updateVerificationStatus);
 router.post('/tickets/validate', staffController.validateTicket);
 router.post('/tickets/check', staffController.checkTicket);
 router.post('/tickets/mark-used', staffController.markTicketUsed);
@@ -86,7 +86,7 @@ router.delete('/events/:id', trackActivity('event_update', (req) => `Deleted eve
 
 // Appeals management
 router.get('/appeals', staffController.getPendingAppeals);
-router.put('/appeals/:id/review', staffController.reviewAppeal);
+router.put('/appeals/:id/review', trackActivity('other', (req) => `Reviewed appeal #${req.params.id}`), staffController.reviewAppeal);
 
 // Notifications
 router.get('/notifications', staffController.getNotifications);
@@ -98,7 +98,7 @@ router.get('/messages', messageController.getAllMessages);
 router.put('/messages/:id/read', messageController.markAsRead);
 router.put('/messages/read-all', messageController.markAllAsRead);
 router.put('/messages/:id/respond', messageController.respondToMessage);
-router.delete('/messages/:id', messageController.deleteMessage);
+router.delete('/messages/:id', trackActivity('other', (req) => `Deleted message #${req.params.id}`), messageController.deleteMessage);
 router.get('/appeals', messageController.getAppeals);
 
 // dynamic middleware - checks cloudinary at request time

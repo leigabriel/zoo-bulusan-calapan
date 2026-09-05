@@ -4,6 +4,7 @@ const path = require('path');
 const multer = require('multer');
 const reservationController = require('../controllers/reservation-controller');
 const { protect, authorize } = require('../middleware/auth');
+const { trackActivity } = require('../middleware/track-activity');
 const { handleCloudinaryResidentIdUpload, handleCloudinaryImageUpload } = require('../middleware/cloudinary-upload');
 const { isConfigured: isCloudinaryConfigured } = require('../config/cloudinary');
 
@@ -45,21 +46,21 @@ router.use(protect);
 router.get('/ticket/my', reservationController.getUserTicketReservations);
 router.get('/event/my', reservationController.getUserEventReservations);
 router.get('/event/hosted', reservationController.getUserHostedEvents);
-router.put('/event/hosted/:id', reservationController.updateUserHostedEvent);
-router.post('/event/hosted/:id/image', dynamicEventImageUpload, reservationController.uploadHostedEventImage);
+router.put('/event/hosted/:id', trackActivity('event_update', (req) => `Updated hosted event #${req.params.id}`), reservationController.updateUserHostedEvent);
+router.post('/event/hosted/:id/image', dynamicEventImageUpload, trackActivity('event_update', (req) => `Updated image for hosted event #${req.params.id}`), reservationController.uploadHostedEventImage);
 router.get('/availability/ticket', reservationController.getTicketAvailability);
 router.get('/availability/event', reservationController.getEventAvailability);
 router.post('/ticket', handleCloudinaryResidentIdUpload, reservationController.createTicketReservation);
 router.post('/event', reservationController.createEventReservation);
-router.put('/ticket/:id/archive', reservationController.archiveTicketReservation);
-router.put('/ticket/:id/unarchive', reservationController.unarchiveTicketReservation);
-router.put('/event/:id/archive', reservationController.archiveEventReservation);
-router.put('/event/:id/unarchive', reservationController.unarchiveEventReservation);
+router.put('/ticket/:id/archive', trackActivity('ticket_archive', (req) => `Archived ticket reservation #${req.params.id}`), reservationController.archiveTicketReservation);
+router.put('/ticket/:id/unarchive', trackActivity('ticket_unarchive', (req) => `Unarchived ticket reservation #${req.params.id}`), reservationController.unarchiveTicketReservation);
+router.put('/event/:id/archive', trackActivity('event_archive', (req) => `Archived event reservation #${req.params.id}`), reservationController.archiveEventReservation);
+router.put('/event/:id/unarchive', trackActivity('event_unarchive', (req) => `Unarchived event reservation #${req.params.id}`), reservationController.unarchiveEventReservation);
 
 router.use(authorize('admin', 'staff'));
 
 router.get('/', reservationController.getAllReservations);
-router.post('/scan', reservationController.scanReservation);
+router.post('/scan', trackActivity('reservation_update', 'Scanned a reservation'), reservationController.scanReservation);
 router.get('/stats', reservationController.getReservationStats);
 router.get('/today', reservationController.getTodayReservations);
 router.get('/upcoming', reservationController.getUpcomingReservations);
@@ -69,8 +70,8 @@ router.get('/ticket/:id', reservationController.getTicketReservationById);
 router.get('/event/:id', reservationController.getEventReservationById);
 router.put('/ticket/:id/status', reservationController.updateTicketReservationStatus);
 router.put('/event/:id/status', reservationController.updateEventReservationStatus);
-router.put('/ticket/:id/verification', reservationController.updateVerificationStatus);
-router.delete('/ticket/:id', reservationController.deleteTicketReservation);
-router.delete('/event/:id', reservationController.deleteEventReservation);
+router.put('/ticket/:id/verification', trackActivity('reservation_update', (req) => `Updated reservation #${req.params.id} verification`), reservationController.updateVerificationStatus);
+router.delete('/ticket/:id', trackActivity('reservation_update', (req) => `Deleted ticket reservation #${req.params.id}`), reservationController.deleteTicketReservation);
+router.delete('/event/:id', trackActivity('reservation_update', (req) => `Deleted event reservation #${req.params.id}`), reservationController.deleteEventReservation);
 
 module.exports = router;

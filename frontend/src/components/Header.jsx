@@ -8,60 +8,68 @@ import ReservationHistoryPanel from './features/ReservationHistoryPanel';
 import Settings from '../pages/user/Settings';
 import UserProfile from '../pages/user/UserProfile';
 import useScrollLock from '../hooks/use-scroll-lock';
+import {
+    Home, Pet, Leaf, Calendar, Bell, Menu, CloseCircle, Ticket,
+    People, Message, Globe, Game, Setting, Camera, Lifebuoy,
+    Headset, Logout, Information, HandHeart
+} from 'reicon-react';
 
 const MINIZOO_GAME_URL = (typeof process !== 'undefined' && process.env && process.env.VITE_MINIZOO_GAME_URL) ? process.env.VITE_MINIZOO_GAME_URL : 'https://bulusanzootopia.vercel.app';
 
-const ICONS = {
-    home: 'https://cdn-icons-png.flaticon.com/128/3917/3917743.png',
-    animals: 'https://cdn-icons-png.flaticon.com/128/5527/5527836.png',
-    plants: 'https://cdn-icons-png.flaticon.com/128/19009/19009811.png',
-    events: 'https://cdn-icons-png.flaticon.com/128/9586/9586200.png',
-    notification: 'https://cdn-icons-png.flaticon.com/128/3917/3917256.png',
-    menu: 'https://cdn-icons-png.flaticon.com/128/3917/3917762.png',
-    close: 'https://cdn-icons-png.flaticon.com/128/4338/4338828.png',
-    ticket: 'https://cdn-icons-png.flaticon.com/128/14703/14703145.png',
-    profile: 'https://cdn-icons-png.flaticon.com/128/3917/3917796.png',
-    messages: 'https://cdn-icons-png.flaticon.com/128/3916/3916613.png',
-    wildlife: 'https://cdn-icons-png.flaticon.com/128/9585/9585894.png',
-    game: 'https://cdn-icons-png.flaticon.com/128/17390/17390411.png',
-    setting: 'https://cdn-icons-png.flaticon.com/128/17586/17586903.png',
-    camera: 'https://cdn-icons-png.flaticon.com/128/3917/3917085.png',
-    help: 'https://cdn-icons-png.flaticon.com/128/3916/3916708.png',
-    support: 'https://cdn-icons-png.flaticon.com/128/16850/16850034.png',
-    logout: 'https://cdn-icons-png.flaticon.com/128/17720/17720307.png',
-    about: 'https://cdn-icons-png.flaticon.com/128/3916/3916708.png',
-    donation: 'https://cdn-icons-png.flaticon.com/128/2770/2770636.png',
+const ICON_COMPONENTS = {
+    home: Home,
+    animals: Pet,
+    plants: Leaf,
+    events: Calendar,
+    notification: Bell,
+    menu: Menu,
+    close: CloseCircle,
+    ticket: Ticket,
+    profile: People,
+    messages: Message,
+    wildlife: Globe,
+    game: Game,
+    setting: Setting,
+    camera: Camera,
+    help: Lifebuoy,
+    support: Headset,
+    logout: Logout,
+    about: Information,
+    donation: HandHeart,
 };
 
 const NAV_LINKS = [
-    { path: '/', label: 'Home', iconUrl: ICONS.home },
-    { path: '/animals', label: 'Animals', iconUrl: ICONS.animals },
-    { path: '/plants', label: 'Plants', iconUrl: ICONS.plants },
-    { path: '/events', label: 'Events', iconUrl: ICONS.events },
-    { path: '/community', label: 'Community', iconUrl: ICONS.messages },
-    { path: '/about', label: 'About', iconUrl: ICONS.about },
+    { path: '/', label: 'Home', iconKey: 'home' },
+    { path: '/animals', label: 'Animals', iconKey: 'animals' },
+    { path: '/plants', label: 'Plants', iconKey: 'plants' },
+    { path: '/events', label: 'Events', iconKey: 'events' },
+    { path: '/community', label: 'Community', iconKey: 'messages' },
+    { path: '/about', label: 'About', iconKey: 'about' },
 ];
 
-const IconBtn = ({ src, alt, onClick, badge, className = '' }) => (
-    <button
-        onClick={onClick}
-        className={`relative flex items-center justify-center w-9 h-9 rounded-full hover:bg-gray-100 transition-colors flex-shrink-0 ${className}`}
-    >
-        <img src={src} alt={alt} className="w-[18px] h-[18px] object-contain opacity-55" />
-        {badge > 0 && (
-            <span className="absolute top-0.5 right-0.5 min-w-[15px] h-[15px] px-0.5 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center border border-white leading-none">
-                {badge > 9 ? '9+' : badge}
-            </span>
-        )}
-    </button>
-);
+const IconBtn = ({ iconKey, alt, onClick, badge, className = '' }) => {
+    const IconComponent = ICON_COMPONENTS[iconKey];
+    return (
+        <button
+            onClick={onClick}
+            className={`relative flex items-center justify-center w-9 h-9 rounded-full hover:bg-gray-100 transition-colors flex-shrink-0 ${className}`}
+        >
+            {IconComponent && <IconComponent size={18} className="opacity-55" />}
+            {badge > 0 && (
+                <span className="absolute top-0.5 right-0.5 min-w-[15px] h-[15px] px-0.5 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center border border-white leading-none">
+                    {badge > 9 ? '9+' : badge}
+                </span>
+            )}
+        </button>
+    );
+};
 
 const CloseBtn = ({ onClick }) => (
     <button
         onClick={onClick}
         className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-gray-100 transition-colors flex-shrink-0"
     >
-        <img src={ICONS.close} alt="Close" className="w-3.5 h-3.5 object-contain opacity-40" />
+        <CloseCircle size={14} className="opacity-40" />
     </button>
 );
 
@@ -69,16 +77,17 @@ const SectionLabel = ({ label }) => (
     <p className="px-1 pt-5 pb-2 text-[10px] font-bold text-gray-400 uppercase tracking-[0.16em]">{label}</p>
 );
 
-const MenuItem = ({ iconUrl, label, badge, danger, to, onClick, onClose, isLast, onNavigate }) => {
+const MenuItem = ({ iconKey, label, badge, danger, to, onClick, onClose, isLast, onNavigate }) => {
+    const IconComponent = ICON_COMPONENTS[iconKey];
     const inner = (
         <span className={`flex items-center gap-3 px-4 py-3 transition-colors group ${danger ? 'hover:bg-red-50/60' : 'hover:bg-green-400'} ${!isLast ? 'border-b border-gray-50' : ''}`}>
             <span className={`w-8 h-8 flex items-center justify-center rounded-xl flex-shrink-0 ${danger ? 'bg-red-50' : 'bg-gray-50'}`}>
-                <img
-                    src={iconUrl}
-                    alt={label}
-                    className="w-[15px] h-[15px] object-contain"
-                    style={danger ? { filter: 'invert(30%) sepia(80%) saturate(700%) hue-rotate(330deg)' } : { opacity: 0.5 }}
-                />
+                {IconComponent && (
+                    <IconComponent
+                        size={15}
+                        className={danger ? 'text-red-500' : 'opacity-50'}
+                    />
+                )}
             </span>
             <span className={`text-[13px] font-medium flex-1 text-left leading-none ${danger ? 'text-red-500' : 'text-gray-700'}`}>
                 {label}
@@ -309,12 +318,12 @@ const Header = () => {
             }
             notifs.sort((a, b) => new Date(b.time) - new Date(a.time));
             setNotifications(notifs);
-            setReadNotificationIds((prev) => {
-                const serverReadIds = notifs
-                    .filter((notification) => notification.read)
-                    .map((notification) => notification.id);
-                return [...new Set([...prev, ...serverReadIds])];
-            });
+
+            const serverReadIds = notifs
+                .filter((notification) => notification.read)
+                .map((notification) => notification.id);
+
+            setReadNotificationIds((prev) => [...new Set([...prev, ...serverReadIds])]);
         } catch (err) {
         } finally {
             setNotificationLoading(false);
@@ -407,29 +416,29 @@ const Header = () => {
     };
 
     const handleOpenReservationHistory = () => { closeSidePanel(); setShowHistoryPanel(true); };
-    const handleOpenSettings = () => { closeSidePanel(); setShowSettingsPanel(true); };
-    const handleOpenProfile = () => { closeSidePanel(); setShowProfilePanel(true); };
-    const handleOpenMiniZooGame = () => { closeSidePanel(); setShowMiniZooGame(true); };
+    const handleOpenSettings = () => { setShowSettingsPanel(true); };
+    const handleOpenProfile = () => { setShowProfilePanel(true); };
+    const handleOpenMiniZooGame = () => { setShowMiniZooGame(true); };
     const handleConfirmMiniZooGame = () => {
         setShowMiniZooGame(false);
         window.open(MINIZOO_GAME_URL, '_blank', 'noopener,noreferrer');
     };
 
     const quickItems = [
-        ...(user?.role === 'admin' ? [{ iconUrl: ICONS.setting, label: 'Admin Dashboard', path: '/admin/dashboard' }] : []),
-        ...(user?.role === 'staff' ? [{ iconUrl: ICONS.setting, label: 'Staff Dashboard', path: '/staff/dashboard' }] : []),
+        ...(user?.role === 'admin' ? [{ iconKey: 'setting', label: 'Admin Dashboard', path: '/admin/dashboard' }] : []),
+        ...(user?.role === 'staff' ? [{ iconKey: 'setting', label: 'Staff Dashboard', path: '/staff/dashboard' }] : []),
     ];
 
     const accountItems = [
-        { iconUrl: ICONS.ticket, label: 'Reservations', action: handleOpenReservationHistory },
-        { iconUrl: ICONS.events, label: 'My Events', path: '/my-events' },
-        { iconUrl: ICONS.messages, label: 'My Messages', path: '/my-messages' },
+        { iconKey: 'ticket', label: 'Reservations', action: handleOpenReservationHistory },
+        { iconKey: 'events', label: 'My Events', path: '/my-events' },
+        { iconKey: 'messages', label: 'My Messages', path: '/my-messages' },
     ];
 
     const exploreItems = [
-        { iconUrl: ICONS.wildlife, label: 'Wildlife Origins', path: '/map' },
-        { iconUrl: ICONS.game, label: 'Mini Zoo Game', action: handleOpenMiniZooGame },
-        ...(donationEnabled ? [{ iconUrl: ICONS.donation, label: 'Donate', path: '/donation' }] : []),
+        { iconKey: 'wildlife', label: 'Wildlife Origins', path: '/map' },
+        { iconKey: 'game', label: 'Mini Zoo Game', action: handleOpenMiniZooGame },
+        ...(donationEnabled ? [{ iconKey: 'donation', label: 'Donate', path: '/donation' }] : []),
     ];
 
     const avatarSrc = getProfileImageUrl(user?.profileImage || user?.profile_image) || '/profile-img/default-avatar.svg';
@@ -478,7 +487,7 @@ const Header = () => {
                                 </button>
                             </Link>
                             {user && (
-                                <IconBtn src={ICONS.notification} alt="Notifications" onClick={openNotifications} badge={unreadCount} />
+                                <IconBtn iconKey="notification" alt="Notifications" onClick={openNotifications} badge={unreadCount} />
                             )}
                             {authLoading ? (
                                 <div className="flex items-center gap-2 px-4 py-1.5">
@@ -509,12 +518,25 @@ const Header = () => {
                             )}
                         </div>
 
-                        <div className="ml-auto flex flex-shrink-0 items-center gap-1 lg:hidden">
-                            <Link to="/reservations" onClick={(e) => { e.preventDefault(); handleTransitionNavigate(e, '/reservations'); }} className="flex items-center justify-center w-9 h-9 rounded-full hover:bg-gray-100 transition-colors flex-shrink-0">
-                                <img src={ICONS.ticket} alt="Reserve" className="w-[18px] h-[18px] object-contain opacity-55" />
-                            </Link>
-                            <IconBtn src={ICONS.notification} alt="Notifications" onClick={openNotifications} badge={unreadCount} />
-                            <IconBtn src={isMenuOpen ? ICONS.close : ICONS.menu} alt="Menu" onClick={() => setIsMenuOpen(!isMenuOpen)} />
+                        <div className="ml-auto flex flex-shrink-0 items-center gap-1.5 lg:hidden">
+                            {user && (
+                                <IconBtn iconKey="notification" alt="Notifications" onClick={openNotifications} badge={unreadCount} />
+                            )}
+                            {user && (
+                                <button
+                                    onClick={() => setShowSidePanel(true)}
+                                    className="flex items-center justify-center w-9 h-9 rounded-full hover:bg-gray-100 transition-colors flex-shrink-0 overflow-hidden"
+                                >
+                                    <img
+                                        src={avatarSrc}
+                                        alt="Profile"
+                                        className="w-7 h-7 rounded-full object-cover"
+                                        referrerPolicy="no-referrer"
+                                        onError={(e) => { e.target.onerror = null; e.target.src = '/profile-img/default-avatar.svg'; }}
+                                    />
+                                </button>
+                            )}
+                            <IconBtn iconKey={isMenuOpen ? 'close' : 'menu'} alt="Menu" onClick={() => setIsMenuOpen(!isMenuOpen)} />
                         </div>
                     </div>
                 </div>
@@ -523,52 +545,50 @@ const Header = () => {
                     className={`absolute left-0 top-full flex w-full origin-top flex-col overflow-y-auto overscroll-contain border-t border-gray-100 bg-white shadow-xl transition-all duration-300 ease-in-out lg:hidden ${isMenuOpen ? 'max-h-[calc(100dvh-56px)] opacity-100' : 'max-h-0 opacity-0 pointer-events-none'}`}
                     data-lenis-prevent
                 >
-                    <div className="flex flex-col p-4 gap-1">
-                        {user && (
-                            <button
-                                onClick={() => { setIsMenuOpen(false); setShowSidePanel(true); }}
-                                className="flex items-center gap-3 w-full px-4 py-3 rounded-xl border border-gray-100 bg-gray-50 hover:bg-gray-100 transition-colors text-left mb-2"
-                            >
-                                <img
-                                    src={avatarSrc}
-                                    alt="Profile"
-                                    className="w-9 h-9 rounded-full object-cover flex-shrink-0"
-                                    referrerPolicy="no-referrer"
-                                    onError={(e) => { e.target.onerror = null; e.target.src = '/profile-img/default-avatar.svg'; }}
-                                />
-                                <div className="min-w-0">
-                                    <p className="text-[13px] font-semibold text-gray-900 truncate">{displayName}</p>
-                                    <p className="text-[11px] text-gray-400 mt-0.5">View Account</p>
-                                </div>
-                            </button>
-                        )}
-                        {NAV_LINKS.map((link) => {
-                            const active = location.pathname === link.path;
-                            return (
+                    <div className="flex flex-col p-4 gap-4">
+                        <div>
+                            <div className="rounded-xl overflow-hidden border border-gray-100">
+                                {NAV_LINKS.map((link) => {
+                                    const active = location.pathname === link.path;
+                                    const LinkIcon = ICON_COMPONENTS[link.iconKey];
+                                    return (
+                                        <Link
+                                            key={link.path}
+                                            to={link.path}
+                                            onClick={(e) => { e.preventDefault(); setIsMenuOpen(false); handleTransitionNavigate(e, link.path); }}
+                                            className={`flex items-center gap-3 px-4 py-3 transition-colors ${active ? 'bg-green-400' : 'hover:bg-gray-50'}`}
+                                        >
+                                            {LinkIcon && (
+                                                <LinkIcon
+                                                    size={16}
+                                                    className={`flex-shrink-0 ${active ? 'opacity-100' : 'opacity-45'}`}
+                                                />
+                                            )}
+                                            <span className={`text-[13px] font-medium ${active ? 'text-[#000]' : 'text-gray-600'}`}>
+                                                {link.label}
+                                            </span>
+                                        </Link>
+                                    );
+                                })}
                                 <Link
-                                    key={link.path}
-                                    to={link.path}
-                                    onClick={(e) => { e.preventDefault(); setIsMenuOpen(false); handleTransitionNavigate(e, link.path); }}
-                                     className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${active ? 'bg-green-400' : 'hover:bg-gray-50'}`}
+                                    to="/reservations"
+                                    onClick={(e) => { e.preventDefault(); setIsMenuOpen(false); handleTransitionNavigate(e, '/reservations'); }}
+                                    className={`flex items-center gap-3 px-4 py-3 border-t border-gray-100 transition-colors ${location.pathname === '/reservations' ? 'bg-green-400' : 'hover:bg-gray-50'}`}
                                 >
-                                    <img
-                                        src={link.iconUrl}
-                                        alt={link.label}
-                                        className="w-4 h-4 object-contain flex-shrink-0"
-                                        style={{ opacity: active ? 1 : 0.45, filter: active ? 'brightness(0) invert(0)' : 'none' }}
-                                    />
-                                    <span className={`text-[13px] font-medium ${active ? 'text-[#000]' : 'text-gray-600'}`}>
-                                        {link.label}
+                                    <Ticket size={16} className={`flex-shrink-0 ${location.pathname === '/reservations' ? 'opacity-100' : 'opacity-45'}`} />
+                                    <span className={`text-[13px] font-medium ${location.pathname === '/reservations' ? 'text-[#000]' : 'text-gray-600'}`}>
+                                        Reserve
                                     </span>
                                 </Link>
-                            );
-                        })}
+                            </div>
+                        </div>
+
                         {authLoading ? (
-                            <div className="flex items-center justify-center py-3 mt-2">
+                            <div className="flex items-center justify-center py-3">
                                 <div className="w-5 h-5 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin" />
                             </div>
                         ) : !user ? (
-                            <Link to="/login" onClick={(e) => { e.preventDefault(); setIsMenuOpen(false); handleTransitionNavigate(e, '/login'); }} className="mt-2">
+                            <Link to="/login" onClick={(e) => { e.preventDefault(); setIsMenuOpen(false); handleTransitionNavigate(e, '/login'); }}>
                                 <button className="w-full py-3 rounded-xl bg-gray-900 text-white text-[13px] font-medium">
                                     Login / Sign Up
                                 </button>
@@ -576,13 +596,11 @@ const Header = () => {
                         ) : (
                             <button
                                 onClick={() => { setIsMenuOpen(false); setShowLogoutModal(true); }}
-                                className="flex items-center gap-3 px-4 py-3 rounded-xl text-red-500 hover:bg-red-50 transition-colors mt-2"
+                                className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-red-500 hover:bg-red-50 transition-colors"
                             >
-                                <img
-                                    src={ICONS.logout}
-                                    alt="Sign Out"
-                                    className="w-4 h-4 object-contain flex-shrink-0"
-                                    style={{ filter: 'invert(30%) sepia(80%) saturate(700%) hue-rotate(330deg) opacity(0.75)' }}
+                                <Logout
+                                    size={16}
+                                    className="flex-shrink-0 text-red-500 opacity-75"
                                 />
                                 <span className="text-[13px] font-medium">Sign Out</span>
                             </button>
@@ -620,7 +638,7 @@ const Header = () => {
                                 <SectionLabel label="Quick Access" />
                                 <div className="rounded-xl overflow-hidden border border-gray-200 bg-white">
                                     {quickItems.map((item, i) => (
-                                        <MenuItem key={i} iconUrl={item.iconUrl} label={item.label} to={item.path} onClose={closeSidePanel} onNavigate={handleTransitionNavigate} isLast={i === quickItems.length - 1} />
+                                        <MenuItem key={i} iconKey={item.iconKey} label={item.label} to={item.path} onClose={closeSidePanel} onNavigate={handleTransitionNavigate} isLast={i === quickItems.length - 1} />
                                     ))}
                                 </div>
                             </>
@@ -629,22 +647,22 @@ const Header = () => {
                         <SectionLabel label="Account" />
                         <div className="rounded-xl overflow-hidden border border-gray-200 bg-white">
                             {accountItems.map((item, i) => (
-                                <MenuItem key={i} iconUrl={item.iconUrl} label={item.label} to={item.path} onClick={item.action} onClose={closeSidePanel} onNavigate={handleTransitionNavigate} isLast={i === accountItems.length - 1} />
+                                <MenuItem key={i} iconKey={item.iconKey} label={item.label} to={item.path} onClick={item.action} onClose={closeSidePanel} onNavigate={handleTransitionNavigate} isLast={i === accountItems.length - 1} />
                             ))}
                         </div>
 
                         <SectionLabel label="Explore" />
                         <div className="rounded-xl overflow-hidden border border-gray-200 bg-white">
                             {exploreItems.map((item, i) => (
-                                <MenuItem key={i} iconUrl={item.iconUrl} label={item.label} to={item.path} onClick={item.action} onClose={closeSidePanel} onNavigate={handleTransitionNavigate} isLast={i === exploreItems.length - 1} />
+                                <MenuItem key={i} iconKey={item.iconKey} label={item.label} to={item.path} onClick={item.action} onClose={closeSidePanel} onNavigate={handleTransitionNavigate} isLast={i === exploreItems.length - 1} />
                             ))}
                         </div>
 
                         <SectionLabel label="Tools & Preferences" />
                         <div className="overflow-hidden rounded-2xl border border-gray-200/80 bg-white shadow-sm shadow-gray-100/70">
-                            <MenuItem iconUrl={ICONS.setting} label="Settings" onClick={handleOpenSettings} isLast={false} />
+                            <MenuItem iconKey="setting" label="Settings" onClick={handleOpenSettings} isLast={false} />
                             <MenuItem
-                                iconUrl={ICONS.camera}
+                                iconKey="camera"
                                 label="AI Animal Scanner"
                                 badge="New"
                                 onClick={() => { closeSidePanel(); setShowAIScanner(true); }}
@@ -654,8 +672,8 @@ const Header = () => {
 
                          <SectionLabel label="Support" />
                          <div className="overflow-hidden rounded-2xl border border-gray-200/80 bg-white shadow-sm shadow-gray-100/70">
-                             <MenuItem iconUrl={ICONS.help} label="Help Center" to="/help" onClose={closeSidePanel} onNavigate={handleTransitionNavigate} isLast={false} />
-                             <MenuItem iconUrl={ICONS.support} label="Contact Support" onClick={openEmailModal} isLast={true} />
+                             <MenuItem iconKey="help" label="Help Center" to="/help" onClose={closeSidePanel} onNavigate={handleTransitionNavigate} isLast={false} />
+                             <MenuItem iconKey="support" label="Contact Support" onClick={openEmailModal} isLast={true} />
                          </div>
                          <div className="mt-5 space-y-3 border-t border-emerald-100 pt-5">
                              {user ? (
@@ -689,11 +707,9 @@ const Header = () => {
                                  onClick={() => { closeSidePanel(); setShowLogoutModal(true); }}
                                   className="flex w-full items-center gap-3 rounded-xl bg-red-300 px-3 py-2.5 text-red-900 transition-colors hover:bg-red-400"
                              >
-                                 <img
-                                     src={ICONS.logout}
-                                     alt="Sign Out"
-                                     className="w-4 h-4 object-contain flex-shrink-0"
-                                     style={{ filter: 'invert(30%) sepia(80%) saturate(700%) hue-rotate(330deg) opacity(0.75)' }}
+                                 <Logout
+                                     size={16}
+                                     className="flex-shrink-0 text-red-900 opacity-75"
                                  />
                                  <span className="text-[13px] font-medium">Sign Out</span>
                              </button>
@@ -703,23 +719,23 @@ const Header = () => {
               </div>
 
               <div className={`fixed inset-0 z-[125] flex justify-end transition-all duration-300 ${showSettingsPanel ? 'visible' : 'invisible'}`}>
-                  <div className={`absolute inset-0 bg-black/25 backdrop-blur-[2px] transition-opacity duration-300 ${showSettingsPanel ? 'opacity-100' : 'opacity-0'}`} onClick={() => setShowSettingsPanel(false)} />
+                  <div className={`absolute inset-0 bg-black/25 backdrop-blur-[2px] transition-opacity duration-300 ${showSettingsPanel ? 'opacity-100' : 'opacity-0'}`} onClick={() => { setShowSettingsPanel(false); if (user) setShowSidePanel(true); }} />
                   <div className={`relative h-full w-full overflow-y-auto overscroll-contain bg-white shadow-2xl transition-transform duration-300 ease-out sm:w-1/2 sm:min-w-[420px] sm:max-w-[720px] ${showSettingsPanel ? 'translate-x-0' : 'translate-x-full'}`} role="dialog" aria-modal="true" aria-label="Account settings" data-lenis-prevent>
-                      <Settings embedded onClose={() => setShowSettingsPanel(false)} />
+                      <Settings embedded onClose={() => { setShowSettingsPanel(false); if (user) setShowSidePanel(true); }} />
                   </div>
               </div>
 
               <div className={`fixed inset-0 z-[125] flex justify-end transition-all duration-300 ${showProfilePanel ? 'visible' : 'invisible'}`}>
-                  <div className={`absolute inset-0 bg-black/25 backdrop-blur-[2px] transition-opacity duration-300 ${showProfilePanel ? 'opacity-100' : 'opacity-0'}`} onClick={() => setShowProfilePanel(false)} />
+                  <div className={`absolute inset-0 bg-black/25 backdrop-blur-[2px] transition-opacity duration-300 ${showProfilePanel ? 'opacity-100' : 'opacity-0'}`} onClick={() => { setShowProfilePanel(false); if (user) setShowSidePanel(true); }} />
                   <div className={`relative h-full w-full overflow-y-auto overscroll-contain bg-white shadow-2xl transition-transform duration-300 ease-out sm:w-1/2 sm:min-w-[420px] sm:max-w-[720px] ${showProfilePanel ? 'translate-x-0' : 'translate-x-full'}`} role="dialog" aria-modal="true" aria-label="User profile" data-lenis-prevent>
-                      <UserProfile embedded onClose={() => setShowProfilePanel(false)} />
+                      <UserProfile embedded onClose={() => { setShowProfilePanel(false); if (user) setShowSidePanel(true); }} />
                   </div>
               </div>
 
               <div className={`fixed inset-0 z-[110] flex justify-end transition-all duration-300 ${showAIScanner ? 'visible' : 'invisible'}`}>
                 <div
                     className={`absolute inset-0 bg-black/25 backdrop-blur-[2px] transition-opacity duration-300 ${showAIScanner ? 'opacity-100' : 'opacity-0'}`}
-                    onClick={() => setShowAIScanner(false)}
+                    onClick={() => { setShowAIScanner(false); if (user) setShowSidePanel(true); }}
                 />
                 <div
                     className={`relative w-full max-w-2xl h-full bg-[#f7faf7] shadow-2xl flex flex-col transform transition-transform duration-300 ${showAIScanner ? 'translate-x-0' : 'translate-x-full'}`}
@@ -734,7 +750,7 @@ const Header = () => {
                             <p className="text-sm font-bold text-slate-900">AI Animal Scanner</p>
                             <p className="text-[11px] text-slate-500">Identify animals from a photo</p>
                         </div>
-                        <CloseBtn onClick={() => setShowAIScanner(false)} />
+                        <CloseBtn onClick={() => { setShowAIScanner(false); if (user) setShowSidePanel(true); }} />
                     </div>
                     <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain" data-lenis-prevent>
                         {showAIScanner && <AnimalClassifier embedded={true} />}
@@ -845,7 +861,7 @@ const Header = () => {
                         ) : notifications.length === 0 ? (
                             <div className="flex flex-col items-center justify-center py-16 gap-2">
                                 <div className="w-11 h-11 bg-gray-50 rounded-full flex items-center justify-center">
-                                    <img src={ICONS.notification} alt="" className="w-5 h-5 object-contain opacity-25" />
+                                    <Bell size={20} className="opacity-25" />
                                 </div>
                                 <p className="text-[13px] font-medium text-gray-500">No notifications</p>
                                 <p className="text-[11px] text-gray-400">You're all caught up!</p>
@@ -866,11 +882,13 @@ const Header = () => {
                                             <div className={`relative w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${notif.type === 'event' ? 'bg-emerald-50' :
                                                 notif.type === 'reservation' ? 'bg-orange-50' : 'bg-gray-50'
                                                 }`}>
-                                                <img
-                                                    src={notif.type === 'event' ? ICONS.events : notif.type === 'reservation' ? ICONS.ticket : ICONS.messages}
-                                                    alt=""
-                                                    className="w-4 h-4 object-contain opacity-55"
-                                                />
+                                                {notif.type === 'event' ? (
+                                                    <Calendar size={16} className="opacity-55" />
+                                                ) : notif.type === 'reservation' ? (
+                                                    <Ticket size={16} className="opacity-55" />
+                                                ) : (
+                                                    <Message size={16} className="opacity-55" />
+                                                )}
                                                 {!isRead && (
                                                     <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-emerald-500 rounded-full"></span>
                                                 )}
@@ -909,7 +927,7 @@ const Header = () => {
                 <div className="fixed inset-0 z-[200] flex items-center justify-center">
                     <div
                         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-                        onClick={() => setShowMiniZooGame(false)}
+                        onClick={() => { setShowMiniZooGame(false); if (user) setShowSidePanel(true); }}
                     />
                     <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden">
                         <div className="p-6 text-center">
@@ -925,7 +943,7 @@ const Header = () => {
                             </p>
                             <div className="flex gap-3">
                                 <button
-                                    onClick={() => setShowMiniZooGame(false)}
+                                    onClick={() => { setShowMiniZooGame(false); if (user) setShowSidePanel(true); }}
                                     className="flex-1 py-2.5 px-4 border border-gray-200 rounded-xl font-medium text-gray-600 hover:bg-gray-50 transition-colors"
                                 >
                                     Cancel

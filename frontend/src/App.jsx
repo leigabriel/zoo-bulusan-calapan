@@ -37,7 +37,7 @@ import AdminProfile from './pages/admin/AdminProfile';
 import AdminHelpCenter from './pages/admin/AdminHelpCenter';
 import AdminTickets from './pages/admin/AdminTickets';
 import AdminMessages from './pages/admin/AdminMessages';
-import AdminStaffMonitoring from './pages/admin/AdminStaffMonitoring';
+import AdminLogs from './pages/admin/AdminLogs';
 import AdminCommunityModeration from './pages/admin/AdminCommunityModeration';
 import AdminSettings from './pages/admin/AdminSettings';
 import StaffDashboard from './pages/staff/StaffDashboard';
@@ -222,10 +222,10 @@ function AppRoutes() {
                     </AdminLayout>
                 </ProtectedRoute>
             } />
-            <Route path="/admin/staff-monitoring" element={
+            <Route path="/admin/logs" element={
                 <ProtectedRoute allowedRoles={['admin']}>
                     <AdminLayout>
-                        <AdminStaffMonitoring />
+                        <AdminLogs />
                     </AdminLayout>
                 </ProtectedRoute>
             } />

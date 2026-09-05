@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const User = require('../models/user-model');
 const StaffActivity = require('../models/staff-activity-model');
+const UserActivity = require('../models/user-activity-model');
 const { deleteOldProfileImage } = require('../middleware/upload-profile-image');
 const { deleteFromCloudinary, extractPublicId } = require('../middleware/cloudinary-upload');
 const { sendVerificationEmail, sendPasswordResetEmail } = require('../utils/email');
@@ -132,6 +133,21 @@ exports.register = async (req, res) => {
             message: 'Registration successful. Please check your email to verify your account.',
             requiresVerification: true
         });
+
+        // Log user registration
+        if (userRole === 'user') {
+            const ipAddress = req.ip || req.connection?.remoteAddress || 'unknown';
+            const userAgent = req.headers['user-agent'] || 'unknown';
+            UserActivity.logActivity({
+                userId,
+                actionType: 'register',
+                actionDescription: `${sanitizedFirstName} ${sanitizedLastName} created an account`,
+                entityType: 'user',
+                entityId: userId,
+                ipAddress,
+                userAgent
+            });
+        }
     } catch (error) {
         console.error('Register error:', error);
         res.status(500).json({ success: false, message: 'Server error during registration' });
@@ -218,6 +234,19 @@ exports.login = async (req, res) => {
                 staffId: user.id,
                 actionType: 'login',
                 actionDescription: 'User logged in',
+                ipAddress,
+                userAgent
+            });
+        } else {
+            // Log user login
+            const ipAddress = req.ip || req.connection?.remoteAddress || 'unknown';
+            const userAgent = req.headers['user-agent'] || 'unknown';
+            await UserActivity.logActivity({
+                userId: user.id,
+                actionType: 'login',
+                actionDescription: `${user.first_name} ${user.last_name} logged in`,
+                entityType: 'user',
+                entityId: user.id,
                 ipAddress,
                 userAgent
             });
@@ -477,6 +506,21 @@ exports.updateProfile = async (req, res) => {
                 profileImage: user.profile_image
             }
         });
+
+        // Log profile update for users
+        if (req.user.role === 'user') {
+            const ipAddress = req.ip || req.connection?.remoteAddress || 'unknown';
+            const userAgent = req.headers['user-agent'] || 'unknown';
+            UserActivity.logActivity({
+                userId: req.user.id,
+                actionType: 'profile_update',
+                actionDescription: `${user.first_name} ${user.last_name} updated their profile`,
+                entityType: 'user',
+                entityId: req.user.id,
+                ipAddress,
+                userAgent
+            });
+        }
     } catch (error) {
         console.error('Update profile error:', error);
         res.status(500).json({ success: false, message: 'Server error' });
@@ -525,6 +569,21 @@ exports.updatePassword = async (req, res) => {
             message: 'Password updated successfully',
             token
         });
+
+        // Log password change for users
+        if (req.user.role === 'user') {
+            const ipAddress = req.ip || req.connection?.remoteAddress || 'unknown';
+            const userAgent = req.headers['user-agent'] || 'unknown';
+            UserActivity.logActivity({
+                userId: req.user.id,
+                actionType: 'password_change',
+                actionDescription: `${user.first_name} ${user.last_name} changed their password`,
+                entityType: 'user',
+                entityId: req.user.id,
+                ipAddress,
+                userAgent
+            });
+        }
     } catch (error) {
         console.error('Update password error:', error);
         res.status(500).json({ success: false, message: 'Server error' });
@@ -561,6 +620,20 @@ exports.deleteAccount = async (req, res) => {
             }
         }
 
+        if (req.user.role === 'user') {
+            const ipAddress = req.ip || req.connection?.remoteAddress || 'unknown';
+            const userAgent = req.headers['user-agent'] || 'unknown';
+            await UserActivity.logActivity({
+                userId: req.user.id,
+                actionType: 'account_delete',
+                actionDescription: `${user.first_name} ${user.last_name} deleted their account`,
+                entityType: 'user',
+                entityId: req.user.id,
+                ipAddress,
+                userAgent
+            });
+        }
+
         await User.deleteAccountData(req.user.id);
 
         res.json({
@@ -588,6 +661,19 @@ exports.logout = async (req, res) => {
                 staffId: req.user.id,
                 actionType: 'logout',
                 actionDescription: 'User logged out',
+                ipAddress,
+                userAgent
+            });
+        } else if (req.user) {
+            // Log user logout
+            const ipAddress = req.ip || req.connection?.remoteAddress || 'unknown';
+            const userAgent = req.headers['user-agent'] || 'unknown';
+            await UserActivity.logActivity({
+                userId: req.user.id,
+                actionType: 'logout',
+                actionDescription: `${req.user.first_name || 'User'} logged out`,
+                entityType: 'user',
+                entityId: req.user.id,
                 ipAddress,
                 userAgent
             });

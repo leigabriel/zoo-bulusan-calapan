@@ -629,6 +629,39 @@ export const adminAPI = {
         return handleResponse(response);
     },
 
+    getStaffLogs: async (options = {}) => {
+        const params = new URLSearchParams();
+        Object.entries(options).forEach(([key, value]) => {
+            if (value !== undefined && value !== null && value !== '') {
+                params.append(key, value);
+            }
+        });
+        const response = await fetch(`${API_BASE_URL}/admin/logs/staff?${params}`, {
+            headers: getAuthHeaders('admin')
+        });
+        return handleResponse(response);
+    },
+
+    getUserLogs: async (options = {}) => {
+        const params = new URLSearchParams();
+        Object.entries(options).forEach(([key, value]) => {
+            if (value !== undefined && value !== null && value !== '') {
+                params.append(key, value);
+            }
+        });
+        const response = await fetch(`${API_BASE_URL}/admin/logs/users?${params}`, {
+            headers: getAuthHeaders('admin')
+        });
+        return handleResponse(response);
+    },
+
+    getLogsSummary: async () => {
+        const response = await fetch(`${API_BASE_URL}/admin/logs/summary`, {
+            headers: getAuthHeaders('admin')
+        });
+        return handleResponse(response);
+    },
+
     // Plants management
     getPlants: async () => {
         const response = await fetch(`${API_BASE_URL}/admin/plants`, {

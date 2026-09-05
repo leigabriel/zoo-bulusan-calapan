@@ -1,7 +1,7 @@
 const Message = require('../models/message-model');
 const Notification = require('../models/notification-model');
 const User = require('../models/user-model');
-const { logStaffActivity } = require('../middleware/track-activity');
+const { logStaffActivity, logUserActivity } = require('../middleware/track-activity');
 
 exports.sendMessage = async (req, res) => {
     try {
@@ -47,6 +47,11 @@ exports.sendMessage = async (req, res) => {
             message: 'Message sent successfully',
             messageId 
         });
+
+        // Log user message sent
+        if (req.user.role === 'user') {
+            logUserActivity(req, 'message_sent', `${req.user.first_name || 'User'} sent a message: ${subject}`, 'message', messageId);
+        }
     } catch (error) {
         console.error('Error sending message:', error);
         res.status(500).json({ success: false, message: 'Error sending message' });

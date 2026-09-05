@@ -1,7 +1,7 @@
 const Reservation = require('../models/reservation-model');
 const Event = require('../models/event-model');
 const Notification = require('../models/notification-model');
-const { logStaffActivity } = require('../middleware/track-activity');
+const { logStaffActivity, logUserActivity } = require('../middleware/track-activity');
 const crypto = require('crypto');
 const { reservationQrSecret } = require('../config/app-config');
 const { readConfig: readEventPaymentConfig } = require('../config/event-payment-config');
@@ -342,6 +342,11 @@ exports.createTicketReservation = async (req, res) => {
             reservationReference,
             qrData
         });
+
+        // Log user ticket reservation
+        if (userId) {
+            logUserActivity(req, 'ticket_reservation', `${visitorName} booked a ticket for ${reservationDate}`, 'ticket_reservation', reservationId);
+        }
     } catch (error) {
         console.error('Error creating ticket reservation:', error);
         res.status(500).json({ success: false, message: 'Error creating reservation' });
@@ -445,6 +450,11 @@ exports.createEventReservation = async (req, res) => {
             paymentAmount,
             paymentStatus: 'unpaid'
         });
+
+        // Log user event reservation
+        if (userId) {
+            logUserActivity(req, 'event_reservation', `${participantName} reserved for ${venueEventName}`, 'event_reservation', reservationId);
+        }
     } catch (error) {
         console.error('Error creating event reservation:', error);
         res.status(500).json({ success: false, message: 'Error creating reservation' });

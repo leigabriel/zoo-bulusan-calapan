@@ -1,6 +1,7 @@
 const Community = require('../models/community-model');
 const Notification = require('../models/notification-model');
 const { deleteFromCloudinary, extractPublicId } = require('../middleware/cloudinary-upload');
+const { logUserActivity, logStaffActivity } = require('../middleware/track-activity');
 
 const sanitizeText = (value, maxLength = 2000) => {
     if (typeof value !== 'string') return '';
@@ -132,6 +133,10 @@ exports.createPost = async (req, res) => {
             link: '/admin/community-moderation'
         });
 
+        if (req.user.role === 'user') {
+            await logUserActivity(req, 'post_create', 'Created a community post', 'community', postId);
+        }
+
         return res.status(201).json({
             success: true,
             message: 'Your post was submitted for review.',
@@ -198,6 +203,10 @@ exports.updatePost = async (req, res) => {
             link: '/admin/community-moderation'
         });
 
+        if (req.user.role === 'user') {
+            await logUserActivity(req, 'post_update', 'Updated a community post', 'community', postId);
+        }
+
         return res.json({
             success: true,
             message: 'Post updated and sent back for review.'
@@ -239,6 +248,12 @@ exports.deletePost = async (req, res) => {
             : await Community.deletePostByOwner(postId, req.user.id);
         if (!deleted) {
             return res.status(404).json({ success: false, message: 'Post not found.' });
+        }
+
+        if (isModerator) {
+            await logStaffActivity(req, 'other', `Deleted community post #${postId}`, 'community', postId);
+        } else if (req.user.role === 'user') {
+            await logUserActivity(req, 'post_delete', 'Deleted a community post', 'community', postId);
         }
 
         return res.json({ success: true, message: 'Post deleted successfully.' });
@@ -314,6 +329,8 @@ exports.reviewPost = async (req, res) => {
         } catch (error) {
             console.error('Error notifying post owner after moderation:', error);
         }
+
+        await logStaffActivity(req, 'other', `${action === 'approved' ? 'Approved' : 'Declined'} community post #${postId}`, 'community', postId);
 
         return res.json({
             success: true,
@@ -391,6 +408,10 @@ exports.createComment = async (req, res) => {
             }
         }
 
+        if (req.user.role === 'user') {
+            await logUserActivity(req, 'comment_create', `Commented on community post #${postId}`, 'comment', commentId);
+        }
+
         return res.status(201).json({ success: true, message: 'Comment added successfully.', commentId });
     } catch (error) {
         console.error('Error creating comment:', error);
@@ -416,6 +437,15 @@ exports.togglePostLike = async (req, res) => {
         }
 
         const result = await Community.togglePostLike(postId, req.user.id);
+        if (req.user.role === 'user') {
+            await logUserActivity(
+                req,
+                'post_like',
+                `${result.liked ? 'Liked' : 'Unliked'} community post #${postId}`,
+                'community',
+                postId
+            );
+        }
         return res.json({
             success: true,
             liked: result.liked,
@@ -441,6 +471,10 @@ exports.updateComment = async (req, res) => {
         const updated = await Community.updateCommentByOwner(commentId, req.user.id, commentText);
         if (!updated) {
             return res.status(404).json({ success: false, message: 'Comment not found or access denied.' });
+        }
+
+        if (req.user.role === 'user') {
+            await logUserActivity(req, 'comment_update', 'Updated a community comment', 'comment', commentId);
         }
 
         return res.json({ success: true, message: 'Comment updated successfully.' });
@@ -475,6 +509,12 @@ exports.deleteComment = async (req, res) => {
             return res.status(404).json({ success: false, message: 'Comment not found.' });
         }
 
+        if (isModerator) {
+            await logStaffActivity(req, 'other', `Deleted community comment #${commentId}`, 'comment', commentId);
+        } else if (req.user.role === 'user') {
+            await logUserActivity(req, 'comment_delete', 'Deleted a community comment', 'comment', commentId);
+        }
+
         return res.json({ success: true, message: 'Comment deleted successfully.' });
     } catch (error) {
         console.error('Error deleting comment:', error);
@@ -496,6 +536,15 @@ exports.toggleCommentHeart = async (req, res) => {
         }
 
         const result = await Community.toggleCommentHeart(commentId, req.user.id);
+        if (req.user.role === 'user') {
+            await logUserActivity(
+                req,
+                'comment_heart',
+                `${result.hearted ? 'Hearted' : 'Removed heart from'} comment #${commentId}`,
+                'comment',
+                commentId
+            );
+        }
         return res.json({
             success: true,
             message: result.hearted ? 'You hearted this comment.' : 'You removed your heart.',
@@ -531,6 +580,10 @@ exports.reportComment = async (req, res) => {
             link: '/admin/community-moderation'
         });
 
+        if (req.user.role === 'user') {
+            await logUserActivity(req, 'comment_report', `Reported comment #${commentId}`, 'comment', commentId);
+        }
+
         return res.json({ success: true, message: 'Thanks for reporting. We will review this comment.' });
     } catch (error) {
         console.error('Error reporting comment:', error);
@@ -562,6 +615,8 @@ exports.reviewCommentReport = async (req, res) => {
         if (!updated) {
             return res.status(404).json({ success: false, message: 'Report not found.' });
         }
+
+        await logStaffActivity(req, 'other', `${action === 'reviewed' ? 'Reviewed' : 'Dismissed'} community report #${reportId}`, 'comment_report', reportId);
 
         return res.json({ success: true, message: 'Report updated successfully.' });
     } catch (error) {

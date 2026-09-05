@@ -34,6 +34,7 @@
     "react-router-dom": "^7.9.6",
     "react-toastify": "^11.0.5",
     "recharts": "^3.10.1",
+    "reicon-react": "^1.2.5",
     "tailwind-merge": "^3.6.0",
     "tailwindcss": "^4.1.13",
     "three": "^0.160.1",

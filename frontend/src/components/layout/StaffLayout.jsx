@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { authAPI, staffAPI, reservationAPI, communityAPI, getProfileImageUrl } from '../../services/api-client';
@@ -8,151 +8,25 @@ import LogoutModal from '../common/LogoutModal';
 import CollapsibleNavGroup from '../common/CollapsibleNavGroup';
 import RoleCompanionFloatingButton from '../common/RoleCompanionFloatingButton';
 import useScrollLock from '../../hooks/use-scroll-lock';
-
-// Icons matching Admin design system
-const OverviewIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
-        <rect x="3" y="3" width="7" height="7" rx="1" />
-        <rect x="14" y="3" width="7" height="7" rx="1" />
-        <rect x="14" y="14" width="7" height="7" rx="1" />
-        <rect x="3" y="14" width="7" height="7" rx="1" />
-    </svg>
-);
-
-const EventsIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
-        <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-        <line x1="16" y1="2" x2="16" y2="6" />
-        <line x1="8" y1="2" x2="8" y2="6" />
-        <line x1="3" y1="10" x2="21" y2="10" />
-    </svg>
-);
-
-const TicketsIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
-        <path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z" />
-        <path d="M13 5v2" />
-        <path d="M13 17v2" />
-        <path d="M13 11v2" />
-    </svg>
-);
-
-const UsersIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
-        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-        <circle cx="9" cy="7" r="4" />
-        <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-    </svg>
-);
-
-const AnimalsIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="currentColor" className="w-5 h-5">
-        <path d="M226.5 92.9c14.3 42.9-.3 86.2-32.6 96.8s-70.1-15.6-84.4-58.5s.3-86.2 32.6-96.8s70.1 15.6 84.4 58.5zM100.4 198.6c18.9 32.4 14.3 70.1-10.2 84.1s-59.7-.9-78.5-33.3S-2.7 179.3 21.8 165.3s59.7 .9 78.5 33.3zM69.2 401.2C121.6 259.9 214.7 224 256 224s134.4 35.9 186.8 177.2c3.6 9.7 5.2 20.1 5.2 30.5v1.6c0 25.8-20.9 46.7-46.7 46.7c-11.5 0-22.9-1.4-34-4.2l-88-22c-15.3-3.8-31.3-3.8-46.6 0l-88 22c-11.1 2.8-22.5 4.2-34 4.2C84.9 480 64 459.1 64 433.3v-1.6c0-10.4 1.6-20.8 5.2-30.5zM421.8 282.7c-24.5-14-29.1-51.7-10.2-84.1s54-47.3 78.5-33.3s29.1 51.7 10.2 84.1s-54 47.3-78.5 33.3zM310.1 189.7c-32.3-10.6-46.9-53.9-32.6-96.8s52.1-69.1 84.4-58.5s46.9 53.9 32.6 96.8s-52.1 69.1-84.4 58.5z" />
-    </svg>
-);
-
-const ScannerIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
-        <path d="M3 7V5a2 2 0 0 1 2-2h2" />
-        <path d="M17 3h2a2 2 0 0 1 2 2v2" />
-        <path d="M21 17v2a2 2 0 0 1-2 2h-2" />
-        <path d="M7 21H5a2 2 0 0 1-2-2v-2" />
-        <rect x="7" y="7" width="10" height="10" rx="1" />
-    </svg>
-);
-
-const HelpIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
-        <circle cx="12" cy="12" r="10" />
-        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
-        <line x1="12" y1="17" x2="12.01" y2="17" />
-    </svg>
-);
-
-const MailIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
-        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
-        <polyline points="22,6 12,13 2,6" />
-    </svg>
-);
-
-const PlantsIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
-        <path d="M7 20h10" />
-        <path d="M10 20c5.5-2.5.8-6.4 3-10" />
-        <path d="M9.5 9.4c1.1.8 1.8 2.2 2.3 3.7-2 .4-3.5.4-4.8-.3-1.2-.6-2.3-1.9-3-4.2 2.8-.5 4.4 0 5.5.8z" />
-        <path d="M14.1 6a7 7 0 0 0-1.1 4c1.9-.1 3.3-.6 4.3-1.4 1-1 1.6-2.3 1.7-4.6-2.7.1-4 1-4.9 2z" />
-    </svg>
-);
-
-const LogoutIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
-        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-        <polyline points="16 17 21 12 16 7" />
-        <line x1="21" y1="12" x2="9" y2="12" />
-    </svg>
-);
-
-const MenuIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
-        <line x1="3" y1="12" x2="21" y2="12" />
-        <line x1="3" y1="6" x2="21" y2="6" />
-        <line x1="3" y1="18" x2="21" y2="18" />
-    </svg>
-);
-
-const SearchIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
-        <circle cx="11" cy="11" r="8" />
-        <path d="m21 21-4.3-4.3" />
-    </svg>
-);
-
-const BellIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
-        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-        <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-    </svg>
-);
-
-const ChecklistIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
-        <path d="M9 11l3 3L22 4" />
-        <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
-    </svg>
-);
-
-const CloseIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
-        <line x1="18" y1="6" x2="6" y2="18" />
-        <line x1="6" y1="6" x2="18" y2="18" />
-    </svg>
-);
-
-const CommunityIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
-        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-        <circle cx="9" cy="7" r="4" />
-        <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-    </svg>
-);
-
-const PawIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="currentColor" className="w-7 h-7">
-        <path d="M226.5 92.9c14.3 42.9-.3 86.2-32.6 96.8s-70.1-15.6-84.4-58.5s.3-86.2 32.6-96.8s70.1 15.6 84.4 58.5zM100.4 198.6c18.9 32.4 14.3 70.1-10.2 84.1s-59.7-.9-78.5-33.3S-2.7 179.3 21.8 165.3s59.7 .9 78.5 33.3zM69.2 401.2C121.6 259.9 214.7 224 256 224s134.4 35.9 186.8 177.2c3.6 9.7 5.2 20.1 5.2 30.5v1.6c0 25.8-20.9 46.7-46.7 46.7c-11.5 0-22.9-1.4-34-4.2l-88-22c-15.3-3.8-31.3-3.8-46.6 0l-88 22c-11.1 2.8-22.5 4.2-34 4.2C84.9 480 64 459.1 64 433.3v-1.6c0-10.4 1.6-20.8 5.2-30.5zM421.8 282.7c-24.5-14-29.1-51.7-10.2-84.1s54-47.3 78.5-33.3s29.1 51.7 10.2 84.1s-54 47.3-78.5 33.3zM310.1 189.7c-32.3-10.6-46.9-53.9-32.6-96.8s52.1-69.1 84.4-58.5s46.9 53.9 32.6 96.8s-52.1 69.1-84.4 58.5z" />
-    </svg>
-);
+import {
+    Home, Calendar, Ticket, Pet, Leaf, Message, Messages, ShieldCheck,
+    Scan, Logout, Menu, Bell, CloseCircle, Lifebuoy, Checklist, Search, Setting, People,
+    Sparkles, User
+} from 'reicon-react';
 
 const StaffLayout = ({ children }) => {
     const { user, logout, updateUser } = useAuth();
     const location = useLocation();
     const navigate = useNavigate();
     const fileInputRef = useRef(null);
+    const searchRef = useRef(null);
+    const searchInputRef = useRef(null);
+    const mobileMenuRef = useRef(null);
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [showLogoutModal, setShowLogoutModal] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
+    const [showSearchDropdown, setShowSearchDropdown] = useState(false);
+    const [mobileHeaderMenuOpen, setMobileHeaderMenuOpen] = useState(false);
     const [notificationPanelOpen, setNotificationPanelOpen] = useState(false);
     const [dailyTaskPanelOpen, setDailyTaskPanelOpen] = useState(false);
     const [showProfileModal, setShowProfileModal] = useState(false);
@@ -162,6 +36,11 @@ const StaffLayout = ({ children }) => {
     const [previewImage, setPreviewImage] = useState(null);
     const [aiAssistOpen, setAiAssistOpen] = useState(false);
     const [openNavGroups, setOpenNavGroups] = useState({ main: true, management: true, communication: true });
+
+    // Global search database state
+    const [searchData, setSearchData] = useState({ animals: [], events: [], plants: [] });
+    const [searchDataLoading, setSearchDataLoading] = useState(false);
+    const [searchDataLoaded, setSearchDataLoaded] = useState(false);
 
     // Real notifications state
     const [notifications, setNotifications] = useState([]);
@@ -257,6 +136,32 @@ const StaffLayout = ({ children }) => {
         // Refresh notifications every 30 seconds for real-time updates
         const interval = setInterval(fetchNotifications, 30000);
         return () => clearInterval(interval);
+    }, []);
+
+    // Fetch search database (animals, events, plants) on demand
+    const searchDataFetchingRef = useRef(false);
+    const fetchSearchData = useCallback(async () => {
+        if (searchDataFetchingRef.current) return;
+        searchDataFetchingRef.current = true;
+        try {
+            setSearchDataLoading(true);
+            const [animalsRes, eventsRes, plantsRes] = await Promise.all([
+                staffAPI.getAnimals().catch(() => ({ animals: [] })),
+                staffAPI.getEvents().catch(() => ({ events: [] })),
+                staffAPI.getPlants().catch(() => ({ plants: [] })),
+            ]);
+            setSearchData({
+                animals: animalsRes?.animals || animalsRes?.data || [],
+                events: eventsRes?.events || eventsRes?.data || [],
+                plants: plantsRes?.plants || plantsRes?.data || [],
+            });
+            setSearchDataLoaded(true);
+        } catch (err) {
+            // Error fetching search data
+        } finally {
+            setSearchDataLoading(false);
+            searchDataFetchingRef.current = false;
+        }
     }, []);
 
     useEffect(() => {
@@ -457,32 +362,96 @@ const StaffLayout = ({ children }) => {
     };
 
     const menuItems = [
-        { path: '/staff/dashboard', label: 'Overview', Icon: OverviewIcon },
-        { path: '/staff/qr-scanner', label: 'QR Scanner', Icon: ScannerIcon },
+        { path: '/staff/dashboard', label: 'Overview', Icon: Home },
+        { path: '/staff/qr-scanner', label: 'QR Scanner', Icon: Scan },
     ];
 
     const managementItems = [
-        { path: '/staff/events', label: 'Events', Icon: EventsIcon },
-        { path: '/staff/reservations', label: 'Reservations', Icon: TicketsIcon },
-        { path: '/staff/animals', label: 'Manage Animals', Icon: AnimalsIcon },
-        { path: '/staff/plants', label: 'Manage Plants', Icon: PlantsIcon },
+        { path: '/staff/events', label: 'Events', Icon: Calendar },
+        { path: '/staff/reservations', label: 'Reservations', Icon: Ticket },
+        { path: '/staff/animals', label: 'Manage Animals', Icon: Pet },
+        { path: '/staff/plants', label: 'Manage Plants', Icon: Leaf },
     ];
 
     const communicationItems = [
-        { path: '/staff/messages', label: 'Messages', Icon: MailIcon },
-        { path: '/staff/community-moderation', label: 'Community Moderation', Icon: CommunityIcon },
+        { path: '/staff/messages', label: 'Messages', Icon: Message },
+        { path: '/staff/community-moderation', label: 'Community Moderation', Icon: ShieldCheck },
     ];
 
     const allMenuItems = [...menuItems, ...managementItems, ...communicationItems];
     const navGroups = [
-        { key: 'main', label: 'Main', items: menuItems },
-        { key: 'management', label: 'Management', items: managementItems },
-        { key: 'communication', label: 'Communication', items: communicationItems },
+        { key: 'main', label: 'Main', items: menuItems, Icon: Home },
+        { key: 'management', label: 'Management', items: managementItems, Icon: Pet },
+        { key: 'communication', label: 'Communication', items: communicationItems, Icon: Messages },
     ];
     const hasOpenOverlay = sidebarOpen || notificationPanelOpen || dailyTaskPanelOpen
-        || showProfileModal || showLogoutModal || aiAssistOpen;
+        || showProfileModal || showLogoutModal || aiAssistOpen || showSearchDropdown;
 
     useScrollLock(hasOpenOverlay);
+
+    // Global search items (pages + database)
+    const filteredSearchItems = useMemo(() => {
+        if (!searchQuery.trim()) return [];
+        const query = searchQuery.toLowerCase();
+        const results = [];
+
+        // 1. Search pages
+        const pageResults = allMenuItems.filter(item =>
+            item.label.toLowerCase().includes(query)
+        ).map(item => ({
+            ...item,
+            type: 'page',
+            category: 'Pages',
+        }));
+        results.push(...pageResults);
+
+        // 2. Search animals
+        const animalResults = searchData.animals.filter(animal =>
+            (animal.name || animal.commonName || '').toLowerCase().includes(query) ||
+            (animal.species || '').toLowerCase().includes(query)
+        ).slice(0, 5).map(animal => ({
+            id: `animal-${animal.id || animal._id}`,
+            label: animal.name || animal.commonName || 'Unknown Animal',
+            sublabel: animal.species || 'Animal',
+            path: '/staff/animals',
+            Icon: Pet,
+            type: 'data',
+            category: 'Animals',
+        }));
+        results.push(...animalResults);
+
+        // 3. Search events
+        const eventResults = searchData.events.filter(event =>
+            (event.name || event.title || '').toLowerCase().includes(query) ||
+            (event.description || '').toLowerCase().includes(query)
+        ).slice(0, 5).map(event => ({
+            id: `event-${event.id || event._id}`,
+            label: event.name || event.title || 'Unknown Event',
+            sublabel: event.date ? new Date(event.date).toLocaleDateString() : 'Event',
+            path: '/staff/events',
+            Icon: Calendar,
+            type: 'data',
+            category: 'Events',
+        }));
+        results.push(...eventResults);
+
+        // 4. Search plants
+        const plantResults = searchData.plants.filter(plant =>
+            (plant.name || plant.commonName || '').toLowerCase().includes(query) ||
+            (plant.species || '').toLowerCase().includes(query)
+        ).slice(0, 5).map(plant => ({
+            id: `plant-${plant.id || plant._id}`,
+            label: plant.name || plant.commonName || 'Unknown Plant',
+            sublabel: plant.species || 'Plant',
+            path: '/staff/plants',
+            Icon: Leaf,
+            type: 'data',
+            category: 'Plants',
+        }));
+        results.push(...plantResults);
+
+        return results.slice(0, 15);
+    }, [searchQuery, allMenuItems, searchData]);
 
     const handleNavClick = () => {
         if (window.innerWidth < 1024) {
@@ -495,11 +464,19 @@ const StaffLayout = ({ children }) => {
         setSidebarOpen(false);
         setNotificationPanelOpen(false);
         setDailyTaskPanelOpen(false);
+        setShowSearchDropdown(false);
+        setMobileHeaderMenuOpen(false);
     }, [location.pathname]);
 
-    // Close notification panel when clicking outside
+    // Close panels when clicking outside
     useEffect(() => {
         const handleClickOutside = (e) => {
+            if (searchRef.current && !searchRef.current.contains(e.target)) {
+                setShowSearchDropdown(false);
+            }
+            if (mobileMenuRef.current && !mobileMenuRef.current.contains(e.target)) {
+                setMobileHeaderMenuOpen(false);
+            }
             if (notificationPanelOpen && !e.target.closest('.notification-panel') && !e.target.closest('.notification-bell')) {
                 setNotificationPanelOpen(false);
             }
@@ -514,7 +491,7 @@ const StaffLayout = ({ children }) => {
     const unreadCount = notifications.filter(n => !n.read).length;
 
     return (
-        <div className="flex h-screen bg-gray-50 overflow-hidden">
+        <div className="flex h-screen bg-gray-50 overflow-hidden font-['JetBrains']">
             {/* Mobile overlay for left sidebar */}
             {sidebarOpen && (
                 <div
@@ -556,7 +533,7 @@ const StaffLayout = ({ children }) => {
                         onClick={() => setSidebarOpen(false)}
                         className="ml-auto lg:hidden text-gray-400 hover:text-gray-900"
                     >
-                        <CloseIcon />
+                        <CloseCircle size={20} />
                     </button>
                 </div>
 
@@ -567,6 +544,7 @@ const StaffLayout = ({ children }) => {
                             key={group.key}
                             label={group.label}
                             items={group.items}
+                            Icon={group.Icon}
                             open={openNavGroups[group.key]}
                             onToggle={() => setOpenNavGroups((current) => ({ ...current, [group.key]: !current[group.key] }))}
                             pathname={location.pathname}
@@ -584,106 +562,272 @@ const StaffLayout = ({ children }) => {
                                 : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                             }`}
                     >
-                        <HelpIcon />
+                        <Lifebuoy size={20} />
                         <span className="font-medium">Help Center</span>
                     </Link>
 
-                    {/* User Profile Card */}
-                    <div className="flex items-center gap-3 p-3 bg-gray-100 rounded-xl mt-4">
-                        <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-green-600 rounded-full flex items-center justify-center font-bold text-white">
-                            {user?.fullName?.charAt(0) || user?.firstName?.charAt(0) || 'S'}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                            <p className="font-medium text-gray-900 truncate">{user?.fullName || `${user?.firstName || ''} ${user?.lastName || ''}`}</p>
-                            <p className="text-xs text-gray-500 capitalize">{user?.role}</p>
-                        </div>
-                    </div>
+                    <div className="flex gap-2">
+                        <Link
+                            to="/staff/settings"
+                            className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-medium transition-all duration-200 ${location.pathname === '/staff/settings'
+                                    ? 'bg-green-100 text-green-700'
+                                    : 'bg-gray-200 text-gray-600 hover:bg-gray-300 hover:text-gray-900'
+                                }`}
+                        >
+                            <Setting size={20} />
+                        </Link>
 
-                    <button
-                        onClick={() => setShowLogoutModal(true)}
-                        className="w-full flex items-center justify-center gap-2 py-3 bg-red-500 hover:bg-red-600 
-                            rounded-xl font-medium text-white transition-all duration-200 
-                            shadow-md shadow-red-500/20"
-                        aria-label="Logout from staff portal"
-                    >
-                        <LogoutIcon />
-                        Logout
-                    </button>
+                        <button
+                            onClick={() => setShowLogoutModal(true)}
+                            className="flex-1 flex items-center justify-center gap-2 py-3 bg-red-500 hover:bg-red-600 
+                                rounded-xl font-medium text-white transition-all duration-200 
+                                shadow-md shadow-red-500/20"
+                            aria-label="Logout from staff portal"
+                        >
+                            <Logout size={20} />
+                        </button>
+                    </div>
                 </div>
             </aside>
 
             {/* Main Content Area */}
             <div className="flex-1 flex flex-col overflow-hidden">
                 {/* Top Header */}
-                <header className="bg-[#ebebeb] border-b border-gray-300 px-4 lg:px-6 py-4 flex justify-between items-center">
-                    <div className="flex items-center gap-4">
-                        <button
-                            onClick={() => setSidebarOpen(!sidebarOpen)}
-                            className="p-2 hover:bg-gray-100 rounded-xl text-gray-500 hover:text-gray-900 transition lg:hidden"
-                            aria-label={sidebarOpen ? 'Close sidebar menu' : 'Open sidebar menu'}
-                            aria-expanded={sidebarOpen}
-                        >
-                            <MenuIcon />
-                        </button>
-                        <div>
-                            <h2 className="text-xl font-bold text-gray-900">
+                <header className="bg-[#ebebeb] border-b border-gray-300 px-3 sm:px-4 lg:px-6 py-3 sm:py-4 relative">
+                    {/* Mobile Header */}
+                    <div className="flex items-center justify-between lg:hidden">
+                        <div className="flex items-center gap-3 min-w-0">
+                            <button
+                                onClick={() => setSidebarOpen(!sidebarOpen)}
+                                className="p-2 hover:bg-gray-100 rounded-xl text-gray-500 hover:text-gray-900 transition flex-shrink-0"
+                                aria-label={sidebarOpen ? 'Close sidebar menu' : 'Open sidebar menu'}
+                                aria-expanded={sidebarOpen}
+                            >
+                                <Menu size={22} />
+                            </button>
+                            <h2 className="text-base font-bold text-gray-900 truncate">
                                 {allMenuItems.find(item => item.path === location.pathname)?.label ||
-                                    (location.pathname === '/staff/help' ? 'Help Center' : 'Staff Portal')}
+                                    (location.pathname === '/staff/help' ? 'Help Center' :
+                                        location.pathname === '/staff/settings' ? 'Settings' : 'Staff Portal')}
                             </h2>
-                            <p className="text-sm text-gray-500">
-                                {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-                            </p>
+                        </div>
+                        <div className="flex items-center gap-2" ref={mobileMenuRef}>
+                            <button
+                                onClick={() => setMobileHeaderMenuOpen(!mobileHeaderMenuOpen)}
+                                className="relative p-2 hover:bg-gray-100 rounded-xl transition flex-shrink-0"
+                                aria-label="Open menu"
+                            >
+                                <div className="w-8 h-8 bg-gradient-to-br from-green-500 to-green-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                                    {(user?.firstName || user?.lastName || user?.fullName)?.charAt(0) || 'S'}
+                                </div>
+                                {unreadCount > 0 && (
+                                    <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center text-[9px] font-bold text-white">
+                                        {unreadCount > 9 ? '9+' : unreadCount}
+                                    </span>
+                                )}
+                            </button>
+                            {mobileHeaderMenuOpen && (
+                                <div className="absolute top-full right-3 mt-2 w-56 bg-white border border-gray-200 rounded-xl shadow-lg z-[60] py-2">
+                                    <button
+                                        onClick={() => { setMobileHeaderMenuOpen(false); setNotificationPanelOpen(true); }}
+                                        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-left"
+                                    >
+                                        <Bell size={18} className="text-gray-400" />
+                                        <span className="text-sm text-gray-700">Notifications</span>
+                                        {unreadCount > 0 && (
+                                            <span className="ml-auto text-[10px] px-1.5 py-0.5 bg-green-100 text-green-700 rounded-full font-medium">{unreadCount}</span>
+                                        )}
+                                    </button>
+                                    <button
+                                        onClick={() => { setMobileHeaderMenuOpen(false); setAiAssistOpen(true); }}
+                                        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-left"
+                                    >
+                                        <Sparkles size={18} className="text-gray-400" />
+                                        <span className="text-sm text-gray-700">AI Assist</span>
+                                    </button>
+                                    <button
+                                        onClick={() => { setMobileHeaderMenuOpen(false); setDailyTaskPanelOpen(true); }}
+                                        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-left"
+                                    >
+                                        <Checklist size={18} className="text-gray-400" />
+                                        <span className="text-sm text-gray-700">Daily Tasks</span>
+                                        <span className="ml-auto text-[10px] px-1.5 py-0.5 bg-green-100 text-green-700 rounded-full font-medium">{completedTaskCount}/{dailyTasks.length}</span>
+                                    </button>
+                                    <button
+                                        onClick={() => { setMobileHeaderMenuOpen(false); openProfileModal(); }}
+                                        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-left"
+                                    >
+                                        <User size={18} className="text-gray-400" />
+                                        <span className="text-sm text-gray-700">Profile</span>
+                                    </button>
+                                    <div className="border-t border-gray-100 mt-1 pt-1">
+                                        <button
+                                            onClick={() => { setMobileHeaderMenuOpen(false); setShowLogoutModal(true); }}
+                                            className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-left"
+                                        >
+                                            <Logout size={18} className="text-red-500" />
+                                            <span className="text-sm text-red-600">Sign Out</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-3">
-                        <button
-                            type="button"
-                            onClick={() => setAiAssistOpen(true)}
-                            className="flex items-center gap-2 rounded-xl bg-[#c6fe69] px-3 py-2 text-sm font-semibold text-gray-900 transition hover:bg-[#b6ef58]"
-                            aria-label="Open AI Assist"
-                        >
-                            <img src="/admin-staff-icon-ai.svg" alt="" className="h-6 w-6 object-contain" />
-                            <span className="hidden sm:inline">AI Assist</span>
-                        </button>
-                        {/* Notification Bell */}
-                        <button
-                            onClick={() => setNotificationPanelOpen(!notificationPanelOpen)}
-                            className="notification-bell relative p-2.5 hover:bg-gray-100 rounded-xl text-gray-500 hover:text-gray-900 transition"
-                            aria-label="Toggle notifications"
-                        >
-                            <BellIcon />
-                            {unreadCount > 0 && (
-                                <span className="absolute top-1 right-1 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center text-[10px] font-bold text-white">
-                                    {unreadCount}
+                    {/* Desktop Header */}
+                    <div className="hidden lg:flex items-center">
+                        <div className="flex items-center gap-4 min-w-0 w-64 flex-shrink-0">
+                            <h2 className="text-xl font-bold text-gray-900 truncate">
+                                {allMenuItems.find(item => item.path === location.pathname)?.label ||
+                                    (location.pathname === '/staff/help' ? 'Help Center' :
+                                        location.pathname === '/staff/settings' ? 'Settings' : 'Staff Portal')}
+                            </h2>
+                        </div>
+                        {/* Centered Search */}
+                        <div className="flex-1 flex justify-center px-4">
+                            <div className="relative w-full max-w-md" ref={searchRef}>
+                                <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-3 py-2 focus-within:border-green-500 focus-within:ring-1 focus-within:ring-green-500/20 transition-all">
+                                    <Search size={16} className="text-gray-400 flex-shrink-0" />
+                                    <input
+                                        ref={searchInputRef}
+                                        type="text"
+                                        value={searchQuery}
+                                        onChange={(e) => {
+                                            setSearchQuery(e.target.value);
+                                            if (e.target.value.trim()) {
+                                                setShowSearchDropdown(true);
+                                                fetchSearchData();
+                                            } else {
+                                                setShowSearchDropdown(false);
+                                            }
+                                        }}
+                                        onFocus={() => {
+                                            if (searchQuery.trim()) {
+                                                setShowSearchDropdown(true);
+                                                fetchSearchData();
+                                            }
+                                        }}
+                                        placeholder="Search pages, animals, events..."
+                                        className="bg-transparent border-none outline-none text-sm text-gray-900 placeholder-gray-400 w-full"
+                                    />
+                                    {searchQuery && (
+                                        <button
+                                            onClick={() => { setSearchQuery(''); setShowSearchDropdown(false); }}
+                                            className="text-gray-400 hover:text-gray-600"
+                                        >
+                                            <CloseCircle size={14} />
+                                        </button>
+                                    )}
+                                </div>
+                                {showSearchDropdown && searchQuery.trim() && (
+                                    <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-lg z-[60] max-h-80 overflow-y-auto w-96">
+                                        {searchDataLoading && filteredSearchItems.length === 0 ? (
+                                            <div className="px-4 py-6 text-center text-gray-500">
+                                                <div className="w-6 h-6 border-2 border-green-500 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+                                                <p className="text-sm">Searching...</p>
+                                            </div>
+                                        ) : filteredSearchItems.length > 0 ? (
+                                            <>
+                                                {filteredSearchItems.filter(i => i.type === 'page').length > 0 && (
+                                                    <div>
+                                                        <div className="px-4 py-2 bg-gray-50 border-b border-gray-100">
+                                                            <p className="text-xs font-semibold text-gray-500 uppercase">Pages</p>
+                                                        </div>
+                                                        {filteredSearchItems.filter(i => i.type === 'page').map((item) => (
+                                                            <Link
+                                                                key={item.path}
+                                                                to={item.path}
+                                                                onClick={() => { setSearchQuery(''); setShowSearchDropdown(false); handleNavClick(); }}
+                                                                className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-0"
+                                                            >
+                                                                <item.Icon size={18} className="text-gray-400 flex-shrink-0" />
+                                                                <div className="min-w-0">
+                                                                    <p className="text-sm font-medium text-gray-900 truncate">{item.label}</p>
+                                                                    <p className="text-xs text-gray-500 truncate">{item.path}</p>
+                                                                </div>
+                                                            </Link>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                                {['Animals', 'Events', 'Plants'].map(category => {
+                                                    const items = filteredSearchItems.filter(i => i.category === category);
+                                                    if (items.length === 0) return null;
+                                                    return (
+                                                        <div key={category}>
+                                                            <div className="px-4 py-2 bg-gray-50 border-b border-gray-100 border-t">
+                                                                <p className="text-xs font-semibold text-gray-500 uppercase">{category}</p>
+                                                            </div>
+                                                            {items.map((item) => (
+                                                                <Link
+                                                                    key={item.id}
+                                                                    to={item.path}
+                                                                    onClick={() => { setSearchQuery(''); setShowSearchDropdown(false); handleNavClick(); }}
+                                                                    className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-0"
+                                                                >
+                                                                    <item.Icon size={18} className="text-gray-400 flex-shrink-0" />
+                                                                    <div className="min-w-0 flex-1">
+                                                                        <p className="text-sm font-medium text-gray-900 truncate">{item.label}</p>
+                                                                        <p className="text-xs text-gray-500 truncate">{item.sublabel}</p>
+                                                                    </div>
+                                                                    <span className="text-[10px] px-1.5 py-0.5 bg-green-100 text-green-700 rounded font-medium flex-shrink-0">{category}</span>
+                                                                </Link>
+                                                            ))}
+                                                        </div>
+                                                    );
+                                                })}
+                                            </>
+                                        ) : (
+                                            <div className="px-4 py-6 text-center text-gray-500">
+                                                <Search size={24} className="mx-auto mb-2 text-gray-300" />
+                                                <p className="text-sm">No results found</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                        {/* Right icons */}
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                            <button
+                                type="button"
+                                onClick={() => setAiAssistOpen(true)}
+                                className="p-2.5 hover:bg-gray-100 rounded-xl text-gray-500 hover:text-gray-900 transition"
+                                aria-label="Open AI Assist"
+                            >
+                                <Sparkles size={20} />
+                            </button>
+                            <button
+                                onClick={() => setNotificationPanelOpen(!notificationPanelOpen)}
+                                className="notification-bell relative p-2.5 hover:bg-gray-100 rounded-xl text-gray-500 hover:text-gray-900 transition"
+                                aria-label="Toggle notifications"
+                            >
+                                <Bell size={20} />
+                                {unreadCount > 0 && (
+                                    <span className="absolute top-1 right-1 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center text-[10px] font-bold text-white">
+                                        {unreadCount > 99 ? '99+' : unreadCount}
+                                    </span>
+                                )}
+                            </button>
+                            <button
+                                onClick={() => setDailyTaskPanelOpen(!dailyTaskPanelOpen)}
+                                className="daily-task-btn relative p-2.5 hover:bg-gray-100 rounded-xl text-gray-500 hover:text-gray-900 transition"
+                                aria-label="Toggle daily tasks"
+                            >
+                                <Checklist size={20} />
+                                <span className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1 bg-green-500 rounded-full flex items-center justify-center text-[10px] font-bold text-white">
+                                    {completedTaskCount}/{dailyTasks.length}
                                 </span>
-                            )}
-                        </button>
-
-                        <button
-                            onClick={() => setDailyTaskPanelOpen(!dailyTaskPanelOpen)}
-                            className="daily-task-btn relative p-2.5 hover:bg-gray-100 rounded-xl text-gray-500 hover:text-gray-900 transition"
-                            aria-label="Toggle daily tasks"
-                        >
-                            <ChecklistIcon />
-                            <span className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1 bg-green-500 rounded-full flex items-center justify-center text-[10px] font-bold text-white">
-                                {completedTaskCount}/{dailyTasks.length}
-                            </span>
-                        </button>
-
-                        {/* Profile Button */}
-                        <button
-                            onClick={openProfileModal}
-                            className="flex items-center gap-3 hover:bg-gray-100 px-3 py-2 rounded-xl transition"
-                        >
-                            <div className="w-9 h-9 bg-gradient-to-br from-green-500 to-green-600 rounded-full flex items-center justify-center text-white font-bold">
-                                {(user?.firstName || user?.lastName || user?.fullName)?.charAt(0) || 'S'}
-                            </div>
-                            <div className="text-left hidden md:block">
-                                <div className="text-sm text-gray-900 font-medium">{user?.fullName || `${user?.firstName || ''} ${user?.lastName || ''}`}</div>
-                                <div className="text-xs text-gray-500">View profile</div>
-                            </div>
-                        </button>
+                            </button>
+                            <button
+                                onClick={openProfileModal}
+                                className="p-1 hover:bg-gray-100 rounded-xl transition"
+                                aria-label="Open profile"
+                            >
+                                <div className="w-9 h-9 bg-gradient-to-br from-green-500 to-green-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                                    {(user?.firstName || user?.lastName || user?.fullName)?.charAt(0) || 'S'}
+                                </div>
+                            </button>
+                        </div>
                     </div>
                 </header>
 
@@ -697,21 +841,21 @@ const StaffLayout = ({ children }) => {
             </div>
 
             <aside
-                className={`daily-task-panel fixed right-0 top-0 z-50 w-80 sm:w-96 h-full bg-white border-l border-gray-200 flex flex-col overscroll-contain
+                className={`daily-task-panel fixed right-0 top-0 z-50 w-full sm:w-96 h-full bg-white border-l border-gray-200 flex flex-col overscroll-contain
                     transform transition-transform duration-300 ease-in-out ${dailyTaskPanelOpen ? 'translate-x-0' : 'translate-x-full'
                     }`}
                 aria-label="Daily tasks panel"
             >
                 <div className="p-5 flex items-center justify-between border-b border-gray-200">
                     <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                        <ChecklistIcon />
+                        <Checklist size={20} />
                         Daily Tasks
                     </h3>
                     <button
                         onClick={() => setDailyTaskPanelOpen(false)}
                         className="p-2 hover:bg-gray-100 rounded-lg text-gray-400 hover:text-gray-900 transition"
                     >
-                        <CloseIcon />
+                        <CloseCircle size={20} />
                     </button>
                 </div>
 
@@ -784,7 +928,7 @@ const StaffLayout = ({ children }) => {
                 {/* Notifications Header */}
                 <div className="p-5 flex items-center justify-between border-b border-gray-200">
                     <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                        <BellIcon />
+                        <Bell size={20} />
                         Notifications
                         {unreadCount > 0 && (
                             <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs font-medium rounded-full">
@@ -796,7 +940,7 @@ const StaffLayout = ({ children }) => {
                         onClick={() => setNotificationPanelOpen(false)}
                         className="p-2 hover:bg-gray-100 rounded-lg text-gray-400 hover:text-gray-900 transition"
                     >
-                        <CloseIcon />
+                        <CloseCircle size={20} />
                     </button>
                 </div>
 
@@ -804,7 +948,7 @@ const StaffLayout = ({ children }) => {
                 <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-4 space-y-3">
                     {notifications.length === 0 ? (
                         <div className="text-center py-8 text-gray-500">
-                            <BellIcon />
+                            <Bell size={32} />
                             <p className="mt-2">No notifications</p>
                         </div>
                     ) : (
@@ -871,7 +1015,7 @@ const StaffLayout = ({ children }) => {
                                 onClick={() => setShowProfileModal(false)}
                                 className="text-gray-400 hover:text-gray-900 transition"
                             >
-                                <CloseIcon />
+                                <CloseCircle size={20} />
                             </button>
                         </div>
 
