@@ -173,7 +173,7 @@ const AdminEvents = () => {
             } else {
                 setEvents([]);
             }
-        } catch (err) {
+        } catch {
             setError('Failed to load events');
             setEvents([]);
         } finally {
@@ -306,7 +306,10 @@ const AdminEvents = () => {
             const response = await adminAPI.deleteEvent(selectedEvent.id);
             if (response.success) {
                 await fetchEvents();
-                notify.success('Event moved to trash.');
+                const eventData = events.find(e => e.id === selectedEvent.id);
+                setUndoItem({ type: 'event', data: eventData });
+                if (undoTimeoutRef.current) clearTimeout(undoTimeoutRef.current);
+                undoTimeoutRef.current = setTimeout(() => setUndoItem(null), 5000);
                 setShowModal(false);
                 resetForm();
             }
@@ -337,21 +340,6 @@ const AdminEvents = () => {
 
     // ==================== TRASH HANDLERS ====================
 
-    const trashEvent = async (eventId) => {
-        try {
-            const response = await adminAPI.deleteEvent(eventId);
-            if (response.success) {
-                await fetchEvents();
-                const event = events.find(e => e.id === eventId.toString());
-                setUndoItem({ type: 'event', data: event });
-                if (undoTimeoutRef.current) clearTimeout(undoTimeoutRef.current);
-                undoTimeoutRef.current = setTimeout(() => setUndoItem(null), 5000);
-            }
-        } catch (err) {
-            notify.error('Failed to move event to trash');
-        }
-    };
-
     const handleUndoTrash = async () => {
         if (!undoItem) return;
         try {
@@ -359,7 +347,7 @@ const AdminEvents = () => {
             await fetchEvents();
             setUndoItem(null);
             if (undoTimeoutRef.current) clearTimeout(undoTimeoutRef.current);
-        } catch (err) {
+        } catch {
             notify.error('Failed to restore event');
         }
     };
@@ -558,7 +546,7 @@ const AdminEvents = () => {
                                         eventDate: newDate,
                                     });
                                     await fetchEvents();
-                                } catch (err) {
+                                } catch {
                                     info.revert();
                                 }
                             }}
