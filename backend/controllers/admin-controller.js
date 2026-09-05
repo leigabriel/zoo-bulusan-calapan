@@ -56,7 +56,7 @@ exports.getDashboardStats = async (req, res) => {
         const validTicket = `tr.status IN ('confirmed', 'completed')`;
         const validEvent = `er.status IN ('confirmed', 'completed') AND er.payment_status = 'paid'`;
 
-        const [summaryRows, previousRows, weeklyRows, siteVisitorRows, distributionRows, breakdownRows, eventRows, currentDateRows, totalUsers, totalAnimals, totalPlants] = await Promise.all([
+        const [summaryRows, previousRows, weeklyRows, siteVisitorRows, distributionRows, breakdownRows, eventRows, currentDateRows, reservationRows, messageRows, totalUsers, totalAnimals, totalPlants] = await Promise.all([
             db.query(`SELECT
                 (SELECT COALESCE(SUM(tr.adult_quantity + tr.child_quantity + tr.bulusan_resident_quantity), 0) FROM ticket_reservations tr WHERE ${validTicket} ${ticketDate}) AS tickets,
                 (SELECT COUNT(*) FROM site_visits WHERE visit_date >= ${periodStart} AND visit_date < ${currentEnd}) AS visitors,
@@ -95,6 +95,12 @@ exports.getDashboardStats = async (req, res) => {
              WHERE e.event_date >= CURDATE() AND e.status IN ('upcoming', 'ongoing')
              GROUP BY e.id, e.title, e.event_date, e.status ORDER BY e.event_date ASC LIMIT 5`),
             db.query("SELECT CAST(DATE_FORMAT(CURDATE(), '%Y-%m-%d') AS CHAR) AS today"),
+            db.query(`SELECT
+                COUNT(*) AS totalEventReservations,
+                SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) AS pendingEventReservations,
+                SUM(CASE WHEN created_at >= ${periodStart} AND created_at < ${currentEnd} THEN 1 ELSE 0 END) AS periodEventReservations
+                FROM event_reservations`),
+            db.query('SELECT SUM(CASE WHEN is_read = FALSE THEN 1 ELSE 0 END) AS unreadMessages FROM user_messages'),
             User.count(), Animal.count(), Plant.count()
         ]);
         const summary = summaryRows[0][0] || {};
@@ -129,6 +135,10 @@ exports.getDashboardStats = async (req, res) => {
                 totalRevenue,
                 totalProfit: totalRevenue,
                 upcomingEvents: eventRows[0].length,
+                totalEventReservations: Number(reservationRows[0][0]?.totalEventReservations) || 0,
+                periodEventReservations: Number(reservationRows[0][0]?.periodEventReservations) || 0,
+                pendingEventReservations: Number(reservationRows[0][0]?.pendingEventReservations) || 0,
+                unreadMessages: Number(messageRows[0][0]?.unreadMessages) || 0,
                 trends: {
                     tickets: pct(Number(summary.tickets), Number(previous.tickets)),
                     visitors: pct(Number(summary.visitors), Number(previous.visitors)),
@@ -248,6 +258,9 @@ exports.updateUser = async (req, res) => {
         if (!user) {
             return res.status(404).json({ success: false, message: 'User not found' });
         }
+        if (user.role === 'admin') {
+            return res.status(403).json({ success: false, message: 'Administrator accounts cannot be edited here' });
+        }
 
         const updated = await User.update(id, { 
             firstName: firstName || user.first_name,
@@ -274,6 +287,11 @@ exports.updateUser = async (req, res) => {
 exports.deleteUser = async (req, res) => {
     try {
         const { id } = req.params;
+        const user = await User.findById(id);
+        if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+        if (user.role === 'admin' || String(id) === String(req.user.id)) {
+            return res.status(403).json({ success: false, message: 'Administrator accounts cannot be moved to trash' });
+        }
         const deleted = await User.softDelete(id, req.user.id);
 
         if (!deleted) {
@@ -655,7 +673,8 @@ exports.getReportData = async (req, res) => {
                     tr.bulusan_resident_quantity,
                     tr.total_visitors,
                     tr.status,
-                    (tr.adult_quantity * 40) + (tr.child_quantity * 20) as amount
+                    CASE WHEN tr.status IN ('confirmed', 'completed')
+                        THEN (tr.adult_quantity * 40) + (tr.child_quantity * 20) ELSE 0 END as amount
                  FROM ticket_reservations tr
                  WHERE DATE(tr.created_at) BETWEEN ? AND ?
                  ORDER BY tr.created_at DESC
@@ -708,7 +727,7 @@ exports.getReportData = async (req, res) => {
                     COALESCE(SUM(total_visitors), 0) as visitors
                  FROM ticket_reservations
                  WHERE DATE(created_at) BETWEEN ? AND ?
-                 AND status NOT IN ('cancelled', 'no_show')`,
+                 AND status IN ('confirmed', 'completed')`,
                 [start, end]
             );
 
@@ -757,29 +776,36 @@ exports.getReportData = async (req, res) => {
             ticketsSold = parseInt(totals[0]?.ticketsSold) || 0;
 
         } else if (reportType === 'events') {
-            // Get event data
             const [rows] = await db.query(
                 `SELECT 
-                    id,
-                    title,
-                    DATE_FORMAT(event_date, '%Y-%m-%d') as date,
-                    status,
-                    created_at
-                 FROM events
-                 WHERE DATE(event_date) BETWEEN ? AND ?
-                 ORDER BY event_date DESC`,
+                    er.reservation_reference AS reference,
+                    COALESCE(er.venue_event_name, e.title, 'Event reservation') AS name,
+                    DATE_FORMAT(COALESCE(er.venue_event_date, e.event_date, er.created_at), '%Y-%m-%d') AS date,
+                    er.status,
+                    er.payment_status,
+                    er.payment_amount,
+                    COALESCE(er.number_of_participants, 1) AS participants
+                 FROM event_reservations er
+                 LEFT JOIN events e ON e.id = er.event_id
+                 WHERE DATE(COALESCE(er.venue_event_date, e.event_date, er.created_at)) BETWEEN ? AND ?
+                 ORDER BY COALESCE(er.venue_event_date, e.event_date, er.created_at) DESC`,
                 [start, end]
             );
 
             items = rows.map(row => ({
                 date: row.date,
-                type: 'Event',
-                quantity: 1,
-                amount: 0,
-                status: row.status === 'active' ? 'Active' : 
-                       row.status === 'completed' ? 'Completed' : 'Cancelled',
-                name: row.title
+                reference: row.reference,
+                type: 'Event Reservation',
+                quantity: Number(row.participants) || 1,
+                amount: row.payment_status === 'paid' ? Number(row.payment_amount) || 0 : 0,
+                status: row.status,
+                name: row.name
             }));
+
+            const validRows = rows.filter(row => !['cancelled', 'no_show'].includes(row.status));
+            totalRevenue = validRows.reduce((sum, row) => sum + (row.payment_status === 'paid' ? Number(row.payment_amount) || 0 : 0), 0);
+            ticketsSold = validRows.length;
+            visitors = validRows.reduce((sum, row) => sum + (Number(row.participants) || 1), 0);
         }
 
         res.json({
@@ -809,7 +835,7 @@ exports.getQuickStats = async (req, res) => {
                 COALESCE(SUM(adult_quantity + child_quantity + bulusan_resident_quantity), 0) as ticketsSold,
                 COALESCE(SUM(total_visitors), 0) as visitors
              FROM ticket_reservations
-             WHERE status NOT IN ('cancelled', 'no_show')`
+             WHERE status IN ('confirmed', 'completed')`
         );
 
         res.json({
@@ -967,10 +993,11 @@ exports.uploadImage = async (req, res) => {
 exports.getNotifications = async (req, res) => {
     try {
         const userId = req.user?.id || null;
-        const result = await Notification.generateDashboardNotifications(userId);
+        const result = await Notification.generateDashboardNotifications(userId, 'admin');
         res.json({
             success: true,
             notifications: result.notifications,
+            unreadCount: result.unreadCount,
             summary: result.summary
         });
     } catch (error) {
@@ -984,7 +1011,9 @@ exports.markNotificationRead = async (req, res) => {
     try {
         const { id } = req.params;
         const userId = req.user.id;
-        await Notification.markAsRead(id, userId);
+        if (!await Notification.markAsRead(id, userId)) {
+            return res.status(404).json({ success: false, message: 'Notification not found' });
+        }
         res.json({ success: true, message: 'Notification marked as read' });
     } catch (error) {
         console.error('Error marking notification read:', error);
@@ -1270,7 +1299,7 @@ const verifyPassword = async (userId, password) => {
 exports.getTrashUsers = async (req, res) => {
     try {
         const users = await User.getDeleted();
-        res.json({ success: true, users });
+        res.json({ success: true, users: users.filter(user => user.role !== 'admin') });
     } catch (error) {
         console.error('Error getting trashed users:', error);
         res.status(500).json({ success: false, message: 'Error fetching trashed users' });
@@ -1312,6 +1341,11 @@ exports.permanentDeleteUser = async (req, res) => {
         const valid = await verifyPassword(req.user.id, password);
         if (!valid) return res.status(401).json({ success: false, message: 'Incorrect password' });
 
+        const target = await User.findById(id);
+        if (target?.role === 'admin' || String(id) === String(req.user.id)) {
+            return res.status(403).json({ success: false, message: 'Administrator accounts cannot be permanently deleted' });
+        }
+
         const deleted = await User.permanentDelete(id);
         if (!deleted) return res.status(404).json({ success: false, message: 'User not found' });
         res.json({ success: true, message: 'User permanently deleted' });
@@ -1331,6 +1365,11 @@ exports.permanentDeleteMultipleUsers = async (req, res) => {
 
         const valid = await verifyPassword(req.user.id, password);
         if (!valid) return res.status(401).json({ success: false, message: 'Incorrect password' });
+
+        const targets = await Promise.all(ids.map(id => User.findById(id)));
+        if (targets.some((target, index) => target?.role === 'admin' || String(ids[index]) === String(req.user.id))) {
+            return res.status(403).json({ success: false, message: 'Administrator accounts cannot be permanently deleted' });
+        }
 
         await User.permanentDeleteMultiple(ids);
         res.json({ success: true, message: `${ids.length} user(s) permanently deleted` });

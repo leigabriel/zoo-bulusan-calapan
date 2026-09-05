@@ -3,6 +3,7 @@ import { useState, useEffect, useMemo } from 'react';
 import * as XLSX from 'xlsx';
 import { adminAPI } from '../../services/api-client';
 import { notify } from '../../utils/toast';
+import './Reports.css';
 
 // Icons
 const ChartIcon = () => (
@@ -41,16 +42,16 @@ const ClipboardIcon = () => (
     <ReiconClipboard strokeWidth="2" className="w-12 h-12 text-gray-500" />
 );
 
-const SearchIcon = () => (
-    <ReiconSearch strokeWidth="2" className="w-4 h-4" />
+const SearchIcon = ({ className = '' }) => (
+    <ReiconSearch strokeWidth="2" className={`w-4 h-4 pointer-events-none ${className}`} aria-hidden="true" />
 );
 
 const SortIcon = ({ direction }) => (
     (direction === 'asc' ? <ReiconChevronUp strokeWidth="2" className="w-3 h-3 inline ml-1" /> : direction === 'desc' ? <ReiconChevronDown strokeWidth="2" className="w-3 h-3 inline ml-1" /> : <ReiconChevronExpandY strokeWidth="2" className="w-3 h-3 inline ml-1" />)
 );
 
-const TrendIcon = () => (
-    <ReiconTrendUp strokeWidth="2" className="w-5 h-5" />
+const TrendIcon = ({ className = '' }) => (
+    <ReiconTrendUp strokeWidth="2" className={`w-5 h-5 ${className}`} />
 );
 
 const Reports = () => {
@@ -59,11 +60,12 @@ const Reports = () => {
     const [reportData, setReportData] = useState(null);
     const [loading, setLoading] = useState(false);
     const [statsLoading, setStatsLoading] = useState(true);
+    const [reportError, setReportError] = useState('');
+    const [statsError, setStatsError] = useState(false);
     const [quickStats, setQuickStats] = useState({
         totalRevenue: 0,
         ticketsSold: 0,
         visitors: 0,
-        avgPerDay: 0,
     });
     const [searchTerm, setSearchTerm] = useState('');
     const [sortConfig, setSortConfig] = useState({ key: 'date', direction: 'desc' });
@@ -74,7 +76,7 @@ const Reports = () => {
         { label: 'This Week', getValue: () => { const d = new Date(); const w = new Date(d.setDate(d.getDate() - d.getDay())); return { start: formatDate(w), end: formatDate(new Date()) }; } },
         { label: 'This Month', getValue: () => { const d = new Date(); return { start: formatDate(new Date(d.getFullYear(), d.getMonth(), 1)), end: formatDate(d) }; } },
         { label: 'This Year', getValue: () => { const d = new Date(); return { start: formatDate(new Date(d.getFullYear(), 0, 1)), end: formatDate(d) }; } },
-        { label: 'Last 30 Days', getValue: () => { const d = new Date(); return { start: formatDate(new Date(d - 30 * 24 * 60 * 60 * 1000)), end: formatDate(d) }; } },
+        { label: 'Last 30 Days', getValue: () => { const d = new Date(); return { start: formatDate(new Date(d.getFullYear(), d.getMonth(), d.getDate() - 29)), end: formatDate(d) }; } },
     ];
 
     function formatDate(date) {
@@ -139,10 +141,12 @@ const Reports = () => {
                         totalRevenue: response.data.totalRevenue || 0,
                         ticketsSold: response.data.ticketsSold || 0,
                         visitors: response.data.visitors || 0,
-                        avgPerDay: response.data.avgPerDay || Math.round((response.data.visitors || 0) / 30),
                     });
+                } else {
+                    setStatsError(true);
                 }
             } catch (error) {
+                setStatsError(true);
                 console.error('Error fetching quick stats:', error);
             } finally {
                 setStatsLoading(false);
@@ -159,8 +163,15 @@ const Reports = () => {
     ];
 
     const generateReport = async () => {
+        if (loading) return;
         const effectiveEnd = dateRange.end || formatDate(new Date());
-        const effectiveStart = dateRange.start || formatDate(new Date(Date.now() - 30 * 24 * 60 * 60 * 1000));
+        const end = new Date(`${effectiveEnd}T00:00:00`);
+        const effectiveStart = dateRange.start || formatDate(new Date(end.getFullYear(), end.getMonth(), end.getDate() - 29));
+
+        if (effectiveStart > effectiveEnd) {
+            setReportError('Start date must be on or before end date.');
+            return;
+        }
 
         if (!dateRange.start || !dateRange.end) {
             setDateRange({
@@ -170,6 +181,7 @@ const Reports = () => {
         }
         
         setLoading(true);
+        setReportError('');
         try {
             const response = await adminAPI.getReportData(effectiveStart, effectiveEnd, reportType);
             
@@ -182,30 +194,15 @@ const Reports = () => {
                     generatedAt: new Date().toLocaleString(),
                     dateRange: { start: effectiveStart, end: effectiveEnd },
                     reportType: reportTypes.find(t => t.value === reportType)?.label || 'Report',
+                    type: reportType,
                 });
+                setSearchTerm('');
             } else {
-                console.error('Failed to generate report:', response.message);
-                setReportData({
-                    totalRevenue: 0,
-                    ticketsSold: 0,
-                    visitors: 0,
-                    items: [],
-                    generatedAt: new Date().toLocaleString(),
-                    dateRange: { start: effectiveStart, end: effectiveEnd },
-                    reportType: reportTypes.find(t => t.value === reportType)?.label || 'Report',
-                });
+                throw new Error(response.message || 'Report request failed');
             }
         } catch (error) {
             console.error('Error generating report:', error);
-            setReportData({
-                totalRevenue: 0,
-                ticketsSold: 0,
-                visitors: 0,
-                items: [],
-                generatedAt: new Date().toLocaleString(),
-                dateRange: { start: effectiveStart, end: effectiveEnd },
-                reportType: reportTypes.find(t => t.value === reportType)?.label || 'Report',
-            });
+            setReportError('Unable to generate report. Please try again. Any previous report is still shown below.');
         } finally {
             setLoading(false);
         }
@@ -222,6 +219,7 @@ const Reports = () => {
             const term = searchTerm.toLowerCase();
             items = items.filter(item => 
                 normalizeReportDate(item.date).toLowerCase().includes(term) ||
+                item.name?.toLowerCase().includes(term) ||
                 item.type?.toLowerCase().includes(term) ||
                 item.status?.toLowerCase().includes(term) ||
                 item.reference?.toLowerCase().includes(term)
@@ -261,7 +259,7 @@ const Reports = () => {
     const reportRows = useMemo(() => processedItems.map(item => ({
         date: normalizeReportDate(item.date),
         reference: item.reference || 'N/A',
-        type: item.type || 'N/A',
+        type: item.name || item.type || 'N/A',
         quantity: toExportNumber(item.quantity),
         amount: toExportNumber(item.amount),
         status: normalizeStatus(item.status)
@@ -333,7 +331,7 @@ const Reports = () => {
         });
 
         const dateStr = start && end ? `${start}_to_${end}` : formatDate(new Date());
-        const filename = `Zoo_${reportType}_Report_${dateStr}.xlsx`;
+        const filename = `Zoo_${reportData.type}_Report_${dateStr}.xlsx`;
 
         XLSX.writeFile(wb, filename);
     };
@@ -382,7 +380,7 @@ const Reports = () => {
 </head>
 <body>
     <h1>Zoo Bulusan Calapan</h1>
-    <h2>${escapeHtml(title)} Report</h2>
+    <h2>${escapeHtml(title)}</h2>
     <div class="meta">
         <span>Date Range: ${escapeHtml(start)} to ${escapeHtml(end)}</span>
         <span>Generated: ${escapeHtml(generatedAt)}</span>
@@ -421,13 +419,13 @@ const Reports = () => {
             return;
         }
 
+        printWindow.onload = () => {
+            printWindow.print();
+        };
         printWindow.document.open();
         printWindow.document.write(html);
         printWindow.document.close();
         printWindow.focus();
-        printWindow.onload = () => {
-            printWindow.print();
-        };
     };
 
     const getStatusBadge = (status) => {
@@ -451,8 +449,13 @@ const Reports = () => {
         setDateRange(values);
     };
 
+    const stats = reportData ?? quickStats;
+    const statsPending = !reportData && statsLoading;
+    const statsUnavailable = !reportData && statsError;
+    const reportDays = reportData ? Math.max(1, Math.round((Date.parse(reportData.dateRange.end) - Date.parse(reportData.dateRange.start)) / 86400000) + 1) : 0;
+
     return (
-        <div className="space-y-6">
+        <div className="admin-reports min-w-0 w-full space-y-6">
             {/* Header */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div>
@@ -471,13 +474,15 @@ const Reports = () => {
             </div>
 
             {/* Report Generator Card */}
-            <div className="bg-white border border-green-200 rounded-2xl p-6">
+            <div className="bg-white border border-green-200 rounded-2xl p-4 sm:p-6">
                 <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                     <RefreshIcon />
                     Generate Report
                 </h3>
                 
                 {/* Quick Date Presets */}
+                <fieldset disabled={loading} className="min-w-0">
+                <legend className="sr-only">Report criteria</legend>
                 <div className="flex flex-wrap gap-2 mb-4">
                     {datePresets.map((preset, idx) => (
                         <button
@@ -490,11 +495,12 @@ const Reports = () => {
                     ))}
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="report-controls grid gap-4">
                     {/* Report Type */}
                     <div>
-                        <label className="block text-sm font-medium text-gray-500 mb-2">Report Type</label>
+                        <label htmlFor="report-type" className="block text-sm font-medium text-gray-500 mb-2">Report Type</label>
                         <select
+                            id="report-type"
                             value={reportType}
                             onChange={(e) => setReportType(e.target.value)}
                             className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:border-green-400 focus:ring-1 focus:ring-green-200 transition-all cursor-pointer"
@@ -508,8 +514,10 @@ const Reports = () => {
 
                     {/* Start Date */}
                     <div>
-                        <label className="block text-sm font-medium text-gray-500 mb-2">Start Date</label>
+                        <label htmlFor="report-start" className="block text-sm font-medium text-gray-500 mb-2">Start Date</label>
                         <input
+                            id="report-start"
+                            max={dateRange.end || undefined}
                             type="date"
                             value={dateRange.start}
                             onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
@@ -519,8 +527,10 @@ const Reports = () => {
 
                     {/* End Date */}
                     <div>
-                        <label className="block text-sm font-medium text-gray-500 mb-2">End Date</label>
+                        <label htmlFor="report-end" className="block text-sm font-medium text-gray-500 mb-2">End Date</label>
                         <input
+                            id="report-end"
+                            min={dateRange.start || undefined}
                             type="date"
                             value={dateRange.end}
                             onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
@@ -529,7 +539,7 @@ const Reports = () => {
                     </div>
 
                     {/* Generate Button */}
-                    <div className="flex items-end">
+                    <div className="report-generate flex items-start">
                         <button
                             onClick={generateReport}
                             disabled={loading}
@@ -549,10 +559,12 @@ const Reports = () => {
                         </button>
                     </div>
                 </div>
+                </fieldset>
+                {reportError && <p role="alert" className="mt-4 text-sm text-red-700">{reportError}</p>}
             </div>
 
             {/* Quick Stats - Now with 4 columns */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="report-stats grid gap-4" aria-busy={statsPending}>
                 <div className="bg-white border border-green-200 rounded-2xl p-5">
                     <div className="flex items-center justify-between mb-3">
                         <div className="w-10 h-10 bg-green-400/10 rounded-xl flex items-center justify-center text-green-800">
@@ -561,8 +573,8 @@ const Reports = () => {
                         <TrendIcon className="text-green-800" />
                     </div>
                     <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wider">Total Revenue</h4>
-                    <p className="text-2xl font-bold text-green-800 mt-1">₱{(reportData?.totalRevenue || quickStats.totalRevenue).toLocaleString()}</p>
-                    <p className="text-xs text-gray-500 mt-1">{dateRange.start && dateRange.end ? `${dateRange.start} - ${dateRange.end}` : 'All time'}</p>
+                    <p className="text-2xl font-bold text-green-800 mt-1">{statsPending ? 'Loading...' : statsUnavailable ? 'Unavailable' : `₱${toExportNumber(stats.totalRevenue).toLocaleString()}`}</p>
+                    <p className="text-xs text-gray-500 mt-1">{reportData ? `${reportData.dateRange.start} - ${reportData.dateRange.end}` : 'All time'}</p>
                 </div>
                 <div className="bg-white border border-green-200 rounded-2xl p-5">
                     <div className="flex items-center justify-between mb-3">
@@ -571,8 +583,8 @@ const Reports = () => {
                         </div>
                     </div>
                     <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wider">Tickets Sold</h4>
-                    <p className="text-2xl font-bold text-blue-700 mt-1">{(reportData?.ticketsSold || quickStats.ticketsSold).toLocaleString()}</p>
-                    <p className="text-xs text-gray-500 mt-1">{reportData?.items?.length || 0} transactions</p>
+                    <p className="text-2xl font-bold text-blue-700 mt-1">{statsPending ? 'Loading...' : statsUnavailable ? 'Unavailable' : toExportNumber(stats.ticketsSold).toLocaleString()}</p>
+                    <p className="text-xs text-gray-500 mt-1">{reportData ? `${reportData.items.length} report rows` : 'All time'}</p>
                 </div>
                 <div className="bg-white border border-green-200 rounded-2xl p-5">
                     <div className="flex items-center justify-between mb-3">
@@ -581,8 +593,8 @@ const Reports = () => {
                         </div>
                     </div>
                     <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wider">Total Visitors</h4>
-                    <p className="text-2xl font-bold text-purple-700 mt-1">{(reportData?.visitors || quickStats.visitors).toLocaleString()}</p>
-                    <p className="text-xs text-gray-500 mt-1">Unique visitors</p>
+                    <p className="text-2xl font-bold text-purple-700 mt-1">{statsPending ? 'Loading...' : statsUnavailable ? 'Unavailable' : toExportNumber(stats.visitors).toLocaleString()}</p>
+                    <p className="text-xs text-gray-500 mt-1">Reserved visitors</p>
                 </div>
                 <div className="bg-white border border-green-200 rounded-2xl p-5">
                     <div className="flex items-center justify-between mb-3">
@@ -592,43 +604,42 @@ const Reports = () => {
                     </div>
                     <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wider">Avg Revenue/Day</h4>
                     <p className="text-2xl font-bold text-amber-700 mt-1">
-                        ₱{reportData?.items?.length > 0 
-                            ? Math.round(reportData.totalRevenue / Math.max(1, new Set(reportData.items.map(i => i.date)).size)).toLocaleString()
-                            : quickStats.avgPerDay?.toLocaleString() || '0'
-                        }
+                        {reportData ? `₱${Math.round(toExportNumber(reportData.totalRevenue) / reportDays).toLocaleString()}` : 'N/A'}
                     </p>
-                    <p className="text-xs text-gray-500 mt-1">Daily average</p>
+                    <p className="text-xs text-gray-500 mt-1">{reportData ? 'Across selected date range' : 'Generate a report to calculate'}</p>
                 </div>
             </div>
 
             {/* Report Preview */}
             <div className="bg-white border border-green-200 rounded-2xl overflow-hidden">
-                <div className="p-4 md:p-6 border-b border-green-200 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
-                    <div className="flex-1">
+                <div className="report-toolbar p-4 md:p-6 border-b border-green-200 flex flex-wrap items-center justify-between gap-4">
+                    <div className="min-w-0 flex-1 basis-52">
                         <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
                             {reportData?.reportType || 'Report'} Preview
                         </h3>
-                        <p className="text-xs text-gray-500 mt-1">
+                        <p className="text-xs text-gray-500 mt-1 break-words">
                             {processedItems.length} records {searchTerm && `matching "${searchTerm}"`}
                         </p>
+                        {reportData && <p className="text-xs text-gray-500 mt-1">{reportData.dateRange.start} to {reportData.dateRange.end}</p>}
                     </div>
-                    <div className="flex flex-col sm:flex-row w-full lg:w-auto gap-3">
+                    <div className="flex flex-wrap grow basis-96 min-w-0 gap-3">
                         {/* Search */}
-                        <div className="relative flex-1 lg:flex-none">
+                        <div className="relative flex-1 min-w-0 basis-48">
                             <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
                             <input
                                 type="text"
+                                aria-label="Search report records"
                                 placeholder="Search records..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full lg:w-56 pl-10 pr-4 py-2 bg-green-50 border border-green-200 rounded-xl text-gray-900 text-sm focus:outline-none focus:border-green-400/50"
+                                className="w-full pl-10 pr-4 py-2 bg-green-50 border border-green-200 rounded-xl text-gray-900 text-sm focus:outline-none focus:border-green-400/50"
                             />
                         </div>
                         {/* Export + Print */}
                         <div className="flex flex-wrap gap-2">
                             <button
                                 onClick={exportReport}
-                                disabled={reportRows.length === 0}
+                                disabled={loading || reportRows.length === 0}
                                 className="flex items-center gap-2 px-4 py-2 bg-green-400/10 border border-green-400/30 text-green-800 rounded-xl hover:bg-green-400/20 transition disabled:opacity-50 disabled:cursor-not-allowed text-sm"
                             >
                                 <DownloadIcon />
@@ -636,7 +647,7 @@ const Reports = () => {
                             </button>
                             <button
                                 onClick={handlePrint}
-                                disabled={reportRows.length === 0}
+                                disabled={loading || reportRows.length === 0}
                                 className="flex items-center gap-2 px-4 py-2 bg-gray-500/10 border border-gray-500/30 text-gray-700 rounded-xl hover:bg-gray-500/20 transition disabled:opacity-50 disabled:cursor-not-allowed text-sm"
                             >
                                 <PrintIcon />
@@ -646,11 +657,12 @@ const Reports = () => {
                     </div>
                 </div>
 
-                <div className="p-4 md:p-6">
+                <div className="p-4 md:p-6" aria-busy={loading}>
+                    {loading && <p role="status" className="mb-4 text-sm text-gray-500">Generating report...</p>}
                     {reportData ? (
                         processedItems.length > 0 ? (
-                            <div className="overflow-x-auto">
-                                <table className="w-full">
+                            <div className="overflow-x-auto focus-visible:outline-green-500" role="region" aria-label="Report records, scroll horizontally to view all columns" tabIndex={0}>
+                                <table className="w-full min-w-[720px]">
                                     <thead className="bg-green-50">
                                         <tr>
                                             <th 
@@ -660,7 +672,7 @@ const Reports = () => {
                                                 Date
                                                 <SortIcon direction={sortConfig.key === 'date' ? sortConfig.direction : null} />
                                             </th>
-                                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider hidden md:table-cell">Ref</th>
+                                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Ref</th>
                                             <th 
                                                 onClick={() => handleSort('type')}
                                                 className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-900 transition"
@@ -686,11 +698,11 @@ const Reports = () => {
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-green-200">
-                                        {processedItems.map((item, index) => (
+                                        {reportRows.map((item, index) => (
                                             <tr key={index} className="hover:bg-green-50/50 transition-colors">
                                                 <td className="px-4 py-4 text-gray-700 whitespace-nowrap">{normalizeReportDate(item.date)}</td>
-                                                <td className="px-4 py-4 text-gray-500 text-xs font-mono hidden md:table-cell">{item.reference?.substring(0, 12) || '-'}</td>
-                                                <td className="px-4 py-4 text-gray-900 font-medium">{item.type}</td>
+                                                <td className="px-4 py-4 text-gray-500 text-xs font-mono break-all">{item.reference}</td>
+                                                <td className="px-4 py-4 text-gray-900 font-medium break-words max-w-64">{item.type}</td>
                                                 <td className="px-4 py-4 text-gray-700">{item.quantity}</td>
                                                 <td className="px-4 py-4 text-green-800 font-medium">₱{(item.amount || 0).toLocaleString()}</td>
                                                 <td className="px-4 py-4">
@@ -705,10 +717,10 @@ const Reports = () => {
                                         <tr>
                                             <td colSpan="3" className="px-4 py-3 text-sm font-bold text-gray-900">Summary</td>
                                             <td className="px-4 py-3 text-sm font-bold text-gray-900">
-                                                {processedItems.reduce((sum, item) => sum + (item.quantity || 0), 0)}
+                                                {reportTotals.totalQuantity.toLocaleString()}
                                             </td>
                                             <td className="px-4 py-3 text-sm font-bold text-green-800">
-                                                ₱{processedItems.reduce((sum, item) => sum + (item.amount || 0), 0).toLocaleString()}
+                                                ₱{reportTotals.totalAmount.toLocaleString()}
                                             </td>
                                             <td className="px-4 py-3"></td>
                                         </tr>

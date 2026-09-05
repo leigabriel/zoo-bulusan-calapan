@@ -1,14 +1,17 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { communityAPI } from '../../services/api-client';
 import ConfirmationModal from '../../components/common/ConfirmationModal';
 import { notify } from '../../utils/toast';
 import { formatSafeDate } from '../../utils/format-date';
+import { Check, ChevronRight, FileText, Flag, Library, Search, Trash2, X } from 'lucide-react';
 
-const AdminCommunityModeration = () => {
+const AdminCommunityModeration = ({ role = 'admin' }) => {
     const [pendingPosts, setPendingPosts] = useState([]);
     const [allPosts, setAllPosts] = useState([]);
     const [reportedComments, setReportedComments] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [activeTab, setActiveTab] = useState('pending');
+    const [searchQuery, setSearchQuery] = useState('');
     const [selectedPost, setSelectedPost] = useState(null);
     const [removeModal, setRemoveModal] = useState({ isOpen: false, postId: null });
     const [reportActionModal, setReportActionModal] = useState({
@@ -28,13 +31,13 @@ const AdminCommunityModeration = () => {
         note: ''
     });
 
-    const loadData = async () => {
+    const loadData = useCallback(async () => {
         setLoading(true);
         try {
             const [postsRes, allPostsRes, reportsRes] = await Promise.all([
-                communityAPI.getPendingPosts('admin'),
-                communityAPI.getAllPostsForModeration('admin'),
-                communityAPI.getReportedComments('admin')
+                communityAPI.getPendingPosts(role),
+                communityAPI.getAllPostsForModeration(role),
+                communityAPI.getReportedComments(role)
             ]);
             setPendingPosts(postsRes.posts || []);
             setAllPosts(allPostsRes.posts || []);
@@ -44,15 +47,15 @@ const AdminCommunityModeration = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [role]);
 
     useEffect(() => {
         loadData();
-    }, []);
+    }, [loadData]);
 
     const reviewPost = async (postId, action, note = '') => {
         try {
-            await communityAPI.reviewPost(postId, action, note, 'admin');
+            await communityAPI.reviewPost(postId, action, note, role);
             notify.success(action === 'approved' ? 'Post approved.' : 'Post declined.');
             await loadData();
         } catch {
@@ -93,7 +96,7 @@ const AdminCommunityModeration = () => {
 
     const reviewReport = async (reportId, action) => {
         try {
-            await communityAPI.reviewReport(reportId, action, 'admin');
+            await communityAPI.reviewReport(reportId, action, role);
             notify.success('Report updated.');
             await loadData();
         } catch {
@@ -127,8 +130,8 @@ const AdminCommunityModeration = () => {
         if (!removeCommentModal.commentId || !removeCommentModal.reportId) return;
 
         try {
-            await communityAPI.deleteComment(removeCommentModal.commentId, 'admin');
-            await communityAPI.reviewReport(removeCommentModal.reportId, 'reviewed', 'admin');
+            await communityAPI.deleteComment(removeCommentModal.commentId, role);
+            await communityAPI.reviewReport(removeCommentModal.reportId, 'reviewed', role);
             notify.success('Comment removed.');
             closeRemoveCommentModal();
             await loadData();
@@ -149,7 +152,7 @@ const AdminCommunityModeration = () => {
         if (!removeModal.postId) return;
 
         try {
-            await communityAPI.deletePost(removeModal.postId, 'admin');
+            await communityAPI.deletePost(removeModal.postId, role);
             notify.success('Post removed.');
             closeRemoveModal();
             await loadData();
@@ -164,118 +167,62 @@ const AdminCommunityModeration = () => {
         return 'bg-amber-50 text-amber-700 border border-amber-200';
     };
 
+    const normalizedSearch = searchQuery.trim().toLowerCase();
+    const matchesSearch = (...values) => !normalizedSearch || values.some((value) => String(value || '').toLowerCase().includes(normalizedSearch));
+    const visiblePendingPosts = pendingPosts.filter((post) => matchesSearch(post.content, post.author?.firstName, post.author?.lastName, post.author?.username, post.userId));
+    const visibleAllPosts = allPosts.filter((post) => matchesSearch(post.content, post.status, post.author?.firstName, post.author?.lastName, post.author?.username, post.userId));
+    const visibleReports = reportedComments.filter((report) => matchesSearch(
+        report.reason,
+        report.commentText || report.comment_text,
+        report.reporter?.username || report.reporter_username,
+        report.commentAuthor?.username || report.comment_username
+    ));
+    const tabs = [
+        { id: 'pending', label: 'Pending posts', count: pendingPosts.length, icon: FileText },
+        { id: 'reports', label: 'Reported comments', count: reportedComments.length, icon: Flag },
+        { id: 'library', label: 'Post library', count: allPosts.length, icon: Library }
+    ];
+    const activeMeta = tabs.find((tab) => tab.id === activeTab);
+    const visibleCount = activeTab === 'pending' ? visiblePendingPosts.length : activeTab === 'reports' ? visibleReports.length : visibleAllPosts.length;
+
     return (
-        <div className="space-y-6">
-            <section className="rounded-2xl border border-green-200 bg-white p-5 shadow-sm">
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                    <div>
-                        <p className="text-xs font-semibold uppercase tracking-wider text-green-800">Admin tools</p>
-                        <h1 className="mt-1 text-2xl font-bold text-gray-900">Community Moderation</h1>
-                        <p className="mt-1 text-sm text-gray-500">Review posts and reports from one place.</p>
+        <div className="space-y-5">
+            <header className="overflow-hidden rounded-2xl border border-emerald-200 bg-gradient-to-r from-emerald-950 via-emerald-900 to-green-800 p-5 text-white shadow-sm sm:p-7">
+                <p className="text-xs font-bold uppercase tracking-[0.2em] text-emerald-200">{role === 'admin' ? 'Admin tools' : 'Staff tools'}</p>
+                <div className="mt-2 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+                    <div><h1 className="text-2xl font-bold sm:text-3xl">Community Moderation</h1><p className="mt-1 max-w-xl text-sm text-emerald-100">Review submissions, resolve reports, and manage published community content.</p></div>
+                    <div className="flex gap-2 text-xs font-bold"><span className="rounded-full bg-white/10 px-3 py-2 ring-1 ring-white/15">{pendingPosts.length} awaiting review</span><span className="rounded-full bg-red-400/15 px-3 py-2 text-red-100 ring-1 ring-red-300/20">{reportedComments.length} reports</span></div>
+                </div>
+            </header>
+
+            <section className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+                <div className="border-b border-gray-200 p-3 sm:p-4">
+                    <div className="flex gap-2 overflow-x-auto pb-1" role="tablist" aria-label="Moderation queues">
+                        {tabs.map((tab) => { const Icon = tab.icon; return <button key={tab.id} type="button" role="tab" aria-selected={activeTab === tab.id} onClick={() => { setActiveTab(tab.id); setSearchQuery(''); }} className={`flex shrink-0 items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold transition ${activeTab === tab.id ? 'bg-emerald-900 text-white shadow-sm' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'}`}><Icon className="h-4 w-4" /><span>{tab.label}</span><span className={`rounded-full px-2 py-0.5 text-[11px] ${activeTab === tab.id ? 'bg-white/15' : 'bg-gray-100'}`}>{tab.count}</span></button>; })}
                     </div>
-                    <div className="flex items-center gap-2 text-xs">
-                        <span className="rounded-lg bg-amber-50 px-3 py-2 font-semibold text-amber-700">{pendingPosts.length} pending</span>
-                        <span className="rounded-lg bg-red-50 px-3 py-2 font-semibold text-red-700">{reportedComments.length} reports</span>
-                    </div>
                 </div>
-            </section>
-
-            {loading && <div className="text-sm text-gray-500">Loading moderation queue...</div>}
-
-            <section className="rounded-2xl border border-green-200 bg-white p-5 shadow-sm">
-                <div className="mb-4 flex items-center justify-between"><div><h2 className="text-lg font-bold text-gray-900">Review queue</h2><p className="mt-1 text-xs text-gray-500">Posts waiting for a moderation decision</p></div><span className="rounded-full bg-amber-50 px-3 py-1 text-xs font-bold text-amber-700">{pendingPosts.length} pending</span></div>
-                <div className="space-y-4">
-                    {pendingPosts.map((post) => (
-                        <article key={post.id} className="rounded-2xl border border-amber-100 bg-gradient-to-br from-amber-50/70 to-white p-4 shadow-sm">
-                            <p className="text-sm text-green-700 mb-2">
-                                {post.author?.firstName} {post.author?.lastName} • {formatSafeDate(post.createdAt, { dateStyle: 'medium', timeStyle: 'short' })}
-                            </p>
-                            <p className="text-xs text-green-800 mb-2">@{post.author?.username} • User ID #{post.userId}</p>
-                            <p className="text-sm text-gray-900 whitespace-pre-wrap">{post.content}</p>
-                            {post.imageUrl && <img src={post.imageUrl} alt="post" className="mt-3 w-full max-h-80 object-cover rounded-lg" />}
-                            <div className="mt-3 flex gap-2">
-                                <button onClick={() => setSelectedPost(post)} className="px-3 py-2 rounded-lg bg-gray-200 text-gray-900 text-xs font-semibold">View details</button>
-                                <button onClick={() => openModerationModal(post.id, 'approved')} className="px-3 py-2 rounded-lg bg-green-400 text-gray-900 text-xs font-semibold">Accept</button>
-                                <button onClick={() => openModerationModal(post.id, 'declined')} className="px-3 py-2 rounded-lg bg-red-600 text-gray-900 text-xs font-semibold">Decline</button>
-                            </div>
-                        </article>
-                    ))}
-                    {!pendingPosts.length && <p className="text-sm text-gray-500">No pending posts.</p>}
+                <div className="flex flex-col gap-3 border-b border-gray-100 bg-gray-50/70 p-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div><h2 className="font-bold text-gray-900">{activeMeta.label}</h2><p className="text-xs text-gray-500">{activeTab === 'pending' ? 'Posts waiting for a moderation decision' : activeTab === 'reports' ? 'Resolve reports or remove harmful comments' : 'Browse the complete community publishing history'}</p></div>
+                    <label className="relative block w-full sm:w-72"><span className="sr-only">Search {activeMeta.label}</span><Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" /><input value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} placeholder={`Search ${activeMeta.label.toLowerCase()}...`} className="w-full rounded-xl border border-gray-200 bg-white py-2.5 pl-9 pr-9 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100" />{searchQuery && <button type="button" aria-label="Clear search" onClick={() => setSearchQuery('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700"><X className="h-4 w-4" /></button>}</label>
                 </div>
-            </section>
-
-            <section className="rounded-2xl border border-green-200 bg-white p-5 shadow-sm">
-                <div className="mb-4 flex items-center justify-between"><div><h2 className="text-lg font-bold text-gray-900">Post library</h2><p className="mt-1 text-xs text-gray-500">Review the full community publishing history</p></div><span className="rounded-full bg-green-50 px-3 py-1 text-xs font-bold text-green-700">{allPosts.length} total</span></div>
-                <div className="space-y-4 max-h-[620px] overflow-auto pr-1">
-                    {allPosts.map((post) => (
-                        <article key={`all-${post.id}`} className="rounded-2xl border border-gray-200 bg-white p-4 transition hover:border-green-200 hover:shadow-sm">
-                            <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
-                                <p className="text-sm text-green-700">
-                                    {post.author?.firstName} {post.author?.lastName} • {formatSafeDate(post.createdAt, { dateStyle: 'medium', timeStyle: 'short' })}
-                                </p>
-                                <span className={`px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-[0.15em] ${getStatusBadgeClass(post.status)}`}>
-                                    {post.status}
-                                </span>
-                            </div>
-                            <p className="text-xs text-green-800 mb-2">@{post.author?.username} • User ID #{post.userId}</p>
-                            <p className="text-sm text-gray-900 whitespace-pre-wrap line-clamp-3">{post.content}</p>
-                            <div className="mt-3 flex flex-wrap gap-2">
-                                <button onClick={() => setSelectedPost(post)} className="px-3 py-2 rounded-lg bg-gray-200 text-gray-900 text-xs font-semibold">View details</button>
-                                <button onClick={() => openRemoveModal(post.id)} className="px-3 py-2 rounded-lg bg-red-700 text-gray-900 text-xs font-semibold">Remove</button>
-                            </div>
-                        </article>
-                    ))}
-                    {!allPosts.length && <p className="text-sm text-gray-500">No posts found.</p>}
-                </div>
-            </section>
-
-            <section className="rounded-2xl border border-red-100 bg-white p-5 shadow-sm">
-                <div className="mb-4 flex items-center justify-between"><div><h2 className="text-lg font-bold text-gray-900">Reported comments</h2><p className="mt-1 text-xs text-gray-500">Resolve reports and remove harmful content</p></div><span className="rounded-full bg-red-50 px-3 py-1 text-xs font-bold text-red-700">{reportedComments.length} open</span></div>
-                <div className="space-y-4">
-                    {reportedComments.map((report) => (
-                        <article key={report.reportId || report.report_id} className="rounded-2xl border border-red-100 bg-red-50/40 p-4">
-                            <p className="text-[11px] text-amber-700">
-                                Reported by: {report.reporter?.firstName || report.reporter_first_name} {report.reporter?.lastName || report.reporter_last_name} (@{report.reporter?.username || report.reporter_username})
-                            </p>
-                            <p className="text-[11px] text-amber-700 mt-1">
-                                Comment by: {report.commentAuthor?.firstName || report.comment_first_name} {report.commentAuthor?.lastName || report.comment_last_name} (@{report.commentAuthor?.username || report.comment_username})
-                            </p>
-                            <p className="text-xs text-amber-600">Reason: {report.reason}</p>
-                            <p className="text-sm text-gray-900 mt-2">{report.commentText || report.comment_text}</p>
-                            <div className="mt-3 flex gap-2">
-                                <button onClick={() => openReportActionModal(report.reportId || report.report_id, 'reviewed')} className="px-3 py-2 rounded-lg bg-green-400 text-gray-900 text-xs font-semibold">Mark reviewed</button>
-                                <button onClick={() => openReportActionModal(report.reportId || report.report_id, 'dismissed')} className="px-3 py-2 rounded-lg bg-gray-600 text-gray-900 text-xs font-semibold">Dismiss</button>
-                                <button onClick={() => openRemoveCommentModal(report.reportId || report.report_id, report.commentId || report.comment_id)} className="px-3 py-2 rounded-lg bg-red-700 text-gray-900 text-xs font-semibold">Remove comment</button>
-                            </div>
-                        </article>
-                    ))}
-                    {!reportedComments.length && <p className="text-sm text-gray-500">No reported comments.</p>}
+                <div className="p-3 sm:p-4">
+                    {loading && <div className="py-12 text-center text-sm text-gray-500">Loading moderation queue...</div>}
+                    {!loading && <div className="grid gap-3 xl:grid-cols-2">
+                        {activeTab === 'pending' && visiblePendingPosts.map((post) => <article key={post.id} className="flex flex-col rounded-xl border border-amber-200 bg-amber-50/40 p-4"><div className="flex items-start justify-between gap-3"><div className="min-w-0"><p className="truncate text-sm font-bold text-gray-900">{post.author?.firstName} {post.author?.lastName}</p><p className="truncate text-xs text-gray-500">@{post.author?.username} · User #{post.userId}</p></div><time className="shrink-0 text-[11px] text-gray-500">{formatSafeDate(post.createdAt, { dateStyle: 'medium' })}</time></div><p className="mt-3 line-clamp-3 whitespace-pre-wrap text-sm leading-6 text-gray-700">{post.content}</p>{post.imageUrl && <p className="mt-2 text-xs font-semibold text-emerald-700">Image attached</p>}<div className="mt-auto flex flex-wrap gap-2 pt-4"><button onClick={() => setSelectedPost(post)} className="flex flex-1 items-center justify-center gap-1 rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-bold text-gray-700 hover:bg-gray-50">Details <ChevronRight className="h-3.5 w-3.5" /></button><button onClick={() => openModerationModal(post.id, 'approved')} className="flex flex-1 items-center justify-center gap-1 rounded-lg bg-emerald-700 px-3 py-2 text-xs font-bold text-white hover:bg-emerald-800"><Check className="h-3.5 w-3.5" /> Accept</button><button onClick={() => openModerationModal(post.id, 'declined')} className="flex flex-1 items-center justify-center gap-1 rounded-lg bg-red-700 px-3 py-2 text-xs font-bold text-white hover:bg-red-800"><X className="h-3.5 w-3.5" /> Decline</button></div></article>)}
+                        {activeTab === 'library' && visibleAllPosts.map((post) => <article key={post.id} className="flex flex-col rounded-xl border border-gray-200 p-4 transition hover:border-emerald-200 hover:shadow-sm"><div className="flex items-start justify-between gap-3"><div className="min-w-0"><p className="truncate text-sm font-bold text-gray-900">{post.author?.firstName} {post.author?.lastName}</p><p className="truncate text-xs text-gray-500">@{post.author?.username} · {formatSafeDate(post.createdAt, { dateStyle: 'medium' })}</p></div><span className={`rounded-full px-2 py-1 text-[10px] font-bold uppercase tracking-wider ${getStatusBadgeClass(post.status)}`}>{post.status}</span></div><p className="mt-3 line-clamp-3 whitespace-pre-wrap text-sm leading-6 text-gray-700">{post.content}</p><div className="mt-auto flex gap-2 pt-4"><button onClick={() => setSelectedPost(post)} className="flex flex-1 items-center justify-center gap-1 rounded-lg border border-gray-200 px-3 py-2 text-xs font-bold text-gray-700 hover:bg-gray-50">Details <ChevronRight className="h-3.5 w-3.5" /></button><button onClick={() => openRemoveModal(post.id)} className="flex flex-1 items-center justify-center gap-1 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-bold text-red-700 hover:bg-red-100"><Trash2 className="h-3.5 w-3.5" /> Remove</button></div></article>)}
+                        {activeTab === 'reports' && visibleReports.map((report) => <article key={report.reportId || report.report_id} className="flex flex-col rounded-xl border border-red-200 bg-red-50/30 p-4"><div className="flex items-start justify-between gap-3"><div><p className="text-xs font-bold uppercase tracking-wider text-red-700">{report.reason || 'Reported comment'}</p><p className="mt-1 text-xs text-gray-500">Comment by @{report.commentAuthor?.username || report.comment_username}</p></div><Flag className="h-4 w-4 shrink-0 text-red-500" /></div><blockquote className="mt-3 border-l-2 border-red-300 pl-3 text-sm leading-6 text-gray-800">{report.commentText || report.comment_text}</blockquote><p className="mt-3 text-[11px] text-gray-500">Reported by {report.reporter?.firstName || report.reporter_first_name} {report.reporter?.lastName || report.reporter_last_name} (@{report.reporter?.username || report.reporter_username})</p><div className="mt-auto grid grid-cols-1 gap-2 pt-4 sm:grid-cols-3"><button onClick={() => openReportActionModal(report.reportId || report.report_id, 'reviewed')} className="rounded-lg bg-emerald-700 px-3 py-2 text-xs font-bold text-white hover:bg-emerald-800">Mark reviewed</button><button onClick={() => openReportActionModal(report.reportId || report.report_id, 'dismissed')} className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-xs font-bold text-gray-700 hover:bg-gray-50">Dismiss</button><button onClick={() => openRemoveCommentModal(report.reportId || report.report_id, report.commentId || report.comment_id)} className="rounded-lg bg-red-700 px-3 py-2 text-xs font-bold text-white hover:bg-red-800">Remove comment</button></div></article>)}
+                    </div>}
+                    {!loading && visibleCount === 0 && <div className="py-14 text-center"><div className="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-gray-100"><Search className="h-5 w-5 text-gray-400" /></div><p className="mt-3 text-sm font-semibold text-gray-700">{searchQuery ? 'No matching results' : `No ${activeMeta.label.toLowerCase()}`}</p><p className="mt-1 text-xs text-gray-500">{searchQuery ? 'Try a different name, username, or keyword.' : 'This queue is currently clear.'}</p></div>}
                 </div>
             </section>
 
             {selectedPost && (
-                <div className="fixed inset-0 z-[210] flex items-center justify-center p-4">
-                    <button className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setSelectedPost(null)} />
-                    <div className="relative w-full max-w-3xl max-h-[85vh] overflow-auto bg-white border border-green-200 rounded-2xl p-5">
-                        <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-lg font-bold text-gray-900">Submitted Post Details</h3>
-                            <button onClick={() => setSelectedPost(null)} className="text-xs font-semibold text-gray-700 hover:text-gray-900">Close</button>
-                        </div>
-                        <div className="space-y-3 text-sm">
-                            <p className="text-green-700"><span className="font-semibold">User:</span> {selectedPost.author?.firstName} {selectedPost.author?.lastName} (@{selectedPost.author?.username})</p>
-                            <p className="text-green-700"><span className="font-semibold">Submission Time:</span> {formatSafeDate(selectedPost.createdAt, { dateStyle: 'medium', timeStyle: 'short' })}</p>
-                            <div>
-                                <p className="text-green-800 mb-1 font-semibold">Full Content</p>
-                                <p className="text-gray-900 whitespace-pre-wrap leading-relaxed">{selectedPost.content}</p>
-                            </div>
-                            {selectedPost.imageUrl && (
-                                <div>
-                                    <p className="text-green-800 mb-2 font-semibold">Attached Image</p>
-                                    <img src={selectedPost.imageUrl} alt="submitted post" className="w-full max-h-[420px] object-contain rounded-xl border border-green-200" />
-                                </div>
-                            )}
-                        </div>
-                    </div>
+                <div className="fixed inset-0 z-[210] flex items-center justify-center p-3 sm:p-6" role="dialog" aria-modal="true" aria-labelledby="post-detail-title">
+                    <button type="button" aria-label="Close post details" className="absolute inset-0 bg-gray-950/65 backdrop-blur-sm" onClick={() => setSelectedPost(null)} />
+                    <article className="relative flex max-h-[90vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl border border-white/20 bg-white shadow-2xl">
+                        <header className="flex items-start justify-between gap-4 border-b border-gray-200 bg-emerald-950 px-5 py-4 text-white sm:px-6"><div><p className="text-[11px] font-bold uppercase tracking-[0.2em] text-emerald-300">Post review</p><h2 id="post-detail-title" className="mt-1 text-xl font-bold">Submitted content</h2></div><button type="button" onClick={() => setSelectedPost(null)} className="rounded-full p-2 text-emerald-100 hover:bg-white/10 hover:text-white" aria-label="Close"><X className="h-5 w-5" /></button></header>
+                        <div className="overflow-y-auto"><div className="grid border-b border-gray-200 bg-gray-50 sm:grid-cols-2"><div className="px-5 py-3 sm:px-6"><p className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Submitted by</p><p className="mt-1 text-sm font-semibold text-gray-900">{selectedPost.author?.firstName} {selectedPost.author?.lastName} <span className="font-normal text-gray-500">@{selectedPost.author?.username}</span></p></div><div className="border-t border-gray-200 px-5 py-3 sm:border-l sm:border-t-0 sm:px-6"><p className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Submission time</p><p className="mt-1 text-sm font-semibold text-gray-900">{formatSafeDate(selectedPost.createdAt, { dateStyle: 'medium', timeStyle: 'short' })}</p></div></div><div className="space-y-6 p-5 sm:p-6"><section aria-labelledby="post-content-label"><h3 id="post-content-label" className="text-xs font-bold uppercase tracking-wider text-emerald-800">Post content</h3><p className="mt-3 whitespace-pre-wrap text-[15px] leading-7 text-gray-800">{selectedPost.content}</p></section>{selectedPost.imageUrl && <figure><figcaption className="mb-3 text-xs font-bold uppercase tracking-wider text-emerald-800">Attached image</figcaption><div className="overflow-hidden rounded-xl border border-gray-200 bg-gray-100"><img src={selectedPost.imageUrl} alt="Image attached to the submitted post" className="max-h-[460px] w-full object-contain" /></div></figure>}</div></div>
+                    </article>
                 </div>
             )}
 

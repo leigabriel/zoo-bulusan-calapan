@@ -30,10 +30,14 @@ const AdminLayout = ({ children }) => {
     const [showSearchDropdown, setShowSearchDropdown] = useState(false);
     const [mobileHeaderMenuOpen, setMobileHeaderMenuOpen] = useState(false);
     const [showProfileModal, setShowProfileModal] = useState(false);
+    const [showPasswordModal, setShowPasswordModal] = useState(false);
     const [profileForm, setProfileForm] = useState({ firstName: '', lastName: '', email: '' });
     const [profileLoading, setProfileLoading] = useState(false);
     const [profileSaving, setProfileSaving] = useState(false);
+    const [imageUploading, setImageUploading] = useState(false);
     const [previewImage, setPreviewImage] = useState(null);
+    const [passwordForm, setPasswordForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
+    const [passwordSaving, setPasswordSaving] = useState(false);
     const [aiAssistOpen, setAiAssistOpen] = useState(false);
     const [openNavGroups, setOpenNavGroups] = useState({ main: true, management: true, communication: true, insights: true });
 
@@ -144,6 +148,14 @@ const AdminLayout = ({ children }) => {
             });
         }
 
+        if (activitySummary.eventReservations?.pending > 0) {
+            activities.push({ id: 'event-reservations', icon: 'ER', message: `${activitySummary.eventReservations.pending} event reservation${activitySummary.eventReservations.pending > 1 ? 's' : ''} pending.`, time: 'Action needed', color: 'yellow' });
+        }
+
+        if (activitySummary.messages?.unread > 0) {
+            activities.push({ id: 'messages', icon: 'M', message: `${activitySummary.messages.unread} unread message${activitySummary.messages.unread > 1 ? 's' : ''}.`, time: 'Inbox', color: 'blue' });
+        }
+
         return activities;
     }, [activitySummary]);
 
@@ -200,8 +212,51 @@ const AdminLayout = ({ children }) => {
         }
     };
 
+    const uploadProfileImage = async (event) => {
+        const file = event.target.files?.[0];
+        event.target.value = '';
+        if (!file) return;
+        if (!file.type.startsWith('image/') || file.size > 5 * 1024 * 1024) {
+            notify.error('Choose an image smaller than 5 MB.');
+            return;
+        }
+        try {
+            setImageUploading(true);
+            const res = await authAPI.uploadProfileImage(file, 'admin');
+            if (!res?.success) throw new Error(res?.message);
+            const profileImage = res.profileImage || res.user?.profileImage;
+            setPreviewImage(getProfileImageUrl(profileImage));
+            updateUser({ ...user, profileImage });
+            notify.success('Profile photo updated.');
+        } catch (error) {
+            notify.error(error.message || "Couldn't upload profile photo.");
+        } finally {
+            setImageUploading(false);
+        }
+    };
+
+    const savePassword = async () => {
+        if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+            notify.error('New passwords do not match.');
+            return;
+        }
+        try {
+            setPasswordSaving(true);
+            const res = await authAPI.updatePassword({ currentPassword: passwordForm.currentPassword, newPassword: passwordForm.newPassword }, 'admin');
+            if (!res?.success) throw new Error(res?.message);
+            setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
+            setShowPasswordModal(false);
+            notify.success('Password changed.');
+        } catch (error) {
+            notify.error(error.message || "Couldn't change password.");
+        } finally {
+            setPasswordSaving(false);
+        }
+    };
+
     // Open profile modal
     const openProfileModal = () => {
+        setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
         setShowProfileModal(true);
         loadProfile();
     };
@@ -237,7 +292,7 @@ const AdminLayout = ({ children }) => {
         { key: 'communication', label: 'Communication', items: communicationItems, Icon: Messages },
         { key: 'insights', label: 'Insights', items: insightItems, Icon: ChartBar },
     ];
-    const hasOpenOverlay = sidebarOpen || notificationPanelOpen || showProfileModal || showLogoutModal || aiAssistOpen || showSearchDropdown;
+    const hasOpenOverlay = sidebarOpen || notificationPanelOpen || showProfileModal || showPasswordModal || showLogoutModal || aiAssistOpen || showSearchDropdown;
 
     useScrollLock(hasOpenOverlay);
 
@@ -489,8 +544,8 @@ const AdminLayout = ({ children }) => {
                                 className="relative p-2 hover:bg-gray-100 rounded-xl transition flex-shrink-0"
                                 aria-label="Open menu"
                             >
-                                <div className="w-8 h-8 bg-gradient-to-br from-green-300 via-green-400 to-green-500 rounded-full flex items-center justify-center text-gray-900 font-bold text-sm">
-                                    {(user?.firstName || user?.lastName || user?.fullName)?.charAt(0) || 'A'}
+                                <div className="w-8 h-8 bg-gradient-to-br from-green-300 via-green-400 to-green-500 rounded-full flex items-center justify-center text-gray-900 font-bold text-sm overflow-hidden">
+                                    {getProfileImageUrl(user?.profileImage || user?.profile_image) ? <img src={getProfileImageUrl(user?.profileImage || user?.profile_image)} alt="" className="h-full w-full object-cover" /> : ((user?.firstName || user?.lastName || user?.fullName)?.charAt(0) || 'A')}
                                 </div>
                                 {unreadCount > 0 && (
                                     <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-green-400 rounded-full flex items-center justify-center text-[9px] font-bold text-gray-900">
@@ -704,8 +759,8 @@ const AdminLayout = ({ children }) => {
                                 className="p-1 hover:bg-gray-100 rounded-xl transition"
                                 aria-label="Open profile"
                             >
-                                <div className="w-9 h-9 bg-gradient-to-br from-green-300 via-green-400 to-green-500 rounded-full flex items-center justify-center text-gray-900 font-bold text-sm">
-                                    {(user?.firstName || user?.lastName || user?.fullName)?.charAt(0) || 'A'}
+                                <div className="w-9 h-9 bg-gradient-to-br from-green-300 via-green-400 to-green-500 rounded-full flex items-center justify-center text-gray-900 font-bold text-sm overflow-hidden">
+                                    {getProfileImageUrl(user?.profileImage || user?.profile_image) ? <img src={getProfileImageUrl(user?.profileImage || user?.profile_image)} alt="" className="h-full w-full object-cover" /> : ((user?.firstName || user?.lastName || user?.fullName)?.charAt(0) || 'A')}
                                 </div>
                             </button>
                         </div>
@@ -851,7 +906,7 @@ const AdminLayout = ({ children }) => {
             {/* Profile Modal */}
             {showProfileModal && (
                 <div className="fixed inset-0 bg-gray-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-white border border-gray-200 rounded-2xl w-full max-w-md max-h-[90vh] overflow-y-auto overscroll-contain shadow-xl">
+                    <div className="bg-white border border-gray-200 rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-y-auto overscroll-contain shadow-xl">
                         {/* Modal Header */}
                         <div className="flex items-center justify-between p-5 border-b border-gray-200">
                             <h2 className="text-xl font-bold text-gray-900">Admin Profile</h2>
@@ -870,7 +925,7 @@ const AdminLayout = ({ children }) => {
                         ) : (
                             <div className="p-5 space-y-5">
                                 {/* Avatar */}
-                                <div className="flex justify-center">
+                                <div className="flex flex-col items-center gap-2">
                                     <div className="w-24 h-24 bg-gradient-to-br from-green-300 via-green-400 to-green-500 rounded-full flex items-center justify-center overflow-hidden">
                                         {previewImage ? (
                                             <img
@@ -886,6 +941,15 @@ const AdminLayout = ({ children }) => {
                                             </span>
                                         )}
                                     </div>
+                                    <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={uploadProfileImage} />
+                                    <button type="button" disabled={imageUploading} onClick={() => fileInputRef.current?.click()} className="text-sm font-semibold text-green-700 hover:text-green-800 disabled:opacity-50">
+                                        {imageUploading ? 'Uploading...' : previewImage ? 'Change photo' : 'Add profile photo'}
+                                    </button>
+                                </div>
+
+                                <div className="flex items-center justify-between gap-4 rounded-2xl border border-gray-200 bg-gray-50 p-4">
+                                    <div><p className="font-semibold text-gray-900">Account security</p><p className="text-sm text-gray-500">Update your sign-in password securely.</p></div>
+                                    <button type="button" onClick={() => setShowPasswordModal(true)} className="shrink-0 rounded-xl border border-green-300 bg-white px-4 py-2.5 font-medium text-green-700 hover:bg-green-50">Change password</button>
                                 </div>
 
                                 {/* Role Badge */}
@@ -968,6 +1032,20 @@ const AdminLayout = ({ children }) => {
                                 </div>
                             </div>
                         )}
+                    </div>
+                </div>
+            )}
+
+            {showPasswordModal && (
+                <div className="fixed inset-0 z-[70] flex items-center justify-center bg-gray-900/55 p-4 backdrop-blur-sm">
+                    <div role="dialog" aria-modal="true" aria-labelledby="admin-password-title" className="w-full max-w-md rounded-3xl bg-white shadow-2xl">
+                        <div className="flex items-center justify-between border-b border-gray-200 p-5"><div><h2 id="admin-password-title" className="text-xl font-bold text-gray-900">Change password</h2><p className="text-sm text-gray-500">Use a strong password you do not reuse.</p></div><button onClick={() => setShowPasswordModal(false)} className="rounded-lg p-2 text-gray-400 hover:bg-gray-100"><CloseCircle size={20} /></button></div>
+                        <div className="space-y-4 p-5">
+                            <input type="password" autoComplete="current-password" value={passwordForm.currentPassword} onChange={(e) => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })} placeholder="Current password" className="w-full rounded-xl border border-gray-300 bg-gray-50 px-4 py-3 focus:border-green-400 focus:outline-none" />
+                            <input type="password" autoComplete="new-password" value={passwordForm.newPassword} onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })} placeholder="New password" className="w-full rounded-xl border border-gray-300 bg-gray-50 px-4 py-3 focus:border-green-400 focus:outline-none" />
+                            <input type="password" autoComplete="new-password" value={passwordForm.confirmPassword} onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })} placeholder="Confirm new password" className="w-full rounded-xl border border-gray-300 bg-gray-50 px-4 py-3 focus:border-green-400 focus:outline-none" />
+                            <div className="flex justify-end gap-3 pt-2"><button onClick={() => setShowPasswordModal(false)} className="rounded-xl px-4 py-3 text-gray-600 hover:bg-gray-100">Cancel</button><button onClick={async () => { await savePassword(); }} disabled={passwordSaving || !passwordForm.newPassword || !passwordForm.confirmPassword} className="rounded-xl bg-green-400 px-5 py-3 font-semibold text-gray-900 disabled:opacity-50">{passwordSaving ? 'Changing...' : 'Change password'}</button></div>
+                        </div>
                     </div>
                 </div>
             )}

@@ -474,6 +474,10 @@ exports.getMe = async (req, res) => {
 exports.updateProfile = async (req, res) => {
     try {
         const { firstName, lastName, phoneNumber, gender, birthday } = req.body;
+        const existingUser = await User.findById(req.user.id);
+        if (!existingUser) {
+            return res.status(404).json({ success: false, message: 'User not found' });
+        }
 
         const updated = await User.updateProfile(req.user.id, {
             firstName,
@@ -481,7 +485,7 @@ exports.updateProfile = async (req, res) => {
             phoneNumber,
             gender,
             birthday,
-            profileImage: req.body.profileImage || null
+            profileImage: req.body.profileImage ?? existingUser.profile_image
         });
 
         if (!updated) {

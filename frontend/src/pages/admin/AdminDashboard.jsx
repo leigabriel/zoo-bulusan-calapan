@@ -1,4 +1,4 @@
-import { DollarCircle as ReiconDollarCircle, Leaf as ReiconLeaf, More as ReiconMore, Paw as ReiconPaw, Ticket as ReiconTicket, TrendDown as ReiconTrendDown, TrendUp as ReiconTrendUp, Users as ReiconUsers } from 'reicon-react';
+import { Calendar as ReiconCalendar, DollarCircle as ReiconDollarCircle, Leaf as ReiconLeaf, Message as ReiconMessage, More as ReiconMore, Paw as ReiconPaw, Ticket as ReiconTicket, TrendDown as ReiconTrendDown, TrendUp as ReiconTrendUp, Users as ReiconUsers } from 'reicon-react';
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import {
@@ -47,6 +47,10 @@ const AdminDashboard = () => {
         totalRevenue: 0,
         totalVisitors: 0,
         totalProfit: 0,
+        totalEventReservations: 0,
+        periodEventReservations: 0,
+        pendingEventReservations: 0,
+        unreadMessages: 0,
         ticketDistribution: [],
         revenueBreakdown: [],
         eventOverview: [],
@@ -195,6 +199,10 @@ const AdminDashboard = () => {
                 totalRevenue: 0,
                 totalVisitors: 0,
                 totalProfit: 0,
+                totalEventReservations: 0,
+                periodEventReservations: 0,
+                pendingEventReservations: 0,
+                unreadMessages: 0,
                 ticketDistribution: [],
                 revenueBreakdown: [],
                 eventOverview: [],
@@ -225,6 +233,10 @@ const AdminDashboard = () => {
                 ) || 0;
                 updatedStats.totalVisitors = Number(s.totalVisitors) || 0;
                 updatedStats.totalProfit = Number(s.totalProfit) || 0;
+                updatedStats.totalEventReservations = Number(s.totalEventReservations) || 0;
+                updatedStats.periodEventReservations = Number(s.periodEventReservations) || 0;
+                updatedStats.pendingEventReservations = Number(s.pendingEventReservations) || 0;
+                updatedStats.unreadMessages = Number(s.unreadMessages) || 0;
                 updatedStats.ticketDistribution = Array.isArray(s.ticketDistribution) ? s.ticketDistribution : [];
                 updatedStats.revenueBreakdown = Array.isArray(s.revenueBreakdown) ? s.revenueBreakdown : [];
                 updatedStats.eventOverview = Array.isArray(s.eventOverview) ? s.eventOverview : [];
@@ -463,6 +475,21 @@ const AdminDashboard = () => {
                     trendValue={`${stats.trends?.revenue >= 0 ? '+' : ''}${stats.trends?.revenue || 0}%`}
                     trendLabel="vs previous period"
                 />
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                <Link to="/admin/reservations" className="rounded-2xl border border-green-200 bg-white p-5 transition hover:border-green-400 hover:shadow-sm">
+                    <div className="mb-3 flex items-center justify-between"><span className="rounded-xl bg-green-100 p-2 text-green-700"><ReiconCalendar className="h-5 w-5" /></span><span className="text-xs font-semibold text-green-700">{stats.periodEventReservations} this period</span></div>
+                    <p className="text-sm text-gray-500">Event Reservations</p><p className="mt-1 text-2xl font-bold text-gray-900">{stats.totalEventReservations.toLocaleString()}</p>
+                </Link>
+                <Link to="/admin/reservations" className="rounded-2xl border border-amber-200 bg-white p-5 transition hover:border-amber-400 hover:shadow-sm">
+                    <div className="mb-3 flex items-center justify-between"><span className="rounded-xl bg-amber-100 p-2 text-amber-700"><ReiconTicket className="h-5 w-5" /></span><span className="text-xs font-semibold text-amber-700">Action needed</span></div>
+                    <p className="text-sm text-gray-500">Pending Event Reservations</p><p className="mt-1 text-2xl font-bold text-gray-900">{stats.pendingEventReservations.toLocaleString()}</p>
+                </Link>
+                <Link to="/admin/messages" className="rounded-2xl border border-blue-200 bg-white p-5 transition hover:border-blue-400 hover:shadow-sm">
+                    <div className="mb-3 flex items-center justify-between"><span className="rounded-xl bg-blue-100 p-2 text-blue-700"><ReiconMessage className="h-5 w-5" /></span><span className="text-xs font-semibold text-blue-700">Inbox</span></div>
+                    <p className="text-sm text-gray-500">Unread Messages</p><p className="mt-1 text-2xl font-bold text-gray-900">{stats.unreadMessages.toLocaleString()}</p>
+                </Link>
             </div>
 
             {/* Middle Section - Charts */}

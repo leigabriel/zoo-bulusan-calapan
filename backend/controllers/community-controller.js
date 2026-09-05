@@ -76,22 +76,7 @@ const normalizeReportedComment = (report) => ({
 });
 
 const createAdminStaffNotifications = async ({ title, message, type = 'community', link = '/admin/community-moderation' }) => {
-    try {
-        const userIds = await Community.getAdminAndStaffUserIds();
-        await Promise.all(
-            userIds.map((userId) =>
-                Notification.create({
-                    userId,
-                    title,
-                    message,
-                    type,
-                    link
-                })
-            )
-        );
-    } catch (error) {
-        console.error('Error creating admin/staff community notifications:', error);
-    }
+    await Notification.notifyManagement({ title, message, type, link });
 };
 
 exports.getPublicPosts = async (req, res) => {

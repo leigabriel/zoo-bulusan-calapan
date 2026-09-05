@@ -8,26 +8,7 @@ const { saveBase64Image } = require('../middleware/upload-resident-id');
 
 // Helper function to create notifications for admin/staff
 const createAdminStaffNotification = async (title, message, type = 'ticket', link = null) => {
-    try {
-        const db = require('../config/database');
-        // Get all admin and staff users
-        const [adminStaff] = await db.query(
-            "SELECT id FROM users WHERE role IN ('admin', 'staff') AND is_active = TRUE"
-        );
-        
-        // Create notification for each admin/staff
-        for (const user of adminStaff) {
-            await Notification.create({
-                userId: user.id,
-                title,
-                message,
-                type,
-                link
-            });
-        }
-    } catch (error) {
-        console.error('Error creating admin/staff notification:', error);
-    }
+    await Notification.notifyManagement({ title, message, type, link });
 };
 
 exports.getProfile = async (req, res) => {
@@ -362,7 +343,7 @@ exports.purchaseTicket = async (req, res) => {
                 'New Ticket Reservation',
                 `${buyerName} reserved ${totalQuantity} ticket(s) for ${new Date(visitDate).toLocaleDateString()}`,
                 'ticket',
-                `/admin/reservations?ticket=${ticketId}`
+                '/admin/tickets'
             );
 
             let confirmationMessage = 'Tickets booked successfully! Your booking is pending approval.';
@@ -451,7 +432,7 @@ exports.purchaseTicket = async (req, res) => {
             'New Ticket Reservation',
             `${buyerName} reserved ${quantity} ${ticketType} ticket(s) for ${new Date(visitDate).toLocaleDateString()}`,
             'ticket',
-            `/admin/reservations?ticket=${ticketId}`
+            '/admin/tickets'
         );
 
         let confirmationMessage = 'Ticket booked successfully! Your ticket is pending approval.';

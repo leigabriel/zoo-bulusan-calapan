@@ -458,10 +458,11 @@ exports.getTodayTickets = async (req, res) => {
 exports.getNotifications = async (req, res) => {
     try {
         const userId = req.user?.id || null;
-        const result = await Notification.generateDashboardNotifications(userId);
+        const result = await Notification.generateDashboardNotifications(userId, 'staff');
         res.json({
             success: true,
             notifications: result.notifications,
+            unreadCount: result.unreadCount,
             summary: result.summary
         });
     } catch (error) {
@@ -475,7 +476,9 @@ exports.markNotificationRead = async (req, res) => {
     try {
         const { id } = req.params;
         const userId = req.user.id;
-        await Notification.markAsRead(id, userId);
+        if (!await Notification.markAsRead(id, userId)) {
+            return res.status(404).json({ success: false, message: 'Notification not found' });
+        }
         res.json({ success: true, message: 'Notification marked as read' });
     } catch (error) {
         console.error('Error marking notification read:', error);

@@ -75,18 +75,24 @@ const AdminUsers = ({ globalSearch = '' }) => {
     // Combine local and global search
     const effectiveSearch = globalSearch || searchQuery;
 
-    useEffect(() => { fetchUsers(); }, []);
+    useEffect(() => {
+        fetchUsers();
+        const interval = setInterval(() => fetchUsers(false), 15000);
+        const refreshOnFocus = () => fetchUsers(false);
+        window.addEventListener('focus', refreshOnFocus);
+        return () => { clearInterval(interval); window.removeEventListener('focus', refreshOnFocus); };
+    }, []);
 
-    const fetchUsers = async () => {
+    const fetchUsers = async (showLoading = true) => {
         try {
-            setLoading(true);
+            if (showLoading) setLoading(true);
             const res = await adminAPI.getUsers();
             if (res.success) setUsers(res.users || []);
             else throw new Error(res.message || 'Failed to fetch users');
         } catch (err) {
             console.error(err);
             setError(err.message || 'Error');
-        } finally { setLoading(false); }
+        } finally { if (showLoading) setLoading(false); }
     };
 
     const openCreateModal = () => {
@@ -146,7 +152,7 @@ const AdminUsers = ({ globalSearch = '' }) => {
         try {
             const res = await adminAPI.suspendUser(suspendUser.id, suspendReason);
             if (res.success) {
-                setUsers(users.map(u => u.id === suspendUser.id ? { ...u, is_suspended: true, suspension_reason: suspendReason } : u));
+                setUsers(users.map(u => u.id === suspendUser.id ? { ...u, is_suspended: true, is_active: false, suspension_reason: suspendReason } : u));
                 notify.success('Account suspended.');
                 setSuspendUser(null);
                 setSuspendReason('');
@@ -164,7 +170,7 @@ const AdminUsers = ({ globalSearch = '' }) => {
         try {
             const res = await adminAPI.unsuspendUser(userId);
             if (res.success) {
-                setUsers(users.map(u => u.id === userId ? { ...u, is_suspended: false, suspension_reason: null } : u));
+                setUsers(users.map(u => u.id === userId ? { ...u, is_suspended: false, is_active: true, suspension_reason: null } : u));
                 notify.success('Account restored.');
             } else throw new Error(res.message || 'Unsuspend failed');
         } catch (err) {
@@ -211,6 +217,12 @@ const AdminUsers = ({ globalSearch = '' }) => {
         }
     };
 
+    const getAccountStatus = (user) => user.is_suspended
+        ? { label: 'Suspended', dot: 'bg-red-500', text: 'text-red-700' }
+        : (user.is_active === false || user.is_active === 0 || user.is_active === '0')
+            ? { label: 'Inactive', dot: 'bg-gray-400', text: 'text-gray-600' }
+            : { label: 'Active', dot: 'bg-green-500', text: 'text-green-700' };
+
     const filteredUsers = users.filter(user => {
         if (user.role === 'admin') return false;
         const fullName = `${user.firstName || user.first_name || ''} ${user.lastName || user.last_name || ''}`.toLowerCase();
@@ -224,6 +236,8 @@ const AdminUsers = ({ globalSearch = '' }) => {
         total: users.filter(u => u.role !== 'admin').length,
         staff: users.filter(u => u.role === 'staff').length,
         user: users.filter(u => u.role === 'user').length,
+        active: users.filter(u => u.role !== 'admin' && !u.is_suspended && !(u.is_active === false || u.is_active === 0 || u.is_active === '0')).length,
+        suspended: users.filter(u => u.role !== 'admin' && u.is_suspended).length,
     };
 
     if (loading) {
@@ -258,6 +272,12 @@ const AdminUsers = ({ globalSearch = '' }) => {
                             <p className="text-2xl font-bold text-gray-900">{userCounts.total}</p>
                             <p className="text-xs text-gray-500">Total Users</p>
                         </div>
+                    </div>
+                </div>
+                <div className="bg-white border border-green-200 rounded-xl p-4">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center text-emerald-700"><span className="h-3 w-3 rounded-full bg-emerald-500 animate-pulse" /></div>
+                        <div><p className="text-2xl font-bold text-gray-900">{userCounts.active}</p><p className="text-xs text-gray-500">Active <span className="text-red-600">· {userCounts.suspended} suspended</span></p></div>
                     </div>
                 </div>
                 <div className="bg-white border border-green-200 rounded-xl p-4">
@@ -385,17 +405,7 @@ const AdminUsers = ({ globalSearch = '' }) => {
                                             </span>
                                         </td>
                                         <td className="px-6 py-4">
-                                            {user.is_suspended ? (
-                                                <span className="inline-flex items-center gap-1.5 text-red-700 text-sm">
-                                                    <div className="w-2 h-2 bg-red-400 rounded-full"></div>
-                                                    Suspended
-                                                </span>
-                                            ) : (
-                                                <span className="inline-flex items-center gap-1.5 text-green-800 text-sm">
-                                                    <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                                                    Active
-                                                </span>
-                                            )}
+                                            {(() => { const status = getAccountStatus(user); return <span className={`inline-flex items-center gap-1.5 text-sm ${status.text}`}><span className={`h-2 w-2 rounded-full ${status.dot}`} />{status.label}</span>; })()}
                                         </td>
                                         <td className="px-6 py-4">
                                             <div className="flex items-center justify-end gap-2">
@@ -471,7 +481,7 @@ const AdminUsers = ({ globalSearch = '' }) => {
             {/* Create/Edit Modal */}
             {showModal && (
                 <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-white border border-green-200 rounded-2xl w-full max-w-md">
+                    <div className="bg-white border border-green-200 rounded-3xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
                         <div className="p-6 border-b border-green-200 flex items-center justify-between">
                             <h3 className="text-xl font-bold text-gray-900">
                                 {editingUser ? 'Edit User' : 'Create New User'}
@@ -480,7 +490,7 @@ const AdminUsers = ({ globalSearch = '' }) => {
                                 <CloseIcon />
                             </button>
                         </div>
-                        <form onSubmit={saveUser} className="p-6 space-y-4">
+                         <form onSubmit={saveUser} className="p-6 space-y-4">
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-500 mb-2">First Name</label>
@@ -558,7 +568,7 @@ const AdminUsers = ({ globalSearch = '' }) => {
             {/* View User Modal */}
             {viewUser && (
                 <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-white border border-green-200 rounded-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+                    <div className="bg-white border border-green-200 rounded-3xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
                         <div className="p-6 border-b border-green-200 flex items-center justify-between">
                             <h3 className="text-xl font-bold text-gray-900">User Details</h3>
                             <button onClick={() => setViewUser(null)} className="p-2 hover:bg-green-50 rounded-lg text-gray-500 hover:text-gray-900 transition"><CloseIcon /></button>
@@ -583,7 +593,7 @@ const AdminUsers = ({ globalSearch = '' }) => {
                                 <div className="grid grid-cols-2 gap-4">
                                     <div><p className="text-xs text-gray-500">Email</p><p className="text-gray-900">{viewUser.email}</p></div>
                                     <div><p className="text-xs text-gray-500">Role</p><span className={`inline-flex px-2 py-0.5 text-xs font-medium rounded-full border capitalize ${getRoleBadgeColor(viewUser.role)}`}>{viewUser.role}</span></div>
-                                    <div><p className="text-xs text-gray-500">Status</p>{viewUser.is_suspended ? <span className="text-red-700">Suspended</span> : <span className="text-green-800">Active</span>}</div>
+                                    <div><p className="text-xs text-gray-500">Status</p><span className={getAccountStatus(viewUser).text}>{getAccountStatus(viewUser).label}</span></div>
                                     <div><p className="text-xs text-gray-500">Created</p><p className="text-gray-900">{viewUser.created_at?.split('T')[0] || '-'}</p></div>
                                 </div>
                             </div>

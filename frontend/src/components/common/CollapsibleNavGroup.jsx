@@ -6,7 +6,7 @@ const CollapsibleNavGroup = ({ label, items, open, onToggle, pathname, onNavigat
         <button
             type="button"
             onClick={onToggle}
-            className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-xs font-semibold uppercase tracking-wider text-gray-500 transition hover:bg-gray-100 hover:text-gray-800"
+            className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-xs font-semibold uppercase tracking-wider text-gray-900 transition hover:bg-gray-100 hover:text-gray-800"
             aria-expanded={open}
         >
             <span className="flex items-center gap-2">

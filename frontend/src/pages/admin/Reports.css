@@ -1,0 +1,60 @@
+.admin-reports {
+    container-type: inline-size;
+    overflow-x: clip;
+}
+
+.admin-reports .report-controls {
+    grid-template-columns: minmax(0, 1fr);
+}
+
+.admin-reports .report-controls > div,
+.admin-reports .report-controls input,
+.admin-reports .report-controls select {
+    min-width: 0;
+    max-width: 100%;
+}
+
+.admin-reports .report-stats {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr));
+}
+
+.admin-reports .report-stats > div {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.admin-reports .report-toolbar > * {
+    min-width: 0;
+}
+
+.admin-reports table th,
+.admin-reports table td {
+    vertical-align: middle;
+}
+
+@media (max-width: 639px) {
+    .admin-reports .report-toolbar {
+        align-items: stretch;
+    }
+
+    .admin-reports .report-toolbar > div,
+    .admin-reports .report-toolbar button {
+        width: 100%;
+    }
+}
+
+@container (min-width: 560px) {
+    .admin-reports .report-controls {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .admin-reports .report-generate {
+        padding-top: 28px;
+    }
+}
+
+@container (min-width: 1050px) {
+    .admin-reports .report-controls {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+}
