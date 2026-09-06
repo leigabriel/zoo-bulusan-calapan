@@ -130,6 +130,15 @@ const Reports = () => {
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#39;');
 
+    const formatLongDate = (value) => {
+        const normalized = normalizeReportDate(value);
+        if (!normalized) return '';
+        const parsed = new Date(`${normalized}T00:00:00`);
+        return Number.isNaN(parsed.getTime()) ? normalized : parsed.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+    };
+
+    const exportTimestamp = () => new Date().toLocaleString('sv-SE').replace(' ', '_').replace(/:/g, '-');
+
     // Fetch quick stats on mount
     useEffect(() => {
         const fetchQuickStats = async () => {
@@ -156,8 +165,9 @@ const Reports = () => {
     }, []);
 
     const reportTypes = [
+        { value: 'all', label: 'All Reports', icon: FileTextIcon, description: 'Sales, visitors, events, and tickets' },
         { value: 'sales', label: 'Sales Report', icon: ChartIcon, description: 'Revenue and earnings breakdown' },
-        // { value: 'visitors', label: 'Visitor Report', icon: UsersIcon, description: 'Attendance and visitor data' },
+        { value: 'visitors', label: 'Visitor Report', icon: UsersIcon, description: 'Attendance and visitor data' },
         { value: 'events', label: 'Event Report', icon: CalendarIcon, description: 'Event attendance and bookings' },
         { value: 'tickets', label: 'Ticket Report', icon: TicketIcon, description: 'Ticket sales and validations' },
     ];
@@ -184,7 +194,26 @@ const Reports = () => {
         setLoading(true);
         setReportError('');
         try {
-            const response = await adminAPI.getReportData(effectiveStart, effectiveEnd, reportType);
+            let response;
+            if (reportType === 'all') {
+                const [sales, visitors, events] = await Promise.all(['sales', 'visitors', 'events'].map(type => adminAPI.getReportData(effectiveStart, effectiveEnd, type)));
+                if (![sales, visitors, events].every(result => result.success && result.data)) throw new Error('One or more report requests failed');
+                response = {
+                    success: true,
+                    data: {
+                        totalRevenue: toExportNumber(sales.data.totalRevenue) + toExportNumber(events.data.totalRevenue),
+                        ticketsSold: toExportNumber(sales.data.ticketsSold) + toExportNumber(events.data.ticketsSold),
+                        visitors: toExportNumber(sales.data.visitors) + toExportNumber(events.data.visitors),
+                        items: [
+                            ...sales.data.items.map(item => ({ ...item, reportGroup: 'Sales and Tickets' })),
+                            ...visitors.data.items.map(item => ({ ...item, reportGroup: 'Visitors' })),
+                            ...events.data.items.map(item => ({ ...item, reportGroup: 'Events' }))
+                        ]
+                    }
+                };
+            } else {
+                response = await adminAPI.getReportData(effectiveStart, effectiveEnd, reportType);
+            }
             
             if (response.success && response.data) {
                 setReportData({
@@ -262,7 +291,7 @@ const Reports = () => {
     const reportRows = useMemo(() => processedItems.map(item => ({
         date: normalizeReportDate(item.date),
         reference: item.reference || 'N/A',
-        type: item.name || item.type || 'N/A',
+        type: `${item.reportGroup ? `${item.reportGroup}: ` : ''}${item.name || item.type || 'N/A'}`,
         quantity: toExportNumber(item.quantity),
         amount: toExportNumber(item.amount),
         status: normalizeStatus(item.status)
@@ -294,7 +323,7 @@ const Reports = () => {
         const { start, end, title } = getReportMeta();
         const headers = ['Date', 'Reference', 'Type', 'Quantity', 'Amount (PHP)', 'Status'];
         const rows = reportRows.map(row => [
-            row.date,
+            formatLongDate(row.date),
             row.reference,
             row.type,
             row.quantity,
@@ -303,7 +332,7 @@ const Reports = () => {
         ]);
 
         const sheetRows = [
-            ['Date Range', `${start} to ${end}`],
+            ['Date Range', `${formatLongDate(start)} to ${formatLongDate(end)}`],
             [],
             ['Report Summary'],
             ['Total Revenue (PHP)', toExportNumber(stats.totalRevenue)],
@@ -362,11 +391,21 @@ const Reports = () => {
             ['Average Revenue / Day', `PHP ${Math.round(toExportNumber(reportData.totalRevenue) / reportDays).toLocaleString()}`]
         ].map(([label, value]) => `<div class="metric"><strong>${escapeHtml(value)}</strong><span>${escapeHtml(label)}</span></div>`).join('');
 
-        const rowsHtml = reportRows.map((row) => (
+        const groupedRows = Object.values(reportRows.reduce((groups, row) => {
+            const classification = reportData.type === 'events'
+                ? 'Event Reservations'
+                : row.type.includes(':') ? row.type.split(':', 1)[0] : row.type;
+            const key = `${classification}|${row.status}`;
+            if (!groups[key]) groups[key] = { type: classification, status: row.status, quantity: 0, amount: 0, records: 0 };
+            groups[key].quantity += row.quantity;
+            groups[key].amount += row.amount;
+            groups[key].records += 1;
+            return groups;
+        }, {}));
+        const rowsHtml = groupedRows.map((row) => (
             `<tr>
-                <td>${escapeHtml(row.date)}</td>
-                <td>${escapeHtml(row.reference)}</td>
                 <td>${escapeHtml(row.type)}</td>
+                <td class="num">${escapeHtml(row.records.toLocaleString())}</td>
                 <td class="num">${escapeHtml(row.quantity.toLocaleString())}</td>
                 <td class="num">₱${escapeHtml(row.amount.toLocaleString())}</td>
                 <td>${escapeHtml(row.status)}</td>
@@ -377,43 +416,54 @@ const Reports = () => {
 <html>
 <head>
     <meta charset="utf-8" />
-    <title></title>
+    <title>BulusanZoo-Report-${exportTimestamp()}.pdf</title>
     <style>
         * { box-sizing: border-box; }
-         body { font-family: Arial, sans-serif; color: #111; margin: 0; padding: 10mm; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
-        h1 { font-size: 20px; margin: 0 0 6px; }
-        h2 { font-size: 16px; margin: 0 0 16px; font-weight: 600; }
-        .meta { font-size: 12px; margin-bottom: 16px; color: #444; }
-         .meta span { display: inline-block; margin-right: 18px; }
-         .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 14px 0; break-inside: avoid; }
-         .metric { border: 1px solid #d1d5db; border-radius: 8px; padding: 10px; }
+         html, body { width: 210mm !important; max-width: 210mm !important; height: 297mm !important; margin: 0 !important; overflow: hidden !important; }
+         body { page: reportPage; padding: 1in; font-family: Arial, sans-serif; color: #111; font-size: 11pt; line-height: 1.5; text-align: left; }
+         .letterhead { text-align: center; border-bottom: 2px solid #222; padding-bottom: 5px; }
+         .letterhead strong { display: block; font-size: 16pt; font-weight: 700; }
+         .letterhead span { font-size: 11pt; }
+         .subject { margin: 0 0 8pt; font-size: 16pt; font-weight: 700; text-align: center; }
+         p { margin: 0 0 8pt; text-align: left; }
+         .meta { font-size: 11pt; margin-bottom: 8pt; color: #333; }
+         .meta span { display: inline-block; margin-right: 14px; }
+         .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; margin: 7px 0; break-inside: avoid; }
+         .metric { border: 1px solid #777; padding: 5px; }
          .metric strong, .metric span { display: block; }
-         .metric strong { font-size: 17px; margin-bottom: 3px; }
-         .metric span { color: #555; font-size: 10px; text-transform: uppercase; }
-        table { width: 100%; border-collapse: collapse; margin-top: 12px; }
-        th, td { border: 1px solid #ddd; padding: 10px 12px; font-size: 12px; text-align: left; }
-        th { background: #f3f3f3; text-transform: uppercase; letter-spacing: 0.04em; font-size: 11px; }
+         .metric strong { font-size: 13pt; margin-bottom: 2pt; }
+         .metric span { color: #555; font-size: 11pt; }
+         table { width: 100%; border-collapse: collapse; margin-top: 6px; }
+         th, td { border: 1px solid #777; padding: 3pt 4pt; font-size: 11pt; line-height: 1.5; text-align: left; }
+         th { background: #eee; }
         td.num { text-align: right; }
          tfoot td { font-weight: 700; background: #fafafa; }
          thead { display: table-header-group; }
          tfoot { display: table-footer-group; }
          tr, .metric, .summary { break-inside: avoid; page-break-inside: avoid; }
-        .summary { margin-top: 12px; font-size: 12px; color: #333; }
-         @page { size: A4 portrait; margin: 0; }
+         .summary { margin-top: 8pt; font-size: 11pt; color: #333; }
+         @page reportPage { size: 210mm 297mm; margin: 0; }
+         @media print {
+             html, body { width: 210mm !important; height: 297mm !important; }
+             body { page: reportPage; }
+         }
     </style>
 </head>
 <body>
+    <header class="letterhead"><strong>Bulusan Zoo Calapan</strong><span>Administrative Report Memorandum</span></header>
+    <div class="subject">${escapeHtml(reportData.reportType)} Summary</div>
+    <p>To the concerned administrative officers:</p>
+    <p>This memorandum provides a consolidated review of operational records for the period indicated below. The summarized figures and classifications are presented for administrative evaluation, planning, and official reference.</p>
     <div class="meta">
-        <span>Date Range: ${escapeHtml(start)} to ${escapeHtml(end)}</span>
+        <span>Date Range: ${escapeHtml(formatLongDate(start))} to ${escapeHtml(formatLongDate(end))}</span>
         <span>Records: ${reportRows.length}</span>
     </div>
     <div class="metrics">${summaryCards}</div>
     <table>
         <thead>
             <tr>
-                <th>Date</th>
-                <th>Reference</th>
-                <th>Type</th>
+                <th>Report Classification</th>
+                <th>Records</th>
                 <th>Quantity</th>
                 <th>Amount</th>
                 <th>Status</th>
@@ -424,30 +474,41 @@ const Reports = () => {
         </tbody>
         <tfoot>
             <tr>
-                <td colspan="3">Summary</td>
+                <td colspan="2">Summary</td>
                 <td class="num">${escapeHtml(totalQuantity)}</td>
                 <td class="num">₱${escapeHtml(totalAmount)}</td>
                 <td></td>
             </tr>
         </tfoot>
     </table>
-    <div class="summary">Prepared by the Admin Reports module.</div>
+    <div class="summary">Detailed record-level data remains available in the corresponding Excel export.</div>
 </body>
 </html>`;
 
-        const printWindow = window.open('', '_blank', 'width=1200,height=800');
+        const printWindow = window.open('', '_blank', 'width=816,height=1056');
         if (!printWindow) {
             notify.error('Please allow pop-ups.');
             return;
         }
 
-        printWindow.onload = () => {
-            printWindow.print();
-        };
         printWindow.document.open();
         printWindow.document.write(html);
         printWindow.document.close();
-        printWindow.focus();
+        const printWhenReady = async () => {
+            try {
+                await printWindow.document.fonts?.ready;
+                await new Promise(resolve => setTimeout(resolve, 300));
+                printWindow.focus();
+                printWindow.print();
+            } catch (error) {
+                console.error('Error preparing PDF export:', error);
+                notify.error("Couldn't prepare the PDF export.");
+                printWindow.close();
+            }
+        };
+        printWindow.addEventListener('afterprint', () => printWindow.close(), { once: true });
+        if (printWindow.document.readyState === 'complete') printWhenReady();
+        else printWindow.addEventListener('load', printWhenReady, { once: true });
     };
 
     const getStatusBadge = (status) => {
@@ -665,7 +726,7 @@ const Reports = () => {
                                 className="flex items-center gap-2 px-4 py-2 bg-green-400/10 border border-green-400/30 text-green-800 rounded-xl hover:bg-green-400/20 transition disabled:opacity-50 disabled:cursor-not-allowed text-sm"
                             >
                                 <DownloadIcon />
-                                Export
+                                Export Excel
                             </button>
                             <button
                                 onClick={handlePrint}
@@ -673,7 +734,7 @@ const Reports = () => {
                                 className="flex items-center gap-2 px-4 py-2 bg-gray-500/10 border border-gray-500/30 text-gray-700 rounded-xl hover:bg-gray-500/20 transition disabled:opacity-50 disabled:cursor-not-allowed text-sm"
                             >
                                 <PrintIcon />
-                                Print
+                                Export PDF
                             </button>
                         </div>
                     </div>

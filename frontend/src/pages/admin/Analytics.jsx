@@ -9,6 +9,13 @@ const numberFormat = new Intl.NumberFormat('en-PH');
 const currencyFormat = new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP', maximumFractionDigits: 0 });
 const colors = ['#22c55e', '#3b82f6', '#a855f7', '#f59e0b', '#ef4444'];
 const metricTones = { green: 'bg-green-100 text-green-700', blue: 'bg-blue-100 text-blue-700', purple: 'bg-purple-100 text-purple-700', amber: 'bg-amber-100 text-amber-700' };
+const escapeHtml = value => String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+const longDate = value => {
+    if (!value) return '';
+    const date = new Date(`${String(value).slice(0, 10)}T00:00:00`);
+    return Number.isNaN(date.getTime()) ? String(value) : date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+};
+const exportTimestamp = () => new Date().toLocaleString('sv-SE').replace(' ', '_').replace(/:/g, '-');
 
 const MetricCard = ({ icon, label, value, detail, tone = 'green' }) => (
     <article className="rounded-2xl border border-green-200 bg-white p-5 shadow-sm print:border-gray-300 print:shadow-none">
@@ -49,7 +56,7 @@ const Analytics = () => {
     const cancelled = statuses.find(item => item.status === 'cancelled')?.count || 0;
     const statusTotal = statuses.reduce((sum, item) => sum + item.count, 0);
     const cancellationRate = statusTotal > 0 ? cancelled / statusTotal * 100 : 0;
-    const periodLabel = data?.meta ? `${data.meta.startDate} to ${data.meta.endDate}` : '';
+    const periodLabel = data?.meta ? `${longDate(data.meta.startDate)} to ${longDate(data.meta.endDate)}` : '';
 
     const baseChart = {
         chart: { toolbar: { show: false }, fontFamily: 'inherit', animations: { enabled: false } },
@@ -58,10 +65,23 @@ const Analytics = () => {
         legend: { position: 'top', horizontalAlign: 'left' },
         tooltip: { theme: 'light' }
     };
-    const demandOptions = { ...baseChart, colors: [colors[0], colors[1]], stroke: { width: [0, 3], curve: 'straight' }, xaxis: { categories: daily.map(item => item.date), labels: { rotate: -45 } }, yaxis: [{ title: { text: 'Visitors' } }, { opposite: true, title: { text: 'Reservations' } }] };
+    const chartDates = daily.map(item => new Date(`${item.date}T00:00:00`).getTime());
+    const dateLabel = timestamp => new Date(timestamp).toLocaleDateString('en-US', timeRange === 'year' ? { month: 'short', year: 'numeric' } : { month: 'short', day: 'numeric' });
+    const demandOptions = {
+        ...baseChart,
+        colors: [colors[0], colors[1]],
+        stroke: { width: [0, 3], curve: 'straight' },
+        xaxis: {
+            type: 'datetime',
+            categories: chartDates,
+            tickAmount: timeRange === 'week' ? 6 : timeRange === 'month' ? 9 : 11,
+            labels: { rotate: timeRange === 'year' ? 0 : -45, hideOverlappingLabels: true, formatter: value => dateLabel(Number(value)) },
+            tooltip: { enabled: false }
+        },
+        tooltip: { shared: true, x: { formatter: timestamp => longDate(new Date(timestamp).toISOString().slice(0, 10)) } },
+        yaxis: [{ title: { text: 'Visitors' }, min: 0, forceNiceScale: true }, { opposite: true, title: { text: 'Reservations' }, min: 0, forceNiceScale: true }]
+    };
     const demandSeries = [{ name: 'Scheduled visitors', type: 'column', data: daily.map(item => item.visitors) }, { name: 'Reservations', type: 'line', data: daily.map(item => item.reservations) }];
-    const attendanceOptions = { ...baseChart, colors: [colors[0], colors[2]], stroke: { width: 3, curve: 'straight' }, xaxis: { categories: daily.map(item => item.date), labels: { rotate: -45 } } };
-    const attendanceSeries = [{ name: 'Scheduled', data: daily.map(item => item.visitors) }, { name: 'Checked in', data: daily.map(item => item.checkedIn) }];
     const weekdayOptions = { ...baseChart, colors: [colors[3]], plotOptions: { bar: { borderRadius: 6, horizontal: true } }, xaxis: { categories: weekdays.map(item => item.day) } };
     const mixOptions = { ...baseChart, labels: mix.map(item => item.type), colors, plotOptions: { pie: { donut: { size: '68%', labels: { show: true, total: { show: true, label: 'Admissions', formatter: () => numberFormat.format(totalAdmissions) } } } } } };
 
@@ -83,7 +103,7 @@ const Analytics = () => {
             ];
             const sheets = [
                 ['Metadata', XLSX.utils.aoa_to_sheet(metadata)], ['Summary', XLSX.utils.aoa_to_sheet(summaryRows)],
-                ['Daily Trend', XLSX.utils.json_to_sheet(daily)], ['Status Breakdown', XLSX.utils.json_to_sheet(statuses)],
+                ['Daily Trend', XLSX.utils.json_to_sheet(daily.map(item => ({ ...item, date: longDate(item.date) })))], ['Status Breakdown', XLSX.utils.json_to_sheet(statuses)],
                 ['Admission Mix', XLSX.utils.json_to_sheet(mix.map(item => ({ ...item, share: totalAdmissions ? item.count / totalAdmissions : 0 })))], ['Weekday Demand', XLSX.utils.json_to_sheet(weekdays)]
             ];
             sheets.forEach(([name, sheet]) => { sheet['!cols'] = Array.from({ length: 6 }, () => ({ wch: 22 })); XLSX.utils.book_append_sheet(workbook, sheet, name); });
@@ -95,33 +115,53 @@ const Analytics = () => {
     };
 
     const printReport = () => {
-        const report = document.querySelector('.analytics-report');
         const printWindow = window.open('', '_blank', 'width=1400,height=900');
-        if (!report || !printWindow) {
-            notify.error(printWindow ? "Couldn't prepare the report." : 'Please allow pop-ups to print the report.');
+        if (!printWindow) {
+            notify.error('Please allow pop-ups to print the report.');
             return;
         }
-
-        const styles = [...document.head.querySelectorAll('link[rel="stylesheet"], style')].map(node => node.outerHTML).join('');
+        const metricRows = [
+            ['Confirmed/completed reservations', numberFormat.format(summary.reservations || 0), 'Scheduled visitors', numberFormat.format(summary.scheduledVisitors || 0)],
+            ['Estimated admission fees', currencyFormat.format(summary.estimatedFees || 0), 'Average party size', Number(summary.averagePartySize || 0).toFixed(1)],
+            ['Pending verification', numberFormat.format(summary.pendingVerification || 0), 'Cancellation rate', `${cancellationRate.toFixed(1)}%`],
+            ['Registered users', numberFormat.format(summary.totalUsers || 0), 'Animal inventory', numberFormat.format(summary.totalAnimals || 0)],
+            ['Upcoming events', numberFormat.format(summary.upcomingEvents || 0), 'Reporting period', periodLabel]
+        ].map(row => `<tr>${row.map((cell, index) => `<${index % 2 ? 'td' : 'th'}>${escapeHtml(cell)}</${index % 2 ? 'td' : 'th'}>`).join('')}</tr>`).join('');
+        const statusRows = statuses.map(item => `<tr><td>${escapeHtml(item.status.replace('_', ' '))}</td><td>${numberFormat.format(item.count)}</td><td>${numberFormat.format(item.visitors)}</td></tr>`).join('');
+        const mixRows = mix.filter(item => item.type !== 'Resident' || item.count > 0).map(item => `<tr><td>${escapeHtml(item.type)}</td><td>${numberFormat.format(item.count)}</td><td>${totalAdmissions ? (item.count / totalAdmissions * 100).toFixed(1) : '0.0'}%</td><td>${escapeHtml(currencyFormat.format(item.estimatedFees))}</td></tr>`).join('');
+        const weekdayRows = weekdays.map(item => `<tr><td>${escapeHtml(item.day)}</td><td>${numberFormat.format(item.visitors)}</td></tr>`).join('');
         printWindow.document.open();
-        printWindow.document.write(`<!doctype html><html><head><meta charset="utf-8"><title></title>${styles}<style>
+        printWindow.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>BulusanZoo-Analytic-${exportTimestamp()}.pdf</title><style>
             @page { size: A4 portrait; margin: 0; }
-            * { box-sizing: border-box; print-color-adjust: exact !important; -webkit-print-color-adjust: exact !important; }
-            html, body { width: 100%; height: auto !important; overflow: visible !important; background: #fff !important; }
-            body { margin: 0; padding: 10mm; font-family: Arial, sans-serif; color: #111827; }
-            .analytics-report { width: 100% !important; max-width: none !important; padding: 0 !important; }
-            .analytics-controls, .analytics-print-hidden { display: none !important; }
-            .analytics-primary-grid, .analytics-secondary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
-            .analytics-charts, .analytics-details { display: block !important; }
-            .analytics-charts > *, .analytics-details > * { margin-bottom: 6mm !important; }
-            article, .analytics-chart, .analytics-details > *, footer, table, tr { break-inside: avoid !important; page-break-inside: avoid !important; }
-            .analytics-chart { min-width: 0 !important; overflow: visible !important; }
-            .apexcharts-canvas, .apexcharts-svg { max-width: 100% !important; overflow: visible !important; }
-            .apexcharts-toolbar { display: none !important; }
-            table { width: 100% !important; }
-            thead { display: table-header-group; }
-            svg { animation: none !important; transition: none !important; }
-        </style></head><body>${report.outerHTML}</body></html>`);
+            * { box-sizing: border-box; }
+            html, body { width: 210mm; height: 297mm; margin: 0; overflow: hidden; }
+            body { padding: 1in; font-family: Arial, sans-serif; color: #111; font-size: 11pt; line-height: 1.5; text-align: left; }
+            .letterhead { text-align: center; border-bottom: 2px solid #222; padding-bottom: 5px; }
+            .letterhead strong { display: block; font-size: 16pt; font-weight: 700; }
+            .letterhead span { font-size: 11pt; }
+            .subject { margin: 0 0 8pt; font-size: 16pt; font-weight: 700; text-align: center; }
+            p { margin: 0 0 8pt; text-align: left; }
+            h2 { margin: 0 0 8pt; font-size: 13pt; font-weight: 700; text-align: left; }
+            .columns { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; align-items: start; }
+            table { width: 100%; border-collapse: collapse; break-inside: avoid; }
+            th, td { border: 1px solid #777; padding: 3pt 4pt; font-size: 11pt; line-height: 1.5; text-align: left; }
+            th { background: #eee; font-weight: 700; }
+            td { text-align: right; }
+            .data td:first-child { text-align: left; text-transform: capitalize; }
+            .note { margin-top: 8pt; font-size: 11pt; }
+        </style></head><body>
+            <header class="letterhead"><strong>Bulusan Zoo Calapan</strong><span>Administrative Analytics Memorandum</span></header>
+            <div class="subject">Operational Analytics Summary</div>
+            <p>To the concerned administrative officers:</p>
+            <p>This memorandum presents the consolidated operational indicators for <strong>${escapeHtml(periodLabel)}</strong>. The information below summarizes reservation activity, visitor attendance, admission composition, and institutional activity for management review and planning.</p>
+            <h2>Executive Summary</h2><table>${metricRows}</table>
+            <div class="columns">
+                <section><h2>Reservation Status</h2><table class="data"><thead><tr><th>Status</th><th>Records</th><th>Visitors</th></tr></thead><tbody>${statusRows}</tbody></table></section>
+                <section><h2>Admission Classification</h2><table class="data"><thead><tr><th>Type</th><th>Count</th><th>Share</th><th>Est. Fees</th></tr></thead><tbody>${mixRows}</tbody></table></section>
+            </div>
+            <h2>Weekday Visitor Demand</h2><table class="data"><thead><tr><th>Day</th><th>Scheduled Visitors</th></tr></thead><tbody>${weekdayRows}</tbody></table>
+            <p class="note"><strong>Methodological note:</strong> Admission fees are estimates based on PHP 40 per adult and PHP 20 per child; Bulusan residents are assigned no admission fee. Estimated fees are not recorded payment revenue.</p>
+        </body></html>`);
         printWindow.document.close();
         printWindow.addEventListener('load', () => setTimeout(() => {
             printWindow.focus();
@@ -159,8 +199,7 @@ const Analytics = () => {
             </div>
 
             <div className="analytics-charts grid gap-6 xl:grid-cols-2">
-                <article className="analytics-chart rounded-2xl border border-green-200 bg-white p-5"><h2 className="text-lg font-black">Daily visitor demand</h2><p className="text-sm text-gray-500">Chronological reservations and scheduled visitors</p><Chart options={demandOptions} series={demandSeries} type="line" height={320} /></article>
-                <article className="analytics-chart rounded-2xl border border-green-200 bg-white p-5"><h2 className="text-lg font-black">Attendance progression</h2><p className="text-sm text-gray-500">Scheduled visitors compared with recorded check-ins</p><Chart options={attendanceOptions} series={attendanceSeries} type="line" height={320} /></article>
+                <article className="analytics-chart overflow-visible rounded-2xl border border-green-200 bg-white p-5"><h2 className="text-lg font-black">Daily visitor demand</h2><p className="text-sm text-gray-500">Chronological reservations and scheduled visitors. Hover any point for its complete date and values.</p><Chart options={demandOptions} series={demandSeries} type="line" height={360} /></article>
                 <article className="analytics-chart rounded-2xl border border-green-200 bg-white p-5"><h2 className="text-lg font-black">Admission mix</h2><p className="text-sm text-gray-500">Adult, child, and Bulusan resident quantities</p><Chart options={mixOptions} series={mix.map(item => item.count)} type="donut" height={320} /></article>
                 <article className="analytics-chart rounded-2xl border border-green-200 bg-white p-5"><h2 className="text-lg font-black">Weekday demand profile</h2><p className="text-sm text-gray-500">Aggregate scheduled visitors by day of week</p><Chart options={weekdayOptions} series={[{ name: 'Visitors', data: weekdays.map(item => item.visitors) }]} type="bar" height={320} /></article>
             </div>
