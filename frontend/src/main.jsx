@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import './index.css';
 import 'lenis/dist/lenis.css';
 import App from './App.jsx';
+import { warmUpBackend } from './services/api-client.js';
 
 // Ensure each browser tab gets a unique TAB_ID before the app renders.
 // This guarantees X-Tab-ID is available for any initial API calls
@@ -33,3 +34,23 @@ createRoot(document.getElementById('root')).render(
         <App />
     </StrictMode>
 );
+
+if (window.location.pathname === '/') {
+    const WARMUP_KEY = 'backend-warmup-at';
+    const WARMUP_TTL = 5 * 60 * 1000;
+    let shouldWarmUp = true;
+
+    try {
+        const lastWarmup = Number(sessionStorage.getItem(WARMUP_KEY));
+        shouldWarmUp = !lastWarmup || Date.now() - lastWarmup > WARMUP_TTL;
+        if (shouldWarmUp) sessionStorage.setItem(WARMUP_KEY, String(Date.now()));
+    } catch {
+        // Storage is optional; the in-flight promise still prevents duplicates.
+    }
+
+    if (shouldWarmUp) {
+        setTimeout(() => {
+            warmUpBackend();
+        }, 0);
+    }
+}

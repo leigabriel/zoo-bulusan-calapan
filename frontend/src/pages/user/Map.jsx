@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState, useCallback, memo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { fetchAnimalDescription } from '../../services/animal-description-service';
+import { ChevronLeft, Menu, X } from 'reicon-react';
 
 const animalHabitats = [
     { id: 1, name: 'African Lion', species: 'Panthera leo', habitat: 'Sub-Saharan Africa', region: 'Africa', coordinates: [-1.2921, 36.8219], icon: '🦁', image: 'https://images.unsplash.com/photo-1546182990-dffeafbe841d?auto=format&fit=crop&q=80&w=1000', description: 'The king of the savannah, living in social prides. They are apex predators essential for maintaining the balance of herbivore populations.', category: 'Mammals' },
@@ -44,7 +45,7 @@ const DiscoveryList = memo(({ isMobile, filterRegion, setFilterRegion, selectedA
                 </div>
                 {isMobile && (
                     <button onClick={onClose} className="p-2 text-[#52675a] hover:bg-white rounded-xl transition-colors" aria-label="Close wildlife origins">
-                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                        <X className="h-6 w-6" />
                     </button>
                 )}
             </div>
@@ -206,10 +207,10 @@ const MapPage = () => {
             <div className="flex-1 relative h-full">
                 <div className="absolute top-4 md:top-6 left-4 md:left-6 z-[1000] flex gap-2">
                     <button onClick={() => setShowExitConfirm(true)} className="h-12 w-12 md:h-14 md:w-14 bg-[#fffdf8] rounded-2xl shadow-lg flex items-center justify-center hover:bg-[#edf3eb] transition-all border border-[#dce5dc]" aria-label="Back">
-                        <svg className="w-6 h-6 text-[#1f3328]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+                        <ChevronLeft className="h-6 w-6 text-[#1f3328]" />
                     </button>
                      <button onClick={() => setIsMobileListOpen(true)} className="md:hidden h-12 w-12 bg-[#fffdf8] rounded-2xl shadow-lg flex items-center justify-center border border-[#dce5dc]" aria-label="Open wildlife list">
-                         <svg className="w-6 h-6 text-[#1f3328]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16m-7 6h7" /></svg>
+                         <Menu className="h-6 w-6 text-[#1f3328]" />
                     </button>
                 </div>
                 <div ref={mapContainerRef} className="h-full w-full" />
@@ -235,7 +236,7 @@ const MapPage = () => {
                         <div className="w-full md:w-1/2 h-[38dvh] md:h-auto relative shrink-0">
                             <img src={selectedAnimal.image} alt={selectedAnimal.name} className="w-full h-full object-cover" />
                             <button onClick={() => setSelectedAnimal(null)} className="absolute top-6 right-6 w-12 h-12 bg-black/30 backdrop-blur-xl rounded-full text-white flex items-center justify-center border border-white/20">
-                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12" /></svg>
+                                <X className="h-6 w-6" />
                             </button>
                         </div>
                         <div className="flex-1 p-8 md:p-12 overflow-y-auto hide-scrollbar">

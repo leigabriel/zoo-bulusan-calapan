@@ -7,26 +7,11 @@ import { isDefaultAvatar, getDefaultAvatarSvg, getInitials } from '../../utils/p
 import { notify } from '../../utils/toast';
 import LogoutModal from '../../components/common/LogoutModal';
 import AvatarSelector from '../../components/common/AvatarSelector';
-import LetterHoverTitle from '../../components/common/LetterHoverTitle';
+import { Camera, CheckCircle, ChevronLeft, FaceSmile, Save, Trash, User } from 'reicon-react';
 
-const UserIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-16 h-16 text-gray-300">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
-    </svg>
-);
-
-const CameraIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4">
-        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
-        <circle cx="12" cy="13" r="4" />
-    </svg>
-);
-
-const VerifiedIcon = () => (
-    <svg className="w-5 h-5 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
-        <path d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.64.304 1.24.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" />
-    </svg>
-);
+const UserIcon = () => <User className="h-16 w-16 text-gray-300" />;
+const CameraIcon = () => <Camera className="h-4 w-4" />;
+const VerifiedIcon = () => <CheckCircle className="h-5 w-5 text-blue-500" />;
 
 const UserProfile = ({ embedded = false, onClose }) => {
     const { user, logout, updateUser } = useAuth();
@@ -288,7 +273,7 @@ const UserProfile = ({ embedded = false, onClose }) => {
                         onClick={() => embedded ? onClose?.() : navigate(-1)}
                         className="flex items-center gap-2 rounded-full border border-gray-200 px-3.5 py-2 text-xs font-bold text-gray-600 transition hover:border-gray-300 hover:bg-gray-50"
                     >
-                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 19l-7-7 7-7" /></svg>
+                        <ChevronLeft className="h-4 w-4" />
                         {embedded ? 'Close' : 'Back'}
                     </button>
                 </div>
@@ -327,21 +312,16 @@ const UserProfile = ({ embedded = false, onClose }) => {
                                         className="p-2 bg-white border border-gray-100 rounded-full shadow-lg text-gray-700 hover:text-emerald-600 transition"
                                         title="Choose avatar"
                                     >
-                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4">
-                                            <circle cx="12" cy="12" r="10"/>
-                                            <path d="M8 14s1.5 2 4 2 4-2 4-2"/>
-                                            <line x1="9" y1="9" x2="9.01" y2="9"/>
-                                            <line x1="15" y1="9" x2="15.01" y2="9"/>
-                                        </svg>
+                                        <FaceSmile className="h-4 w-4" />
                                     </button>
                                 </div>
                                 <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileSelect} className="hidden" />
                             </div>
                              <div className="pb-1 text-center sm:text-left">
                                 <div className="flex items-center justify-center sm:justify-start gap-2 mb-1">
-                                         <LetterHoverTitle className="text-2xl sm:text-3xl font-extrabold text-[#212631] tracking-tight">
+                                         <h1 className="text-2xl sm:text-3xl font-extrabold text-[#212631] tracking-tight">
                                              {user.firstName} {user.lastName}
-                                         </LetterHoverTitle>
+                                         </h1>
                                     <VerifiedIcon/>
                                 </div>
                                 <p className="text-lg text-gray-400 font-medium">@{user.username}</p>
@@ -476,7 +456,7 @@ const UserProfile = ({ embedded = false, onClose }) => {
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-red-950/35 backdrop-blur-md p-4">
                     <div className="max-h-[calc(100dvh-2rem)] w-full max-w-md overflow-y-auto rounded-[2rem] bg-white p-5 shadow-2xl sm:p-8">
                         <div className="w-12 h-12 bg-red-50 rounded-2xl flex items-center justify-center mb-4">
-                            <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M9 7V4h6v3m-9 0h12" /></svg>
+                            <Trash className="h-6 w-6 text-red-600" />
                         </div>
                         <h3 className="text-2xl font-black text-gray-900 mb-2">Delete your account?</h3>
                         <p className="text-sm leading-relaxed text-gray-500 mb-5">This permanently deletes your profile, messages, reservations, community activity, scans, and account data. This cannot be undone.</p>
@@ -503,11 +483,7 @@ const UserProfile = ({ embedded = false, onClose }) => {
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-md p-4">
                     <div className="bg-white rounded-[2rem] p-8 w-full max-w-sm shadow-2xl text-center">
                         <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-8 h-8 text-emerald-600">
-                                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
-                                <polyline points="17 21 17 13 7 13 7 21" />
-                                <polyline points="7 3 7 8 15 8" />
-                            </svg>
+                            <Save className="h-8 w-8 text-emerald-600" />
                         </div>
                         <h3 className="text-xl font-black text-gray-900 mb-2">Save Changes?</h3>
                         <p className="text-gray-500 text-sm mb-6">Are you sure you want to save your profile changes?</p>

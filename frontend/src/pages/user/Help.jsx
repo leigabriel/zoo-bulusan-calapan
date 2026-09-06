@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { ChevronLeft, Home, Ticket, Camera, MapPoint, User, ChevronDown, ChevronUp, Envelope, Phone, Clock, Search, Book, Message } from 'reicon-react';
 
 // Icons
-const Icons = {
+const LegacyIcons = {
     Back: () => (
         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
@@ -80,6 +81,7 @@ const Icons = {
         </svg>
     )
 };
+const Icons = { Back: ChevronLeft, Home, Ticket, Camera, Map: MapPoint, User, ChevronDown, ChevronUp, Mail: Envelope, Phone, Clock, Search, Book, Robot: Message };
 
 const Help = () => {
     const navigate = useNavigate();

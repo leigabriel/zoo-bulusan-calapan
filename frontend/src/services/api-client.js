@@ -31,6 +31,21 @@ const getBackendBaseUrl = () => {
 // API Base URL - ensure no trailing slash
 const API_BASE_URL = getApiBaseUrl();
 
+let backendWarmupPromise = null;
+
+export const warmUpBackend = () => {
+    if (backendWarmupPromise) return backendWarmupPromise;
+
+    backendWarmupPromise = fetch(`${API_BASE_URL}/health?full=true`, {
+        method: 'HEAD',
+        cache: 'no-store'
+    }).catch(() => null).finally(() => {
+        backendWarmupPromise = null;
+    });
+
+    return backendWarmupPromise;
+};
+
 // Backend Base URL (for OAuth and file uploads)
 const BACKEND_BASE_URL = getBackendBaseUrl();
 

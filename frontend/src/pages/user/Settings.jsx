@@ -4,10 +4,10 @@ import { useAuth } from '../../context/AuthContext';
 import { notify } from '../../utils/toast';
 import { userAPI } from '../../services/api-client';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
-import LetterHoverTitle from '../../components/common/LetterHoverTitle';
+import { ChevronLeft, Home, Bell, Activity, HelpCircle, ChevronRight, Ticket, Message, Heart, X } from 'reicon-react';
 
 // Icons
-const Icons = {
+const LegacyIcons = {
     Back: () => (
         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
@@ -54,6 +54,7 @@ const Icons = {
         </svg>
     )
 };
+const Icons = { Back: ChevronLeft, Home, Bell, Activity, Help: HelpCircle, ChevronRight, Ticket, Message, Heart };
 
 const Settings = ({ embedded = false, onClose }) => {
     const { user } = useAuth();
@@ -389,13 +390,13 @@ const Settings = ({ embedded = false, onClose }) => {
                     <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-700">Tools & preferences</p>
                     <h2 className="mt-1 text-lg font-bold text-gray-900">Account settings</h2>
                 </div>
-                <button onClick={onClose} className="rounded-full p-2 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700" aria-label="Close settings">×</button>
+                <button onClick={onClose} className="rounded-full p-2 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700" aria-label="Close settings"><X className="h-5 w-5" /></button>
             </div>}
 
             {/* Hero Section */}
             <section className={`relative border-b border-[#dce5dc] bg-[#e8f1e6] text-[#172018] ${embedded ? 'px-4 pb-8 pt-8' : 'pt-28 pb-14'} text-center`}>
                 <div className="relative z-10 px-4">
-                    <LetterHoverTitle className="text-3xl md:text-4xl font-extrabold mb-3 tracking-tight">Account Settings</LetterHoverTitle>
+                    <h1 className="text-3xl md:text-4xl font-extrabold mb-3 tracking-tight">Account Settings</h1>
                     <p className="text-[#56705a] max-w-md mx-auto text-sm md:text-base">Manage your notifications and view your activity history.</p>
                 </div>
             </section>

@@ -467,7 +467,7 @@ const RoleCompanionAssistant = ({ onClose, role = 'staff' }) => {
                     </div>
                 ) : (
                     <div className="min-h-0 flex-1 overflow-hidden relative" data-lenis-prevent>
-                        <ReactLenis isChild className="h-full overflow-y-auto overscroll-contain px-7 py-8" data-lenis-prevent>
+                        <ReactLenis className="h-full overflow-y-auto overscroll-contain px-7 py-8" data-lenis-prevent>
                             <div className="flex flex-col gap-6 max-w-2xl mx-auto">
                                 {messages.map((msg, i) => (
                                     <div key={i} className={`flex gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : 'items-end'}`}>

@@ -36,13 +36,4 @@ const pool = mysql.createPool(dbConfig);
 
 const promisePool = pool.promise();
 
-pool.getConnection((err, connection) => {
-    if (err) {
-        console.error('DB connection failed');
-        return;
-    }
-    console.info('DB connected');
-    connection.release();
-});
-
 module.exports = promisePool;

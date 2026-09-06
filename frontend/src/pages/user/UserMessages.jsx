@@ -3,53 +3,61 @@ import { Link, useNavigate } from 'react-router-dom';
 import { messageAPI } from '../../services/api-client';
 import { ReactLenis } from 'lenis/react';
 import { notify } from '../../utils/toast';
+import { Envelope, ChevronLeft, Home, X, Reply, Plus, Send, Check } from 'reicon-react';
 
-const MailIcon = () => (
+const LegacyMailIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
         <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
         <polyline points="22,6 12,13 2,6" />
     </svg>
 );
 
-const BackIcon = () => (
+const LegacyBackIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
     </svg>
 );
 
-const HomeIcon = () => (
+const LegacyHomeIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
     </svg>
 );
 
-const CloseIcon = () => (
+const LegacyCloseIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
         <line x1="18" y1="6" x2="6" y2="18" />
         <line x1="6" y1="6" x2="18" y2="18" />
     </svg>
 );
 
-const ReplyIcon = () => (
+const LegacyReplyIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
         <polyline points="9 17 4 12 9 7" />
         <path d="M20 18v-2a4 4 0 0 0-4-4H4" />
     </svg>
 );
 
-const PlusIcon = () => (
+const LegacyPlusIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
         <line x1="12" y1="5" x2="12" y2="19" />
         <line x1="5" y1="12" x2="19" y2="12" />
     </svg>
 );
 
-const SendIcon = () => (
+const LegacySendIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
         <line x1="22" y1="2" x2="11" y2="13" />
         <polygon points="22 2 15 22 11 13 2 9 22 2" />
     </svg>
 );
+const MailIcon = Envelope;
+const BackIcon = ChevronLeft;
+const HomeIcon = Home;
+const CloseIcon = X;
+const ReplyIcon = Reply;
+const PlusIcon = Plus;
+const SendIcon = Send;
 
 const UserMessages = () => {
     const navigate = useNavigate();
@@ -362,9 +370,7 @@ const UserMessages = () => {
                         {sendSuccess ? (
                             <div className="p-8 text-center">
                                 <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                    <svg className="w-8 h-8 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                                    </svg>
+                                    <Check className="h-8 w-8 text-emerald-600" />
                                 </div>
                                 <h3 className="text-xl font-bold text-gray-900 mb-2">Message Sent!</h3>
                                 <p className="text-gray-500 text-sm">Your message has been submitted. We'll respond shortly.</p>

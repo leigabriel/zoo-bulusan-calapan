@@ -1,631 +1,176 @@
-import { Calendar as ReiconCalendar, ChartBar as ReiconChartBar, DollarCircle as ReiconDollarCircle, Download as ReiconDownload, Ticket as ReiconTicket, TrendDown as ReiconTrendDown, TrendUp as ReiconTrendUp, Users as ReiconUsers } from 'reicon-react';
-import { useState, useEffect } from 'react';
-import * as XLSX from 'xlsx';
-import { adminAPI } from '../../services/api-client';
+import { createElement, useEffect, useState } from 'react';
 import Chart from 'react-apexcharts';
+import * as XLSX from 'xlsx';
+import { Activity, Calendar, ChartBar, CheckCircle, DollarCircle, Download, Pet, Print, Ticket, Users } from 'reicon-react';
+import { adminAPI } from '../../services/api-client';
+import { notify } from '../../utils/toast';
 
-// Icons
-const TrendUpIcon = () => (
-    <ReiconTrendUp strokeWidth="2" className="w-4 h-4" />
-);
+const numberFormat = new Intl.NumberFormat('en-PH');
+const currencyFormat = new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP', maximumFractionDigits: 0 });
+const colors = ['#22c55e', '#3b82f6', '#a855f7', '#f59e0b', '#ef4444'];
+const metricTones = { green: 'bg-green-100 text-green-700', blue: 'bg-blue-100 text-blue-700', purple: 'bg-purple-100 text-purple-700', amber: 'bg-amber-100 text-amber-700' };
 
-const TrendDownIcon = () => (
-    <ReiconTrendDown strokeWidth="2" className="w-4 h-4" />
-);
-
-const UsersIcon = () => (
-    <ReiconUsers strokeWidth="2" className="w-6 h-6" />
-);
-
-const TicketIcon = () => (
-    <ReiconTicket strokeWidth="2" className="w-6 h-6" />
-);
-
-const RevenueIcon = () => (
-    <ReiconDollarCircle strokeWidth="2" className="w-6 h-6" />
-);
-
-const EventsIcon = () => (
-    <ReiconCalendar strokeWidth="2" className="w-6 h-6" />
-);
-
-const ChartIcon = () => (
-    <ReiconChartBar strokeWidth="2" className="w-5 h-5" />
-);
-
-const DownloadIcon = () => (
-    <ReiconDownload strokeWidth="2" className="w-4 h-4" />
+const MetricCard = ({ icon, label, value, detail, tone = 'green' }) => (
+    <article className="rounded-2xl border border-green-200 bg-white p-5 shadow-sm print:border-gray-300 print:shadow-none">
+        <div className={`mb-5 flex h-11 w-11 items-center justify-center rounded-xl ${metricTones[tone]}`}>{createElement(icon, { className: 'h-6 w-6' })}</div>
+        <p className="text-3xl font-black tabular-nums tracking-tight text-gray-950">{value}</p>
+        <h2 className="mt-1 text-sm font-bold text-gray-800">{label}</h2>
+        <p className="mt-2 text-xs leading-5 text-gray-500">{detail}</p>
+    </article>
 );
 
 const Analytics = () => {
     const [timeRange, setTimeRange] = useState('week');
+    const [data, setData] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [stats, setStats] = useState({
-        totalUsers: 0,
-        totalAnimals: 0,
-        totalTickets: 0,
-        totalRevenue: 0,
-        todayTickets: 0,
-        todayRevenue: 0,
-        ticketGrowth: 0,
-        revenueGrowth: 0,
-        upcomingEvents: 0,
-    });
-    const [weeklyData, setWeeklyData] = useState([]);
-    const [monthlyData, setMonthlyData] = useState([]);
-    const [ticketDistribution, setTicketDistribution] = useState([]);
+    const [error, setError] = useState('');
 
     useEffect(() => {
-        const loadAnalytics = async () => {
-            setLoading(true);
-            try {
-                const response = await adminAPI.getAnalytics(timeRange);
-                
-                if (response.success && response.data) {
-                    const { summary, weeklyData: weekly, monthlyData: monthly, ticketDistribution: distribution } = response.data;
-                    
-                    setStats({
-                        totalUsers: summary.totalUsers || 0,
-                        totalAnimals: summary.totalAnimals || 0,
-                        totalTickets: summary.totalTickets || 0,
-                        totalRevenue: summary.totalRevenue || 0,
-                        todayTickets: summary.todayTickets || 0,
-                        todayRevenue: summary.todayRevenue || 0,
-                        ticketGrowth: summary.ticketGrowth || 0,
-                        revenueGrowth: summary.revenueGrowth || 0,
-                        upcomingEvents: summary.upcomingEvents || 0,
-                    });
-                    
-                    // Fill missing days with empty data for consistent display
-                    const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-                    const filledWeekly = days.map(day => {
-                        const found = weekly?.find(d => d.day === day);
-                        return found || { day, tickets: 0, visitors: 0, revenue: 0 };
-                    });
-                    setWeeklyData(filledWeekly);
-                    
-                    setMonthlyData(monthly || []);
-                    setTicketDistribution(distribution || []);
-                }
-            } catch (error) {
-                console.error('Error loading analytics:', error);
-                // Set fallback empty data
-                setWeeklyData([
-                    { day: 'Mon', tickets: 0, visitors: 0, revenue: 0 },
-                    { day: 'Tue', tickets: 0, visitors: 0, revenue: 0 },
-                    { day: 'Wed', tickets: 0, visitors: 0, revenue: 0 },
-                    { day: 'Thu', tickets: 0, visitors: 0, revenue: 0 },
-                    { day: 'Fri', tickets: 0, visitors: 0, revenue: 0 },
-                    { day: 'Sat', tickets: 0, visitors: 0, revenue: 0 },
-                    { day: 'Sun', tickets: 0, visitors: 0, revenue: 0 },
-                ]);
-            } finally {
-                setLoading(false);
-            }
-        };
-        loadAnalytics();
+        let active = true;
+        setLoading(true);
+        setError('');
+        adminAPI.getAnalytics(timeRange).then(response => {
+            if (active) setData(response.data);
+        }).catch(err => {
+            if (active) setError(err.message || 'Analytics could not be loaded.');
+        }).finally(() => {
+            if (active) setLoading(false);
+        });
+        return () => { active = false; };
     }, [timeRange]);
 
-    // Weekly Ticket Sales Chart Configuration (Interactive Bar Chart)
-    const weeklyChartOptions = {
-        chart: {
-            type: 'bar',
-            toolbar: { show: false },
-            background: 'transparent',
-            animations: {
-                enabled: true,
-                easing: 'easeinout',
-                speed: 800,
-            },
-        },
-        plotOptions: {
-            bar: {
-                borderRadius: 8,
-                columnWidth: '60%',
-                distributed: false,
-            }
-        },
+    const summary = data?.summary || {};
+    const daily = data?.dailyData || [];
+    const statuses = data?.statusDistribution || [];
+    const weekdays = data?.weekdayDemand || [];
+    const mix = data?.admissionMix || [];
+    const totalAdmissions = mix.reduce((sum, item) => sum + Number(item.count || 0), 0);
+    const attendanceRate = summary.scheduledVisitors > 0 ? summary.checkedInVisitors / summary.scheduledVisitors * 100 : 0;
+    const cancelled = statuses.find(item => item.status === 'cancelled')?.count || 0;
+    const statusTotal = statuses.reduce((sum, item) => sum + item.count, 0);
+    const cancellationRate = statusTotal > 0 ? cancelled / statusTotal * 100 : 0;
+    const periodLabel = data?.meta ? `${data.meta.startDate} to ${data.meta.endDate}` : '';
+
+    const baseChart = {
+        chart: { toolbar: { show: false }, fontFamily: 'inherit', animations: { enabled: false } },
         dataLabels: { enabled: false },
-        colors: ['#4ade80'],
-        xaxis: {
-            categories: weeklyData.map(d => d.day),
-            labels: { style: { colors: '#374151', fontSize: '12px' } },
-            axisBorder: { show: false },
-            axisTicks: { show: false },
-        },
-        yaxis: {
-            labels: { style: { colors: '#374151', fontSize: '12px' } },
-        },
-        grid: {
-            borderColor: '#e5e7eb',
-            strokeDashArray: 4,
-        },
-        tooltip: {
-            enabled: true,
-            theme: 'light',
-            y: {
-                formatter: (val) => `${val} tickets`,
-            },
-            custom: function({ series, seriesIndex, dataPointIndex, w }) {
-                const data = weeklyData[dataPointIndex];
-                return `
-                    <div style="background: #ffffff; border: 1px solid #d1fae5; border-radius: 8px; padding: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.3);">
-                        <div style="color: #166534; font-weight: bold; font-size: 14px;">${data?.day || 'N/A'}</div>
-                        <div style="color: #111827; margin-top: 4px;">Tickets: <span style="font-weight: 600;">${data?.tickets || 0}</span></div>
-                        <div style="color: #6b7280;">Revenue: <span style="color: #166534;">₱${data?.revenue?.toLocaleString() || 0}</span></div>
-                    </div>
-                `;
-            }
-        },
-        states: {
-            hover: {
-                filter: {
-                    type: 'lighten',
-                    value: 0.15,
-                }
-            }
+        grid: { borderColor: '#e5e7eb', strokeDashArray: 4 },
+        legend: { position: 'top', horizontalAlign: 'left' },
+        tooltip: { theme: 'light' }
+    };
+    const demandOptions = { ...baseChart, colors: [colors[0], colors[1]], stroke: { width: [0, 3], curve: 'straight' }, xaxis: { categories: daily.map(item => item.date), labels: { rotate: -45 } }, yaxis: [{ title: { text: 'Visitors' } }, { opposite: true, title: { text: 'Reservations' } }] };
+    const demandSeries = [{ name: 'Scheduled visitors', type: 'column', data: daily.map(item => item.visitors) }, { name: 'Reservations', type: 'line', data: daily.map(item => item.reservations) }];
+    const attendanceOptions = { ...baseChart, colors: [colors[0], colors[2]], stroke: { width: 3, curve: 'straight' }, xaxis: { categories: daily.map(item => item.date), labels: { rotate: -45 } } };
+    const attendanceSeries = [{ name: 'Scheduled', data: daily.map(item => item.visitors) }, { name: 'Checked in', data: daily.map(item => item.checkedIn) }];
+    const weekdayOptions = { ...baseChart, colors: [colors[3]], plotOptions: { bar: { borderRadius: 6, horizontal: true } }, xaxis: { categories: weekdays.map(item => item.day) } };
+    const mixOptions = { ...baseChart, labels: mix.map(item => item.type), colors, plotOptions: { pie: { donut: { size: '68%', labels: { show: true, total: { show: true, label: 'Admissions', formatter: () => numberFormat.format(totalAdmissions) } } } } } };
+
+    const exportExcel = () => {
+        if (!data) return;
+        try {
+            const workbook = XLSX.utils.book_new();
+            const metadata = [
+                ['Period', periodLabel], ['Date basis', data.meta.dateBasis],
+                ['Included statuses', data.meta.includedStatuses.join(', ')],
+                ['Fee assumptions', `Adult PHP ${data.meta.feeAssumptions.adult}; Child PHP ${data.meta.feeAssumptions.child}; Resident PHP ${data.meta.feeAssumptions.resident}`]
+            ];
+            const summaryRows = [
+                ['Metric', 'Value'], ['Reservations', summary.reservations], ['Scheduled visitors', summary.scheduledVisitors],
+                ['Checked-in visitors', summary.checkedInVisitors], ['Attendance rate', attendanceRate / 100],
+                ['Estimated admission fees', summary.estimatedFees], ['Average party size', summary.averagePartySize],
+                ['Pending verification', summary.pendingVerification], ['Cancellation rate', cancellationRate / 100],
+                ['All-time users', summary.totalUsers], ['Animal inventory', summary.totalAnimals], ['Upcoming events', summary.upcomingEvents]
+            ];
+            const sheets = [
+                ['Metadata', XLSX.utils.aoa_to_sheet(metadata)], ['Summary', XLSX.utils.aoa_to_sheet(summaryRows)],
+                ['Daily Trend', XLSX.utils.json_to_sheet(daily)], ['Status Breakdown', XLSX.utils.json_to_sheet(statuses)],
+                ['Admission Mix', XLSX.utils.json_to_sheet(mix.map(item => ({ ...item, share: totalAdmissions ? item.count / totalAdmissions : 0 })))], ['Weekday Demand', XLSX.utils.json_to_sheet(weekdays)]
+            ];
+            sheets.forEach(([name, sheet]) => { sheet['!cols'] = Array.from({ length: 6 }, () => ({ wch: 22 })); XLSX.utils.book_append_sheet(workbook, sheet, name); });
+            XLSX.writeFile(workbook, `Zoo_Analytics_${data.meta.startDate}_${data.meta.endDate}.xlsx`);
+            notify.success('Analytics exported.');
+        } catch (err) {
+            notify.error(err.message || "Couldn't export analytics.");
         }
     };
 
-    const weeklyChartSeries = [{
-        name: 'Tickets',
-        data: weeklyData.map(d => d.tickets)
-    }];
-
-    // Monthly Revenue Chart Configuration (Interactive Line/Area Chart)
-    const monthlyChartOptions = {
-        chart: {
-            type: 'area',
-            toolbar: { show: false },
-            background: 'transparent',
-            animations: {
-                enabled: true,
-                easing: 'easeinout',
-                speed: 800,
-            },
-            zoom: { enabled: false }
-        },
-        stroke: {
-            curve: 'smooth',
-            width: 3,
-        },
-        fill: {
-            type: 'gradient',
-            gradient: {
-                shadeIntensity: 1,
-                opacityFrom: 0.45,
-                opacityTo: 0.05,
-                stops: [0, 100]
-            }
-        },
-        colors: ['#4ade80'],
-        dataLabels: { enabled: false },
-        xaxis: {
-            categories: monthlyData.map(d => d.month?.substring(0, 3) || 'N/A'),
-            labels: { style: { colors: '#374151', fontSize: '12px' } },
-            axisBorder: { show: false },
-            axisTicks: { show: false },
-        },
-        yaxis: {
-            labels: {
-                style: { colors: '#374151', fontSize: '12px' },
-                formatter: (val) => `₱${(val / 1000).toFixed(0)}K`
-            },
-        },
-        grid: {
-            borderColor: '#e5e7eb',
-            strokeDashArray: 4,
-        },
-        tooltip: {
-            enabled: true,
-            theme: 'light',
-            y: {
-                formatter: (val) => `₱${val?.toLocaleString() || 0}`,
-            },
-            custom: function({ series, seriesIndex, dataPointIndex, w }) {
-                const data = monthlyData[dataPointIndex];
-                return `
-                    <div style="background: #ffffff; border: 1px solid #d1fae5; border-radius: 8px; padding: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.3);">
-                        <div style="color: #166534; font-weight: bold; font-size: 14px;">${data?.month || 'N/A'}</div>
-                        <div style="color: #111827; margin-top: 4px;">Revenue: <span style="color: #166534; font-weight: 600;">₱${data?.revenue?.toLocaleString() || 0}</span></div>
-                        <div style="color: #6b7280;">Tickets: ${data?.tickets || 0}</div>
-                    </div>
-                `;
-            }
-        },
-        markers: {
-            size: 5,
-            colors: ['#4ade80'],
-            strokeColors: '#ffffff',
-            strokeWidth: 2,
-            hover: {
-                size: 8,
-            }
+    const printReport = () => {
+        const report = document.querySelector('.analytics-report');
+        const printWindow = window.open('', '_blank', 'width=1400,height=900');
+        if (!report || !printWindow) {
+            notify.error(printWindow ? "Couldn't prepare the report." : 'Please allow pop-ups to print the report.');
+            return;
         }
+
+        const styles = [...document.head.querySelectorAll('link[rel="stylesheet"], style')].map(node => node.outerHTML).join('');
+        printWindow.document.open();
+        printWindow.document.write(`<!doctype html><html><head><meta charset="utf-8"><title></title>${styles}<style>
+            @page { size: A4 portrait; margin: 0; }
+            * { box-sizing: border-box; print-color-adjust: exact !important; -webkit-print-color-adjust: exact !important; }
+            html, body { width: 100%; height: auto !important; overflow: visible !important; background: #fff !important; }
+            body { margin: 0; padding: 10mm; font-family: Arial, sans-serif; color: #111827; }
+            .analytics-report { width: 100% !important; max-width: none !important; padding: 0 !important; }
+            .analytics-controls, .analytics-print-hidden { display: none !important; }
+            .analytics-primary-grid, .analytics-secondary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+            .analytics-charts, .analytics-details { display: block !important; }
+            .analytics-charts > *, .analytics-details > * { margin-bottom: 6mm !important; }
+            article, .analytics-chart, .analytics-details > *, footer, table, tr { break-inside: avoid !important; page-break-inside: avoid !important; }
+            .analytics-chart { min-width: 0 !important; overflow: visible !important; }
+            .apexcharts-canvas, .apexcharts-svg { max-width: 100% !important; overflow: visible !important; }
+            .apexcharts-toolbar { display: none !important; }
+            table { width: 100% !important; }
+            thead { display: table-header-group; }
+            svg { animation: none !important; transition: none !important; }
+        </style></head><body>${report.outerHTML}</body></html>`);
+        printWindow.document.close();
+        printWindow.addEventListener('load', () => setTimeout(() => {
+            printWindow.focus();
+            printWindow.print();
+            printWindow.close();
+        }, 500), { once: true });
     };
 
-    const monthlyChartSeries = [{
-        name: 'Revenue',
-        data: monthlyData.map(d => d.revenue || 0)
-    }];
-
-    // Ticket Distribution Donut Chart Configuration
-    const distributionChartOptions = {
-        chart: {
-            type: 'donut',
-            background: 'transparent',
-            animations: {
-                enabled: true,
-                easing: 'easeinout',
-                speed: 800,
-            },
-        },
-        labels: ticketDistribution.map(d => d.type || 'Unknown'),
-        colors: ['#4ade80', '#60a5fa', '#a855f7', '#fbbf24', '#f87171'],
-        legend: {
-            position: 'bottom',
-            labels: { colors: '#374151' },
-            markers: { strokeWidth: 0 }
-        },
-        dataLabels: {
-            enabled: true,
-            style: {
-                fontSize: '14px',
-                fontWeight: 'bold',
-            },
-            dropShadow: { enabled: false }
-        },
-        plotOptions: {
-            pie: {
-                donut: {
-                    size: '65%',
-                    labels: {
-                        show: true,
-                        name: {
-                            show: true,
-                            color: '#374151',
-                        },
-                        value: {
-                            show: true,
-                            color: '#111827',
-                            fontSize: '20px',
-                            fontWeight: 'bold',
-                        },
-                        total: {
-                            show: true,
-                            label: 'Total',
-                            color: '#374151',
-                            formatter: function (w) {
-                                return w.globals.seriesTotals.reduce((a, b) => a + b, 0);
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        tooltip: {
-            enabled: true,
-            theme: 'light',
-            y: {
-                formatter: (val) => `${val} tickets`,
-            }
-        },
-        stroke: {
-            show: false
-        }
-    };
-
-    const distributionChartSeries = [{
-        data: ticketDistribution.map(d => ({
-            x: d.type || 'Unknown',
-            y: Number(d.count) || 0
-        }))
-    }];
-
-    // Calculate total for ticket distribution percentage
-    const totalDistribution = ticketDistribution.reduce((acc, d) => acc + (d.count || 0), 0);
-
-    // Export analytics data to Excel
-    const exportToExcel = () => {
-        // Prepare weekly data sheet
-        const weeklySheet = weeklyData.map(d => ({
-            'Day': d.day,
-            'Tickets': d.tickets || 0,
-            'Visitors': d.visitors || 0,
-            'Revenue (₱)': d.revenue || 0
-        }));
-
-        // Add summary row
-        weeklySheet.push({});
-        weeklySheet.push({
-            'Day': 'TOTAL',
-            'Tickets': weeklyData.reduce((sum, d) => sum + (d.tickets || 0), 0),
-            'Visitors': weeklyData.reduce((sum, d) => sum + (d.visitors || 0), 0),
-            'Revenue (₱)': weeklyData.reduce((sum, d) => sum + (d.revenue || 0), 0)
-        });
-
-        // Prepare monthly data sheet
-        const monthlySheet = monthlyData.map(d => ({
-            'Month': d.month || '',
-            'Revenue (₱)': d.revenue || 0
-        }));
-
-        // Prepare ticket distribution sheet
-        const distributionSheet = ticketDistribution.map(d => ({
-            'Ticket Type': d.type || '',
-            'Count': d.count || 0,
-            'Percentage': totalDistribution > 0 ? `${((d.count / totalDistribution) * 100).toFixed(1)}%` : '0%'
-        }));
-
-        // Prepare summary sheet
-        const summarySheet = [
-            { 'Metric': 'Total Users', 'Value': stats.totalUsers },
-            { 'Metric': 'Total Tickets', 'Value': stats.totalTickets },
-            { 'Metric': 'Total Revenue', 'Value': `₱${stats.totalRevenue.toLocaleString()}` },
-            { 'Metric': 'Today\'s Tickets', 'Value': stats.todayTickets },
-            { 'Metric': 'Today\'s Revenue', 'Value': `₱${stats.todayRevenue.toLocaleString()}` },
-            { 'Metric': 'Ticket Growth', 'Value': `${stats.ticketGrowth}%` },
-            { 'Metric': 'Revenue Growth', 'Value': `${stats.revenueGrowth}%` },
-            { 'Metric': 'Upcoming Events', 'Value': stats.upcomingEvents },
-        ];
-
-        // Create workbook with multiple sheets
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(summarySheet), 'Summary');
-        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(weeklySheet), 'Weekly Data');
-        if (monthlySheet.length > 0) {
-            XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(monthlySheet), 'Monthly Data');
-        }
-        if (distributionSheet.length > 0) {
-            XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(distributionSheet), 'Ticket Distribution');
-        }
-
-        // Generate filename with date
-        const dateStr = new Date().toISOString().split('T')[0];
-        const filename = `Zoo_Analytics_${timeRange}_${dateStr}.xlsx`;
-
-        // Download file
-        XLSX.writeFile(wb, filename);
-    };
-
-    if (loading) {
-        return (
-            <div className="flex items-center justify-center h-64">
-                <div className="flex flex-col items-center gap-3">
-                    <div className="w-10 h-10 border-4 border-green-400 border-t-transparent rounded-full animate-spin"></div>
-                    <span className="text-gray-500">Loading analytics...</span>
-                </div>
-            </div>
-        );
-    }
+    if (loading) return <div className="flex h-64 items-center justify-center"><div className="h-10 w-10 animate-spin rounded-full border-4 border-green-400 border-t-transparent" /></div>;
+    if (error) return <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-red-700">{error}</div>;
 
     return (
-        <div className="space-y-6">
-            {/* Time Range Selector */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <div>
-                    <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-                        <ChartIcon />
-                        Analytics Overview
-                    </h1>
-                    <p className="text-gray-500 text-sm mt-1">Monitor your zoo's performance metrics</p>
-                </div>
-                <div className="flex items-center gap-3">
-                    <button
-                        onClick={exportToExcel}
-                        className="flex items-center gap-2 px-4 py-2 bg-green-400/10 border border-green-400/30 text-green-800 rounded-xl hover:bg-green-400/20 transition"
-                    >
-                        <DownloadIcon />
-                        Export Excel
-                    </button>
-                    <div className="flex items-center gap-2 bg-white border border-green-200 rounded-xl p-1">
-                        {['week', 'month', 'year'].map((range) => (
-                            <button
-                                key={range}
-                                onClick={() => setTimeRange(range)}
-                                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${timeRange === range
-                                        ? 'bg-green-400 text-gray-900'
-                                        : 'text-gray-500 hover:text-gray-900'
-                                    }`}
-                            >
-                                {range.charAt(0).toUpperCase() + range.slice(1)}
-                            </button>
-                        ))}
+        <section className="analytics-report space-y-6 pb-10">
+            <header className="analytics-print-hidden rounded-3xl border border-green-400 bg-gradient-to-r from-green-300 via-green-400 to-green-500 p-6 text-gray-950 md:p-8">
+                <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+                    <div><p className="text-xs font-black uppercase tracking-[0.22em] text-green-950/70">Operational intelligence</p><h1 className="mt-2 text-3xl font-black tracking-tight md:text-5xl">Zoo analytics</h1><p className="mt-2 text-sm text-green-950/75">Visit-date performance for confirmed and completed reservations · {periodLabel}</p></div>
+                    <div className="analytics-controls flex flex-wrap gap-2">
+                        <button onClick={exportExcel} className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-bold shadow-sm"><Download className="h-4 w-4" />Export Excel</button>
+                        <button onClick={printReport} className="inline-flex items-center gap-2 rounded-xl bg-gray-950 px-4 py-2.5 text-sm font-bold text-white"><Print className="h-4 w-4" />Print / PDF</button>
                     </div>
                 </div>
+            </header>
+
+            <div className="analytics-controls flex w-fit gap-1 rounded-xl border border-green-200 bg-white p-1">{['week', 'month', 'year'].map(range => <button key={range} onClick={() => setTimeRange(range)} className={`rounded-lg px-4 py-2 text-sm font-bold capitalize ${timeRange === range ? 'bg-green-400 text-gray-950' : 'text-gray-500 hover:bg-green-50'}`}>{range}</button>)}</div>
+
+            <div className="analytics-primary-grid grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                <MetricCard icon={Users} label="Scheduled visitors" value={numberFormat.format(summary.scheduledVisitors || 0)} detail={`${numberFormat.format(summary.reservations || 0)} confirmed/completed reservations`} tone="green" />
+                <MetricCard icon={CheckCircle} label="Checked-in visitors" value={numberFormat.format(summary.checkedInVisitors || 0)} detail={`${attendanceRate.toFixed(1)}% of scheduled visitors`} tone="blue" />
+                <MetricCard icon={DollarCircle} label="Estimated admission fees" value={currencyFormat.format(summary.estimatedFees || 0)} detail="Tariff estimate, not recorded payment revenue" tone="purple" />
+                <MetricCard icon={Ticket} label="Average party size" value={Number(summary.averagePartySize || 0).toFixed(1)} detail={`${summary.pendingVerification || 0} resident verifications pending`} tone="amber" />
             </div>
 
-            {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {/* Total Users */}
-                <div className="bg-white border border-green-200 rounded-2xl p-5 hover:border-green-300 transition-all cursor-pointer group">
-                    <div className="flex items-center justify-between mb-4">
-                        <div className="w-12 h-12 bg-blue-500/10 rounded-xl flex items-center justify-center text-blue-700 group-hover:scale-110 transition-transform">
-                            <UsersIcon />
-                        </div>
-                    </div>
-                    <h3 className="text-3xl font-bold text-gray-900">{stats.totalUsers.toLocaleString()}</h3>
-                    <p className="text-gray-500 text-sm mt-1">Total Users</p>
-                </div>
-
-                {/* Tickets Sold */}
-                <div className="bg-white border border-green-200 rounded-2xl p-5 hover:border-green-300 transition-all cursor-pointer group">
-                    <div className="flex items-center justify-between mb-4">
-                        <div className="w-12 h-12 bg-green-400/10 rounded-xl flex items-center justify-center text-green-800 group-hover:scale-110 transition-transform">
-                            <TicketIcon />
-                        </div>
-                        <span className={`flex items-center gap-1 text-sm font-medium ${stats.ticketGrowth >= 0 ? 'text-green-800' : 'text-red-700'}`}>
-                            {stats.ticketGrowth >= 0 ? <TrendUpIcon /> : <TrendDownIcon />}
-                            {Math.abs(stats.ticketGrowth)}%
-                        </span>
-                    </div>
-                    <h3 className="text-3xl font-bold text-gray-900">{stats.totalTickets.toLocaleString()}</h3>
-                    <p className="text-gray-500 text-sm mt-1">Tickets Sold</p>
-                    <p className="text-gray-500 text-xs mt-2">{stats.todayTickets} today</p>
-                </div>
-
-                {/* Revenue */}
-                <div className="bg-white border border-green-200 rounded-2xl p-5 hover:border-green-300 transition-all cursor-pointer group">
-                    <div className="flex items-center justify-between mb-4">
-                        <div className="w-12 h-12 bg-purple-500/10 rounded-xl flex items-center justify-center text-purple-700 group-hover:scale-110 transition-transform">
-                            <RevenueIcon />
-                        </div>
-                        <span className={`flex items-center gap-1 text-sm font-medium ${stats.revenueGrowth >= 0 ? 'text-green-800' : 'text-red-700'}`}>
-                            {stats.revenueGrowth >= 0 ? <TrendUpIcon /> : <TrendDownIcon />}
-                            {Math.abs(stats.revenueGrowth)}%
-                        </span>
-                    </div>
-                    <h3 className="text-3xl font-bold text-gray-900">₱{stats.totalRevenue.toLocaleString()}</h3>
-                    <p className="text-gray-500 text-sm mt-1">Total Revenue</p>
-                    <p className="text-gray-500 text-xs mt-2">₱{stats.todayRevenue.toLocaleString()} today</p>
-                </div>
-
-                {/* Upcoming Events */}
-                <div className="bg-white border border-green-200 rounded-2xl p-5 hover:border-green-300 transition-all cursor-pointer group">
-                    <div className="flex items-center justify-between mb-4">
-                        <div className="w-12 h-12 bg-yellow-500/10 rounded-xl flex items-center justify-center text-yellow-700 group-hover:scale-110 transition-transform">
-                            <EventsIcon />
-                        </div>
-                    </div>
-                    <h3 className="text-3xl font-bold text-gray-900">{stats.upcomingEvents}</h3>
-                    <p className="text-gray-500 text-sm mt-1">Upcoming Events</p>
-                </div>
+            <div className="analytics-secondary-grid grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                {[['Cancellation rate', `${cancellationRate.toFixed(1)}%`, Activity], ['All-time users', numberFormat.format(summary.totalUsers || 0), Users], ['Animal inventory', numberFormat.format(summary.totalAnimals || 0), Pet], ['Upcoming events', numberFormat.format(summary.upcomingEvents || 0), Calendar]].map(([label, value, icon]) => <div key={label} className="rounded-2xl border border-green-200 bg-white p-4">{createElement(icon, { className: 'mb-3 h-5 w-5 text-green-700' })}<p className="text-2xl font-black tabular-nums">{value}</p><p className="text-xs font-bold uppercase tracking-wide text-gray-500">{label}</p></div>)}
             </div>
 
-            {/* Charts Row */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Weekly Ticket Sales Chart */}
-                <div className="bg-white border border-green-200 rounded-2xl p-6 hover:border-green-300 transition-all">
-                    <div className="flex items-center justify-between mb-4">
-                        <div>
-                            <h3 className="text-lg font-bold text-gray-900">Weekly Ticket Sales</h3>
-                            <p className="text-sm text-gray-500">Tickets sold per day this week</p>
-                        </div>
-                    </div>
-                    <div className="h-64">
-                        <Chart
-                            options={weeklyChartOptions}
-                            series={weeklyChartSeries}
-                            type="bar"
-                            height="100%"
-                        />
-                    </div>
-                </div>
-
-                {/* Revenue Trend Chart */}
-                <div className="bg-white border border-green-200 rounded-2xl p-6 hover:border-green-300 transition-all">
-                    <div className="flex items-center justify-between mb-4">
-                        <div>
-                            <h3 className="text-lg font-bold text-gray-900">Revenue Trend</h3>
-                            <p className="text-sm text-gray-500">Monthly revenue overview</p>
-                        </div>
-                    </div>
-                    <div className="h-64">
-                        {monthlyData.length > 0 ? (
-                            <Chart
-                                options={monthlyChartOptions}
-                                series={monthlyChartSeries}
-                                type="area"
-                                height="100%"
-                            />
-                        ) : (
-                            <div className="flex items-center justify-center h-full text-gray-500">
-                                No monthly data available
-                            </div>
-                        )}
-                    </div>
-                </div>
+            <div className="analytics-charts grid gap-6 xl:grid-cols-2">
+                <article className="analytics-chart rounded-2xl border border-green-200 bg-white p-5"><h2 className="text-lg font-black">Daily visitor demand</h2><p className="text-sm text-gray-500">Chronological reservations and scheduled visitors</p><Chart options={demandOptions} series={demandSeries} type="line" height={320} /></article>
+                <article className="analytics-chart rounded-2xl border border-green-200 bg-white p-5"><h2 className="text-lg font-black">Attendance progression</h2><p className="text-sm text-gray-500">Scheduled visitors compared with recorded check-ins</p><Chart options={attendanceOptions} series={attendanceSeries} type="line" height={320} /></article>
+                <article className="analytics-chart rounded-2xl border border-green-200 bg-white p-5"><h2 className="text-lg font-black">Admission mix</h2><p className="text-sm text-gray-500">Adult, child, and Bulusan resident quantities</p><Chart options={mixOptions} series={mix.map(item => item.count)} type="donut" height={320} /></article>
+                <article className="analytics-chart rounded-2xl border border-green-200 bg-white p-5"><h2 className="text-lg font-black">Weekday demand profile</h2><p className="text-sm text-gray-500">Aggregate scheduled visitors by day of week</p><Chart options={weekdayOptions} series={[{ name: 'Visitors', data: weekdays.map(item => item.visitors) }]} type="bar" height={320} /></article>
             </div>
 
-            {/* Bottom Row */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Ticket Types Distribution - Donut Chart */}
-                <div className="bg-white border border-green-200 rounded-2xl p-6 hover:border-green-300 transition-all">
-                    <h3 className="text-lg font-bold text-gray-900 mb-4">Ticket Distribution</h3>
-                    {ticketDistribution.length > 0 ? (
-                        <div className="h-64">
-                            <Chart
-                                options={distributionChartOptions}
-                                series={distributionChartSeries}
-                                type="donut"
-                                height="100%"
-                            />
-                        </div>
-                    ) : (
-                        <div className="h-64 flex flex-col items-center justify-center text-gray-500">
-                            <TicketIcon />
-                            <span className="mt-2">No ticket data available</span>
-                        </div>
-                    )}
-                </div>
-
-                {/* Ticket Types List */}
-                <div className="lg:col-span-2 bg-white border border-green-200 rounded-2xl p-6 hover:border-green-300 transition-all">
-                    <h3 className="text-lg font-bold text-gray-900 mb-6">Ticket Types Breakdown</h3>
-                    {ticketDistribution.length > 0 ? (
-                        <div className="overflow-x-auto">
-                            <table className="w-full">
-                                <thead>
-                                    <tr className="text-left text-xs text-gray-500 uppercase tracking-wider border-b border-green-200">
-                                        <th className="pb-3">Type</th>
-                                        <th className="pb-3 text-right">Count</th>
-                                        <th className="pb-3 text-right">Revenue</th>
-                                        <th className="pb-3 text-right">Share</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-green-200">
-                                    {ticketDistribution.map((ticket, index) => {
-                                        const colors = ['#4ade80', '#60a5fa', '#a855f7', '#fbbf24', '#f87171'];
-                                        const percentage = totalDistribution > 0 
-                                            ? ((ticket.count / totalDistribution) * 100).toFixed(1) 
-                                            : 0;
-                                        return (
-                                            <tr key={index} className="hover:bg-green-50/50 transition-colors">
-                                                <td className="py-4">
-                                                    <div className="flex items-center gap-3">
-                                                        <div 
-                                                            className="w-3 h-3 rounded-full"
-                                                            style={{ backgroundColor: colors[index % colors.length] }}
-                                                        />
-                                                        <span className="text-gray-900 font-medium capitalize">
-                                                            {ticket.type || 'Unknown'}
-                                                        </span>
-                                                    </div>
-                                                </td>
-                                                <td className="py-4 text-right text-gray-700">{ticket.count}</td>
-                                                <td className="py-4 text-right text-gray-900 font-medium">
-                                                    ₱{(ticket.revenue || 0).toLocaleString()}
-                                                </td>
-                                                <td className="py-4 text-right">
-                                                    <div className="flex items-center justify-end gap-2">
-                                                        <div className="w-16 bg-green-50 rounded-full h-2">
-                                                            <div
-                                                                className="h-full rounded-full transition-all duration-500"
-                                                                style={{ 
-                                                                    width: `${percentage}%`,
-                                                                    backgroundColor: colors[index % colors.length]
-                                                                }}
-                                                            />
-                                                        </div>
-                                                        <span className="text-gray-500 text-sm w-12 text-right">
-                                                            {percentage}%
-                                                        </span>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        );
-                                    })}
-                                </tbody>
-                            </table>
-                        </div>
-                    ) : (
-                        <div className="flex items-center justify-center h-48 text-gray-500">
-                            No ticket distribution data available
-                        </div>
-                    )}
-                </div>
+            <div className="analytics-details grid gap-6 lg:grid-cols-2">
+                <article className="rounded-2xl border border-green-200 bg-white p-5"><h2 className="mb-4 text-lg font-black">Reservation status</h2><div className="space-y-3">{statuses.map(item => <div key={item.status} className="flex items-center justify-between border-b border-green-100 pb-3"><span className="capitalize text-gray-700">{item.status.replace('_', ' ')}</span><span className="font-black tabular-nums">{numberFormat.format(item.count)} <small className="font-medium text-gray-400">· {numberFormat.format(item.visitors)} visitors</small></span></div>)}</div></article>
+                <article className="rounded-2xl border border-green-200 bg-white p-5"><h2 className="mb-4 text-lg font-black">Admission breakdown</h2><div className="overflow-x-auto"><table className="w-full text-sm"><thead><tr className="border-b text-left text-xs uppercase tracking-wide text-gray-500"><th className="pb-3">Type</th><th className="pb-3 text-right">Admissions</th><th className="pb-3 text-right">Share</th><th className="pb-3 text-right">Estimated fees</th></tr></thead><tbody>{mix.map(item => <tr key={item.type} className="border-b border-green-100"><td className="py-3 font-bold">{item.type}</td><td className="py-3 text-right">{numberFormat.format(item.count)}</td><td className="py-3 text-right">{totalAdmissions ? (item.count / totalAdmissions * 100).toFixed(1) : '0.0'}%</td><td className="py-3 text-right font-bold">{currencyFormat.format(item.estimatedFees)}</td></tr>)}</tbody></table></div></article>
             </div>
-        </div>
+            <footer className="flex items-start gap-3 rounded-xl bg-green-50 p-4 text-xs leading-5 text-green-950"><ChartBar className="mt-0.5 h-4 w-4 shrink-0" /><p>Estimated admission fees use configured report assumptions of PHP 40 per adult, PHP 20 per child, and no fee for Bulusan residents. They are not payment transactions.</p></footer>
+        </section>
     );
 };
 

@@ -2,8 +2,9 @@ import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { userAPI } from '../../services/api-client';
 import { notify } from '../../utils/toast';
+import { ChevronLeft, Home, Gift, DollarCircle, Phone, Copy, Check, Activity, Lock } from 'reicon-react';
 
-const Icons = {
+const LegacyIcons = {
     Back: () => (
         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
@@ -59,6 +60,7 @@ const Icons = {
         </svg>
     )
 };
+const Icons = { Back: ChevronLeft, Home, Gift, Coin: DollarCircle, Phone, Copy, Check, Sparkle: Activity, Lock };
 
 const PRESET_AMOUNTS = [50, 100, 200, 500, 1000];
 

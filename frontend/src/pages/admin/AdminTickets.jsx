@@ -185,50 +185,44 @@ const AdminTickets = ({ globalSearch = '' }) => {
     };
 
     // Export tickets
-    const handleExport = async () => {
+    const handleExport = () => {
         try {
             setExportLoading(true);
-            const filters = {};
-            if (dateFilter) {
-                filters.startDate = dateFilter;
-                filters.endDate = dateFilter;
-            }
-            if (statusFilter !== 'all') filters.status = statusFilter;
-            if (paymentFilter !== 'all') filters.paymentStatus = paymentFilter;
-
-            const res = await adminAPI.exportTickets(filters);
-            if (res.success && res.tickets) {
-                // Generate CSV
-                const headers = ['Code', 'Customer', 'Email', 'Type', 'Quantity', 'Price', 'Visit Date', 'Status', 'Payment Status', 'Payment Method'];
-                const rows = res.tickets.map(t => [
-                    t.booking_reference || t.code,
-                    t.visitor_name || t.purchasedBy,
-                    t.visitor_email || t.email,
-                    t.ticket_type || t.type,
-                    t.quantity || 1,
-                    t.total_amount || t.price,
-                    t.visit_date?.split('T')[0],
+            const headers = ['Code', 'Customer', 'Email', 'Type', 'Quantity', 'Price', 'Purchase Date', 'Visit Date', 'Status', 'Payment Status', 'Payment Method', 'Verification Status', 'Notes', 'Resident ID Image'];
+            const rows = filteredTickets.map(t => [
+                    t.code,
+                    t.purchasedBy,
+                    t.email,
+                    t.type,
+                    t.quantity,
+                    t.price,
+                    t.purchaseDate?.split('T')[0],
+                    t.visitDate?.split('T')[0],
                     t.status,
-                    t.payment_status,
-                    t.payment_method
+                    t.paymentStatus,
+                    t.paymentMethod,
+                    t.verificationStatus,
+                    t.notes,
+                    t.residentIdImage ? getResidentIdImageUrl(t.residentIdImage) : ''
                 ]);
-                
-                const csvContent = [
+
+            const escapeCsv = value => {
+                let text = value === null || value === undefined ? '' : String(value);
+                if (/^[=+@]/.test(text) || (/^-/.test(text) && Number.isNaN(Number(text)))) text = `'${text}`;
+                return `"${text.replace(/"/g, '""')}"`;
+            };
+            const csvContent = '\uFEFF' + [
                     headers.join(','),
-                    ...rows.map(row => row.map(cell => `"${cell || ''}"`).join(','))
-                ].join('\n');
-                
-                // Download CSV
-                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-                const link = document.createElement('a');
-                link.href = URL.createObjectURL(blob);
-                link.download = `tickets_export_${new Date().toISOString().split('T')[0]}.csv`;
-                link.click();
-                setTimeout(() => URL.revokeObjectURL(link.href), 0);
-                notify.success('Tickets exported.');
-            } else {
-                notify.error(res.message || "Couldn't export tickets.");
-            }
+                    ...rows.map(row => row.map(escapeCsv).join(','))
+                ].join('\r\n');
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `tickets_export_${new Date().toISOString().split('T')[0]}.csv`;
+            link.click();
+            setTimeout(() => URL.revokeObjectURL(link.href), 0);
+            notify.success(`${filteredTickets.length} filtered tickets exported.`);
         } catch (err) {
             console.error(err);
             notify.error(err.message || "Couldn't export tickets. Please try again.");

@@ -57,7 +57,7 @@ app.use(cors({
         callback(new Error('Not allowed by CORS'));
     },
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    methods: ['GET', 'HEAD', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Tab-ID', 'X-Requested-With']
 }));
 
@@ -102,6 +102,7 @@ app.use('/api/community', communityRoutes);
 app.use('/api/analytics', analyticsRoutes);
 
 app.get('/api/health', async (req, res) => {
+    res.setHeader('Cache-Control', 'no-store');
     const health = {
         success: true,
         message: 'Bulusan Zoo API is running',
@@ -143,7 +144,9 @@ app.use((err, req, res, next) => {
     });
 });
 
-Promise.all([ensureEventPaymentSchema(), ensureAIAssistSchema(), ensureAuthSchema(), ensureSiteVisitSchema(), ensureUserActivitySchema(), ensureTrashSchema()])
+const schemaInitializers = [ensureEventPaymentSchema, ensureAIAssistSchema, ensureAuthSchema, ensureSiteVisitSchema, ensureUserActivitySchema, ensureTrashSchema];
+
+schemaInitializers.reduce((initialization, initializeSchema) => initialization.then(initializeSchema), Promise.resolve())
     .catch(error => console.error('Database schema initialization failed:', error.message))
     .finally(() => {
         app.listen(PORT, HOST, () => {

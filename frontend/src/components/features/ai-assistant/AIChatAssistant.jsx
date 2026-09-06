@@ -291,7 +291,7 @@ const AIChatAssistant = ({ onClose }) => {
                 style={{ color: THEME.text }}
                 aria-label="Message Zusan"
             />
-            <button type="button" onClick={() => handleSend()} disabled={!input.trim() || loading} className="w-10 h-10 shrink-0 rounded-xl flex items-center justify-center transition-all active:scale-90 disabled:opacity-25" style={{ background: THEME.accentDark, color: '#142018' }} aria-label="Send message">
+            <button type="button" onClick={() => handleSend()} disabled={!input.trim() || loading} className="w-10 h-10 shrink-0 rounded-xl flex items-center justify-center transition-all active:scale-90 disabled:opacity-25" style={{ background: THEME.accent, color: '#142018' }} aria-label="Send message">
                 <SendIcon />
             </button>
         </div>
@@ -311,7 +311,7 @@ const AIChatAssistant = ({ onClose }) => {
                         <button type="button" onClick={() => setSessionSidebarOpen(false)} className="p-2 rounded-lg md:hidden" style={{ color: THEME.textMuted }} aria-label="Close chat history"><CloseIcon /></button>
                     </div>
                     <div className="px-3">
-                        <button type="button" onClick={startNewSession} className="w-full min-h-11 flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors" style={{ background: THEME.accentDark, color: '#142018' }}>
+                        <button type="button" onClick={startNewSession} className="w-full min-h-11 flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors" style={{ background: THEME.accent, color: '#142018' }}>
                             <PlusIcon /> New chat
                         </button>
                     </div>
@@ -367,7 +367,7 @@ const AIChatAssistant = ({ onClose }) => {
                         </div>
                     ) : (
                         <div className="flex-1 min-h-0 overflow-hidden relative">
-                            <ReactLenis isChild className="h-full overflow-y-auto overscroll-contain px-4 sm:px-7 py-6 sm:py-8" data-lenis-prevent>
+                            <ReactLenis className="h-full overflow-y-auto overscroll-contain px-4 sm:px-7 py-6 sm:py-8" data-lenis-prevent>
                                 <div className="flex flex-col gap-5 sm:gap-6 max-w-2xl mx-auto min-w-0 pb-28">
                                     {messages.map((message, index) => {
                                         const isUser = message.role === 'user';
@@ -376,9 +376,9 @@ const AIChatAssistant = ({ onClose }) => {
                                                 {!isUser && <Avatar />}
                                                 <div className={`min-w-0 flex-1 flex flex-col gap-2.5 ${isUser ? 'items-end' : 'items-start'}`}>
                                                     {!isUser && <span className="px-1 text-[10px] font-bold uppercase tracking-widest" style={{ color: THEME.textSoft }}>Zusan · wildlife guide</span>}
-                                                    <div className="max-w-[88%] sm:max-w-[80%] px-4 sm:px-5 py-3.5 sm:py-4 text-sm sm:text-base leading-relaxed font-medium whitespace-pre-wrap break-words" style={isUser ? { background: THEME.accentDark, color: '#142018', borderRadius: '1rem 1rem 0.25rem 1rem' } : { background: THEME.surface, color: THEME.text, border: `1px solid ${THEME.border}`, borderRadius: '0.25rem 1rem 1rem 1rem', boxShadow: '0 2px 8px rgba(15,23,42,0.04)' }}>{message.content}</div>
+                                                    <div className="max-w-[88%] sm:max-w-[80%] px-4 sm:px-5 py-3.5 sm:py-4 text-sm sm:text-base leading-relaxed font-medium whitespace-pre-wrap break-words" style={isUser ? { background: THEME.accent, color: '#142018', borderRadius: '1rem 1rem 0.25rem 1rem' } : { background: THEME.surface, color: THEME.text, border: `1px solid ${THEME.border}`, borderRadius: '0.25rem 1rem 1rem 1rem', boxShadow: '0 2px 8px rgba(15,23,42,0.04)' }}>{message.content}</div>
                                                     {message.cards?.length > 0 && <div className="w-full flex flex-col gap-2.5">{message.cards.map((card, cardIndex) => card.kind === 'animal' || card.kind === 'plant' || card.kind === 'zoo-event' ? <ZooCard key={`${card.name || card.title || cardIndex}-${cardIndex}`} data={card} /> : <TicketCard key={`${card.reference || cardIndex}-${cardIndex}`} data={card} />)}</div>}
-                                                    {message.action && <button type="button" onClick={() => handleAction(message.action)} className="inline-flex items-center gap-2 min-h-10 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all active:scale-95 hover:opacity-90" style={message.action.variant === 'ghost' ? { background: THEME.surface, color: THEME.text, border: `1px solid ${THEME.border}` } : { background: THEME.accentDark, color: '#142018' }}>{message.action.label}</button>}
+                                                    {message.action && <button type="button" onClick={() => handleAction(message.action)} className="inline-flex items-center gap-2 min-h-10 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all active:scale-95 hover:opacity-90" style={message.action.variant === 'ghost' ? { background: THEME.surface, color: THEME.text, border: `1px solid ${THEME.border}` } : { background: THEME.accent, color: '#142018' }}>{message.action.label}</button>}
                                                 </div>
                                             </div>
                                         );

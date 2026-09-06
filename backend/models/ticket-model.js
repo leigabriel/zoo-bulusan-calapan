@@ -367,6 +367,48 @@ class Ticket {
         return rows[0];
     }
 
+    static async getAnalyticsDashboard(timeRange = 'week') {
+        const days = { week: 7, month: 30, year: 365 }[timeRange] || 7;
+        const active = '(is_deleted IS NULL OR is_deleted = FALSE)';
+        const period = `reservation_date BETWEEN DATE_SUB(CURDATE(), INTERVAL ${days - 1} DAY) AND CURDATE()`;
+        const included = "status IN ('confirmed', 'completed')";
+
+        const [summaryRows, dailyRows, statusRows, weekdayRows, mixRows] = await Promise.all([
+            db.query(`SELECT COUNT(*) AS reservations, COALESCE(SUM(total_visitors), 0) AS scheduledVisitors,
+                COALESCE(SUM(CASE WHEN checked_in_at IS NOT NULL OR status = 'completed' THEN total_visitors ELSE 0 END), 0) AS checkedInVisitors,
+                COALESCE(SUM(adult_quantity * 40 + child_quantity * 20), 0) AS estimatedFees,
+                COALESCE(AVG(total_visitors), 0) AS averagePartySize,
+                (SELECT COUNT(*) FROM ticket_reservations WHERE ${active} AND ${period} AND status = 'pending') AS pendingReservations,
+                (SELECT COUNT(*) FROM ticket_reservations WHERE ${active} AND ${period} AND verification_status = 'pending' AND bulusan_resident_quantity > 0) AS pendingVerification
+                FROM ticket_reservations WHERE ${active} AND ${period} AND ${included}`),
+            db.query(`SELECT DATE_FORMAT(reservation_date, '%Y-%m-%d') AS date, COUNT(*) AS reservations,
+                COALESCE(SUM(total_visitors), 0) AS visitors,
+                COALESCE(SUM(CASE WHEN checked_in_at IS NOT NULL OR status = 'completed' THEN total_visitors ELSE 0 END), 0) AS checkedIn,
+                COALESCE(SUM(adult_quantity * 40 + child_quantity * 20), 0) AS estimatedFees
+                FROM ticket_reservations WHERE ${active} AND ${period} AND ${included}
+                GROUP BY DATE_FORMAT(reservation_date, '%Y-%m-%d') ORDER BY date`),
+            db.query(`SELECT status, COUNT(*) AS count, COALESCE(SUM(total_visitors), 0) AS visitors
+                FROM ticket_reservations WHERE ${active} AND ${period} GROUP BY status ORDER BY status`),
+            db.query(`SELECT WEEKDAY(reservation_date) AS weekday, DAYNAME(reservation_date) AS day,
+                COALESCE(SUM(total_visitors), 0) AS visitors FROM ticket_reservations
+                WHERE ${active} AND ${period} AND ${included} GROUP BY WEEKDAY(reservation_date), DAYNAME(reservation_date) ORDER BY weekday`),
+            db.query(`SELECT
+                COALESCE(SUM(adult_quantity), 0) AS adults,
+                COALESCE(SUM(child_quantity), 0) AS children,
+                COALESCE(SUM(bulusan_resident_quantity), 0) AS residents
+                FROM ticket_reservations WHERE ${active} AND ${period} AND ${included}`)
+        ]);
+
+        return {
+            days,
+            summary: summaryRows[0][0],
+            daily: dailyRows[0],
+            statuses: statusRows[0],
+            weekdays: weekdayRows[0],
+            mix: mixRows[0][0]
+        };
+    }
+
     // Archive reservation
     static async archiveTicket(ticketId) {
         const [result] = await db.query(

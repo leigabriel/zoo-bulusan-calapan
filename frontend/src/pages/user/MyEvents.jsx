@@ -10,8 +10,9 @@ import { useAuth } from '../../hooks/use-auth';
 import { sanitizeInput, sanitizePhone } from '../../utils/sanitize';
 import { notify } from '../../utils/toast';
 import useScrollLock from '../../hooks/use-scroll-lock';
+import { X, Calendar, Clock, Users, Edit, CheckCircle, ChevronLeft, Camera } from 'reicon-react';
 
-const Icons = {
+const LegacyIcons = {
     Close: () => (
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
             <path fillRule="evenodd" d="M5.47 5.47a.75.75 0 011.06 0L12 10.94l5.47-5.47a.75.75 0 111.06 1.06L13.06 12l5.47 5.47a.75.75 0 11-1.06 1.06L12 13.06l-5.47 5.47a.75.75 0 01-1.06-1.06L10.94 12 5.47 6.53a.75.75 0 010-1.06z" clipRule="evenodd" />
@@ -43,6 +44,7 @@ const Icons = {
         </svg>
     )
 };
+const Icons = { Close: X, Calendar, Clock, Users, Edit, Check: CheckCircle };
 
 const STATUS_STYLES = {
     confirmed: 'bg-emerald-50 text-emerald-700 border border-emerald-200',
@@ -200,7 +202,7 @@ const MyEvents = () => {
                             onClick={() => navigate('/reservations')}
                             className="px-4 py-2 text-[10px] md:text-xs font-bold uppercase tracking-widest rounded-full border border-gray-200 hover:bg-gray-50 transition-colors"
                         >
-                            ← Back to Reservations
+                            <ChevronLeft className="h-4 w-4" /> Back to Reservations
                         </button>
                     </div>
 
@@ -262,10 +264,7 @@ const MyEvents = () => {
                                                     </div>
                                                 ) : (
                                                     <label className="absolute bottom-3 right-3 flex items-center gap-2 px-3 py-2 bg-black/70 text-white text-[10px] font-bold uppercase tracking-widest rounded-full cursor-pointer hover:bg-black/90 transition-colors backdrop-blur-sm">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
-                                                            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
-                                                            <circle cx="12" cy="13" r="4" />
-                                                        </svg>
+                                                        <Camera className="h-3.5 w-3.5" />
                                                         <span>Change Photo</span>
                                                         <input
                                                             type="file"

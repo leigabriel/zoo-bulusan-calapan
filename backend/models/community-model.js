@@ -2,6 +2,7 @@ const db = require('../config/database');
 
 class Community {
     static initialized = false;
+    static initializationPromise = null;
 
     static async hasColumn(tableName, columnName) {
         const [rows] = await db.query(
@@ -75,8 +76,18 @@ class Community {
         `);
     }
 
-    static async initializeTables() {
-        if (Community.initialized) return;
+    static initializeTables() {
+        if (Community.initialized) return Promise.resolve();
+        if (!Community.initializationPromise) {
+            Community.initializationPromise = Community.performInitialization().catch(error => {
+                Community.initializationPromise = null;
+                throw error;
+            });
+        }
+        return Community.initializationPromise;
+    }
+
+    static async performInitialization() {
 
         await db.query(`
             CREATE TABLE IF NOT EXISTS community_posts (

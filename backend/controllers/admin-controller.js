@@ -577,74 +577,30 @@ exports.getRevenueReport = async (req, res) => {
 exports.getAnalytics = async (req, res) => {
     try {
         const { timeRange = 'week' } = req.query;
-
-        // Get all analytics data in parallel - pass timeRange for proper filtering
-        const [
-            weeklyData,
-            monthlyData,
-            ticketDistribution,
-            dailyComparison,
-            totalUsers,
-            totalAnimals,
-            totalTickets,
-            totalRevenue,
-            upcomingEvents,
-            timeRangeStats
-        ] = await Promise.all([
-            Ticket.getWeeklyAnalytics(timeRange),
-            Ticket.getMonthlyAnalytics(timeRange),
-            Ticket.getTicketTypeDistribution(timeRange),
-            Ticket.getDailyComparison(),
-            User.count(),
-            Animal.count(),
-            Ticket.count(),
-            Ticket.getTotalRevenue(),
-            Event.countUpcoming(),
-            Ticket.getStatsForTimeRange(timeRange)
+        if (!['week', 'month', 'year'].includes(timeRange)) {
+            return res.status(400).json({ success: false, message: 'Invalid analytics time range' });
+        }
+        const [analytics, totalUsers, totalAnimals, upcomingEvents] = await Promise.all([
+            Ticket.getAnalyticsDashboard(timeRange), User.count(), Animal.count(), Event.countUpcoming()
         ]);
-
-        // Calculate growth rates
-        const ticketGrowth = dailyComparison.yesterday_tickets > 0 
-            ? ((dailyComparison.today_tickets - dailyComparison.yesterday_tickets) / dailyComparison.yesterday_tickets * 100).toFixed(1)
-            : 0;
-        const revenueGrowth = dailyComparison.yesterday_revenue > 0 
-            ? ((dailyComparison.today_revenue - dailyComparison.yesterday_revenue) / dailyComparison.yesterday_revenue * 100).toFixed(1)
-            : 0;
+        const number = value => Number(value) || 0;
+        const endDate = new Date();
+        const startDate = new Date();
+        startDate.setDate(endDate.getDate() - analytics.days + 1);
 
         res.json({
             success: true,
             data: {
-                summary: {
-                    totalUsers,
-                    totalAnimals,
-                    // Use timeRange-specific stats for filtered view
-                    totalTickets: timeRangeStats.totalTickets || totalTickets,
-                    totalRevenue: parseFloat(timeRangeStats.totalRevenue) || totalRevenue,
-                    upcomingEvents,
-                    todayTickets: dailyComparison.today_tickets,
-                    todayRevenue: dailyComparison.today_revenue,
-                    ticketGrowth: parseFloat(ticketGrowth),
-                    revenueGrowth: parseFloat(revenueGrowth),
-                    timeRange // Include current filter in response
-                },
-                weeklyData: weeklyData.map(d => ({
-                    day: d.day?.substring(0, 3) || 'N/A',
-                    date: d.date,
-                    tickets: d.tickets,
-                    visitors: d.visitors,
-                    revenue: parseFloat(d.revenue) || 0
-                })),
-                monthlyData: monthlyData.map(d => ({
-                    month: d.monthName,
-                    tickets: d.tickets,
-                    visitors: d.visitors,
-                    revenue: parseFloat(d.revenue) || 0
-                })),
-                ticketDistribution: ticketDistribution.map(d => ({
-                    type: d.type,
-                    count: d.count,
-                    revenue: parseFloat(d.revenue) || 0
-                }))
+                meta: { timeRange, startDate: startDate.toISOString().slice(0, 10), endDate: endDate.toISOString().slice(0, 10), dateBasis: 'reservation_date', includedStatuses: ['confirmed', 'completed'], feeAssumptions: { adult: 40, child: 20, resident: 0 }, generatedAt: new Date().toISOString() },
+                summary: { ...Object.fromEntries(Object.entries(analytics.summary).map(([key, value]) => [key, number(value)])), totalUsers, totalAnimals, upcomingEvents },
+                dailyData: analytics.daily.map(row => ({ date: row.date, reservations: number(row.reservations), visitors: number(row.visitors), checkedIn: number(row.checkedIn), estimatedFees: number(row.estimatedFees) })),
+                statusDistribution: analytics.statuses.map(row => ({ status: row.status, count: number(row.count), visitors: number(row.visitors) })),
+                weekdayDemand: analytics.weekdays.map(row => ({ day: row.day, weekday: number(row.weekday), visitors: number(row.visitors) })),
+                admissionMix: [
+                    { type: 'Adult', count: number(analytics.mix.adults), estimatedFees: number(analytics.mix.adults) * 40 },
+                    { type: 'Child', count: number(analytics.mix.children), estimatedFees: number(analytics.mix.children) * 20 },
+                    { type: 'Resident', count: number(analytics.mix.residents), estimatedFees: 0 }
+                ]
             }
         });
     } catch (error) {
@@ -686,8 +642,7 @@ exports.getReportData = async (req, res) => {
                         THEN (tr.adult_quantity * 40) + (tr.child_quantity * 20) ELSE 0 END as amount
                  FROM ticket_reservations tr
                  WHERE DATE(tr.created_at) BETWEEN ? AND ?
-                 ORDER BY tr.created_at DESC
-                 LIMIT 100`,
+                 ORDER BY tr.created_at DESC`,
                 [start, end]
             );
 
@@ -757,7 +712,7 @@ exports.getReportData = async (req, res) => {
                  FROM ticket_reservations
                  WHERE DATE(COALESCE(reservation_date, created_at)) BETWEEN ? AND ?
                  AND status NOT IN ('cancelled', 'no_show')
-                 GROUP BY DATE(COALESCE(reservation_date, created_at))
+                 GROUP BY DATE_FORMAT(COALESCE(reservation_date, created_at), '%Y-%m-%d')
                  ORDER BY date DESC`,
                 [start, end]
             );

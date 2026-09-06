@@ -8,7 +8,7 @@ export const AI_ASSISTANT_THEME = {
     text: '#000000',
     textMuted: '#333333', // Dark gray for readability
     textSoft: '#666666',
-    accent: '#c6fe69',
-    accentDark: '#b5ed5a', // Slightly darker tint for active/hover button states
-    accentSoft: '#f3fce3' // Very light tint of your accent for the avatar background
+    accent: 'var(--color-green-400)',
+    accentDark: 'var(--color-green-700)',
+    accentSoft: 'var(--color-green-50)'
 };

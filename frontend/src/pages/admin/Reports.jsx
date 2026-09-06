@@ -291,7 +291,7 @@ const Reports = () => {
             return;
         }
 
-        const { start, end, title, generatedAt } = getReportMeta();
+        const { start, end, title } = getReportMeta();
         const headers = ['Date', 'Reference', 'Type', 'Quantity', 'Amount (PHP)', 'Status'];
         const rows = reportRows.map(row => [
             row.date,
@@ -303,10 +303,16 @@ const Reports = () => {
         ]);
 
         const sheetRows = [
-            ['Bulusan Zoo Calapan'],
-            [title],
             ['Date Range', `${start} to ${end}`],
-            ['Generated At', generatedAt],
+            [],
+            ['Report Summary'],
+            ['Total Revenue (PHP)', toExportNumber(stats.totalRevenue)],
+            ['Tickets Sold', toExportNumber(stats.ticketsSold)],
+            ['Total Visitors', toExportNumber(stats.visitors)],
+            ['Average Revenue Per Day (PHP)', Math.round(toExportNumber(reportData.totalRevenue) / reportDays)],
+            ['Filtered Records', reportRows.length],
+            ['Filtered Quantity', reportTotals.totalQuantity],
+            ['Filtered Amount (PHP)', reportTotals.totalAmount],
             [],
             headers,
             ...rows,
@@ -316,11 +322,6 @@ const Reports = () => {
         const ws = XLSX.utils.aoa_to_sheet(sheetRows);
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, title);
-
-        ws['!merges'] = [
-            { s: { r: 0, c: 0 }, e: { r: 0, c: headers.length - 1 } },
-            { s: { r: 1, c: 0 }, e: { r: 1, c: headers.length - 1 } }
-        ];
 
         ws['!cols'] = headers.map((_, colIndex) => {
             let maxLength = 10;
@@ -351,9 +352,15 @@ const Reports = () => {
             return;
         }
 
-        const { start, end, title, generatedAt } = getReportMeta();
+        const { start, end } = getReportMeta();
         const totalAmount = reportTotals.totalAmount.toLocaleString();
         const totalQuantity = reportTotals.totalQuantity.toLocaleString();
+        const summaryCards = [
+            ['Total Revenue', `PHP ${toExportNumber(stats.totalRevenue).toLocaleString()}`],
+            ['Tickets Sold', toExportNumber(stats.ticketsSold).toLocaleString()],
+            ['Total Visitors', toExportNumber(stats.visitors).toLocaleString()],
+            ['Average Revenue / Day', `PHP ${Math.round(toExportNumber(reportData.totalRevenue) / reportDays).toLocaleString()}`]
+        ].map(([label, value]) => `<div class="metric"><strong>${escapeHtml(value)}</strong><span>${escapeHtml(label)}</span></div>`).join('');
 
         const rowsHtml = reportRows.map((row) => (
             `<tr>
@@ -370,31 +377,37 @@ const Reports = () => {
 <html>
 <head>
     <meta charset="utf-8" />
-    <title>${escapeHtml(title)} - Print</title>
+    <title></title>
     <style>
         * { box-sizing: border-box; }
-        body { font-family: Arial, sans-serif; color: #111; margin: 24px; }
+         body { font-family: Arial, sans-serif; color: #111; margin: 0; padding: 10mm; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
         h1 { font-size: 20px; margin: 0 0 6px; }
         h2 { font-size: 16px; margin: 0 0 16px; font-weight: 600; }
         .meta { font-size: 12px; margin-bottom: 16px; color: #444; }
-        .meta span { display: inline-block; margin-right: 18px; }
+         .meta span { display: inline-block; margin-right: 18px; }
+         .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 14px 0; break-inside: avoid; }
+         .metric { border: 1px solid #d1d5db; border-radius: 8px; padding: 10px; }
+         .metric strong, .metric span { display: block; }
+         .metric strong { font-size: 17px; margin-bottom: 3px; }
+         .metric span { color: #555; font-size: 10px; text-transform: uppercase; }
         table { width: 100%; border-collapse: collapse; margin-top: 12px; }
         th, td { border: 1px solid #ddd; padding: 10px 12px; font-size: 12px; text-align: left; }
         th { background: #f3f3f3; text-transform: uppercase; letter-spacing: 0.04em; font-size: 11px; }
         td.num { text-align: right; }
-        tfoot td { font-weight: 700; background: #fafafa; }
+         tfoot td { font-weight: 700; background: #fafafa; }
+         thead { display: table-header-group; }
+         tfoot { display: table-footer-group; }
+         tr, .metric, .summary { break-inside: avoid; page-break-inside: avoid; }
         .summary { margin-top: 12px; font-size: 12px; color: #333; }
-        @page { size: landscape; margin: 12mm; }
+         @page { size: A4 portrait; margin: 0; }
     </style>
 </head>
 <body>
-    <h1>Bulusan Zoo Calapan</h1>
-    <h2>${escapeHtml(title)}</h2>
     <div class="meta">
         <span>Date Range: ${escapeHtml(start)} to ${escapeHtml(end)}</span>
-        <span>Generated: ${escapeHtml(generatedAt)}</span>
         <span>Records: ${reportRows.length}</span>
     </div>
+    <div class="metrics">${summaryCards}</div>
     <table>
         <thead>
             <tr>

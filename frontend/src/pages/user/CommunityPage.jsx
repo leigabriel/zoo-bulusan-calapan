@@ -10,6 +10,7 @@ import ConfirmationModal from '../../components/common/ConfirmationModal';
 import { communityAPI, getProfileImageUrl } from '../../services/api-client';
 import { useAuth } from '../../context/AuthContext';
 import { notify } from '../../utils/toast';
+import { Plus, X } from 'reicon-react';
 import Footer from '../../components/Footer';
 
 const CommunityPage = () => {
@@ -225,9 +226,7 @@ const CommunityPage = () => {
                     aria-label="Create post"
                 >
                     <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#212631] transition-colors group-hover:bg-[#5c7d16]">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="34" height="34" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                        <path d="M12 2C6.49 2 2 6.49 2 12C2 17.51 6.49 22 12 22C17.51 22 22 17.51 22 12C22 6.49 17.51 2 12 2ZM16 12.75H12.75V16C12.75 16.41 12.41 16.75 12 16.75C11.59 16.75 11.25 16.41 11.25 16V12.75H8C7.59 12.75 7.25 12.41 7.25 12C7.25 11.59 7.59 11.25 8 11.25H11.25V8C11.25 7.59 11.59 7.25 12 7.25C12.41 7.25 12.75 7.59 12.75 8V11.25H16C16.41 11.25 16.75 11.59 16.75 12C16.75 12.41 16.41 12.75 16 12.75Z" fill="#c6fe59" />
-                    </svg>
+                    <Plus className="h-8 w-8 text-[#c6fe59]" aria-hidden="true" />
                     </span>
                     <span className="hidden whitespace-nowrap text-[11px] uppercase tracking-[0.16em] sm:inline">Create post</span>
                 </button>
@@ -270,9 +269,7 @@ const CommunityPage = () => {
                                         className="text-[#212631] opacity-70 hover:opacity-100 transition-opacity cursor-pointer flex items-center gap-2"
                                     >
                                         <span className="text-[10px] tracking-widest uppercase font-bold">Close</span>
-                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-3.5 h-3.5">
-                                            <path fillRule="evenodd" d="M5.47 5.47a.75.75 0 011.06 0L12 10.94l5.47-5.47a.75.75 0 111.06 1.06L13.06 12l5.47 5.47a.75.75 0 11-1.06 1.06L12 13.06l-5.47 5.47a.75.75 0 01-1.06-1.06L10.94 12 5.47 6.53a.75.75 0 010-1.06z" clipRule="evenodd" />
-                                        </svg>
+                                        <X className="h-3.5 w-3.5" />
                                     </button>
                                 </div>
 

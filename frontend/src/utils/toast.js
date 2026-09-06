@@ -8,6 +8,21 @@ const fallbackMessages = {
     required: 'Please fill in all required fields.'
 };
 
+const soundUrls = {
+    success: '/sound/success-sfx.mp3',
+    error: '/sound/error-sfx.mp3'
+};
+const sounds = {};
+
+const playToastSound = (type) => {
+    if (typeof Audio === 'undefined' || !soundUrls[type]) return;
+    const audio = sounds[type] || new Audio(soundUrls[type]);
+    sounds[type] = audio;
+    audio.volume = 0.45;
+    audio.currentTime = 0;
+    audio.play().catch(() => {});
+};
+
 const friendlyMessage = (message, fallbackKey = 'retry') => {
     if (!message || typeof message !== 'string') {
         return fallbackMessages[fallbackKey] || fallbackMessages.retry;
@@ -42,6 +57,7 @@ const friendlyMessage = (message, fallbackKey = 'retry') => {
 
 const showToast = (type, message, options) => {
     const title = friendlyMessage(message, type === 'error' ? 'retry' : type === 'warning' ? 'required' : 'saved');
+    playToastSound(type);
     return type === 'default' ? gooeyToast(title, options) : gooeyToast[type](title, options);
 };
 
@@ -53,6 +69,7 @@ export const notify = {
     loading: (message, options) => showToast('info', message, { ...options, duration: Infinity }),
     promise: (promise, config) => gooeyToast.promise(promise, config),
     update: (id, { type = 'default', message, title, isLoading = false, ...options } = {}) => {
+        if (!isLoading) playToastSound(type);
         gooeyToast.update(id, {
             ...options,
             title: friendlyMessage(title || message, type === 'error' ? 'retry' : 'saved'),
