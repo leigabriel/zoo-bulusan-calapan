@@ -60,7 +60,9 @@ const CommunityPage = () => {
         message: '',
         confirmLabel: 'Confirm',
         cancelLabel: 'Cancel',
-        danger: false
+        danger: false,
+        requireInput: false,
+        inputValue: ''
     });
 
     const openConfirmation = ({
@@ -68,7 +70,10 @@ const CommunityPage = () => {
         message,
         confirmLabel = 'Confirm',
         cancelLabel = 'Cancel',
-        danger = false
+        danger = false,
+        requireInput = false,
+        inputLabel = 'Reason',
+        inputPlaceholder = 'Enter details'
     }) => new Promise((resolve) => {
         setConfirmState({
             isOpen: true,
@@ -77,13 +82,17 @@ const CommunityPage = () => {
             confirmLabel,
             cancelLabel,
             danger,
+            requireInput,
+            inputLabel,
+            inputPlaceholder,
+            inputValue: '',
             resolve
         });
     });
 
     const closeConfirmation = (confirmed) => {
         if (typeof confirmState.resolve === 'function') {
-            confirmState.resolve(Boolean(confirmed));
+            confirmState.resolve(confirmed && confirmState.requireInput ? confirmState.inputValue.trim() : Boolean(confirmed));
         }
         setConfirmState({
             isOpen: false,
@@ -91,7 +100,9 @@ const CommunityPage = () => {
             message: '',
             confirmLabel: 'Confirm',
             cancelLabel: 'Cancel',
-            danger: false
+            danger: false,
+            requireInput: false,
+            inputValue: ''
         });
     };
 
@@ -111,17 +122,6 @@ const CommunityPage = () => {
         loadPosts();
     }, []);
 
-    const confirmPostSubmit = async ({ action }) => {
-        const isUpdate = action === 'update';
-        return openConfirmation({
-            title: isUpdate ? 'Update This Post?' : 'Publish This Post?',
-            message: isUpdate
-                ? 'Your post update will be submitted and returned to moderation review.'
-                : 'Your post will be submitted for moderation before it becomes visible to others.',
-            confirmLabel: isUpdate ? 'Update Post' : 'Publish Post'
-        });
-    };
-
     const confirmPostDelete = async () => {
         return openConfirmation({
             title: 'Delete This Post?',
@@ -131,8 +131,8 @@ const CommunityPage = () => {
         });
     };
 
-    const confirmCommentAction = async ({ title, message, confirmLabel, danger = false }) => {
-        return openConfirmation({ title, message, confirmLabel, danger });
+    const confirmCommentAction = async (options) => {
+        return openConfirmation(options);
     };
 
     const createOrUpdatePost = async ({ content, imageFile, removeImage }) => {
@@ -151,8 +151,8 @@ const CommunityPage = () => {
                 notify.success('Post submitted.');
             }
             await loadPosts();
-        } catch {
-            notify.error('Please Try Again');
+        } catch (error) {
+            notify.error(error.message || "Couldn't save post.");
             return false;
         } finally {
             setSavingPost(false);
@@ -238,7 +238,7 @@ const CommunityPage = () => {
                             <Motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => !savingPost && setPostModalOpen(false)} />
                             <Motion.div initial={{ y: 30, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 30, opacity: 0 }} className="relative z-10 max-h-[92vh] w-full overflow-y-auto rounded-t-3xl bg-white p-5 shadow-2xl sm:max-w-xl sm:rounded-3xl sm:p-8">
                                 <div className="mb-6 flex items-center justify-between"><h2 className="text-xl font-black">{editingPost ? 'Edit post' : 'Create post'}</h2><button onClick={() => !savingPost && setPostModalOpen(false)} className="rounded-full px-3 py-2 text-sm text-[#212631]/60 hover:bg-black/5">Close</button></div>
-                                <PostForm onSubmit={async (data) => { const result = await createOrUpdatePost(data); if (result !== false) setPostModalOpen(false); return result; }} loading={savingPost} initialPost={editingPost} onCancelEdit={() => { setEditingPost(null); setPostModalOpen(false); }} onBeforeSubmit={confirmPostSubmit} />
+                                <PostForm onSubmit={async (data) => { const result = await createOrUpdatePost(data); if (result !== false) setPostModalOpen(false); return result; }} loading={savingPost} initialPost={editingPost} onCancelEdit={() => { setEditingPost(null); setPostModalOpen(false); }} />
                             </Motion.div>
                         </div>
                     )}
@@ -337,6 +337,12 @@ const CommunityPage = () => {
                     confirmLabel={confirmState.confirmLabel}
                     cancelLabel={confirmState.cancelLabel}
                     danger={confirmState.danger}
+                    requireInput={confirmState.requireInput}
+                    inputLabel={confirmState.inputLabel}
+                    inputPlaceholder={confirmState.inputPlaceholder}
+                    inputValue={confirmState.inputValue}
+                    onInputChange={(inputValue) => setConfirmState((current) => ({ ...current, inputValue }))}
+                    confirmDisabled={confirmState.requireInput && !confirmState.inputValue.trim()}
                     onConfirm={() => closeConfirmation(true)}
                     onClose={() => closeConfirmation(false)}
                 />

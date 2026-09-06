@@ -8,6 +8,7 @@ const PostFeed = ({ posts, currentUser, onRefresh, onUpdatePost, onEditPost, onP
         try {
             const result = await communityAPI.togglePostLike(postId, currentUser?.role || 'user');
             onUpdatePost?.(postId, { likedByViewer: result.liked, likeCount: result.likeCount });
+            notify.success(result.liked ? 'Post liked.' : 'Like removed.');
         } catch {
             notify.error("Couldn't update like.");
         }
@@ -33,9 +34,22 @@ const PostFeed = ({ posts, currentUser, onRefresh, onUpdatePost, onEditPost, onP
         onEditPost(post);
     };
 
-    const handleReport = (e) => {
+    const sharePost = async (post, e) => {
         e.stopPropagation();
-        notify.success('Post reported.');
+        const url = `${window.location.origin}/community#post-${post.id}`;
+
+        try {
+            if (navigator.share) {
+                await navigator.share({ title: 'Zoo Community', text: post.content, url });
+                notify.success('Post shared.');
+                return;
+            }
+            if (!navigator.clipboard) throw new Error('Clipboard is unavailable.');
+            await navigator.clipboard.writeText(url);
+            notify.success('Post link copied.');
+        } catch (error) {
+            if (error.name !== 'AbortError') notify.error(error.message || "Couldn't share post.");
+        }
     };
 
     return (
@@ -75,16 +89,6 @@ const PostFeed = ({ posts, currentUser, onRefresh, onUpdatePost, onEditPost, onP
                                 </div>
                             </div>
 
-                            <div className="flex items-center gap-3">
-                                {!isOwner && (
-                                    <button
-                                        onClick={handleReport}
-                                        className="text-[9px] tracking-[0.18em] uppercase font-bold text-[#212631]/55 hover:text-red-700 transition-colors"
-                                    >
-                                        Report
-                                    </button>
-                                )}
-                            </div>
                         </div>
 
                         <div className="p-5 md:p-6">
@@ -125,7 +129,7 @@ const PostFeed = ({ posts, currentUser, onRefresh, onUpdatePost, onEditPost, onP
                                          {post.likeCount || 0}
                                      </button>
                                  )}
-                                 <button onClick={(e) => { e.stopPropagation(); const url = `${window.location.origin}/community#post-${post.id}`; if (navigator.share) navigator.share({ title: 'Zoo Community', text: post.content, url }).catch(() => {}); else navigator.clipboard?.writeText(url).then(() => notify.success('Post link copied.')); }} className="flex min-h-14 min-w-14 items-center justify-center rounded-full text-base font-semibold text-[#212631]/70 hover:bg-[#212631]/5 hover:text-[#212631]" aria-label="Share post">
+                                  <button onClick={(e) => sharePost(post, e)} className="flex min-h-14 min-w-14 items-center justify-center rounded-full text-base font-semibold text-[#212631]/70 hover:bg-[#212631]/5 hover:text-[#212631]" aria-label="Share post">
                                      <svg className="h-7 w-7 sm:h-8 sm:w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M7 17 17 7m0 0H9m8 0v8" /></svg>
                                  </button>
                             </div>

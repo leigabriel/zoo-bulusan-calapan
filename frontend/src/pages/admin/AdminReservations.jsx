@@ -2,6 +2,7 @@ import { Calendar as ReiconCalendar, Check as ReiconCheck, Eye as ReiconEye, Sea
 import { useState, useEffect } from 'react';
 import { reservationAPI, getResidentIdImageUrl } from '../../services/api-client';
 import { formatSafeDate } from '../../utils/format-date';
+import { notify } from '../../utils/toast';
 
 
 const AdminReservations = ({ globalSearch = '' }) => {
@@ -54,11 +55,15 @@ const AdminReservations = ({ globalSearch = '' }) => {
                 ? await reservationAPI.updateTicketReservationStatus(id, status, 'admin')
                 : await reservationAPI.updateEventReservationStatus(id, status, 'admin');
             if (res.success) {
-                fetchReservations();
+                await fetchReservations();
                 setShowModal(false);
+                notify.success(`Reservation ${status}.`);
+            } else {
+                notify.error(res.message || "Couldn't update reservation.");
             }
         } catch (err) {
             console.error(err);
+            notify.error(err.message || "Couldn't update reservation.");
         } finally {
             setActionLoading(false);
         }
@@ -70,11 +75,15 @@ const AdminReservations = ({ globalSearch = '' }) => {
                 ? await reservationAPI.deleteTicketReservation(id, 'admin')
                 : await reservationAPI.deleteEventReservation(id, 'admin');
             if (res.success) {
-                fetchReservations();
+                await fetchReservations();
                 setDeleteConfirm(null);
+                notify.success('Reservation removed.');
+            } else {
+                notify.error(res.message || "Couldn't remove reservation.");
             }
         } catch (err) {
             console.error(err);
+            notify.error(err.message || "Couldn't remove reservation.");
         }
     };
 

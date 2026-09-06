@@ -187,11 +187,11 @@ const AdminCommunityModeration = ({ role = 'admin' }) => {
 
     return (
         <div className="space-y-5">
-            <header className="overflow-hidden rounded-2xl border border-emerald-200 bg-gradient-to-r from-emerald-950 via-emerald-900 to-green-800 p-5 text-white shadow-sm sm:p-7">
-                <p className="text-xs font-bold uppercase tracking-[0.2em] text-emerald-200">{role === 'admin' ? 'Admin tools' : 'Staff tools'}</p>
+            <header className="overflow-hidden rounded-2xl border border-green-400 bg-gradient-to-r from-green-300 via-green-400 to-green-500 p-5 text-gray-900 shadow-sm sm:p-7">
+                <p className="text-xs font-bold uppercase tracking-[0.2em] text-green-950">{role === 'admin' ? 'Admin tools' : 'Staff tools'}</p>
                 <div className="mt-2 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-                    <div><h1 className="text-2xl font-bold sm:text-3xl">Community Moderation</h1><p className="mt-1 max-w-xl text-sm text-emerald-100">Review submissions, resolve reports, and manage published community content.</p></div>
-                    <div className="flex gap-2 text-xs font-bold"><span className="rounded-full bg-white/10 px-3 py-2 ring-1 ring-white/15">{pendingPosts.length} awaiting review</span><span className="rounded-full bg-red-400/15 px-3 py-2 text-red-100 ring-1 ring-red-300/20">{reportedComments.length} reports</span></div>
+                    <div><h1 className="text-2xl font-bold sm:text-3xl">Community Moderation</h1><p className="mt-1 max-w-xl text-sm text-green-950/80">Review submissions, resolve reports, and manage published community content.</p></div>
+                    <div className="flex gap-2 text-xs font-bold"><span className="rounded-full bg-white/30 px-3 py-2 ring-1 ring-green-900/15">{pendingPosts.length} awaiting review</span><span className="rounded-full bg-red-100/70 px-3 py-2 text-red-900 ring-1 ring-red-700/20">{reportedComments.length} reports</span></div>
                 </div>
             </header>
 

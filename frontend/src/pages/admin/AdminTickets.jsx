@@ -29,8 +29,6 @@ const AdminTickets = ({ globalSearch = '' }) => {
     const [showImageModal, setShowImageModal] = useState(false);
     const [previewImageUrl, setPreviewImageUrl] = useState('');
 
-    const events = ['All Events', 'Night Safari Experience', 'Animal Feeding Tour', 'General Admission', 'Wildlife Photography Day', 'Conservation Workshop'];
-
     useEffect(() => {
         fetchTickets();
     }, []);
@@ -114,12 +112,6 @@ const AdminTickets = ({ globalSearch = '' }) => {
             notify.error(err.message || "Couldn't update ticket status. Please try again.");
         } finally {
             setActionLoading(false);
-        }
-    };
-
-    const handleCancelTicket = () => {
-        if (selectedTicket) {
-            updateTicketStatus(selectedTicket.id, 'cancelled', cancelReason);
         }
     };
 
@@ -232,6 +224,10 @@ const AdminTickets = ({ globalSearch = '' }) => {
                 link.href = URL.createObjectURL(blob);
                 link.download = `tickets_export_${new Date().toISOString().split('T')[0]}.csv`;
                 link.click();
+                setTimeout(() => URL.revokeObjectURL(link.href), 0);
+                notify.success('Tickets exported.');
+            } else {
+                notify.error(res.message || "Couldn't export tickets.");
             }
         } catch (err) {
             console.error(err);

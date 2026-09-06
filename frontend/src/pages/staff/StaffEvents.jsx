@@ -241,6 +241,7 @@ const StaffEvents = ({ globalSearch = '' }) => {
                 setUndoItem({ type: 'event', data: event });
                 if (undoTimeoutRef.current) clearTimeout(undoTimeoutRef.current);
                 undoTimeoutRef.current = setTimeout(() => setUndoItem(null), 5000);
+                notify.success('Event moved to trash.');
             }
         } catch {
             notify.error('Failed to move event to trash');
@@ -254,6 +255,7 @@ const StaffEvents = ({ globalSearch = '' }) => {
             setEvents(prev => [undoItem.data, ...prev]);
             setUndoItem(null);
             if (undoTimeoutRef.current) clearTimeout(undoTimeoutRef.current);
+            notify.success('Event restored.');
         } catch {
             notify.error('Failed to restore event');
         }

@@ -1,6 +1,7 @@
 import { Ticket as TicketIcon, Calendar as CalendarIcon, Search as SearchIcon, Eye as EyeIcon, Check as CheckIcon, X as CloseIcon } from 'reicon-react';
 import { useState, useEffect } from 'react';
 import { reservationAPI, getResidentIdImageUrl } from '../../services/api-client';
+import { notify } from '../../utils/toast';
 
 
 const StaffReservations = ({ globalSearch = '' }) => {
@@ -52,11 +53,15 @@ const StaffReservations = ({ globalSearch = '' }) => {
                 ? await reservationAPI.updateTicketReservationStatus(id, status, 'staff')
                 : await reservationAPI.updateEventReservationStatus(id, status, 'staff');
             if (res.success) {
-                fetchReservations();
+                await fetchReservations();
                 setShowModal(false);
+                notify.success(`Reservation ${status}.`);
+            } else {
+                notify.error(res.message || "Couldn't update reservation.");
             }
         } catch (err) {
             console.error(err);
+            notify.error(err.message || "Couldn't update reservation.");
         } finally {
             setActionLoading(false);
         }

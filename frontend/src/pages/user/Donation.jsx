@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { userAPI } from '../../services/api-client';
+import { notify } from '../../utils/toast';
 
 const Icons = {
     Back: () => (
@@ -122,9 +123,10 @@ const Donation = () => {
         try {
             await navigator.clipboard.writeText(config.gcashNumber);
             setCopied(true);
+            notify.success('GCash number copied.');
             setTimeout(() => setCopied(false), 2000);
-        } catch {
-            // clipboard unavailable
+        } catch (error) {
+            notify.error(error.message || "Couldn't copy the GCash number.");
         }
     };
 

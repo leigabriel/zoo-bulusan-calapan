@@ -191,6 +191,7 @@ const AdminUsers = ({ globalSearch = '' }) => {
                 setUndoItem({ type: 'user', data: user, action: 'trash' });
                 if (undoTimeoutRef.current) clearTimeout(undoTimeoutRef.current);
                 undoTimeoutRef.current = setTimeout(() => setUndoItem(null), 5000);
+                notify.success('User moved to trash.');
             }
         } catch {
             notify.error('Failed to move user to trash');
@@ -204,6 +205,7 @@ const AdminUsers = ({ globalSearch = '' }) => {
             setUsers(prev => [undoItem.data, ...prev].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)));
             setUndoItem(null);
             if (undoTimeoutRef.current) clearTimeout(undoTimeoutRef.current);
+            notify.success('User restored.');
         } catch {
             notify.error('Failed to restore user');
         }

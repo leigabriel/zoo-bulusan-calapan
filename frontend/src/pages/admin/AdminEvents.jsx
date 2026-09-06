@@ -283,6 +283,7 @@ const AdminEvents = () => {
                 setUndoItem({ type: 'event', data: eventData });
                 if (undoTimeoutRef.current) clearTimeout(undoTimeoutRef.current);
                 undoTimeoutRef.current = setTimeout(() => setUndoItem(null), 5000);
+                notify.success('Event moved to trash.');
                 setShowModal(false);
                 resetForm();
             }
@@ -320,6 +321,7 @@ const AdminEvents = () => {
             await fetchEvents();
             setUndoItem(null);
             if (undoTimeoutRef.current) clearTimeout(undoTimeoutRef.current);
+            notify.success('Event restored.');
         } catch {
             notify.error('Failed to restore event');
         }

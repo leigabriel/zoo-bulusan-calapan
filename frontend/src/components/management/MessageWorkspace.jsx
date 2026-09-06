@@ -271,13 +271,13 @@ const MessageWorkspace = ({ globalSearch = '', api, roleLabel }) => {
 
     return (
         <div className="space-y-5">
-            <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+            <div className="flex flex-col justify-between gap-4 rounded-2xl border border-green-400 bg-gradient-to-r from-green-300 via-green-400 to-green-500 p-5 text-gray-900 shadow-sm sm:flex-row sm:items-end sm:p-7">
                 <div>
-                    <div className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-green-700">
+                    <div className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-green-950">
                         <Envelope className="h-4 w-4" /> Communications
                     </div>
                     <h1 className="text-3xl font-black tracking-tight text-gray-900">Messages</h1>
-                    <p className="mt-1 text-sm text-gray-500">Manage user conversations as {roleLabel}.</p>
+                    <p className="mt-1 text-sm text-green-950/80">Manage user conversations as {roleLabel}.</p>
                 </div>
                 {!isAppeal && messageUnread > 0 && (
                     <button type="button" onClick={markAllRead} className="inline-flex items-center justify-center gap-2 rounded-xl border border-green-200 bg-white px-4 py-2.5 text-sm font-bold text-green-800 shadow-sm hover:bg-green-50">

@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
 import { messageAPI } from '../../services/api-client';
 import { ReactLenis } from 'lenis/react';
+import { notify } from '../../utils/toast';
 
 const MailIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
@@ -53,7 +53,6 @@ const SendIcon = () => (
 
 const UserMessages = () => {
     const navigate = useNavigate();
-    const { user } = useAuth();
     const [messages, setMessages] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -98,14 +97,16 @@ const UserMessages = () => {
     const handleSendMessage = async (e) => {
         e.preventDefault();
         if (!newMessage.subject.trim() || !newMessage.content.trim()) return;
-        
+
         setSending(true);
+        setError(null);
         try {
             const response = await messageAPI.sendMessage({
                 subject: newMessage.subject.trim(),
                 content: newMessage.content.trim()
             });
             if (response.success) {
+                notify.success('Message sent.');
                 setSendSuccess(true);
                 setTimeout(() => {
                     setShowNewMessageModal(false);
@@ -113,10 +114,13 @@ const UserMessages = () => {
                     setSendSuccess(false);
                     fetchMessages();
                 }, 1500);
+            } else {
+                notify.error(response.message || 'Failed to send message.');
             }
         } catch (err) {
             console.error('Error sending message:', err);
             setError('Failed to send message. Please try again.');
+            notify.error(err.message || 'Failed to send message.');
         } finally {
             setSending(false);
         }

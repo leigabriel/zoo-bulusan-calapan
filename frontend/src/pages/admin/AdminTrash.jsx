@@ -153,6 +153,7 @@ const AdminTrash = () => {
             setTrashedItems(prev => prev.filter(i => !(i.type === item.type && i.id === item.id)));
             setSelectedIds(prev => prev.filter(id => id !== `${item.type}-${item.id}`));
             showToast(`${item.type} "${getEntityName(item)}" restored`);
+            notify.success(`${item.type} restored.`);
         } catch (err) {
             notify.error(err.message || `Failed to restore ${item.type.toLowerCase()}`);
         }
@@ -179,6 +180,7 @@ const AdminTrash = () => {
             const count = selectedIds.length;
             setSelectedIds([]);
             showToast(`${count} item(s) restored`);
+            notify.success(`${count} item(s) restored.`);
         } catch (err) {
             notify.error(err.message || 'Failed to restore selected items');
         }

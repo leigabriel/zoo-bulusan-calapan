@@ -174,6 +174,7 @@ const AdminAnimals = ({ globalSearch = '' }) => {
                 setUndoItem({ type: 'animal', data: animal, action: 'trash' });
                 if (undoTimeoutRef.current) clearTimeout(undoTimeoutRef.current);
                 undoTimeoutRef.current = setTimeout(() => setUndoItem(null), 5000);
+                notify.success('Animal moved to trash.');
             }
         } catch {
             notify.error('Failed to move animal to trash');
@@ -187,6 +188,7 @@ const AdminAnimals = ({ globalSearch = '' }) => {
             setAnimals(prev => [undoItem.data, ...prev]);
             setUndoItem(null);
             if (undoTimeoutRef.current) clearTimeout(undoTimeoutRef.current);
+            notify.success('Animal restored.');
         } catch {
             notify.error('Failed to restore animal');
         }

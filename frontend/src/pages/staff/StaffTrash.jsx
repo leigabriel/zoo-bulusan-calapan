@@ -1,5 +1,5 @@
 import { Trash as TrashIcon, Undo as RestoreIcon, X as CloseIcon } from 'reicon-react';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { staffAPI } from '../../services/api-client';
 import { notify } from '../../utils/toast';
 
@@ -18,14 +18,8 @@ const StaffTrash = () => {
   const [activeTab, setActiveTab] = useState('All');
   const [selected, setSelected] = useState(new Set());
   const [loading, setLoading] = useState(true);
-  const undoTimers = useRef({});
-
   useEffect(() => {
     fetchTrashItems();
-    return () => {
-      const timers = undoTimers.current;
-      Object.values(timers).forEach(clearTimeout);
-    };
   }, []);
 
   const fetchTrashItems = async () => {
@@ -76,7 +70,7 @@ const StaffTrash = () => {
       all.sort((a, b) => new Date(b.deleted_at) - new Date(a.deleted_at));
       setTrashItems(all);
     } catch {
-      notify('Failed to load trash items', 'error');
+      notify.error("Couldn't load trash items.");
     } finally {
       setLoading(false);
     }
@@ -119,48 +113,12 @@ const StaffTrash = () => {
       });
 
       if (undoable) {
-        notify(
-          <div className="flex items-center gap-3">
-            <span className="flex-1">
-              <strong>{item.name}</strong> restored.
-            </span>
-            <button
-              onClick={() => undoRestore(item)}
-              className="text-sm font-semibold text-blue-600 hover:text-blue-800 underline"
-            >
-              Undo
-            </button>
-          </div>,
-          'success',
-          { duration: 5000, id: `restore-${key}` }
-        );
-
-        undoTimers.current[key] = setTimeout(() => {
-          delete undoTimers.current[key];
-        }, 5000);
+        notify.success(`${item.name} restored.`, { duration: 5000, id: `restore-${key}` });
       }
+      return true;
     } catch {
-      notify(`Failed to restore ${item.name}`, 'error');
-    }
-  };
-
-  const undoRestore = async (item) => {
-    try {
-      const key = `${item.type}-${item.id}`;
-      if (undoTimers.current[key]) {
-        clearTimeout(undoTimers.current[key]);
-        delete undoTimers.current[key];
-      }
-
-      if (item.type === 'User') await staffAPI.softDeleteUser(item.id);
-      else if (item.type === 'Animal') await staffAPI.deleteAnimal(item.id);
-      else if (item.type === 'Plant') await staffAPI.deletePlant(item.id);
-      else if (item.type === 'Event') await staffAPI.deleteEvent(item.id);
-
-      setTrashItems(prev => [item, ...prev].sort((a, b) => new Date(b.deleted_at) - new Date(a.deleted_at)));
-      notify(`${item.name} moved back to trash`, 'info');
-    } catch {
-      notify('Failed to undo restore', 'error');
+      notify.error(`Couldn't restore ${item.name}.`);
+      return false;
     }
   };
 
@@ -168,11 +126,10 @@ const StaffTrash = () => {
     const keys = [...selected];
     const items = keys.map(k => trashItems.find(i => `${i.type}-${i.id}` === k)).filter(Boolean);
 
-    for (const item of items) {
-      await restoreItem(item, false);
-    }
+    const results = await Promise.all(items.map(item => restoreItem(item, false)));
+    const restoredCount = results.filter(Boolean).length;
 
-    notify(`${items.length} item(s) restored`, 'success');
+    if (restoredCount > 0) notify.success(`${restoredCount} item(s) restored.`);
   };
 
   const formatDate = (dateStr) => {

@@ -51,16 +51,6 @@ const CommentSection = ({ postId, currentUser, refreshTrigger, onRequireConfirma
         if (!value) return;
 
         try {
-            if (onRequireConfirmation) {
-                const confirmed = await onRequireConfirmation({
-                    type: 'create-comment',
-                    title: 'Post This Comment?',
-                    message: 'Are you sure you want to publish this comment?',
-                    confirmLabel: 'Post Comment'
-                });
-                if (!confirmed) return;
-            }
-
             await communityAPI.createComment(postId, value, null, currentUser?.role || 'user');
             setCommentText('');
             await loadComments();
@@ -75,16 +65,6 @@ const CommentSection = ({ postId, currentUser, refreshTrigger, onRequireConfirma
         if (!value) return;
 
         try {
-            if (onRequireConfirmation) {
-                const confirmed = await onRequireConfirmation({
-                    type: 'create-reply',
-                    title: 'Post This Reply?',
-                    message: 'Are you sure you want to publish this reply?',
-                    confirmLabel: 'Post Reply'
-                });
-                if (!confirmed) return;
-            }
-
             await communityAPI.createComment(postId, value, parentCommentId, currentUser?.role || 'user');
             setReplyText('');
             setReplyingToId(null);
@@ -100,16 +80,6 @@ const CommentSection = ({ postId, currentUser, refreshTrigger, onRequireConfirma
         if (!value) return;
 
         try {
-            if (onRequireConfirmation) {
-                const confirmed = await onRequireConfirmation({
-                    type: 'update-comment',
-                    title: 'Save Comment Changes?',
-                    message: 'Are you sure you want to update this comment?',
-                    confirmLabel: 'Save Changes'
-                });
-                if (!confirmed) return;
-            }
-
             await communityAPI.updateComment(editingId, value, currentUser?.role || 'user');
             setEditingId(null);
             setEditingText('');
@@ -143,35 +113,27 @@ const CommentSection = ({ postId, currentUser, refreshTrigger, onRequireConfirma
 
     const toggleHeart = async (commentId) => {
         try {
-            await communityAPI.toggleCommentHeart(commentId, currentUser?.role || 'user');
+            const result = await communityAPI.toggleCommentHeart(commentId, currentUser?.role || 'user');
             await loadComments();
+            notify.success(result.hearted ? 'Comment hearted.' : 'Heart removed.');
         } catch {
             notify.error("Couldn't update heart.");
         }
     };
 
     const handleReport = async (comment) => {
-        const reason = window.prompt('Please provide a short reason for reporting this comment (required):', '');
-        if (reason === null) return;
-
-        const trimmedReason = reason.trim();
-        if (!trimmedReason) {
-            notify.warning('Please provide a reason.');
-            return;
-        }
-
         try {
-            if (onRequireConfirmation) {
-                const confirmed = await onRequireConfirmation({
-                    type: 'report-comment',
-                    title: 'Report This Comment?',
-                    message: 'Your report will be sent to admin/staff for moderation review.',
-                    confirmLabel: 'Submit Report'
-                });
-                if (!confirmed) return;
-            }
+            const reason = await onRequireConfirmation?.({
+                title: 'Report This Comment?',
+                message: 'Your report will be sent to admin/staff for moderation review.',
+                confirmLabel: 'Submit Report',
+                requireInput: true,
+                inputLabel: 'Reason',
+                inputPlaceholder: 'Briefly explain your concern'
+            });
+            if (!reason) return;
 
-            await communityAPI.reportComment(comment.id, trimmedReason, currentUser?.role || 'user');
+            await communityAPI.reportComment(comment.id, reason, currentUser?.role || 'user');
             await loadComments();
             notify.success('Comment reported.');
         } catch {

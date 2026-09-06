@@ -314,36 +314,40 @@ const ReservationHistoryPanel = ({ isOpen, onClose, paymentReturn = false }) => 
     };
 
     const handleArchive = async (reservation) => {
-        if (!confirm('Archive this reservation?')) return;
         setArchiving(true);
         try {
             const res = reservation.type === 'ticket'
                 ? await reservationAPI.archiveTicketReservation(reservation.id)
                 : await reservationAPI.archiveEventReservation(reservation.id);
             if (res.success) {
-                fetchReservations();
+                notify.success('Reservation archived.');
+                await fetchReservations();
                 setSelectedReservation(null);
+            } else {
+                notify.error(res.message || "Couldn't archive the reservation.");
             }
-        } catch {
-            notify.error("Couldn't update the reservation.");
+        } catch (error) {
+            notify.error(error.message || "Couldn't archive the reservation.");
         } finally {
             setArchiving(false);
         }
     };
 
     const handleUnarchive = async (reservation) => {
-        if (!confirm('Restore this reservation?')) return;
         setArchiving(true);
         try {
             const res = reservation.type === 'ticket'
                 ? await reservationAPI.unarchiveTicketReservation(reservation.id)
                 : await reservationAPI.unarchiveEventReservation(reservation.id);
             if (res.success) {
-                fetchReservations();
+                notify.success('Reservation restored.');
+                await fetchReservations();
                 setSelectedReservation(null);
+            } else {
+                notify.error(res.message || "Couldn't restore the reservation.");
             }
-        } catch {
-            notify.error("Couldn't restore the reservation.");
+        } catch (error) {
+            notify.error(error.message || "Couldn't restore the reservation.");
         } finally {
             setArchiving(false);
         }

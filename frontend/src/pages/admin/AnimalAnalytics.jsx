@@ -215,6 +215,7 @@ const AnimalAnalytics = () => {
                 setUploadProgress(100);
                 setUploadSuccess(true);
                 setModelFiles([]);
+                notify.success('AI model uploaded.');
                 setTimeout(() => {
                     setUploadSuccess(false);
                     setShowModelManager(false);
@@ -225,6 +226,7 @@ const AnimalAnalytics = () => {
         } catch (error) {
             console.error('Model upload error:', error);
             setUploadError(error.message || 'Failed to upload model');
+            notify.error(error.message || "Couldn't upload AI model.");
         } finally {
             setIsUploading(false);
         }

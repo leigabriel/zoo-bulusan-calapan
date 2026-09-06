@@ -174,6 +174,7 @@ const AdminPlants = ({ globalSearch = '' }) => {
                 setUndoItem({ type: 'plant', data: plant, action: 'trash' });
                 if (undoTimeoutRef.current) clearTimeout(undoTimeoutRef.current);
                 undoTimeoutRef.current = setTimeout(() => setUndoItem(null), 5000);
+                notify.success('Plant moved to trash.');
             }
         } catch {
             notify.error('Failed to move plant to trash');
@@ -187,6 +188,7 @@ const AdminPlants = ({ globalSearch = '' }) => {
             setPlants(prev => [undoItem.data, ...prev]);
             setUndoItem(null);
             if (undoTimeoutRef.current) clearTimeout(undoTimeoutRef.current);
+            notify.success('Plant restored.');
         } catch {
             notify.error('Failed to restore plant');
         }

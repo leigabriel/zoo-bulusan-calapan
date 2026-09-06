@@ -126,7 +126,6 @@ const StaffUsers = ({ globalSearch = '' }) => {
     };
 
     const handleUnsuspendUser = async (userId) => {
-        if (!confirm('Are you sure you want to unsuspend this user?')) return;
         try {
             await staffAPI.unsuspendUser(userId);
             notify.success('Account restored.');
@@ -144,6 +143,7 @@ const StaffUsers = ({ globalSearch = '' }) => {
             if (res.success) {
                 setUsers(users.filter(u => u.id !== user.id));
                 setUndoItem({ type: 'user', data: user });
+                notify.success('User moved to trash.');
                 if (undoTimeoutRef.current) clearTimeout(undoTimeoutRef.current);
                 undoTimeoutRef.current = setTimeout(() => setUndoItem(null), 5000);
             }
@@ -159,6 +159,7 @@ const StaffUsers = ({ globalSearch = '' }) => {
             setUsers(prev => [undoItem.data, ...prev]);
             setUndoItem(null);
             if (undoTimeoutRef.current) clearTimeout(undoTimeoutRef.current);
+            notify.success('User restored.');
         } catch {
             notify.error('Failed to restore user');
         }

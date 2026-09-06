@@ -63,7 +63,7 @@ const AdminSettings = () => {
                     });
                 }
             } catch {
-                // Keep defaults when settings cannot be loaded.
+                notify.error("Couldn't load settings.");
             } finally {
                 setLoading(false);
             }
@@ -96,13 +96,13 @@ const AdminSettings = () => {
 
     return (
         <div className="animate-fade-in space-y-6 pb-8">
-            <header className="relative overflow-hidden rounded-3xl border border-emerald-200 bg-gradient-to-br from-emerald-950 via-emerald-900 to-green-800 p-6 text-white shadow-sm md:p-8">
+            <header className="relative overflow-hidden rounded-3xl border border-green-400 bg-gradient-to-br from-green-300 via-green-400 to-green-500 p-6 text-gray-900 shadow-sm md:p-8">
                 <div className="absolute -right-20 -top-24 h-64 w-64 rounded-full border-[40px] border-white/5" />
                 <div className="relative flex flex-col justify-between gap-6 md:flex-row md:items-end">
                     <div>
-                        <p className="mb-3 text-xs font-bold uppercase tracking-[0.18em] text-emerald-200">Administration</p>
+                        <p className="mb-3 text-xs font-bold uppercase tracking-[0.18em] text-green-950">Administration</p>
                         <h1 className="text-3xl font-bold tracking-tight md:text-4xl">System settings</h1>
-                        <p className="mt-2 max-w-2xl text-sm leading-6 text-emerald-100/80 md:text-base">
+                        <p className="mt-2 max-w-2xl text-sm leading-6 text-green-950/80 md:text-base">
                             Control visitor donations and event reservation payments from one place.
                         </p>
                     </div>

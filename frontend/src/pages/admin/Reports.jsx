@@ -170,6 +170,7 @@ const Reports = () => {
 
         if (effectiveStart > effectiveEnd) {
             setReportError('Start date must be on or before end date.');
+            notify.warning('Choose a valid date range.');
             return;
         }
 
@@ -197,12 +198,14 @@ const Reports = () => {
                     type: reportType,
                 });
                 setSearchTerm('');
+                notify.success('Report generated.');
             } else {
                 throw new Error(response.message || 'Report request failed');
             }
         } catch (error) {
             console.error('Error generating report:', error);
             setReportError('Unable to generate report. Please try again. Any previous report is still shown below.');
+            notify.error("Couldn't generate report.");
         } finally {
             setLoading(false);
         }
@@ -333,7 +336,13 @@ const Reports = () => {
         const dateStr = start && end ? `${start}_to_${end}` : formatDate(new Date());
         const filename = `Zoo_${reportData.type}_Report_${dateStr}.xlsx`;
 
-        XLSX.writeFile(wb, filename);
+        try {
+            XLSX.writeFile(wb, filename);
+            notify.success('Report exported.');
+        } catch (error) {
+            console.error('Error exporting report:', error);
+            notify.error("Couldn't export report.");
+        }
     };
 
     const handlePrint = () => {
