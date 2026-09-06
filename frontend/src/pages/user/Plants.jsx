@@ -30,7 +30,7 @@ const PlantCard = ({ plant }) => {
             </div>
             <div className="mb-1 flex items-baseline justify-between gap-3">
                 <span className="text-lg font-medium text-black">{plant.name}</span>
-                <span className="text-sm font-medium text-black">Zoo Bulusan</span>
+                <span className="text-sm font-medium text-black">Bulusan Zoo</span>
             </div>
             <div className="text-sm text-gray-500">{plant.category}</div>
         </Link>

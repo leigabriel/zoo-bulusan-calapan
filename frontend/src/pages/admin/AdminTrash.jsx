@@ -1,6 +1,6 @@
 import { CloseCircle as ReiconCloseCircle, RotateLeft as ReiconRotateLeft, Search as ReiconSearch, Trash as ReiconTrash, X as ReiconX } from 'reicon-react';
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { adminAPI } from '../../services/api-client';
+import { adminAPI, reservationAPI } from '../../services/api-client';
 import { notify } from '../../utils/toast';
 
 
@@ -21,6 +21,8 @@ const getEntityName = (item) => {
     if (item.type === 'Event') {
         return item.title || item.name || 'Unknown Event';
     }
+    if (item.type === 'Ticket Reservation') return item.reservation_reference || item.visitor_name || 'Ticket Reservation';
+    if (item.type === 'Event Reservation') return item.reservation_reference || item.venue_event_name || 'Event Reservation';
     return 'Unknown';
 };
 
@@ -29,6 +31,8 @@ const getEntitySubtitle = (item) => {
     if (item.type === 'Animal') return item.species || item.scientific_name || '';
     if (item.type === 'Plant') return item.species || item.scientific_name || '';
     if (item.type === 'Event') return item.description ? item.description.slice(0, 60) + (item.description.length > 60 ? '...' : '') : '';
+    if (item.type === 'Ticket Reservation') return item.visitor_name || item.visitor_email || '';
+    if (item.type === 'Event Reservation') return item.venue_event_name || item.participant_name || '';
     return '';
 };
 
@@ -37,6 +41,8 @@ const entityTypeBadgeColors = {
     Animal: 'bg-amber-500/20 text-amber-600 border-amber-500/30',
     Plant: 'bg-green-400/20 text-green-800 border-green-400/30',
     Event: 'bg-purple-500/20 text-purple-600 border-purple-500/30',
+    'Ticket Reservation': 'bg-cyan-500/20 text-cyan-700 border-cyan-500/30',
+    'Event Reservation': 'bg-fuchsia-500/20 text-fuchsia-700 border-fuchsia-500/30',
 };
 
 const AdminTrash = () => {
@@ -54,17 +60,18 @@ const AdminTrash = () => {
     const [permDeleteLoading, setPermDeleteLoading] = useState(false);
     const [permDeleteTargets, setPermDeleteTargets] = useState([]); // array of { id, type }
 
-    const tabs = ['All', 'Users', 'Animals', 'Plants', 'Events'];
+    const tabs = ['All', 'Users', 'Animals', 'Plants', 'Events', 'Reservations'];
     const tabToType = { Users: 'User', Animals: 'Animal', Plants: 'Plant', Events: 'Event' };
 
     const fetchAllTrash = useCallback(async () => {
         setLoading(true);
         try {
-            const [usersRes, animalsRes, plantsRes, eventsRes] = await Promise.all([
+            const [usersRes, animalsRes, plantsRes, eventsRes, reservationsRes] = await Promise.all([
                 adminAPI.getTrashUsers(),
                 adminAPI.getTrashAnimals(),
                 adminAPI.getTrashPlants(),
                 adminAPI.getTrashEvents(),
+                reservationAPI.getTrashReservations('admin'),
             ]);
 
             const items = [];
@@ -81,6 +88,8 @@ const AdminTrash = () => {
             if (eventsRes.success && eventsRes.events) {
                 eventsRes.events.forEach(e => items.push({ ...e, type: 'Event' }));
             }
+            (reservationsRes.ticketReservations || []).forEach(r => items.push({ ...r, type: 'Ticket Reservation' }));
+            (reservationsRes.eventReservations || []).forEach(r => items.push({ ...r, type: 'Event Reservation' }));
 
             items.sort((a, b) => new Date(b.deleted_at) - new Date(a.deleted_at));
             setTrashedItems(items);
@@ -99,7 +108,7 @@ const AdminTrash = () => {
     }, []);
 
     const filteredItems = trashedItems.filter(item => {
-        const matchesTab = activeTab === 'All' || item.type === tabToType[activeTab];
+        const matchesTab = activeTab === 'All' || (activeTab === 'Reservations' ? item.type.endsWith('Reservation') : item.type === tabToType[activeTab]);
         if (!matchesTab) return false;
         if (!searchQuery) return true;
         const q = searchQuery.toLowerCase();
@@ -114,6 +123,7 @@ const AdminTrash = () => {
         Animals: trashedItems.filter(i => i.type === 'Animal').length,
         Plants: trashedItems.filter(i => i.type === 'Plant').length,
         Events: trashedItems.filter(i => i.type === 'Event').length,
+        Reservations: trashedItems.filter(i => i.type.endsWith('Reservation')).length,
     };
 
     const toggleSelect = (globalId) => {
@@ -145,6 +155,8 @@ const AdminTrash = () => {
                 Animal: () => adminAPI.restoreAnimal(item.id),
                 Plant: () => adminAPI.restorePlant(item.id),
                 Event: () => adminAPI.restoreEvent(item.id),
+                'Ticket Reservation': () => reservationAPI.restoreTrashReservations('ticket', [item.id]),
+                'Event Reservation': () => reservationAPI.restoreTrashReservations('event', [item.id]),
             }[item.type];
 
             if (!restoreFn) return;
@@ -174,6 +186,8 @@ const AdminTrash = () => {
                 grouped.Animal && adminAPI.restoreMultipleAnimals(grouped.Animal),
                 grouped.Plant && adminAPI.restoreMultiplePlants(grouped.Plant),
                 grouped.Event && adminAPI.restoreMultipleEvents(grouped.Event),
+                grouped['Ticket Reservation'] && reservationAPI.restoreTrashReservations('ticket', grouped['Ticket Reservation']),
+                grouped['Event Reservation'] && reservationAPI.restoreTrashReservations('event', grouped['Event Reservation']),
             ].filter(Boolean));
 
             setTrashedItems(prev => prev.filter(i => !selectedIds.includes(`${i.type}-${i.id}`)));
@@ -207,6 +221,8 @@ const AdminTrash = () => {
                 grouped.Animal && adminAPI.permanentDeleteMultipleAnimals(grouped.Animal, permDeletePassword),
                 grouped.Plant && adminAPI.permanentDeleteMultiplePlants(grouped.Plant, permDeletePassword),
                 grouped.Event && adminAPI.permanentDeleteMultipleEvents(grouped.Event, permDeletePassword),
+                grouped['Ticket Reservation'] && reservationAPI.permanentDeleteTrashReservations('ticket', grouped['Ticket Reservation'], permDeletePassword),
+                grouped['Event Reservation'] && reservationAPI.permanentDeleteTrashReservations('event', grouped['Event Reservation'], permDeletePassword),
             ].filter(Boolean));
 
             setTrashedItems(prev =>

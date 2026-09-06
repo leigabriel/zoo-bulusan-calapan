@@ -211,7 +211,7 @@ const Help = () => {
                 <div className="absolute -top-24 right-0 w-72 h-72 rounded-full bg-[#bfe6cc] opacity-40 blur-3xl" />
                 <div className="relative z-10 container mx-auto px-4">
                     <p className="text-xs uppercase tracking-[0.35em] font-semibold text-emerald-700/80 bg-white/70 border border-emerald-200 inline-flex px-4 py-2 rounded-full mb-6">
-                        Zoo Bulusan Help
+                        Bulusan Zoo Help
                     </p>
                     <h1 className="text-4xl md:text-5xl font-bold mb-3 tracking-tight">Help Center</h1>
                     <p className="text-base md:text-lg max-w-2xl mx-auto text-emerald-900/70 mb-8">

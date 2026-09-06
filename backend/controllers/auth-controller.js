@@ -851,7 +851,7 @@ exports.submitPublicAppeal = async (req, res) => {
                     userId: admin.id,
                     title: 'New Suspension Appeal',
                     message: `${user.first_name} ${user.last_name} has submitted a suspension appeal`,
-                    type: 'appeal',
+                    type: 'warning',
                     link: '/admin/messages'
                 });
             } catch (notifyError) {

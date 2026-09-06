@@ -64,6 +64,11 @@ router.post('/scan', trackActivity('reservation_update', 'Scanned reservation'),
 router.get('/stats', reservationController.getReservationStats);
 router.get('/today', reservationController.getTodayReservations);
 router.get('/upcoming', reservationController.getUpcomingReservations);
+router.get('/trash', reservationController.getTrashReservations);
+router.put('/trash/:type/restore', trackActivity('reservation_update', () => 'Restored reservations from trash'), reservationController.restoreTrashReservations);
+router.put('/trash/:type/:id/restore', trackActivity('reservation_update', () => 'Restored reservation from trash'), reservationController.restoreTrashReservations);
+router.delete('/trash/:type/permanent', authorize('admin'), trackActivity('reservation_update', () => 'Permanently deleted reservations'), reservationController.permanentDeleteTrashReservations);
+router.delete('/trash/:type/:id/permanent', authorize('admin'), trackActivity('reservation_update', () => 'Permanently deleted reservation'), reservationController.permanentDeleteTrashReservations);
 router.get('/ticket', reservationController.getAllTicketReservations);
 router.get('/event', reservationController.getAllEventReservations);
 router.get('/ticket/:id', reservationController.getTicketReservationById);
@@ -71,7 +76,7 @@ router.get('/event/:id', reservationController.getEventReservationById);
 router.put('/ticket/:id/status', reservationController.updateTicketReservationStatus);
 router.put('/event/:id/status', reservationController.updateEventReservationStatus);
 router.put('/ticket/:id/verification', trackActivity('reservation_update', (req) => 'Updated reservation verification'), reservationController.updateVerificationStatus);
-router.delete('/ticket/:id', trackActivity('reservation_update', (req) => 'Deleted ticket reservation'), reservationController.deleteTicketReservation);
-router.delete('/event/:id', trackActivity('reservation_update', (req) => 'Deleted event reservation'), reservationController.deleteEventReservation);
+router.delete('/ticket/:id', trackActivity('reservation_update', () => 'Moved ticket reservation to trash'), reservationController.deleteTicketReservation);
+router.delete('/event/:id', trackActivity('reservation_update', () => 'Moved event reservation to trash'), reservationController.deleteEventReservation);
 
 module.exports = router;

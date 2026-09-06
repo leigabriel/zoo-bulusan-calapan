@@ -1,7 +1,7 @@
 {
   "name": "zoobulusan-backend",
   "version": "1.0.0",
-  "description": "Backend API for Zoo Bulusan Management System",
+  "description": "Backend API for Bulusan Zoo Management System",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

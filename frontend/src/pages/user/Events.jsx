@@ -130,7 +130,7 @@ const Events = () => {
                         eventDate,
                         startTime: event.start_time || event.time,
                         endTime: event.end_time,
-                        location: event.location || 'Zoo Bulusan',
+                        location: event.location || 'Bulusan Zoo',
                         status: computedStatus,
                         imageUrl: event.image_url || DEFAULT_EVENT_IMAGES[index % DEFAULT_EVENT_IMAGES.length],
                         tags: event.tags || ['Wildlife', 'Education'],

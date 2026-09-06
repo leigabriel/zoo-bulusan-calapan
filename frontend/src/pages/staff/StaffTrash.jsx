@@ -1,6 +1,6 @@
 import { Trash as TrashIcon, Undo as RestoreIcon, X as CloseIcon } from 'reicon-react';
 import { useState, useEffect } from 'react';
-import { staffAPI } from '../../services/api-client';
+import { staffAPI, reservationAPI } from '../../services/api-client';
 import { notify } from '../../utils/toast';
 
 
@@ -9,9 +9,11 @@ const TYPE_BADGES = {
   Animal: 'bg-amber-100 text-amber-700',
   Plant: 'bg-green-100 text-green-700',
   Event: 'bg-purple-100 text-purple-700',
+  'Ticket Reservation': 'bg-cyan-100 text-cyan-700',
+  'Event Reservation': 'bg-fuchsia-100 text-fuchsia-700',
 };
 
-const TABS = ['All', 'Users', 'Animals', 'Plants', 'Events'];
+const TABS = ['All', 'Users', 'Animals', 'Plants', 'Events', 'Reservations'];
 
 const StaffTrash = () => {
   const [trashItems, setTrashItems] = useState([]);
@@ -25,15 +27,16 @@ const StaffTrash = () => {
   const fetchTrashItems = async () => {
     setLoading(true);
     try {
-      const [users, animals, plants, events] = await Promise.all([
+      const [users, animals, plants, events, reservations] = await Promise.all([
         staffAPI.getTrashUsers(),
         staffAPI.getTrashAnimals(),
         staffAPI.getTrashPlants(),
         staffAPI.getTrashEvents(),
+        reservationAPI.getTrashReservations('staff'),
       ]);
 
       const all = [
-        ...(users.data || []).map(u => ({
+        ...(users.users || []).map(u => ({
           id: u.id,
           name: u.name || u.username || `User #${u.id}`,
           type: 'User',
@@ -41,7 +44,7 @@ const StaffTrash = () => {
           deleted_by: u.deleted_by || '—',
           original: u,
         })),
-        ...(animals.data || []).map(a => ({
+        ...(animals.animals || []).map(a => ({
           id: a.id,
           name: a.name || `Animal #${a.id}`,
           type: 'Animal',
@@ -49,7 +52,7 @@ const StaffTrash = () => {
           deleted_by: a.deleted_by || '—',
           original: a,
         })),
-        ...(plants.data || []).map(p => ({
+        ...(plants.plants || []).map(p => ({
           id: p.id,
           name: p.name || `Plant #${p.id}`,
           type: 'Plant',
@@ -57,7 +60,7 @@ const StaffTrash = () => {
           deleted_by: p.deleted_by || '—',
           original: p,
         })),
-        ...(events.data || []).map(e => ({
+        ...(events.events || []).map(e => ({
           id: e.id,
           name: e.title || e.name || `Event #${e.id}`,
           type: 'Event',
@@ -65,6 +68,8 @@ const StaffTrash = () => {
           deleted_by: e.deleted_by || '—',
           original: e,
         })),
+        ...(reservations.ticketReservations || []).map(r => ({ id: r.id, name: r.reservation_reference || r.visitor_name, type: 'Ticket Reservation', deleted_at: r.deleted_at, deleted_by: r.deleted_by_name || '—', original: r })),
+        ...(reservations.eventReservations || []).map(r => ({ id: r.id, name: r.reservation_reference || r.venue_event_name, type: 'Event Reservation', deleted_at: r.deleted_at, deleted_by: r.deleted_by_name || '—', original: r })),
       ];
 
       all.sort((a, b) => new Date(b.deleted_at) - new Date(a.deleted_at));
@@ -78,7 +83,7 @@ const StaffTrash = () => {
 
   const filtered = activeTab === 'All'
     ? trashItems
-    : trashItems.filter(i => i.type === activeTab.replace(/s$/, ''));
+    : trashItems.filter(i => activeTab === 'Reservations' ? i.type.endsWith('Reservation') : i.type === activeTab.replace(/s$/, ''));
 
   const toggleSelect = (key) => {
     setSelected(prev => {
@@ -104,6 +109,8 @@ const StaffTrash = () => {
       else if (item.type === 'Animal') await staffAPI.restoreAnimal(item.id);
       else if (item.type === 'Plant') await staffAPI.restorePlant(item.id);
       else if (item.type === 'Event') await staffAPI.restoreEvent(item.id);
+      else if (item.type === 'Ticket Reservation') await reservationAPI.restoreTrashReservations('ticket', [item.id], 'staff');
+      else if (item.type === 'Event Reservation') await reservationAPI.restoreTrashReservations('event', [item.id], 'staff');
 
       setTrashItems(prev => prev.filter(i => `${i.type}-${i.id}` !== key));
       setSelected(prev => {
@@ -147,6 +154,7 @@ const StaffTrash = () => {
     Animals: trashItems.filter(i => i.type === 'Animal').length,
     Plants: trashItems.filter(i => i.type === 'Plant').length,
     Events: trashItems.filter(i => i.type === 'Event').length,
+    Reservations: trashItems.filter(i => i.type.endsWith('Reservation')).length,
   };
 
   return (

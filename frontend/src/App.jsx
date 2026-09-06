@@ -25,7 +25,6 @@ import GoogleAuthSuccess from './pages/auth/GoogleAuthSuccess';
 import AccessDenied from './pages/auth/AccessDenied';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminEvents from './pages/admin/AdminEvents';
-import AnimalAnalytics from './pages/admin/AnimalAnalytics';
 import Analytics from './pages/admin/Analytics';
 import Reports from './pages/admin/Reports';
 import AdminUsers from './pages/admin/AdminUsers';
@@ -210,13 +209,7 @@ function AppRoutes() {
                     </AdminLayout>
                 </ProtectedRoute>
             } />
-            <Route path="/admin/animal-analytics" element={
-                <ProtectedRoute allowedRoles={['admin']}>
-                    <AdminLayout>
-                        <AnimalAnalytics />
-                    </AdminLayout>
-                </ProtectedRoute>
-            } />
+
             <Route path="/admin/reports" element={
                 <ProtectedRoute allowedRoles={['admin']}>
                     <AdminLayout>
@@ -415,6 +408,7 @@ function App() {
                     showProgress
                     visibleToasts={3}
                     maxQueue={8}
+                    theme="dark"
                 />
             </Router>
         </AuthProvider>

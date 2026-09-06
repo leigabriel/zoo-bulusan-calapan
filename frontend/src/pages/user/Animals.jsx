@@ -83,7 +83,7 @@ const Animals = () => {
                     id: a.id,
                     name: a.name,
                     species: a.species || 'Unknown',
-                    exhibit: a.habitat || a.exhibit || 'Zoo Bulusan',
+                    exhibit: a.habitat || a.exhibit || 'Bulusan Zoo',
                     description: a.description || '',
                     status: a.status || 'healthy',
                     imageUrl: a.image_url || null,

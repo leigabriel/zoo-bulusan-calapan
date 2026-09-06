@@ -14,7 +14,7 @@ exports.protect = async (req, res, next) => {
 
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        const user = await User.findById(decoded.id);
+        const user = await User.findAuthenticatedById(decoded.id);
 
         if (!user) {
             return res.status(404).json({ success: false, message: 'User not found' });
@@ -68,7 +68,7 @@ exports.optionalAuth = async (req, res, next) => {
     if (token) {
         try {
             const decoded = jwt.verify(token, process.env.JWT_SECRET);
-            const user = await User.findById(decoded.id);
+            const user = await User.findAuthenticatedById(decoded.id);
 
             if (user) {
                 req.user = { id: user.id, email: user.email, role: user.role };

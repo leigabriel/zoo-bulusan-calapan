@@ -154,9 +154,9 @@ const sendVerificationEmail = async (email, token, firstName) => {
     const verificationLink = `${backendUrl}/api/auth/verify-email?token=${token}`;
 
     const mailOptions = {
-        from: `"Zoo Bulusan" <${process.env.SMTP_USER}>`,
+        from: `"Bulusan Zoo" <${process.env.SMTP_USER}>`,
         to: email,
-        subject: 'Verify Your Email - Zoo Bulusan',
+        subject: 'Verify Your Email - Bulusan Zoo',
         html: `
             <!DOCTYPE html>
             <html lang="en">
@@ -173,7 +173,7 @@ const sendVerificationEmail = async (email, token, firstName) => {
                                 <!-- Header -->
                                 <tr>
                                     <td style="background: linear-gradient(135deg, #059669 0%, #047857 100%); padding: 40px 40px 30px; border-radius: 12px 12px 0 0; text-align: center;">
-                                        <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: bold;">Zoo Bulusan</h1>
+                                        <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: bold;">Bulusan Zoo</h1>
                                         <p style="margin: 10px 0 0; color: rgba(255, 255, 255, 0.9); font-size: 14px;">Wildlife Sanctuary</p>
                                     </td>
                                 </tr>
@@ -183,7 +183,7 @@ const sendVerificationEmail = async (email, token, firstName) => {
                                     <td style="padding: 40px;">
                                         <h2 style="margin: 0 0 20px; color: #1f2937; font-size: 24px; font-weight: 600;">Welcome, ${firstName}!</h2>
                                         <p style="margin: 0 0 25px; color: #4b5563; font-size: 16px; line-height: 1.6;">
-                                            Thank you for registering with Zoo Bulusan. To complete your registration and gain access to your account, please verify your email address by clicking the button below.
+                                            Thank you for registering with Bulusan Zoo. To complete your registration and gain access to your account, please verify your email address by clicking the button below.
                                         </p>
                                         
                                         <!-- CTA Button -->
@@ -199,7 +199,7 @@ const sendVerificationEmail = async (email, token, firstName) => {
                                         </table>
                                         
                                         <p style="margin: 0 0 15px; color: #6b7280; font-size: 14px; line-height: 1.6;">
-                                            This verification link will expire in <strong>1 hour</strong>. If you did not create an account with Zoo Bulusan, please ignore this email.
+                                            This verification link will expire in <strong>1 hour</strong>. If you did not create an account with Bulusan Zoo, please ignore this email.
                                         </p>
                                         
                                         <p style="margin: 0 0 15px; color: #6b7280; font-size: 14px; line-height: 1.6;">
@@ -215,7 +215,7 @@ const sendVerificationEmail = async (email, token, firstName) => {
                                 <tr>
                                     <td style="padding: 30px 40px; background-color: #f9fafb; border-radius: 0 0 12px 12px; text-align: center; border-top: 1px solid #e5e7eb;">
                                         <p style="margin: 0 0 10px; color: #6b7280; font-size: 13px;">
-                                            &copy; ${new Date().getFullYear()} Zoo Bulusan. All rights reserved.
+                                            &copy; ${new Date().getFullYear()} Bulusan Zoo. All rights reserved.
                                         </p>
                                         <p style="margin: 0; color: #9ca3af; font-size: 12px;">
                                             Sorsogon, Philippines
@@ -230,7 +230,7 @@ const sendVerificationEmail = async (email, token, firstName) => {
             </html>
         `,
         text: `
-Welcome to Zoo Bulusan, ${firstName}!
+Welcome to Bulusan Zoo, ${firstName}!
 
 Thank you for registering. Please verify your email address by clicking the link below:
 
@@ -238,9 +238,9 @@ ${verificationLink}
 
 This link will expire in 1 hour.
 
-If you did not create an account with Zoo Bulusan, please ignore this email.
+If you did not create an account with Bulusan Zoo, please ignore this email.
 
-© ${new Date().getFullYear()} Zoo Bulusan. All rights reserved.
+© ${new Date().getFullYear()} Bulusan Zoo. All rights reserved.
         `.trim()
     };
 
@@ -263,9 +263,9 @@ const sendVerificationEmailSync = async (email, token, firstName) => {
     const verificationLink = `${backendUrl}/api/auth/verify-email?token=${token}`;
 
     const mailOptions = {
-        from: `"Zoo Bulusan" <${process.env.SMTP_USER}>`,
+        from: `"Bulusan Zoo" <${process.env.SMTP_USER}>`,
         to: email,
-        subject: 'Verify Your Email - Zoo Bulusan',
+        subject: 'Verify Your Email - Bulusan Zoo',
         html: generateVerificationEmailHtml(firstName, verificationLink),
         text: generateVerificationEmailText(firstName, verificationLink)
     };
@@ -291,7 +291,7 @@ const generateVerificationEmailHtml = (firstName, verificationLink) => `
                 <table role="presentation" cellspacing="0" cellpadding="0" width="100%" style="max-width: 600px; background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
                     <tr>
                         <td style="background: linear-gradient(135deg, #059669 0%, #047857 100%); padding: 40px 40px 30px; border-radius: 12px 12px 0 0; text-align: center;">
-                            <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: bold;">Zoo Bulusan</h1>
+                            <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: bold;">Bulusan Zoo</h1>
                             <p style="margin: 10px 0 0; color: rgba(255, 255, 255, 0.9); font-size: 14px;">Wildlife Sanctuary</p>
                         </td>
                     </tr>
@@ -299,7 +299,7 @@ const generateVerificationEmailHtml = (firstName, verificationLink) => `
                         <td style="padding: 40px;">
                             <h2 style="margin: 0 0 20px; color: #1f2937; font-size: 24px; font-weight: 600;">Welcome, ${firstName}!</h2>
                             <p style="margin: 0 0 25px; color: #4b5563; font-size: 16px; line-height: 1.6;">
-                                Thank you for registering with Zoo Bulusan. To complete your registration and gain access to your account, please verify your email address by clicking the button below.
+                                Thank you for registering with Bulusan Zoo. To complete your registration and gain access to your account, please verify your email address by clicking the button below.
                             </p>
                             <table role="presentation" cellspacing="0" cellpadding="0" width="100%">
                                 <tr>
@@ -312,7 +312,7 @@ const generateVerificationEmailHtml = (firstName, verificationLink) => `
                                 </tr>
                             </table>
                             <p style="margin: 0 0 15px; color: #6b7280; font-size: 14px; line-height: 1.6;">
-                                This verification link will expire in <strong>1 hour</strong>. If you did not create an account with Zoo Bulusan, please ignore this email.
+                                This verification link will expire in <strong>1 hour</strong>. If you did not create an account with Bulusan Zoo, please ignore this email.
                             </p>
                             <p style="margin: 0 0 15px; color: #6b7280; font-size: 14px; line-height: 1.6;">
                                 If the button above doesn't work, copy and paste this link into your browser:
@@ -325,7 +325,7 @@ const generateVerificationEmailHtml = (firstName, verificationLink) => `
                     <tr>
                         <td style="padding: 30px 40px; background-color: #f9fafb; border-radius: 0 0 12px 12px; text-align: center; border-top: 1px solid #e5e7eb;">
                             <p style="margin: 0 0 10px; color: #6b7280; font-size: 13px;">
-                                &copy; ${new Date().getFullYear()} Zoo Bulusan. All rights reserved.
+                                &copy; ${new Date().getFullYear()} Bulusan Zoo. All rights reserved.
                             </p>
                             <p style="margin: 0; color: #9ca3af; font-size: 12px;">
                                 Sorsogon, Philippines
@@ -344,7 +344,7 @@ const generateVerificationEmailHtml = (firstName, verificationLink) => `
  * Generate plain text content for verification email
  */
 const generateVerificationEmailText = (firstName, verificationLink) => `
-Welcome to Zoo Bulusan, ${firstName}!
+Welcome to Bulusan Zoo, ${firstName}!
 
 Thank you for registering. Please verify your email address by clicking the link below:
 
@@ -352,21 +352,21 @@ ${verificationLink}
 
 This link will expire in 1 hour.
 
-If you did not create an account with Zoo Bulusan, please ignore this email.
+If you did not create an account with Bulusan Zoo, please ignore this email.
 
-© ${new Date().getFullYear()} Zoo Bulusan. All rights reserved.
+© ${new Date().getFullYear()} Bulusan Zoo. All rights reserved.
 `.trim();
 
 const sendPasswordResetEmail = async (email, token, firstName) => {
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
     const resetLink = `${frontendUrl}/login?resetToken=${encodeURIComponent(token)}`;
     const mailOptions = {
-        from: `"Zoo Bulusan" <${process.env.SMTP_USER}>`,
+        from: `"Bulusan Zoo" <${process.env.SMTP_USER}>`,
         to: email,
-        subject: 'Reset Your Password - Zoo Bulusan',
+        subject: 'Reset Your Password - Bulusan Zoo',
         html: `
             <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:32px;color:#1f3328">
-                <h1>Zoo Bulusan</h1>
+                <h1>Bulusan Zoo</h1>
                 <h2>Reset your password</h2>
                 <p>Hello ${firstName || 'there'},</p>
                 <p>We received a request to create a new password for your account. This link expires in 1 hour.</p>
@@ -374,7 +374,7 @@ const sendPasswordResetEmail = async (email, token, firstName) => {
                 <p style="color:#66756b;font-size:13px">If you did not request this, you can safely ignore this email.</p>
             </div>
         `,
-        text: `Hello ${firstName || 'there'},\n\nCreate a new Zoo Bulusan password here: ${resetLink}\n\nThis link expires in 1 hour. If you did not request this, ignore this email.`
+        text: `Hello ${firstName || 'there'},\n\nCreate a new Bulusan Zoo password here: ${resetLink}\n\nThis link expires in 1 hour. If you did not request this, ignore this email.`
     };
 
     return sendEmailWithRetry(mailOptions);

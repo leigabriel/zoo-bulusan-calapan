@@ -161,14 +161,14 @@ We use cookies and similar technologies to enhance your experience and gather in
 7. CONTACT US
 If you have questions about this Privacy Policy, please contact us at:
 Email: privacy@zoobulusan.com
-Address: Zoo Bulusan, Sorsogon, Philippines
+Address: Bulusan Zoo, Sorsogon, Philippines
 `;
 
 const TERMS_OF_SERVICE_CONTENT = `
 Last Updated: December 15, 2025
 
 1. ACCEPTANCE OF TERMS
-By accessing and using Zoo Bulusan's services, you agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use our services.
+By accessing and using Bulusan Zoo's services, you agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use our services.
 
 2. USE OF SERVICES
 You agree to use our services only for lawful purposes and in accordance with these Terms. You are responsible for:
@@ -183,7 +183,7 @@ You agree to use our services only for lawful purposes and in accordance with th
 - Children must be accompanied by adults
 
 4. VISITOR CONDUCT
-While visiting Zoo Bulusan, you agree to:
+While visiting Bulusan Zoo, you agree to:
 - Follow all posted rules and staff instructions
 - Respect all animals and their habitats
 - Not feed animals unless authorized
@@ -191,10 +191,10 @@ While visiting Zoo Bulusan, you agree to:
 - Supervise children at all times
 
 5. INTELLECTUAL PROPERTY
-All content on our website and services, including text, graphics, logos, and images, is the property of Zoo Bulusan and is protected by copyright laws.
+All content on our website and services, including text, graphics, logos, and images, is the property of Bulusan Zoo and is protected by copyright laws.
 
 6. LIMITATION OF LIABILITY
-Zoo Bulusan shall not be liable for any indirect, incidental, special, consequential, or punitive damages resulting from your use of our services.
+Bulusan Zoo shall not be liable for any indirect, incidental, special, consequential, or punitive damages resulting from your use of our services.
 
 7. MODIFICATIONS
 We reserve the right to modify these Terms at any time. Continued use of our services after changes constitutes acceptance of the new Terms.
@@ -538,13 +538,13 @@ const RegisterPage = () => {
 
                 <div className="relative z-10 flex flex-col h-full justify-between">
                     <div className="flex items-center gap-3 text-white">
-                        <span className="font-bold text-xl tracking-widest uppercase">Zoo Bulusan</span>
+                        <span className="font-bold text-xl tracking-widest uppercase">Bulusan Zoo</span>
                     </div>
 
                     <div className="mt-auto">
                         <h1 className="text-4xl lg:text-5xl xl:text-6xl font-bold text-white leading-tight mb-8">
                             Become part of<br />
-                            Zoo Bulusan<br />
+                            Bulusan Zoo<br />
                             family.
                         </h1>
                         <div className="flex flex-wrap gap-3 text-sm font-medium">
@@ -560,7 +560,7 @@ const RegisterPage = () => {
                         Create Account
                     </h2>
                     <p className="text-gray-500 text-sm lg:text-base mb-8 leading-relaxed">
-                        Register to explore Zoo Bulusan's amazing wildlife.
+                        Register to explore Bulusan Zoo's amazing wildlife.
                     </p>
 
                     {successMessage && (

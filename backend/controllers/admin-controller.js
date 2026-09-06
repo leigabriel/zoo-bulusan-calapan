@@ -208,6 +208,9 @@ exports.getUsersByRole = async (req, res) => {
 exports.createUser = async (req, res) => {
     try {
         const { firstName, lastName, username, email, password, role, phoneNumber, gender, birthday } = req.body;
+        if (role && !['admin', 'staff', 'user'].includes(role)) {
+            return res.status(400).json({ success: false, message: 'Invalid user role' });
+        }
 
         if (!firstName || !lastName || !username || !email || !password) {
             return res.status(400).json({ success: false, message: 'Please provide all required fields' });
@@ -253,13 +256,16 @@ exports.updateUser = async (req, res) => {
     try {
         const { id } = req.params;
         const { firstName, lastName, username, email, phoneNumber, gender, birthday, role } = req.body;
+        if (role && !['admin', 'staff'].includes(role)) {
+            return res.status(400).json({ success: false, message: 'Managed accounts must be admin or staff' });
+        }
 
         const user = await User.findById(id);
         if (!user) {
             return res.status(404).json({ success: false, message: 'User not found' });
         }
-        if (user.role === 'admin') {
-            return res.status(403).json({ success: false, message: 'Administrator accounts cannot be edited here' });
+        if (user.role === 'user') {
+            return res.status(403).json({ success: false, message: 'Regular user accounts are view-only' });
         }
 
         const updated = await User.update(id, { 
@@ -289,8 +295,11 @@ exports.deleteUser = async (req, res) => {
         const { id } = req.params;
         const user = await User.findById(id);
         if (!user) return res.status(404).json({ success: false, message: 'User not found' });
-        if (user.role === 'admin' || String(id) === String(req.user.id)) {
-            return res.status(403).json({ success: false, message: 'Administrator accounts cannot be moved to trash' });
+        if (user.role === 'user') {
+            return res.status(403).json({ success: false, message: 'Regular user accounts cannot be moved to trash' });
+        }
+        if (String(id) === String(req.user.id)) {
+            return res.status(403).json({ success: false, message: 'You cannot move your own account to trash' });
         }
         const deleted = await User.softDelete(id, req.user.id);
 
@@ -1050,9 +1059,8 @@ exports.suspendUser = async (req, res) => {
             return res.status(404).json({ success: false, message: 'User not found' });
         }
 
-        // Prevent suspending admins
-        if (user.role === 'admin') {
-            return res.status(403).json({ success: false, message: 'Cannot suspend admin users' });
+        if (user.role !== 'user') {
+            return res.status(403).json({ success: false, message: 'Only regular user accounts can be suspended' });
         }
 
         const suspended = await User.suspendUser(id, req.user.id, reason.trim());
@@ -1076,6 +1084,9 @@ exports.unsuspendUser = async (req, res) => {
         const user = await User.findById(id);
         if (!user) {
             return res.status(404).json({ success: false, message: 'User not found' });
+        }
+        if (user.role !== 'user') {
+            return res.status(403).json({ success: false, message: 'Only regular user accounts can be unsuspended' });
         }
 
         const unsuspended = await User.unsuspendUser(id);
@@ -1298,8 +1309,8 @@ const verifyPassword = async (userId, password) => {
 // --- Users Trash ---
 exports.getTrashUsers = async (req, res) => {
     try {
-        const users = await User.getDeleted();
-        res.json({ success: true, users: users.filter(user => user.role !== 'admin') });
+        const users = await User.getDeleted(['admin', 'staff']);
+        res.json({ success: true, users });
     } catch (error) {
         console.error('Error getting trashed users:', error);
         res.status(500).json({ success: false, message: 'Error fetching trashed users' });
@@ -1309,6 +1320,11 @@ exports.getTrashUsers = async (req, res) => {
 exports.restoreUser = async (req, res) => {
     try {
         const { id } = req.params;
+        const target = await User.findById(id);
+        if (!target) return res.status(404).json({ success: false, message: 'User not found in trash' });
+        if (!['admin', 'staff'].includes(target.role)) {
+            return res.status(403).json({ success: false, message: 'Regular user accounts cannot be restored from trash' });
+        }
         const restored = await User.restore(id);
         if (!restored) return res.status(404).json({ success: false, message: 'User not found in trash' });
         res.json({ success: true, message: 'User restored successfully' });
@@ -1323,6 +1339,10 @@ exports.restoreMultipleUsers = async (req, res) => {
         const { ids } = req.body;
         if (!ids || !Array.isArray(ids) || ids.length === 0) {
             return res.status(400).json({ success: false, message: 'No user IDs provided' });
+        }
+        const targets = await Promise.all(ids.map(id => User.findById(id)));
+        if (targets.some(target => !target || !['admin', 'staff'].includes(target.role))) {
+            return res.status(403).json({ success: false, message: 'Only admin and staff accounts can be restored from trash' });
         }
         await User.restoreMultiple(ids);
         res.json({ success: true, message: `${ids.length} user(s) restored successfully` });
@@ -1342,8 +1362,12 @@ exports.permanentDeleteUser = async (req, res) => {
         if (!valid) return res.status(401).json({ success: false, message: 'Incorrect password' });
 
         const target = await User.findById(id);
-        if (target?.role === 'admin' || String(id) === String(req.user.id)) {
-            return res.status(403).json({ success: false, message: 'Administrator accounts cannot be permanently deleted' });
+        if (!target) return res.status(404).json({ success: false, message: 'User not found' });
+        if (target.role === 'user') {
+            return res.status(403).json({ success: false, message: 'Regular user accounts cannot be permanently deleted' });
+        }
+        if (String(id) === String(req.user.id)) {
+            return res.status(403).json({ success: false, message: 'You cannot permanently delete your own account' });
         }
 
         const deleted = await User.permanentDelete(id);
@@ -1367,8 +1391,11 @@ exports.permanentDeleteMultipleUsers = async (req, res) => {
         if (!valid) return res.status(401).json({ success: false, message: 'Incorrect password' });
 
         const targets = await Promise.all(ids.map(id => User.findById(id)));
-        if (targets.some((target, index) => target?.role === 'admin' || String(ids[index]) === String(req.user.id))) {
-            return res.status(403).json({ success: false, message: 'Administrator accounts cannot be permanently deleted' });
+        if (targets.some(target => !target || !['admin', 'staff'].includes(target.role))) {
+            return res.status(403).json({ success: false, message: 'Only admin and staff accounts can be permanently deleted' });
+        }
+        if (ids.some(id => String(id) === String(req.user.id))) {
+            return res.status(403).json({ success: false, message: 'You cannot permanently delete your own account' });
         }
 
         await User.permanentDeleteMultiple(ids);

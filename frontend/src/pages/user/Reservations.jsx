@@ -366,7 +366,7 @@ const Reservations = () => {
                 <div className="sticky top-0 w-full h-[70vh] flex flex-col items-center justify-center overflow-hidden z-0 border-b border-[#212631]/10 bg-[#ebebeb]">
                     <div className="relative z-10 flex flex-col items-center justify-center text-center px-4 w-full max-w-5xl h-full">
                         <span className="text-[10px] tracking-[0.3em] uppercase font-bold text-[#212631]/40 mb-6 md:mb-10">
-                            Zoo Bulusan Admissions
+                            Bulusan Zoo Admissions
                         </span>
                         <h1 className="font-extrabold uppercase text-[#212631] leading-[0.85] tracking-tighter"
                             style={{ fontSize: 'clamp(40px, 10vw, 140px)' }}>

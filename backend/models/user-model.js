@@ -30,6 +30,16 @@ class User {
         return rows[0];
     }
 
+    static async findAuthenticatedById(id) {
+        const [rows] = await db.query(
+            `SELECT id, email, role, is_suspended, suspension_reason
+             FROM users
+             WHERE id = ? AND (is_deleted IS NULL OR is_deleted = FALSE)`,
+            [id]
+        );
+        return rows[0];
+    }
+
     static async create(userData) {
         const {
             firstName, lastName, username, email, phoneNumber,
@@ -255,15 +265,18 @@ class User {
         return result.affectedRows > 0;
     }
 
-    static async getDeleted() {
+    static async getDeleted(roles = null) {
+        const roleClause = roles?.length ? ' AND u.role IN (?)' : '';
+        const params = roles?.length ? [roles] : [];
         const [rows] = await db.query(
             `SELECT u.id, u.first_name, u.last_name, u.username, u.email, u.role, u.profile_image,
                     u.is_suspended, u.created_at, u.deleted_at, u.deleted_by,
                     CONCAT(d.first_name, ' ', d.last_name) as deleted_by_name
              FROM users u
              LEFT JOIN users d ON u.deleted_by = d.id
-             WHERE u.is_deleted = TRUE
-             ORDER BY u.deleted_at DESC`
+             WHERE u.is_deleted = TRUE${roleClause}
+             ORDER BY u.deleted_at DESC`,
+            params
         );
         return rows;
     }

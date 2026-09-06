@@ -3,6 +3,7 @@ import { useEffect, useState, useRef } from 'react';
 import { adminAPI, getProfileImageUrl } from '../../services/api-client';
 import { sanitizeInput, sanitizeEmail } from '../../utils/sanitize';
 import { notify } from '../../utils/toast';
+import { useAuth } from '../../context/AuthContext';
 
 // Icons
 const SearchIcon = () => (
@@ -50,6 +51,7 @@ const RestoreIcon = () => (
 );
 
 const AdminUsers = ({ globalSearch = '' }) => {
+    const { user: currentUser } = useAuth();
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -226,7 +228,6 @@ const AdminUsers = ({ globalSearch = '' }) => {
             : { label: 'Active', dot: 'bg-green-500', text: 'text-green-700' };
 
     const filteredUsers = users.filter(user => {
-        if (user.role === 'admin') return false;
         const fullName = `${user.firstName || user.first_name || ''} ${user.lastName || user.last_name || ''}`.toLowerCase();
         const matchesSearch = fullName.includes(effectiveSearch.toLowerCase()) ||
             user.email?.toLowerCase().includes(effectiveSearch.toLowerCase());
@@ -235,11 +236,12 @@ const AdminUsers = ({ globalSearch = '' }) => {
     });
 
     const userCounts = {
-        total: users.filter(u => u.role !== 'admin').length,
+        total: users.length,
+        admin: users.filter(u => u.role === 'admin').length,
         staff: users.filter(u => u.role === 'staff').length,
         user: users.filter(u => u.role === 'user').length,
-        active: users.filter(u => u.role !== 'admin' && !u.is_suspended && !(u.is_active === false || u.is_active === 0 || u.is_active === '0')).length,
-        suspended: users.filter(u => u.role !== 'admin' && u.is_suspended).length,
+        active: users.filter(u => !u.is_suspended && !(u.is_active === false || u.is_active === 0 || u.is_active === '0')).length,
+        suspended: users.filter(u => u.is_suspended).length,
     };
 
     if (loading) {
@@ -332,6 +334,7 @@ const AdminUsers = ({ globalSearch = '' }) => {
                                 className="appearance-none bg-green-50 border border-green-200 rounded-xl py-2.5 pl-10 pr-8 text-sm text-gray-900 focus:outline-none focus:border-green-400 cursor-pointer"
                             >
                                 <option value="all">All Roles</option>
+                                <option value="admin">Admin</option>
                                 <option value="staff">Staff</option>
                                 <option value="user">User</option>
                             </select>
@@ -373,7 +376,19 @@ const AdminUsers = ({ globalSearch = '' }) => {
                                 </tr>
                             ) : (
                                 filteredUsers.map(user => (
-                                    <tr key={user.id} className="hover:bg-green-50/50 transition-colors">
+                                    <tr
+                                        key={user.id}
+                                        className="hover:bg-green-50/50 transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-green-500"
+                                        onClick={() => setViewUser(user)}
+                                        onKeyDown={(event) => {
+                                            if (event.key === 'Enter' || event.key === ' ') {
+                                                event.preventDefault();
+                                                setViewUser(user);
+                                            }
+                                        }}
+                                        tabIndex={0}
+                                        aria-label={`View ${user.firstName || user.first_name} ${user.lastName || user.last_name}`}
+                                    >
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-3">
                                                 <div className="w-10 h-10 rounded-full overflow-hidden bg-white flex items-center justify-center border border-green-200">
@@ -412,22 +427,22 @@ const AdminUsers = ({ globalSearch = '' }) => {
                                         <td className="px-6 py-4">
                                             <div className="flex items-center justify-end gap-2">
                                                 <button
-                                                    onClick={() => setViewUser(user)}
+                                                    onClick={(event) => { event.stopPropagation(); setViewUser(user); }}
                                                     className="p-2 bg-green-50 hover:bg-green-50 border border-green-200 hover:border-blue-500/50 text-gray-500 hover:text-blue-700 rounded-lg transition-all"
                                                     title="View user"
                                                 >
                                                     <EyeIcon />
                                                 </button>
-                                                <button
-                                                    onClick={() => openEditModal(user)}
+                                                {user.role !== 'user' && <button
+                                                    onClick={(event) => { event.stopPropagation(); openEditModal(user); }}
                                                     className="p-2 bg-green-50 hover:bg-green-50 border border-green-200 hover:border-green-400/50 text-gray-500 hover:text-green-800 rounded-lg transition-all"
                                                     title="Edit user"
                                                 >
                                                     <EditIcon />
-                                                </button>
-                                                {user.is_suspended ? (
+                                                </button>}
+                                                {user.role === 'user' && (user.is_suspended ? (
                                                     <button
-                                                        onClick={() => handleUnsuspendUser(user.id)}
+                                                        onClick={(event) => { event.stopPropagation(); handleUnsuspendUser(user.id); }}
                                                         disabled={suspending}
                                                         className="p-2 bg-green-50 hover:bg-green-400/10 border border-green-200 hover:border-green-400/50 text-gray-500 hover:text-green-800 rounded-lg transition-all disabled:opacity-50"
                                                         title="Unsuspend user"
@@ -436,20 +451,20 @@ const AdminUsers = ({ globalSearch = '' }) => {
                                                     </button>
                                                 ) : (
                                                     <button
-                                                        onClick={() => setSuspendUser(user)}
+                                                        onClick={(event) => { event.stopPropagation(); setSuspendUser(user); }}
                                                         className="p-2 bg-green-50 hover:bg-red-500/10 border border-green-200 hover:border-red-500/50 text-gray-500 hover:text-red-700 rounded-lg transition-all"
                                                         title="Suspend user"
                                                     >
                                                         <BanIcon />
                                                     </button>
-                                                )}
-                                                <button
-                                                    onClick={() => trashUser(user)}
+                                                ))}
+                                                {user.role !== 'user' && String(user.id) !== String(currentUser?.id) && <button
+                                                    onClick={(event) => { event.stopPropagation(); trashUser(user); }}
                                                     className="p-2 bg-green-50 hover:bg-red-500/10 border border-green-200 hover:border-red-500/50 text-gray-500 hover:text-red-700 rounded-lg transition-all"
                                                     title="Move to trash"
                                                 >
                                                     <TrashIcon />
-                                                </button>
+                                                </button>}
                                             </div>
                                         </td>
                                     </tr>
@@ -607,12 +622,13 @@ const AdminUsers = ({ globalSearch = '' }) => {
                                 </div>
                             )}
                             <div className="flex gap-3 pt-2">
-                                <button onClick={() => { setViewUser(null); openEditModal(viewUser); }} className="flex-1 py-3 bg-green-400/10 border border-green-400/30 text-green-800 font-medium rounded-xl hover:bg-green-400/20 transition-all">Edit User</button>
-                                {viewUser.is_suspended ? (
+                                {viewUser.role !== 'user' && <button onClick={() => { setViewUser(null); openEditModal(viewUser); }} className="flex-1 py-3 bg-green-400/10 border border-green-400/30 text-green-800 font-medium rounded-xl hover:bg-green-400/20 transition-all">Edit User</button>}
+                                {viewUser.role !== 'user' && String(viewUser.id) !== String(currentUser?.id) && <button onClick={() => { setViewUser(null); trashUser(viewUser); }} className="flex-1 py-3 bg-red-500/10 border border-red-500/30 text-red-700 font-medium rounded-xl hover:bg-red-500/20 transition-all">Move to Trash</button>}
+                                {viewUser.role === 'user' && (viewUser.is_suspended ? (
                                     <button onClick={() => { handleUnsuspendUser(viewUser.id); setViewUser(null); }} className="flex-1 py-3 bg-green-400/10 border border-green-400/30 text-green-800 font-medium rounded-xl hover:bg-green-400/20 transition-all">Unsuspend</button>
                                 ) : (
                                     <button onClick={() => { setViewUser(null); setSuspendUser(viewUser); }} className="flex-1 py-3 bg-red-500/10 border border-red-500/30 text-red-700 font-medium rounded-xl hover:bg-red-500/20 transition-all">Suspend</button>
-                                )}
+                                ))}
                             </div>
                         </div>
                     </div>

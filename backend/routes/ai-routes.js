@@ -456,13 +456,13 @@ const getFallbackResponse = (message, dynamicData = null, userData = null) => {
     }
 
     if (lowerMsg.includes('hour') || lowerMsg.includes('open') || lowerMsg.includes('time') || lowerMsg.includes('schedule')) {
-        return "Zoo Bulusan Operating Hours:\n\n- Tuesday to Sunday: 8:00 AM - 5:00 PM\n- Monday: CLOSED (maintenance day)\n- Last entry: 4:00 PM\n\nPlan your visit accordingly and arrive early to enjoy all our exhibits!";
+        return "Bulusan Zoo Operating Hours:\n\n- Tuesday to Sunday: 8:00 AM - 5:00 PM\n- Monday: CLOSED (maintenance day)\n- Last entry: 4:00 PM\n\nPlan your visit accordingly and arrive early to enjoy all our exhibits!";
     }
 
     if (lowerMsg.includes('animal') || lowerMsg.includes('species') || lowerMsg.includes('wildlife')) {
-        let response = "We have amazing animals at Zoo Bulusan!";
+        let response = "We have amazing animals at Bulusan Zoo!";
         if (dynamicData?.animalCount) {
-            response = `We currently have ${dynamicData.animalCount} animals at Zoo Bulusan!`;
+            response = `We currently have ${dynamicData.animalCount} animals at Bulusan Zoo!`;
             if (dynamicData.animalNames?.length > 0) {
                 response += ` Some of our residents include: ${dynamicData.animalNames.slice(0, 5).join(', ')}.`;
             }
@@ -476,11 +476,11 @@ const getFallbackResponse = (message, dynamicData = null, userData = null) => {
     }
 
     if (lowerMsg.includes('location') || lowerMsg.includes('where') || lowerMsg.includes('address') || lowerMsg.includes('direction')) {
-        return "Zoo Bulusan Location:\n\nBulusan Wildlife Park\nCalapan City, Oriental Mindoro\nMIMAROPA Region, Philippines\n\nEmail: info@zoobulusan.com\nPhone: (043) 123-4567";
+        return "Bulusan Zoo Location:\n\nBulusan Wildlife Park\nCalapan City, Oriental Mindoro\nMIMAROPA Region, Philippines\n\nEmail: info@zoobulusan.com\nPhone: (043) 123-4567";
     }
 
     if (lowerMsg.includes('plant') || lowerMsg.includes('flora') || lowerMsg.includes('botanical') || lowerMsg.includes('botany') || lowerMsg.includes('tree')) {
-        let response = "Zoo Bulusan also features a lush botanical collection across our grounds.";
+        let response = "Bulusan Zoo also features a lush botanical collection across our grounds.";
         if (dynamicData?.plantCatalog?.length > 0) {
             response = `Our botanical collection features ${dynamicData.plantCatalog.length}+ plants, including ${dynamicData.plantCatalog.slice(0, 5).map(p => p.name).join(', ')}.`;
         }
@@ -491,14 +491,14 @@ const getFallbackResponse = (message, dynamicData = null, userData = null) => {
     if (lowerMsg.includes('event') || lowerMsg.includes('activity') || lowerMsg.includes('program')) {
         let response = "Check out our Events page for:\n\n- Wildlife educational programs\n- Guided tours\n- Conservation workshops\n- School field trips\n- Special seasonal events";
         if (dynamicData?.upcomingEvents?.length > 0) {
-            response = `Upcoming Events at Zoo Bulusan:\n\n${dynamicData.upcomingEvents.map(e => `- ${e.title} (${e.event_date})`).join('\n')}\n\nVisit our Events page for more details!`;
+            response = `Upcoming Events at Bulusan Zoo:\n\n${dynamicData.upcomingEvents.map(e => `- ${e.title} (${e.event_date})`).join('\n')}\n\nVisit our Events page for more details!`;
         }
         response += "\n\nBook in advance for group visits!";
         return response;
     }
 
     if (lowerMsg.includes('hello') || lowerMsg.includes('hi') || lowerMsg.includes('hey') || lowerMsg.includes('mabuhay')) {
-        let greeting = "Mabuhay! Welcome to Zoo Bulusan! I'm Zusan, your zoo assistant.";
+        let greeting = "Mabuhay! Welcome to Bulusan Zoo! I'm Zusan, your zoo assistant.";
         if (dynamicData?.animalCount) {
             greeting += ` We currently have ${dynamicData.animalCount} amazing animals waiting to meet you!`;
         }
@@ -652,7 +652,7 @@ const getCompanionSystemContext = (role, preferredLanguage = 'english') => {
         : 'Respond only in clear, professional English. Do not switch to Tagalog unless the user explicitly asks.';
 
     const sharedRules = `
-You are an internal AI companion for Zoo Bulusan Calapan.
+You are an internal AI companion for Bulusan Zoo Calapan.
 
 Core rules:
 - Provide role-appropriate, workflow-focused guidance only.
@@ -714,7 +714,7 @@ Response style:
 };
 
 const ZOO_BULUSAN_CONTEXT = `
-you are "zusan", the official ai assistant of zoo bulusan calapan, a wildlife conservation sanctuary located in calapan city, oriental mindoro, philippines. you provide accurate, professional, and educational information about the zoo, wildlife, conservation, visitor services, and animal protection laws.
+you are "zusan", the official ai assistant of Bulusan Zoo calapan, a wildlife conservation sanctuary located in calapan city, oriental mindoro, philippines. you provide accurate, professional, and educational information about the zoo, wildlife, conservation, visitor services, and animal protection laws.
 
 general behavior
 
@@ -751,7 +751,7 @@ animal knowledge rules
   * conservation status
 * animal information must be written as short paragraphs, not lists
 * keep explanations concise and educational
-* if the animal exists in zoo bulusan, mention where visitors can find it
+* if the animal exists in Bulusan Zoo, mention where visitors can find it
 * if the animal is not in the zoo, briefly mention similar animals available in the zoo when possible
 
 animal law and protection information
@@ -767,11 +767,11 @@ animal law and protection information
   * responsible wildlife interaction rules
 * provide clear and factual explanations when discussing animal laws
 
-zoo bulusan information
+Bulusan Zoo information
 
 name
 
-* zoo bulusan calapan
+* Bulusan Zoo calapan
 
 location
 
@@ -873,7 +873,7 @@ uncertainty handling
 * if unsure about zoo-specific data:
 
   * recommend visiting the official website
-  * recommend contacting zoo bulusan directly
+  * recommend contacting Bulusan Zoo directly
 
 mission
 

@@ -181,7 +181,7 @@ const MyEvents = () => {
 
                 <div className="w-full min-h-[40vh] md:min-h-[50vh] flex flex-col items-center justify-center px-4 pt-24 pb-8 text-center">
                     <span className="text-[10px] tracking-[0.3em] uppercase font-bold text-black/40 mb-6">
-                        Zoo Bulusan · Host Dashboard
+                        Bulusan Zoo · Host Dashboard
                     </span>
                     <h1 className="text-[3.5rem] sm:text-[6rem] md:text-[8rem] lg:text-[10rem] leading-none tracking-tight text-black text-center break-words w-full">
                         My Events

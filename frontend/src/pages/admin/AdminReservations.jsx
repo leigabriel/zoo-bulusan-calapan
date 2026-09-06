@@ -77,7 +77,7 @@ const AdminReservations = ({ globalSearch = '' }) => {
             if (res.success) {
                 await fetchReservations();
                 setDeleteConfirm(null);
-                notify.success('Reservation removed.');
+                notify.success('Reservation moved to trash.');
             } else {
                 notify.error(res.message || "Couldn't remove reservation.");
             }
@@ -323,7 +323,7 @@ const AdminReservations = ({ globalSearch = '' }) => {
                                                 <button
                                                     onClick={(event) => { event.stopPropagation(); setDeleteConfirm({ ...reservation, type: activeTab === 'tickets' ? 'ticket' : 'event' }); }}
                                                     className="p-2 bg-green-50 hover:bg-red-500/10 border border-green-300 hover:border-red-500/50 text-gray-500 hover:text-red-700 rounded-lg transition-all"
-                                                    title="Delete"
+                                                    title="Move to trash"
                                                 >
                                                     <ReiconTrash className="w-4 h-4" />
                                                 </button>
@@ -480,9 +480,9 @@ const AdminReservations = ({ globalSearch = '' }) => {
                         <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4 text-red-700">
                             <ReiconTrash className="w-4 h-4" />
                         </div>
-                        <h3 className="text-xl font-bold text-gray-900 mb-2">Delete Reservation?</h3>
+                        <h3 className="text-xl font-bold text-gray-900 mb-2">Move Reservation to Trash?</h3>
                         <p className="text-gray-500 mb-6">
-                            Are you sure you want to delete reservation <span className="text-gray-900 font-medium">{deleteConfirm.reservation_reference}</span>? This action cannot be undone.
+                            Reservation <span className="text-gray-900 font-medium">{deleteConfirm.reservation_reference}</span> can be restored later from Trash.
                         </p>
                         <div className="flex gap-3">
                             <button
@@ -495,7 +495,7 @@ const AdminReservations = ({ globalSearch = '' }) => {
                                 onClick={() => deleteReservation(deleteConfirm.id, deleteConfirm.type)}
                                 className="flex-1 py-3 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-gray-900 font-semibold rounded-xl transition-all"
                             >
-                                Delete
+                                Move to Trash
                             </button>
                         </div>
                     </div>

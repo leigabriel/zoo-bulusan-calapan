@@ -34,7 +34,7 @@ exports.sendMessage = async (req, res) => {
                     userId: recipient.id,
                     title: 'New Message Received',
                     message: `New message from ${req.user.firstName || 'a user'}: ${subject}`,
-                    type: 'message',
+                    type: 'info',
                     link: '/admin/messages'
                 });
             }
@@ -194,7 +194,7 @@ exports.respondToMessage = async (req, res) => {
                 userId: message.sender_id,
                 title: 'Response to Your Message',
                 message: `Admin has responded to your message: ${message.subject}`,
-                type: 'message'
+                type: 'info'
             });
         } catch (notificationError) {
             console.error('Error creating notification (response was saved):', notificationError);
@@ -254,7 +254,7 @@ exports.submitAppeal = async (req, res) => {
                 userId: admin.id,
                 title: 'New Suspension Appeal',
                 message: `${user.first_name} ${user.last_name} has submitted a suspension appeal`,
-                type: 'appeal',
+                type: 'warning',
                 link: '/admin/messages'
             });
         }

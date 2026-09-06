@@ -6,7 +6,8 @@ class Reservation {
             `SELECT tr.*, DATE_FORMAT(tr.reservation_date, '%Y-%m-%d') AS reservation_date_display,
                     CONCAT(u.first_name, ' ', u.last_name) as user_name, u.email as user_email
              FROM ticket_reservations tr 
-             LEFT JOIN users u ON tr.user_id = u.id 
+             LEFT JOIN users u ON tr.user_id = u.id
+             WHERE (tr.is_deleted IS NULL OR tr.is_deleted = FALSE)
              ORDER BY tr.created_at DESC`
         );
         return rows.map(row => ({
@@ -24,6 +25,7 @@ class Reservation {
              FROM event_reservations er 
              LEFT JOIN users u ON er.user_id = u.id 
              LEFT JOIN events e ON er.event_id = e.id
+             WHERE (er.is_deleted IS NULL OR er.is_deleted = FALSE)
              ORDER BY er.created_at DESC`
         );
         return rows.map(row => ({
@@ -38,7 +40,7 @@ class Reservation {
             `SELECT tr.*, CONCAT(u.first_name, ' ', u.last_name) as user_name, u.email as user_email 
              FROM ticket_reservations tr 
              LEFT JOIN users u ON tr.user_id = u.id 
-             WHERE tr.id = ?`,
+             WHERE tr.id = ? AND (tr.is_deleted IS NULL OR tr.is_deleted = FALSE)`,
             [id]
         );
         return rows[0];
@@ -51,7 +53,7 @@ class Reservation {
              FROM event_reservations er 
              LEFT JOIN users u ON er.user_id = u.id 
              LEFT JOIN events e ON er.event_id = e.id
-             WHERE er.id = ?`,
+             WHERE er.id = ? AND (er.is_deleted IS NULL OR er.is_deleted = FALSE)`,
             [id]
         );
         return rows[0];
@@ -62,7 +64,7 @@ class Reservation {
             `SELECT tr.*, CONCAT(u.first_name, ' ', u.last_name) as user_name, u.email as user_email 
              FROM ticket_reservations tr 
              LEFT JOIN users u ON tr.user_id = u.id 
-             WHERE tr.reservation_reference = ?`,
+             WHERE tr.reservation_reference = ? AND (tr.is_deleted IS NULL OR tr.is_deleted = FALSE)`,
             [reference]
         );
         return rows[0];
@@ -75,7 +77,7 @@ class Reservation {
              FROM event_reservations er 
              LEFT JOIN users u ON er.user_id = u.id 
              LEFT JOIN events e ON er.event_id = e.id
-             WHERE er.reservation_reference = ?`,
+             WHERE er.reservation_reference = ? AND (er.is_deleted IS NULL OR er.is_deleted = FALSE)`,
             [reference]
         );
         return rows[0];
@@ -84,7 +86,7 @@ class Reservation {
     static async findTicketReservationsByUserId(userId) {
         const [rows] = await db.query(
             `SELECT * FROM ticket_reservations 
-             WHERE user_id = ? 
+             WHERE user_id = ? AND (is_deleted IS NULL OR is_deleted = FALSE)
              ORDER BY created_at DESC`,
             [userId]
         );
@@ -96,7 +98,7 @@ class Reservation {
             `SELECT er.*, e.title as event_title, e.event_date, e.start_time, e.end_time, e.location as event_location
              FROM event_reservations er 
              LEFT JOIN events e ON er.event_id = e.id
-             WHERE er.user_id = ? 
+             WHERE er.user_id = ? AND (er.is_deleted IS NULL OR er.is_deleted = FALSE)
              ORDER BY er.created_at DESC`,
             [userId]
         );
@@ -106,10 +108,10 @@ class Reservation {
     static async findEventReservationByPaymentReference(checkoutSessionId, reservationReference, paymentId, reservationId) {
         const [rows] = await db.query(
             `SELECT * FROM event_reservations
-             WHERE (paymongo_checkout_session_id = ? AND ? IS NOT NULL)
+             WHERE (is_deleted IS NULL OR is_deleted = FALSE) AND ((paymongo_checkout_session_id = ? AND ? IS NOT NULL)
                 OR (reservation_reference = ? AND ? IS NOT NULL)
                 OR (paymongo_payment_id = ? AND ? IS NOT NULL)
-                OR (id = ? AND ? IS NOT NULL)
+                 OR (id = ? AND ? IS NOT NULL))
              LIMIT 1`,
             [checkoutSessionId || null, checkoutSessionId || null, reservationReference || null, reservationReference || null,
                 paymentId || null, paymentId || null, reservationId || null, reservationId || null]
@@ -126,6 +128,7 @@ class Reservation {
              LEFT JOIN users u ON er.user_id = u.id 
              LEFT JOIN events e ON er.event_id = e.id
              WHERE er.user_id = ? AND er.status = 'confirmed' AND er.is_archived = FALSE
+               AND (er.is_deleted IS NULL OR er.is_deleted = FALSE)
              ORDER BY er.venue_event_date ASC`,
             [userId]
         );
@@ -204,7 +207,7 @@ class Reservation {
         });
         if (!updates.length) return false;
         params.push(id);
-        const [result] = await db.query(`UPDATE event_reservations SET ${updates.join(', ')} WHERE id = ?`, params);
+        const [result] = await db.query(`UPDATE event_reservations SET ${updates.join(', ')} WHERE id = ? AND (is_deleted IS NULL OR is_deleted = FALSE)`, params);
         return result.affectedRows > 0;
     }
 
@@ -220,7 +223,7 @@ class Reservation {
             query += ', cancelled_at = NOW()';
         }
         
-        query += ' WHERE id = ?';
+        query += ' WHERE id = ? AND (is_deleted IS NULL OR is_deleted = FALSE)';
         params.push(id);
         
         const [result] = await db.query(query, params);
@@ -239,7 +242,7 @@ class Reservation {
             query += ', cancelled_at = NOW()';
         }
         
-        query += ' WHERE id = ?';
+        query += ' WHERE id = ? AND (is_deleted IS NULL OR is_deleted = FALSE)';
         params.push(id);
         
         const [result] = await db.query(query, params);
@@ -275,7 +278,7 @@ class Reservation {
 
         params.push(id);
         const [result] = await db.query(
-            `UPDATE ticket_reservations SET ${updates.join(', ')} WHERE id = ?`,
+            `UPDATE ticket_reservations SET ${updates.join(', ')} WHERE id = ? AND (is_deleted IS NULL OR is_deleted = FALSE)`,
             params
         );
         return result.affectedRows > 0;
@@ -314,7 +317,7 @@ class Reservation {
 
         params.push(id);
         const [result] = await db.query(
-            `UPDATE event_reservations SET ${updates.join(', ')} WHERE id = ?`,
+            `UPDATE event_reservations SET ${updates.join(', ')} WHERE id = ? AND (is_deleted IS NULL OR is_deleted = FALSE)`,
             params
         );
         return result.affectedRows > 0;
@@ -327,7 +330,7 @@ class Reservation {
                 venue_event_name = ?, venue_event_date = ?, venue_event_time = ?,
                 venue_event_end_time = ?, venue_event_description = ?,
                 number_of_participants = ?, notes = ?
-             WHERE id = ? AND user_id = ? AND status = 'confirmed'`,
+             WHERE id = ? AND user_id = ? AND status = 'confirmed' AND (is_deleted IS NULL OR is_deleted = FALSE)`,
             [
                 venueEventName, venueEventDate, venueEventStartTime,
                 venueEventEndTime, venueEventDescription,
@@ -340,35 +343,65 @@ class Reservation {
 
     static async updateEventReservationEventId(id, eventId) {
         const [result] = await db.query(
-            'UPDATE event_reservations SET event_id = ? WHERE id = ?',
+            'UPDATE event_reservations SET event_id = ? WHERE id = ? AND (is_deleted IS NULL OR is_deleted = FALSE)',
             [eventId, id]
         );
         return result.affectedRows > 0;
     }
 
-    static async deleteTicketReservation(id) {
-        const [result] = await db.query('DELETE FROM ticket_reservations WHERE id = ?', [id]);
+    static async deleteTicketReservation(id, deletedBy) {
+        const [result] = await db.query('UPDATE ticket_reservations SET is_deleted = TRUE, deleted_at = NOW(), deleted_by = ? WHERE id = ? AND (is_deleted IS NULL OR is_deleted = FALSE)', [deletedBy, id]);
         return result.affectedRows > 0;
     }
 
-    static async deleteEventReservation(id) {
-        const [result] = await db.query('DELETE FROM event_reservations WHERE id = ?', [id]);
+    static async deleteEventReservation(id, deletedBy) {
+        const [result] = await db.query('UPDATE event_reservations SET is_deleted = TRUE, deleted_at = NOW(), deleted_by = ? WHERE id = ? AND (is_deleted IS NULL OR is_deleted = FALSE)', [deletedBy, id]);
         return result.affectedRows > 0;
+    }
+
+    static async getDeletedTicketReservations() {
+        const [rows] = await db.query(`SELECT tr.*, CONCAT(u.first_name, ' ', u.last_name) AS deleted_by_name FROM ticket_reservations tr LEFT JOIN users u ON tr.deleted_by = u.id WHERE tr.is_deleted = TRUE ORDER BY tr.deleted_at DESC`);
+        return rows;
+    }
+
+    static async getDeletedEventReservations() {
+        const [rows] = await db.query(`SELECT er.*, CONCAT(u.first_name, ' ', u.last_name) AS deleted_by_name FROM event_reservations er LEFT JOIN users u ON er.deleted_by = u.id WHERE er.is_deleted = TRUE ORDER BY er.deleted_at DESC`);
+        return rows;
+    }
+
+    static async restoreTicketReservations(ids) {
+        const [result] = await db.query('UPDATE ticket_reservations SET is_deleted = FALSE, deleted_at = NULL, deleted_by = NULL WHERE id IN (?) AND is_deleted = TRUE', [ids]);
+        return result.affectedRows;
+    }
+
+    static async restoreEventReservations(ids) {
+        const [result] = await db.query('UPDATE event_reservations SET is_deleted = FALSE, deleted_at = NULL, deleted_by = NULL WHERE id IN (?) AND is_deleted = TRUE', [ids]);
+        return result.affectedRows;
+    }
+
+    static async permanentDeleteTicketReservations(ids) {
+        const [result] = await db.query('DELETE FROM ticket_reservations WHERE id IN (?) AND is_deleted = TRUE', [ids]);
+        return result.affectedRows;
+    }
+
+    static async permanentDeleteEventReservations(ids) {
+        const [result] = await db.query('DELETE FROM event_reservations WHERE id IN (?) AND is_deleted = TRUE', [ids]);
+        return result.affectedRows;
     }
 
     static async countTicketReservations() {
-        const [rows] = await db.query('SELECT COUNT(*) as total FROM ticket_reservations');
+        const [rows] = await db.query('SELECT COUNT(*) as total FROM ticket_reservations WHERE (is_deleted IS NULL OR is_deleted = FALSE)');
         return rows[0].total;
     }
 
     static async countEventReservations() {
-        const [rows] = await db.query('SELECT COUNT(*) as total FROM event_reservations');
+        const [rows] = await db.query('SELECT COUNT(*) as total FROM event_reservations WHERE (is_deleted IS NULL OR is_deleted = FALSE)');
         return rows[0].total;
     }
 
     static async countTicketReservationsByStatus(status) {
         const [rows] = await db.query(
-            'SELECT COUNT(*) as total FROM ticket_reservations WHERE status = ?',
+            'SELECT COUNT(*) as total FROM ticket_reservations WHERE status = ? AND (is_deleted IS NULL OR is_deleted = FALSE)',
             [status]
         );
         return rows[0].total;
@@ -376,7 +409,7 @@ class Reservation {
 
     static async countEventReservationsByStatus(status) {
         const [rows] = await db.query(
-            'SELECT COUNT(*) as total FROM event_reservations WHERE status = ?',
+            'SELECT COUNT(*) as total FROM event_reservations WHERE status = ? AND (is_deleted IS NULL OR is_deleted = FALSE)',
             [status]
         );
         return rows[0].total;
@@ -387,7 +420,7 @@ class Reservation {
             `SELECT tr.*, CONCAT(u.first_name, ' ', u.last_name) as user_name, u.email as user_email 
              FROM ticket_reservations tr 
              LEFT JOIN users u ON tr.user_id = u.id 
-             WHERE DATE(tr.reservation_date) = CURDATE()
+              WHERE DATE(tr.reservation_date) = CURDATE() AND (tr.is_deleted IS NULL OR tr.is_deleted = FALSE)
              ORDER BY tr.created_at DESC`
         );
         return rows;
@@ -398,7 +431,7 @@ class Reservation {
             `SELECT tr.*, CONCAT(u.first_name, ' ', u.last_name) as user_name, u.email as user_email 
              FROM ticket_reservations tr 
              LEFT JOIN users u ON tr.user_id = u.id 
-             WHERE tr.reservation_date >= CURDATE() AND tr.status IN ('pending', 'confirmed')
+             WHERE tr.reservation_date >= CURDATE() AND tr.status IN ('pending', 'confirmed') AND (tr.is_deleted IS NULL OR tr.is_deleted = FALSE)
              ORDER BY tr.reservation_date ASC`
         );
         return rows;
@@ -411,7 +444,7 @@ class Reservation {
              FROM event_reservations er 
              LEFT JOIN users u ON er.user_id = u.id 
              LEFT JOIN events e ON er.event_id = e.id
-             WHERE e.event_date >= CURDATE() AND er.status IN ('pending', 'confirmed')
+             WHERE e.event_date >= CURDATE() AND er.status IN ('pending', 'confirmed') AND (er.is_deleted IS NULL OR er.is_deleted = FALSE)
              ORDER BY e.event_date ASC`
         );
         return rows;
@@ -419,7 +452,7 @@ class Reservation {
 
     static async updateVerificationStatus(id, status) {
         const [result] = await db.query(
-            'UPDATE ticket_reservations SET verification_status = ? WHERE id = ?',
+            'UPDATE ticket_reservations SET verification_status = ? WHERE id = ? AND (is_deleted IS NULL OR is_deleted = FALSE)',
             [status, id]
         );
         return result.affectedRows > 0;
@@ -430,7 +463,7 @@ class Reservation {
             `SELECT COALESCE(SUM(total_visitors), 0) as total_visitors,
                     COALESCE(SUM(bulusan_resident_quantity), 0) as bulusan_residents
              FROM ticket_reservations
-             WHERE reservation_date = ? AND status IN ('pending', 'confirmed')`,
+             WHERE reservation_date = ? AND status IN ('pending', 'confirmed') AND (is_deleted IS NULL OR is_deleted = FALSE)`,
             [reservationDate]
         );
         return rows[0] || { total_visitors: 0, bulusan_residents: 0 };
@@ -441,7 +474,7 @@ class Reservation {
             `SELECT reservation_date, reservation_time,
                     COALESCE(SUM(total_visitors), 0) as total_visitors
              FROM ticket_reservations
-             WHERE reservation_date BETWEEN ? AND ? AND status IN ('pending', 'confirmed')
+             WHERE reservation_date BETWEEN ? AND ? AND status IN ('pending', 'confirmed') AND (is_deleted IS NULL OR is_deleted = FALSE)
              GROUP BY reservation_date, reservation_time`,
             [startDate, endDate]
         );
@@ -452,7 +485,7 @@ class Reservation {
         const [rows] = await db.query(
             `SELECT COALESCE(SUM(number_of_participants), 0) as total_participants
              FROM event_reservations
-             WHERE venue_event_date = ? AND status IN ('pending', 'confirmed')`,
+             WHERE venue_event_date = ? AND status IN ('pending', 'confirmed') AND (is_deleted IS NULL OR is_deleted = FALSE)`,
             [venueEventDate]
         );
         return rows[0] || { total_participants: 0 };
@@ -462,7 +495,7 @@ class Reservation {
         const [rows] = await db.query(
             `SELECT COALESCE(SUM(number_of_participants), 0) as total_participants
              FROM event_reservations
-             WHERE venue_event_date = ? AND venue_event_time = ? AND status IN ('pending', 'confirmed')`,
+             WHERE venue_event_date = ? AND venue_event_time = ? AND status IN ('pending', 'confirmed') AND (is_deleted IS NULL OR is_deleted = FALSE)`,
             [venueEventDate, venueEventTime]
         );
         return rows[0] || { total_participants: 0 };
@@ -473,7 +506,7 @@ class Reservation {
             `SELECT venue_event_date, venue_event_time,
                     COALESCE(SUM(number_of_participants), 0) as total_participants
              FROM event_reservations
-             WHERE venue_event_date BETWEEN ? AND ? AND status IN ('pending', 'confirmed')
+             WHERE venue_event_date BETWEEN ? AND ? AND status IN ('pending', 'confirmed') AND (is_deleted IS NULL OR is_deleted = FALSE)
              GROUP BY venue_event_date, venue_event_time`,
             [startDate, endDate]
         );
@@ -484,7 +517,7 @@ class Reservation {
         const [result] = await db.query(
             `UPDATE ticket_reservations
              SET status = 'completed', checked_in_at = NOW(), checked_in_by = ?
-             WHERE reservation_reference = ? AND status IN ('pending', 'confirmed')`,
+             WHERE reservation_reference = ? AND status IN ('pending', 'confirmed') AND (is_deleted IS NULL OR is_deleted = FALSE)`,
             [staffId, reference]
         );
         return result.affectedRows > 0;
@@ -494,7 +527,7 @@ class Reservation {
         const [result] = await db.query(
             `UPDATE event_reservations
              SET status = 'completed', checked_in_at = NOW(), checked_in_by = ?
-             WHERE reservation_reference = ? AND status IN ('pending', 'confirmed')`,
+             WHERE reservation_reference = ? AND status IN ('pending', 'confirmed') AND (is_deleted IS NULL OR is_deleted = FALSE)`,
             [staffId, reference]
         );
         return result.affectedRows > 0;
@@ -506,7 +539,7 @@ class Reservation {
                 `SELECT tr.*, CONCAT(u.first_name, ' ', u.last_name) as user_name, u.email as user_email 
                  FROM ticket_reservations tr 
                  LEFT JOIN users u ON tr.user_id = u.id 
-                 WHERE tr.reservation_date BETWEEN ? AND ?
+                  WHERE tr.reservation_date BETWEEN ? AND ? AND (tr.is_deleted IS NULL OR tr.is_deleted = FALSE)
                  ORDER BY tr.reservation_date ASC`,
                 [startDate, endDate]
             );
@@ -518,7 +551,7 @@ class Reservation {
                  FROM event_reservations er 
                  LEFT JOIN users u ON er.user_id = u.id 
                  LEFT JOIN events e ON er.event_id = e.id
-                 WHERE e.event_date BETWEEN ? AND ?
+                  WHERE e.event_date BETWEEN ? AND ? AND (er.is_deleted IS NULL OR er.is_deleted = FALSE)
                  ORDER BY e.event_date ASC`,
                 [startDate, endDate]
             );
@@ -528,7 +561,7 @@ class Reservation {
 
     static async archiveTicketReservation(id, userId) {
         const [result] = await db.query(
-            'UPDATE ticket_reservations SET is_archived = TRUE, updated_at = NOW() WHERE id = ? AND user_id = ?',
+            'UPDATE ticket_reservations SET is_archived = TRUE, updated_at = NOW() WHERE id = ? AND user_id = ? AND (is_deleted IS NULL OR is_deleted = FALSE)',
             [id, userId]
         );
         return result.affectedRows > 0;
@@ -536,7 +569,7 @@ class Reservation {
 
     static async unarchiveTicketReservation(id, userId) {
         const [result] = await db.query(
-            'UPDATE ticket_reservations SET is_archived = FALSE, updated_at = NOW() WHERE id = ? AND user_id = ?',
+            'UPDATE ticket_reservations SET is_archived = FALSE, updated_at = NOW() WHERE id = ? AND user_id = ? AND (is_deleted IS NULL OR is_deleted = FALSE)',
             [id, userId]
         );
         return result.affectedRows > 0;
@@ -544,7 +577,7 @@ class Reservation {
 
     static async archiveEventReservation(id, userId) {
         const [result] = await db.query(
-            'UPDATE event_reservations SET is_archived = TRUE, updated_at = NOW() WHERE id = ? AND user_id = ?',
+            'UPDATE event_reservations SET is_archived = TRUE, updated_at = NOW() WHERE id = ? AND user_id = ? AND (is_deleted IS NULL OR is_deleted = FALSE)',
             [id, userId]
         );
         return result.affectedRows > 0;
@@ -552,7 +585,7 @@ class Reservation {
 
     static async unarchiveEventReservation(id, userId) {
         const [result] = await db.query(
-            'UPDATE event_reservations SET is_archived = FALSE, updated_at = NOW() WHERE id = ? AND user_id = ?',
+            'UPDATE event_reservations SET is_archived = FALSE, updated_at = NOW() WHERE id = ? AND user_id = ? AND (is_deleted IS NULL OR is_deleted = FALSE)',
             [id, userId]
         );
         return result.affectedRows > 0;

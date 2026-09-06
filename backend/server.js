@@ -104,7 +104,7 @@ app.use('/api/analytics', analyticsRoutes);
 app.get('/api/health', async (req, res) => {
     const health = {
         success: true,
-        message: 'Zoo Bulusan API is running',
+        message: 'Bulusan Zoo API is running',
         timestamp: new Date().toISOString(),
         environment: process.env.NODE_ENV || 'development',
         uptime: process.uptime()
@@ -125,7 +125,7 @@ app.get('/api/health', async (req, res) => {
 app.get('/', (req, res) => {
     res.json({
         success: true,
-        message: 'Welcome to Zoo Bulusan API',
+        message: 'Welcome to Bulusan Zoo API',
         version: '1.0.0'
     });
 });

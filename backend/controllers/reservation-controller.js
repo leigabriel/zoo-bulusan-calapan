@@ -1,5 +1,7 @@
 const Reservation = require('../models/reservation-model');
 const Event = require('../models/event-model');
+const User = require('../models/user-model');
+const bcrypt = require('bcryptjs');
 const Notification = require('../models/notification-model');
 const { logStaffActivity, logUserActivity } = require('../middleware/track-activity');
 const crypto = require('crypto');
@@ -58,7 +60,7 @@ const createOrUpdateLinkedEvent = async (reservation, imageUrl = null) => {
                 eventDate,
                 startTime,
                 endTime,
-                location: existing.location || 'Zoo Bulusan',
+                location: existing.location || 'Bulusan Zoo',
                 imageUrl: imageUrl || existing.image_url || EVENT_IMAGE_PLACEHOLDER,
                 status: 'upcoming',
                 color: existing.color || '#22c55e'
@@ -73,7 +75,7 @@ const createOrUpdateLinkedEvent = async (reservation, imageUrl = null) => {
         eventDate,
         startTime,
         endTime,
-        location: 'Zoo Bulusan',
+        location: 'Bulusan Zoo',
         imageUrl: imageUrl || EVENT_IMAGE_PLACEHOLDER,
         status: 'upcoming',
         color: '#22c55e',
@@ -582,13 +584,13 @@ exports.updateVerificationStatus = async (req, res) => {
 exports.deleteTicketReservation = async (req, res) => {
     try {
         const { id } = req.params;
-        const deleted = await Reservation.deleteTicketReservation(id);
+        const deleted = await Reservation.deleteTicketReservation(id, req.user.id);
 
         if (!deleted) {
             return res.status(404).json({ success: false, message: 'Reservation not found' });
         }
 
-        res.json({ success: true, message: 'Reservation deleted successfully' });
+        res.json({ success: true, message: 'Reservation moved to trash' });
     } catch (error) {
         console.error('Error deleting reservation:', error);
         res.status(500).json({ success: false, message: 'Error deleting reservation' });
@@ -598,20 +600,72 @@ exports.deleteTicketReservation = async (req, res) => {
 exports.deleteEventReservation = async (req, res) => {
     try {
         const { id } = req.params;
-        const existing = await Reservation.findEventReservationById(id);
-        const deleted = await Reservation.deleteEventReservation(id);
+        const deleted = await Reservation.deleteEventReservation(id, req.user.id);
 
         if (!deleted) {
             return res.status(404).json({ success: false, message: 'Reservation not found' });
         }
 
-        // Clean up the calendar event created from this reservation if applicable.
-        await removeReservationOwnedEvent(existing);
-
-        res.json({ success: true, message: 'Reservation deleted successfully' });
+        res.json({ success: true, message: 'Reservation moved to trash' });
     } catch (error) {
         console.error('Error deleting event reservation:', error);
         res.status(500).json({ success: false, message: 'Error deleting reservation' });
+    }
+};
+
+exports.getTrashReservations = async (req, res) => {
+    try {
+        const [ticketReservations, eventReservations] = await Promise.all([
+            Reservation.getDeletedTicketReservations(),
+            Reservation.getDeletedEventReservations()
+        ]);
+        res.json({ success: true, ticketReservations, eventReservations });
+    } catch (error) {
+        console.error('Error fetching trashed reservations:', error);
+        res.status(500).json({ success: false, message: 'Error fetching trashed reservations' });
+    }
+};
+
+exports.restoreTrashReservations = async (req, res) => {
+    try {
+        const { type } = req.params;
+        const ids = Array.isArray(req.body.ids) ? req.body.ids : [req.params.id].filter(Boolean);
+        if (!ids.length || !['ticket', 'event'].includes(type)) {
+            return res.status(400).json({ success: false, message: 'Invalid reservation selection' });
+        }
+        const count = type === 'ticket'
+            ? await Reservation.restoreTicketReservations(ids)
+            : await Reservation.restoreEventReservations(ids);
+        if (!count) return res.status(404).json({ success: false, message: 'Reservation not found in trash' });
+        res.json({ success: true, message: `${count} reservation(s) restored` });
+    } catch (error) {
+        console.error('Error restoring reservations:', error);
+        res.status(500).json({ success: false, message: 'Error restoring reservations' });
+    }
+};
+
+exports.permanentDeleteTrashReservations = async (req, res) => {
+    try {
+        if (req.user.role !== 'admin') return res.status(403).json({ success: false, message: 'Admin access required' });
+        const { type } = req.params;
+        const { password } = req.body;
+        const ids = Array.isArray(req.body.ids) ? req.body.ids : [req.params.id].filter(Boolean);
+        if (!ids.length || !['ticket', 'event'].includes(type)) {
+            return res.status(400).json({ success: false, message: 'Invalid reservation selection' });
+        }
+        if (!password) return res.status(400).json({ success: false, message: 'Password required for permanent deletion' });
+        const admin = await User.findById(req.user.id);
+        if (!admin?.password || !(await bcrypt.compare(password, admin.password))) {
+            return res.status(401).json({ success: false, message: 'Incorrect password' });
+        }
+        const count = type === 'ticket'
+            ? await Reservation.permanentDeleteTicketReservations(ids)
+            : await Reservation.permanentDeleteEventReservations(ids);
+        if (!count) return res.status(404).json({ success: false, message: 'Reservation not found in trash' });
+        res.json({ success: true, message: `${count} reservation(s) permanently deleted` });
+    } catch (error) {
+        console.error('Error permanently deleting reservations:', error);
+        res.status(500).json({ success: false, message: 'Error permanently deleting reservations' });
     }
 };
 

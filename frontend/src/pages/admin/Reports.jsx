@@ -303,7 +303,7 @@ const Reports = () => {
         ]);
 
         const sheetRows = [
-            ['Zoo Bulusan Calapan'],
+            ['Bulusan Zoo Calapan'],
             [title],
             ['Date Range', `${start} to ${end}`],
             ['Generated At', generatedAt],
@@ -388,7 +388,7 @@ const Reports = () => {
     </style>
 </head>
 <body>
-    <h1>Zoo Bulusan Calapan</h1>
+    <h1>Bulusan Zoo Calapan</h1>
     <h2>${escapeHtml(title)}</h2>
     <div class="meta">
         <span>Date Range: ${escapeHtml(start)} to ${escapeHtml(end)}</span>

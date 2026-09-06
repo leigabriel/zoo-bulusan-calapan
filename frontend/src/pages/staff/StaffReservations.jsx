@@ -1,4 +1,4 @@
-import { Ticket as TicketIcon, Calendar as CalendarIcon, Search as SearchIcon, Eye as EyeIcon, Check as CheckIcon, X as CloseIcon } from 'reicon-react';
+import { Ticket as TicketIcon, Calendar as CalendarIcon, Search as SearchIcon, Eye as EyeIcon, Check as CheckIcon, X as CloseIcon, Trash as TrashIcon } from 'reicon-react';
 import { useState, useEffect } from 'react';
 import { reservationAPI, getResidentIdImageUrl } from '../../services/api-client';
 import { notify } from '../../utils/toast';
@@ -16,6 +16,7 @@ const StaffReservations = ({ globalSearch = '' }) => {
     const [showModal, setShowModal] = useState(false);
     const [actionLoading, setActionLoading] = useState(false);
     const [confirmAction, setConfirmAction] = useState(null);
+    const [trashTarget, setTrashTarget] = useState(null);
 
     useEffect(() => { fetchReservations(); }, []);
 
@@ -98,6 +99,26 @@ const StaffReservations = ({ globalSearch = '' }) => {
         if (!confirmAction) return;
         await updateReservationStatus(confirmAction.id, confirmAction.type, confirmAction.status);
         setConfirmAction(null);
+    };
+
+    const moveToTrash = async () => {
+        if (!trashTarget) return;
+        setActionLoading(true);
+        try {
+            const response = trashTarget.type === 'ticket'
+                ? await reservationAPI.deleteTicketReservation(trashTarget.id, 'staff')
+                : await reservationAPI.deleteEventReservation(trashTarget.id, 'staff');
+            if (!response.success) throw new Error(response.message || 'Move failed');
+            await fetchReservations();
+            setShowModal(false);
+            setSelectedReservation(null);
+            setTrashTarget(null);
+            notify.success('Reservation moved to trash.');
+        } catch (error) {
+            notify.error(error.message || "Couldn't move reservation to trash.");
+        } finally {
+            setActionLoading(false);
+        }
     };
 
     const stats = {
@@ -292,7 +313,7 @@ const StaffReservations = ({ globalSearch = '' }) => {
                                                 >
                                                     <EyeIcon className="w-4 h-4" />
                                                 </button>
-                                                {reservation.status === 'pending' && (
+                                                 {reservation.status === 'pending' && (
                                                     <button
                                                          onClick={(event) => { event.stopPropagation(); handleStatusChange(reservation.id, activeTab === 'tickets' ? 'ticket' : 'event', 'confirmed'); }}
                                                         className="p-2 bg-green-50 hover:bg-green-400/10 border border-green-300 hover:border-green-400/50 text-gray-500 hover:text-green-800 rounded-lg transition-all"
@@ -300,7 +321,14 @@ const StaffReservations = ({ globalSearch = '' }) => {
                                                     >
 <CheckIcon className="w-4 h-4" />
                                                     </button>
-                                                )}
+                                                 )}
+                                                 <button
+                                                     onClick={(event) => { event.stopPropagation(); setTrashTarget({ ...reservation, type: activeTab === 'tickets' ? 'ticket' : 'event' }); }}
+                                                     className="p-2 bg-green-50 hover:bg-red-500/10 border border-green-300 hover:border-red-500/50 text-gray-500 hover:text-red-700 rounded-lg transition-all"
+                                                     title="Move to trash"
+                                                 >
+                                                     <TrashIcon className="w-4 h-4" />
+                                                 </button>
                                             </div>
                                         </td>
                                     </tr>
@@ -477,6 +505,19 @@ const StaffReservations = ({ globalSearch = '' }) => {
                             >
                                 {actionLoading ? 'Processing...' : (confirmAction.status === 'confirmed' ? 'Confirm' : 'Cancel Reservation')}
                             </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+            {trashTarget && (
+                <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-white border border-green-300 rounded-2xl w-full max-w-sm p-6 text-center">
+                        <TrashIcon className="w-10 h-10 mx-auto mb-4 text-red-700" />
+                        <h3 className="text-xl font-bold text-gray-900 mb-2">Move Reservation to Trash?</h3>
+                        <p className="text-gray-500 mb-6">Reservation <span className="font-medium text-gray-900">{trashTarget.reservation_reference}</span> can be restored later from Trash.</p>
+                        <div className="flex gap-3">
+                            <button onClick={() => setTrashTarget(null)} disabled={actionLoading} className="flex-1 py-3 bg-green-50 text-gray-700 font-medium rounded-xl">Cancel</button>
+                            <button onClick={moveToTrash} disabled={actionLoading} className="flex-1 py-3 bg-red-600 text-white font-semibold rounded-xl disabled:opacity-50">{actionLoading ? 'Moving...' : 'Move to Trash'}</button>
                         </div>
                     </div>
                 </div>

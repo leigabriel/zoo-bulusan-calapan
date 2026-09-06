@@ -2058,6 +2058,25 @@ export const reservationAPI = {
         return handleResponse(response);
     },
 
+    getTrashReservations: async (type = 'admin') => {
+        const response = await fetch(`${API_BASE_URL}/reservations/trash`, { headers: getAuthHeaders(type) });
+        return handleResponse(response);
+    },
+
+    restoreTrashReservations: async (reservationType, ids, type = 'admin') => {
+        const response = await fetch(`${API_BASE_URL}/reservations/trash/${reservationType}/restore`, {
+            method: 'PUT', headers: getAuthHeaders(type), body: JSON.stringify({ ids })
+        });
+        return handleResponse(response);
+    },
+
+    permanentDeleteTrashReservations: async (reservationType, ids, password) => {
+        const response = await fetch(`${API_BASE_URL}/reservations/trash/${reservationType}/permanent`, {
+            method: 'DELETE', headers: getAuthHeaders('admin'), body: JSON.stringify({ ids, password })
+        });
+        return handleResponse(response);
+    },
+
     archiveTicketReservation: async (id) => {
         const response = await fetch(`${API_BASE_URL}/reservations/ticket/${id}/archive`, {
             method: 'PUT',

@@ -308,7 +308,7 @@ exports.reviewPost = async (req, res) => {
                 message: action === 'approved'
                     ? 'Your community post has been approved and is now visible to others.'
                     : `Your community post was declined. Reason: ${moderationNote}`,
-                type: 'community',
+                type: 'info',
                 link: '/community'
             });
         } catch (error) {
@@ -385,7 +385,7 @@ exports.createComment = async (req, res) => {
                     userId: postWithAuthor.user_id,
                     title: 'New Comment on Your Post',
                     message: `${req.user.firstName || req.user.username || 'A user'} commented on your post.`,
-                    type: 'community',
+                    type: 'info',
                     link: '/community'
                 });
             } catch (error) {
