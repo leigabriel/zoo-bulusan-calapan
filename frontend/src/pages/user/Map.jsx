@@ -4,7 +4,9 @@ import { APIProvider, APILoadingStatus, Map3D, MapMode, Marker3D, AltitudeMode, 
 import { fetchAnimalDescription } from '../../services/animal-description-service';
 import { ChevronLeft, Menu, X } from 'reicon-react';
 
-const API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+/* global __GOOGLE_MAPS_API_KEY__ */
+
+const API_KEY = __GOOGLE_MAPS_API_KEY__;
 
 const animalHabitats = [
     { id: 1, name: 'African Lion', species: 'Panthera leo', habitat: 'Sub-Saharan Africa', region: 'Africa', coordinates: [-1.2921, 36.8219], icon: '🦁', image: 'https://images.unsplash.com/photo-1546182990-dffeafbe841d?auto=format&fit=crop&q=80&w=1000', description: 'The king of the savannah, living in social prides. They are apex predators essential for maintaining the balance of herbivore populations.', category: 'Mammals' },
