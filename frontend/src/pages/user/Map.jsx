@@ -1,7 +1,10 @@
-import React, { useEffect, useRef, useState, useCallback, memo } from 'react';
+import React, { useEffect, useState, useCallback, memo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { APIProvider, APILoadingStatus, Map3D, MapMode, Marker3D, AltitudeMode, Pin, useApiLoadingStatus } from '@vis.gl/react-google-maps';
 import { fetchAnimalDescription } from '../../services/animal-description-service';
 import { ChevronLeft, Menu, X } from 'reicon-react';
+
+const API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
 const animalHabitats = [
     { id: 1, name: 'African Lion', species: 'Panthera leo', habitat: 'Sub-Saharan Africa', region: 'Africa', coordinates: [-1.2921, 36.8219], icon: '🦁', image: 'https://images.unsplash.com/photo-1546182990-dffeafbe841d?auto=format&fit=crop&q=80&w=1000', description: 'The king of the savannah, living in social prides. They are apex predators essential for maintaining the balance of herbivore populations.', category: 'Mammals' },
@@ -34,6 +37,17 @@ const regionColors = {
     'Polar Regions': '#8098ad',
     'Europe': '#987c66'
 };
+
+const INITIAL_VIEW = {
+    center: { lat: 20, lng: 0, altitude: 0 },
+    range: 32000000,
+    heading: 0,
+    tilt: 0,
+    roll: 0
+};
+
+const FOCUS_RANGE = 4200000;
+const FOCUS_TILT = 55;
 
 const DiscoveryList = memo(({ isMobile, filterRegion, setFilterRegion, selectedAnimal, onSelect, onClose }) => (
     <div className={`flex flex-col h-full bg-[#fffdf8] ${!isMobile && 'border-l border-[#dce5dc] shadow-2xl'}`}>
@@ -81,13 +95,98 @@ const DiscoveryList = memo(({ isMobile, filterRegion, setFilterRegion, selectedA
     </div>
 ));
 
+const GlobeMap = ({ selectedAnimal, filterRegion, onSelectAnimal }) => {
+    const apiStatus = useApiLoadingStatus();
+    const [viewProps, setViewProps] = useState(INITIAL_VIEW);
+    const selectedAnimalId = selectedAnimal?.id;
+
+    const handleCameraChange = useCallback((ev) => {
+        setViewProps(prev => ({ ...prev, ...ev.detail }));
+    }, []);
+
+    useEffect(() => {
+        const animal = animalHabitats.find(a => a.id === selectedAnimalId);
+        if (!animal) return;
+        const [lat, lng] = animal.coordinates;
+        setViewProps(prev => ({
+            ...prev,
+            center: { lat, lng, altitude: 0 },
+            range: FOCUS_RANGE,
+            heading: 0,
+            tilt: FOCUS_TILT,
+            roll: 0
+        }));
+    }, [selectedAnimalId]);
+
+    const visibleAnimals = filterRegion === 'All'
+        ? animalHabitats
+        : animalHabitats.filter(a => a.region === filterRegion);
+
+    const isLoaded = apiStatus === APILoadingStatus.LOADED;
+    const isFailed = apiStatus === APILoadingStatus.FAILED || apiStatus === APILoadingStatus.AUTH_FAILURE;
+
+    if (!isLoaded) {
+        return (
+            <div className="h-full w-full flex items-center justify-center bg-[#e8eee8]">
+                {isFailed ? (
+                    <p className="px-6 text-center text-sm font-medium text-[#52675a]">
+                        Could not load the 3D globe. Check that the Google Maps API key is valid and that the Maps 3D API is enabled.
+                    </p>
+                ) : (
+                    <div className="flex flex-col items-center gap-6">
+                        <div className="w-12 h-12 border-4 border-[#d5e1d5] border-t-[#1f3328] rounded-full animate-spin" />
+                        <p className="text-[#1f3328] font-bold text-[10px] uppercase tracking-[0.3em] animate-pulse">Synchronizing Globe...</p>
+                    </div>
+                )}
+            </div>
+        );
+    }
+
+    return (
+        <Map3D
+            {...viewProps}
+            mode={MapMode.SATELLITE}
+            onCameraChanged={handleCameraChange}
+            style={{ width: '100%', height: '100%' }}
+        >
+            {visibleAnimals.map(animal => (
+                <Marker3D
+                    key={animal.id}
+                    position={{ lat: animal.coordinates[0], lng: animal.coordinates[1], altitude: 0 }}
+                    altitudeMode={AltitudeMode.RELATIVE_TO_GROUND}
+                    onClick={() => onSelectAnimal(animal)}
+                    title={`${animal.name} — ${animal.region}`}
+                >
+                    <Pin
+                        background={regionColors[animal.region]}
+                        borderColor="#ffffff"
+                        glyphColor="#ffffff"
+                        glyph={animal.icon}
+                        scale={10}
+                    />
+                </Marker3D>
+            ))}
+        </Map3D>
+    );
+};
+
+const MapFallback = () => (
+    <div className="h-full w-full flex items-center justify-center bg-[#e8eee8] p-8">
+        <div className="max-w-xs text-center">
+            <div className="w-20 h-20 mx-auto mb-5 rounded-full border-4 border-white bg-[#f1f5ed] shadow-inner flex items-center justify-center text-4xl">
+                🌏
+            </div>
+            <h2 className="text-lg font-black text-[#1f3328] mb-2">3D Globe Disabled</h2>
+            <p className="text-sm text-[#52675a] font-medium leading-relaxed">
+                The interactive globe needs a Google Maps API key with the Maps 3D API enabled. Set <span className="font-mono text-[#1f3328]">VITE_GOOGLE_MAPS_API_KEY</span> to activate it.
+            </p>
+        </div>
+    </div>
+);
+
 const MapPage = () => {
     const navigate = useNavigate();
-    const mapContainerRef = useRef(null);
-    const mapRef = useRef(null);
-    const markersRef = useRef([]);
     const [selectedAnimal, setSelectedAnimal] = useState(null);
-    const [isMapReady, setIsMapReady] = useState(false);
     const [filterRegion, setFilterRegion] = useState('All');
     const [showExitConfirm, setShowExitConfirm] = useState(false);
     const [isMobileListOpen, setIsMobileListOpen] = useState(false);
@@ -120,86 +219,15 @@ const MapPage = () => {
         return () => { active = false; };
     }, [selectedAnimalId]);
 
-    useEffect(() => {
-        let lenisRafId = null;
-        
-        const loadLenis = () => {
-            if (window.Lenis) return;
-            const script = document.createElement('script');
-            script.src = 'https://unpkg.com/@studio-freight/lenis@1.0.33/dist/lenis.min.js';
-            script.onload = () => {
-                const lenis = new window.Lenis({ lerp: 0.1, duration: 1.2 });
-                const raf = (time) => { 
-                    lenis.raf(time); 
-                    lenisRafId = requestAnimationFrame(raf); 
-                };
-                lenisRafId = requestAnimationFrame(raf);
-            };
-            document.head.appendChild(script);
-        };
-
-        const loadLeaflet = () => {
-            if (window.L) { initializeMap(); return; }
-            const link = document.createElement('link');
-            link.rel = 'stylesheet'; link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
-            document.head.appendChild(link);
-            const script = document.createElement('script');
-            script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
-            script.async = true;
-            script.onload = initializeMap;
-            document.body.appendChild(script);
-        };
-
-        loadLenis();
-        loadLeaflet();
-        return () => { 
-            if (lenisRafId) cancelAnimationFrame(lenisRafId);
-            if (mapRef.current) mapRef.current.remove(); 
-        };
-    }, []);
-
-    const initializeMap = () => {
-        if (mapRef.current || !mapContainerRef.current) return;
-        const L = window.L;
-        const map = L.map(mapContainerRef.current, {
-            center: [20, 0], zoom: 3, minZoom: 2, zoomControl: false, attributionControl: false
-        });
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png').addTo(map);
-        mapRef.current = map;
-        setIsMapReady(true);
-    };
-
     const handleSelect = useCallback((animal) => {
         setSelectedAnimal(animal);
         setIsMobileListOpen(false);
-        if (mapRef.current) mapRef.current.flyTo(animal.coordinates, 5, { duration: 1.5 });
     }, []);
-
-    useEffect(() => {
-        if (!isMapReady || !window.L) return;
-        const L = window.L;
-        markersRef.current.forEach(m => mapRef.current.removeLayer(m));
-        markersRef.current = [];
-
-        const filtered = filterRegion === 'All' ? animalHabitats : animalHabitats.filter(a => a.region === filterRegion);
-
-        filtered.forEach(animal => {
-            const icon = L.divIcon({
-                className: 'custom-div-icon',
-                html: `<div class="w-14 h-14 md:w-16 md:h-16 rounded-full border-4 border-white shadow-xl flex items-center justify-center text-3xl md:text-4xl transform hover:scale-110 active:scale-90 transition-all duration-300" style="background: ${regionColors[animal.region]}">${animal.icon}</div>`,
-                iconSize: [64, 64], iconAnchor: [32, 32]
-            });
-            const marker = L.marker(animal.coordinates, { icon }).addTo(mapRef.current);
-            marker.on('click', () => handleSelect(animal));
-            markersRef.current.push(marker);
-        });
-        mapRef.current.invalidateSize();
-    }, [filterRegion, isMapReady, handleSelect]);
 
     return (
         <div className="wildlife-origins flex flex-col md:flex-row h-[100dvh] w-full bg-[#eef3ed] overflow-hidden text-[#1f3328] antialiased">
             <style>{`
-                .leaflet-container { background: #e8eee8 !important; }
+                .wildlife-origins gmp-map-3d { background: #e8eee8 !important; }
                 .hide-scrollbar::-webkit-scrollbar { display: none; }
                 .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
             `}</style>
@@ -213,7 +241,13 @@ const MapPage = () => {
                          <Menu className="h-6 w-6 text-[#1f3328]" />
                     </button>
                 </div>
-                <div ref={mapContainerRef} className="h-full w-full" />
+                {API_KEY ? (
+                    <APIProvider apiKey={API_KEY} libraries={['maps3d', 'marker']}>
+                        <GlobeMap selectedAnimal={selectedAnimal} filterRegion={filterRegion} onSelectAnimal={handleSelect} />
+                    </APIProvider>
+                ) : (
+                    <MapFallback />
+                )}
             </div>
 
             <aside className="hidden md:block w-80 lg:w-96 h-full z-[1001]">
@@ -267,7 +301,6 @@ const MapPage = () => {
                 <div className="fixed inset-0 z-[3000] flex items-center justify-center p-6">
                      <div className="absolute inset-0 bg-[#1f3328]/70 backdrop-blur-lg" onClick={() => setShowExitConfirm(false)} />
                     <div className="relative bg-[#fffdf8] p-8 rounded-3xl shadow-2xl max-w-sm w-full text-center animate-in zoom-in-95 duration-200">
-                        {/* <div className="w-24 h-24 bg-teal-50 rounded-[2rem] flex items-center justify-center text-5xl mx-auto mb-6 shadow-inner">🌏</div> */}
                          <h3 className="text-2xl font-black text-[#1f3328] mb-2">Close Expedition?</h3>
                          <p className="text-[#52675a] mb-8 font-medium leading-relaxed">Your curated discovery view will be cleared.</p>
                         <div className="flex flex-col gap-3">
@@ -275,13 +308,6 @@ const MapPage = () => {
                               <button onClick={() => setShowExitConfirm(false)} className="w-full py-4 bg-[#e5f0e3] text-[#1f3328] rounded-2xl font-bold hover:bg-[#d8e8d7] transition-all">Keep Browsing</button>
                         </div>
                     </div>
-                </div>
-            )}
-
-            {!isMapReady && (
-                  <div className="fixed inset-0 bg-[#eef3ed] z-[5000] flex flex-col items-center justify-center gap-6">
-                      <div className="w-12 h-12 border-4 border-[#d5e1d5] border-t-[#1f3328] rounded-full animate-spin" />
-                      <p className="text-[#1f3328] font-bold text-[10px] uppercase tracking-[0.3em] animate-pulse">Synchronizing Globe...</p>
                 </div>
             )}
         </div>

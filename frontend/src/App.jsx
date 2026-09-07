@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { useEffect } from 'react';
+import { useEffect, lazy, Suspense } from 'react';
 import { GooeyToaster } from 'goey-toast';
 import 'goey-toast/styles.css';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -59,10 +59,19 @@ import StaffTrash from './pages/staff/StaffTrash';
 import AdminLayout from './components/layout/AdminLayout';
 import StaffLayout from './components/layout/StaffLayout';
 import AnimalClassifier from './components/features/ai-scanner/AnimalClassifier';
-import MapPage from './pages/user/Map';
 import './App.css';
 import AIAssist from './pages/AIAssist';
 import { trackVisit } from './services/visitor-tracking';
+
+const MapPage = lazy(() => import('./pages/user/Map'));
+const MapPageFallback = () => (
+    <div className="flex items-center justify-center h-screen bg-[#eef3ed]">
+        <div className="flex flex-col items-center gap-6">
+            <div className="w-12 h-12 border-4 border-[#d5e1d5] border-t-[#1f3328] rounded-full animate-spin" />
+            <p className="text-[#1f3328] font-bold text-[10px] uppercase tracking-[0.3em] animate-pulse">Synchronizing Globe...</p>
+        </div>
+    </div>
+);
 
 const ProtectedRoute = ({ children, allowedRoles }) => {
     const { isAuthenticated, user, loading } = useAuth();
@@ -121,7 +130,7 @@ function AppRoutes() {
             <Route path="/events" element={<Events />} />
             <Route path="/about" element={<AboutUs />} />
             <Route path="/animaldex" element={<AnimalClassifier />} />
-            <Route path="/map" element={<MapPage />} />
+            <Route path="/map" element={<Suspense fallback={<MapPageFallback />}><MapPage /></Suspense>} />
             <Route path="/privacy" element={<PrivacyPolicy />} />
             <Route path="/terms" element={<TermsOfService />} />
             <Route path="/cookies" element={<CookiePolicy />} />
