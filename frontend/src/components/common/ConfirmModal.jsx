@@ -9,18 +9,18 @@ const TrashIcon = ({ className = 'w-5 h-5' }) => (
 );
 
 const ConfirmModal = ({ title, message, confirmLabel = 'Confirm', loading = false, onCancel, onConfirm }) => (
-    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[70] flex items-center justify-center p-4">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[200] flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="confirm-modal-title">
         <div className="bg-white border border-green-200 rounded-2xl w-full max-w-md p-6">
             <div className="w-12 h-12 rounded-full bg-red-500/20 text-red-700 flex items-center justify-center mx-auto mb-4">
                 <TrashIcon className="w-5 h-5" />
             </div>
-            <h3 className="text-xl font-bold text-gray-900 text-center mb-2">{title}</h3>
+            <h3 id="confirm-modal-title" className="text-xl font-bold text-gray-900 text-center mb-2">{title}</h3>
             <p className="text-gray-500 text-center mb-6">{message}</p>
             <div className="flex gap-3">
                 <button onClick={onCancel} disabled={loading} className="flex-1 px-4 py-3 bg-green-50 hover:bg-green-100 text-gray-900 rounded-xl font-medium transition disabled:opacity-50">
                     Cancel
                 </button>
-                <button onClick={onConfirm} disabled={loading} className="flex-1 px-4 py-3 bg-red-500 hover:bg-red-600 text-gray-900 rounded-xl font-medium transition disabled:opacity-50">
+                <button onClick={onConfirm} disabled={loading} className="flex-1 px-4 py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl font-medium transition disabled:opacity-50">
                     {loading ? 'Processing...' : confirmLabel}
                 </button>
             </div>

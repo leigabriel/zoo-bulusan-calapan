@@ -266,9 +266,10 @@ const MessageWorkspace = ({ globalSearch = '', api, role, roleLabel }) => {
                     </div>
                 </div>
                 <div className="rounded-2xl border border-green-100 bg-white p-2 shadow-sm">
-                <div className="grid grid-cols-2 gap-2" role="tablist" aria-label="Communication type">
-                        <button type="button" role="tab" aria-selected="true" onClick={() => switchTab('support')} className="rounded-xl bg-green-600 px-4 py-3 text-left text-white shadow-sm"><span className="font-bold">Contact support inbox</span><span className="mt-0.5 block text-xs text-green-50">User-submitted messages</span></button>
-                        <button type="button" role="tab" aria-selected="false" onClick={() => switchTab('appeals')} className="rounded-xl px-4 py-3 text-left text-gray-600 transition hover:bg-amber-50"><span className="flex items-center justify-between gap-2"><span className="font-bold">Appeals</span><span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-bold">{appeals.length}</span></span><span className="mt-0.5 block text-xs text-gray-400">{pendingAppeals} pending</span></button>
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-3" role="tablist" aria-label="Communication type">
+                        <button type="button" role="tab" aria-selected={isSupport} onClick={() => switchTab('support')} className={`rounded-xl px-4 py-3 text-left transition ${isSupport ? 'bg-green-600 text-white shadow-sm' : 'text-gray-600 hover:bg-green-50'}`}><span className="font-bold">Contact support</span><span className={`mt-0.5 block text-xs ${isSupport ? 'text-green-50' : 'text-gray-400'}`}>User-submitted messages</span></button>
+                        <button type="button" role="tab" aria-selected={activeTab === 'chat'} onClick={() => switchTab('chat')} className="rounded-xl px-4 py-3 text-left text-gray-600 transition hover:bg-green-50"><span className="font-bold">Live chat</span><span className="mt-0.5 block text-xs text-gray-400">Open conversations</span></button>
+                        <button type="button" role="tab" aria-selected={isAppeal} onClick={() => switchTab('appeals')} className={`rounded-xl px-4 py-3 text-left transition ${isAppeal ? 'bg-amber-500 text-white shadow-sm' : 'text-gray-600 hover:bg-amber-50'}`}><span className="flex items-center justify-between gap-2"><span className="font-bold">Appeals</span><span className={`rounded-full px-2 py-0.5 text-xs font-bold ${isAppeal ? 'bg-white/20' : 'bg-gray-100'}`}>{appeals.length}</span></span><span className={`mt-0.5 block text-xs ${isAppeal ? 'text-amber-50' : 'text-gray-400'}`}>{pendingAppeals} pending</span></button>
                     </div>
                 </div>
                 <ChatWorkspace role={role} currentUser={user} embedded globalSearch={globalSearch} />
@@ -405,7 +406,7 @@ const MessageWorkspace = ({ globalSearch = '', api, role, roleLabel }) => {
             </div>
 
             <div className="rounded-2xl border border-green-100 bg-white p-2 shadow-sm">
-                <div className="grid grid-cols-3 gap-2" role="tablist" aria-label="Communication type">
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-3" role="tablist" aria-label="Communication type">
                     <button type="button" role="tab" aria-selected={isSupport} onClick={() => switchTab('support')} className={`rounded-xl px-4 py-3 text-left transition ${isSupport ? 'bg-green-600 text-white shadow-sm' : 'text-gray-600 hover:bg-green-50'}`}>
                         <span className="flex items-center justify-between gap-2"><span className="font-bold">Contact Support</span><span className={`rounded-full px-2 py-0.5 text-xs font-bold ${isSupport ? 'bg-white/20' : 'bg-gray-100'}`}>{messages.length}</span></span>
                         <span className={`mt-0.5 block text-xs ${isSupport ? 'text-green-50' : 'text-gray-400'}`}>{messageUnread} unread</span>

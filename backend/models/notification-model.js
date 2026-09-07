@@ -181,6 +181,21 @@ class Notification {
         }
     }
 
+    static async notifyUsers({ title, message, type = 'info', link = null }) {
+        try {
+            await db.query(
+                `INSERT INTO notifications (user_id, title, message, type, link)
+                 SELECT id, ?, ?, ?, ?
+                 FROM users
+                 WHERE role = 'user' AND is_active = TRUE AND is_suspended = FALSE
+                 AND deleted_at IS NULL`,
+                [title, message, type, link]
+            );
+        } catch (error) {
+            console.error('Error creating user notifications:', error);
+        }
+    }
+
     // Format time for display
     static formatTime(date) {
         if (!date) return 'Recently';

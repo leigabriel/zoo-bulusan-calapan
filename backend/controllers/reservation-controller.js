@@ -476,6 +476,24 @@ exports.updateTicketReservationStatus = async (req, res) => {
             await Reservation.updateTicketReservationStatus(id, status, confirmedBy);
         }
 
+        if (status === 'confirmed') {
+            await notifyReservationUser(
+                existingReservation?.user_id,
+                'Ticket Reservation Confirmed',
+                `Your ticket reservation #${existingReservation?.booking_reference || existingReservation?.reservation_reference || id} has been confirmed.`,
+                '/reservations'
+            );
+        }
+
+        if (status === 'cancelled') {
+            await notifyReservationUser(
+                existingReservation?.user_id,
+                'Ticket Reservation Cancelled',
+                `Your ticket reservation #${existingReservation?.booking_reference || existingReservation?.reservation_reference || id} has been cancelled.`,
+                '/reservations'
+            );
+        }
+
         if (req.user && ['staff', 'admin'].includes(req.user.role)) {
             await logStaffActivity(
                 req,

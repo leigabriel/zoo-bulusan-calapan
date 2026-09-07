@@ -1,393 +1,92 @@
-import { useState, useEffect, useMemo } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Copy, Gift, Home, Phone, Check, ChevronLeft, ShieldCheck } from 'reicon-react';
 import { userAPI } from '../../services/api-client';
 import { notify } from '../../utils/toast';
-import { appendConsentRecord } from '../../utils/consent';
-import { ChevronLeft, Home, Gift, DollarCircle, Phone, Copy, Check, Activity, Lock } from 'reicon-react';
-
-const LegacyIcons = {
-    Back: () => (
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-        </svg>
-    ),
-    Home: () => (
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-        </svg>
-    ),
-    Gift: () => (
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <rect x="3" y="8" width="18" height="4" rx="1" />
-            <path d="M12 8v13" />
-            <path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7" />
-            <path d="M7.5 8a2.5 2.5 0 0 1 0-5C11 3 12 8 12 8" />
-            <path d="M16.5 8a2.5 2.5 0 0 0 0-5C13 3 12 8 12 8" />
-        </svg>
-    ),
-    Coin: () => (
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <circle cx="12" cy="12" r="9" />
-            <path d="M14.8 9A2.5 2.5 0 0 0 12 8c-1.38 0-2.5.9-2.5 2s1.12 2 2.5 2 2.5.9 2.5 2-1.12 2-2.5 2a2.5 2.5 0 0 1-2.8-1" />
-            <path d="M12 6v2m0 8v2" />
-        </svg>
-    ),
-    Phone: () => (
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-        </svg>
-    ),
-    Copy: () => (
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-        </svg>
-    ),
-    Check: () => (
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <polyline points="20 6 9 17 4 12" />
-        </svg>
-    ),
-    Sparkle: () => (
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path d="M12 3v2M12 19v2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M3 12h2M19 12h2M5.6 18.4L7 17M17 7l1.4-1.4" />
-            <circle cx="12" cy="12" r="3.5" />
-        </svg>
-    ),
-    Lock: () => (
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-            <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-        </svg>
-    )
-};
-const Icons = { Back: ChevronLeft, Home, Gift, Coin: DollarCircle, Phone, Copy, Check, Sparkle: Activity, Lock };
-
-const PRESET_AMOUNTS = [50, 100, 200, 500, 1000];
-
-const STEPS = [
-    'Open the GCash app on your phone.',
-    'Tap "Send" and choose "Send Money".',
-    'Enter the GCash number shown below as the recipient.',
-    'Type your chosen donation amount and add a note if you like.',
-    'Double-check the details, then confirm and enter your MPIN.',
-    'That\u2019s it - thank you for supporting Bulusan Zoo!'
-];
 
 const Donation = () => {
     const navigate = useNavigate();
-
     const [config, setConfig] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [amount, setAmount] = useState('');
-    const [activePreset, setActivePreset] = useState(null);
     const [copied, setCopied] = useState(false);
-    const [showConfirm, setShowConfirm] = useState(false);
-    const [confirmedAmount, setConfirmedAmount] = useState(0);
-    const [donationConsent, setDonationConsent] = useState(false);
 
     useEffect(() => {
         let mounted = true;
-        const loadConfig = async () => {
-            try {
-                const res = await userAPI.getDonationConfig();
-                if (mounted && res.success) {
-                    setConfig(res.config);
-                }
-            } catch {
-                // fall back to empty config on error
-            } finally {
+        userAPI.getDonationConfig()
+            .then((response) => {
+                if (mounted && response?.success) setConfig(response.config);
+            })
+            .catch(() => {
+                if (mounted) notify.error("Couldn't load donation details.");
+            })
+            .finally(() => {
                 if (mounted) setLoading(false);
-            }
-        };
-        loadConfig();
+            });
         return () => { mounted = false; };
     }, []);
 
-    const numericAmount = useMemo(() => {
-        const cleaned = String(amount || '0').replace(/[^0-9]/g, '');
-        return Math.max(0, parseInt(cleaned || '0', 10));
-    }, [amount]);
-
-    const donationEnabled = Boolean(config?.enabled);
-
-    const handlePreset = (value) => {
-        setActivePreset(value);
-        setAmount(String(value));
-    };
-
-    const handleCustomChange = (e) => {
-        const value = e.target.value.replace(/[^0-9]/g, '').slice(0, 7);
-        setAmount(value);
-        setActivePreset(null);
-    };
-
-    const handleCopy = async () => {
+    const copyNumber = async () => {
         if (!config?.gcashNumber) return;
         try {
             await navigator.clipboard.writeText(config.gcashNumber);
             setCopied(true);
             notify.success('GCash number copied.');
-            setTimeout(() => setCopied(false), 2000);
-        } catch (error) {
-            notify.error(error.message || "Couldn't copy the GCash number.");
+            window.setTimeout(() => setCopied(false), 2000);
+        } catch {
+            notify.error("Couldn't copy the GCash number.");
         }
-    };
-
-    const handleDonate = () => {
-        let finalAmount = numericAmount;
-        if (finalAmount <= 0) {
-            setAmount('100');
-            setActivePreset(100);
-            finalAmount = 100;
-        }
-        setDonationConsent(false);
-        setConfirmedAmount(finalAmount);
-        setShowConfirm(true);
     };
 
     const openGcash = () => {
-        if (!donationConsent) {
-            notify.warning('Please agree to continue with your donation.');
+        if (!config?.gcashNumber) {
+            notify.error('GCash payment details are not available yet.');
             return;
         }
-        appendConsentRecord({
-            type: 'donation',
-            summary: `Donation consent for ₱${confirmedAmount.toLocaleString()} via GCash`,
-            data: { amount: confirmedAmount, consented: true }
-        });
-        const url = config?.gcashNumber ? `gcash://sendmoney?amount=${confirmedAmount}&to=${config.gcashNumber}` : 'gcash://';
-        window.open(url, '_blank', 'noopener,noreferrer');
+
+        // Do not include an amount. GCash lets the donor enter any amount.
+        window.location.href = `gcash://sendmoney?to=${encodeURIComponent(config.gcashNumber)}`;
     };
 
+    if (loading) {
+        return <div className="flex min-h-screen items-center justify-center bg-[#f5fbf6]"><div className="h-10 w-10 animate-spin rounded-full border-4 border-emerald-200 border-t-emerald-600" /></div>;
+    }
+
+    if (!config?.enabled) {
+        return <div className="flex min-h-screen items-center justify-center bg-[#f5fbf6] p-5"><div className="w-full max-w-md rounded-3xl border border-emerald-100 bg-white p-10 text-center shadow-xl"><Gift className="mx-auto h-12 w-12 text-emerald-500" /><h1 className="mt-5 text-2xl font-black text-gray-900">Donations are temporarily unavailable</h1><p className="mt-3 text-sm leading-6 text-gray-500">Please check back later. Thank you for supporting Bulusan Zoo.</p><Link to="/" className="mt-7 inline-flex items-center gap-2 rounded-xl bg-gray-900 px-5 py-3 text-sm font-bold text-white"> <Home className="h-4 w-4" /> Return home</Link></div></div>;
+    }
+
     return (
-        <div className="min-h-screen bg-[#f2fbf4] text-[#1f2d23] flex flex-col">
-            <div className="fixed top-4 left-4 right-4 z-50 flex justify-between items-center pointer-events-none">
-                <button
-                    onClick={() => navigate(-1)}
-                    className="pointer-events-auto flex items-center gap-2 px-4 py-2.5 bg-white/90 backdrop-blur-sm text-emerald-900 rounded-full shadow-lg border border-emerald-100 hover:shadow-xl transition-all duration-300 font-medium"
-                >
-                    <Icons.Back />
-                    <span className="hidden sm:inline">Back</span>
-                </button>
-                <Link
-                    to="/"
-                    className="pointer-events-auto flex items-center gap-2 px-4 py-2.5 bg-white/90 backdrop-blur-sm text-emerald-900 rounded-full shadow-lg border border-emerald-100 hover:shadow-xl transition-all duration-300 font-medium"
-                >
-                    <Icons.Home />
-                    <span className="hidden sm:inline">Home</span>
-                </Link>
-            </div>
+        <div className="min-h-screen bg-[#f5fbf6] text-slate-900">
+            <header className="mx-auto flex max-w-6xl items-center justify-between px-5 py-5 sm:px-8">
+                <button type="button" onClick={() => navigate(-1)} className="inline-flex items-center gap-2 rounded-full border border-emerald-100 bg-white px-4 py-2.5 text-sm font-bold text-emerald-900 shadow-sm transition hover:border-emerald-300"><ChevronLeft className="h-4 w-4" /> Back</button>
+                <Link to="/" className="inline-flex items-center gap-2 rounded-full border border-emerald-100 bg-white px-4 py-2.5 text-sm font-bold text-emerald-900 shadow-sm transition hover:border-emerald-300"><Home className="h-4 w-4" /> <span className="hidden sm:inline">Home</span></Link>
+            </header>
 
-            <section className="relative py-20 pt-28 text-center overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-br from-[#effbf3] via-[#ddf3e5] to-[#cce9d7]" />
-                <div className="absolute -top-24 right-0 w-72 h-72 rounded-full bg-[#bfe6cc] opacity-40 blur-3xl" />
-                <div className="absolute -bottom-32 left-0 w-80 h-80 rounded-full bg-[#a7d8b8] opacity-30 blur-3xl" />
-                <div className="relative z-10 container mx-auto px-4">
-                    <p className="text-xs uppercase tracking-[0.35em] font-semibold text-emerald-700/80 bg-white/70 border border-emerald-200 inline-flex px-4 py-2 rounded-full mb-6">
-                        Support Bulusan Zoo
-                    </p>
-                    <h1 className="text-4xl md:text-5xl font-bold mb-3 tracking-tight">Donate Today</h1>
-                    <p className="text-base md:text-lg max-w-2xl mx-auto text-emerald-900/70 mb-4">
-                        Your generosity helps us care for our animals and preserve wildlife for generations to come.
-                    </p>
-                </div>
-            </section>
-
-            <div className="container mx-auto px-4 py-8 md:py-12 max-w-5xl">
-                {loading ? (
-                    <div className="flex flex-col items-center justify-center py-24 gap-3">
-                        <div className="w-10 h-10 border-4 border-emerald-300 border-t-emerald-600 rounded-full animate-spin" />
-                        <p className="text-sm text-emerald-900/60">Loading donation details...</p>
+            <main className="mx-auto max-w-6xl px-5 pb-14 pt-8 sm:px-8 sm:pt-14">
+                <section className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-emerald-700 via-emerald-600 to-teal-700 px-6 py-12 text-white shadow-2xl sm:px-12 sm:py-16">
+                    <div className="absolute -right-20 -top-24 h-72 w-72 rounded-full bg-white/10 blur-2xl" />
+                    <div className="relative max-w-2xl">
+                        <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-bold uppercase tracking-[0.2em] text-emerald-50"><Gift className="h-4 w-4" /> Support Bulusan Zoo</span>
+                        <h1 className="mt-6 text-4xl font-black tracking-tight sm:text-6xl">Every gift helps wildlife thrive.</h1>
+                        <p className="mt-5 max-w-xl text-base leading-7 text-emerald-50 sm:text-lg">Donate any amount directly through GCash. You choose the amount in your GCash app, when you are ready.</p>
                     </div>
-                ) : !donationEnabled ? (
-                    <div className="bg-white rounded-3xl shadow-lg border border-emerald-100 p-10 md:p-16 text-center">
-                        <div className="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-5">
-                            <Icons.Gift />
+                </section>
+
+                <section className="mt-8 grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
+                    <div className="rounded-3xl border border-emerald-100 bg-white p-6 shadow-lg sm:p-8">
+                        <div className="flex items-start gap-4"><span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-700"><Phone className="h-6 w-6" /></span><div><h2 className="text-xl font-black text-gray-900">Donate through GCash</h2><p className="mt-1 text-sm text-gray-500">One secure handoff. No amount selection on this page.</p></div></div>
+                        <div className="mt-7 rounded-2xl bg-slate-950 p-5 text-white sm:p-6">
+                            <p className="text-xs font-bold uppercase tracking-[0.18em] text-emerald-300">Send to GCash number</p>
+                            <div className="mt-3 flex items-center justify-between gap-3"><p className="break-all text-2xl font-black tracking-tight sm:text-3xl">{config.gcashNumber || 'Not configured'}</p>{config.gcashNumber && <button type="button" onClick={copyNumber} className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-white/10 px-3 py-2 text-xs font-bold hover:bg-white/20">{copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}{copied ? 'Copied' : 'Copy'}</button>}</div>
+                            <p className="mt-3 text-sm text-slate-300">Account name: <span className="font-bold text-white">{config.accountName || 'Bulusan Zoo'}</span></p>
                         </div>
-                        <h2 className="text-2xl font-bold mb-2">Donations are currently unavailable</h2>
-                        <p className="text-emerald-900/70 max-w-md mx-auto">
-                            We are not accepting online donations at the moment. Please check back again soon.
-                        </p>
+                        <button type="button" onClick={openGcash} disabled={!config.gcashNumber} className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-5 py-4 text-base font-black text-white shadow-lg shadow-emerald-600/20 transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50">Open GCash and choose amount</button>
+                        <div className="mt-4 flex items-start gap-2 text-xs leading-5 text-slate-500"><ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />The GCash app opens without a preset amount. Review the recipient and enter your own donation amount before sending.</div>
                     </div>
-                ) : (
-                    <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 lg:gap-8 items-start">
-                        <div className="lg:col-span-2 space-y-6">
-                            <div className="bg-white rounded-3xl shadow-lg border border-emerald-100 overflow-hidden">
-                                <div className="p-6 border-b border-emerald-100 bg-emerald-50/40">
-                                    <h2 className="font-bold text-emerald-900 flex items-center gap-2">
-                                        <span className="w-9 h-9 bg-emerald-600 text-white rounded-xl flex items-center justify-center">
-                                            <Icons.Coin />
-                                        </span>
-                                        Choose Your Amount
-                                    </h2>
-                                </div>
-                                <div className="p-6">
-                                    <div className="grid grid-cols-3 gap-2.5 mb-4">
-                                        {PRESET_AMOUNTS.map((value) => (
-                                            <button
-                                                key={value}
-                                                onClick={() => handlePreset(value)}
-                                                className={`py-3 rounded-xl text-sm font-bold transition-all border ${activePreset === value
-                                                    ? 'bg-emerald-600 text-white border-emerald-600 shadow-md'
-                                                    : 'bg-emerald-50 text-emerald-900 border-emerald-100 hover:border-emerald-300'
-                                                    }`}
-                                            >
-                                                ₱{value.toLocaleString()}
-                                            </button>
-                                        ))}
-                                    </div>
 
-                                    <div className="relative mb-6">
-                                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-lg font-bold text-emerald-600">₱</span>
-                                        <input
-                                            type="text"
-                                            inputMode="numeric"
-                                            value={amount}
-                                            onChange={handleCustomChange}
-                                            placeholder="Enter any amount"
-                                            className="w-full pl-10 pr-4 py-4 rounded-xl bg-white text-emerald-900 placeholder-emerald-700/40 font-bold text-lg border border-emerald-200 focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:border-emerald-400 transition-all"
-                                        />
-                                    </div>
-
-                                    <button
-                                        onClick={handleDonate}
-                                        disabled={numericAmount <= 0}
-                                        className={`w-full py-4 rounded-xl font-bold transition-all flex items-center justify-center gap-2 ${numericAmount > 0
-                                            ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-600/20'
-                                            : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                                            }`}
-                                    >
-                                        <Icons.Sparkle />
-                                        Donate ₱{numericAmount.toLocaleString()}
-                                    </button>
-                                    <p className="text-xs text-emerald-900/50 text-center mt-4 flex items-center justify-center gap-1.5">
-                                        <Icons.Lock />
-                                        Secure &amp; private. No account needed to donate.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="lg:col-span-3 space-y-6">
-                            <div className="bg-white rounded-3xl shadow-lg border border-emerald-100 overflow-hidden">
-                                <div className="p-6 border-b border-emerald-100 bg-emerald-50/40">
-                                    <h2 className="font-bold text-emerald-900 flex items-center gap-2">
-                                        <span className="w-9 h-9 bg-blue-600 text-white rounded-xl flex items-center justify-center">
-                                            <Icons.Phone />
-                                        </span>
-                                        Payment via GCash
-                                    </h2>
-                                </div>
-                                <div className="p-6 space-y-5">
-                                    <div className="rounded-2xl bg-gradient-to-br from-emerald-600 to-emerald-700 text-white p-6">
-                                        <p className="text-xs uppercase tracking-widest font-semibold text-emerald-100 mb-1">GCash Number</p>
-                                        <div className="flex items-center justify-between gap-3">
-                                            <p className="text-2xl md:text-3xl font-black tracking-tight break-all">
-                                                {config?.gcashNumber || 'Not yet provided'}
-                                            </p>
-                                            {config?.gcashNumber && (
-                                                <button
-                                                    onClick={handleCopy}
-                                                    className="flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/15 hover:bg-white/25 transition-all text-xs font-semibold"
-                                                >
-                                                    {copied ? <Icons.Check /> : <Icons.Copy />}
-                                                    {copied ? 'Copied' : 'Copy'}
-                                                </button>
-                                            )}
-                                        </div>
-                                        <p className="text-sm text-emerald-100 mt-2">
-                                            Account Name: <span className="font-semibold">{config?.accountName || 'Bulusan Zoo & Wildlife Park'}</span>
-                                        </p>
-                                        {config?.note && (
-                                            <p className="text-xs text-emerald-100/90 mt-3 leading-relaxed">{config.note}</p>
-                                        )}
-                                    </div>
-
-                                    <div>
-                                        <p className="text-xs uppercase tracking-widest font-semibold text-emerald-900/60 mb-3">How to Donate</p>
-                                        <ol className="space-y-3">
-                                            {STEPS.map((step, index) => (
-                                                <li key={index} className="flex items-start gap-3">
-                                                    <span className="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 text-xs font-bold flex items-center justify-center flex-shrink-0">
-                                                        {index + 1}
-                                                    </span>
-                                                    <p className="text-sm text-emerald-900/80 leading-relaxed pt-0.5">{step}</p>
-                                                </li>
-                                            ))}
-                                        </ol>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                )}
-            </div>
-
-            {showConfirm && (
-                <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
-                    <div
-                        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-                        onClick={() => setShowConfirm(false)}
-                    />
-                    <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden">
-                        <div className="p-6 text-center">
-                            <div className="w-16 h-16 mx-auto mb-4 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-600">
-                                <Icons.Gift />
-                            </div>
-                            <h3 className="text-xl font-bold text-gray-900 mb-2">Thank you for your generosity!</h3>
-                            <p className="text-sm text-gray-500 leading-relaxed mb-5">
-                                Please complete your donation of{' '}
-                                <span className="font-bold text-emerald-600">₱{confirmedAmount.toLocaleString()}</span>{' '}
-                                by sending it to the GCash number below.
-                            </p>
-                            <div className="rounded-xl bg-emerald-50 border border-emerald-100 p-4 mb-6">
-                                <p className="text-xs text-emerald-900/60 mb-1">Amount</p>
-                                <p className="text-2xl font-black text-emerald-700">₱{confirmedAmount.toLocaleString()}</p>
-                                <p className="text-xs text-emerald-900/60 mt-3 mb-1">GCash Number</p>
-                                <p className="text-sm font-bold text-gray-800 break-all">{config?.gcashNumber || '—'}</p>
-                                {config?.accountName && (
-                                    <p className="text-xs text-gray-500 mt-1">{config.accountName}</p>
-                                )}
-                            </div>
-                            <div className="flex gap-3">
-                                <button
-                                    onClick={() => setShowConfirm(false)}
-                                    className="flex-1 py-2.5 border border-gray-200 rounded-xl font-medium text-gray-600 hover:bg-gray-50 transition-colors"
-                                >
-                                    Done
-                                </button>
-                                <button
-                                    onClick={openGcash}
-                                    disabled={!donationConsent}
-                                    className="flex-1 py-2.5 rounded-xl font-medium transition-colors disabled:cursor-not-allowed disabled:bg-gray-200 disabled:text-gray-400"
-                                >
-                                    Open GCash
-                                </button>
-                            </div>
-                            <label className="flex items-start gap-3 mt-5 text-left cursor-pointer">
-                                <div className="mt-0.5 relative flex items-center justify-center flex-shrink-0">
-                                    <input
-                                        type="checkbox"
-                                        checked={donationConsent}
-                                        onChange={(e) => setDonationConsent(e.target.checked)}
-                                        className="peer appearance-none w-4 h-4 border border-gray-300 rounded bg-white checked:bg-emerald-600 checked:border-emerald-600 transition-all cursor-pointer"
-                                    />
-                                    <svg className="absolute w-2.5 h-2.5 text-white pointer-events-none opacity-0 peer-checked:opacity-100 transition-opacity" viewBox="0 0 14 10" fill="none">
-                                        <path d="M1 5L5 9L13 1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                                    </svg>
-                                </div>
-                                <p className="text-[11px] text-gray-500 leading-relaxed">
-                                    I consent to Bulusan Zoo recording my donation in accordance with its{' '}
-                                    <Link to="/privacy" className="text-emerald-600 font-semibold hover:underline">Privacy Policy</Link>,{' '}
-                                    <Link to="/terms" className="text-emerald-600 font-semibold hover:underline">Terms of Service</Link>, and{' '}
-                                    <Link to="/refund-policy" className="text-emerald-600 font-semibold hover:underline">Refund Policy</Link>.
-                                </p>
-                            </label>
-                        </div>
-                    </div>
-                </div>
-            )}
+                    <div className="rounded-3xl border border-emerald-100 bg-emerald-50/70 p-6 sm:p-8"><p className="text-xs font-black uppercase tracking-[0.2em] text-emerald-700">Quick guide</p><h2 className="mt-3 text-2xl font-black text-emerald-950">You are in control.</h2><ol className="mt-6 space-y-5">{['Tap Open GCash above.', 'Check that the recipient matches the details shown.', 'Enter any amount you want to give.', 'Review the transfer and confirm in GCash.'].map((step, index) => <li key={step} className="flex gap-4"><span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white text-sm font-black text-emerald-700 shadow-sm">{index + 1}</span><p className="pt-1 text-sm leading-6 text-emerald-950/75">{step}</p></li>)}</ol>{config.note && <div className="mt-8 rounded-2xl border border-emerald-200 bg-white/70 p-4 text-sm leading-6 text-emerald-900">{config.note}</div>}</div>
+                </section>
+            </main>
         </div>
     );
 };

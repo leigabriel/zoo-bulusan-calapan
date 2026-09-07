@@ -383,6 +383,12 @@ exports.getAllEvents = async (req, res) => {
 exports.createEvent = async (req, res) => {
     try {
         const eventId = await Event.create(req.body);
+        await Notification.notifyUsers({
+            title: 'New Event Available',
+            message: `${req.body.title || 'A new event'} is now available at Bulusan Zoo.`,
+            type: 'event',
+            link: '/events'
+        });
         res.status(201).json({
             success: true,
             message: 'Event created successfully',

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ChevronLeft, Envelope, Home, Loader, Send, X } from 'reicon-react';
 import { useNavigate } from 'react-router-dom';
-import { chatAPI, getProfileImageUrl } from '../../services/api-client';
+import { chatAPI, getProfileImageUrl, messageAPI } from '../../services/api-client';
 import { connectChatSocket } from '../../services/chat-socket';
 import { notify } from '../../utils/toast';
 
@@ -38,6 +38,10 @@ const UserMessages = () => {
     const [loading, setLoading] = useState(true);
     const [sending, setSending] = useState(false);
     const [pickerOpen, setPickerOpen] = useState(false);
+    const [activeView, setActiveView] = useState('chats');
+    const [supportMessages, setSupportMessages] = useState([]);
+    const [supportLoading, setSupportLoading] = useState(true);
+    const [selectedSupport, setSelectedSupport] = useState(null);
 
     const loadConversations = useCallback(async () => {
         const response = await chatAPI.getConversations('user');
@@ -54,9 +58,17 @@ const UserMessages = () => {
     }, [selected]);
 
     useEffect(() => {
-        Promise.all([chatAPI.getRecipients(), loadConversations()]).then(([recipientResponse]) => {
+        Promise.all([
+            chatAPI.getRecipients(),
+            loadConversations(),
+            messageAPI.getMyMessages().catch(() => ({ messages: [] }))
+        ]).then(([recipientResponse, , supportResponse]) => {
             setRecipients(recipientResponse.recipients || []);
-        }).catch((error) => notify.error(error.message || 'Could not load messages.')).finally(() => setLoading(false));
+            setSupportMessages(supportResponse.messages || []);
+        }).catch((error) => notify.error(error.message || 'Could not load messages.')).finally(() => {
+            setLoading(false);
+            setSupportLoading(false);
+        });
     }, [loadConversations]);
 
     useEffect(() => { if (selected) loadMessages(selected); }, [selected, loadMessages]);
@@ -118,28 +130,42 @@ const UserMessages = () => {
     return (
         <div className="flex h-[100dvh] overflow-hidden bg-white text-gray-900 antialiased">
             {/* Sidebar List */}
-            <aside className={`${selected ? 'hidden md:flex' : 'flex'} w-full flex-col border-r border-gray-100 bg-gray-50/50 md:w-[380px]`}>
+            <aside className={`${selected || selectedSupport ? 'hidden md:flex' : 'flex'} w-full flex-col border-r border-gray-100 bg-gray-50/50 md:w-[380px]`}>
                 <header className="flex flex-col gap-4 px-5 py-5 pb-3">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                             <button type="button" onClick={() => navigate(-1)} className="rounded-full p-2 text-gray-500 hover:bg-gray-200 transition-colors">
                                 <ChevronLeft className="h-6 w-6" />
                             </button>
-                            <h1 className="text-2xl font-bold tracking-tight">Chats</h1>
+                            <h1 className="text-2xl font-bold tracking-tight">{activeView === 'chats' ? 'Chats' : 'Support Requests'}</h1>
                         </div>
                         <div className="flex items-center gap-1">
                             <button type="button" onClick={() => navigate('/')} className="rounded-full p-2 text-gray-500 hover:bg-gray-200 transition-colors">
                                 <Home className="h-5 w-5" />
                             </button>
-                            <button type="button" onClick={() => setPickerOpen(true)} className="rounded-full bg-blue-50 p-2 text-blue-600 hover:bg-blue-100 transition-colors">
+                            {activeView === 'chats' && <button type="button" onClick={() => setPickerOpen(true)} className="rounded-full bg-blue-50 p-2 text-blue-600 hover:bg-blue-100 transition-colors">
                                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
-                            </button>
+                            </button>}
                         </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 rounded-xl bg-gray-100 p-1">
+                        <button type="button" onClick={() => { setActiveView('chats'); setSelectedSupport(null); }} className={`rounded-lg px-3 py-2 text-xs font-bold transition ${activeView === 'chats' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-800'}`}>Live Chats</button>
+                        <button type="button" onClick={() => { setActiveView('support'); setSelected(null); }} className={`rounded-lg px-3 py-2 text-xs font-bold transition ${activeView === 'support' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-800'}`}>Contact Support</button>
                     </div>
                 </header>
 
                 <div className="flex-1 overflow-y-auto px-3 pb-4">
-                    {conversations.map((conversation) => {
+                    {activeView === 'support' ? (supportLoading ? (
+                        <div className="flex h-64 items-center justify-center"><Loader className="h-7 w-7 animate-spin text-blue-500" /></div>
+                    ) : supportMessages.length ? supportMessages.map((support) => (
+                        <button type="button" key={support.id} onClick={() => setSelectedSupport(support)} className={`mb-1 w-full rounded-2xl p-4 text-left transition ${selectedSupport?.id === support.id ? 'bg-blue-500 text-white shadow-md' : 'hover:bg-gray-100'}`}>
+                            <div className="flex items-start justify-between gap-3"><strong className="truncate text-sm">{support.subject}</strong><span className={`shrink-0 text-[10px] ${selectedSupport?.id === support.id ? 'text-blue-100' : 'text-gray-400'}`}>{support.created_at ? formatTime(support.created_at) : ''}</span></div>
+                            <p className={`mt-2 line-clamp-2 text-sm ${selectedSupport?.id === support.id ? 'text-blue-50' : 'text-gray-500'}`}>{support.content}</p>
+                            <span className={`mt-2 inline-block text-[10px] font-bold uppercase ${selectedSupport?.id === support.id ? 'text-blue-100' : support.admin_response ? 'text-emerald-600' : 'text-amber-600'}`}>{support.admin_response ? 'Replied' : 'Awaiting reply'}</span>
+                        </button>
+                    )) : (
+                        <div className="flex flex-col items-center justify-center pt-20 text-center text-gray-500"><Envelope className="mb-4 h-8 w-8 text-gray-400" /><p className="text-sm font-medium">No support requests yet</p><p className="mt-1 text-xs text-gray-400">Contact Support messages will appear here.</p></div>
+                    )) : conversations.map((conversation) => {
                         const person = recipientFor(conversation);
                         const isSelected = selected?.id === conversation.id;
                         return (
@@ -171,7 +197,7 @@ const UserMessages = () => {
                             </button>
                         );
                     })}
-                    {!conversations.length && (
+                    {activeView === 'chats' && !conversations.length && (
                         <div className="flex flex-col items-center justify-center pt-20 text-center text-gray-500">
                             <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gray-100">
                                 <Envelope className="h-8 w-8 text-gray-400" />
@@ -184,8 +210,23 @@ const UserMessages = () => {
             </aside>
 
             {/* Main Chat Area */}
-            <main className={`${selected ? 'flex' : 'hidden md:flex'} relative flex-1 flex-col bg-white`}>
-                {selected ? (
+            <main className={`${selected || selectedSupport ? 'flex' : 'hidden md:flex'} relative flex-1 flex-col bg-white`}>
+                {activeView === 'support' ? (
+                    selectedSupport ? (
+                        <article className="flex h-full min-h-0 flex-col bg-white">
+                            <header className="flex items-center gap-3 border-b border-gray-100 px-4 py-3 sm:px-6">
+                                <button type="button" onClick={() => setSelectedSupport(null)} className="rounded-full p-2 text-gray-500 hover:bg-gray-100 md:hidden" aria-label="Back to support requests"><ChevronLeft className="h-6 w-6" /></button>
+                                <div className="min-w-0"><h2 className="truncate font-bold text-gray-900">{selectedSupport.subject}</h2><p className="text-xs text-gray-500">{selectedSupport.created_at ? new Date(selectedSupport.created_at).toLocaleString() : 'Support request'}</p></div>
+                            </header>
+                            <div className="flex-1 overflow-y-auto p-5 sm:p-8">
+                                <div className="mx-auto max-w-2xl">
+                                    <div className="rounded-2xl bg-blue-50 p-5"><p className="whitespace-pre-wrap text-sm leading-7 text-gray-800">{selectedSupport.content}</p><p className="mt-3 text-xs text-gray-500">You</p></div>
+                                    {selectedSupport.admin_response ? <div className="mt-5 rounded-2xl border border-emerald-100 bg-emerald-50 p-5"><p className="text-xs font-bold uppercase tracking-wider text-emerald-700">Support reply</p><p className="mt-2 whitespace-pre-wrap text-sm leading-7 text-gray-800">{selectedSupport.admin_response}</p>{selectedSupport.responded_at && <p className="mt-3 text-xs text-gray-500">{new Date(selectedSupport.responded_at).toLocaleString()}</p>}</div> : <div className="mt-5 rounded-2xl border border-amber-100 bg-amber-50 p-4 text-sm text-amber-800">Your request is waiting for a support reply.</div>}
+                                </div>
+                            </div>
+                        </article>
+                    ) : <div className="m-auto flex flex-col items-center text-center p-8"><Envelope className="h-10 w-10 text-blue-300" /><h3 className="mt-4 text-xl font-semibold text-gray-900">Select a support request</h3><p className="mt-2 max-w-sm text-sm text-gray-500">Open a request to read your message and any reply from support.</p></div>
+                ) : selected ? (
                     <>
                         {/* Glassmorphism Header */}
                         <header className="sticky top-0 z-10 flex items-center gap-3 border-b border-gray-100 bg-white/80 px-4 py-3 backdrop-blur-md">
