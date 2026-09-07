@@ -6,6 +6,7 @@ const adminMessageApi = {
     markAllSupportRead: () => messageAPI.markAllAsRead('admin'),
     respondToSupport: (id, response) => messageAPI.respondToMessage(id, response, 'admin'),
     deleteSupport: (id) => messageAPI.deleteMessage(id, 'admin'),
+    closeSupport: (id) => messageAPI.closeMessageCase(id, 'admin'),
     getAppeals: messageAPI.getAppeals,
     reviewAppeal: adminAPI.reviewAppeal,
     unsuspendUser: adminAPI.unsuspendUser

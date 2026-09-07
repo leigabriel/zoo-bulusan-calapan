@@ -43,8 +43,9 @@ const Donation = () => {
             return;
         }
 
-        // Do not include an amount. GCash lets the donor enter any amount.
-        window.location.href = `gcash://sendmoney?to=${encodeURIComponent(config.gcashNumber)}`;
+        // Fallback for phones with GCash installed. The donor enters the amount
+        // in GCash; browsers without the scheme still have the visible number.
+        window.location.assign(`gcash://sendmoney?mobile_number=${encodeURIComponent(config.gcashNumber)}`);
     };
 
     if (loading) {

@@ -166,6 +166,7 @@ router.put('/messages/:id/read', messageController.markAsRead);
 router.put('/messages/read-all', messageController.markAllAsRead);
 router.post('/messages/:id/respond', messageController.respondToMessage);
 router.delete('/messages/:id', trackActivity('other', (req) => 'Deleted message'), messageController.deleteMessage);
+router.put('/messages/:id/close', messageController.closeCase);
 // staff monitoring
 router.get('/monitoring/dashboard', monitoringController.getMonitoringDashboard);
 router.get('/monitoring/sessions', monitoringController.getActiveSessions);

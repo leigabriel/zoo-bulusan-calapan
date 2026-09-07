@@ -42,6 +42,8 @@ const UserMessages = () => {
     const [supportMessages, setSupportMessages] = useState([]);
     const [supportLoading, setSupportLoading] = useState(true);
     const [selectedSupport, setSelectedSupport] = useState(null);
+    const [supportReply, setSupportReply] = useState('');
+    const [supportReplySending, setSupportReplySending] = useState(false);
 
     const loadConversations = useCallback(async () => {
         const response = await chatAPI.getConversations('user');
@@ -121,6 +123,30 @@ const UserMessages = () => {
             loadConversations().catch(() => { });
         } catch (error) { notify.error(error.message || 'Message was not sent.'); }
         finally { setSending(false); }
+    };
+
+    const sendSupportReply = async (event) => {
+        event.preventDefault();
+        const content = supportReply.trim();
+        if (!selectedSupport || !content || supportReplySending || selectedSupport.case_status === 'closed') return;
+        setSupportReplySending(true);
+        try {
+            await messageAPI.replyToMessage(selectedSupport.id, content);
+            const updated = {
+                ...selectedSupport,
+                user_response: selectedSupport.user_response ? `${selectedSupport.user_response}\n\n${content}` : content,
+                user_responded_at: new Date().toISOString(),
+                case_status: 'open'
+            };
+            setSelectedSupport(updated);
+            setSupportMessages((items) => items.map((item) => item.id === updated.id ? updated : item));
+            setSupportReply('');
+            notify.success('Reply sent.');
+        } catch (error) {
+            notify.error(error.message || 'Reply was not sent.');
+        } finally {
+            setSupportReplySending(false);
+        }
     };
 
     if (loading) return <div className="flex h-[100dvh] items-center justify-center bg-white"><Loader className="h-8 w-8 animate-spin text-blue-500" /></div>;
@@ -216,12 +242,14 @@ const UserMessages = () => {
                         <article className="flex h-full min-h-0 flex-col bg-white">
                             <header className="flex items-center gap-3 border-b border-gray-100 px-4 py-3 sm:px-6">
                                 <button type="button" onClick={() => setSelectedSupport(null)} className="rounded-full p-2 text-gray-500 hover:bg-gray-100 md:hidden" aria-label="Back to support requests"><ChevronLeft className="h-6 w-6" /></button>
-                                <div className="min-w-0"><h2 className="truncate font-bold text-gray-900">{selectedSupport.subject}</h2><p className="text-xs text-gray-500">{selectedSupport.created_at ? new Date(selectedSupport.created_at).toLocaleString() : 'Support request'}</p></div>
+                                <div className="min-w-0"><h2 className="truncate font-bold text-gray-900">{selectedSupport.subject}</h2><p className="text-xs text-gray-500">{selectedSupport.created_at ? new Date(selectedSupport.created_at).toLocaleString() : 'Support request'} · <span className={selectedSupport.case_status === 'closed' ? 'text-gray-500' : 'text-emerald-600'}>{selectedSupport.case_status === 'closed' ? 'Closed' : 'Open'}</span></p></div>
                             </header>
                             <div className="flex-1 overflow-y-auto p-5 sm:p-8">
                                 <div className="mx-auto max-w-2xl">
                                     <div className="rounded-2xl bg-blue-50 p-5"><p className="whitespace-pre-wrap text-sm leading-7 text-gray-800">{selectedSupport.content}</p><p className="mt-3 text-xs text-gray-500">You</p></div>
+                                    {selectedSupport.user_response && <div className="mt-5 rounded-2xl border border-blue-100 bg-blue-50 p-5"><p className="text-xs font-bold uppercase tracking-wider text-blue-700">Your reply</p><p className="mt-2 whitespace-pre-wrap text-sm leading-7 text-gray-800">{selectedSupport.user_response}</p></div>}
                                     {selectedSupport.admin_response ? <div className="mt-5 rounded-2xl border border-emerald-100 bg-emerald-50 p-5"><p className="text-xs font-bold uppercase tracking-wider text-emerald-700">Support reply</p><p className="mt-2 whitespace-pre-wrap text-sm leading-7 text-gray-800">{selectedSupport.admin_response}</p>{selectedSupport.responded_at && <p className="mt-3 text-xs text-gray-500">{new Date(selectedSupport.responded_at).toLocaleString()}</p>}</div> : <div className="mt-5 rounded-2xl border border-amber-100 bg-amber-50 p-4 text-sm text-amber-800">Your request is waiting for a support reply.</div>}
+                                    {selectedSupport.case_status === 'closed' ? <div className="mt-5 rounded-2xl border border-gray-200 bg-gray-50 p-4 text-sm text-gray-600">This support case is closed. Start a new Contact Support request if you need more help.</div> : <form onSubmit={sendSupportReply} className="mt-6"><label htmlFor="support-reply" className="text-sm font-bold text-gray-900">Reply to support</label><textarea id="support-reply" value={supportReply} onChange={(event) => setSupportReply(event.target.value)} rows={4} maxLength={4000} placeholder="Add more information or reply to support..." className="mt-2 w-full resize-y rounded-xl border border-blue-100 bg-blue-50/30 px-4 py-3 text-sm leading-6 outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100" /><button type="submit" disabled={!supportReply.trim() || supportReplySending} className="mt-3 rounded-xl bg-blue-500 px-4 py-2.5 text-sm font-bold text-white hover:bg-blue-600 disabled:cursor-not-allowed disabled:opacity-50">{supportReplySending ? 'Sending...' : 'Send reply'}</button></form>}
                                 </div>
                             </div>
                         </article>

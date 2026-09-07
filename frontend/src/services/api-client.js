@@ -1282,6 +1282,14 @@ export const staffAPI = {
         return handleResponse(response);
     },
 
+    closeMessageCase: async (id) => {
+        const response = await fetch(`${API_BASE_URL}/staff/messages/${id}/close`, {
+            method: 'PUT',
+            headers: getAuthHeaders('staff')
+        });
+        return handleResponse(response);
+    },
+
     // Image upload methods (uses Cloudinary when configured)
     uploadImage: async (file) => {
         const formData = new FormData();
@@ -1625,6 +1633,15 @@ export const messageAPI = {
         return handleResponse(response);
     },
 
+    replyToMessage: async (id, content) => {
+        const response = await fetch(`${API_BASE_URL}/messages/${id}/reply`, {
+            method: 'POST',
+            headers: getAuthHeaders('user'),
+            body: JSON.stringify({ content })
+        });
+        return handleResponse(response);
+    },
+
     submitAppeal: async (appealData) => {
         const response = await fetch(`${API_BASE_URL}/messages/appeal`, {
             method: 'POST',
@@ -1676,6 +1693,14 @@ export const messageAPI = {
     deleteMessage: async (id, type = 'admin') => {
         const response = await fetch(`${API_BASE_URL}/admin/messages/${id}`, {
             method: 'DELETE',
+            headers: getAuthHeaders(type)
+        });
+        return handleResponse(response);
+    },
+
+    closeMessageCase: async (id, type = 'admin') => {
+        const response = await fetch(`${API_BASE_URL}/${type === 'staff' ? 'staff' : 'admin'}/messages/${id}/close`, {
+            method: 'PUT',
             headers: getAuthHeaders(type)
         });
         return handleResponse(response);

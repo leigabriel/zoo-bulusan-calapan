@@ -93,6 +93,28 @@ class Message {
         return result.affectedRows > 0;
     }
 
+    static async replyToMessage(id, userId, content) {
+        const [result] = await db.query(
+            `UPDATE user_messages
+             SET user_response = CASE
+                 WHEN user_response IS NULL OR user_response = '' THEN ?
+                 ELSE CONCAT(user_response, '\\n\\n', ?)
+             END,
+                 user_responded_at = NOW(), case_status = 'open', is_read = FALSE, updated_at = NOW()
+             WHERE id = ? AND sender_id = ? AND message_type != 'appeal' AND case_status != 'closed'`,
+            [content, content, id, userId]
+        );
+        return result.affectedRows > 0;
+    }
+
+    static async closeCase(id) {
+        const [result] = await db.query(
+            "UPDATE user_messages SET case_status = 'closed', is_read = TRUE, updated_at = NOW() WHERE id = ? AND message_type != 'appeal'",
+            [id]
+        );
+        return result.affectedRows > 0;
+    }
+
     static async getBySenderId(senderId) {
         const [rows] = await db.query(
             `SELECT * FROM user_messages WHERE sender_id = ? ORDER BY created_at DESC`,

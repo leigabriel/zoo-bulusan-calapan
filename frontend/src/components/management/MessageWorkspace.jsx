@@ -88,6 +88,7 @@ const MessageWorkspace = ({ globalSearch = '', api, role, roleLabel }) => {
     const [deleting, setDeleting] = useState(false);
     const [reviewingAppeal, setReviewingAppeal] = useState(false);
     const [unsuspending, setUnsuspending] = useState(false);
+    const [closing, setClosing] = useState(false);
     const closeButtonRef = useRef(null);
 
     const isAppeal = activeTab === 'appeals';
@@ -205,6 +206,23 @@ const MessageWorkspace = ({ globalSearch = '', api, role, roleLabel }) => {
             notify.error(deleteError.message || "Couldn't remove message.");
         } finally {
             setDeleting(false);
+        }
+    };
+
+    const closeCase = async () => {
+        if (!selected || !isSupport || closing) return;
+        setClosing(true);
+        try {
+            await api.closeSupport(selected.id);
+            const closed = { ...selected, case_status: 'closed', is_read: true };
+            setMessages((items) => items.map((message) => message.id === selected.id ? closed : message));
+            setSelected(closed);
+            notify.success('Support case closed.');
+        } catch (closeError) {
+            console.error('Error closing support case:', closeError);
+            notify.error(closeError.message || "Couldn't close support case.");
+        } finally {
+            setClosing(false);
         }
     };
 
@@ -364,6 +382,7 @@ const MessageWorkspace = ({ globalSearch = '', api, role, roleLabel }) => {
                     </div>
                 ) : (
                     <div className="mt-7 border-t border-green-100 pt-6">
+                        {selected.user_response && <div className="mb-5 rounded-xl border border-blue-100 bg-blue-50 p-4 text-sm leading-6 text-blue-900"><p className="font-bold">User reply:</p><p className="mt-1 whitespace-pre-wrap">{selected.user_response}</p></div>}
                         <label htmlFor="message-reply" className="text-sm font-bold text-gray-900">Reply to {selected.sender_name}</label>
                         <textarea
                             id="message-reply"
@@ -374,10 +393,10 @@ const MessageWorkspace = ({ globalSearch = '', api, role, roleLabel }) => {
                             className="mt-3 w-full resize-y rounded-xl border border-green-200 bg-green-50/50 px-4 py-3 text-sm leading-6 text-gray-900 outline-none transition focus:border-green-500 focus:ring-2 focus:ring-green-100"
                         />
                         <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
-                            <button type="button" onClick={() => setDeleteTarget(selected)} className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-bold text-red-700 hover:bg-red-50">
+                            <div className="flex flex-wrap gap-2"><button type="button" onClick={() => setDeleteTarget(selected)} className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-bold text-red-700 hover:bg-red-50">
                                 <Trash className="h-4 w-4" /> Delete
-                            </button>
-                            <button type="button" onClick={sendReply} disabled={replying || !reply.trim()} className="inline-flex items-center gap-2 rounded-lg bg-green-500 px-4 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-green-600 disabled:cursor-not-allowed disabled:opacity-50">
+                            </button>{selected.case_status !== 'closed' && <button type="button" onClick={closeCase} disabled={closing} className="rounded-lg border border-amber-300 px-3 py-2 text-sm font-bold text-amber-700 hover:bg-amber-50 disabled:opacity-50">{closing ? 'Closing...' : 'Close Case'}</button>}</div>
+                            <button type="button" onClick={sendReply} disabled={replying || !reply.trim() || selected.case_status === 'closed'} className="inline-flex items-center gap-2 rounded-lg bg-green-500 px-4 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-green-600 disabled:cursor-not-allowed disabled:opacity-50">
                                 {replying ? <Loader className="h-4 w-4 animate-spin" /> : <Reply className="h-4 w-4" />}
                                 {replying ? 'Sending...' : selected.admin_response ? 'Update reply' : 'Send reply'}
                             </button>

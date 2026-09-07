@@ -7,6 +7,7 @@ const staffMessageApi = {
     markAllSupportRead: staffAPI.markAllMessagesRead,
     respondToSupport: staffAPI.respondToMessage,
     deleteSupport: staffAPI.deleteMessage,
+    closeSupport: staffAPI.closeMessageCase,
     getAppeals: staffAPI.getAppeals,
     reviewAppeal: staffAPI.reviewAppeal,
     unsuspendUser: staffAPI.unsuspendUser

@@ -68,6 +68,50 @@ exports.getMyMessages = async (req, res) => {
     }
 };
 
+exports.replyToMessage = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const content = typeof req.body.content === 'string' ? req.body.content.trim() : '';
+        if (!content) return res.status(400).json({ success: false, message: 'Reply content is required' });
+        if (content.length > 4000) return res.status(400).json({ success: false, message: 'Reply cannot exceed 4000 characters' });
+
+        const updated = await Message.replyToMessage(id, req.user.id, content);
+        if (!updated) return res.status(404).json({ success: false, message: 'Support case not found or already closed' });
+        await Notification.notifyManagement({
+            title: 'Support Case Reply',
+            message: `${req.user.firstName || req.user.username || 'A user'} replied to a support case.`,
+            type: 'info',
+            link: '/admin/messages'
+        });
+        res.json({ success: true, message: 'Reply sent successfully' });
+    } catch (error) {
+        console.error('Error replying to support message:', error);
+        res.status(500).json({ success: false, message: 'Error sending reply' });
+    }
+};
+
+exports.closeCase = async (req, res) => {
+    try {
+        const supportMessage = await Message.findById(req.params.id);
+        if (!supportMessage || supportMessage.message_type === 'appeal') {
+            return res.status(404).json({ success: false, message: 'Support case not found' });
+        }
+        const closed = await Message.closeCase(req.params.id);
+        if (!closed) return res.status(404).json({ success: false, message: 'Support case not found' });
+        await Notification.create({
+            userId: supportMessage.sender_id,
+            title: 'Support Case Closed',
+            message: `Your support case "${supportMessage.subject}" has been closed.`,
+            type: 'info',
+            link: '/my-messages'
+        });
+        res.json({ success: true, message: 'Support case closed' });
+    } catch (error) {
+        console.error('Error closing support case:', error);
+        res.status(500).json({ success: false, message: 'Error closing support case' });
+    }
+};
+
 exports.getAllMessages = async (req, res) => {
     try {
         // Staff and admin should both be able to see all messages to handle user inquiries
