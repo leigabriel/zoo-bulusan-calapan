@@ -194,7 +194,8 @@ exports.respondToMessage = async (req, res) => {
                 userId: message.sender_id,
                 title: 'Response to Your Message',
                 message: `Admin has responded to your message: ${message.subject}`,
-                type: 'info'
+                type: 'info',
+                link: '/my-messages'
             });
         } catch (notificationError) {
             console.error('Error creating notification (response was saved):', notificationError);

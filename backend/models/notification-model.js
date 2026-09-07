@@ -37,27 +37,32 @@ class Notification {
     }
 
     // Get recent activity summary for admin/staff dashboard
-    static async getActivitySummary() {
+    static async getActivitySummary(role = null) {
         let ticketStats = [{ total: 0, today: 0, this_week: 0 }];
         let pendingTickets = [{ count: 0 }];
         let recentTickets = [];
         try {
+            // "Sold" counts confirmed/completed bookings created on the calendar
+            // day or week (not a rolling window), excluding soft-deleted rows.
             [ticketStats] = await db.query(`
                 SELECT 
                     COUNT(*) as total,
-                    SUM(CASE WHEN created_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR) THEN 1 ELSE 0 END) as today,
-                    SUM(CASE WHEN created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY) THEN 1 ELSE 0 END) as this_week
+                    SUM(CASE WHEN status IN ('confirmed', 'completed') AND DATE(created_at) = CURDATE() THEN 1 ELSE 0 END) as today,
+                    SUM(CASE WHEN status IN ('confirmed', 'completed') AND created_at >= DATE_SUB(CURDATE(), INTERVAL WEEKDAY(CURDATE()) DAY) THEN 1 ELSE 0 END) as this_week
                 FROM ticket_reservations
+                WHERE (is_deleted IS NULL OR is_deleted = FALSE)
             `);
 
             [pendingTickets] = await db.query(`
-                SELECT COUNT(*) as count FROM ticket_reservations WHERE status = 'pending'
+                SELECT COUNT(*) as count FROM ticket_reservations 
+                WHERE status = 'pending' AND (is_deleted IS NULL OR is_deleted = FALSE)
             `);
 
             [recentTickets] = await db.query(`
                 SELECT t.*, u.first_name, u.last_name, u.email
                 FROM ticket_reservations t
                 LEFT JOIN users u ON t.user_id = u.id
+                WHERE (t.is_deleted IS NULL OR t.is_deleted = FALSE)
                 ORDER BY t.created_at DESC
                 LIMIT 5
             `);
@@ -68,16 +73,15 @@ class Notification {
         const [userStats] = await db.query(`
             SELECT 
                 COUNT(*) as total,
-                SUM(CASE WHEN created_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR) THEN 1 ELSE 0 END) as today,
-                SUM(CASE WHEN created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY) THEN 1 ELSE 0 END) as this_week
-            FROM users WHERE role = 'user'
+                SUM(CASE WHEN DATE(created_at) = CURDATE() THEN 1 ELSE 0 END) as today,
+                SUM(CASE WHEN created_at >= DATE_SUB(CURDATE(), INTERVAL WEEKDAY(CURDATE()) DAY) THEN 1 ELSE 0 END) as this_week
+            FROM users WHERE role = 'user' AND deleted_at IS NULL
         `);
 
         const [animalStats] = await db.query(`
             SELECT 
                 COUNT(*) as total,
-                SUM(CASE WHEN created_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR) THEN 1 ELSE 0 END) as today,
-                SUM(CASE WHEN created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY) THEN 1 ELSE 0 END) as this_week
+                SUM(CASE WHEN created_at >= DATE_SUB(CURDATE(), INTERVAL WEEKDAY(CURDATE()) DAY) THEN 1 ELSE 0 END) as this_week
             FROM animals
         `);
 
@@ -90,17 +94,23 @@ class Notification {
 
         const [eventReservationStats] = await db.query(`
             SELECT COUNT(*) AS total,
-                SUM(CASE WHEN created_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR) THEN 1 ELSE 0 END) AS today,
+                SUM(CASE WHEN created_at >= DATE_SUB(CURDATE(), INTERVAL WEEKDAY(CURDATE()) DAY) THEN 1 ELSE 0 END) AS today,
                 SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) AS pending
             FROM event_reservations
+            WHERE (is_deleted IS NULL OR is_deleted = FALSE)
         `);
 
-        const [messageStats] = await db.query(`
-            SELECT COUNT(*) AS total,
-                SUM(CASE WHEN created_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR) THEN 1 ELSE 0 END) AS today,
+        // Scope the inbox unread count to the requestor's portal when known.
+        const isPortal = role === 'admin' || role === 'staff';
+        const messageParams = isPortal ? [role] : [];
+        const [messageStats] = await db.query(
+            `SELECT COUNT(*) AS total,
+                SUM(CASE WHEN created_at >= DATE_SUB(CURDATE(), INTERVAL WEEKDAY(CURDATE()) DAY) THEN 1 ELSE 0 END) AS today,
                 SUM(CASE WHEN is_read = FALSE THEN 1 ELSE 0 END) AS unread
             FROM user_messages
-        `);
+            ${isPortal ? "WHERE (recipient_type = ? OR recipient_type = 'all')" : ''}`,
+            messageParams
+        );
 
         let pendingCommunityPosts = [{ count: 0 }];
         let pendingAppeals = [{ count: 0 }];
@@ -133,7 +143,7 @@ class Notification {
         const [rows, unreadCount, summary] = await Promise.all([
             this.getByUserId(userId, 50),
             this.getUnreadCount(userId),
-            this.getActivitySummary()
+            this.getActivitySummary(role)
         ]);
         return {
             notifications: rows.map(n => ({
@@ -227,6 +237,16 @@ class Notification {
             [id, userId]
         );
         return result.affectedRows > 0;
+    }
+
+    // Delete all notifications for a user
+    static async deleteAll(userId) {
+        const [result] = await db.query(
+            `DELETE FROM notifications 
+             WHERE user_id = ?`,
+            [userId]
+        );
+        return result.affectedRows;
     }
 
     // Delete old notifications (older than 30 days)

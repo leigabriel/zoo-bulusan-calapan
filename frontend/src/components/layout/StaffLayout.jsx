@@ -7,6 +7,8 @@ import { notify } from '../../utils/toast';
 import LogoutModal from '../common/LogoutModal';
 import Tooltip from '../common/Tooltip';
 import CollapsibleNavGroup from '../common/CollapsibleNavGroup';
+import PasswordInput from '../common/PasswordInput';
+import ConfirmModal from '../common/ConfirmModal';
 import RoleCompanionFloatingButton from '../common/RoleCompanionFloatingButton';
 import useScrollLock from '../../hooks/use-scroll-lock';
 import WorkspaceThemeContext from '../common/WorkspaceThemeContext';
@@ -26,6 +28,8 @@ const StaffLayout = ({ children }) => {
     const mobileMenuRef = useRef(null);
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [showLogoutModal, setShowLogoutModal] = useState(false);
+    const [showClearNotificationsConfirm, setShowClearNotificationsConfirm] = useState(false);
+    const [clearingNotifications, setClearingNotifications] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [showSearchDropdown, setShowSearchDropdown] = useState(false);
     const [mobileHeaderMenuOpen, setMobileHeaderMenuOpen] = useState(false);
@@ -42,9 +46,6 @@ const StaffLayout = ({ children }) => {
     const [passwordSaving, setPasswordSaving] = useState(false);
     const [aiAssistOpen, setAiAssistOpen] = useState(false);
     const [openNavGroups, setOpenNavGroups] = useState({ main: true, management: true, communication: true });
-    const [seenBadges, setSeenBadges] = useState(() => {
-        try { return JSON.parse(sessionStorage.getItem('staffSeenBadges') || '{}'); } catch { return {}; }
-    });
 
     // Global search database state
     const [searchData, setSearchData] = useState({ animals: [], events: [], plants: [] });
@@ -136,6 +137,20 @@ const StaffLayout = ({ children }) => {
             // Error fetching notifications
         } finally {
             setNotificationsLoading(false);
+        }
+    };
+
+    const clearAllNotifications = async () => {
+        setClearingNotifications(true);
+        try {
+            await staffAPI.clearNotifications();
+            setNotifications([]);
+        } catch (err) {
+            console.error('Error clearing notifications:', err);
+        } finally {
+            setClearingNotifications(false);
+            setShowClearNotificationsConfirm(false);
+            setNotificationPanelOpen(false);
         }
     };
 
@@ -427,15 +442,15 @@ const StaffLayout = ({ children }) => {
     ];
 
     const managementItems = [
-        { path: '/staff/events', label: 'Events', Icon: Calendar, badge: Math.max(0, (activitySummary?.events?.upcoming || 0) - (seenBadges['/staff/events'] || 0)) },
-        { path: '/staff/reservations', label: 'Reservations', Icon: Ticket, badge: Math.max(0, ((activitySummary?.pendingTickets || 0) + (activitySummary?.eventReservations?.pending || 0)) - (seenBadges['/staff/reservations'] || 0)) },
+        { path: '/staff/events', label: 'Events', Icon: Calendar },
+        { path: '/staff/reservations', label: 'Reservations', Icon: Ticket },
         { path: '/staff/animals', label: 'Manage Animals', Icon: Pet },
         { path: '/staff/plants', label: 'Manage Plants', Icon: Leaf },
     ];
 
     const communicationItems = [
-        { path: '/staff/messages', label: 'Messages', Icon: Message, badge: Math.max(0, (activitySummary?.messages?.unread || 0) - (seenBadges['/staff/messages'] || 0)) },
-        { path: '/staff/community-moderation', label: 'Community Moderation', Icon: ShieldCheck, badge: Math.max(0, (activitySummary?.pendingCommunityPosts || 0) - (seenBadges['/staff/community-moderation'] || 0)) },
+        { path: '/staff/messages', label: 'Messages', Icon: Message },
+        { path: '/staff/community-moderation', label: 'Community Moderation', Icon: ShieldCheck },
     ];
 
     const allMenuItems = [...menuItems, ...managementItems, ...communicationItems];
@@ -513,15 +528,7 @@ const StaffLayout = ({ children }) => {
         return results.slice(0, 15);
     }, [searchQuery, allMenuItems, searchData]);
 
-    const handleNavClick = (path) => {
-        if (path && activitySummary) {
-            const currentBadge = navGroups.flatMap(g => g.items).find(i => i.path === path)?.badge || 0;
-            if (currentBadge > 0) {
-                const updated = { ...seenBadges, [path]: (seenBadges[path] || 0) + currentBadge };
-                setSeenBadges(updated);
-                sessionStorage.setItem('staffSeenBadges', JSON.stringify(updated));
-            }
-        }
+    const handleNavClick = () => {
         if (window.innerWidth < 1024) {
             setSidebarOpen(false);
         }
@@ -1079,7 +1086,8 @@ const StaffLayout = ({ children }) => {
                             <div key={activity.id} className="flex items-center gap-3 text-sm">
                                 <div className={`w-8 h-8 rounded-full flex items-center justify-center ${activity.color === 'blue' ? 'bg-blue-100 text-blue-600' :
                                         activity.color === 'green' ? 'bg-green-100 text-green-600' :
-                                            'bg-yellow-100 text-yellow-600'
+                                            activity.color === 'purple' ? 'bg-purple-100 text-purple-600' :
+                                                'bg-yellow-100 text-yellow-600'
                                     }`}>
                                     <span className="text-xs">{activity.icon}</span>
                                 </div>
@@ -1092,10 +1100,17 @@ const StaffLayout = ({ children }) => {
                     </div>
                 </div>
 
-                {/* Mark All Read Button */}
-                <div className="border-t border-gray-200 p-4">
-                    <button onClick={async () => { await staffAPI.markAllNotificationsRead(); setNotifications((current) => current.map((item) => ({ ...item, read: true }))); }} disabled={unreadCount === 0} className="w-full py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-600 hover:text-gray-900 rounded-xl text-sm font-medium transition disabled:opacity-50">
+                {/* Mark All Read / Clear Buttons */}
+                <div className="border-t border-gray-200 p-4 flex gap-3">
+                    <button onClick={async () => { await staffAPI.markAllNotificationsRead(); setNotifications((current) => current.map((item) => ({ ...item, read: true }))); }} disabled={unreadCount === 0} className="flex-1 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-600 hover:text-gray-900 rounded-xl text-sm font-medium transition disabled:opacity-50">
                         Mark all as read
+                    </button>
+                    <button
+                        onClick={() => setShowClearNotificationsConfirm(true)}
+                        disabled={notifications.length === 0}
+                        className="flex-1 py-2.5 bg-red-50 hover:bg-red-100 text-red-600 hover:text-red-700 rounded-xl text-sm font-medium transition disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        Clear all
                     </button>
                 </div>
             </aside>
@@ -1238,9 +1253,9 @@ const StaffLayout = ({ children }) => {
                     <div role="dialog" aria-modal="true" aria-labelledby="staff-password-title" className="w-full max-w-md rounded-3xl bg-white shadow-2xl">
                         <div className="flex items-center justify-between border-b border-gray-200 p-5"><div><h2 id="staff-password-title" className="text-xl font-bold text-gray-900">Change password</h2><p className="text-sm text-gray-500">Use a strong password you do not reuse.</p></div><button onClick={() => setShowPasswordModal(false)} className="rounded-lg p-2 text-gray-400 hover:bg-gray-100"><CloseCircle size={20} /></button></div>
                         <div className="space-y-4 p-5">
-                            <input type="password" autoComplete="current-password" value={passwordForm.currentPassword} onChange={(e) => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })} placeholder="Current password" className="w-full rounded-xl border border-gray-300 bg-gray-50 px-4 py-3 focus:border-green-400 focus:outline-none" />
-                            <input type="password" autoComplete="new-password" value={passwordForm.newPassword} onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })} placeholder="New password" className="w-full rounded-xl border border-gray-300 bg-gray-50 px-4 py-3 focus:border-green-400 focus:outline-none" />
-                            <input type="password" autoComplete="new-password" value={passwordForm.confirmPassword} onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })} placeholder="Confirm new password" className="w-full rounded-xl border border-gray-300 bg-gray-50 px-4 py-3 focus:border-green-400 focus:outline-none" />
+                            <PasswordInput autoComplete="current-password" value={passwordForm.currentPassword} onChange={(e) => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })} placeholder="Current password" className="rounded-xl border border-gray-300 bg-gray-50 px-4 py-3 focus:border-green-400 focus:outline-none" />
+                            <PasswordInput autoComplete="new-password" value={passwordForm.newPassword} onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })} placeholder="New password" className="rounded-xl border border-gray-300 bg-gray-50 px-4 py-3 focus:border-green-400 focus:outline-none" />
+                            <PasswordInput autoComplete="new-password" value={passwordForm.confirmPassword} onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })} placeholder="Confirm new password" className="rounded-xl border border-gray-300 bg-gray-50 px-4 py-3 focus:border-green-400 focus:outline-none" />
                             <div className="flex justify-end gap-3 pt-2"><button onClick={() => setShowPasswordModal(false)} className="rounded-xl px-4 py-3 text-gray-600 hover:bg-gray-100">Cancel</button><button onClick={savePassword} disabled={passwordSaving || !passwordForm.newPassword || !passwordForm.confirmPassword} className="rounded-xl bg-green-400 px-5 py-3 font-semibold text-gray-900 disabled:opacity-50">{passwordSaving ? 'Changing...' : 'Change password'}</button></div>
                         </div>
                     </div>
@@ -1252,6 +1267,17 @@ const StaffLayout = ({ children }) => {
                 onClose={() => setShowLogoutModal(false)}
                 onConfirm={handleLogout}
             />
+
+            {showClearNotificationsConfirm && (
+                <ConfirmModal
+                    title="Clear all notifications?"
+                    message="This will permanently delete all your notifications. You can't undo this action."
+                    confirmLabel="Yes, clear"
+                    loading={clearingNotifications}
+                    onCancel={() => setShowClearNotificationsConfirm(false)}
+                    onConfirm={clearAllNotifications}
+                />
+            )}
 
             <RoleCompanionFloatingButton role="staff" open={aiAssistOpen} onOpenChange={setAiAssistOpen} hideTrigger />
 

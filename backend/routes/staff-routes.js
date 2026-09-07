@@ -95,6 +95,7 @@ router.put('/users/:id/unsuspend', trackActivity('user_update', (req) => 'Unsusp
 router.get('/notifications', staffController.getNotifications);
 router.put('/notifications/:id/read', staffController.markNotificationRead);
 router.put('/notifications/read-all', staffController.markAllNotificationsRead);
+router.delete('/notifications', staffController.clearNotifications);
 
 // Messages
 router.get('/messages', messageController.getAllMessages);

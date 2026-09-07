@@ -21,6 +21,7 @@ router.get('/activities', userController.getActivities);
 router.get('/notifications', userController.getNotifications);
 router.put('/notifications/:id/read', userController.markNotificationRead);
 router.put('/notifications/read-all', userController.markAllNotificationsRead);
+router.delete('/notifications', userController.clearNotifications);
 
 // Ticket routes
 router.post('/tickets/purchase', trackActivity('ticket_purchase', 'Purchased a ticket'), userController.purchaseTicket);

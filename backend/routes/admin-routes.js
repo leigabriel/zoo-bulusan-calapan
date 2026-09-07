@@ -116,6 +116,7 @@ router.put('/appeals/:id/review', trackActivity('other', (req) => 'Reviewed appe
 router.get('/notifications', adminController.getNotifications);
 router.put('/notifications/:id/read', adminController.markNotificationRead);
 router.put('/notifications/read-all', adminController.markAllNotificationsRead);
+router.delete('/notifications', adminController.clearNotifications);
 
 // Donation settings
 router.get('/donation-config', donationController.getConfig);

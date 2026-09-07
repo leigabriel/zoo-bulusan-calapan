@@ -162,6 +162,16 @@ exports.markAllNotificationsRead = async (req, res) => {
     }
 };
 
+exports.clearNotifications = async (req, res) => {
+    try {
+        await Notification.deleteAll(req.user.id);
+        res.json({ success: true, message: 'All notifications cleared' });
+    } catch (error) {
+        console.error('Error clearing user notifications:', error);
+        res.status(500).json({ success: false, message: 'Error clearing notifications' });
+    }
+};
+
 exports.getAnimals = async (req, res) => {
     try {
         const animals = await Animal.getAll();

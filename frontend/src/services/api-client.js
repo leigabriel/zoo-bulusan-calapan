@@ -522,6 +522,14 @@ export const adminAPI = {
         return handleResponse(response);
     },
 
+    clearNotifications: async () => {
+        const response = await fetch(`${API_BASE_URL}/admin/notifications`, {
+            method: 'DELETE',
+            headers: getAuthHeaders('admin')
+        });
+        return handleResponse(response);
+    },
+
     // User management - suspend/unsuspend
     getUserById: async (id) => {
         const response = await fetch(`${API_BASE_URL}/admin/users/${id}`, {
@@ -1175,6 +1183,14 @@ export const staffAPI = {
         return handleResponse(response);
     },
 
+    clearNotifications: async () => {
+        const response = await fetch(`${API_BASE_URL}/staff/notifications`, {
+            method: 'DELETE',
+            headers: getAuthHeaders('staff')
+        });
+        return handleResponse(response);
+    },
+
     unsuspendUser: async (id) => {
         const response = await fetch(`${API_BASE_URL}/staff/users/${id}/unsuspend`, {
             method: 'PUT',
@@ -1572,6 +1588,15 @@ export const userAPI = {
         const authType = getCurrentAuthType();
         const response = await fetch(`${API_BASE_URL}/${authType === 'user' ? 'users' : authType + 's'}/notifications/read-all`, {
             method: 'PUT',
+            headers: getAuthHeaders(authType)
+        });
+        return handleResponse(response);
+    },
+
+    clearNotifications: async () => {
+        const authType = getCurrentAuthType();
+        const response = await fetch(`${API_BASE_URL}/${authType === 'user' ? 'users' : authType + 's'}/notifications`, {
+            method: 'DELETE',
             headers: getAuthHeaders(authType)
         });
         return handleResponse(response);

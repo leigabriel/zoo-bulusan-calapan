@@ -1,12 +1,13 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { getProfileImageUrl, messageAPI, userAPI, reservationAPI } from '../services/api-client';
+import { getProfileImageUrl, messageAPI, userAPI } from '../services/api-client';
 import LogoutModal from './common/LogoutModal';
 import AnimalClassifier from './features/ai-scanner/AnimalClassifier';
 import ReservationHistoryPanel from './features/ReservationHistoryPanel';
 import Settings from '../pages/user/Settings';
 import UserProfile from '../pages/user/UserProfile';
+import ConfirmModal from './common/ConfirmModal';
 import useScrollLock from '../hooks/use-scroll-lock';
 import {
     Home, Pet, Leaf, Calendar, Bell, Menu, CloseCircle, Ticket,
@@ -119,15 +120,9 @@ const Header = () => {
     const [showNotificationPanel, setShowNotificationPanel] = useState(false);
     const [showMiniZooGame, setShowMiniZooGame] = useState(false);
     const [notifications, setNotifications] = useState([]);
-    const [readNotificationIds, setReadNotificationIds] = useState(() => {
-        try {
-            const saved = localStorage.getItem('readNotificationIds');
-            return saved ? JSON.parse(saved) : [];
-        } catch {
-            return [];
-        }
-    });
     const [notificationLoading, setNotificationLoading] = useState(false);
+    const [showClearNotificationsConfirm, setShowClearNotificationsConfirm] = useState(false);
+    const [clearingNotifications, setClearingNotifications] = useState(false);
     const [scrolled, setScrolled] = useState(false);
     const [isNavVisible, setIsNavVisible] = useState(true);
     const [showEmailModal, setShowEmailModal] = useState(false);
@@ -229,101 +224,19 @@ const Header = () => {
         if (!user) return;
         if (showLoading) setNotificationLoading(true);
 
-        const formatSafeDate = (dateValue) => {
-            if (!dateValue) return 'date to be announced';
-            const parsed = new Date(dateValue);
-            return Number.isNaN(parsed.getTime()) ? 'date to be announced' : parsed.toLocaleDateString();
-        };
-
-        const getReservationDate = (reservation) => {
-            return reservation.reservation_date
-                || reservation.visit_date
-                || reservation.venue_event_date
-                || reservation.event_date
-                || null;
-        };
-
         try {
-            const notifs = [];
-            const [eventsRes, messagesRes, ticketReservationsRes, eventReservationsRes, dbNotificationsRes] = await Promise.all([
-                userAPI.getEvents(false).catch(() => ({ success: false })),
-                messageAPI.getMyMessages().catch(() => ({ success: false })),
-                reservationAPI.getMyTicketReservations().catch(() => ({ success: false })),
-                reservationAPI.getMyEventReservations().catch(() => ({ success: false })),
-                userAPI.getNotifications().catch(() => ({ success: false }))
-            ]);
-
-            if (dbNotificationsRes?.success && Array.isArray(dbNotificationsRes.notifications)) {
-                dbNotificationsRes.notifications.forEach((notification) => notifs.push({
+            const res = await userAPI.getNotifications().catch(() => ({ success: false }));
+            if (res?.success && Array.isArray(res.notifications)) {
+                setNotifications(res.notifications.map((notification) => ({
                     id: notification.id,
                     type: notification.type || 'message',
                     title: notification.title || 'Notification',
                     message: notification.message,
-                    time: notification.createdAt,
+                    time: notification.time || notification.createdAt || null,
                     path: notification.link || null,
                     read: Boolean(notification.read)
-                }));
+                })));
             }
-            if (eventsRes?.success && eventsRes.events) {
-                const today = new Date();
-                today.setHours(0, 0, 0, 0);
-                eventsRes.events
-                    .filter(e => new Date(e.event_date || e.start_date) >= today)
-                    .slice(0, 3)
-                    .forEach(e => notifs.push({
-                        id: `event-${e.id}`, type: 'event', title: e.title,
-                        message: `Upcoming: ${e.event_date ? new Date(e.event_date).toLocaleDateString() : 'Soon'}`,
-                        time: e.event_date || e.start_date, path: '/events',
-                    }));
-            }
-            if (messagesRes?.success && messagesRes.messages) {
-                messagesRes.messages.filter(m => m.admin_response).slice(0, 3).forEach(m => notifs.push({
-                    id: `message-${m.id}`, type: 'message', title: m.subject,
-                    message: 'Admin has responded to your message',
-                    time: m.responded_at || m.created_at, path: '/my-messages',
-                }));
-            }
-            if (ticketReservationsRes?.success && ticketReservationsRes.reservations) {
-                ticketReservationsRes.reservations
-                    .filter(r => r.status === 'confirmed' || r.status === 'pending')
-                    .slice(0, 3)
-                    .forEach(r => notifs.push({
-                        id: `reservation-ticket-${r.id}`,
-                        type: 'reservation',
-                        title: `Reservation #${r.booking_reference || r.reservation_reference || r.id}`,
-                        message: r.status === 'confirmed'
-                            ? `Confirmed for ${formatSafeDate(getReservationDate(r))}`
-                            : 'Pending confirmation',
-                        time: r.created_at,
-                        path: null,
-                        action: 'openReservationHistory',
-                    }));
-            }
-
-            if (eventReservationsRes?.success && eventReservationsRes.reservations) {
-                eventReservationsRes.reservations
-                    .filter(r => r.status === 'confirmed' || r.status === 'pending')
-                    .slice(0, 3)
-                    .forEach(r => notifs.push({
-                        id: `reservation-event-${r.id}`,
-                        type: 'reservation',
-                        title: `${r.venue_event_name || r.event_title || 'Event Reservation'} #${r.reservation_reference || r.id}`,
-                        message: r.status === 'confirmed'
-                            ? `Confirmed for ${formatSafeDate(getReservationDate(r))}`
-                            : 'Pending confirmation',
-                        time: r.created_at,
-                        path: null,
-                        action: 'openReservationHistory',
-                    }));
-            }
-            notifs.sort((a, b) => new Date(b.time) - new Date(a.time));
-            setNotifications(notifs);
-
-            const serverReadIds = notifs
-                .filter((notification) => notification.read)
-                .map((notification) => notification.id);
-
-            setReadNotificationIds((prev) => [...new Set([...prev, ...serverReadIds])]);
         } catch (err) {
         } finally {
             setNotificationLoading(false);
@@ -343,41 +256,42 @@ const Header = () => {
         };
     }, [user, fetchNotifications]);
 
-    useEffect(() => {
-        localStorage.setItem('readNotificationIds', JSON.stringify(readNotificationIds));
-    }, [readNotificationIds]);
-
-    const unreadCount = notifications.filter(n => !readNotificationIds.includes(n.id)).length;
+    // Read state is server-persisted (same flow as admin/staff notifications).
+    const unreadCount = notifications.filter(n => !n.read).length;
 
     const markNotificationRead = async (notificationId) => {
-        if (!readNotificationIds.includes(notificationId)) {
-            setReadNotificationIds(prev => [...prev, notificationId]);
-        }
-
-        if (typeof notificationId === 'number') {
-            try {
-                await userAPI.markNotificationRead(notificationId);
-            } catch {
-            }
+        try {
+            await userAPI.markNotificationRead(notificationId);
+            setNotifications(prev => prev.map((n) => n.id === notificationId ? { ...n, read: true } : n));
+        } catch {
         }
     };
 
     const markAllNotificationsRead = async () => {
-        const allIds = notifications.map(n => n.id);
-        setReadNotificationIds(prev => [...new Set([...prev, ...allIds])]);
-
         try {
             await userAPI.markAllNotificationsRead();
+            setNotifications(prev => prev.map((n) => ({ ...n, read: true })));
         } catch {
+        }
+    };
+
+    const clearAllNotifications = async () => {
+        setClearingNotifications(true);
+        try {
+            await userAPI.clearNotifications();
+            setNotifications([]);
+        } catch {
+        } finally {
+            setClearingNotifications(false);
+            setShowClearNotificationsConfirm(false);
+            setShowNotificationPanel(false);
         }
     };
 
     const handleNotificationClick = async (notif) => {
         await markNotificationRead(notif.id);
         setShowNotificationPanel(false);
-        if (notif.action === 'openReservationHistory') {
-            setShowHistoryPanel(true);
-        } else if (notif.path) {
+        if (notif.path) {
             handleTransitionNavigate(null, notif.path);
         }
     };
@@ -404,7 +318,7 @@ const Header = () => {
         setEmailLoading(true);
         setEmailError('');
         try {
-            await messageAPI.sendMessage({ recipientType: 'admin', subject: emailSubject, content: emailMessage });
+            await messageAPI.sendMessage({ recipientType: 'all', subject: emailSubject, content: emailMessage });
             setEmailSent(true);
             setEmailSubject('');
             setEmailMessage('');
@@ -792,13 +706,20 @@ const Header = () => {
                                 )}
                                 <div>
                                     <label className="block text-[11px] font-medium text-gray-500 mb-1.5">Subject</label>
-                                    <input
-                                        type="text"
+                                    <select
                                         value={emailSubject}
                                         onChange={(e) => setEmailSubject(e.target.value)}
-                                        placeholder="What's this about?"
                                         className="w-full px-3 py-2.5 text-[13px] border border-gray-200 rounded-lg focus:ring-1 focus:ring-gray-400 focus:border-gray-400 outline-none transition-all"
-                                    />
+                                    >
+                                        <option value="">Select a subject</option>
+                                        <option value="General inquiry">General inquiry</option>
+                                        <option value="Ticket reservation">Ticket reservation</option>
+                                        <option value="Event reservation">Event reservation</option>
+                                        <option value="Payment or refund">Payment or refund</option>
+                                        <option value="Account support">Account support</option>
+                                        <option value="Website problem">Website problem</option>
+                                        <option value="Other concern">Other concern</option>
+                                    </select>
                                 </div>
                                 <div>
                                     <label className="block text-[11px] font-medium text-gray-500 mb-1.5">Message</label>
@@ -850,6 +771,14 @@ const Header = () => {
                                     Mark all read
                                 </button>
                             )}
+                            {notifications.length > 0 && (
+                                <button
+                                    onClick={() => setShowClearNotificationsConfirm(true)}
+                                    className="text-[11px] font-medium text-red-500 hover:text-red-700 transition-colors px-2 py-1 rounded hover:bg-red-50"
+                                >
+                                    Clear
+                                </button>
+                            )}
                             <CloseBtn onClick={() => setShowNotificationPanel(false)} />
                         </div>
                     </div>
@@ -869,7 +798,7 @@ const Header = () => {
                         ) : (
                             <div className="flex flex-col gap-2">
                                 {notifications.map((notif) => {
-                                    const isRead = readNotificationIds.includes(notif.id);
+                                    const isRead = notif.read;
                                     return (
                                         <button
                                             key={notif.id}
@@ -880,11 +809,11 @@ const Header = () => {
                                             onClick={() => handleNotificationClick(notif)}
                                         >
                                             <div className={`relative w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${notif.type === 'event' ? 'bg-emerald-50' :
-                                                notif.type === 'reservation' ? 'bg-orange-50' : 'bg-gray-50'
+                                                notif.type === 'ticket' || notif.type === 'reservation' ? 'bg-orange-50' : 'bg-gray-50'
                                                 }`}>
                                                 {notif.type === 'event' ? (
                                                     <Calendar size={16} className="opacity-55" />
-                                                ) : notif.type === 'reservation' ? (
+                                                ) : notif.type === 'ticket' || notif.type === 'reservation' ? (
                                                     <Ticket size={16} className="opacity-55" />
                                                 ) : (
                                                     <Message size={16} className="opacity-55" />
@@ -897,9 +826,7 @@ const Header = () => {
                                                 <p className={`text-[13px] font-medium truncate ${isRead ? 'text-gray-500' : 'text-gray-800'}`}>{notif.title}</p>
                                                 <p className={`text-[11px] mt-0.5 leading-relaxed ${isRead ? 'text-gray-400' : 'text-gray-500'}`}>{notif.message}</p>
                                                 <p className="text-[10px] text-gray-300 mt-1.5">
-                                                    {notif.time
-                                                        ? new Date(notif.time).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
-                                                        : 'Recently'}
+                                                    {notif.time || 'Recently'}
                                                 </p>
                                             </div>
                                         </button>
@@ -917,6 +844,17 @@ const Header = () => {
                 onConfirm={handleLogout}
                 userName={user?.firstName || user?.username || 'User'}
             />
+
+            {showClearNotificationsConfirm && (
+                <ConfirmModal
+                    title="Clear notifications?"
+                    message="This will permanently delete all your notifications. You can't undo this action."
+                    confirmLabel="Yes, clear"
+                    loading={clearingNotifications}
+                    onCancel={() => setShowClearNotificationsConfirm(false)}
+                    onConfirm={clearAllNotifications}
+                />
+            )}
 
             <ReservationHistoryPanel
                 isOpen={showHistoryPanel}

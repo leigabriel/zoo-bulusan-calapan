@@ -498,6 +498,18 @@ exports.markAllNotificationsRead = async (req, res) => {
     }
 };
 
+// Clear all notifications
+exports.clearNotifications = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        await Notification.deleteAll(userId);
+        res.json({ success: true, message: 'All notifications cleared' });
+    } catch (error) {
+        console.error('Error clearing notifications:', error);
+        res.status(500).json({ success: false, message: 'Error clearing notifications' });
+    }
+};
+
 // user suspension
 
 // suspend user

@@ -75,8 +75,8 @@ const MessageWorkspace = ({ globalSearch = '', api, role, roleLabel }) => {
     const { user } = useAuth();
     const [messages, setMessages] = useState([]);
     const [appeals, setAppeals] = useState([]);
-    const [loadedTabs, setLoadedTabs] = useState({ messages: false, appeals: false });
-    const [activeTab, setActiveTab] = useState('messages');
+    const [loadedTabs, setLoadedTabs] = useState({ support: false, appeals: false });
+    const [activeTab, setActiveTab] = useState('support');
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [search, setSearch] = useState('');
@@ -91,13 +91,20 @@ const MessageWorkspace = ({ globalSearch = '', api, role, roleLabel }) => {
     const closeButtonRef = useRef(null);
 
     const isAppeal = activeTab === 'appeals';
-    const currentItems = isAppeal ? appeals : messages;
+    const isSupport = activeTab === 'support';
+    const currentItems = isAppeal ? appeals : isSupport ? messages : [];
 
     useEffect(() => {
-        if (loadedTabs[activeTab]) return;
-        if (activeTab === 'messages') {
-            setLoadedTabs((tabs) => ({ ...tabs, messages: true }));
-            setLoading(false);
+        if (activeTab === 'chat' || loadedTabs[activeTab]) return;
+        if (activeTab === 'support') {
+            setLoadedTabs((tabs) => ({ ...tabs, support: true }));
+            api.getSupportMessages().then((response) => {
+                setMessages(getCollection(response, 'messages').map((message) => ({ ...message, recordType: 'message' })));
+                setError('');
+            }).catch((loadError) => {
+                console.error('Error loading support messages:', loadError);
+                setError("Couldn't load support messages. Please try again.");
+            }).finally(() => setLoading(false));
             return;
         }
         let cancelled = false;
@@ -105,15 +112,13 @@ const MessageWorkspace = ({ globalSearch = '', api, role, roleLabel }) => {
             setLoading(true);
             setError('');
             try {
-                const response = isAppeal ? await api.getAppeals() : await api.getMessages();
+                const response = await api.getAppeals();
                 if (cancelled) return;
                 if (isAppeal) {
                     const records = getCollection(response, 'user_appeals').length
                         ? getCollection(response, 'user_appeals')
                         : getCollection(response, 'appeals');
                     setAppeals(records.map(normalizeAppeal));
-                } else {
-                    setMessages(getCollection(response, 'messages').map((message) => ({ ...message, recordType: 'message' })));
                 }
                 setLoadedTabs((tabs) => ({ ...tabs, [activeTab]: true }));
             } catch (loadError) {
@@ -147,17 +152,17 @@ const MessageWorkspace = ({ globalSearch = '', api, role, roleLabel }) => {
     const openItem = (item) => {
         setSelected(item);
         setReply(item.admin_response || '');
-        if (item.recordType === 'appeal' || item.is_read) return;
-        api.markRead(item.id).then(() => {
+        if (!isSupport || item.is_read) return;
+        api.markSupportRead(item.id).then(() => {
             setMessages((items) => items.map((message) => message.id === item.id ? { ...message, is_read: true } : message));
             setSelected((current) => current?.id === item.id ? { ...current, is_read: true } : current);
         }).catch((readError) => console.error('Error marking message as read:', readError));
     };
 
     const markAllRead = async () => {
-        if (isAppeal) return;
+        if (!isSupport) return;
         try {
-            await api.markAllRead();
+            await api.markAllSupportRead();
             setMessages((items) => items.map((message) => ({ ...message, is_read: true })));
             setSelected((item) => item ? { ...item, is_read: true } : item);
             notify.success('All messages marked as read.');
@@ -168,11 +173,11 @@ const MessageWorkspace = ({ globalSearch = '', api, role, roleLabel }) => {
     };
 
     const sendReply = async () => {
-        if (isAppeal || selected?.recordType !== 'message' || !reply.trim()) return;
+        if (!isSupport || selected?.recordType !== 'message' || !reply.trim()) return;
         setReplying(true);
         try {
             const responseText = reply.trim();
-            await api.respond(selected.id, responseText);
+            await api.respondToSupport(selected.id, responseText);
             setMessages((items) => items.map((message) => message.id === selected.id
                 ? { ...message, admin_response: responseText, is_read: true }
                 : message));
@@ -187,10 +192,10 @@ const MessageWorkspace = ({ globalSearch = '', api, role, roleLabel }) => {
     };
 
     const deleteMessage = async () => {
-        if (!deleteTarget || deleteTarget.recordType !== 'message' || isAppeal) return;
+        if (!deleteTarget || deleteTarget.recordType !== 'message' || !isSupport) return;
         setDeleting(true);
         try {
-            await api.delete(deleteTarget.id);
+            await api.deleteSupport(deleteTarget.id);
             setMessages((items) => items.filter((message) => message.id !== deleteTarget.id));
             setSelected(null);
             setDeleteTarget(null);
@@ -250,7 +255,7 @@ const MessageWorkspace = ({ globalSearch = '', api, role, roleLabel }) => {
     const messageUnread = messages.filter((message) => !message.is_read).length;
     const pendingAppeals = appeals.filter((appeal) => appeal.status === 'pending').length;
 
-    if (!isAppeal) {
+    if (activeTab === 'chat') {
         return (
             <div className="space-y-5">
                 <div className="flex flex-col justify-between gap-4 rounded-2xl border border-green-400 bg-gradient-to-r from-green-300 via-green-400 to-green-500 p-5 text-gray-900 shadow-sm sm:flex-row sm:items-end sm:p-7">
@@ -261,8 +266,8 @@ const MessageWorkspace = ({ globalSearch = '', api, role, roleLabel }) => {
                     </div>
                 </div>
                 <div className="rounded-2xl border border-green-100 bg-white p-2 shadow-sm">
-                    <div className="grid grid-cols-2 gap-2" role="tablist" aria-label="Communication type">
-                        <button type="button" role="tab" aria-selected="true" onClick={() => switchTab('messages')} className="rounded-xl bg-green-600 px-4 py-3 text-left text-white shadow-sm"><span className="font-bold">Inbox</span><span className="mt-0.5 block text-xs text-green-50">Live chat conversations</span></button>
+                <div className="grid grid-cols-2 gap-2" role="tablist" aria-label="Communication type">
+                        <button type="button" role="tab" aria-selected="true" onClick={() => switchTab('support')} className="rounded-xl bg-green-600 px-4 py-3 text-left text-white shadow-sm"><span className="font-bold">Contact support inbox</span><span className="mt-0.5 block text-xs text-green-50">User-submitted messages</span></button>
                         <button type="button" role="tab" aria-selected="false" onClick={() => switchTab('appeals')} className="rounded-xl px-4 py-3 text-left text-gray-600 transition hover:bg-amber-50"><span className="flex items-center justify-between gap-2"><span className="font-bold">Appeals</span><span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-bold">{appeals.length}</span></span><span className="mt-0.5 block text-xs text-gray-400">{pendingAppeals} pending</span></button>
                     </div>
                 </div>
@@ -400,11 +405,12 @@ const MessageWorkspace = ({ globalSearch = '', api, role, roleLabel }) => {
             </div>
 
             <div className="rounded-2xl border border-green-100 bg-white p-2 shadow-sm">
-                <div className="grid grid-cols-2 gap-2" role="tablist" aria-label="Communication type">
-                    <button type="button" role="tab" aria-selected={!isAppeal} onClick={() => switchTab('messages')} className={`rounded-xl px-4 py-3 text-left transition ${!isAppeal ? 'bg-green-600 text-white shadow-sm' : 'text-gray-600 hover:bg-green-50'}`}>
-                        <span className="flex items-center justify-between gap-2"><span className="font-bold">Inbox</span><span className={`rounded-full px-2 py-0.5 text-xs font-bold ${!isAppeal ? 'bg-white/20' : 'bg-gray-100'}`}>{messages.length}</span></span>
-                        <span className={`mt-0.5 block text-xs ${!isAppeal ? 'text-green-50' : 'text-gray-400'}`}>{messageUnread} unread</span>
+                <div className="grid grid-cols-3 gap-2" role="tablist" aria-label="Communication type">
+                    <button type="button" role="tab" aria-selected={isSupport} onClick={() => switchTab('support')} className={`rounded-xl px-4 py-3 text-left transition ${isSupport ? 'bg-green-600 text-white shadow-sm' : 'text-gray-600 hover:bg-green-50'}`}>
+                        <span className="flex items-center justify-between gap-2"><span className="font-bold">Contact Support</span><span className={`rounded-full px-2 py-0.5 text-xs font-bold ${isSupport ? 'bg-white/20' : 'bg-gray-100'}`}>{messages.length}</span></span>
+                        <span className={`mt-0.5 block text-xs ${isSupport ? 'text-green-50' : 'text-gray-400'}`}>{messageUnread} unread</span>
                     </button>
+                    <button type="button" role="tab" aria-selected={activeTab === 'chat'} onClick={() => switchTab('chat')} className="rounded-xl px-4 py-3 text-left text-gray-600 transition hover:bg-green-50"><span className="font-bold">Live Chat</span><span className="mt-0.5 block text-xs text-gray-400">Open conversations</span></button>
                     <button type="button" role="tab" aria-selected={isAppeal} onClick={() => switchTab('appeals')} className={`rounded-xl px-4 py-3 text-left transition ${isAppeal ? 'bg-amber-500 text-white shadow-sm' : 'text-gray-600 hover:bg-amber-50'}`}>
                         <span className="flex items-center justify-between gap-2"><span className="font-bold">Appeals</span><span className={`rounded-full px-2 py-0.5 text-xs font-bold ${isAppeal ? 'bg-white/20' : 'bg-gray-100'}`}>{appeals.length}</span></span>
                         <span className={`mt-0.5 block text-xs ${isAppeal ? 'text-amber-50' : 'text-gray-400'}`}>{pendingAppeals} pending, read-only</span>

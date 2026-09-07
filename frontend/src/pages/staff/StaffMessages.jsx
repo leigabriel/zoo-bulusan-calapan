@@ -2,6 +2,11 @@ import MessageWorkspace from '../../components/management/MessageWorkspace';
 import { staffAPI } from '../../services/api-client';
 
 const staffMessageApi = {
+    getSupportMessages: staffAPI.getMessages,
+    markSupportRead: staffAPI.markMessageRead,
+    markAllSupportRead: staffAPI.markAllMessagesRead,
+    respondToSupport: staffAPI.respondToMessage,
+    deleteSupport: staffAPI.deleteMessage,
     getAppeals: staffAPI.getAppeals,
     reviewAppeal: staffAPI.reviewAppeal,
     unsuspendUser: staffAPI.unsuspendUser
