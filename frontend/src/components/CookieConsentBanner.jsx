@@ -1,63 +1,90 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { getCookieConsent, setCookieConsent } from '../utils/consent';
+
+const CONSENT_KEY = 'bulusan_cookie_consent_v1';
+
+export const getCookieConsent = () => {
+    try {
+        const raw = localStorage.getItem(CONSENT_KEY);
+        return raw ? JSON.parse(raw) : null;
+    } catch {
+        return null;
+    }
+};
+
+export const setCookieConsent = (accepted) => {
+    const record = {
+        decision: accepted ? 'accepted' : 'declined',
+        timestamp: new Date().toISOString()
+    };
+    try {
+        localStorage.setItem(CONSENT_KEY, JSON.stringify(record));
+    } catch {
+        // Storage can be unavailable in private browsing or restricted contexts.
+    }
+    return record;
+};
 
 const CookieConsentBanner = () => {
     const [visible, setVisible] = useState(false);
+    const [entered, setEntered] = useState(false);
 
     useEffect(() => {
         const hasDecision = getCookieConsent();
         if (!hasDecision) {
             setVisible(true);
+            // Defer so the enter transition actually plays on mount.
+            const id = requestAnimationFrame(() => setEntered(true));
+            return () => cancelAnimationFrame(id);
         }
     }, []);
 
     const handleDecision = (accepted) => {
         setCookieConsent(accepted);
-        setVisible(false);
+        setEntered(false);
+        window.setTimeout(() => setVisible(false), 150);
     };
 
     if (!visible) return null;
 
     return (
         <div
-            className="fixed bottom-0 left-0 right-0 z-[300] bg-[#f2fbf4] border-t-4 border-emerald-600 shadow-2xl"
             role="dialog"
             aria-live="polite"
             aria-label="Cookie consent"
+            className={`fixed z-[300] bottom-4 left-4 right-4 sm:right-auto sm:bottom-6 sm:left-6
+                w-auto sm:w-[360px] transition-all duration-200 ease-out
+                ${entered ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}`}
         >
-            <div className="mx-auto max-w-6xl px-4 sm:px-6 py-5 flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                <div className="flex-1">
-                    <p className="text-sm font-semibold text-[#1f2d23] mb-1">
-                        We use cookies to improve your experience
-                    </p>
-                    <p className="text-xs text-[#1f2d23]/70 leading-relaxed">
-                        We use cookies and similar technologies to keep our site secure, understand
-                        how you use it, and process payments through PayMongo. You can review how
-                        we use cookies in our{' '}
-                        <Link
-                            to="/cookies"
-                            className="text-emerald-700 font-semibold hover:underline"
-                        >
-                            Cookie Policy
-                        </Link>
-                        .
-                    </p>
-                </div>
-                <div className="flex items-center gap-3 flex-shrink-0">
-                    <button
-                        type="button"
-                        onClick={() => handleDecision(false)}
-                        className="px-5 py-2.5 rounded-lg border border-[#1f2d23]/30 text-sm font-semibold text-[#1f2d23] hover:bg-[#1f2d23]/5 transition-colors"
+            <div className="bg-white border border-[#1f2d23]/12 rounded-lg shadow-[0_4px_20px_rgba(15,23,18,0.08)] px-5 py-4">
+                <p className="text-[13px] font-semibold text-[#1f2d23] mb-1.5 tracking-tight">
+                    Cookie notice
+                </p>
+                <p className="text-[12.5px] text-[#1f2d23]/65 leading-relaxed mb-4">
+                    We use cookies to keep this site secure, understand how it's used, and
+                    process payments through PayMongo.{' '}
+                    <Link
+                        to="/cookies"
+                        className="text-emerald-700 underline underline-offset-2 decoration-emerald-700/30 hover:decoration-emerald-700"
                     >
-                        Decline
-                    </button>
+                        Read our policy
+                    </Link>
+                    .
+                </p>
+                <div className="flex items-center gap-2">
                     <button
                         type="button"
                         onClick={() => handleDecision(true)}
-                        className="px-5 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold transition-colors"
+                        className="flex-1 px-3.5 py-2 rounded-md bg-[#1f2d23] hover:bg-[#14201a] text-white text-[12.5px] font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2"
                     >
-                        Accept All
+                        Accept
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => handleDecision(false)}
+                        className="flex-1 px-3.5 py-2 rounded-md border border-[#1f2d23]/15 text-[#1f2d23]/80 text-[12.5px] font-medium hover:bg-[#1f2d23]/[0.04] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2"
+                    >
+                        Decline
                     </button>
                 </div>
             </div>
