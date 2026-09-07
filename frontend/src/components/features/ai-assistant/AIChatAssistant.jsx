@@ -41,7 +41,7 @@ const TrashIcon = () => (
 
 const Avatar = () => (
     <div className="w-9 h-9 rounded-xl overflow-hidden shrink-0" style={{ background: THEME.accentSoft }}>
-        <img src="/zusan-ai.svg" alt="Zusan" className="w-full h-full object-contain p-1.5" />
+        <img src="/zusan-ai.svg" alt="Jiji" className="w-full h-full object-contain p-1.5" />
     </div>
 );
 
@@ -53,7 +53,7 @@ const SUGGESTIONS = [
     'Tell me about the conservation program.'
 ];
 
-const GREETING = "Mabuhay! I'm Zusan. I'm here to guide you through the Calapan Bulusan Zoo. Ask me anything about our animals, exhibits, or how to get around.";
+const GREETING = "Mabuhay! I'm Jiji. I'm here to guide you through the Calapan Bulusan Zoo. Ask me anything about our animals, exhibits, or how to get around.";
 
 const createLocalSession = () => ({
     id: `local-chat-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
@@ -286,10 +286,10 @@ const AIChatAssistant = ({ onClose }) => {
                 value={input}
                 onChange={event => setInput(event.target.value)}
                 onKeyDown={event => event.key === 'Enter' && handleSend()}
-                placeholder="Ask Zusan anything..."
+                placeholder="Ask Jiji anything..."
                 className="min-w-0 flex-1 bg-transparent outline-none text-base font-medium py-2"
                 style={{ color: THEME.text }}
-                aria-label="Message Zusan"
+                aria-label="Message Jiji"
             />
             <button type="button" onClick={() => handleSend()} disabled={!input.trim() || loading} className="w-10 h-10 shrink-0 rounded-xl flex items-center justify-center transition-all active:scale-90 disabled:opacity-25" style={{ background: THEME.accent, color: '#142018' }} aria-label="Send message">
                 <SendIcon />
@@ -337,15 +337,15 @@ const AIChatAssistant = ({ onClose }) => {
                         <div className="flex items-center gap-3 min-w-0">
                             <button type="button" onClick={() => setSessionSidebarOpen(true)} className="p-2 -ml-2 rounded-lg md:hidden" style={{ color: THEME.textMuted }} aria-label="Open chat history"><MenuIcon /></button>
                             <div className="relative shrink-0">
-                                <div className="w-10 h-10 rounded-xl overflow-hidden" style={{ background: THEME.accentSoft }}><img src="/zusan-ai.svg" alt="Zusan" className="w-full h-full object-contain p-1.5" /></div>
+                                <div className="w-10 h-10 rounded-xl overflow-hidden" style={{ background: THEME.accentSoft }}><img src="/zusan-ai.svg" alt="Jiji" className="w-full h-full object-contain p-1.5" /></div>
                                 <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2" style={{ background: THEME.accent, borderColor: THEME.base }} />
                             </div>
                             <div className="min-w-0">
-                                <p className="text-base font-bold" style={{ color: THEME.text }}>Zusan</p>
+                                <p className="text-base font-bold" style={{ color: THEME.text }}>Jiji</p>
                                 <p className="text-xs sm:text-sm truncate" style={{ color: THEME.textMuted }}>{activeSession?.title || 'Wildlife Guide · Online'}</p>
                             </div>
                         </div>
-                        <button type="button" aria-label="Close Zusan AI assistant" onClick={() => onClose?.()} className="w-10 h-10 shrink-0 rounded-xl flex items-center justify-center transition-all active:scale-90" style={{ background: THEME.accentSoft, color: THEME.textMuted }}><CloseIcon /></button>
+                        <button type="button" aria-label="Close Jiji AI assistant" onClick={() => onClose?.()} className="w-10 h-10 shrink-0 rounded-xl flex items-center justify-center transition-all active:scale-90" style={{ background: THEME.accentSoft, color: THEME.textMuted }}><CloseIcon /></button>
                     </header>
 
                     {!sessionHydrated ? (
@@ -353,10 +353,10 @@ const AIChatAssistant = ({ onClose }) => {
                     ) : !started ? (
                         <div className="flex-1 min-h-0 flex flex-col px-4 sm:px-7 py-6 sm:py-10 overflow-y-auto overscroll-contain" data-lenis-prevent>
                             <div className="flex-1 flex flex-col gap-7 sm:gap-10">
-                                <div className="w-16 h-16 rounded-2xl overflow-hidden shrink-0" style={{ background: THEME.accentSoft }}><img src="/zusan-ai.svg" alt="Zusan" className="w-full h-full object-contain p-2" /></div>
+                                <div className="w-16 h-16 rounded-2xl overflow-hidden shrink-0" style={{ background: THEME.accentSoft }}><img src="/zusan-ai.svg" alt="Jiji" className="w-full h-full object-contain p-2" /></div>
                                 <div className="flex flex-col gap-3">
-                                    <p className="text-2xl sm:text-3xl font-bold leading-tight" style={{ color: THEME.text }}>Meet Zusan,<br />your zoo guide.</p>
-                                    <p className="text-base sm:text-lg leading-relaxed" style={{ color: THEME.textMuted }}>Zusan is an AI assistant for Calapan Bulusan Zoo. Ask about animals, feeding schedules, exhibits, and conservation, or anything about your visit.</p>
+                                    <p className="text-2xl sm:text-3xl font-bold leading-tight" style={{ color: THEME.text }}>Meet Jiji,<br />your zoo guide.</p>
+                                    <p className="text-base sm:text-lg leading-relaxed" style={{ color: THEME.textMuted }}>Jiji is an AI assistant for Calapan Bulusan Zoo. Ask about animals, feeding schedules, exhibits, and conservation, or anything about your visit.</p>
                                 </div>
                                 <div className="flex flex-col gap-3">
                                     <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: THEME.textSoft }}>Try asking</p>
@@ -375,7 +375,7 @@ const AIChatAssistant = ({ onClose }) => {
                                             <div key={`${message.role}-${index}`} className={`flex min-w-0 gap-2.5 sm:gap-3 ${isUser ? 'flex-row-reverse' : 'items-end'}`}>
                                                 {!isUser && <Avatar />}
                                                 <div className={`min-w-0 flex-1 flex flex-col gap-2.5 ${isUser ? 'items-end' : 'items-start'}`}>
-                                                    {!isUser && <span className="px-1 text-[10px] font-bold uppercase tracking-widest" style={{ color: THEME.textSoft }}>Zusan · wildlife guide</span>}
+                                                    {!isUser && <span className="px-1 text-[10px] font-bold uppercase tracking-widest" style={{ color: THEME.textSoft }}>Jiji · wildlife guide</span>}
                                                     <div className="max-w-[88%] sm:max-w-[80%] px-4 sm:px-5 py-3.5 sm:py-4 text-sm sm:text-base leading-relaxed font-medium whitespace-pre-wrap break-words" style={isUser ? { background: THEME.accent, color: '#142018', borderRadius: '1rem 1rem 0.25rem 1rem' } : { background: THEME.surface, color: THEME.text, border: `1px solid ${THEME.border}`, borderRadius: '0.25rem 1rem 1rem 1rem', boxShadow: '0 2px 8px rgba(15,23,42,0.04)' }}>{message.content}</div>
                                                     {message.cards?.length > 0 && <div className="w-full flex flex-col gap-2.5">{message.cards.map((card, cardIndex) => card.kind === 'animal' || card.kind === 'plant' || card.kind === 'zoo-event' ? <ZooCard key={`${card.name || card.title || cardIndex}-${cardIndex}`} data={card} /> : <TicketCard key={`${card.reference || cardIndex}-${cardIndex}`} data={card} />)}</div>}
                                                     {message.action && <button type="button" onClick={() => handleAction(message.action)} className="inline-flex items-center gap-2 min-h-10 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all active:scale-95 hover:opacity-90" style={message.action.variant === 'ghost' ? { background: THEME.surface, color: THEME.text, border: `1px solid ${THEME.border}` } : { background: THEME.accent, color: '#142018' }}>{message.action.label}</button>}

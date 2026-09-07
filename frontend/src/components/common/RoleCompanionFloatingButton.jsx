@@ -41,21 +41,17 @@ const RoleCompanionFloatingButton = ({ role = 'staff', open, onOpenChange, hideT
                         <button
                             onClick={() => setAssistantOpen(true)}
                             aria-label="Open AI Assist"
-                            className="relative border border-gray-500 z-40 flex items-center justify-center
+                            className="relative z-40 flex items-center justify-center
                        w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20
-                       rounded-full bg-green-400 text-gray-900
-                       shadow-lg
                        transition-transform duration-200
                        active:scale-95 hover:scale-110"
-                        />
-
-                        <img
-                            src={AI_ASSISTANT_ICON}
-                            className="absolute inset-0 m-auto z-50
-                       w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12
-                       object-contain pointer-events-none"
-                            alt="Assistant Icon"
-                        />
+                        >
+                            <img
+                                src={AI_ASSISTANT_ICON}
+                                className="w-full h-full object-contain pointer-events-none"
+                                alt="Open AI Assist"
+                            />
+                        </button>
                     </div>
                 </div>
             )}

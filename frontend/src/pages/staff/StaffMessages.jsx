@@ -7,7 +7,9 @@ const staffMessageApi = {
     markRead: staffAPI.markMessageRead,
     markAllRead: staffAPI.markAllMessagesRead,
     respond: staffAPI.respondToMessage,
-    delete: staffAPI.deleteMessage
+    delete: staffAPI.deleteMessage,
+    reviewAppeal: staffAPI.reviewAppeal,
+    unsuspendUser: staffAPI.unsuspendUser
 };
 
 const StaffMessages = ({ globalSearch = '' }) => (

@@ -547,6 +547,14 @@ export const adminAPI = {
         return handleResponse(response);
     },
 
+    unsuspendUser: async (id) => {
+        const response = await fetch(`${API_BASE_URL}/admin/users/${id}/unsuspend`, {
+            method: 'PUT',
+            headers: getAuthHeaders('admin')
+        });
+        return handleResponse(response);
+    },
+
     // Appeals management
     getPendingAppeals: async () => {
         const response = await fetch(`${API_BASE_URL}/admin/appeals`, {
@@ -555,11 +563,11 @@ export const adminAPI = {
         return handleResponse(response);
     },
 
-    reviewAppeal: async (appealId, status, responseMessage) => {
+    reviewAppeal: async (appealId, status, adminResponse) => {
         const response = await fetch(`${API_BASE_URL}/admin/appeals/${appealId}/review`, {
-            method: 'POST',
+            method: 'PUT',
             headers: getAuthHeaders('admin'),
-            body: JSON.stringify({ status, response: responseMessage })
+            body: JSON.stringify({ status, adminResponse })
         });
         return handleResponse(response);
     },
@@ -1160,6 +1168,14 @@ export const staffAPI = {
         return handleResponse(response);
     },
 
+    unsuspendUser: async (id) => {
+        const response = await fetch(`${API_BASE_URL}/staff/users/${id}/unsuspend`, {
+            method: 'PUT',
+            headers: getAuthHeaders('staff')
+        });
+        return handleResponse(response);
+    },
+
     // Appeals management
     getPendingAppeals: async () => {
         const response = await fetch(`${API_BASE_URL}/staff/appeals`, {
@@ -1168,11 +1184,11 @@ export const staffAPI = {
         return handleResponse(response);
     },
 
-    reviewAppeal: async (appealId, status, responseMessage) => {
+    reviewAppeal: async (appealId, status, adminResponse) => {
         const response = await fetch(`${API_BASE_URL}/staff/appeals/${appealId}/review`, {
-            method: 'POST',
+            method: 'PUT',
             headers: getAuthHeaders('staff'),
-            body: JSON.stringify({ status, response: responseMessage })
+            body: JSON.stringify({ status, adminResponse })
         });
         return handleResponse(response);
     },

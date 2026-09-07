@@ -1,5 +1,5 @@
 import { CloseCircle as ReiconCloseCircle, RotateLeft as ReiconRotateLeft, Search as ReiconSearch, Trash as ReiconTrash, X as ReiconX } from 'reicon-react';
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { adminAPI, reservationAPI } from '../../services/api-client';
 import { notify } from '../../utils/toast';
 
@@ -51,8 +51,6 @@ const AdminTrash = () => {
     const [activeTab, setActiveTab] = useState('All');
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedIds, setSelectedIds] = useState([]);
-    const [undoToast, setUndoToast] = useState(null);
-    const undoTimeoutRef = useRef(null);
 
     // Permanent delete modal
     const [showPermDeleteModal, setShowPermDeleteModal] = useState(false);
@@ -103,10 +101,6 @@ const AdminTrash = () => {
 
     useEffect(() => { fetchAllTrash(); }, [fetchAllTrash]);
 
-    useEffect(() => {
-        return () => { if (undoTimeoutRef.current) clearTimeout(undoTimeoutRef.current); };
-    }, []);
-
     const filteredItems = trashedItems.filter(item => {
         const matchesTab = activeTab === 'All' || (activeTab === 'Reservations' ? item.type.endsWith('Reservation') : item.type === tabToType[activeTab]);
         if (!matchesTab) return false;
@@ -142,12 +136,6 @@ const AdminTrash = () => {
 
     const clearSelection = () => setSelectedIds([]);
 
-    const showToast = (message) => {
-        setUndoToast(message);
-        if (undoTimeoutRef.current) clearTimeout(undoTimeoutRef.current);
-        undoTimeoutRef.current = setTimeout(() => setUndoToast(null), 5000);
-    };
-
     const handleRestore = async (item) => {
         try {
             const restoreFn = {
@@ -164,7 +152,6 @@ const AdminTrash = () => {
 
             setTrashedItems(prev => prev.filter(i => !(i.type === item.type && i.id === item.id)));
             setSelectedIds(prev => prev.filter(id => id !== `${item.type}-${item.id}`));
-            showToast(`${item.type} "${getEntityName(item)}" restored`);
             notify.success(`${item.type} restored.`);
         } catch (err) {
             notify.error(err.message || `Failed to restore ${item.type.toLowerCase()}`);
@@ -193,7 +180,6 @@ const AdminTrash = () => {
             setTrashedItems(prev => prev.filter(i => !selectedIds.includes(`${i.type}-${i.id}`)));
             const count = selectedIds.length;
             setSelectedIds([]);
-            showToast(`${count} item(s) restored`);
             notify.success(`${count} item(s) restored.`);
         } catch (err) {
             notify.error(err.message || 'Failed to restore selected items');
@@ -470,22 +456,6 @@ const AdminTrash = () => {
                     </p>
                 </div>
             </div>
-
-            {/* Undo Toast */}
-            {undoToast && (
-                <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-gray-900 text-white px-5 py-3 rounded-xl shadow-2xl flex items-center gap-4">
-                    <span className="text-sm">{undoToast}</span>
-                    <button
-                        onClick={() => {
-                            if (undoTimeoutRef.current) clearTimeout(undoTimeoutRef.current);
-                            setUndoToast(null);
-                        }}
-                        className="p-1 hover:bg-white/10 rounded-lg transition-colors"
-                    >
-                        <CloseIcon />
-                    </button>
-                </div>
-            )}
 
             {/* Permanent Delete Modal */}
             {showPermDeleteModal && (

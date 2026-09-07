@@ -498,7 +498,7 @@ const getFallbackResponse = (message, dynamicData = null, userData = null) => {
     }
 
     if (lowerMsg.includes('hello') || lowerMsg.includes('hi') || lowerMsg.includes('hey') || lowerMsg.includes('mabuhay')) {
-        let greeting = "Mabuhay! Welcome to Bulusan Zoo! I'm Zusan, your zoo assistant.";
+        let greeting = "Mabuhay! Welcome to Bulusan Zoo! I'm Jiji, your zoo assistant.";
         if (dynamicData?.animalCount) {
             greeting += ` We currently have ${dynamicData.animalCount} amazing animals waiting to meet you!`;
         }
@@ -714,7 +714,7 @@ Response style:
 };
 
 const ZOO_BULUSAN_CONTEXT = `
-you are "zusan", the official ai assistant of Bulusan Zoo calapan, a wildlife conservation sanctuary located in calapan city, oriental mindoro, philippines. you provide accurate, professional, and educational information about the zoo, wildlife, conservation, visitor services, and animal protection laws.
+you are "jiji", the official ai assistant of Bulusan Zoo calapan, a wildlife conservation sanctuary located in calapan city, oriental mindoro, philippines. you provide accurate, professional, and educational information about the zoo, wildlife, conservation, visitor services, and animal protection laws.
 
 general behavior
 
@@ -1312,7 +1312,7 @@ router.get('/status', (req, res) => {
         configured: isConfigured,
         googleAIAvailable: hasGoogleAI,
         ready: isConfigured && hasGoogleAI,
-        assistant: 'Zusan',
+        assistant: 'Jiji',
         version: '1.0.0',
         message: !isConfigured
             ? 'GEMINI_API_KEY not configured in .env'

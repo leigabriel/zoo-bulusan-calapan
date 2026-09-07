@@ -6,7 +6,9 @@ import {
     Loader,
     Reply,
     Search,
+    ShieldCheck,
     Trash,
+    Unlock,
     X
 } from 'reicon-react';
 import { useEffect, useRef, useState } from 'react';
@@ -81,6 +83,8 @@ const MessageWorkspace = ({ globalSearch = '', api, roleLabel }) => {
     const [replying, setReplying] = useState(false);
     const [deleteTarget, setDeleteTarget] = useState(null);
     const [deleting, setDeleting] = useState(false);
+    const [reviewingAppeal, setReviewingAppeal] = useState(false);
+    const [unsuspending, setUnsuspending] = useState(false);
     const closeButtonRef = useRef(null);
 
     const isAppeal = activeTab === 'appeals';
@@ -191,6 +195,37 @@ const MessageWorkspace = ({ globalSearch = '', api, roleLabel }) => {
         }
     };
 
+    const reviewAppeal = async (appealId, status) => {
+        setReviewingAppeal(true);
+        try {
+            await api.reviewAppeal(appealId, status, status === 'approved' ? 'Appeal approved. Your account has been unsuspended.' : 'Appeal rejected.');
+            setAppeals((items) => items.map((appeal) => appeal.id === appealId ? { ...appeal, status } : appeal));
+            setSelected((current) => current?.id === appealId ? { ...current, status } : current);
+            notify.success(`Appeal ${status}.`);
+        } catch (reviewError) {
+            console.error('Error reviewing appeal:', reviewError);
+            notify.error(reviewError.message || "Couldn't review appeal.");
+        } finally {
+            setReviewingAppeal(false);
+        }
+    };
+
+    const unsuspendUser = async (userId) => {
+        if (!userId) return;
+        setUnsuspending(true);
+        try {
+            await api.unsuspendUser(userId);
+            setAppeals((items) => items.map((appeal) => appeal.user_id === userId ? { ...appeal, is_suspended: 0 } : appeal));
+            setSelected((current) => current?.user_id === userId ? { ...current, is_suspended: 0 } : current);
+            notify.success('User unsuspended.');
+        } catch (unsuspendError) {
+            console.error('Error unsuspending user:', unsuspendError);
+            notify.error(unsuspendError.message || "Couldn't unsuspend user.");
+        } finally {
+            setUnsuspending(false);
+        }
+    };
+
     const query = (globalSearch || search).trim().toLowerCase();
     const filteredItems = currentItems.filter((item) => {
         const matchesSearch = !query || [item.sender_name, item.sender_email, item.subject, item.content]
@@ -238,10 +273,59 @@ const MessageWorkspace = ({ globalSearch = '', api, roleLabel }) => {
                 )}
 
                 {isAppeal ? (
-                    <div className="mt-6 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900">
-                        <p className="font-bold">Appeals are read-only here</p>
-                        <p className="mt-1">Use the Appeals or user management review workflow to approve or reject this request. Message actions do not apply to appeal records.</p>
-                        {selected.admin_response && <p className="mt-3 border-t border-amber-200 pt-3"><strong>Review response:</strong> {selected.admin_response}</p>}
+                    <div className="mt-6 space-y-4">
+                        {selected.admin_response && (
+                            <div className="rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm leading-6 text-blue-900">
+                                <p className="font-bold">Review response:</p>
+                                <p className="mt-1">{selected.admin_response}</p>
+                            </div>
+                        )}
+
+                        {selected.status === 'pending' && (
+                            <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
+                                <p className="text-sm font-bold text-amber-800">Pending review</p>
+                                <p className="mt-1 text-sm text-amber-700">Approve to unsuspend the user, or reject the appeal.</p>
+                                <div className="mt-3 flex flex-wrap gap-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => reviewAppeal(selected.id, 'approved')}
+                                        disabled={reviewingAppeal}
+                                        className="inline-flex items-center gap-2 rounded-lg bg-emerald-500 px-4 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-50"
+                                    >
+                                        {reviewingAppeal ? <Loader className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+                                        Approve & Unsuspend
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => reviewAppeal(selected.id, 'rejected')}
+                                        disabled={reviewingAppeal}
+                                        className="inline-flex items-center gap-2 rounded-lg bg-red-500 px-4 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-red-600 disabled:cursor-not-allowed disabled:opacity-50"
+                                    >
+                                        {reviewingAppeal ? <Loader className="h-4 w-4 animate-spin" /> : <X className="h-4 w-4" />}
+                                        Reject
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
+                        {selected.status !== 'pending' && (
+                            <div className={`rounded-xl border p-4 text-sm leading-6 ${selected.status === 'approved' ? 'border-emerald-200 bg-emerald-50 text-emerald-900' : 'border-red-200 bg-red-50 text-red-900'}`}>
+                                <p className="font-bold capitalize">{selected.status}</p>
+                                {selected.reviewed_at && <p className="mt-1 text-xs opacity-70">Reviewed {new Date(selected.reviewed_at).toLocaleString()}</p>}
+                            </div>
+                        )}
+
+                        {selected.is_suspended == 1 && selected.status !== 'pending' && (
+                            <button
+                                type="button"
+                                onClick={() => unsuspendUser(selected.user_id)}
+                                disabled={unsuspending}
+                                className="inline-flex items-center gap-2 rounded-lg border border-amber-300 bg-white px-4 py-2.5 text-sm font-bold text-amber-700 shadow-sm transition hover:bg-amber-50 disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                                {unsuspending ? <Loader className="h-4 w-4 animate-spin" /> : <Unlock className="h-4 w-4" />}
+                                Unsuspend Account
+                            </button>
+                        )}
                     </div>
                 ) : (
                     <div className="mt-7 border-t border-green-100 pt-6">

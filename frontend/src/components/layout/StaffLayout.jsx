@@ -5,6 +5,7 @@ import { authAPI, staffAPI, reservationAPI, communityAPI, getProfileImageUrl } f
 import { sanitizeInput } from '../../utils/sanitize';
 import { notify } from '../../utils/toast';
 import LogoutModal from '../common/LogoutModal';
+import Tooltip from '../common/Tooltip';
 import CollapsibleNavGroup from '../common/CollapsibleNavGroup';
 import RoleCompanionFloatingButton from '../common/RoleCompanionFloatingButton';
 import useScrollLock from '../../hooks/use-scroll-lock';
@@ -12,7 +13,7 @@ import WorkspaceThemeContext from '../common/WorkspaceThemeContext';
 import {
     Home, Calendar, Ticket, Pet, Leaf, Message, Messages, ShieldCheck,
     Scan, Logout, Menu, Bell, CloseCircle, Lifebuoy, Checklist, Search, Setting, People,
-    Sparkles, User, Trash, Check
+    Sparkles, User, Trash, Check, ChevronRight, ChevronLeft
 } from 'reicon-react';
 
 const StaffLayout = ({ children }) => {
@@ -24,6 +25,7 @@ const StaffLayout = ({ children }) => {
     const searchInputRef = useRef(null);
     const mobileMenuRef = useRef(null);
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
     const [showLogoutModal, setShowLogoutModal] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [showSearchDropdown, setShowSearchDropdown] = useState(false);
@@ -41,6 +43,9 @@ const StaffLayout = ({ children }) => {
     const [passwordSaving, setPasswordSaving] = useState(false);
     const [aiAssistOpen, setAiAssistOpen] = useState(false);
     const [openNavGroups, setOpenNavGroups] = useState({ main: true, management: true, communication: true });
+    const [seenBadges, setSeenBadges] = useState(() => {
+        try { return JSON.parse(sessionStorage.getItem('staffSeenBadges') || '{}'); } catch { return {}; }
+    });
 
     // Global search database state
     const [searchData, setSearchData] = useState({ animals: [], events: [], plants: [] });
@@ -423,15 +428,15 @@ const StaffLayout = ({ children }) => {
     ];
 
     const managementItems = [
-        { path: '/staff/events', label: 'Events', Icon: Calendar },
-        { path: '/staff/reservations', label: 'Reservations', Icon: Ticket },
+        { path: '/staff/events', label: 'Events', Icon: Calendar, badge: Math.max(0, (activitySummary?.events?.upcoming || 0) - (seenBadges['/staff/events'] || 0)) },
+        { path: '/staff/reservations', label: 'Reservations', Icon: Ticket, badge: Math.max(0, ((activitySummary?.pendingTickets || 0) + (activitySummary?.eventReservations?.pending || 0)) - (seenBadges['/staff/reservations'] || 0)) },
         { path: '/staff/animals', label: 'Manage Animals', Icon: Pet },
         { path: '/staff/plants', label: 'Manage Plants', Icon: Leaf },
     ];
 
     const communicationItems = [
-        { path: '/staff/messages', label: 'Messages', Icon: Message },
-        { path: '/staff/community-moderation', label: 'Community Moderation', Icon: ShieldCheck },
+        { path: '/staff/messages', label: 'Messages', Icon: Message, badge: Math.max(0, (activitySummary?.messages?.unread || 0) - (seenBadges['/staff/messages'] || 0)) },
+        { path: '/staff/community-moderation', label: 'Community Moderation', Icon: ShieldCheck, badge: Math.max(0, (activitySummary?.pendingCommunityPosts || 0) - (seenBadges['/staff/community-moderation'] || 0)) },
     ];
 
     const allMenuItems = [...menuItems, ...managementItems, ...communicationItems];
@@ -509,7 +514,15 @@ const StaffLayout = ({ children }) => {
         return results.slice(0, 15);
     }, [searchQuery, allMenuItems, searchData]);
 
-    const handleNavClick = () => {
+    const handleNavClick = (path) => {
+        if (path && activitySummary) {
+            const currentBadge = navGroups.flatMap(g => g.items).find(i => i.path === path)?.badge || 0;
+            if (currentBadge > 0) {
+                const updated = { ...seenBadges, [path]: (seenBadges[path] || 0) + currentBadge };
+                setSeenBadges(updated);
+                sessionStorage.setItem('staffSeenBadges', JSON.stringify(updated));
+            }
+        }
         if (window.innerWidth < 1024) {
             setSidebarOpen(false);
         }
@@ -573,19 +586,40 @@ const StaffLayout = ({ children }) => {
             {/* Sidebar - matching Admin design system */}
             <aside
                 className={`${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'} 
-                    fixed lg:relative z-50 lg:z-auto w-64 bg-[#ebebeb] border-r border-gray-300 
-                    transition-transform duration-300 flex flex-col h-full`}
+                    fixed lg:relative z-50 lg:z-auto bg-[#ebebeb] border-r border-gray-300 
+                    transition-all duration-300 flex flex-col h-full
+                    ${sidebarCollapsed ? 'w-[72px]' : 'w-72'}`}
                 aria-label="Staff navigation"
             >
-                {/* Logo Section */}
-                <div className="p-3.5 flex items-center gap-3 border-b border-gray-300">
-                    <div className="w-12 h-12 rounded-xl flex items-center justify-center text-white">
-                        <img src="/bz-url-logo.png" alt="Bz Logo" className="w-12 h-12 object-contain" />
+                {/* Logo Section + Collapse Toggle */}
+                <div className={`p-3.5 border-b border-gray-300 flex items-center ${sidebarCollapsed ? 'justify-center' : 'gap-3'}`}>
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white shrink-0">
+                        <img src="/bz-url-logo.png" alt="Bz Logo" className="w-10 h-10 object-contain" />
                     </div>
-                    <div>
-                        <h1 className="font-bold text-gray-900 text-lg uppercase">Bulusan Zoo</h1>
-                        <p className="text-xs text-gray-500">Staff Portal</p>
-                    </div>
+                    {!sidebarCollapsed && (
+                        <div className="min-w-0 flex-1">
+                            <h1 className="font-bold text-gray-900 text-base uppercase">Bulusan Zoo</h1>
+                            <p className="text-[10px] text-gray-500">Staff Portal</p>
+                        </div>
+                    )}
+                    {!sidebarCollapsed && (
+                        <button
+                            onClick={() => setSidebarCollapsed(true)}
+                            className="hidden lg:flex p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-200 transition-colors shrink-0"
+                            title="Collapse sidebar"
+                        >
+                            <ChevronLeft size={18} />
+                        </button>
+                    )}
+                    {sidebarCollapsed && (
+                        <button
+                            onClick={() => setSidebarCollapsed(false)}
+                            className="hidden lg:flex p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-200 transition-colors mt-1"
+                            title="Expand sidebar"
+                        >
+                            <ChevronRight size={18} />
+                        </button>
+                    )}
                     <button
                         onClick={() => setSidebarOpen(false)}
                         className="ml-auto lg:hidden text-gray-400 hover:text-gray-900"
@@ -595,7 +629,7 @@ const StaffLayout = ({ children }) => {
                 </div>
 
                 {/* Navigation Menu */}
-                <nav className="flex-1 px-3 py-4 overflow-y-auto" role="navigation">
+                <nav className="flex-1 px-2 py-4 overflow-y-auto" role="navigation">
                     {navGroups.map((group) => (
                         <CollapsibleNavGroup
                             key={group.key}
@@ -606,44 +640,33 @@ const StaffLayout = ({ children }) => {
                             onToggle={() => setOpenNavGroups((current) => ({ ...current, [group.key]: !current[group.key] }))}
                             pathname={location.pathname}
                             onNavigate={handleNavClick}
+                            collapsed={sidebarCollapsed}
                         />
                     ))}
                 </nav>
 
                 {/* Bottom Section - Help & Logout */}
-                <div className="p-4 border-t border-gray-200 space-y-2">
+                <div className={`p-3 border-t border-gray-200 space-y-2 ${sidebarCollapsed ? 'px-2' : ''}`}>
                     <Link
                         to="/staff/help"
-                        className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all ${location.pathname === '/staff/help'
+                        className={`flex items-center gap-3 rounded-xl transition-all ${sidebarCollapsed ? 'justify-center px-2 py-2.5' : 'px-3 py-2.5'} ${location.pathname === '/staff/help'
                                 ? 'bg-green-50 text-green-700'
                                 : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                             }`}
                     >
                         <Lifebuoy size={20} />
-                        <span className="font-medium">Help Center</span>
+                        {!sidebarCollapsed && <span className="font-medium">Help Center</span>}
                     </Link>
 
-                    <div className="flex gap-2">
-                        {/* <Link
-                            to="/staff/settings"
-                            className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-medium transition-all duration-200 ${location.pathname === '/staff/settings'
-                                    ? 'bg-green-100 text-green-700'
-                                    : 'bg-gray-200 text-gray-600 hover:bg-gray-300 hover:text-gray-900'
-                                }`}
-                        >
-                            <Setting size={20} />
-                        </Link> */}
-
-                        <button
-                            onClick={() => setShowLogoutModal(true)}
-                            className="flex-1 flex items-center justify-center gap-2 py-3 bg-red-500 hover:bg-red-600 
-                                rounded-xl font-medium text-white transition-all duration-200 
-                                shadow-md shadow-red-500/20"
-                            aria-label="Logout from staff portal"
-                        >
-                            <Logout size={20} />
-                        </button>
-                    </div>
+                    <button
+                        onClick={() => setShowLogoutModal(true)}
+                        className={`w-full flex items-center justify-center gap-2 py-3 bg-red-500 hover:bg-red-600 
+                            rounded-xl font-medium text-white transition-all duration-200 
+                            shadow-md shadow-red-500/20`}
+                        aria-label="Logout from staff portal"
+                    >
+                        <Logout size={20} />
+                    </button>
                 </div>
             </aside>
 
@@ -673,6 +696,7 @@ const StaffLayout = ({ children }) => {
                                 onClick={() => setMobileHeaderMenuOpen(!mobileHeaderMenuOpen)}
                                 className="relative p-2 hover:bg-gray-100 rounded-xl transition flex-shrink-0"
                                 aria-label="Open menu"
+                                title="Open menu"
                             >
                                 <div className="w-8 h-8 bg-gradient-to-br from-green-300 via-green-400 to-green-500 rounded-full flex items-center justify-center text-gray-900 font-bold text-sm overflow-hidden">
                                     {getProfileImageUrl(user?.profileImage || user?.profile_image) ? <img src={getProfileImageUrl(user?.profileImage || user?.profile_image)} alt="" className="h-full w-full object-cover" /> : ((user?.firstName || user?.lastName || user?.fullName)?.charAt(0) || 'S')}
@@ -853,52 +877,62 @@ const StaffLayout = ({ children }) => {
                         </div>
                         {/* Right icons */}
                         <div className="flex items-center gap-2 flex-shrink-0">
-                            <button
-                                type="button"
-                                onClick={() => setAiAssistOpen(true)}
-                                className="p-2.5 hover:bg-gray-100 rounded-xl text-gray-500 hover:text-gray-900 transition"
-                                aria-label="Open AI Assist"
-                            >
-                                <Sparkles size={20} />
-                            </button>
-                            <button
-                                onClick={() => setNotificationPanelOpen(!notificationPanelOpen)}
-                                className="notification-bell relative p-2.5 hover:bg-gray-100 rounded-xl text-gray-500 hover:text-gray-900 transition"
-                                aria-label="Toggle notifications"
-                            >
-                                <Bell size={20} />
-                                {unreadCount > 0 && (
-                                    <span className="absolute top-1 right-1 w-5 h-5 bg-green-400 rounded-full flex items-center justify-center text-[10px] font-bold text-gray-900">
-                                        {unreadCount > 99 ? '99+' : unreadCount}
+                            <Tooltip label="AI Assist">
+                                <button
+                                    type="button"
+                                    onClick={() => setAiAssistOpen(true)}
+                                    className="p-2.5 hover:bg-gray-100 rounded-xl text-gray-500 hover:text-gray-900 transition"
+                                    aria-label="Open AI Assist"
+                                >
+                                    <Sparkles size={20} />
+                                </button>
+                            </Tooltip>
+                            <Tooltip label="Notifications">
+                                <button
+                                    onClick={() => setNotificationPanelOpen(!notificationPanelOpen)}
+                                    className="notification-bell relative p-2.5 hover:bg-gray-100 rounded-xl text-gray-500 hover:text-gray-900 transition"
+                                    aria-label="Toggle notifications"
+                                >
+                                    <Bell size={20} />
+                                    {unreadCount > 0 && (
+                                        <span className="absolute top-1 right-1 w-5 h-5 bg-green-400 rounded-full flex items-center justify-center text-[10px] font-bold text-gray-900">
+                                            {unreadCount > 99 ? '99+' : unreadCount}
+                                        </span>
+                                    )}
+                                </button>
+                            </Tooltip>
+                            <Tooltip label="Trash">
+                                <button
+                                    onClick={() => navigate('/staff/trash')}
+                                    className="p-2.5 hover:bg-gray-100 rounded-xl text-gray-500 hover:text-gray-900 transition"
+                                    aria-label="Trash"
+                                >
+                                    <Trash size={20} />
+                                </button>
+                            </Tooltip>
+                            <Tooltip label="Daily Tasks">
+                                <button
+                                    onClick={() => setDailyTaskPanelOpen(!dailyTaskPanelOpen)}
+                                    className="daily-task-btn relative p-2.5 hover:bg-gray-100 rounded-xl text-gray-500 hover:text-gray-900 transition"
+                                    aria-label="Toggle daily tasks"
+                                >
+                                    <Checklist size={20} />
+                                    <span className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1 bg-green-400 rounded-full flex items-center justify-center text-[10px] font-bold text-gray-900">
+                                        {completedTaskCount}/{dailyTasks.length}
                                     </span>
-                                )}
-                            </button>
-                            <button
-                                onClick={() => navigate('/staff/trash')}
-                                className="p-2.5 hover:bg-gray-100 rounded-xl text-gray-500 hover:text-gray-900 transition"
-                                aria-label="Trash"
-                            >
-                                <Trash size={20} />
-                            </button>
-                            <button
-                                onClick={() => setDailyTaskPanelOpen(!dailyTaskPanelOpen)}
-                                className="daily-task-btn relative p-2.5 hover:bg-gray-100 rounded-xl text-gray-500 hover:text-gray-900 transition"
-                                aria-label="Toggle daily tasks"
-                            >
-                                <Checklist size={20} />
-                                <span className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1 bg-green-400 rounded-full flex items-center justify-center text-[10px] font-bold text-gray-900">
-                                    {completedTaskCount}/{dailyTasks.length}
-                                </span>
-                            </button>
-                            <button
-                                onClick={openProfileModal}
-                                className="p-1 hover:bg-gray-100 rounded-xl transition"
-                                aria-label="Open profile"
-                            >
-                                <div className="w-9 h-9 bg-gradient-to-br from-green-300 via-green-400 to-green-500 rounded-full flex items-center justify-center text-gray-900 font-bold text-sm overflow-hidden">
-                                    {getProfileImageUrl(user?.profileImage || user?.profile_image) ? <img src={getProfileImageUrl(user?.profileImage || user?.profile_image)} alt="" className="h-full w-full object-cover" /> : ((user?.firstName || user?.lastName || user?.fullName)?.charAt(0) || 'S')}
-                                </div>
-                            </button>
+                                </button>
+                            </Tooltip>
+                            <Tooltip label="Profile">
+                                <button
+                                    onClick={openProfileModal}
+                                    className="p-1 hover:bg-gray-100 rounded-xl transition"
+                                    aria-label="Open profile"
+                                >
+                                    <div className="w-9 h-9 bg-gradient-to-br from-green-300 via-green-400 to-green-500 rounded-full flex items-center justify-center text-gray-900 font-bold text-sm overflow-hidden">
+                                        {getProfileImageUrl(user?.profileImage || user?.profile_image) ? <img src={getProfileImageUrl(user?.profileImage || user?.profile_image)} alt="" className="h-full w-full object-cover" /> : ((user?.firstName || user?.lastName || user?.fullName)?.charAt(0) || 'S')}
+                                    </div>
+                                </button>
+                            </Tooltip>
                         </div>
                     </div>
                 </header>

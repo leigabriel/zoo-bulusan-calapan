@@ -35,7 +35,7 @@ const AIFloatingButton = () => {
                         <button
                             onClick={() => setAssistantOpen(true)}
                             type="button"
-                            aria-label="Open Zusan AI assistant"
+                            aria-label="Open Jiji AI assistant"
                             className="relative cursor-pointer border-0 bg-transparent z-40 flex items-center justify-center
                        w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20
                        transition-transform duration-200
@@ -44,7 +44,7 @@ const AIFloatingButton = () => {
                              <img
                                  src="/zusan-ai.svg"
                                  className="w-full h-full object-contain pointer-events-none"
-                                 alt="Open Zusan AI assistant"
+                                 alt="Open Jiji AI assistant"
                              />
                          </button>
                     </div>

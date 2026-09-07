@@ -1,30 +1,32 @@
 import { gooeyToast } from 'goey-toast';
 
 const actionHint = (title, type) => {
-    if (type === 'error') return 'Sorry, something went wrong. Please try again.';
-    if (type === 'warning') return 'Please check the highlighted parts and try again.';
-    if (type !== 'success') return 'Please take a look at the details above.';
+    if (type === 'error') return 'Please try again.';
+    if (type === 'warning') return 'Please check and try again.';
+    if (type !== 'success') return 'Please check the details.';
 
     const t = title.toLowerCase();
-    if (/(added|created|submitted|new)/.test(t)) return "Done! You can now see it in the list.";
-    if (/(updated|saved|changed|edited)/.test(t)) return 'Done! Your changes have been saved.';
-    if (/(deleted|removed|moved to trash|cancelled|canceled|archived|declined|deactivated)/.test(t)) return "It's been removed from the list. You can still bring it back from the trash.";
-    if (/(restored|restore)/.test(t)) return 'It is back where it belongs.';
-    if (/(liked|hearted|shared|followed|joined)/.test(t)) return 'Thanks for your support!';
-    if (/(copied|exported|downloaded|printed)/.test(t)) return 'It is ready — just paste or save it anywhere.';
-    if (/(verified|checked|confirmed|checked in|checked-in)/.test(t)) return 'All done, everything is confirmed now.';
-    if (/(read|marked as read|replied|sent|posted|commented)/.test(t)) return 'Everyone can now see it.';
-    if (/(refund|payment|charged)/.test(t)) return "We'll check it and get back to you soon.";
-    if (/(approved|approve)/.test(t)) return 'It is now approved and out for everyone to see.';
-    return 'All set — nothing more needed from you.';
+
+    if (/(added|created|submitted|new)/.test(t)) return 'Added successfully.';
+    if (/(updated|saved|changed|edited)/.test(t)) return 'Changes saved.';
+    if (/(deleted|removed|moved to trash|cancelled|canceled|archived|declined|deactivated)/.test(t)) return 'Removed successfully.';
+    if (/(restored|restore)/.test(t)) return 'Restored successfully.';
+    if (/(liked|hearted|shared|followed|joined)/.test(t)) return 'Done successfully.';
+    if (/(copied|exported|downloaded|printed)/.test(t)) return 'Ready.';
+    if (/(verified|checked|confirmed|checked in|checked-in)/.test(t)) return 'Confirmed successfully.';
+    if (/(read|marked as read|replied|sent|posted|commented)/.test(t)) return 'Done successfully.';
+    if (/(refund|payment|charged)/.test(t)) return 'Payment updated.';
+    if (/(approved|approve)/.test(t)) return 'Approved successfully.';
+
+    return 'Done successfully.';
 };
 
 const fallbackMessages = {
-    saved: 'Done! Your changes are saved.',
-    deleted: 'Done! It has been removed.',
-    loading: 'Working on it...',
-    retry: 'Something went wrong. Please try again.',
-    required: 'Please fill in the missing details first.'
+    saved: 'Changes saved.',
+    deleted: 'Removed successfully.',
+    loading: 'Please wait...',
+    retry: 'Please try again.',
+    required: 'Please fill in the required fields.'
 };
 
 const soundUrls = {

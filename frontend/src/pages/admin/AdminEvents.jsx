@@ -87,10 +87,6 @@ const AdminEvents = () => {
     const [confirmAction, setConfirmAction] = useState(null);
     const [confirmData, setConfirmData] = useState(null);
 
-    // Undo trash
-    const [undoItem, setUndoItem] = useState(null);
-    const undoTimeoutRef = useRef(null);
-
     const handleImageFileChange = (e) => {
         const file = e.target.files[0];
         if (file) {
@@ -279,11 +275,21 @@ const AdminEvents = () => {
             const response = await adminAPI.deleteEvent(selectedEvent.id);
             if (response.success) {
                 await fetchEvents();
-                const eventData = events.find(e => e.id === selectedEvent.id);
-                setUndoItem({ type: 'event', data: eventData });
-                if (undoTimeoutRef.current) clearTimeout(undoTimeoutRef.current);
-                undoTimeoutRef.current = setTimeout(() => setUndoItem(null), 5000);
-                notify.success('Event moved to trash.');
+                notify.success('Event moved to trash.', {
+                    action: {
+                        label: 'Undo',
+                        onClick: async () => {
+                            try {
+                                await adminAPI.restoreEvent(selectedEvent.id);
+                                await fetchEvents();
+                                notify.success('Event restored.');
+                            } catch {
+                                notify.error('Failed to restore event');
+                            }
+                        },
+                        successLabel: 'Restored'
+                    }
+                });
                 setShowModal(false);
                 resetForm();
             }
@@ -310,21 +316,6 @@ const AdminEvents = () => {
         setImageInputMode('upload');
         setImageFile(null);
         setImagePreview(null);
-    };
-
-    // ==================== TRASH HANDLERS ====================
-
-    const handleUndoTrash = async () => {
-        if (!undoItem) return;
-        try {
-            await adminAPI.restoreEvent(undoItem.data.id);
-            await fetchEvents();
-            setUndoItem(null);
-            if (undoTimeoutRef.current) clearTimeout(undoTimeoutRef.current);
-            notify.success('Event restored.');
-        } catch {
-            notify.error('Failed to restore event');
-        }
     };
 
     const handleViewChange = (view) => {
@@ -668,19 +659,6 @@ const AdminEvents = () => {
                         </div>
                     </div>
                 </div>
-
-                {/* Undo Toast */}
-                {undoItem && (
-                    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-gray-900 text-white px-5 py-3 rounded-xl shadow-2xl flex items-center gap-4 animate-slide-up">
-                        <span className="text-sm">Event moved to trash</span>
-                        <button
-                            onClick={handleUndoTrash}
-                            className="text-sm font-semibold text-green-400 hover:text-green-300 transition-colors"
-                        >
-                            Undo
-                        </button>
-                    </div>
-                )}
 
             {/* Event Modal */}
             {showModal && (

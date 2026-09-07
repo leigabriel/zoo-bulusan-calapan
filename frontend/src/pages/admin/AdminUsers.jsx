@@ -1,6 +1,7 @@
 import { Ban as ReiconBan, CheckCircle as ReiconCheckCircle, Edit as ReiconEdit, Eye as ReiconEye, Filter as ReiconFilter, Plus as ReiconPlus, RotateLeft as ReiconRotateLeft, Search as ReiconSearch, Trash as ReiconTrash, Users as ReiconUsers, X as ReiconX } from 'reicon-react';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { adminAPI, getProfileImageUrl } from '../../services/api-client';
+import ConfirmModal from '../../components/common/ConfirmModal';
 import { sanitizeInput, sanitizeEmail } from '../../utils/sanitize';
 import { notify } from '../../utils/toast';
 import { useAuth } from '../../context/AuthContext';
@@ -59,20 +60,35 @@ const AdminUsers = ({ globalSearch = '' }) => {
     const [showModal, setShowModal] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [roleFilter, setRoleFilter] = useState('all');
+    const [selectedIds, setSelectedIds] = useState([]);
     const [form, setForm] = useState({ firstName: '', lastName: '', username: '', email: '', role: 'user', password: '' });
     const [saving, setSaving] = useState(false);
-    
+
+    // Trash confirm states
+    const [deleting, setDeleting] = useState(false);
+    const [trashTarget, setTrashTarget] = useState(null);
+    const [showBulkModal, setShowBulkModal] = useState(false);
+
     // Suspend modal states
     const [suspendUser, setSuspendUser] = useState(null);
     const [suspendReason, setSuspendReason] = useState('');
+    const [suspendOtherReason, setSuspendOtherReason] = useState('');
     const [suspending, setSuspending] = useState(false);
+    
+    // Unsuspend confirmation
+    const [unsuspendTarget, setUnsuspendTarget] = useState(null);
     
     // View user modal
     const [viewUser, setViewUser] = useState(null);
 
-    // Trash undo state
-    const [undoItem, setUndoItem] = useState(null);
-    const undoTimeoutRef = useRef(null);
+    const suspendReasonOptions = [
+        'Inappropriate content or behavior',
+        'Violation of community guidelines',
+        'Spam or fraudulent activity',
+        'Harassment or bullying',
+        'Fake identity or impersonation',
+        'Other'
+    ];
 
     // Combine local and global search
     const effectiveSearch = globalSearch || searchQuery;
@@ -148,16 +164,19 @@ const AdminUsers = ({ globalSearch = '' }) => {
     };
 
     const handleSuspendUser = async () => {
-        if (!suspendUser || !suspendReason.trim()) return;
+        if (!suspendUser) return;
+        const finalReason = suspendReason === 'Other' ? suspendOtherReason.trim() : suspendReason;
+        if (!finalReason) return;
         
         setSuspending(true);
         try {
-            const res = await adminAPI.suspendUser(suspendUser.id, suspendReason);
+            const res = await adminAPI.suspendUser(suspendUser.id, finalReason);
             if (res.success) {
-                setUsers(users.map(u => u.id === suspendUser.id ? { ...u, is_suspended: true, is_active: false, suspension_reason: suspendReason } : u));
+                setUsers(users.map(u => u.id === suspendUser.id ? { ...u, is_suspended: true, is_active: false, suspension_reason: finalReason } : u));
                 notify.success('Account suspended.');
                 setSuspendUser(null);
                 setSuspendReason('');
+                setSuspendOtherReason('');
             } else throw new Error(res.message || 'Suspend failed');
         } catch (err) {
             console.error(err);
@@ -174,6 +193,7 @@ const AdminUsers = ({ globalSearch = '' }) => {
             if (res.success) {
                 setUsers(users.map(u => u.id === userId ? { ...u, is_suspended: false, is_active: true, suspension_reason: null } : u));
                 notify.success('Account restored.');
+                setUnsuspendTarget(null);
             } else throw new Error(res.message || 'Unsuspend failed');
         } catch (err) {
             console.error(err);
@@ -190,27 +210,40 @@ const AdminUsers = ({ globalSearch = '' }) => {
             const res = await adminAPI.deleteUser(user.id);
             if (res.success) {
                 setUsers(users.filter(u => u.id !== user.id));
-                setUndoItem({ type: 'user', data: user, action: 'trash' });
-                if (undoTimeoutRef.current) clearTimeout(undoTimeoutRef.current);
-                undoTimeoutRef.current = setTimeout(() => setUndoItem(null), 5000);
-                notify.success('User moved to trash.');
+                notify.success('User moved to trash.', {
+                    action: {
+                        label: 'Undo',
+                        onClick: async () => {
+                            try {
+                                await adminAPI.restoreUser(user.id);
+                                setUsers(prev => [user, ...prev].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)));
+                                notify.success('User restored.');
+                            } catch {
+                                notify.error('Failed to restore user');
+                            }
+                        },
+                        successLabel: 'Restored'
+                    }
+                });
             }
         } catch {
             notify.error('Failed to move user to trash');
         }
     };
 
-    const handleUndoTrash = async () => {
-        if (!undoItem) return;
-        try {
-            await adminAPI.restoreUser(undoItem.data.id);
-            setUsers(prev => [undoItem.data, ...prev].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)));
-            setUndoItem(null);
-            if (undoTimeoutRef.current) clearTimeout(undoTimeoutRef.current);
-            notify.success('User restored.');
-        } catch {
-            notify.error('Failed to restore user');
-        }
+    const handleConfirmTrash = async () => {
+        if (!trashTarget) return;
+        setDeleting(true);
+        await trashUser(trashTarget);
+        setTrashTarget(null);
+        setDeleting(false);
+    };
+
+    const handleConfirmBulkTrash = async () => {
+        setDeleting(true);
+        await trashSelected();
+        setShowBulkModal(false);
+        setDeleting(false);
     };
 
     const getRoleBadgeColor = (role) => {
@@ -242,6 +275,45 @@ const AdminUsers = ({ globalSearch = '' }) => {
         user: users.filter(u => u.role === 'user').length,
         active: users.filter(u => !u.is_suspended && !(u.is_active === false || u.is_active === 0 || u.is_active === '0')).length,
         suspended: users.filter(u => u.is_suspended).length,
+    };
+
+    const allFilteredSelected = filteredUsers.length > 0 && filteredUsers.every(u => selectedIds.includes(u.id));
+
+    const toggleSelect = (id) => {
+        setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
+    };
+
+    const toggleSelectAll = () => {
+        if (allFilteredSelected) setSelectedIds([]);
+        else setSelectedIds([...new Set([...selectedIds, ...filteredUsers.map(u => u.id)])]);
+    };
+
+    const trashSelected = async () => {
+        const selectedUsers = filteredUsers.filter(u => selectedIds.includes(u.id));
+        if (selectedUsers.length === 0) return;
+        try {
+            await Promise.all(selectedUsers.map(u => adminAPI.deleteUser(u.id)));
+            setUsers(prev => prev.filter(u => !selectedIds.includes(u.id)));
+            setSelectedIds([]);
+            const count = selectedUsers.length;
+            notify.success(`${count} user${count > 1 ? 's' : ''} moved to trash.`, {
+                action: {
+                    label: 'Undo',
+                    onClick: async () => {
+                        try {
+                            await Promise.all(selectedUsers.map(u => adminAPI.restoreUser(u.id)));
+                            setUsers(prev => [...selectedUsers, ...prev].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)));
+                            notify.success('Users restored.');
+                        } catch {
+                            notify.error('Failed to restore users');
+                        }
+                    },
+                    successLabel: 'Restored'
+                }
+            });
+        } catch {
+            notify.error('Failed to move users to trash');
+        }
     };
 
     if (loading) {
@@ -355,11 +427,28 @@ const AdminUsers = ({ globalSearch = '' }) => {
                     </div>
                 </div>
 
+                {selectedIds.length > 0 && (
+                    <div className="flex items-center justify-between gap-3 px-6 py-3 bg-green-50 border-b border-green-200">
+                        <span className="text-sm font-medium text-gray-700">{selectedIds.length} selected</span>
+                        <div className="flex items-center gap-2">
+                            <button onClick={() => setSelectedIds([])} className="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition">
+                                Cancel
+                            </button>
+                            <button onClick={() => setShowBulkModal(true)} className="flex items-center gap-2 px-3 py-1.5 text-sm font-semibold text-red-700 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 rounded-lg transition">
+                                <TrashIcon /> Trash selected ({selectedIds.length})
+                            </button>
+                        </div>
+                    </div>
+                )}
+
                 {/* Users Table */}
                 <div className="overflow-x-auto">
                     <table className="w-full">
                         <thead className="bg-green-50">
                             <tr>
+                                <th className="px-6 py-4 text-left w-12">
+                                    <input type="checkbox" checked={allFilteredSelected} onChange={toggleSelectAll} className="w-4 h-4 accent-green-500 cursor-pointer" aria-label="Select all users" />
+                                </th>
                                 <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">User</th>
                                 <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Email</th>
                                 <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Role</th>
@@ -370,7 +459,7 @@ const AdminUsers = ({ globalSearch = '' }) => {
                         <tbody className="divide-y divide-green-200">
                             {filteredUsers.length === 0 ? (
                                 <tr>
-                                    <td colSpan="5" className="px-6 py-12 text-center text-gray-500">
+                                    <td colSpan="6" className="px-6 py-12 text-center text-gray-500">
                                         {searchQuery || roleFilter !== 'all' ? 'No users match your filters' : 'No users found'}
                                     </td>
                                 </tr>
@@ -389,6 +478,17 @@ const AdminUsers = ({ globalSearch = '' }) => {
                                         tabIndex={0}
                                         aria-label={`View ${user.firstName || user.first_name} ${user.lastName || user.last_name}`}
                                     >
+                                        <td className="px-6 py-4 w-12">
+                                            <input
+                                                type="checkbox"
+                                                checked={selectedIds.includes(user.id)}
+                                                onChange={() => toggleSelect(user.id)}
+                                                onClick={(event) => event.stopPropagation()}
+                                                onKeyDown={(event) => event.stopPropagation()}
+                                                className="w-4 h-4 accent-green-500 cursor-pointer"
+                                                aria-label={`Select ${user.firstName || user.first_name} ${user.lastName || user.last_name}`}
+                                            />
+                                        </td>
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-3">
                                                 <div className="w-10 h-10 rounded-full overflow-hidden bg-white flex items-center justify-center border border-green-200">
@@ -442,7 +542,7 @@ const AdminUsers = ({ globalSearch = '' }) => {
                                                 </button>}
                                                 {user.role === 'user' && (user.is_suspended ? (
                                                     <button
-                                                        onClick={(event) => { event.stopPropagation(); handleUnsuspendUser(user.id); }}
+                                                        onClick={(event) => { event.stopPropagation(); setUnsuspendTarget(user); }}
                                                         disabled={suspending}
                                                         className="p-2 bg-green-50 hover:bg-green-400/10 border border-green-200 hover:border-green-400/50 text-gray-500 hover:text-green-800 rounded-lg transition-all disabled:opacity-50"
                                                         title="Unsuspend user"
@@ -459,7 +559,7 @@ const AdminUsers = ({ globalSearch = '' }) => {
                                                     </button>
                                                 ))}
                                                 {user.role !== 'user' && String(user.id) !== String(currentUser?.id) && <button
-                                                    onClick={(event) => { event.stopPropagation(); trashUser(user); }}
+                                                    onClick={(event) => { event.stopPropagation(); setTrashTarget(user); }}
                                                     className="p-2 bg-green-50 hover:bg-red-500/10 border border-green-200 hover:border-red-500/50 text-gray-500 hover:text-red-700 rounded-lg transition-all"
                                                     title="Move to trash"
                                                 >
@@ -482,17 +582,26 @@ const AdminUsers = ({ globalSearch = '' }) => {
                 </div>
             </div>
 
-            {/* Undo Toast */}
-            {undoItem && (
-                <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-gray-900 text-white px-5 py-3 rounded-xl shadow-2xl flex items-center gap-4 animate-slide-up">
-                    <span className="text-sm">User moved to trash</span>
-                    <button
-                        onClick={handleUndoTrash}
-                        className="text-sm font-semibold text-green-400 hover:text-green-300 transition-colors"
-                    >
-                        Undo
-                    </button>
-                </div>
+            {trashTarget && (
+                <ConfirmModal
+                    title={`Delete ${trashTarget.firstName || trashTarget.first_name || ''} ${trashTarget.lastName || trashTarget.last_name || ''}?`}
+                    message={`Are you sure you want to move this user to the trash? You can undo this action from the toast notification.`}
+                    confirmLabel="Yes, Move to Trash"
+                    loading={deleting}
+                    onCancel={() => setTrashTarget(null)}
+                    onConfirm={handleConfirmTrash}
+                />
+            )}
+
+            {showBulkModal && (
+                <ConfirmModal
+                    title={`Delete ${selectedIds.length} Users?`}
+                    message={`Are you sure you want to move ${selectedIds.length} selected users to the trash? You can undo this action from the toast notification.`}
+                    confirmLabel="Yes, Move to Trash"
+                    loading={deleting}
+                    onCancel={() => setShowBulkModal(false)}
+                    onConfirm={handleConfirmBulkTrash}
+                />
             )}
 
             {/* Create/Edit Modal */}
@@ -553,27 +662,55 @@ const AdminUsers = ({ globalSearch = '' }) => {
 
             {/* Suspend User Modal */}
             {suspendUser && (
-                <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-white border border-green-200 rounded-2xl w-full max-w-md">
-                        <div className="p-6 border-b border-green-200">
-                            <h3 className="text-xl font-bold text-gray-900">Suspend User</h3>
-                            <p className="text-gray-500 text-sm mt-1">
-                                Suspend <span className="text-gray-900 font-medium">{suspendUser.firstName || suspendUser.first_name} {suspendUser.lastName || suspendUser.last_name}</span>
+                <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[70] flex items-center justify-center p-4">
+                    <div className="bg-white border border-red-200 rounded-2xl w-full max-w-md">
+                        <div className="p-6 border-b border-red-100">
+                            <div className="w-12 h-12 rounded-full bg-red-500/15 text-red-600 flex items-center justify-center mx-auto mb-3">
+                                <BanIcon />
+                            </div>
+                            <h3 className="text-xl font-bold text-gray-900 text-center">Suspend User</h3>
+                            <p className="text-gray-500 text-sm mt-1 text-center">
+                                Suspend <span className="text-gray-900 font-medium">{suspendUser.firstName || suspendUser.first_name} {suspendUser.lastName || suspendUser.last_name}</span>?
                             </p>
                         </div>
                         <div className="p-6 space-y-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-500 mb-2">Reason for Suspension *</label>
-                                <textarea value={suspendReason} onChange={(e) => setSuspendReason(e.target.value)} placeholder="Enter the reason for suspending this user..." rows={4} className="w-full px-4 py-3 bg-green-50 border border-green-200 rounded-xl text-gray-900 placeholder:text-gray-500 focus:outline-none focus:border-red-500/50 resize-none" />
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Reason for Suspension *</label>
+                                <select
+                                    value={suspendReason}
+                                    onChange={(e) => setSuspendReason(e.target.value)}
+                                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:border-red-400 focus:ring-1 focus:ring-red-200 transition-all cursor-pointer"
+                                >
+                                    <option value="">Select a reason...</option>
+                                    {suspendReasonOptions.map(reason => (
+                                        <option key={reason} value={reason}>{reason}</option>
+                                    ))}
+                                </select>
                             </div>
-                            <div className="p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-xl">
-                                <p className="text-yellow-700 text-sm">
-                                    <strong>Note:</strong> Suspended users will be unable to access their account until unsuspended. They can submit an appeal to request reinstatement.
+                            {suspendReason === 'Other' && (
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Specify Reason *</label>
+                                    <textarea
+                                        value={suspendOtherReason}
+                                        onChange={(e) => setSuspendOtherReason(e.target.value)}
+                                        placeholder="Enter the reason for suspending this user..."
+                                        rows={3}
+                                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-red-400 focus:ring-1 focus:ring-red-200 resize-none transition-all"
+                                    />
+                                </div>
+                            )}
+                            <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl">
+                                <p className="text-amber-700 text-sm">
+                                    <strong>Note:</strong> Suspended users cannot access their account. They can submit an appeal to request reinstatement.
                                 </p>
                             </div>
                             <div className="flex gap-3">
-                                <button onClick={() => { setSuspendUser(null); setSuspendReason(''); }} className="flex-1 py-3 bg-green-50 hover:bg-green-50 text-gray-700 font-medium rounded-xl transition-all">Cancel</button>
-                                <button onClick={handleSuspendUser} disabled={!suspendReason.trim() || suspending} className="flex-1 py-3 bg-red-500/20 border border-red-500/30 text-red-700 font-semibold rounded-xl hover:bg-red-500/30 transition-all disabled:opacity-50">
+                                <button onClick={() => { setSuspendUser(null); setSuspendReason(''); setSuspendOtherReason(''); }} className="flex-1 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl transition-all">Cancel</button>
+                                <button
+                                    onClick={handleSuspendUser}
+                                    disabled={(!suspendReason || (suspendReason === 'Other' && !suspendOtherReason.trim())) || suspending}
+                                    className="flex-1 py-3 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
                                     {suspending ? 'Suspending...' : 'Suspend User'}
                                 </button>
                             </div>
@@ -582,17 +719,40 @@ const AdminUsers = ({ globalSearch = '' }) => {
                 </div>
             )}
 
+            {/* Unsuspend Confirmation Modal */}
+            {unsuspendTarget && (
+                <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[70] flex items-center justify-center p-4">
+                    <div className="bg-white border border-green-200 rounded-2xl w-full max-w-md p-6">
+                        <div className="w-12 h-12 rounded-full bg-green-500/15 text-green-600 flex items-center justify-center mx-auto mb-4">
+                            <UnbanIcon />
+                        </div>
+                        <h3 className="text-xl font-bold text-gray-900 text-center mb-2">Unsuspend User?</h3>
+                        <p className="text-gray-500 text-center mb-6">
+                            This will restore <span className="font-medium text-gray-900">{unsuspendTarget.firstName || unsuspendTarget.first_name} {unsuspendTarget.lastName || unsuspendTarget.last_name}</span>'s account access. They will be able to log in again.
+                        </p>
+                        <div className="flex gap-3">
+                            <button onClick={() => setUnsuspendTarget(null)} disabled={suspending} className="flex-1 px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-900 rounded-xl font-medium transition disabled:opacity-50">
+                                Cancel
+                            </button>
+                            <button onClick={() => handleUnsuspendUser(unsuspendTarget.id)} disabled={suspending} className="flex-1 px-4 py-3 bg-green-500 hover:bg-green-600 text-white rounded-xl font-medium transition disabled:opacity-50">
+                                {suspending ? 'Restoring...' : 'Yes, Unsuspend'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* View User Modal */}
             {viewUser && (
                 <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-white border border-green-200 rounded-3xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
+                    <div className="bg-white border border-green-200 rounded-3xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
                         <div className="p-6 border-b border-green-200 flex items-center justify-between">
                             <h3 className="text-xl font-bold text-gray-900">User Details</h3>
                             <button onClick={() => setViewUser(null)} className="p-2 hover:bg-green-50 rounded-lg text-gray-500 hover:text-gray-900 transition"><CloseIcon /></button>
                         </div>
-                        <div className="p-6 space-y-4">
+                        <div className="p-6 space-y-5">
                             <div className="flex items-center gap-4">
-                                <div className="w-16 h-16 rounded-full overflow-hidden bg-white flex items-center justify-center border border-green-200">
+                                <div className="w-16 h-16 rounded-full overflow-hidden bg-white flex items-center justify-center border border-green-200 shrink-0">
                                     {(viewUser.profileImage || viewUser.profile_image) ? (
                                         <img src={getProfileImageUrl(viewUser.profileImage || viewUser.profile_image)} alt={viewUser.firstName || viewUser.first_name} className="w-full h-full object-cover" />
                                     ) : (
@@ -603,29 +763,46 @@ const AdminUsers = ({ globalSearch = '' }) => {
                                 </div>
                                 <div>
                                     <h4 className="text-lg font-semibold text-gray-900">{viewUser.firstName || viewUser.first_name} {viewUser.lastName || viewUser.last_name}</h4>
-                                    <p className="text-gray-500">@{viewUser.username}</p>
+                                    <p className="text-gray-500 text-sm">@{viewUser.username}</p>
                                 </div>
                             </div>
-                            <div className="p-4 bg-green-50 rounded-xl space-y-3">
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div><p className="text-xs text-gray-500">Email</p><p className="text-gray-900">{viewUser.email}</p></div>
-                                    <div><p className="text-xs text-gray-500">Role</p><span className={`inline-flex px-2 py-0.5 text-xs font-medium rounded-full border capitalize ${getRoleBadgeColor(viewUser.role)}`}>{viewUser.role}</span></div>
-                                    <div><p className="text-xs text-gray-500">Status</p><span className={getAccountStatus(viewUser).text}>{getAccountStatus(viewUser).label}</span></div>
-                                    <div><p className="text-xs text-gray-500">Created</p><p className="text-gray-900">{viewUser.created_at?.split('T')[0] || '-'}</p></div>
+
+                            <div className="space-y-3">
+                                <div className="flex items-center justify-between py-2.5 border-b border-gray-100">
+                                    <span className="text-sm text-gray-500">Email</span>
+                                    <span className="text-sm font-medium text-gray-900">{viewUser.email}</span>
                                 </div>
+                                <div className="flex items-center justify-between py-2.5 border-b border-gray-100">
+                                    <span className="text-sm text-gray-500">Role</span>
+                                    <span className={`inline-flex px-2.5 py-0.5 text-xs font-medium rounded-full border capitalize ${getRoleBadgeColor(viewUser.role)}`}>{viewUser.role}</span>
+                                </div>
+                                <div className="flex items-center justify-between py-2.5 border-b border-gray-100">
+                                    <span className="text-sm text-gray-500">Status</span>
+                                    <span className={`text-sm font-medium ${getAccountStatus(viewUser).text}`}>{getAccountStatus(viewUser).label}</span>
+                                </div>
+                                <div className="flex items-center justify-between py-2.5 border-b border-gray-100">
+                                    <span className="text-sm text-gray-500">Joined</span>
+                                    <span className="text-sm font-medium text-gray-900">{viewUser.created_at?.split('T')[0] || '-'}</span>
+                                </div>
+                                {viewUser.is_suspended && (
+                                    <div className="flex items-start justify-between py-2.5">
+                                        <span className="text-sm text-gray-500 shrink-0">Suspension Reason</span>
+                                        <span className="text-sm text-red-700 text-right ml-4">{viewUser.suspension_reason || 'No reason provided'}</span>
+                                    </div>
+                                )}
+                                {viewUser.is_suspended && viewUser.suspended_at && (
+                                    <div className="flex items-center justify-between py-2.5">
+                                        <span className="text-sm text-gray-500">Suspended On</span>
+                                        <span className="text-sm font-medium text-gray-900">{viewUser.suspended_at.split('T')[0]}</span>
+                                    </div>
+                                )}
                             </div>
-                            {viewUser.is_suspended && (
-                                <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-xl space-y-2">
-                                    <h5 className="text-sm font-semibold text-red-700 uppercase tracking-wider">Suspension Details</h5>
-                                    <p className="text-gray-700">{viewUser.suspension_reason || 'No reason provided'}</p>
-                                    {viewUser.suspended_at && <p className="text-xs text-gray-500">Suspended on: {viewUser.suspended_at.split('T')[0]}</p>}
-                                </div>
-                            )}
+
                             <div className="flex gap-3 pt-2">
                                 {viewUser.role !== 'user' && <button onClick={() => { setViewUser(null); openEditModal(viewUser); }} className="flex-1 py-3 bg-green-400/10 border border-green-400/30 text-green-800 font-medium rounded-xl hover:bg-green-400/20 transition-all">Edit User</button>}
-                                {viewUser.role !== 'user' && String(viewUser.id) !== String(currentUser?.id) && <button onClick={() => { setViewUser(null); trashUser(viewUser); }} className="flex-1 py-3 bg-red-500/10 border border-red-500/30 text-red-700 font-medium rounded-xl hover:bg-red-500/20 transition-all">Move to Trash</button>}
+                                {viewUser.role !== 'user' && String(viewUser.id) !== String(currentUser?.id) && <button onClick={() => { setViewUser(null); setTrashTarget(viewUser); }} className="flex-1 py-3 bg-red-500/10 border border-red-500/30 text-red-700 font-medium rounded-xl hover:bg-red-500/20 transition-all">Move to Trash</button>}
                                 {viewUser.role === 'user' && (viewUser.is_suspended ? (
-                                    <button onClick={() => { handleUnsuspendUser(viewUser.id); setViewUser(null); }} className="flex-1 py-3 bg-green-400/10 border border-green-400/30 text-green-800 font-medium rounded-xl hover:bg-green-400/20 transition-all">Unsuspend</button>
+                                    <button onClick={() => { setViewUser(null); setUnsuspendTarget(viewUser); }} className="flex-1 py-3 bg-green-400/10 border border-green-400/30 text-green-800 font-medium rounded-xl hover:bg-green-400/20 transition-all">Unsuspend</button>
                                 ) : (
                                     <button onClick={() => { setViewUser(null); setSuspendUser(viewUser); }} className="flex-1 py-3 bg-red-500/10 border border-red-500/30 text-red-700 font-medium rounded-xl hover:bg-red-500/20 transition-all">Suspend</button>
                                 ))}

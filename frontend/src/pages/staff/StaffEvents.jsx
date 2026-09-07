@@ -1,6 +1,7 @@
 import { Calendar as CalendarIcon, Search as SearchIcon, Plus as PlusIcon, Clock as ClockIcon, MapPoint as MapPinIcon, Users as UsersIcon, Edit as EditIcon, Trash as TrashIcon, X as CloseIcon, Image as ImageIcon } from 'reicon-react';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { staffAPI } from '../../services/api-client';
+import ConfirmModal from '../../components/common/ConfirmModal';
 import { sanitizeInput } from '../../utils/sanitize';
 import { notify } from '../../utils/toast';
 
@@ -22,6 +23,10 @@ const StaffEvents = ({ globalSearch = '' }) => {
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState('all');
+    const [selectedIds, setSelectedIds] = useState([]);
+    const [deleting, setDeleting] = useState(false);
+    const [trashTarget, setTrashTarget] = useState(null);
+    const [showBulkModal, setShowBulkModal] = useState(false);
     const [showModal, setShowModal] = useState(false);
     const [editingEvent, setEditingEvent] = useState(null);
     const [showSaveConfirm, setShowSaveConfirm] = useState(false);
@@ -35,10 +40,6 @@ const StaffEvents = ({ globalSearch = '' }) => {
         title: '', description: '', eventDate: '', startTime: '', endTime: '',
         status: 'upcoming', imageUrl: '', color: '#22c55e'
     });
-
-    // Undo state
-    const [undoItem, setUndoItem] = useState(null);
-    const undoTimeoutRef = useRef(null);
 
     useEffect(() => {
         fetchEvents();
@@ -238,26 +239,78 @@ const StaffEvents = ({ globalSearch = '' }) => {
             const res = await staffAPI.deleteEvent(event.id);
             if (res.success) {
                 setEvents(events.filter(e => e.id !== event.id));
-                setUndoItem({ type: 'event', data: event });
-                if (undoTimeoutRef.current) clearTimeout(undoTimeoutRef.current);
-                undoTimeoutRef.current = setTimeout(() => setUndoItem(null), 5000);
-                notify.success('Event moved to trash.');
+                notify.success('Event moved to trash.', {
+                    action: {
+                        label: 'Undo',
+                        onClick: async () => {
+                            try {
+                                await staffAPI.restoreEvent(event.id);
+                                setEvents(prev => [event, ...prev]);
+                                notify.success('Event restored.');
+                            } catch {
+                                notify.error('Failed to restore event');
+                            }
+                        },
+                        successLabel: 'Restored'
+                    }
+                });
             }
         } catch {
             notify.error('Failed to move event to trash');
         }
     };
 
-    const handleUndoTrash = async () => {
-        if (!undoItem) return;
+    const handleConfirmTrash = async () => {
+        if (!trashTarget) return;
+        setDeleting(true);
+        await trashEvent(trashTarget);
+        setTrashTarget(null);
+        setDeleting(false);
+    };
+
+    const handleConfirmBulkTrash = async () => {
+        setDeleting(true);
+        await trashSelected();
+        setShowBulkModal(false);
+        setDeleting(false);
+    };
+
+    const allFilteredSelected = filteredEvents.length > 0 && filteredEvents.every(e => selectedIds.includes(e.id));
+
+    const toggleSelect = (id) => {
+        setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
+    };
+
+    const toggleSelectAll = () => {
+        if (allFilteredSelected) setSelectedIds([]);
+        else setSelectedIds([...new Set([...selectedIds, ...filteredEvents.map(e => e.id)])]);
+    };
+
+    const trashSelected = async () => {
+        const selectedEvents = filteredEvents.filter(e => selectedIds.includes(e.id));
+        if (selectedEvents.length === 0) return;
         try {
-            await staffAPI.restoreEvent(undoItem.data.id);
-            setEvents(prev => [undoItem.data, ...prev]);
-            setUndoItem(null);
-            if (undoTimeoutRef.current) clearTimeout(undoTimeoutRef.current);
-            notify.success('Event restored.');
+            await Promise.all(selectedEvents.map(e => staffAPI.deleteEvent(e.id)));
+            setEvents(prev => prev.filter(e => !selectedIds.includes(e.id)));
+            setSelectedIds([]);
+            const count = selectedEvents.length;
+            notify.success(`${count} event${count > 1 ? 's' : ''} moved to trash.`, {
+                action: {
+                    label: 'Undo',
+                    onClick: async () => {
+                        try {
+                            await Promise.all(selectedEvents.map(e => staffAPI.restoreEvent(e.id)));
+                            setEvents(prev => [...selectedEvents, ...prev]);
+                            notify.success('Events restored.');
+                        } catch {
+                            notify.error('Failed to restore events');
+                        }
+                    },
+                    successLabel: 'Restored'
+                }
+            });
         } catch {
-            notify.error('Failed to restore event');
+            notify.error('Failed to move events to trash');
         }
     };
 
@@ -328,6 +381,10 @@ const StaffEvents = ({ globalSearch = '' }) => {
                         </select>
                     </div>
                     <div className="flex items-center gap-2">
+                        <label className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 cursor-pointer select-none">
+                            <input type="checkbox" checked={allFilteredSelected} onChange={toggleSelectAll} className="w-4 h-4 accent-green-500 cursor-pointer" />
+                            Select all
+                        </label>
                         <button
                             onClick={openCreateModal}
                             className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-green-300 via-green-400 to-green-500 text-gray-900 font-semibold rounded-xl hover:from-green-300 hover:via-green-400 hover:to-green-500 transition-all shadow-lg shadow-green-300/50"
@@ -338,11 +395,26 @@ const StaffEvents = ({ globalSearch = '' }) => {
                 </div>
             </div>
 
+            {selectedIds.length > 0 && (
+                <div className="flex items-center justify-between gap-3 px-6 py-3 bg-green-50 border border-green-200 rounded-2xl">
+                    <span className="text-sm font-medium text-gray-700">{selectedIds.length} selected</span>
+                    <div className="flex items-center gap-2">
+                        <button onClick={() => setSelectedIds([])} className="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition">
+                            Cancel
+                        </button>
+                        <button onClick={() => setShowBulkModal(true)} className="flex items-center gap-2 px-3 py-1.5 text-sm font-semibold text-red-700 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 rounded-lg transition">
+                            <TrashIcon className="w-4 h-4" /> Trash selected ({selectedIds.length})
+                        </button>
+                    </div>
+                </div>
+            )}
+
             {/* Events Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {filteredEvents.length > 0 ? (
                         filteredEvents.map(event => (
-                            <div key={event.id} className="bg-white border border-green-200 rounded-2xl overflow-hidden hover:border-green-400/30 transition group">
+                            <div key={event.id} className="relative bg-white border border-green-200 rounded-2xl overflow-hidden hover:border-green-400/30 transition group">
+                                <input type="checkbox" checked={selectedIds.includes(event.id)} onChange={() => toggleSelect(event.id)} className="absolute top-3 left-3 z-10 w-4 h-4 accent-green-500 cursor-pointer" aria-label={`Select ${event.title}`} />
                                 {event.image_url && (
                                     <div className="h-40 bg-white overflow-hidden">
                                         <img
@@ -391,7 +463,7 @@ const StaffEvents = ({ globalSearch = '' }) => {
                                             <EditIcon className="w-4 h-4" /> Edit
                                         </button>
                                         <button
-                                            onClick={() => trashEvent(event)}
+                                            onClick={() => setTrashTarget(event)}
                                             className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-green-50 hover:bg-red-500/10 border border-green-200 hover:border-red-500/50 text-gray-500 hover:text-red-700 rounded-lg transition-all text-sm"
                                         >
                                             <TrashIcon className="w-4 h-4" /> Delete
@@ -406,6 +478,28 @@ const StaffEvents = ({ globalSearch = '' }) => {
                         </div>
                     )}
                 </div>
+
+            {trashTarget && (
+                <ConfirmModal
+                    title={`Delete ${trashTarget.title || 'Event'}?`}
+                    message={`Are you sure you want to move this event to the trash? You can undo this action from the toast notification.`}
+                    confirmLabel="Yes, Move to Trash"
+                    loading={deleting}
+                    onCancel={() => setTrashTarget(null)}
+                    onConfirm={handleConfirmTrash}
+                />
+            )}
+
+            {showBulkModal && (
+                <ConfirmModal
+                    title={`Delete ${selectedIds.length} Events?`}
+                    message={`Are you sure you want to move ${selectedIds.length} selected events to the trash? You can undo this action from the toast notification.`}
+                    confirmLabel="Yes, Move to Trash"
+                    loading={deleting}
+                    onCancel={() => setShowBulkModal(false)}
+                    onConfirm={handleConfirmBulkTrash}
+                />
+            )}
 
             {/* Create/Edit Modal */}
             {showModal && (
@@ -647,14 +741,6 @@ const StaffEvents = ({ globalSearch = '' }) => {
                             </button>
                         </div>
                     </div>
-                </div>
-            )}
-
-            {/* Undo Toast */}
-            {undoItem && (
-                <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-gray-900 text-white px-5 py-3 rounded-xl shadow-2xl flex items-center gap-4 animate-slide-up">
-                    <span className="text-sm">Event moved to trash</span>
-                    <button onClick={handleUndoTrash} className="text-sm font-semibold text-green-400 hover:text-green-300 transition-colors">Undo</button>
                 </div>
             )}
         </div>

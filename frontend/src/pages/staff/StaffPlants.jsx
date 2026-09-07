@@ -1,6 +1,7 @@
 import { Leaf as PlantIcon, Search as SearchIcon, Sort as SortIcon, Plus as PlusIcon, Edit as EditIcon, Trash as TrashIcon, X as CloseIcon } from 'reicon-react';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { plantAPI, staffAPI } from '../../services/api-client';
+import ConfirmModal from '../../components/common/ConfirmModal';
 import { sanitizeInput } from '../../utils/sanitize';
 import { notify } from '../../utils/toast';
 
@@ -14,6 +15,10 @@ const StaffPlants = ({ globalSearch = '' }) => {
     const [sortField, setSortField] = useState('name');
     const [sortOrder, setSortOrder] = useState('asc');
     const [categoryFilter, setCategoryFilter] = useState('all');
+    const [selectedIds, setSelectedIds] = useState([]);
+    const [deleting, setDeleting] = useState(false);
+    const [trashTarget, setTrashTarget] = useState(null);
+    const [showBulkModal, setShowBulkModal] = useState(false);
     const [form, setForm] = useState({
         name: '',
         scientificName: '',
@@ -27,9 +32,6 @@ const StaffPlants = ({ globalSearch = '' }) => {
     const [imageInputMode, setImageInputMode] = useState('upload');
     const [imageFile, setImageFile] = useState(null);
     const [imagePreview, setImagePreview] = useState(null);
-
-    const [undoItem, setUndoItem] = useState(null);
-    const undoTimeoutRef = useRef(null);
 
     const categoryOptions = ['trees', 'shrubs', 'flowers', 'ferns', 'palms', 'succulents', 'aquatic', 'medicinal'];
     const statusOptions = ['healthy', 'growing', 'dormant', 'sick', 'treatment'];
@@ -53,27 +55,40 @@ const StaffPlants = ({ globalSearch = '' }) => {
             const res = await staffAPI.deletePlant(plant.id);
             if (res.success) {
                 setPlants(plants.filter(p => p.id !== plant.id));
-                setUndoItem({ type: 'plant', data: plant });
-                if (undoTimeoutRef.current) clearTimeout(undoTimeoutRef.current);
-                undoTimeoutRef.current = setTimeout(() => setUndoItem(null), 5000);
-                notify.success('Plant moved to trash.');
+                notify.success('Plant moved to trash.', {
+                    action: {
+                        label: 'Undo',
+                        onClick: async () => {
+                            try {
+                                await staffAPI.restorePlant(plant.id);
+                                setPlants(prev => [plant, ...prev]);
+                                notify.success('Plant restored.');
+                            } catch {
+                                notify.error('Failed to restore plant');
+                            }
+                        },
+                        successLabel: 'Restored'
+                    }
+                });
             }
         } catch {
             notify.error('Failed to move plant to trash');
         }
     };
 
-    const handleUndoTrash = async () => {
-        if (!undoItem) return;
-        try {
-            await staffAPI.restorePlant(undoItem.data.id);
-            setPlants(prev => [undoItem.data, ...prev]);
-            setUndoItem(null);
-            if (undoTimeoutRef.current) clearTimeout(undoTimeoutRef.current);
-            notify.success('Plant restored.');
-        } catch {
-            notify.error('Failed to restore plant');
-        }
+    const handleConfirmTrash = async () => {
+        if (!trashTarget) return;
+        setDeleting(true);
+        await trashPlant(trashTarget);
+        setTrashTarget(null);
+        setDeleting(false);
+    };
+
+    const handleConfirmBulkTrash = async () => {
+        setDeleting(true);
+        await trashSelected();
+        setShowBulkModal(false);
+        setDeleting(false);
     };
 
     const openCreateModal = () => {
@@ -234,6 +249,45 @@ const StaffPlants = ({ globalSearch = '' }) => {
         endangered: plants.filter(p => p.is_endangered).length,
     };
 
+    const allFilteredSelected = filteredPlants.length > 0 && filteredPlants.every(p => selectedIds.includes(p.id));
+
+    const toggleSelect = (id) => {
+        setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
+    };
+
+    const toggleSelectAll = () => {
+        if (allFilteredSelected) setSelectedIds([]);
+        else setSelectedIds([...new Set([...selectedIds, ...filteredPlants.map(p => p.id)])]);
+    };
+
+    const trashSelected = async () => {
+        const selectedPlants = filteredPlants.filter(p => selectedIds.includes(p.id));
+        if (selectedPlants.length === 0) return;
+        try {
+            await Promise.all(selectedPlants.map(p => staffAPI.deletePlant(p.id)));
+            setPlants(prev => prev.filter(p => !selectedIds.includes(p.id)));
+            setSelectedIds([]);
+            const count = selectedPlants.length;
+            notify.success(`${count} plant${count > 1 ? 's' : ''} moved to trash.`, {
+                action: {
+                    label: 'Undo',
+                    onClick: async () => {
+                        try {
+                            await Promise.all(selectedPlants.map(p => staffAPI.restorePlant(p.id)));
+                            setPlants(prev => [...selectedPlants, ...prev]);
+                            notify.success('Plants restored.');
+                        } catch {
+                            notify.error('Failed to restore plants');
+                        }
+                    },
+                    successLabel: 'Restored'
+                }
+            });
+        } catch {
+            notify.error('Failed to move plants to trash');
+        }
+    };
+
     if (loading) {
         return (
             <div className="flex items-center justify-center h-64">
@@ -365,10 +419,27 @@ const StaffPlants = ({ globalSearch = '' }) => {
                     </div>
                 </div>
 
+                {selectedIds.length > 0 && (
+                    <div className="flex items-center justify-between gap-3 px-6 py-3 bg-green-50 border-b border-green-200">
+                        <span className="text-sm font-medium text-gray-700">{selectedIds.length} selected</span>
+                        <div className="flex items-center gap-2">
+                            <button onClick={() => setSelectedIds([])} className="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition">
+                                Cancel
+                            </button>
+                            <button onClick={() => setShowBulkModal(true)} className="flex items-center gap-2 px-3 py-1.5 text-sm font-semibold text-red-700 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 rounded-lg transition">
+                                <TrashIcon className="w-4 h-4" /> Trash selected ({selectedIds.length})
+                            </button>
+                        </div>
+                    </div>
+                )}
+
                 <div className="overflow-x-auto">
                     <table className="w-full">
                         <thead className="bg-green-50">
                             <tr>
+                                <th className="px-6 py-4 text-left w-12">
+                                    <input type="checkbox" checked={allFilteredSelected} onChange={toggleSelectAll} className="w-4 h-4 accent-green-500 cursor-pointer" aria-label="Select all plants" />
+                                </th>
                                 <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-900" onClick={() => toggleSort('name')}>
                                     <div className="flex items-center gap-2">
                                         Name
@@ -395,13 +466,16 @@ const StaffPlants = ({ globalSearch = '' }) => {
                         <tbody className="divide-y divide-green-200">
                             {filteredPlants.length === 0 ? (
                                 <tr>
-                                    <td colSpan="6" className="px-6 py-12 text-center text-gray-500">
+                                    <td colSpan="7" className="px-6 py-12 text-center text-gray-500">
                                         {searchQuery || categoryFilter !== 'all' ? 'No plants match your filters' : 'No plants found'}
                                     </td>
                                 </tr>
                             ) : (
                                 filteredPlants.map(plant => (
                                     <tr key={plant.id} className="cursor-pointer hover:bg-green-50/50 transition-colors" title="Open plant details">
+                                        <td className="px-6 py-4 w-12">
+                                            <input type="checkbox" checked={selectedIds.includes(plant.id)} onChange={() => toggleSelect(plant.id)} onClick={(e) => e.stopPropagation()} className="w-4 h-4 accent-green-500 cursor-pointer" aria-label={`Select ${plant.name}`} />
+                                        </td>
                                         <td className="px-6 py-4" onClick={() => openEditModal(plant)}>
                                             <div className="flex items-center gap-3">
                                                 <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-300 via-green-400 to-green-500 flex items-center justify-center text-gray-900 font-bold overflow-hidden">
@@ -437,7 +511,7 @@ const StaffPlants = ({ globalSearch = '' }) => {
                                                     <EditIcon className="w-4 h-4" />
                                                 </button>
                                                 <button
-                                                    onClick={(event) => { event.stopPropagation(); trashPlant(plant); }}
+                                                    onClick={(event) => { event.stopPropagation(); setTrashTarget(plant); }}
                                                     className="p-2 bg-green-50 hover:bg-red-500/10 border border-green-200 hover:border-red-500/50 text-gray-500 hover:text-red-700 rounded-lg transition-all"
                                                     title="Move to trash"
                                                 >
@@ -459,16 +533,31 @@ const StaffPlants = ({ globalSearch = '' }) => {
                 </div>
             </div>
 
-            {undoItem && (
-                <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-gray-900 text-white px-5 py-3 rounded-xl shadow-2xl flex items-center gap-4 animate-slide-up">
-                    <span className="text-sm">Plant moved to trash</span>
-                    <button onClick={handleUndoTrash} className="text-sm font-semibold text-green-400 hover:text-green-300 transition-colors">Undo</button>
-                </div>
+            {trashTarget && (
+                <ConfirmModal
+                    title={`Delete ${trashTarget.name || 'Plant'}?`}
+                    message={`Are you sure you want to move this plant to the trash? You can undo this action from the toast notification.`}
+                    confirmLabel="Yes, Move to Trash"
+                    loading={deleting}
+                    onCancel={() => setTrashTarget(null)}
+                    onConfirm={handleConfirmTrash}
+                />
+            )}
+
+            {showBulkModal && (
+                <ConfirmModal
+                    title={`Delete ${selectedIds.length} Plants?`}
+                    message={`Are you sure you want to move ${selectedIds.length} selected plants to the trash? You can undo this action from the toast notification.`}
+                    confirmLabel="Yes, Move to Trash"
+                    loading={deleting}
+                    onCancel={() => setShowBulkModal(false)}
+                    onConfirm={handleConfirmBulkTrash}
+                />
             )}
 
             {showModal && (
                 <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-white border border-green-200 rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+                    <div className="bg-white border border-green-200 rounded-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
                         <div className="p-6 border-b border-green-200 flex items-center justify-between sticky top-0 bg-white">
                             <h3 className="text-xl font-bold text-gray-900">
                                 {editingPlant ? 'Edit Plant' : 'Add New Plant'}

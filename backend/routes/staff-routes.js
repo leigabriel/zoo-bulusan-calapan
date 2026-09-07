@@ -88,6 +88,9 @@ router.delete('/events/:id', trackActivity('event_update', (req) => 'Deleted eve
 router.get('/appeals', staffController.getPendingAppeals);
 router.put('/appeals/:id/review', trackActivity('other', (req) => 'Reviewed appeal'), staffController.reviewAppeal);
 
+// User suspension management
+router.put('/users/:id/unsuspend', trackActivity('user_update', (req) => 'Unsuspended user'), staffController.unsuspendUser);
+
 // Notifications
 router.get('/notifications', staffController.getNotifications);
 router.put('/notifications/:id/read', staffController.markNotificationRead);

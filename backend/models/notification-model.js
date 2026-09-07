@@ -102,6 +102,19 @@ class Notification {
             FROM user_messages
         `);
 
+        let pendingCommunityPosts = [{ count: 0 }];
+        let pendingAppeals = [{ count: 0 }];
+        try {
+            [pendingCommunityPosts] = await db.query(`
+                SELECT COUNT(*) AS count FROM community_posts WHERE status = 'pending'
+            `);
+            [pendingAppeals] = await db.query(`
+                SELECT COUNT(*) AS count FROM user_appeals WHERE status = 'pending'
+            `);
+        } catch (error) {
+            // Tables may not exist yet
+        }
+
         return {
             tickets: ticketStats[0] || { total: 0, today: 0, this_week: 0 },
             users: userStats[0] || { total: 0, today: 0, this_week: 0 },
@@ -110,6 +123,8 @@ class Notification {
             eventReservations: eventReservationStats[0] || { total: 0, today: 0, pending: 0 },
             messages: messageStats[0] || { total: 0, today: 0, unread: 0 },
             pendingTickets: pendingTickets[0]?.count || 0,
+            pendingCommunityPosts: pendingCommunityPosts[0]?.count || 0,
+            pendingAppeals: pendingAppeals[0]?.count || 0,
             recentTickets: recentTickets || []
         };
     }

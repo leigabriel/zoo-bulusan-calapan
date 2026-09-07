@@ -19,6 +19,7 @@ class Message {
              u.profile_image as sender_profile_image
              FROM user_messages m
              JOIN users u ON m.sender_id = u.id
+             WHERE m.message_type IS NULL OR m.message_type != 'appeal'
              ORDER BY m.created_at DESC`
         );
         return rows;
@@ -32,7 +33,8 @@ class Message {
              u.profile_image as sender_profile_image
              FROM user_messages m
              JOIN users u ON m.sender_id = u.id
-             WHERE m.recipient_type = ? OR m.recipient_type = 'all'
+             WHERE (m.recipient_type = ? OR m.recipient_type = 'all')
+               AND (m.message_type IS NULL OR m.message_type != 'appeal')
              ORDER BY m.created_at DESC`,
             [recipientType]
         );

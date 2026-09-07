@@ -1,6 +1,7 @@
 import { Edit as ReiconEdit, Paw as ReiconPaw, Plus as ReiconPlus, Search as ReiconSearch, Sort as ReiconSort, Trash as ReiconTrash, X as ReiconX } from 'reicon-react';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { adminAPI } from '../../services/api-client';
+import ConfirmModal from '../../components/common/ConfirmModal';
 import { sanitizeInput } from '../../utils/sanitize';
 import { notify } from '../../utils/toast';
 
@@ -42,6 +43,10 @@ const AdminAnimals = ({ globalSearch = '' }) => {
     const [searchQuery, setSearchQuery] = useState('');
     const [sortField, setSortField] = useState('name');
     const [sortOrder, setSortOrder] = useState('asc');
+    const [selectedIds, setSelectedIds] = useState([]);
+    const [deleting, setDeleting] = useState(false);
+    const [trashTarget, setTrashTarget] = useState(null);
+    const [showBulkModal, setShowBulkModal] = useState(false);
     const [speciesFilter, setSpeciesFilter] = useState('all');
     const [form, setForm] = useState({
         name: '',
@@ -61,9 +66,6 @@ const AdminAnimals = ({ globalSearch = '' }) => {
     const [imageInputMode, setImageInputMode] = useState('upload');
     const [imageFile, setImageFile] = useState(null);
     const [imagePreview, setImagePreview] = useState(null);
-
-    const [undoItem, setUndoItem] = useState(null);
-    const undoTimeoutRef = useRef(null);
 
     const effectiveSearch = globalSearch || searchQuery;
 
@@ -171,27 +173,40 @@ const AdminAnimals = ({ globalSearch = '' }) => {
             const res = await adminAPI.deleteAnimal(animal.id);
             if (res.success) {
                 setAnimals(animals.filter(a => a.id !== animal.id));
-                setUndoItem({ type: 'animal', data: animal, action: 'trash' });
-                if (undoTimeoutRef.current) clearTimeout(undoTimeoutRef.current);
-                undoTimeoutRef.current = setTimeout(() => setUndoItem(null), 5000);
-                notify.success('Animal moved to trash.');
+                notify.success('Animal moved to trash.', {
+                    action: {
+                        label: 'Undo',
+                        onClick: async () => {
+                            try {
+                                await adminAPI.restoreAnimal(animal.id);
+                                setAnimals(prev => [animal, ...prev]);
+                                notify.success('Animal restored.');
+                            } catch {
+                                notify.error('Failed to restore animal');
+                            }
+                        },
+                        successLabel: 'Restored'
+                    }
+                });
             }
         } catch {
             notify.error('Failed to move animal to trash');
         }
     };
 
-    const handleUndoTrash = async () => {
-        if (!undoItem) return;
-        try {
-            await adminAPI.restoreAnimal(undoItem.data.id);
-            setAnimals(prev => [undoItem.data, ...prev]);
-            setUndoItem(null);
-            if (undoTimeoutRef.current) clearTimeout(undoTimeoutRef.current);
-            notify.success('Animal restored.');
-        } catch {
-            notify.error('Failed to restore animal');
-        }
+    const handleConfirmTrash = async () => {
+        if (!trashTarget) return;
+        setDeleting(true);
+        await trashAnimal(trashTarget);
+        setTrashTarget(null);
+        setDeleting(false);
+    };
+
+    const handleConfirmBulkTrash = async () => {
+        setDeleting(true);
+        await trashSelected();
+        setShowBulkModal(false);
+        setDeleting(false);
     };
 
     const getStatusBadgeColor = (status) => {
@@ -243,6 +258,45 @@ const AdminAnimals = ({ globalSearch = '' }) => {
         healthy: animals.filter(a => a.status === 'healthy').length,
         sick: animals.filter(a => a.status === 'sick').length,
         other: animals.filter(a => !['healthy', 'sick'].includes(a.status)).length,
+    };
+
+    const allFilteredSelected = filteredAnimals.length > 0 && filteredAnimals.every(a => selectedIds.includes(a.id));
+
+    const toggleSelect = (id) => {
+        setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
+    };
+
+    const toggleSelectAll = () => {
+        if (allFilteredSelected) setSelectedIds([]);
+        else setSelectedIds([...new Set([...selectedIds, ...filteredAnimals.map(a => a.id)])]);
+    };
+
+    const trashSelected = async () => {
+        const selectedAnimals = filteredAnimals.filter(a => selectedIds.includes(a.id));
+        if (selectedAnimals.length === 0) return;
+        try {
+            await Promise.all(selectedAnimals.map(a => adminAPI.deleteAnimal(a.id)));
+            setAnimals(prev => prev.filter(a => !selectedIds.includes(a.id)));
+            setSelectedIds([]);
+            const count = selectedAnimals.length;
+            notify.success(`${count} animal${count > 1 ? 's' : ''} moved to trash.`, {
+                action: {
+                    label: 'Undo',
+                    onClick: async () => {
+                        try {
+                            await Promise.all(selectedAnimals.map(a => adminAPI.restoreAnimal(a.id)));
+                            setAnimals(prev => [...selectedAnimals, ...prev]);
+                            notify.success('Animals restored.');
+                        } catch {
+                            notify.error('Failed to restore animals');
+                        }
+                    },
+                    successLabel: 'Restored'
+                }
+            });
+        } catch {
+            notify.error('Failed to move animals to trash');
+        }
     };
 
     if (loading) {
@@ -381,11 +435,28 @@ const AdminAnimals = ({ globalSearch = '' }) => {
                     </div>
                 </div>
 
+                {selectedIds.length > 0 && (
+                    <div className="flex items-center justify-between gap-3 px-6 py-3 bg-green-50 border-b border-green-200">
+                        <span className="text-sm font-medium text-gray-700">{selectedIds.length} selected</span>
+                        <div className="flex items-center gap-2">
+                            <button onClick={() => setSelectedIds([])} className="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition">
+                                Cancel
+                            </button>
+                            <button onClick={() => setShowBulkModal(true)} className="flex items-center gap-2 px-3 py-1.5 text-sm font-semibold text-red-700 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 rounded-lg transition">
+                                <ReiconTrash strokeWidth="2" className="w-4 h-4" /> Trash selected ({selectedIds.length})
+                            </button>
+                        </div>
+                    </div>
+                )}
+
                 {/* Animals Table */}
                 <div className="overflow-x-auto">
                     <table className="w-full">
                         <thead className="bg-green-50">
                             <tr>
+                                <th className="px-6 py-4 text-left w-12">
+                                    <input type="checkbox" checked={allFilteredSelected} onChange={toggleSelectAll} className="w-4 h-4 accent-green-500 cursor-pointer" aria-label="Select all animals" />
+                                </th>
                                 <th
                                     className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-900"
                                     onClick={() => toggleSort('name')}
@@ -427,13 +498,16 @@ const AdminAnimals = ({ globalSearch = '' }) => {
                         <tbody className="divide-y divide-green-200">
                             {filteredAnimals.length === 0 ? (
                                 <tr>
-                                    <td colSpan="6" className="px-6 py-12 text-center text-gray-500">
+                                    <td colSpan="7" className="px-6 py-12 text-center text-gray-500">
                                         {searchQuery || speciesFilter !== 'all' ? 'No animals match your filters' : 'No animals found'}
                                     </td>
                                 </tr>
                             ) : (
                                 filteredAnimals.map(animal => (
                                     <tr key={animal.id} className="hover:bg-green-50/50 transition-colors">
+                                        <td className="px-6 py-4 w-12">
+                                            <input type="checkbox" checked={selectedIds.includes(animal.id)} onChange={() => toggleSelect(animal.id)} onClick={(e) => e.stopPropagation()} className="w-4 h-4 accent-green-500 cursor-pointer" aria-label={`Select ${animal.name}`} />
+                                        </td>
                                         <td className="px-6 py-4 cursor-pointer" onClick={() => openEditModal(animal)}>
                                             <div className="flex items-center gap-3">
                                                 <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-300 via-green-400 to-green-500 flex items-center justify-center text-gray-900 font-bold overflow-hidden">
@@ -464,7 +538,7 @@ const AdminAnimals = ({ globalSearch = '' }) => {
                                                     <EditIcon />
                                                 </button>
                                                 <button
-                                                    onClick={(event) => { event.stopPropagation(); trashAnimal(animal); }}
+                                                    onClick={(event) => { event.stopPropagation(); setTrashTarget(animal); }}
                                                     className="p-2 bg-green-50 hover:bg-red-500/10 border border-green-200 hover:border-red-500/50 text-gray-500 hover:text-red-700 rounded-lg transition-all"
                                                     title="Move to trash"
                                                 >
@@ -487,23 +561,32 @@ const AdminAnimals = ({ globalSearch = '' }) => {
                 </div>
             </div>
 
-            {/* Undo Toast */}
-            {undoItem && (
-                <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-gray-900 text-white px-5 py-3 rounded-xl shadow-2xl flex items-center gap-4 animate-slide-up">
-                    <span className="text-sm">Animal moved to trash</span>
-                    <button
-                        onClick={handleUndoTrash}
-                        className="text-sm font-semibold text-green-400 hover:text-green-300 transition-colors"
-                    >
-                        Undo
-                    </button>
-                </div>
+            {trashTarget && (
+                <ConfirmModal
+                    title={`Delete ${trashTarget.name || 'Animal'}?`}
+                    message={`Are you sure you want to move this animal to the trash? You can undo this action from the toast notification.`}
+                    confirmLabel="Yes, Move to Trash"
+                    loading={deleting}
+                    onCancel={() => setTrashTarget(null)}
+                    onConfirm={handleConfirmTrash}
+                />
+            )}
+
+            {showBulkModal && (
+                <ConfirmModal
+                    title={`Delete ${selectedIds.length} Animals?`}
+                    message={`Are you sure you want to move ${selectedIds.length} selected animals to the trash? You can undo this action from the toast notification.`}
+                    confirmLabel="Yes, Move to Trash"
+                    loading={deleting}
+                    onCancel={() => setShowBulkModal(false)}
+                    onConfirm={handleConfirmBulkTrash}
+                />
             )}
 
             {/* Create/Edit Modal */}
             {showModal && (
                 <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-white border border-green-200 rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+                    <div className="bg-white border border-green-200 rounded-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
                         {/* Modal Header */}
                         <div className="p-6 border-b border-green-200 flex items-center justify-between sticky top-0 bg-white">
                             <h3 className="text-xl font-bold text-gray-900">
