@@ -173,6 +173,10 @@ const LoginPage = () => {
     const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [successUserName, setSuccessUserName] = useState('');
     const [pendingRedirect, setPendingRedirect] = useState(null);
+    const [masterKeyChallenge, setMasterKeyChallenge] = useState(null);
+    const [masterKey, setMasterKey] = useState('');
+    const [masterKeyLoading, setMasterKeyLoading] = useState(false);
+    const [masterKeyError, setMasterKeyError] = useState('');
     const [showForgotModal, setShowForgotModal] = useState(false);
     const [forgotEmail, setForgotEmail] = useState('');
     const [forgotLoading, setForgotLoading] = useState(false);
@@ -187,6 +191,10 @@ const LoginPage = () => {
     const [searchParams] = useSearchParams();
 
     useEffect(() => {
+        if (location.state?.masterKeyChallenge) {
+            setMasterKeyChallenge(location.state.masterKeyChallenge);
+            window.history.replaceState(null, '', '/login');
+        }
         if (location.state?.message) {
             notify.success(location.state.message);
         }
@@ -297,8 +305,6 @@ const LoginPage = () => {
             });
 
             if (response.success) {
-                 login(response.user, response.token, null, rememberMe);
-
                 // Set user name for success modal
                 const userName = response.user.firstName || response.user.username || 'User';
                 setSuccessUserName(userName);
@@ -310,6 +316,16 @@ const LoginPage = () => {
                 } else if (response.user.role === 'staff') {
                     redirectPath = '/staff/dashboard';
                 }
+
+                if (response.masterKeyRequired) {
+                    setPendingRedirect(redirectPath);
+                    setMasterKeyChallenge(response.challengeToken);
+                    setMasterKey('');
+                    setMasterKeyError('');
+                    return;
+                }
+
+                login(response.user, response.token, null, rememberMe);
 
                 // Store pending redirect and show success modal
                 setPendingRedirect(redirectPath);
@@ -347,6 +363,31 @@ const LoginPage = () => {
             }
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleMasterKeySubmit = async (event) => {
+        event.preventDefault();
+        if (!masterKeyChallenge || !masterKey.trim()) {
+            setMasterKeyError('Enter your Master Key.');
+            return;
+        }
+        setMasterKeyLoading(true);
+        setMasterKeyError('');
+        try {
+            const response = await authAPI.verifyAdminMasterKey(masterKeyChallenge, masterKey);
+            if (!response.success) throw new Error(response.message || 'Master Key verification failed.');
+            login(response.user, response.token, 'admin', rememberMe);
+            setMasterKeyChallenge(null);
+            setMasterKey('');
+            setPendingRedirect('/admin/dashboard');
+            setSuccessUserName(response.user.firstName || response.user.username || 'Admin');
+            setShowSuccessModal(true);
+        } catch (error) {
+            setMasterKeyError(error.message || 'Incorrect Master Key.');
+            setMasterKey('');
+        } finally {
+            setMasterKeyLoading(false);
         }
     };
 
@@ -393,6 +434,17 @@ const LoginPage = () => {
                 userName={successUserName}
                 autoCloseDelay={2500}
             />
+
+            {masterKeyChallenge && (
+                <div className="fixed inset-0 z-[80] flex items-center justify-center bg-[#102019]/60 p-4 backdrop-blur-sm">
+                    <form onSubmit={handleMasterKeySubmit} className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl sm:p-8" role="dialog" aria-modal="true" aria-labelledby="master-key-title">
+                        <div className="mb-6"><p className="text-xs font-bold uppercase tracking-[0.18em] text-emerald-700">Admin security</p><h2 id="master-key-title" className="mt-2 text-2xl font-black text-gray-900">Verify Master Key</h2><p className="mt-2 text-sm leading-6 text-gray-500">Enter your Master Key to continue to the Admin Dashboard.</p></div>
+                        {masterKeyError && <p className="mb-4 rounded-xl bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{masterKeyError}</p>}
+                        <input type="password" value={masterKey} onChange={(event) => setMasterKey(event.target.value)} autoFocus autoComplete="off" placeholder="Enter Master Key" className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3.5 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100" />
+                        <div className="mt-5 flex gap-3"><button type="button" disabled={masterKeyLoading} onClick={() => { setMasterKeyChallenge(null); setMasterKey(''); setMasterKeyError(''); }} className="flex-1 rounded-xl border border-gray-200 px-4 py-3 font-semibold text-gray-600 hover:bg-gray-50 disabled:opacity-50">Cancel</button><button type="submit" disabled={masterKeyLoading || !masterKey.trim()} className="flex-1 rounded-xl bg-emerald-600 px-4 py-3 font-semibold text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50">{masterKeyLoading ? 'Verifying...' : 'Verify'}</button></div>
+                    </form>
+                </div>
+            )}
 
             <PolicyModal
                 isOpen={showPrivacyModal}

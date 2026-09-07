@@ -163,6 +163,15 @@ export const authAPI = {
         return handleResponse(response);
     },
 
+    verifyAdminMasterKey: async (challengeToken, masterKey) => {
+        const response = await fetch(`${API_BASE_URL}/auth/master-key/verify`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify({ challengeToken, masterKey })
+        });
+        return handleResponse(response);
+    },
+
     getProfile: async (type = 'user') => {
         const response = await fetch(`${API_BASE_URL}/auth/me`, {
             headers: getAuthHeaders(type)
@@ -265,6 +274,26 @@ export const authAPI = {
 };
 
 export const adminAPI = {
+    getMasterKeyStatus: async () => {
+        const response = await fetch(`${API_BASE_URL}/admin/master-key/status`, { headers: getAuthHeaders('admin') });
+        return handleResponse(response);
+    },
+
+    createMasterKey: async (data) => {
+        const response = await fetch(`${API_BASE_URL}/admin/master-key/create`, { method: 'POST', headers: getAuthHeaders('admin'), body: JSON.stringify(data) });
+        return handleResponse(response);
+    },
+
+    changeMasterKey: async (data) => {
+        const response = await fetch(`${API_BASE_URL}/admin/master-key/change`, { method: 'PUT', headers: getAuthHeaders('admin'), body: JSON.stringify(data) });
+        return handleResponse(response);
+    },
+
+    toggleMasterKey: async (data) => {
+        const response = await fetch(`${API_BASE_URL}/admin/master-key/toggle`, { method: 'PUT', headers: getAuthHeaders('admin'), body: JSON.stringify(data) });
+        return handleResponse(response);
+    },
+
     getTransactions: async () => {
         const response = await fetch(`${API_BASE_URL}/admin/transactions`, {
             headers: getAuthHeaders('admin')

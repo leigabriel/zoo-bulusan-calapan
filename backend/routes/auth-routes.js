@@ -17,11 +17,13 @@ const {
     resetPassword
 } = require('../controllers/auth-controller');
 const { protect } = require('../middleware/auth');
+const adminMasterKeyController = require('../controllers/admin-master-key-controller');
 const { handleCloudinaryProfileUpload } = require('../middleware/cloudinary-upload');
 
 // Public routes (no auth required)
 router.post('/register', register);
 router.post('/login', login);
+router.post('/master-key/verify', adminMasterKeyController.verifyLoginMasterKey);
 router.post('/appeal', submitPublicAppeal);
 router.get('/verify-email', verifyEmail);
 router.post('/resend-verification', resendVerification);

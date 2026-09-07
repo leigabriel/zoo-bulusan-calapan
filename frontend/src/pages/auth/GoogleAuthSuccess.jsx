@@ -20,7 +20,12 @@ const GoogleAuthSuccess = () => {
                     'http://localhost:5000';
                 const response = await fetch(`${backendUrl}/auth/google/session`, { credentials: 'include' });
                 const data = await response.json();
-                if (!response.ok || !data.success || !data.token || !data.user) throw new Error(data.message || 'Missing authentication data');
+                if (!response.ok || !data.success || !data.user || (!data.token && !data.masterKeyRequired)) throw new Error(data.message || 'Missing authentication data');
+
+                if (data.masterKeyRequired) {
+                    navigate('/login', { replace: true, state: { masterKeyChallenge: data.challengeToken } });
+                    return;
+                }
 
                 const token = data.token;
                 const userData = data.user;

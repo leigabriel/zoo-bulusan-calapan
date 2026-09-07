@@ -39,6 +39,7 @@ exports.protect = async (req, res, next) => {
             role: user.role,
             is_suspended: user.is_suspended 
         };
+        req.authPayload = decoded;
         next();
     } catch (error) {
         console.error('Auth error');
@@ -56,6 +57,21 @@ exports.authorize = (...roles) => {
         }
         next();
     };
+};
+
+exports.requireAdminMasterKey = async (req, res, next) => {
+    if (req.user?.role !== 'admin') return next();
+    try {
+        const AdminMasterKey = require('../models/admin-master-key-model');
+        const status = await AdminMasterKey.getStatus(req.user.id);
+        if (status.enabled && req.authPayload?.masterKeyVerified !== true) {
+            return res.status(403).json({ success: false, message: 'Master Key verification required', masterKeyRequired: true });
+        }
+        next();
+    } catch (error) {
+        console.error('Master Key authorization error');
+        return res.status(403).json({ success: false, message: 'Unable to verify admin security settings' });
+    }
 };
 
 exports.optionalAuth = async (req, res, next) => {

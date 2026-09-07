@@ -8,6 +8,7 @@ import LogoutModal from '../common/LogoutModal';
 import Tooltip from '../common/Tooltip';
 import CollapsibleNavGroup from '../common/CollapsibleNavGroup';
 import PasswordInput from '../common/PasswordInput';
+import AccountDetailsModal from '../common/AccountDetailsModal';
 import ConfirmModal from '../common/ConfirmModal';
 import RoleCompanionFloatingButton from '../common/RoleCompanionFloatingButton';
 import useScrollLock from '../../hooks/use-scroll-lock';
@@ -364,13 +365,14 @@ const StaffLayout = ({ children }) => {
     };
 
     // Save profile changes
-    const saveProfile = async () => {
+    const saveProfile = async (details = profileForm) => {
         setProfileSaving(true);
         try {
-            const payload = { firstName: profileForm.firstName, lastName: profileForm.lastName };
+            const payload = { firstName: details.firstName, lastName: details.lastName };
             const res = await authAPI.updateProfile(payload, 'staff');
             if (res && res.success) {
-                updateUser({ ...user, firstName: profileForm.firstName, lastName: profileForm.lastName });
+                setProfileForm(details);
+                updateUser({ ...user, firstName: details.firstName, lastName: details.lastName });
                 notify.success('Profile updated.');
             } else {
                 notify.error(res.message || "Couldn't save changes.");
@@ -1116,7 +1118,9 @@ const StaffLayout = ({ children }) => {
             </aside>
 
             {/* Profile Modal */}
-            {showProfileModal && (
+            <AccountDetailsModal isOpen={showProfileModal} onClose={() => setShowProfileModal(false)} role="Staff" profile={profileForm} previewImage={previewImage} fileInputRef={fileInputRef} imageUploading={imageUploading} onUploadImage={uploadProfileImage} onSaveDetails={saveProfile} profileSaving={profileSaving} onPassword={() => setShowPasswordModal(true)} />
+
+            {false && showProfileModal && (
                 <div className="fixed inset-0 bg-gray-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
                     <div className="bg-white border border-gray-200 rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-y-auto overscroll-contain shadow-xl">
                         {/* Modal Header */}
@@ -1250,7 +1254,7 @@ const StaffLayout = ({ children }) => {
 
             {showPasswordModal && (
                 <div className="fixed inset-0 z-[70] flex items-center justify-center bg-gray-900/55 p-4 backdrop-blur-sm">
-                    <div role="dialog" aria-modal="true" aria-labelledby="staff-password-title" className="w-full max-w-md rounded-3xl bg-white shadow-2xl">
+                    <div role="dialog" aria-modal="true" aria-labelledby="staff-password-title" className="w-full max-w-xl rounded-3xl bg-white shadow-2xl">
                         <div className="flex items-center justify-between border-b border-gray-200 p-5"><div><h2 id="staff-password-title" className="text-xl font-bold text-gray-900">Change password</h2><p className="text-sm text-gray-500">Use a strong password you do not reuse.</p></div><button onClick={() => setShowPasswordModal(false)} className="rounded-lg p-2 text-gray-400 hover:bg-gray-100"><CloseCircle size={20} /></button></div>
                         <div className="space-y-4 p-5">
                             <PasswordInput autoComplete="current-password" value={passwordForm.currentPassword} onChange={(e) => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })} placeholder="Current password" className="rounded-xl border border-gray-300 bg-gray-50 px-4 py-3 focus:border-green-400 focus:outline-none" />

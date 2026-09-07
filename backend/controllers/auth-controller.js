@@ -7,6 +7,7 @@ const UserActivity = require('../models/user-activity-model');
 const { deleteOldProfileImage } = require('../middleware/upload-profile-image');
 const { deleteFromCloudinary, extractPublicId } = require('../middleware/cloudinary-upload');
 const { sendVerificationEmail, sendPasswordResetEmail } = require('../utils/email');
+const AdminMasterKey = require('../models/admin-master-key-model');
 
 const VALID_ROLES = ['admin', 'staff', 'user'];
 const VALID_GENDERS = ['male', 'female', 'other', 'prefer_not_to_say'];
@@ -207,6 +208,24 @@ exports.login = async (req, res) => {
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
             return res.status(401).json({ success: false, message: 'Invalid credentials' });
+        }
+
+        if (user.role === 'admin') {
+            const masterKeyStatus = await AdminMasterKey.getStatus(user.id);
+            if (masterKeyStatus.enabled) {
+                const tabId = req.headers['x-tab-id'] || req.body.tabId || null;
+                const challengeToken = jwt.sign(
+                    { id: user.id, role: 'admin', purpose: 'admin-master-key', ...(tabId ? { tabId } : {}) },
+                    process.env.JWT_SECRET || 'your-secret-key',
+                    { expiresIn: '5m' }
+                );
+                return res.json({
+                    success: true,
+                    masterKeyRequired: true,
+                    challengeToken,
+                    user: { id: user.id, role: user.role, firstName: user.first_name, username: user.username }
+                });
+            }
         }
 
         const tabId = req.headers['x-tab-id'] || req.body.tabId || null;

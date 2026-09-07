@@ -6,7 +6,8 @@ const monitoringController = require('../controllers/monitoring-controller');
 const logsController = require('../controllers/logs-controller');
 const donationController = require('../controllers/donation-controller');
 const { readConfig: readEventPaymentConfig, writeConfig: writeEventPaymentConfig } = require('../config/event-payment-config');
-const { protect, authorize } = require('../middleware/auth');
+const { protect, authorize, requireAdminMasterKey } = require('../middleware/auth');
+const adminMasterKeyController = require('../controllers/admin-master-key-controller');
 const { trackActivity } = require('../middleware/track-activity');
 const multer = require('multer');
 const path = require('path');
@@ -71,6 +72,15 @@ const imageUpload = multer({
 
 router.use(protect);
 router.use(authorize('admin'));
+
+router.get('/master-key/status', adminMasterKeyController.getStatus);
+router.post('/master-key/create', adminMasterKeyController.create);
+router.put('/master-key/change', adminMasterKeyController.change);
+router.put('/master-key/toggle', adminMasterKeyController.toggle);
+
+// Master Key management authenticates each change with the admin password and key.
+// Keep these routes usable even when an older session lacks the verification claim.
+router.use(requireAdminMasterKey);
 
 router.get('/dashboard', adminController.getDashboardStats);
 router.get('/transactions', adminController.getTransactions);

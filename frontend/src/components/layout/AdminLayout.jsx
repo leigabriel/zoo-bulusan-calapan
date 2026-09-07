@@ -8,6 +8,9 @@ import LogoutModal from '../common/LogoutModal';
 import Tooltip from '../common/Tooltip';
 import CollapsibleNavGroup from '../common/CollapsibleNavGroup';
 import PasswordInput from '../common/PasswordInput';
+import AccountDetailsModal from '../common/AccountDetailsModal';
+import MasterKeyModal from '../common/MasterKeyModal';
+import MasterKeyToggleModal from '../common/MasterKeyToggleModal';
 import ConfirmModal from '../common/ConfirmModal';
 import RoleCompanionFloatingButton from '../common/RoleCompanionFloatingButton';
 import useScrollLock from '../../hooks/use-scroll-lock';
@@ -43,6 +46,14 @@ const AdminLayout = ({ children }) => {
     const [previewImage, setPreviewImage] = useState(null);
     const [passwordForm, setPasswordForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
     const [passwordSaving, setPasswordSaving] = useState(false);
+    const [masterKeyStatus, setMasterKeyStatus] = useState({ configured: false, enabled: false });
+    const [masterKeyForm, setMasterKeyForm] = useState({ currentPassword: '', currentMasterKey: '', newMasterKey: '' });
+    const [masterKeySaving, setMasterKeySaving] = useState(false);
+    const [showMasterKeyModal, setShowMasterKeyModal] = useState(false);
+    const [showRefinedMasterKeyModal, setShowRefinedMasterKeyModal] = useState(false);
+    const [showMasterKeyToggleModal, setShowMasterKeyToggleModal] = useState(false);
+    const [masterKeyToggleForm, setMasterKeyToggleForm] = useState({ currentPassword: '' });
+    const [masterKeyVisible, setMasterKeyVisible] = useState(false);
     const [aiAssistOpen, setAiAssistOpen] = useState(false);
     const [openNavGroups, setOpenNavGroups] = useState({ main: true, management: true, communication: true, insights: true });
 
@@ -213,13 +224,14 @@ const AdminLayout = ({ children }) => {
     };
 
     // Save profile changes
-    const saveProfile = async () => {
+    const saveProfile = async (details = profileForm) => {
         setProfileSaving(true);
         try {
-            const payload = { firstName: profileForm.firstName, lastName: profileForm.lastName };
+            const payload = { firstName: details.firstName, lastName: details.lastName };
             const res = await authAPI.updateProfile(payload, 'admin');
             if (res && res.success) {
-                updateUser({ ...user, firstName: profileForm.firstName, lastName: profileForm.lastName });
+                setProfileForm(details);
+                updateUser({ ...user, firstName: details.firstName, lastName: details.lastName });
                 notify.success('Profile updated.');
             } else {
                 notify.error(res.message || "Couldn't save changes.");
@@ -278,6 +290,47 @@ const AdminLayout = ({ children }) => {
         setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
         setShowProfileModal(true);
         loadProfile();
+        adminAPI.getMasterKeyStatus().then((res) => {
+            if (res?.success) setMasterKeyStatus(res.status);
+        }).catch(() => {});
+    };
+
+    const updateMasterKey = async (action) => {
+        const { currentPassword, currentMasterKey, newMasterKey } = masterKeyForm;
+        setMasterKeySaving(true);
+        try {
+            let response;
+            if (action === 'create') response = await adminAPI.createMasterKey({ currentPassword, masterKey: newMasterKey });
+            else if (action === 'change') response = await adminAPI.changeMasterKey({ currentPassword, currentMasterKey, newMasterKey });
+            else response = await adminAPI.toggleMasterKey({ currentPassword, masterKey: currentMasterKey, enabled: !masterKeyStatus.enabled });
+            if (!response?.success) throw new Error(response?.message || 'Unable to update Master Key.');
+            const statusResponse = await adminAPI.getMasterKeyStatus();
+            const nextStatus = statusResponse?.success ? statusResponse.status : response.status;
+            setMasterKeyStatus(nextStatus);
+            setMasterKeyForm({ currentPassword: '', currentMasterKey: '', newMasterKey: '' });
+            notify.success(action === 'toggle' ? `Master Key verification ${nextStatus.enabled ? 'enabled' : 'disabled'}.` : 'Master Key updated.');
+        } catch (error) {
+            notify.error(error.message || 'Unable to update Master Key.');
+        } finally {
+            setMasterKeySaving(false);
+        }
+    };
+
+    const toggleMasterKey = async (enabled) => {
+        setMasterKeySaving(true);
+        try {
+            const response = await adminAPI.toggleMasterKey({ ...masterKeyToggleForm, enabled });
+            if (!response?.success) throw new Error(response?.message || 'Unable to update Master Key protection.');
+            const statusResponse = await adminAPI.getMasterKeyStatus();
+            setMasterKeyStatus(statusResponse?.success ? statusResponse.status : response.status);
+            setMasterKeyToggleForm({ currentPassword: '' });
+            setShowMasterKeyToggleModal(false);
+            notify.success(`Master Key protection ${enabled ? 'enabled' : 'disabled'}.`);
+        } catch (error) {
+            notify.error(error.message || 'Unable to update Master Key protection.');
+        } finally {
+            setMasterKeySaving(false);
+        }
     };
 
     const menuItems = [
@@ -940,7 +993,11 @@ const AdminLayout = ({ children }) => {
             </aside>
 
             {/* Profile Modal */}
-            {showProfileModal && (
+            <AccountDetailsModal isOpen={showProfileModal} onClose={() => setShowProfileModal(false)} role="Admin" profile={profileForm} previewImage={previewImage} fileInputRef={fileInputRef} imageUploading={imageUploading} onUploadImage={uploadProfileImage} onSaveDetails={saveProfile} profileSaving={profileSaving} onPassword={() => setShowPasswordModal(true)} onMasterKey={() => setShowRefinedMasterKeyModal(true)} onToggleMasterKey={() => { setMasterKeyToggleForm({ currentPassword: '' }); setShowMasterKeyToggleModal(true); }} masterKeyLabel={masterKeyStatus.configured ? 'Change Master Key' : 'Add Master Key'} masterKeyConfigured={masterKeyStatus.configured} masterKeyEnabled={masterKeyStatus.enabled} />
+            <MasterKeyModal isOpen={showRefinedMasterKeyModal} onClose={() => setShowRefinedMasterKeyModal(false)} status={masterKeyStatus} form={masterKeyForm} setForm={setMasterKeyForm} saving={masterKeySaving} onSubmit={updateMasterKey} />
+            <MasterKeyToggleModal isOpen={showMasterKeyToggleModal} onClose={() => setShowMasterKeyToggleModal(false)} enabled={masterKeyStatus.enabled} form={masterKeyToggleForm} setForm={setMasterKeyToggleForm} saving={masterKeySaving} onSubmit={toggleMasterKey} />
+
+            {false && showProfileModal && (
                 <div className="fixed inset-0 bg-gray-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
                     <div className="bg-white border border-gray-200 rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-y-auto overscroll-contain shadow-xl">
                         {/* Modal Header */}
@@ -986,6 +1043,17 @@ const AdminLayout = ({ children }) => {
                                 <div className="flex items-center justify-between gap-4 rounded-2xl border border-gray-200 bg-gray-50 p-4">
                                     <div><p className="font-semibold text-gray-900">Account security</p><p className="text-sm text-gray-500">Update your sign-in password securely.</p></div>
                                     <button type="button" onClick={() => setShowPasswordModal(true)} className="shrink-0 rounded-xl border border-green-300 bg-white px-4 py-2.5 font-medium text-green-700 hover:bg-green-50">Change password</button>
+                                </div>
+
+                                <div className="rounded-2xl border border-emerald-200 bg-emerald-50/60 p-4 space-y-3">
+                                    <div className="flex items-start justify-between gap-4"><div><p className="font-semibold text-gray-900">Admin Master Key</p><p className="text-sm text-gray-600">Require a separate key after your password at admin login.</p></div><span className={`rounded-full px-3 py-1 text-xs font-bold ${masterKeyStatus.enabled ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-200 text-gray-600'}`}>{masterKeyStatus.configured ? (masterKeyStatus.enabled ? 'Enabled' : 'Disabled') : 'Not configured'}</span></div>
+                                    <div className="grid gap-3 sm:grid-cols-3">
+                                        <input type="password" autoComplete="current-password" value={masterKeyForm.currentPassword} onChange={(e) => setMasterKeyForm({ ...masterKeyForm, currentPassword: e.target.value })} placeholder="Current password" className="rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-emerald-500" />
+                                        {masterKeyStatus.configured && <input type="password" autoComplete="off" value={masterKeyForm.currentMasterKey} onChange={(e) => setMasterKeyForm({ ...masterKeyForm, currentMasterKey: e.target.value })} placeholder="Current Master Key" className="rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-emerald-500" />}
+                                        <input type="password" autoComplete="new-password" value={masterKeyForm.newMasterKey} onChange={(e) => setMasterKeyForm({ ...masterKeyForm, newMasterKey: e.target.value })} placeholder={masterKeyStatus.configured ? 'New Master Key' : 'New Master Key'} className="rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-emerald-500" />
+                                    </div>
+                                    <div className="flex flex-wrap gap-2"><button type="button" disabled={masterKeySaving} onClick={() => updateMasterKey(masterKeyStatus.configured ? 'change' : 'create')} className="rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-50">{masterKeySaving ? 'Saving...' : masterKeyStatus.configured ? 'Change Master Key' : 'Create Master Key'}</button>{masterKeyStatus.configured && <button type="button" disabled={masterKeySaving} onClick={() => updateMasterKey('toggle')} className="rounded-xl border border-emerald-300 bg-white px-4 py-2.5 text-sm font-semibold text-emerald-700 hover:bg-emerald-50 disabled:opacity-50">{masterKeyStatus.enabled ? 'Disable' : 'Enable'}</button>}</div>
+                                    <p className="text-xs text-gray-500">Use at least 8 characters. The key is stored only as a secure hash.</p>
                                 </div>
 
                                 {/* Role Badge */}
@@ -1072,9 +1140,11 @@ const AdminLayout = ({ children }) => {
                 </div>
             )}
 
+            {showMasterKeyModal && <div className="fixed inset-0 z-[80] flex items-center justify-center bg-gray-900/55 p-4 backdrop-blur-sm"><div className="w-full max-w-md rounded-3xl bg-white shadow-2xl"><div className="flex items-center justify-between border-b border-gray-200 p-5"><div><h2 className="text-xl font-bold text-gray-900">Admin Master Key</h2><p className="text-sm text-gray-500">Manage your second sign-in factor.</p></div><button onClick={() => setShowMasterKeyModal(false)} className="rounded-lg p-2 text-gray-400 hover:bg-gray-100"><CloseCircle size={20} /></button></div><div className="space-y-4 p-5"><p className="rounded-xl bg-emerald-50 p-3 text-sm text-emerald-800">Status: <strong>{masterKeyStatus.configured ? (masterKeyStatus.enabled ? 'Enabled' : 'Disabled') : 'Not configured'}</strong></p>{masterKeyStatus.configured && <p className="rounded-xl bg-gray-50 p-3 text-xs text-gray-500">The saved key is hashed and cannot be displayed. Enter a new key to replace it.</p>}<input type="password" value={masterKeyForm.currentPassword} onChange={e => setMasterKeyForm({ ...masterKeyForm, currentPassword: e.target.value })} placeholder="Current password" className="w-full rounded-xl border border-gray-300 bg-gray-50 px-4 py-3 outline-none focus:border-emerald-500" />{masterKeyStatus.configured && <input type="password" value={masterKeyForm.currentMasterKey} onChange={e => setMasterKeyForm({ ...masterKeyForm, currentMasterKey: e.target.value })} placeholder="Current Master Key" className="w-full rounded-xl border border-gray-300 bg-gray-50 px-4 py-3 outline-none focus:border-emerald-500" />}<div className="relative"><input type={masterKeyVisible ? 'text' : 'password'} value={masterKeyForm.newMasterKey} onChange={e => setMasterKeyForm({ ...masterKeyForm, newMasterKey: e.target.value })} placeholder="New Master Key" className="w-full rounded-xl border border-gray-300 bg-gray-50 px-4 py-3 pr-12 outline-none focus:border-emerald-500" /><button type="button" onClick={() => setMasterKeyVisible(!masterKeyVisible)} aria-label={masterKeyVisible ? 'Hide new Master Key' : 'Show new Master Key'} className="absolute right-3 top-3 text-gray-500">{masterKeyVisible ? '◉' : '◌'}</button></div><div className="flex flex-wrap justify-end gap-2"><button onClick={() => setShowMasterKeyModal(false)} className="rounded-xl px-4 py-3 text-gray-600 hover:bg-gray-100">Cancel</button><button disabled={masterKeySaving} onClick={() => updateMasterKey(masterKeyStatus.configured ? 'change' : 'create')} className="rounded-xl bg-emerald-600 px-4 py-3 font-semibold text-white disabled:opacity-50">{masterKeyStatus.configured ? 'Change key' : 'Create key'}</button>{masterKeyStatus.configured && <button disabled={masterKeySaving} onClick={() => updateMasterKey('toggle')} className="rounded-xl border border-emerald-300 px-4 py-3 font-semibold text-emerald-700">{masterKeyStatus.enabled ? 'Disable' : 'Enable'}</button>}</div></div></div></div>}
+
             {showPasswordModal && (
                 <div className="fixed inset-0 z-[70] flex items-center justify-center bg-gray-900/55 p-4 backdrop-blur-sm">
-                    <div role="dialog" aria-modal="true" aria-labelledby="admin-password-title" className="w-full max-w-md rounded-3xl bg-white shadow-2xl">
+                    <div role="dialog" aria-modal="true" aria-labelledby="admin-password-title" className="w-full max-w-xl rounded-3xl bg-white shadow-2xl">
                         <div className="flex items-center justify-between border-b border-gray-200 p-5"><div><h2 id="admin-password-title" className="text-xl font-bold text-gray-900">Change password</h2><p className="text-sm text-gray-500">Use a strong password you do not reuse.</p></div><button onClick={() => setShowPasswordModal(false)} className="rounded-lg p-2 text-gray-400 hover:bg-gray-100"><CloseCircle size={20} /></button></div>
                         <div className="space-y-4 p-5">
                             <PasswordInput autoComplete="current-password" value={passwordForm.currentPassword} onChange={(e) => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })} placeholder="Current password" className="rounded-xl border border-gray-300 bg-gray-50 px-4 py-3 focus:border-green-400 focus:outline-none" />

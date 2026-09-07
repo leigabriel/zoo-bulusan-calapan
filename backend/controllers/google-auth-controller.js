@@ -2,6 +2,7 @@ const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const https = require('https');
 const User = require('../models/user-model');
+const AdminMasterKey = require('../models/admin-master-key-model');
 
 const GOOGLE_AUTH_URL = 'https://accounts.google.com/o/oauth2/v2/auth';
 const GOOGLE_TOKEN_URL = 'https://oauth2.googleapis.com/token';
@@ -376,8 +377,16 @@ exports.handleGoogleCallback = async (req, res) => {
             user = await User.findById(userId);
         }
 
-        // Generate JWT token
-        const token = generateToken(user.id, user.role);
+        // Google admins must complete the same second factor as password logins.
+        let token = null;
+        let masterKeyRequired = false;
+        let challengeToken = null;
+        if (user.role === 'admin' && (await AdminMasterKey.getStatus(user.id)).enabled) {
+            masterKeyRequired = true;
+            challengeToken = jwt.sign({ id: user.id, role: 'admin', purpose: 'admin-master-key' }, process.env.JWT_SECRET || 'your-secret-key', { expiresIn: '5m' });
+        } else {
+            token = generateToken(user.id, user.role);
+        }
 
         // Prepare user data for frontend
         const userData = {
@@ -399,7 +408,9 @@ exports.handleGoogleCallback = async (req, res) => {
         googleHandoffStore.set(handoff, {
             expiresAt: Date.now() + 60 * 1000,
             token,
-            userData
+            userData,
+            masterKeyRequired,
+            challengeToken
         });
 
         const sameSite = process.env.NODE_ENV === 'production' ? 'None' : 'Lax';
@@ -433,7 +444,7 @@ exports.getGoogleHandoff = (req, res) => {
     }
 
     googleHandoffStore.delete(handoff);
-    return res.json({ success: true, token: data.token, user: data.userData });
+     return res.json({ success: true, token: data.token, user: data.userData, masterKeyRequired: data.masterKeyRequired, challengeToken: data.challengeToken });
 };
 
 /**
