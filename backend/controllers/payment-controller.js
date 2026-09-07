@@ -105,7 +105,8 @@ exports.getEventPaymentConfig = (req, res) => {
     res.json({
         success: true,
         config: {
-            enabled: Boolean(config.enabled && Number(config.amountPerParticipant) > 0),
+            enabled: Boolean(config.qrphEnabled && Number(config.amountPerParticipant) > 0),
+            qrphEnabled: Boolean(config.qrphEnabled && Number(config.amountPerParticipant) > 0),
             amountPerParticipant: Number(config.amountPerParticipant) || 0,
             currency: config.currency || 'PHP'
         }
@@ -122,7 +123,7 @@ exports.setPayAtBulusan = async (req, res) => {
             return res.json({ success: true, reservation });
         }
         const config = readConfig();
-        const paymentAmount = config.enabled && Number(config.amountPerParticipant) > 0
+        const paymentAmount = Number(config.amountPerParticipant) > 0
             ? Math.round(Number(config.amountPerParticipant) * 100) / 100
             : Number(reservation.payment_amount || 0);
         await Reservation.updateEventPayment(reservation.id, {
@@ -135,6 +136,22 @@ exports.setPayAtBulusan = async (req, res) => {
     } catch (error) {
         console.error('Error selecting pay-at-Bulusan:', error);
         res.status(500).json({ success: false, message: 'Unable to select payment method.' });
+    }
+};
+
+exports.markEventPaid = async (req, res) => {
+    try {
+        const reservation = await Reservation.findEventReservationById(req.params.id);
+        if (!reservation) return res.status(404).json({ success: false, message: 'Event reservation not found.' });
+        if (reservation.payment_method !== 'pay_at_bulusan') return res.status(400).json({ success: false, message: 'Only Pay at Bulusan reservations can be marked paid here.' });
+        if (reservation.payment_status === 'paid') return res.json({ success: true, reservation });
+        if (reservation.status === 'cancelled') return res.status(400).json({ success: false, message: 'Cancelled reservations cannot be marked paid.' });
+        await Reservation.updateEventPayment(reservation.id, { paymentStatus: 'paid', paidAt: new Date() });
+        const updated = await Reservation.findEventReservationById(reservation.id);
+        return res.json({ success: true, message: 'Event payment marked as paid.', reservation: updated });
+    } catch (error) {
+        console.error('Error marking event payment paid:', error);
+        return res.status(500).json({ success: false, message: 'Unable to mark event payment as paid.' });
     }
 };
 
@@ -165,7 +182,7 @@ exports.requestEventRefund = async (req, res) => {
 exports.createEventCheckout = async (req, res) => {
     try {
         const config = readConfig();
-        if (!config.enabled || Number(config.amountPerParticipant) <= 0) {
+        if (!config.qrphEnabled || Number(config.amountPerParticipant) <= 0) {
             return res.status(400).json({ success: false, message: 'Online event payment is currently disabled.' });
         }
 

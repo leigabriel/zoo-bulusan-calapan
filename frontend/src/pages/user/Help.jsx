@@ -94,6 +94,7 @@ const Help = () => {
         { id: 'all', label: 'All Topics', icon: Icons.Book },
         { id: 'tickets', label: 'Tickets & Entry', icon: Icons.Ticket },
         { id: 'reservations', label: 'Reservations & Events', icon: Icons.Clock },
+        { id: 'payments', label: 'Donations & Payments', icon: Icons.Ticket },
         { id: 'ai', label: 'AI Scanner & Assistant', icon: Icons.Robot },
         { id: 'map', label: 'Map & Navigation', icon: Icons.Map },
         { id: 'account', label: 'Account & Profile', icon: Icons.User },
@@ -106,7 +107,8 @@ const Help = () => {
         ai: { label: 'AI Tools', badge: 'bg-green-100 text-green-700' },
         map: { label: 'Map', badge: 'bg-emerald-100 text-emerald-700' },
         account: { label: 'Account', badge: 'bg-teal-100 text-teal-700' },
-        community: { label: 'Community', badge: 'bg-emerald-50 text-emerald-700' }
+        community: { label: 'Community', badge: 'bg-emerald-50 text-emerald-700' },
+        payments: { label: 'Payments', badge: 'bg-blue-100 text-blue-700' }
     };
 
     const faqs = [
@@ -169,6 +171,21 @@ const Help = () => {
             category: 'community',
             question: 'How do I report a post or message?',
             answer: 'Use the Report option on a post or message to flag content. Our staff review reports and take action based on guidelines.'
+        },
+        {
+            category: 'payments',
+            question: 'How do I make a donation?',
+            answer: 'Open Donation from the menu, copy the displayed GCash number, send your chosen amount in the GCash app, then keep your transaction reference for your records.'
+        },
+        {
+            category: 'payments',
+            question: 'How do I pay for an event reservation?',
+            answer: 'Choose an event, complete the reservation details, and follow the payment instructions shown after submission. Keep your reference number and payment confirmation until your reservation is confirmed.'
+        },
+        {
+            category: 'community',
+            question: 'Where can I see replies from support?',
+            answer: 'Open My Messages and choose Contact Support. Your requests, replies, and case status are shown there. Closed cases cannot receive further replies; start a new request if needed.'
         }
     ];
 
@@ -181,10 +198,11 @@ const Help = () => {
     });
 
     const quickLinks = [
-        { label: 'Buy Tickets', path: '/tickets', icon: Icons.Ticket },
+        { label: 'Reserve a visit', path: '/reservations', icon: Icons.Ticket },
         { label: 'AI Scanner', path: '/classifier', icon: Icons.Camera },
         { label: 'Upcoming Events', path: '/events', icon: Icons.Clock },
-        { label: 'Zoo Map', path: '/map', icon: Icons.Map }
+        { label: 'Zoo Map', path: '/map', icon: Icons.Map },
+        { label: 'Contact Support', path: '/my-messages', icon: Icons.Mail }
     ];
 
     return (
@@ -385,6 +403,7 @@ const Help = () => {
                                 <p className="text-sm text-emerald-900/70">8:00 AM - 5:00 PM Daily</p>
                             </div>
                         </div>
+                        <div className="mt-6 text-center"><Link to={user ? '/my-messages' : '/login'} className="inline-flex items-center gap-2 rounded-xl bg-emerald-700 px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-emerald-800"><Icons.Mail /> Contact Support</Link></div>
                     </div>
                 </div>
             </div>

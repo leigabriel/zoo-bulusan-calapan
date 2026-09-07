@@ -57,7 +57,7 @@ const ReservationHistoryPanel = ({ isOpen, onClose, paymentReturn = false }) => 
     const [activeTab, setActiveTab] = useState('all');
     const [ticketReservations, setTicketReservations] = useState([]);
     const [eventReservations, setEventReservations] = useState([]);
-    const [eventPaymentConfig, setEventPaymentConfig] = useState({ enabled: false, amountPerParticipant: 0 });
+    const [eventPaymentConfig, setEventPaymentConfig] = useState({ enabled: false, qrphEnabled: false, amountPerParticipant: 0 });
     const [archivedReservations, setArchivedReservations] = useState([]);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState('all');
@@ -703,7 +703,7 @@ const ReservationHistoryPanel = ({ isOpen, onClose, paymentReturn = false }) => 
                                                   {selectedReservation.payment_status === 'paid' && (
                                                       <div className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3">
                                                           <p className="text-sm font-bold text-emerald-700">Payment successful</p>
-                                                          <p className="mt-1 text-xs text-emerald-600">Your QR Ph payment has been confirmed and marked as paid.</p>
+                                                           <p className="mt-1 text-xs text-emerald-600">{selectedReservation.payment_method === 'pay_at_bulusan' ? 'Your Pay at Bulusan payment has been recorded as paid.' : 'Your QR Ph payment has been confirmed and marked as paid.'}</p>
                                                       </div>
                                                   )}
                                                    <div className="space-y-2 text-sm">
@@ -730,15 +730,15 @@ const ReservationHistoryPanel = ({ isOpen, onClose, paymentReturn = false }) => 
                                                                {refundLoading ? 'Submitting...' : selectedReservation.refund_status ? `Refund ${selectedReservation.refund_status}` : 'Request Refund'}
                                                            </button>
                                                        </div>
-                                                   ) : eventPaymentConfig.enabled && getEventAmount(selectedReservation) > 0 && (
-                                                     <div className="flex flex-col sm:flex-row gap-3 mt-4">
-                                                         <button
+                                                    ) : getEventAmount(selectedReservation) > 0 && (
+                                                      <div className="flex flex-col sm:flex-row gap-3 mt-4">
+                                                          {eventPaymentConfig.qrphEnabled && <button
                                                              onClick={() => { setPaymentOption('now'); setPaymentConsent(false); setShowPaymentDemo(true); }}
                                                              className="flex-1 py-3 bg-slate-800 text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-slate-900 transition flex items-center justify-center gap-2 shadow-sm"
                                                          >
                                                              <Icons.CreditCard />
                                                               Pay with QR Ph
-                                                         </button>
+                                                          </button>}
                                                          <button
                                                              onClick={() => { setPaymentOption('bulusan'); setPaymentConsent(false); setShowPaymentDemo(true); }}
                                                              className="flex-1 py-3 bg-emerald-600 text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-emerald-700 transition flex items-center justify-center gap-2 shadow-sm"

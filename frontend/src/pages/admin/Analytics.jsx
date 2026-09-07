@@ -54,16 +54,17 @@ const Analytics = () => {
     const totalAdmissions = mix.reduce((sum, item) => sum + Number(item.count || 0), 0);
     const attendanceRate = summary.scheduledVisitors > 0 ? summary.checkedInVisitors / summary.scheduledVisitors * 100 : 0;
     const cancelled = statuses.find(item => item.status === 'cancelled')?.count || 0;
-    const statusTotal = statuses.reduce((sum, item) => sum + item.count, 0);
+    const statusTotal = statuses.reduce((sum, item) => sum + (Number(item.count) || 0), 0);
     const cancellationRate = statusTotal > 0 ? cancelled / statusTotal * 100 : 0;
     const periodLabel = data?.meta ? `${longDate(data.meta.startDate)} to ${longDate(data.meta.endDate)}` : '';
 
     const baseChart = {
-        chart: { toolbar: { show: false }, fontFamily: 'inherit', animations: { enabled: false } },
+         chart: { toolbar: { show: false }, fontFamily: 'inherit', animations: { enabled: false }, redrawOnParentResize: true, redrawOnWindowResize: true, parentHeightOffset: 0 },
         dataLabels: { enabled: false },
         grid: { borderColor: '#e5e7eb', strokeDashArray: 4 },
         legend: { position: 'top', horizontalAlign: 'left' },
-        tooltip: { theme: 'light' }
+         tooltip: { theme: 'light' },
+         noData: { text: 'No data for this period', style: { color: '#64748b', fontSize: '14px' } }
     };
     const chartDates = daily.map(item => new Date(`${item.date}T00:00:00`).getTime());
     const dateLabel = timestamp => new Date(timestamp).toLocaleDateString('en-US', timeRange === 'year' ? { month: 'short', year: 'numeric' } : { month: 'short', day: 'numeric' });
@@ -81,7 +82,7 @@ const Analytics = () => {
         tooltip: { shared: true, x: { formatter: timestamp => longDate(new Date(timestamp).toISOString().slice(0, 10)) } },
         yaxis: [{ title: { text: 'Visitors' }, min: 0, forceNiceScale: true }, { opposite: true, title: { text: 'Reservations' }, min: 0, forceNiceScale: true }]
     };
-    const demandSeries = [{ name: 'Scheduled visitors', type: 'column', data: daily.map(item => item.visitors) }, { name: 'Reservations', type: 'line', data: daily.map(item => item.reservations) }];
+    const demandSeries = [{ name: 'Scheduled visitors', type: 'column', data: daily.map((item, index) => ({ x: chartDates[index], y: Number(item.visitors) || 0 })) }, { name: 'Reservations', type: 'line', data: daily.map((item, index) => ({ x: chartDates[index], y: Number(item.reservations) || 0 })) }];
     const weekdayOptions = { ...baseChart, colors: [colors[3]], plotOptions: { bar: { borderRadius: 6, horizontal: true } }, xaxis: { categories: weekdays.map(item => item.day) } };
     const mixOptions = { ...baseChart, labels: mix.map(item => item.type), colors, plotOptions: { pie: { donut: { size: '68%', labels: { show: true, total: { show: true, label: 'Admissions', formatter: () => numberFormat.format(totalAdmissions) } } } } } };
 
@@ -211,10 +212,10 @@ const Analytics = () => {
                 {[['Cancellation rate', `${cancellationRate.toFixed(1)}%`, Activity], ['All-time users', numberFormat.format(summary.totalUsers || 0), Users], ['Animal inventory', numberFormat.format(summary.totalAnimals || 0), Pet], ['Upcoming events', numberFormat.format(summary.upcomingEvents || 0), Calendar]].map(([label, value, icon]) => <div key={label} className="rounded-2xl border border-green-200 bg-white p-4">{createElement(icon, { className: 'mb-3 h-5 w-5 text-green-700' })}<p className="text-2xl font-black tabular-nums">{value}</p><p className="text-xs font-bold uppercase tracking-wide text-gray-500">{label}</p></div>)}
             </div>
 
-            <div className="analytics-charts grid gap-6 xl:grid-cols-2">
-                <article className="analytics-chart overflow-visible rounded-2xl border border-green-200 bg-white p-5"><h2 className="text-lg font-black">Daily visitor demand</h2><p className="text-sm text-gray-500">Chronological reservations and scheduled visitors. Hover any point for its complete date and values.</p><Chart options={demandOptions} series={demandSeries} type="line" height={360} /></article>
-                <article className="analytics-chart rounded-2xl border border-green-200 bg-white p-5"><h2 className="text-lg font-black">Admission mix</h2><p className="text-sm text-gray-500">Adult, child, and Bulusan resident quantities</p><Chart options={mixOptions} series={mix.map(item => item.count)} type="donut" height={320} /></article>
-                <article className="analytics-chart rounded-2xl border border-green-200 bg-white p-5"><h2 className="text-lg font-black">Weekday demand profile</h2><p className="text-sm text-gray-500">Aggregate scheduled visitors by day of week</p><Chart options={weekdayOptions} series={[{ name: 'Visitors', data: weekdays.map(item => item.visitors) }]} type="bar" height={320} /></article>
+             <div className="analytics-charts grid min-w-0 gap-6 xl:grid-cols-2">
+                 <article className="analytics-chart min-w-0 overflow-hidden rounded-2xl border border-green-200 bg-white p-5"><h2 className="text-lg font-black">Daily visitor demand</h2><p className="text-sm text-gray-500">Chronological reservations and scheduled visitors. Hover any point for its complete date and values.</p><div className="min-w-0"><Chart options={demandOptions} series={demandSeries} type="line" height={360} /></div></article>
+                 <article className="analytics-chart min-w-0 overflow-hidden rounded-2xl border border-green-200 bg-white p-5"><h2 className="text-lg font-black">Admission mix</h2><p className="text-sm text-gray-500">Adult, child, and Bulusan resident quantities</p><Chart options={mixOptions} series={mix.map(item => item.count)} type="donut" height={320} /></article>
+                 <article className="analytics-chart min-w-0 overflow-hidden rounded-2xl border border-green-200 bg-white p-5"><h2 className="text-lg font-black">Weekday demand profile</h2><p className="text-sm text-gray-500">Aggregate scheduled visitors by day of week</p><Chart options={weekdayOptions} series={[{ name: 'Visitors', data: weekdays.map(item => Number(item.visitors) || 0) }]} type="bar" height={320} /></article>
             </div>
 
             <div className="analytics-details grid gap-6 lg:grid-cols-2">

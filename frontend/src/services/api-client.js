@@ -2132,6 +2132,14 @@ export const reservationAPI = {
         return handleResponse(response);
     },
 
+    markEventPaymentPaid: async (id, type = 'admin') => {
+        const response = await fetch(`${API_BASE_URL}/payments/event/${id}/mark-paid`, {
+            method: 'POST',
+            headers: getAuthHeaders(type)
+        });
+        return handleResponse(response);
+    },
+
     requestEventRefund: async (id) => {
         const response = await fetch(`${API_BASE_URL}/payments/event/${id}/refund`, {
             method: 'POST',

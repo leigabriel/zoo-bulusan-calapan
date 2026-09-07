@@ -11,6 +11,7 @@ import PasswordInput from '../common/PasswordInput';
 import AccountDetailsModal from '../common/AccountDetailsModal';
 import MasterKeyModal from '../common/MasterKeyModal';
 import MasterKeyToggleModal from '../common/MasterKeyToggleModal';
+import AdminSettingsLauncher from '../common/AdminSettingsLauncher';
 import ConfirmModal from '../common/ConfirmModal';
 import RoleCompanionFloatingButton from '../common/RoleCompanionFloatingButton';
 import useScrollLock from '../../hooks/use-scroll-lock';
@@ -52,6 +53,7 @@ const AdminLayout = ({ children }) => {
     const [showMasterKeyModal, setShowMasterKeyModal] = useState(false);
     const [showRefinedMasterKeyModal, setShowRefinedMasterKeyModal] = useState(false);
     const [showMasterKeyToggleModal, setShowMasterKeyToggleModal] = useState(false);
+    const [showSettingsLauncher, setShowSettingsLauncher] = useState(false);
     const [masterKeyToggleForm, setMasterKeyToggleForm] = useState({ currentPassword: '' });
     const [masterKeyVisible, setMasterKeyVisible] = useState(false);
     const [aiAssistOpen, setAiAssistOpen] = useState(false);
@@ -364,7 +366,7 @@ const AdminLayout = ({ children }) => {
         { key: 'communication', label: 'Communication', items: communicationItems, Icon: Messages },
         { key: 'insights', label: 'Insights', items: insightItems, Icon: ChartBar },
     ];
-    const hasOpenOverlay = sidebarOpen || notificationPanelOpen || showProfileModal || showPasswordModal || showLogoutModal || aiAssistOpen || showSearchDropdown;
+    const hasOpenOverlay = sidebarOpen || notificationPanelOpen || showProfileModal || showPasswordModal || showLogoutModal || aiAssistOpen || showSearchDropdown || showSettingsLauncher;
 
     useScrollLock(hasOpenOverlay);
 
@@ -564,15 +566,15 @@ const AdminLayout = ({ children }) => {
                     </Link>
 
                     <div className="flex gap-2">
-                        <Link
-                            to="/admin/settings"
+                        <button
+                            onClick={() => setShowSettingsLauncher(true)}
                             className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-medium transition-all duration-200 ${location.pathname === '/admin/settings'
                                     ? 'bg-green-100 text-green-700'
                                     : 'bg-gray-200 text-gray-600 hover:bg-gray-300 hover:text-gray-900'
                                 }`}
                         >
                             <Setting size={20} />
-                        </Link>
+                        </button>
 
                         <button
                             onClick={() => setShowLogoutModal(true)}
@@ -647,14 +649,13 @@ const AdminLayout = ({ children }) => {
                                         <span className="text-sm text-gray-700">AI Assist</span>
                                     </button>
                                     {user?.role === 'admin' && (
-                                        <Link
-                                            to="/admin/settings"
-                                            onClick={() => setMobileHeaderMenuOpen(false)}
+                                        <button
+                                            onClick={() => { setMobileHeaderMenuOpen(false); setShowSettingsLauncher(true); }}
                                             className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-left"
                                         >
                                             <Setting size={18} className="text-gray-400" />
                                             <span className="text-sm text-gray-700">Settings</span>
-                                        </Link>
+                                        </button>
                                     )}
                                     <Link
                                         to="/admin/trash"
@@ -996,6 +997,7 @@ const AdminLayout = ({ children }) => {
             <AccountDetailsModal isOpen={showProfileModal} onClose={() => setShowProfileModal(false)} role="Admin" profile={profileForm} previewImage={previewImage} fileInputRef={fileInputRef} imageUploading={imageUploading} onUploadImage={uploadProfileImage} onSaveDetails={saveProfile} profileSaving={profileSaving} onPassword={() => setShowPasswordModal(true)} onMasterKey={() => setShowRefinedMasterKeyModal(true)} onToggleMasterKey={() => { setMasterKeyToggleForm({ currentPassword: '' }); setShowMasterKeyToggleModal(true); }} masterKeyLabel={masterKeyStatus.configured ? 'Change Master Key' : 'Add Master Key'} masterKeyConfigured={masterKeyStatus.configured} masterKeyEnabled={masterKeyStatus.enabled} />
             <MasterKeyModal isOpen={showRefinedMasterKeyModal} onClose={() => setShowRefinedMasterKeyModal(false)} status={masterKeyStatus} form={masterKeyForm} setForm={setMasterKeyForm} saving={masterKeySaving} onSubmit={updateMasterKey} />
             <MasterKeyToggleModal isOpen={showMasterKeyToggleModal} onClose={() => setShowMasterKeyToggleModal(false)} enabled={masterKeyStatus.enabled} form={masterKeyToggleForm} setForm={setMasterKeyToggleForm} saving={masterKeySaving} onSubmit={toggleMasterKey} />
+            <AdminSettingsLauncher isOpen={showSettingsLauncher} onClose={() => setShowSettingsLauncher(false)} />
 
             {false && showProfileModal && (
                 <div className="fixed inset-0 bg-gray-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
