@@ -298,3 +298,41 @@ canvas {
     scrollbar-width: thin;
     scrollbar-color: rgba(120, 120, 120, 0.3) transparent;
 }
+
+/* ===== gooey-toast layout safety ===== */
+.gooey-description {
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    text-align: left;
+    margin-top: 8px;
+    line-height: 1.4;
+}
+
+.gooey-description > div {
+    flex-wrap: wrap;
+    row-gap: 4px;
+}
+
+.gooey-description .gooey-timestamp {
+    align-self: flex-start;
+    padding-left: 0;
+    flex-shrink: 0;
+}
+
+.gooey-title {
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.gooey-contentExpanded {
+    max-width: 380px;
+    padding-bottom: 16px;
+}
+
+.gooey-contentCompact {
+    padding-bottom: 7px;
+}

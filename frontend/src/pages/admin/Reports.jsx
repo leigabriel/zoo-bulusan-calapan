@@ -420,7 +420,7 @@ const Reports = () => {
     <style>
         * { box-sizing: border-box; }
          html, body { width: 210mm !important; max-width: 210mm !important; height: 297mm !important; margin: 0 !important; overflow: hidden !important; }
-         body { page: reportPage; padding: 1in; font-family: Arial, sans-serif; color: #111; font-size: 11pt; line-height: 1.5; text-align: left; }
+         body { padding: 1in; font-family: Arial, sans-serif; color: #111; font-size: 11pt; line-height: 1.5; text-align: left; }
          .letterhead { text-align: center; border-bottom: 2px solid #222; padding-bottom: 5px; }
          .letterhead strong { display: block; font-size: 16pt; font-weight: 700; }
          .letterhead span { font-size: 11pt; }
@@ -442,10 +442,9 @@ const Reports = () => {
          tfoot { display: table-footer-group; }
          tr, .metric, .summary { break-inside: avoid; page-break-inside: avoid; }
          .summary { margin-top: 8pt; font-size: 11pt; color: #333; }
-         @page reportPage { size: 210mm 297mm; margin: 0; }
+         @page { size: A4 portrait; margin: 0; }
          @media print {
              html, body { width: 210mm !important; height: 297mm !important; }
-             body { page: reportPage; }
          }
     </style>
 </head>
@@ -485,30 +484,31 @@ const Reports = () => {
 </body>
 </html>`;
 
-        const printWindow = window.open('', '_blank', 'width=816,height=1056');
-        if (!printWindow) {
-            notify.error('Please allow pop-ups.');
-            return;
-        }
-
-        printWindow.document.open();
-        printWindow.document.write(html);
-        printWindow.document.close();
+        const iframe = document.createElement('iframe');
+        iframe.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;border:none;z-index:9999;visibility:hidden';
+        document.body.appendChild(iframe);
+        const doc = iframe.contentDocument || iframe.contentWindow.document;
+        doc.open();
+        doc.write(html);
+        doc.close();
+        iframe.style.visibility = 'visible';
         const printWhenReady = async () => {
             try {
-                await printWindow.document.fonts?.ready;
+                await iframe.contentDocument.fonts?.ready;
                 await new Promise(resolve => setTimeout(resolve, 300));
-                printWindow.focus();
-                printWindow.print();
+                iframe.contentWindow.focus();
+                iframe.contentWindow.print();
             } catch (error) {
                 console.error('Error preparing PDF export:', error);
                 notify.error("Couldn't prepare the PDF export.");
-                printWindow.close();
+            } finally {
+                iframe.remove();
             }
         };
-        printWindow.addEventListener('afterprint', () => printWindow.close(), { once: true });
-        if (printWindow.document.readyState === 'complete') printWhenReady();
-        else printWindow.addEventListener('load', printWhenReady, { once: true });
+        iframe.addEventListener('afterprint', () => iframe.remove(), { once: true });
+        setTimeout(() => iframe.remove(), 30000);
+        if (doc.readyState === 'complete') printWhenReady();
+        else iframe.addEventListener('load', printWhenReady, { once: true });
     };
 
     const getStatusBadge = (status) => {

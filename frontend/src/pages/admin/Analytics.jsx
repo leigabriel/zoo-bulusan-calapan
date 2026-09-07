@@ -115,11 +115,6 @@ const Analytics = () => {
     };
 
     const printReport = () => {
-        const printWindow = window.open('', '_blank', 'width=1400,height=900');
-        if (!printWindow) {
-            notify.error('Please allow pop-ups to print the report.');
-            return;
-        }
         const metricRows = [
             ['Confirmed/completed reservations', numberFormat.format(summary.reservations || 0), 'Scheduled visitors', numberFormat.format(summary.scheduledVisitors || 0)],
             ['Estimated admission fees', currencyFormat.format(summary.estimatedFees || 0), 'Average party size', Number(summary.averagePartySize || 0).toFixed(1)],
@@ -130,8 +125,13 @@ const Analytics = () => {
         const statusRows = statuses.map(item => `<tr><td>${escapeHtml(item.status.replace('_', ' '))}</td><td>${numberFormat.format(item.count)}</td><td>${numberFormat.format(item.visitors)}</td></tr>`).join('');
         const mixRows = mix.filter(item => item.type !== 'Resident' || item.count > 0).map(item => `<tr><td>${escapeHtml(item.type)}</td><td>${numberFormat.format(item.count)}</td><td>${totalAdmissions ? (item.count / totalAdmissions * 100).toFixed(1) : '0.0'}%</td><td>${escapeHtml(currencyFormat.format(item.estimatedFees))}</td></tr>`).join('');
         const weekdayRows = weekdays.map(item => `<tr><td>${escapeHtml(item.day)}</td><td>${numberFormat.format(item.visitors)}</td></tr>`).join('');
-        printWindow.document.open();
-        printWindow.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>BulusanZoo-Analytic-${exportTimestamp()}.pdf</title><style>
+
+        const iframe = document.createElement('iframe');
+        iframe.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;border:none;z-index:9999;visibility:hidden';
+        document.body.appendChild(iframe);
+        const doc = iframe.contentDocument || iframe.contentWindow.document;
+        doc.open();
+        doc.write(`<!doctype html><html><head><meta charset="utf-8"><title>BulusanZoo-Analytic-${exportTimestamp()}.pdf</title><style>
             @page { size: A4 portrait; margin: 0; }
             * { box-sizing: border-box; }
             html, body { width: 210mm; height: 297mm; margin: 0; overflow: hidden; }
@@ -162,12 +162,25 @@ const Analytics = () => {
             <h2>Weekday Visitor Demand</h2><table class="data"><thead><tr><th>Day</th><th>Scheduled Visitors</th></tr></thead><tbody>${weekdayRows}</tbody></table>
             <p class="note"><strong>Methodological note:</strong> Admission fees are estimates based on PHP 40 per adult and PHP 20 per child; Bulusan residents are assigned no admission fee. Estimated fees are not recorded payment revenue.</p>
         </body></html>`);
-        printWindow.document.close();
-        printWindow.addEventListener('load', () => setTimeout(() => {
-            printWindow.focus();
-            printWindow.print();
-            printWindow.close();
-        }, 500), { once: true });
+        doc.close();
+        iframe.style.visibility = 'visible';
+        const printWhenReady = async () => {
+            try {
+                await iframe.contentDocument.fonts?.ready;
+                await new Promise(resolve => setTimeout(resolve, 300));
+                iframe.contentWindow.focus();
+                iframe.contentWindow.print();
+            } catch (error) {
+                console.error('Error preparing PDF export:', error);
+                notify.error("Couldn't prepare the PDF export.");
+            } finally {
+                iframe.remove();
+            }
+        };
+        iframe.addEventListener('afterprint', () => iframe.remove(), { once: true });
+        setTimeout(() => iframe.remove(), 30000);
+        if (doc.readyState === 'complete') printWhenReady();
+        else iframe.addEventListener('load', printWhenReady, { once: true });
     };
 
     if (loading) return <div className="flex h-64 items-center justify-center"><div className="h-10 w-10 animate-spin rounded-full border-4 border-green-400 border-t-transparent" /></div>;

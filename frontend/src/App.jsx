@@ -405,7 +405,7 @@ function App() {
                     position="top-right"
                     duration={3000}
                     closeButton="top-right"
-                    showProgress
+                    showTimestamp={false}
                     visibleToasts={3}
                     maxQueue={8}
                     theme="dark"
