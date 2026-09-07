@@ -84,7 +84,7 @@ const HeroSection = () => {
 
     return (
         <div ref={containerRef} className="relative w-full min-h-[100dvh] overflow-hidden bg-white">
-            <section className="relative mx-auto max-w-[1800px] w-full min-h-[100dvh] flex flex-col items-center justify-center overflow-hidden">
+            <section className="relative mx-auto max-w-[2000px] w-full min-h-[100dvh] flex flex-col items-center justify-center overflow-hidden">
                 <div className="hero-bg-parallax absolute inset-0 bg-white -z-10 origin-bottom" />
 
                 <div className="hero-images absolute inset-0 z-0 overflow-hidden pointer-events-none">
@@ -92,7 +92,7 @@ const HeroSection = () => {
                         src="/deer.png"
                         alt=""
                         aria-hidden="true"
-                        className="hero-deer absolute bottom-0 left-[-3rem] w-[78vw] max-w-[38rem] origin-bottom-left object-contain object-bottom opacity-0 sm:left-[-2rem] sm:w-[48vw] md:left-0 md:w-[43vw]"
+                        className="hero-deer absolute bottom-0 left-[-3rem] w-[78vw] max-w-[40rem] origin-bottom-left object-contain object-bottom opacity-0 sm:left-[-2rem] sm:w-[48vw] md:left-0 md:w-[43vw]"
                     />
                 </div>
 
@@ -140,9 +140,9 @@ const HeroSection = () => {
 
 const AboutSection = () => {
     return (
-        <section className="relative w-full min-h-[100svh] p-4 sm:p-8 flex items-center justify-center bg-white">
+        <section className="relative w-full min-h-[100svh] p-4 sm:p-8 flex items-center justify-center bg-green-400">
             <div className="w-full mx-auto max-w-[1800px] h-full min-h-[80vh] flex justify-center items-center text-center rounded-[1.5rem] sm:rounded-[2rem] bg-green-400 p-6 sm:p-12">
-                <h1 className="w-full max-w-5xl text-black text-3xl sm:text-5xl md:text-6xl font-black leading-snug sm:leading-tight">
+                <h1 className="w-full max-w-[1800px] text-black text-4xl sm:text-5xl md:text-6xl font-black leading-snug sm:leading-tight">
                     Bulusan Zoo Nature Park is more than a destination, it is a place where nature, wildlife, and serenity meet, inviting every visitor to slow down, appreciate, and reconnect with the beauty of the natural world.
                 </h1>
             </div>

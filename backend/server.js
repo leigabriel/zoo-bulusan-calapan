@@ -3,6 +3,7 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const morgan = require('morgan');
 const path = require('path');
+const http = require('http');
 
 // Load only the local environment file.
 dotenv.config({ path: path.join(__dirname, '.env') });
@@ -22,6 +23,7 @@ const communityRoutes = require('./routes/community-routes');
 const paymentRoutes = require('./routes/payment-routes');
 const paymentController = require('./controllers/payment-controller');
 const analyticsRoutes = require('./routes/analytics-routes');
+const chatRoutes = require('./routes/chat-routes');
 const { decodeRequestIdentifiers } = require('./middleware/public-identifiers');
 const ensureEventPaymentSchema = require('./database/ensure-event-payment-schema');
 const ensureAIAssistSchema = require('./database/ensure-ai-assist-schema');
@@ -29,8 +31,11 @@ const ensureAuthSchema = require('./database/ensure-auth-schema');
 const ensureSiteVisitSchema = require('./database/ensure-site-visit-schema');
 const ensureUserActivitySchema = require('./database/ensure-user-activity-schema');
 const ensureTrashSchema = require('./database/ensure-trash-schema');
+const ensureChatSchema = require('./database/ensure-chat-schema');
+const { initializeChatSocket } = require('./socket/chat-socket');
 
 const app = express();
+const server = http.createServer(app);
 const PORT = process.env.PORT || 5000;
 const HOST = process.env.HOST || '0.0.0.0';
 
@@ -100,6 +105,7 @@ app.use('/api/payments', paymentRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/community', communityRoutes);
 app.use('/api/analytics', analyticsRoutes);
+app.use('/api/chat', chatRoutes);
 
 app.get('/api/health', async (req, res) => {
     res.setHeader('Cache-Control', 'no-store');
@@ -144,12 +150,18 @@ app.use((err, req, res, next) => {
     });
 });
 
-const schemaInitializers = [ensureEventPaymentSchema, ensureAIAssistSchema, ensureAuthSchema, ensureSiteVisitSchema, ensureUserActivitySchema, ensureTrashSchema];
+const schemaInitializers = [ensureEventPaymentSchema, ensureAIAssistSchema, ensureAuthSchema, ensureSiteVisitSchema, ensureUserActivitySchema, ensureTrashSchema, ensureChatSchema];
+
+initializeChatSocket(server, {
+    origin: allowedOrigins,
+    credentials: true,
+    methods: ['GET', 'POST']
+});
 
 schemaInitializers.reduce((initialization, initializeSchema) => initialization.then(initializeSchema), Promise.resolve())
     .catch(error => console.error('Database schema initialization failed:', error.message))
     .finally(() => {
-        app.listen(PORT, HOST, () => {
+        server.listen(PORT, HOST, () => {
             console.info(`Server started on ${HOST}:${PORT}`);
         });
     });

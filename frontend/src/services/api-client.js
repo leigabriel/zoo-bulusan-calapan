@@ -1664,6 +1664,57 @@ export const messageAPI = {
     }
 };
 
+export const chatAPI = {
+    getRecipients: async () => {
+        const response = await fetch(`${API_BASE_URL}/chat/recipients`, { headers: getAuthHeaders('user') });
+        return handleResponse(response);
+    },
+    getConversations: async (type = getCurrentAuthType()) => {
+        const response = await fetch(`${API_BASE_URL}/chat/conversations`, { headers: getAuthHeaders(type) });
+        return handleResponse(response);
+    },
+    createConversation: async (recipientType, recipientId) => {
+        const response = await fetch(`${API_BASE_URL}/chat/conversations`, {
+            method: 'POST',
+            headers: getAuthHeaders('user'),
+            body: JSON.stringify({ recipientType, recipientId })
+        });
+        return handleResponse(response);
+    },
+    getMessages: async (conversationId, type = getCurrentAuthType()) => {
+        const response = await fetch(`${API_BASE_URL}/chat/conversations/${conversationId}/messages`, { headers: getAuthHeaders(type) });
+        return handleResponse(response);
+    },
+    sendMessage: async (conversationId, content, type = getCurrentAuthType()) => {
+        const response = await fetch(`${API_BASE_URL}/chat/conversations/${conversationId}/messages`, {
+            method: 'POST',
+            headers: getAuthHeaders(type),
+            body: JSON.stringify({ content })
+        });
+        return handleResponse(response);
+    },
+    markRead: async (conversationId, type = getCurrentAuthType()) => {
+        const response = await fetch(`${API_BASE_URL}/chat/conversations/${conversationId}/read`, {
+            method: 'PATCH',
+            headers: getAuthHeaders(type)
+        });
+        return handleResponse(response);
+    },
+    getUnreadCount: async (type = getCurrentAuthType()) => {
+        const response = await fetch(`${API_BASE_URL}/chat/unread-count`, { headers: getAuthHeaders(type) });
+        return handleResponse(response);
+    },
+    forRole: (role = 'user') => ({
+        getRecipients: () => chatAPI.getRecipients(),
+        getConversations: () => chatAPI.getConversations(role),
+        createConversation: (recipientType, recipientId) => chatAPI.createConversation(recipientType, recipientId),
+        getMessages: (conversationId) => chatAPI.getMessages(conversationId, role),
+        sendMessage: (conversationId, content) => chatAPI.sendMessage(conversationId, content, role),
+        markRead: (conversationId) => chatAPI.markRead(conversationId, role),
+        getUnreadCount: () => chatAPI.getUnreadCount(role)
+    })
+};
+
 export const communityAPI = {
     getPosts: async (type = 'user') => {
         const response = await fetch(`${API_BASE_URL}/community/posts`, {

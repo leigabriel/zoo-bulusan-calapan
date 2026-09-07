@@ -430,7 +430,7 @@ const Header = () => {
     ];
 
     const accountItems = [
-        { iconKey: 'ticket', label: 'Reservations', action: handleOpenReservationHistory },
+        { iconKey: 'ticket', label: 'My Reservations', action: handleOpenReservationHistory },
         { iconKey: 'events', label: 'My Events', path: '/my-events' },
         { iconKey: 'messages', label: 'My Messages', path: '/my-messages' },
     ];
@@ -456,7 +456,7 @@ const Header = () => {
                         <div className="flex min-w-0 flex-shrink-0 items-center lg:w-[180px]">
                             <Link to="/" className="flex min-w-0 items-center" onClick={(e) => { e.preventDefault(); setIsMenuOpen(false); handleTransitionNavigate(e, '/'); }}>
                                 <img src="/bz-url-logo.png" alt="Logo" className="w-7 h-7 object-contain mr-2" />
-                                <span className="header-title-font whitespace-nowrap text-[18px] font-bold text-[#212631] tracking-tight">
+                                <span className="whitespace-nowrap text-[18px] font-bold text-[#212631] tracking-tight">
                                     BULUSAN ZOO
                                 </span>
                             </Link>
@@ -625,8 +625,8 @@ const Header = () => {
                         <div className="pointer-events-none absolute -right-8 -top-10 h-28 w-28 rounded-full bg-[#c6fe69]/40 blur-2xl" />
                         <div className="relative flex items-center justify-between">
                             <div>
-                                <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-700">Your space</p>
-                                <h2 className="mt-1 text-lg font-bold tracking-tight text-[#172018]">Quick access</h2>
+                                <p className="text-[24px] font-bold uppercase text-emerald-700">Account Menu</p>
+                                {/* <h2 className="mt-1 text-lg font-bold tracking-tight text-[#172018]">Quick access</h2> */}
                             </div>
                             <CloseBtn onClick={closeSidePanel} />
                         </div>

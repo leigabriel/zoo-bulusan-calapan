@@ -12,8 +12,10 @@ import {
     X
 } from 'reicon-react';
 import { useEffect, useRef, useState } from 'react';
+import { useAuth } from '../../context/AuthContext';
 import { getProfileImageUrl } from '../../services/api-client';
 import { notify } from '../../utils/toast';
+import ChatWorkspace from '../chat/ChatWorkspace';
 import ConfirmationModal from '../common/ConfirmationModal';
 
 const defaultAvatar = '/profile-img/default-avatar.svg';
@@ -69,7 +71,8 @@ const Avatar = ({ item, size = 'h-11 w-11' }) => (
     />
 );
 
-const MessageWorkspace = ({ globalSearch = '', api, roleLabel }) => {
+const MessageWorkspace = ({ globalSearch = '', api, role, roleLabel }) => {
+    const { user } = useAuth();
     const [messages, setMessages] = useState([]);
     const [appeals, setAppeals] = useState([]);
     const [loadedTabs, setLoadedTabs] = useState({ messages: false, appeals: false });
@@ -92,6 +95,11 @@ const MessageWorkspace = ({ globalSearch = '', api, roleLabel }) => {
 
     useEffect(() => {
         if (loadedTabs[activeTab]) return;
+        if (activeTab === 'messages') {
+            setLoadedTabs((tabs) => ({ ...tabs, messages: true }));
+            setLoading(false);
+            return;
+        }
         let cancelled = false;
         const load = async () => {
             setLoading(true);
@@ -241,6 +249,27 @@ const MessageWorkspace = ({ globalSearch = '', api, roleLabel }) => {
 
     const messageUnread = messages.filter((message) => !message.is_read).length;
     const pendingAppeals = appeals.filter((appeal) => appeal.status === 'pending').length;
+
+    if (!isAppeal) {
+        return (
+            <div className="space-y-5">
+                <div className="flex flex-col justify-between gap-4 rounded-2xl border border-green-400 bg-gradient-to-r from-green-300 via-green-400 to-green-500 p-5 text-gray-900 shadow-sm sm:flex-row sm:items-end sm:p-7">
+                    <div>
+                        <div className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-green-950"><Envelope className="h-4 w-4" /> Communications</div>
+                        <h1 className="text-3xl font-black tracking-tight text-gray-900">Messages</h1>
+                        <p className="mt-1 text-sm text-green-950/80">Manage user conversations as {roleLabel}.</p>
+                    </div>
+                </div>
+                <div className="rounded-2xl border border-green-100 bg-white p-2 shadow-sm">
+                    <div className="grid grid-cols-2 gap-2" role="tablist" aria-label="Communication type">
+                        <button type="button" role="tab" aria-selected="true" onClick={() => switchTab('messages')} className="rounded-xl bg-green-600 px-4 py-3 text-left text-white shadow-sm"><span className="font-bold">Inbox</span><span className="mt-0.5 block text-xs text-green-50">Live chat conversations</span></button>
+                        <button type="button" role="tab" aria-selected="false" onClick={() => switchTab('appeals')} className="rounded-xl px-4 py-3 text-left text-gray-600 transition hover:bg-amber-50"><span className="flex items-center justify-between gap-2"><span className="font-bold">Appeals</span><span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-bold">{appeals.length}</span></span><span className="mt-0.5 block text-xs text-gray-400">{pendingAppeals} pending</span></button>
+                    </div>
+                </div>
+                <ChatWorkspace role={role} currentUser={user} embedded globalSearch={globalSearch} />
+            </div>
+        );
+    }
 
     const detail = selected && (
         <article className="flex h-full min-h-0 flex-col bg-white" aria-labelledby="message-detail-title">
