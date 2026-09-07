@@ -88,6 +88,13 @@ const getAuthHeaders = (type = 'user') => {
     };
 };
 
+// Detect current auth type from stored tokens (admin > staff > user)
+const getCurrentAuthType = () => {
+    if (getToken('admin')) return 'admin';
+    if (getToken('staff')) return 'staff';
+    return 'user';
+};
+
 // Auth headers without Content-Type for FormData uploads
 const getAuthHeadersMultipart = (type = 'user') => {
     const token = getToken(type);
@@ -1545,24 +1552,27 @@ export const userAPI = {
     },
 
     getNotifications: async () => {
-        const response = await fetch(`${API_BASE_URL}/users/notifications`, {
-            headers: getAuthHeaders('user')
+        const authType = getCurrentAuthType();
+        const response = await fetch(`${API_BASE_URL}/${authType === 'user' ? 'users' : authType + 's'}/notifications`, {
+            headers: getAuthHeaders(authType)
         });
         return handleResponse(response);
     },
 
     markNotificationRead: async (id) => {
-        const response = await fetch(`${API_BASE_URL}/users/notifications/${id}/read`, {
+        const authType = getCurrentAuthType();
+        const response = await fetch(`${API_BASE_URL}/${authType === 'user' ? 'users' : authType + 's'}/notifications/${id}/read`, {
             method: 'PUT',
-            headers: getAuthHeaders('user')
+            headers: getAuthHeaders(authType)
         });
         return handleResponse(response);
     },
 
     markAllNotificationsRead: async () => {
-        const response = await fetch(`${API_BASE_URL}/users/notifications/read-all`, {
+        const authType = getCurrentAuthType();
+        const response = await fetch(`${API_BASE_URL}/${authType === 'user' ? 'users' : authType + 's'}/notifications/read-all`, {
             method: 'PUT',
-            headers: getAuthHeaders('user')
+            headers: getAuthHeaders(authType)
         });
         return handleResponse(response);
     },

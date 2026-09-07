@@ -13,7 +13,7 @@ import WorkspaceThemeContext from '../common/WorkspaceThemeContext';
 import {
     Search, Home, Calendar, Ticket, People, Pet, Leaf,
     Message, Messages, ShieldCheck, ChartBar, DocumentText, ClipboardList,
-    Setting, Logout, Menu, Bell, CloseCircle, Lifebuoy, Sparkles, User, Trash, ChevronRight, ChevronLeft
+    Setting, Logout, Menu, Bell, CloseCircle, Lifebuoy, Sparkles, User, Trash, ChevronRight
 } from 'reicon-react';
 
 const AdminLayout = ({ children }) => {
@@ -25,7 +25,6 @@ const AdminLayout = ({ children }) => {
     const searchInputRef = useRef(null);
     const mobileMenuRef = useRef(null);
     const [sidebarOpen, setSidebarOpen] = useState(false);
-    const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
     const [notificationPanelOpen, setNotificationPanelOpen] = useState(false);
     const [showLogoutModal, setShowLogoutModal] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
@@ -454,40 +453,19 @@ const AdminLayout = ({ children }) => {
             {/* Left Sidebar */}
             <aside
                 className={`${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'} 
-                    fixed lg:relative z-50 lg:z-auto bg-[#ebebeb] border-r border-gray-300 
-                    transition-all duration-300 flex flex-col h-full
-                    ${sidebarCollapsed ? 'w-[72px]' : 'w-72'}`}
+                    fixed lg:relative z-50 lg:z-auto w-72 bg-[#ebebeb] border-r border-gray-300 
+                    transition-transform duration-300 flex flex-col h-full`}
                 aria-label="Admin navigation"
             >
-                {/* Logo Section + Collapse Toggle */}
-                <div className={`p-3.5 border-b border-gray-300 flex items-center ${sidebarCollapsed ? 'justify-center' : 'gap-3'}`}>
+                {/* Logo Section */}
+                <div className="p-3.5 flex items-center gap-3 border-b border-gray-300">
                     <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white shrink-0">
                         <img src="/bz-url-logo.png" alt="Bz Logo" className="w-10 h-10 object-contain" />
                     </div>
-                    {!sidebarCollapsed && (
-                        <div className="min-w-0 flex-1">
-                            <h1 className="font-bold text-gray-900 text-base uppercase">Bulusan Zoo</h1>
-                            <p className="text-[10px] text-gray-500">Admin Panel</p>
-                        </div>
-                    )}
-                    {!sidebarCollapsed && (
-                        <button
-                            onClick={() => setSidebarCollapsed(true)}
-                            className="hidden lg:flex p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-200 transition-colors shrink-0"
-                            title="Collapse sidebar"
-                        >
-                            <ChevronLeft size={18} />
-                        </button>
-                    )}
-                    {sidebarCollapsed && (
-                        <button
-                            onClick={() => setSidebarCollapsed(false)}
-                            className="hidden lg:flex p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-200 transition-colors mt-1"
-                            title="Expand sidebar"
-                        >
-                            <ChevronRight size={18} />
-                        </button>
-                    )}
+                    <div className="min-w-0 flex-1">
+                        <h1 className="font-bold text-gray-900 text-base uppercase">Bulusan Zoo</h1>
+                        <p className="text-[10px] text-gray-500">Admin Panel</p>
+                    </div>
                     <button
                         onClick={() => setSidebarOpen(false)}
                         className="ml-auto lg:hidden text-gray-400 hover:text-gray-900"
@@ -497,7 +475,7 @@ const AdminLayout = ({ children }) => {
                 </div>
 
                 {/* Navigation Menu */}
-                <nav className="flex-1 px-2 py-4 overflow-y-auto" role="navigation">
+                <nav className="flex-1 px-3 py-4 overflow-y-auto" role="navigation">
                     {navGroups.map((group) => (
                         <CollapsibleNavGroup
                             key={group.key}
@@ -508,28 +486,27 @@ const AdminLayout = ({ children }) => {
                             onToggle={() => setOpenNavGroups((current) => ({ ...current, [group.key]: !current[group.key] }))}
                             pathname={location.pathname}
                             onNavigate={handleNavClick}
-                            collapsed={sidebarCollapsed}
                         />
                     ))}
                 </nav>
 
                 {/* Bottom Section - Help & Logout */}
-                <div className={`p-3 border-t border-gray-200 space-y-2 ${sidebarCollapsed ? 'px-2' : ''}`}>
+                <div className="p-3 border-t border-gray-200 space-y-2">
                     <Link
                         to="/admin/help"
-                        className={`flex items-center gap-3 rounded-xl transition-all ${sidebarCollapsed ? 'justify-center px-2 py-2.5' : 'px-3 py-2.5'} ${location.pathname === '/admin/help'
+                        className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all ${location.pathname === '/admin/help'
                                 ? 'bg-green-50 text-green-700'
                                 : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                             }`}
                     >
                         <Lifebuoy size={20} />
-                        {!sidebarCollapsed && <span className="font-medium">Help Center</span>}
+                        <span className="font-medium">Help Center</span>
                     </Link>
 
-                    <div className={`flex gap-2 ${sidebarCollapsed ? 'flex-col' : ''}`}>
+                    <div className="flex gap-2">
                         <Link
                             to="/admin/settings"
-                            className={`${sidebarCollapsed ? 'flex-none flex items-center justify-center' : 'flex-1 flex items-center justify-center'} gap-2 py-3 rounded-xl font-medium transition-all duration-200 ${location.pathname === '/admin/settings'
+                            className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-medium transition-all duration-200 ${location.pathname === '/admin/settings'
                                     ? 'bg-green-100 text-green-700'
                                     : 'bg-gray-200 text-gray-600 hover:bg-gray-300 hover:text-gray-900'
                                 }`}
@@ -539,9 +516,9 @@ const AdminLayout = ({ children }) => {
 
                         <button
                             onClick={() => setShowLogoutModal(true)}
-                            className={`${sidebarCollapsed ? 'flex-none flex items-center justify-center' : 'flex-1 flex items-center justify-center'} gap-2 py-3 bg-red-500 hover:bg-red-600 
+                            className="flex-1 flex items-center justify-center gap-2 py-3 bg-red-500 hover:bg-red-600 
                                 rounded-xl font-medium text-white transition-all duration-200 
-                                shadow-md shadow-red-500/20`}
+                                shadow-md shadow-red-500/20"
                             aria-label="Logout from admin panel"
                         >
                             <Logout size={20} />

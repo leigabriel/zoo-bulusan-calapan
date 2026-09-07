@@ -832,16 +832,10 @@ exports.submitPublicAppeal = async (req, res) => {
             return res.status(400).json({ success: false, message: 'This action is only available for suspended accounts' });
         }
 
-        const db = require('../config/database');
-        const Message = require('../models/message-model');
         const Notification = require('../models/notification-model');
 
-        // Create the appeal message
-        const messageId = await Message.createAppealMessage({
-            senderId: user.id,
-            subject: subject || 'Suspension Appeal',
-            content: content.trim()
-        });
+        // Create the appeal in user_appeals table (used by admin review flow)
+        const appealId = await User.createAppeal(user.id, content.trim());
 
         // Notify admins
         const admins = await User.getByRole('admin');
@@ -862,7 +856,7 @@ exports.submitPublicAppeal = async (req, res) => {
         res.status(201).json({ 
             success: true, 
             message: 'Appeal submitted successfully. You will be notified of the decision via email.',
-            messageId 
+            appealId 
         });
     } catch (error) {
         console.error('Error submitting public appeal:', error);

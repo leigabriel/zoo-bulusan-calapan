@@ -71,7 +71,7 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
     }
 
     if (!isAuthenticated) {
-        return <Navigate to="/login" state={{ message: 'Please login to access this feature' }} replace />;
+        return <Navigate to="/login" state={{ message: 'Please login first.' }} replace />;
     }
 
     if (allowedRoles && !allowedRoles.includes(user?.role)) {

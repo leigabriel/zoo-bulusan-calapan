@@ -242,11 +242,8 @@ exports.submitAppeal = async (req, res) => {
             return res.status(404).json({ success: false, message: 'User not found' });
         }
 
-        const messageId = await Message.createAppealMessage({
-            senderId: req.user.id,
-            subject: subject || 'Suspension Appeal',
-            content: content.trim()
-        });
+        // Create appeal in user_appeals table (used by admin review flow)
+        const appealId = await User.createAppeal(req.user.id, content.trim());
 
         const admins = await User.getByRole('admin');
         for (const admin of admins) {
@@ -262,7 +259,7 @@ exports.submitAppeal = async (req, res) => {
         res.status(201).json({ 
             success: true, 
             message: 'Appeal submitted successfully. You will be notified of the decision.',
-            messageId 
+            appealId 
         });
     } catch (error) {
         console.error('Error submitting appeal:', error);
