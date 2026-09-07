@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { ClipboardList, Users, Activity, Filter, ChevronLeft, ChevronRight, Refresh } from 'reicon-react';
-import { adminAPI } from '../../services/api-client';
+import { adminAPI, getProfileImageUrl } from '../../services/api-client';
 
 const staffActionLabels = {
     login: 'Login',
@@ -340,12 +340,22 @@ const AdminLogs = () => {
                                     <tr key={log.id || index} className="hover:bg-green-50/50 transition">
                                         <td className="px-5 py-3">
                                             <div className="flex items-center gap-3">
-                                                <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-700 text-xs font-bold flex-shrink-0">
-                                                    {log.first_name?.[0] || log.actor_name?.[0] || '?'}{log.last_name?.[0] || ''}
+                                                <div className="w-8 h-8 rounded-full overflow-hidden bg-green-100 flex items-center justify-center text-green-700 text-xs font-bold flex-shrink-0">
+                                                    {log.profile_image ? (
+                                                        <img
+                                                            src={getProfileImageUrl(log.profile_image)}
+                                                            alt={log.first_name}
+                                                            className="w-full h-full object-cover"
+                                                            onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
+                                                        />
+                                                    ) : null}
+                                                    <span className={`${log.profile_image ? 'hidden' : 'flex'} items-center justify-center w-full h-full`}>
+                                                        {log.first_name?.[0] || '?'}{log.last_name?.[0] || ''}
+                                                    </span>
                                                 </div>
                                                 <div className="min-w-0">
                                                     <p className="text-sm font-medium text-gray-900 truncate">{log.actor_name || `${log.first_name || ''} ${log.last_name || ''}`.trim() || 'Deleted user'}</p>
-                                                    <p className="text-xs text-gray-500 truncate">{log.email}</p>
+                                                    <p className="text-xs text-gray-500 truncate">{log.username ? `@${log.username}` : log.email}</p>
                                                 </div>
                                             </div>
                                         </td>

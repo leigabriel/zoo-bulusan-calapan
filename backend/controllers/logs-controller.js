@@ -23,7 +23,10 @@ exports.getStaffLogs = async (req, res) => {
             sal.created_at,
             u.first_name,
             u.last_name,
-            u.role
+            u.role,
+            u.email,
+            u.profile_image,
+            u.username
          FROM staff_activity_logs sal
          JOIN users u ON sal.staff_id = u.id
          WHERE 1=1`;
@@ -88,7 +91,10 @@ exports.getUserLogs = async (req, res) => {
             ual.entity_id,
             ual.created_at,
             COALESCE(u.first_name, ual.actor_name) AS first_name,
-            COALESCE(u.last_name, '') AS last_name
+            COALESCE(u.last_name, '') AS last_name,
+            u.email,
+            u.profile_image,
+            u.username
          FROM user_activity_logs ual
          LEFT JOIN users u ON ual.user_id = u.id
          WHERE 1=1`;
