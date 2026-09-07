@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../hooks/use-auth';
 import { reservationAPI } from '../../services/api-client';
 import { formatSafeDate, getDateTimestamp } from '../../utils/format-date';
 import { QRCodeSVG } from 'qrcode.react';
 import { notify } from '../../utils/toast';
 import useScrollLock from '../../hooks/use-scroll-lock';
+import { appendConsentRecord } from '../../utils/consent';
 import { Ticket, Calendar, X, Archive, RotateLeft, CreditCard, DollarCircle } from 'reicon-react';
 
 const LegacyIcons = {
@@ -68,6 +69,7 @@ const ReservationHistoryPanel = ({ isOpen, onClose, paymentReturn = false }) => 
     const [downloadingPayment, setDownloadingPayment] = useState(false);
     const [showPaymentDemo, setShowPaymentDemo] = useState(false);
     const [paymentOption, setPaymentOption] = useState(null);
+    const [paymentConsent, setPaymentConsent] = useState(false);
     const [paymentLoading, setPaymentLoading] = useState(false);
     const [refundLoading, setRefundLoading] = useState(false);
     const [showQR, setShowQR] = useState(false);
@@ -394,8 +396,23 @@ const ReservationHistoryPanel = ({ isOpen, onClose, paymentReturn = false }) => 
 
     const handleEventPayment = async () => {
         if (!selectedReservation || paymentLoading) return;
+        if (!paymentConsent) {
+            notify.warning('Please agree to the terms before proceeding with payment.');
+            return;
+        }
         try {
             setPaymentLoading(true);
+            appendConsentRecord({
+                type: 'event_payment',
+                summary: `Event payment consent for reservation ${selectedReservation.reservation_reference} (${paymentOption === 'now' ? 'PayMongo QR Ph' : 'Pay at Bulusan'})`,
+                data: {
+                    reservationReference: selectedReservation.reservation_reference,
+                    eventName: selectedReservation.venue_event_name || selectedReservation.event_title,
+                    paymentMethod: paymentOption === 'now' ? 'paymongo_qr_ph' : 'pay_at_bulusan',
+                    amount: Number(selectedReservation.payment_amount || 0),
+                    consented: true
+                }
+            });
             if (paymentOption === 'now') {
                 const response = await reservationAPI.createEventPaymentCheckout(selectedReservation.id);
                 if (!response.success || !response.checkoutUrl) {
@@ -716,14 +733,14 @@ const ReservationHistoryPanel = ({ isOpen, onClose, paymentReturn = false }) => 
                                                    ) : eventPaymentConfig.enabled && getEventAmount(selectedReservation) > 0 && (
                                                      <div className="flex flex-col sm:flex-row gap-3 mt-4">
                                                          <button
-                                                             onClick={() => { setPaymentOption('now'); setShowPaymentDemo(true); }}
+                                                             onClick={() => { setPaymentOption('now'); setPaymentConsent(false); setShowPaymentDemo(true); }}
                                                              className="flex-1 py-3 bg-slate-800 text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-slate-900 transition flex items-center justify-center gap-2 shadow-sm"
                                                          >
                                                              <Icons.CreditCard />
                                                               Pay with QR Ph
                                                          </button>
                                                          <button
-                                                             onClick={() => { setPaymentOption('bulusan'); setShowPaymentDemo(true); }}
+                                                             onClick={() => { setPaymentOption('bulusan'); setPaymentConsent(false); setShowPaymentDemo(true); }}
                                                              className="flex-1 py-3 bg-emerald-600 text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-emerald-700 transition flex items-center justify-center gap-2 shadow-sm"
                                                          >
                                                              <Icons.Cash />
@@ -839,7 +856,27 @@ const ReservationHistoryPanel = ({ isOpen, onClose, paymentReturn = false }) => 
                             </div>
                         </div>
                         <div className="mt-6 flex flex-col gap-3">
-                             <button
+                            <label className="flex items-start gap-3 text-left cursor-pointer">
+                                <div className="mt-0.5 relative flex items-center justify-center flex-shrink-0">
+                                    <input
+                                        type="checkbox"
+                                        checked={paymentConsent}
+                                        onChange={(e) => setPaymentConsent(e.target.checked)}
+                                        className="peer appearance-none w-4 h-4 border border-slate-300 rounded bg-white checked:bg-slate-800 checked:border-slate-800 transition-all cursor-pointer"
+                                    />
+                                    <svg className="absolute w-2.5 h-2.5 text-white pointer-events-none opacity-0 peer-checked:opacity-100 transition-opacity" viewBox="0 0 14 10" fill="none">
+                                        <path d="M1 5L5 9L13 1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                    </svg>
+                                </div>
+                                <p className="text-[11px] text-slate-500 leading-relaxed">
+                                    I consent to this payment being processed per the Bulusan Zoo{' '}
+                                    <Link to="/terms" className="text-slate-800 font-semibold hover:underline">Terms of Service</Link>,{' '}
+                                    <Link to="/privacy" className="text-slate-800 font-semibold hover:underline">Privacy Policy</Link>,{' '}
+                                    <Link to="/refund-policy" className="text-slate-800 font-semibold hover:underline">Refund Policy</Link>, and{' '}
+                                    <Link to="/cookies" className="text-slate-800 font-semibold hover:underline">Cookie Policy</Link>.
+                                </p>
+                            </label>
+                            <button
                                  onClick={handleEventPayment}
                                  disabled={paymentLoading}
                                  className="w-full py-3 bg-slate-800 text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-slate-900 transition"

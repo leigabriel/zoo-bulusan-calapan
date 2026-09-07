@@ -7,6 +7,8 @@ import { sanitizeInput, sanitizeEmail } from '../../utils/sanitize';
 import { notify } from '../../utils/toast';
 import AuthSuccessModal from '../../components/common/AuthSuccessModal';
 import useScrollLock from '../../hooks/use-scroll-lock';
+import { PRIVACY_POLICY_CONTENT, TERMS_OF_SERVICE_CONTENT } from '../legal/policyContent';
+import { appendConsentRecord } from '../../utils/consent';
 
 const EyeIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
@@ -120,93 +122,6 @@ const getErrorMessage = (errorCode) => {
 
     return 'An error occurred during sign-in. Please try again.';
 };
-
-const PRIVACY_POLICY_CONTENT = `
-Last Updated: December 15, 2025
-
-1. INFORMATION WE COLLECT
-We collect information you provide directly to us, such as when you create an account, make a purchase, or contact us for support. This includes:
-- Personal identification information (name, email address, phone number)
-- Account credentials (username, password)
-- Payment information (processed securely through third-party providers)
-- Visit history and ticket purchases
-
-2. HOW WE USE YOUR INFORMATION
-We use the information we collect to:
-- Process transactions and send related information
-- Send promotional communications (with your consent)
-- Respond to your comments, questions, and requests
-- Monitor and analyze trends, usage, and activities
-- Improve our services and develop new features
-
-3. INFORMATION SHARING
-We do not sell, trade, or rent your personal information to third parties. We may share your information only in the following circumstances:
-- With service providers who assist in our operations
-- To comply with legal obligations
-- To protect our rights and safety
-
-4. DATA SECURITY
-We implement appropriate security measures to protect your personal information against unauthorized access, alteration, disclosure, or destruction.
-
-5. YOUR RIGHTS
-You have the right to:
-- Access your personal information
-- Correct inaccurate data
-- Request deletion of your data
-- Opt-out of marketing communications
-
-6. COOKIES
-We use cookies and similar technologies to enhance your experience and gather information about visitors and visits to our website.
-
-7. CONTACT US
-If you have questions about this Privacy Policy, please contact us at:
-Email: privacy@zoobulusan.com
-Address: Bulusan Zoo, Sorsogon, Philippines
-`;
-
-const TERMS_OF_SERVICE_CONTENT = `
-Last Updated: December 15, 2025
-
-1. ACCEPTANCE OF TERMS
-By accessing and using Bulusan Zoo's services, you agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use our services.
-
-2. USE OF SERVICES
-You agree to use our services only for lawful purposes and in accordance with these Terms. You are responsible for:
-- Maintaining the confidentiality of your account
-- All activities that occur under your account
-- Ensuring your account information is accurate
-
-3. TICKET PURCHASES
-- All ticket sales are final unless otherwise stated
-- Tickets are non-transferable
-- Valid identification may be required for entry
-- Children must be accompanied by adults
-
-4. VISITOR CONDUCT
-While visiting Bulusan Zoo, you agree to:
-- Follow all posted rules and staff instructions
-- Respect all animals and their habitats
-- Not feed animals unless authorized
-- Not litter or damage property
-- Supervise children at all times
-
-5. INTELLECTUAL PROPERTY
-All content on our website and services, including text, graphics, logos, and images, is the property of Bulusan Zoo and is protected by copyright laws.
-
-6. LIMITATION OF LIABILITY
-Bulusan Zoo shall not be liable for any indirect, incidental, special, consequential, or punitive damages resulting from your use of our services.
-
-7. MODIFICATIONS
-We reserve the right to modify these Terms at any time. Continued use of our services after changes constitutes acceptance of the new Terms.
-
-8. GOVERNING LAW
-These Terms shall be governed by the laws of the Republic of the Philippines.
-
-9. CONTACT INFORMATION
-For questions regarding these Terms, contact us at:
-Email: support@zoobulusan.com
-Phone: +63 (XXX) XXX-XXXX
-`;
 
 const PolicyModal = ({ isOpen, onClose, title, content }) => {
     useScrollLock(isOpen);
@@ -339,7 +254,8 @@ const RegisterPage = () => {
         username: '',
         email: '',
         password: '',
-        confirmPassword: ''
+        confirmPassword: '',
+        dataConsent: false
     });
     const [loading, setLoading] = useState(false);
     const [googleLoading, setGoogleLoading] = useState(false);
@@ -381,12 +297,14 @@ const RegisterPage = () => {
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        let sanitizedValue = value;
+        let sanitizedValue = e.target.type === 'checkbox' ? e.target.checked : value;
 
-        if (name === 'email') {
-            sanitizedValue = sanitizeEmail(value);
-        } else if (name !== 'password' && name !== 'confirmPassword') {
-            sanitizedValue = sanitizeInput(value);
+        if (e.target.type !== 'checkbox') {
+            if (name === 'email') {
+                sanitizedValue = sanitizeEmail(value);
+            } else if (name !== 'password' && name !== 'confirmPassword') {
+                sanitizedValue = sanitizeInput(value);
+            }
         }
 
         setFormData({ ...formData, [name]: sanitizedValue });
@@ -423,6 +341,10 @@ const RegisterPage = () => {
             validationErrors.push('Passwords do not match');
         }
 
+        if (!formData.dataConsent) {
+            validationErrors.push('You must agree to the Terms of Service and Privacy Policy to create an account');
+        }
+
         return validationErrors;
     };
 
@@ -451,6 +373,11 @@ const RegisterPage = () => {
             });
 
             if (response.success) {
+                appendConsentRecord({
+                    type: 'account_registration',
+                    summary: `Account registration consent for ${formData.email.trim().toLowerCase()}`,
+                    data: { email: formData.email.trim().toLowerCase(), consented: Boolean(formData.dataConsent) }
+                });
                 trackVisit('/signup');
                 if (response.requiresVerification) {
                     setRegisteredEmail(formData.email.trim().toLowerCase());
@@ -727,10 +654,36 @@ const RegisterPage = () => {
                             )}
                         </div>
 
+                        <label className="flex items-start gap-3 cursor-pointer group mt-4">
+                            <div className="mt-0.5 relative flex items-center justify-center flex-shrink-0">
+                                <input
+                                    type="checkbox"
+                                    name="dataConsent"
+                                    checked={formData.dataConsent}
+                                    onChange={handleChange}
+                                    className="peer appearance-none w-5 h-5 border border-gray-300 rounded bg-white checked:bg-emerald-600 checked:border-emerald-600 transition-all cursor-pointer"
+                                />
+                                <svg className="absolute w-3 h-3 text-white pointer-events-none opacity-0 peer-checked:opacity-100 transition-opacity" viewBox="0 0 14 10" fill="none">
+                                    <path d="M1 5L5 9L13 1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                </svg>
+                            </div>
+                            <p className="text-xs text-gray-500 leading-relaxed">
+                                I have read and agree to the{' '}
+                                <Link to="/terms" className="text-emerald-600 font-semibold hover:underline">
+                                    Terms of Service
+                                </Link>
+                                {' '}and{' '}
+                                <Link to="/privacy" className="text-emerald-600 font-semibold hover:underline">
+                                    Privacy Policy
+                                </Link>
+                                , and I consent to Bulusan Zoo collecting and processing my personal information as described therein.
+                            </p>
+                        </label>
+
                         <button
                             type="submit"
                             disabled={loading || googleLoading}
-                            className="w-full bg-emerald-600 text-white py-3.5 mt-4 rounded-lg font-semibold hover:bg-emerald-700 disabled:bg-emerald-300 disabled:cursor-not-allowed transition-colors text-sm"
+                            className="w-full bg-emerald-600 text-white py-3.5 mt-6 rounded-lg font-semibold hover:bg-emerald-700 disabled:bg-emerald-300 disabled:cursor-not-allowed transition-colors text-sm"
                         >
                             {loading ? 'Creating account...' : 'Register'}
                         </button>
@@ -772,21 +725,13 @@ const RegisterPage = () => {
 
                         <div className="text-center text-xs text-gray-400 mt-8 pt-6">
                             By registering, you agree to our{' '}
-                            <button
-                                type="button"
-                                onClick={() => setShowTermsModal(true)}
-                                className="text-gray-500 hover:text-gray-800 transition-colors underline"
-                            >
+                            <Link to="/terms" className="text-gray-500 hover:text-gray-800 transition-colors underline">
                                 Terms of Service
-                            </button>
+                            </Link>
                             {' '}and{' '}
-                            <button
-                                type="button"
-                                onClick={() => setShowPrivacyModal(true)}
-                                className="text-gray-500 hover:text-gray-800 transition-colors underline"
-                            >
+                            <Link to="/privacy" className="text-gray-500 hover:text-gray-800 transition-colors underline">
                                 Privacy Policy
-                            </button>
+                            </Link>
                         </div>
                     </form>
                 </div>

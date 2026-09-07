@@ -23,6 +23,11 @@ import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
 import GoogleAuthSuccess from './pages/auth/GoogleAuthSuccess';
 import AccessDenied from './pages/auth/AccessDenied';
+import PrivacyPolicy from './pages/legal/PrivacyPolicy';
+import TermsOfService from './pages/legal/TermsOfService';
+import CookiePolicy from './pages/legal/CookiePolicy';
+import RefundPolicy from './pages/legal/RefundPolicy';
+import CookieConsentBanner from './components/CookieConsentBanner';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminEvents from './pages/admin/AdminEvents';
 import Analytics from './pages/admin/Analytics';
@@ -117,6 +122,10 @@ function AppRoutes() {
             <Route path="/about" element={<AboutUs />} />
             <Route path="/animaldex" element={<AnimalClassifier />} />
             <Route path="/map" element={<MapPage />} />
+            <Route path="/privacy" element={<PrivacyPolicy />} />
+            <Route path="/terms" element={<TermsOfService />} />
+            <Route path="/cookies" element={<CookiePolicy />} />
+            <Route path="/refund-policy" element={<RefundPolicy />} />
 
             {/* Auth Routes */}
             <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
@@ -401,6 +410,7 @@ function App() {
             <Router>
                 <VisitTracker />
                 <AppRoutes />
+                <CookieConsentBanner />
                 <GooeyToaster
                     position="top-right"
                     duration={3000}

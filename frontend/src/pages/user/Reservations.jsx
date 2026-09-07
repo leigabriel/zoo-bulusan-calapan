@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 import { ReactLenis } from 'lenis/react';
@@ -13,6 +13,7 @@ import { sanitizeInput, sanitizeEmail, sanitizePhone } from '../../utils/sanitiz
 import { notify } from '../../utils/toast';
 import useScrollLock from '../../hooks/use-scroll-lock';
 import { Ticket, Calendar, X, CheckCircle, Plus, Minus, Upload, Clock, ChevronRight, AlertTriangle } from 'reicon-react';
+import { appendConsentRecord } from '../../utils/consent';
 
 const Icons = {
     Ticket: () => <Ticket className="w-5 h-5" />, Calendar: () => <Calendar className="w-5 h-5" />,
@@ -28,8 +29,11 @@ const TICKET_TYPES = {
     bulusan_resident: { name: 'Bulusan Resident', description: 'Free with valid ID', price: 0 }
 };
 
+const RESUME_KEY = 'bulusan_reservation_resume_v1';
+
 const Reservations = () => {
     const navigate = useNavigate();
+    const location = useLocation();
     const { user, isAuthenticated } = useAuth();
     const [events, setEvents] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -83,6 +87,44 @@ const Reservations = () => {
             setEventForm(prev => ({ ...prev, participantName: fullName, participantEmail: user.email || '' }));
         }
     }, [user]);
+
+    const saveReservationResume = () => {
+        try {
+            sessionStorage.setItem(RESUME_KEY, JSON.stringify({
+                reservationType,
+                ticketCounts,
+                ticketForm,
+                eventForm
+            }));
+        } catch {
+            // Storage can be unavailable in private browsing or restricted contexts.
+        }
+    };
+
+    useEffect(() => {
+        if (!user) return;
+        try {
+            const raw = sessionStorage.getItem(RESUME_KEY);
+            if (!raw) return;
+            sessionStorage.removeItem(RESUME_KEY);
+            const saved = JSON.parse(raw);
+            if (!saved) return;
+            if (saved.reservationType) setReservationType(saved.reservationType);
+            if (saved.ticketCounts) setTicketCounts(saved.ticketCounts);
+            if (saved.ticketForm) setTicketForm(saved.ticketForm);
+            if (saved.eventForm) setEventForm(saved.eventForm);
+            setShowCreateModal(true);
+        } catch {
+            // Ignore malformed or unavailable resume data.
+        }
+    }, [user]);
+
+    useEffect(() => {
+        if (location.state?.reopenModal === 'create') {
+            setShowCreateModal(true);
+            window.history.replaceState({}, '', location.pathname);
+        }
+    }, []);
 
     useEffect(() => {
         const fetchAvailability = async () => {
@@ -192,6 +234,17 @@ const Reservations = () => {
                 });
                 if (res.success) {
                     notify.success('Reservation submitted.');
+                    appendConsentRecord({
+                        type: 'reservation',
+                        summary: `Reservation consent for ${res.reservationReference}`,
+                        data: {
+                            reservationType: 'ticket',
+                            reservationReference: res.reservationReference,
+                            visitorName: ticketForm.visitorName,
+                            visitorEmail: ticketForm.visitorEmail,
+                            consented: true
+                        }
+                    });
                     setConfirmationData({
                         type: 'ticket',
                         reference: res.reservationReference,
@@ -222,6 +275,17 @@ const Reservations = () => {
                 });
                 if (res.success) {
                     notify.success('Reservation submitted.');
+                    appendConsentRecord({
+                        type: 'reservation',
+                        summary: `Reservation consent for ${res.reservationReference}`,
+                        data: {
+                            reservationType: 'event',
+                            reservationReference: res.reservationReference,
+                            participantName: eventForm.participantName,
+                            participantEmail: eventForm.participantEmail,
+                            consented: true
+                        }
+                    });
                     setConfirmationData({
                         type: 'event',
                         reference: res.reservationReference,
@@ -617,7 +681,7 @@ const Reservations = () => {
                                                     <svg className="absolute w-3 h-3 text-[#ebebeb] pointer-events-none opacity-0 peer-checked:opacity-100 transition-opacity" viewBox="0 0 14 10" fill="none"><path d="M1 5L5 9L13 1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
                                                 </div>
                                                 <p className="text-[10px] tracking-[0.18em] uppercase font-bold text-[#212631]/60 leading-relaxed pt-0.5">
-                                                    I acknowledge the <a href="#" className="text-[#212631] hover:underline">Terms of Service</a> & <a href="#" className="text-[#212631] hover:underline">Privacy Policy</a>.
+                                                    I acknowledge the <Link to="/terms" state={{ from: '/reservations', reopenModal: 'create' }} onClick={saveReservationResume} className="text-[#212631] hover:underline">Terms of Service</Link> & <Link to="/privacy" state={{ from: '/reservations', reopenModal: 'create' }} onClick={saveReservationResume} className="text-[#212631] hover:underline">Privacy Policy</Link>.
                                                 </p>
                                             </label>
 

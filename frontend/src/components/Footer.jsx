@@ -62,6 +62,13 @@ const Footer = () => {
         { path: "/reservations", label: "Reservation" },
     ];
 
+    const legalLinks = [
+        { path: "/privacy", label: "Privacy Policy" },
+        { path: "/terms", label: "Terms of Service" },
+        { path: "/cookies", label: "Cookie Policy" },
+        { path: "/refund-policy", label: "Refund Policy" },
+    ];
+
     const scrollToTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
 
     return (
@@ -162,11 +169,23 @@ const Footer = () => {
                         initial={{ opacity: 0 }}
                         animate={isInView ? { opacity: 1 } : {}}
                         transition={{ duration: 0.5, delay: 0.8 }}
-                        className="mt-4 flex justify-between items-center"
+                        className="mt-4 flex flex-col sm:flex-row sm:justify-between items-start sm:items-center gap-4"
                     >
                         <span className="text-[11px] font-medium text-white/30 uppercase tracking-widest">
                             © {currentYear} Bulusan Zoo. All rights reserved.
                         </span>
+                        <ul className="flex flex-wrap gap-x-5 gap-y-2">
+                            {legalLinks.map((link) => (
+                                <li key={link.path}>
+                                    <Link
+                                        to={link.path}
+                                        className="text-[11px] font-medium text-white/40 uppercase tracking-widest hover:text-green-400 transition-colors"
+                                    >
+                                        {link.label}
+                                    </Link>
+                                </li>
+                            ))}
+                        </ul>
                     </motion.div>
                 </div>
 

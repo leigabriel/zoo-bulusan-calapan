@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { userAPI } from '../../services/api-client';
 import { notify } from '../../utils/toast';
+import { appendConsentRecord } from '../../utils/consent';
 import { ChevronLeft, Home, Gift, DollarCircle, Phone, Copy, Check, Activity, Lock } from 'reicon-react';
 
 const LegacyIcons = {
@@ -83,6 +84,7 @@ const Donation = () => {
     const [copied, setCopied] = useState(false);
     const [showConfirm, setShowConfirm] = useState(false);
     const [confirmedAmount, setConfirmedAmount] = useState(0);
+    const [donationConsent, setDonationConsent] = useState(false);
 
     useEffect(() => {
         let mounted = true;
@@ -139,11 +141,21 @@ const Donation = () => {
             setActivePreset(100);
             finalAmount = 100;
         }
+        setDonationConsent(false);
         setConfirmedAmount(finalAmount);
         setShowConfirm(true);
     };
 
     const openGcash = () => {
+        if (!donationConsent) {
+            notify.warning('Please agree to continue with your donation.');
+            return;
+        }
+        appendConsentRecord({
+            type: 'donation',
+            summary: `Donation consent for ₱${confirmedAmount.toLocaleString()} via GCash`,
+            data: { amount: confirmedAmount, consented: true }
+        });
         const url = config?.gcashNumber ? `gcash://sendmoney?amount=${confirmedAmount}&to=${config.gcashNumber}` : 'gcash://';
         window.open(url, '_blank', 'noopener,noreferrer');
     };
@@ -347,11 +359,31 @@ const Donation = () => {
                                 </button>
                                 <button
                                     onClick={openGcash}
-                                    className="flex-1 py-2.5 bg-emerald-500 text-white rounded-xl font-medium hover:bg-emerald-600 transition-colors"
+                                    disabled={!donationConsent}
+                                    className="flex-1 py-2.5 rounded-xl font-medium transition-colors disabled:cursor-not-allowed disabled:bg-gray-200 disabled:text-gray-400"
                                 >
                                     Open GCash
                                 </button>
                             </div>
+                            <label className="flex items-start gap-3 mt-5 text-left cursor-pointer">
+                                <div className="mt-0.5 relative flex items-center justify-center flex-shrink-0">
+                                    <input
+                                        type="checkbox"
+                                        checked={donationConsent}
+                                        onChange={(e) => setDonationConsent(e.target.checked)}
+                                        className="peer appearance-none w-4 h-4 border border-gray-300 rounded bg-white checked:bg-emerald-600 checked:border-emerald-600 transition-all cursor-pointer"
+                                    />
+                                    <svg className="absolute w-2.5 h-2.5 text-white pointer-events-none opacity-0 peer-checked:opacity-100 transition-opacity" viewBox="0 0 14 10" fill="none">
+                                        <path d="M1 5L5 9L13 1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                    </svg>
+                                </div>
+                                <p className="text-[11px] text-gray-500 leading-relaxed">
+                                    I consent to Bulusan Zoo recording my donation in accordance with its{' '}
+                                    <Link to="/privacy" className="text-emerald-600 font-semibold hover:underline">Privacy Policy</Link>,{' '}
+                                    <Link to="/terms" className="text-emerald-600 font-semibold hover:underline">Terms of Service</Link>, and{' '}
+                                    <Link to="/refund-policy" className="text-emerald-600 font-semibold hover:underline">Refund Policy</Link>.
+                                </p>
+                            </label>
                         </div>
                     </div>
                 </div>
