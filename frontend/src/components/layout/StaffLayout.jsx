@@ -16,7 +16,7 @@ import WorkspaceThemeContext from '../common/WorkspaceThemeContext';
 import {
     Home, Calendar, Ticket, Pet, Leaf, Message, Messages, ShieldCheck,
     Scan, Logout, Menu, Bell, CloseCircle, Lifebuoy, Checklist, Search, Setting, People,
-    Sparkles, User, Trash, Check, ChevronRight, Print
+    Sparkles, User, Trash, Check, ChevronRight
 } from 'reicon-react';
 
 const StaffLayout = ({ children }) => {
@@ -445,7 +445,7 @@ const StaffLayout = ({ children }) => {
 
     const managementItems = [
         { path: '/staff/walk-in', label: 'Walk-In', Icon: Ticket },
-        { path: '/staff/printer', label: 'Printer Status', Icon: Print },
+        { path: '/staff/walk-in-records', label: 'Walk-In Records', Icon: Ticket },
         { path: '/staff/events', label: 'Events', Icon: Calendar },
         { path: '/staff/reservations', label: 'Reservations', Icon: Ticket },
         { path: '/staff/animals', label: 'Manage Animals', Icon: Pet },

@@ -7,6 +7,7 @@ const { logStaffActivity, logUserActivity } = require('../middleware/track-activ
 const crypto = require('crypto');
 const { reservationQrSecret } = require('../config/app-config');
 const { readConfig: readEventPaymentConfig } = require('../config/event-payment-config');
+const walkInService = require('../services/walk-in-service');
 
 // Helper function to create notifications for admin/staff
 const createAdminStaffNotification = async (title, message, type = 'event', link = null) => {
@@ -1059,13 +1060,19 @@ exports.scanReservation = async (req, res) => {
         const { qrData, markUsed } = req.body;
         let payload = parseQrData(qrData);
 
+        if (!payload && typeof qrData === 'string') {
+            const walkInMatch = qrData.match(/^WALKIN\|(OR-[A-Z0-9-]+)$/i);
+            if (walkInMatch) payload = { type: 'walk_in', ref: walkInMatch[1] };
+            else if (/^OR-[A-Z0-9-]+$/i.test(qrData)) payload = { type: 'walk_in', ref: qrData };
+        }
+
         // New QR codes contain only a short verification URL and reference.
         if (!payload && typeof qrData === 'string' && /^https?:\/\//i.test(qrData)) {
             try {
                 const parts = new URL(qrData).pathname.split('/').filter(Boolean);
                 const type = parts.at(-2);
                 const ref = parts.at(-1) ? decodeURIComponent(parts.at(-1)) : null;
-                if (['ticket', 'event'].includes(type) && ref) payload = { type, ref };
+                if (['ticket', 'event', 'walk-in'].includes(type) && ref) payload = { type: type === 'walk-in' ? 'walk_in' : type, ref };
             } catch {
                 payload = null;
             }
@@ -1073,6 +1080,50 @@ exports.scanReservation = async (req, res) => {
 
         if (!payload || !payload.ref || !payload.type) {
             return res.json({ success: true, status: 'fake', message: 'Invalid QR code.' });
+        }
+
+
+        if (payload.type === 'walk_in') {
+            let sale = await walkInService.getSale(payload.ref);
+            if (!sale) return res.json({ success: true, status: 'fake', message: 'Walk-in receipt not found.' });
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const visitDate = new Date(`${sale.visitDate}T00:00:00`);
+            let status = sale.status === 'voided' ? 'expired' : sale.checkedInAt ? 'used' : visitDate < today ? 'expired' : 'valid';
+            if (markUsed && status === 'valid') {
+                sale = await walkInService.markUsed({
+                    saleNumber: sale.saleNumber,
+                    staff: req.user,
+                    ipAddress: req.ip || null,
+                    userAgent: req.get('user-agent') || null
+                });
+                status = 'used';
+            }
+            return res.json({
+                success: true,
+                status,
+                reservation: {
+                    type: 'walk_in',
+                    reference: sale.receiptNumber,
+                    saleNumber: sale.saleNumber,
+                    name: sale.visitorName || 'Walk-in visitor',
+                    phone: sale.visitorPhone,
+                    date: sale.visitDate,
+                    time: new Date(sale.createdAt).toLocaleTimeString('en-PH'),
+                    createdAt: sale.createdAt,
+                    totalVisitors: sale.items.reduce((sum, item) => sum + Number(item.quantity), 0),
+                    status: sale.status,
+                    items: sale.items,
+                    subtotalCents: sale.subtotalCents,
+                    discountCents: sale.discountCents,
+                    totalCents: sale.totalCents,
+                    currency: sale.currency,
+                    payment: sale.payment,
+                    staffName: sale.staffName,
+                    checkedInAt: sale.checkedInAt,
+                    voidReason: sale.voidReason
+                }
+            });
         }
 
         const isTicket = payload.type === 'ticket';

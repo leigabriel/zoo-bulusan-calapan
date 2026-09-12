@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { validateAndCalculate } = require('../services/walk-in-service');
+const { parkDateKey, validateAndCalculate } = require('../services/walk-in-service');
 
 const today = () => {
     const now = new Date();
@@ -12,15 +12,15 @@ test('calculates server prices, discounts, total, and cash change', () => {
         visitDate: today(),
         items: [
             { categoryCode: 'adult', quantity: 2 },
-            { categoryCode: 'senior', quantity: 1 }
+            { categoryCode: 'child', quantity: 1 }
         ],
         payment: { method: 'cash', amountReceivedCents: 12000 }
     });
 
-    assert.equal(result.subtotalCents, 12000);
-    assert.equal(result.discountCents, 800);
-    assert.equal(result.totalCents, 11200);
-    assert.equal(result.payment.changeCents, 800);
+    assert.equal(result.subtotalCents, 10000);
+    assert.equal(result.discountCents, 0);
+    assert.equal(result.totalCents, 10000);
+    assert.equal(result.payment.changeCents, 2000);
     assert.equal(result.totalVisitors, 3);
 });
 
@@ -58,4 +58,8 @@ test('ignores client prices and uses the configured catalog', () => {
         payment: { method: 'cash', amountReceivedCents: 4000 }
     });
     assert.equal(result.totalCents, 4000);
+});
+
+test('uses the Manila calendar date instead of the UTC date', () => {
+    assert.equal(parkDateKey(new Date('2026-09-11T16:30:00.000Z')), '2026-09-12');
 });

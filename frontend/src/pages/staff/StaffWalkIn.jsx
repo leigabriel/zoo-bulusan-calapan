@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
-import { Print, Ticket, Trash } from 'reicon-react';
+import { Menu, Print, Ticket, Trash } from 'reicon-react';
 import { staffAPI } from '../../services/api-client';
 import { browserPrintAdapter } from '../../services/printing/browser-print-adapter';
 import { webUsbPrintAdapter } from '../../services/printing/web-usb-print-adapter';
-import { loadPrinterPreferences } from '../../services/printing/printer-service';
+import { loadPrinterPreferences, savePrinterPreferences } from '../../services/printing/printer-service';
 import { sanitizeInput, sanitizePhone } from '../../utils/sanitize';
 import { notify } from '../../utils/toast';
 import ConfirmationModal from '../../components/common/ConfirmationModal';
@@ -15,6 +15,7 @@ const localDate = () => {
 };
 const makeIdempotencyKey = () => crypto.randomUUID?.().replaceAll('-', '') || `${Date.now()}_${Math.random().toString(36).slice(2)}`;
 const money = cents => `PHP ${(Number(cents || 0) / 100).toFixed(2)}`;
+const fieldClass = 'mt-1.5 w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-green-500';
 
 const StaffWalkIn = () => {
     const [config, setConfig] = useState(null);
@@ -28,10 +29,14 @@ const StaffWalkIn = () => {
     const [showVoid, setShowVoid] = useState(false);
     const [voidReason, setVoidReason] = useState('');
     const [isReprint, setIsReprint] = useState(false);
+    const [printerMenuOpen, setPrinterMenuOpen] = useState(false);
+    const [printerPreferences, setPrinterPreferences] = useState(loadPrinterPreferences);
+    const [windowsPrinters, setWindowsPrinters] = useState([]);
+    const [usbState, setUsbState] = useState(webUsbPrintAdapter.getState);
+    const [printerBusy, setPrinterBusy] = useState(false);
     const requestKey = useRef(makeIdempotencyKey());
     const submitLock = useRef(false);
-    const printerPreferences = loadPrinterPreferences();
-    const paperWidth = printerPreferences.paperWidth;
+    const printerMenuRef = useRef(null);
 
     useEffect(() => {
         staffAPI.getWalkInConfig().then(data => {
@@ -42,11 +47,21 @@ const StaffWalkIn = () => {
 
     useEffect(() => {
         if (!config || form.visitDate === config.availability?.date) return;
-        const timeout = setTimeout(() => {
-            staffAPI.getWalkInConfig(form.visitDate).then(data => setConfig(data.config)).catch(error => notify.error(error.message));
-        }, 250);
+        const timeout = setTimeout(() => staffAPI.getWalkInConfig(form.visitDate).then(data => setConfig(data.config)).catch(error => notify.error(error.message)), 250);
         return () => clearTimeout(timeout);
     }, [config, form.visitDate]);
+
+    useEffect(() => webUsbPrintAdapter.subscribe(setUsbState), []);
+
+    useEffect(() => {
+        if (!printerMenuOpen) return;
+        staffAPI.getWindowsPrinters().then(data => setWindowsPrinters(data.printers || [])).catch(() => setWindowsPrinters([]));
+        const close = event => {
+            if (!printerMenuRef.current?.contains(event.target)) setPrinterMenuOpen(false);
+        };
+        document.addEventListener('mousedown', close);
+        return () => document.removeEventListener('mousedown', close);
+    }, [printerMenuOpen]);
 
     const lines = config?.categories.map(category => {
         const quantity = quantities[category.code] || 0;
@@ -58,6 +73,44 @@ const StaffWalkIn = () => {
     const totalCents = subtotalCents - discountCents;
     const receivedCents = Math.round((Number(form.amountReceived) || 0) * 100);
     const selectedMethod = config?.paymentMethods.find(method => method.code === form.paymentMethod);
+    const printerStatus = printerPreferences.mode === 'windows'
+        ? printerPreferences.windowsPrinterName || 'Select queue'
+        : printerPreferences.mode === 'usb'
+            ? usbState.status
+            : 'System dialog';
+
+    const savePrinter = changes => {
+        const next = savePrinterPreferences({ ...printerPreferences, ...changes });
+        setPrinterPreferences(next);
+    };
+
+    const updateQuantity = (categoryCode, change) => {
+        setQuantities(current => {
+            const next = { ...current, [categoryCode]: Math.max(0, (current[categoryCode] || 0) + change) };
+            const exactTotalCents = config.categories.reduce((sum, category) =>
+                sum + ((category.unitPriceCents - category.discountCents) * (next[category.code] || 0)), 0);
+            setForm(currentForm => ({
+                ...currentForm,
+                paymentMethod: 'cash',
+                amountReceived: (exactTotalCents / 100).toFixed(2),
+                providerReference: ''
+            }));
+            return next;
+        });
+    };
+
+    const connectUsb = async () => {
+        setPrinterBusy(true);
+        try {
+            const state = await webUsbPrintAdapter.selectPrinter();
+            savePrinter({ mode: 'usb', usbDevice: state.device });
+            notify.success('PT210 connected.');
+        } catch (error) {
+            if (error.message !== 'No printer was selected.') notify.error(error.message);
+        } finally {
+            setPrinterBusy(false);
+        }
+    };
 
     const resetDraft = () => {
         setQuantities(Object.fromEntries((config?.categories || []).map(category => [category.code, 0])));
@@ -71,7 +124,7 @@ const StaffWalkIn = () => {
     const validate = () => {
         if (!visitorCount) return 'Select at least one ticket.';
         if (visitorCount > config.maxVisitorsPerSale) return `Maximum ${config.maxVisitorsPerSale} visitors per sale.`;
-        if (visitorCount > config.availability.remaining) return `Only ${config.availability.remaining} admission slots remain for this date.`;
+        if (visitorCount > config.availability.remaining) return `Only ${config.availability.remaining} admission slots remain.`;
         if (form.paymentMethod === 'cash' && receivedCents < totalCents) return 'Cash received must cover the total.';
         if (selectedMethod?.requiresReference && !form.providerReference.trim()) return 'Enter the GCash reference.';
         return '';
@@ -89,7 +142,7 @@ const StaffWalkIn = () => {
         submitLock.current = true;
         setSubmitting(true);
         try {
-            const payload = {
+            const result = await staffAPI.createWalkIn({
                 visitorName: sanitizeInput(form.visitorName, true),
                 visitorPhone: sanitizePhone(form.visitorPhone, true),
                 visitDate: form.visitDate,
@@ -99,12 +152,11 @@ const StaffWalkIn = () => {
                     ...(form.paymentMethod === 'cash' && { amountReceivedCents: receivedCents }),
                     ...(form.providerReference.trim() && { providerReference: sanitizeInput(form.providerReference, true) })
                 }
-            };
-            const result = await staffAPI.createWalkIn(payload, requestKey.current);
+            }, requestKey.current);
             setReceipt(result.receipt);
             setSale(result.sale);
             setShowConfirm(false);
-            notify.success(result.replayed ? 'Existing sale recovered.' : 'Walk-in sale completed.');
+            notify.success(result.replayed ? 'Existing sale recovered.' : 'Sale completed.');
         } catch (error) {
             notify.error(error.message);
         } finally {
@@ -118,23 +170,13 @@ const StaffWalkIn = () => {
         try {
             await staffAPI.logWalkInReceiptEvent(sale.saleNumber, reprint ? 'reprint_requested' : 'print_requested');
             if (printerPreferences.mode === 'windows') {
-                if (!printerPreferences.windowsPrinterName) throw new Error('Select a Windows printer on the Printer Status page first.');
-                await staffAPI.printWindowsReceipt({
-                    printerName: printerPreferences.windowsPrinterName,
-                    saleNumber: sale.saleNumber,
-                    reprint
-                });
-                notify.success('Receipt queued on the Windows printer.');
+                if (!printerPreferences.windowsPrinterName) throw new Error('Select a Windows printer queue first.');
+                await staffAPI.printWindowsReceipt({ printerName: printerPreferences.windowsPrinterName, saleNumber: sale.saleNumber, reprint });
+                notify.success('Receipt queued.');
             } else if (printerPreferences.mode === 'usb') {
-                if (webUsbPrintAdapter.getState().status !== 'Connected') {
-                    await webUsbPrintAdapter.reconnect(printerPreferences.usbDevice);
-                }
-                await webUsbPrintAdapter.printReceipt(receipt, {
-                    paperWidth: printerPreferences.paperWidth,
-                    reprint,
-                    cut: printerPreferences.autoCut
-                });
-                notify.success('Receipt sent directly to the USB printer.');
+                if (webUsbPrintAdapter.getState().status !== 'Connected') await webUsbPrintAdapter.reconnect(printerPreferences.usbDevice);
+                await webUsbPrintAdapter.printReceipt(receipt, { reprint });
+                notify.success('Receipt sent to PT210.');
             } else {
                 await browserPrintAdapter.print();
             }
@@ -153,7 +195,7 @@ const StaffWalkIn = () => {
             setSale(result.sale);
             setShowVoid(false);
             setVoidReason('');
-            notify.success('Sale voided and retained in the audit trail.');
+            notify.success('Sale voided.');
         } catch (error) {
             notify.error(error.message);
         } finally {
@@ -162,42 +204,41 @@ const StaffWalkIn = () => {
         }
     };
 
-    if (loading) return <div className="flex min-h-64 items-center justify-center text-sm font-bold text-gray-500">Loading cashier configuration...</div>;
-    if (!config) return <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-red-700">Cashier configuration is unavailable.</div>;
+    if (loading) return <div className="flex min-h-64 items-center justify-center text-sm font-bold text-gray-400">Loading cashier...</div>;
+    if (!config) return <div className="rounded-xl border border-red-200 bg-red-50 p-5 text-red-700">Cashier configuration is unavailable.</div>;
 
-    return (
-        <div className="walk-in-page mx-auto max-w-7xl">
-            <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-                <div><p className="text-xs font-black uppercase tracking-[0.2em] text-green-700">On-site admission</p><h1 className="text-3xl font-black text-gray-950">Walk-In Cashier</h1></div>
-                <p className="text-sm text-gray-500">Server-priced / {config.availability.remaining} of {config.dailyCapacity} slots available</p>
+    return <div className="walk-in-page mx-auto max-w-[1800px]">
+        <header className="mb-5 flex items-start justify-between gap-4">
+            <div><p className="text-xs font-bold uppercase tracking-[0.16em] text-green-700">Admissions</p><h1 className="mt-1 text-2xl font-black text-gray-950">Walk-In</h1><p className="mt-1 text-sm text-gray-400">{config.availability.remaining} slots available</p></div>
+            <div className="relative" ref={printerMenuRef}>
+                <button type="button" onClick={() => setPrinterMenuOpen(open => !open)} className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-bold text-gray-700 shadow-sm" aria-expanded={printerMenuOpen}><span className={`h-2 w-2 rounded-full ${printerPreferences.mode === 'usb' && usbState.status !== 'Connected' ? 'bg-amber-400' : 'bg-green-500'}`} /><span className="hidden sm:inline">{printerStatus}</span><Menu size={18} /></button>
+                {printerMenuOpen && <div className="absolute right-0 z-30 mt-2 w-72 rounded-xl border border-gray-200 bg-white p-2 shadow-2xl"><p className="px-2 py-2 text-[10px] font-black uppercase tracking-[0.15em] text-gray-400">Print using</p><button type="button" onClick={() => savePrinter({ mode: 'system' })} className={`w-full rounded-lg px-3 py-2.5 text-left text-sm ${printerPreferences.mode === 'system' ? 'bg-green-50 font-black text-green-800' : 'hover:bg-gray-50'}`}>System print dialog</button>{windowsPrinters.map(printer => <button type="button" key={printer.name} onClick={() => savePrinter({ mode: 'windows', windowsPrinterName: printer.name })} className={`mt-1 w-full rounded-lg px-3 py-2.5 text-left text-sm ${printerPreferences.mode === 'windows' && printerPreferences.windowsPrinterName === printer.name ? 'bg-green-50 font-black text-green-800' : 'hover:bg-gray-50'}`}><span className="block font-bold">{printer.name}</span><span className="text-xs text-gray-400">Windows / {printer.portName}</span></button>)}<button type="button" disabled={printerBusy} onClick={connectUsb} className={`mt-1 w-full rounded-lg px-3 py-2.5 text-left text-sm ${printerPreferences.mode === 'usb' ? 'bg-green-50 text-green-800' : 'hover:bg-gray-50'}`}><span className="block font-bold">PT210 WebUSB</span><span className="text-xs text-gray-400">{printerBusy ? 'Connecting...' : usbState.status}</span></button></div>}
             </div>
-            <div className="grid gap-6 xl:grid-cols-[1fr_380px]">
-                <form onSubmit={requestConfirmation} className="space-y-5">
-                    <section className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-                        <h2 className="mb-4 flex items-center gap-2 font-black text-gray-900"><Ticket size={20} /> Admission tickets</h2>
-                        <div className="grid gap-3 sm:grid-cols-2">
-                            {lines.map(category => <div key={category.code} className="flex items-center justify-between rounded-xl border border-gray-200 bg-gray-50 p-4"><div><p className="font-bold text-gray-900">{category.label}</p><p className="text-xs text-gray-500">{money(category.unitPriceCents - category.discountCents)} each{category.requiresProof ? ' / proof required' : ''}</p></div><div className="flex items-center gap-2"><button type="button" onClick={() => setQuantities(current => ({ ...current, [category.code]: Math.max(0, category.quantity - 1) }))} className="h-10 w-10 rounded-lg border border-gray-300 bg-white font-black">-</button><output className="w-8 text-center font-black">{category.quantity}</output><button type="button" onClick={() => setQuantities(current => ({ ...current, [category.code]: category.quantity + 1 }))} className="h-10 w-10 rounded-lg bg-green-400 font-black">+</button></div></div>)}
-                        </div>
-                    </section>
-                    <section className="grid gap-4 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm sm:grid-cols-2">
-                        <label className="text-sm font-bold text-gray-700">Visitor name <span className="font-normal text-gray-400">optional</span><input value={form.visitorName} maxLength={100} onChange={event => setForm(current => ({ ...current, visitorName: sanitizeInput(event.target.value) }))} className="mt-2 w-full rounded-xl border border-gray-300 bg-gray-50 px-4 py-3 outline-none focus:border-green-500" /></label>
-                        <label className="text-sm font-bold text-gray-700">Contact number <span className="font-normal text-gray-400">optional</span><input value={form.visitorPhone} maxLength={20} onChange={event => setForm(current => ({ ...current, visitorPhone: sanitizePhone(event.target.value) }))} className="mt-2 w-full rounded-xl border border-gray-300 bg-gray-50 px-4 py-3 outline-none focus:border-green-500" /></label>
-                        <label className="text-sm font-bold text-gray-700">Visit date<input type="date" min={localDate()} value={form.visitDate} onChange={event => setForm(current => ({ ...current, visitDate: event.target.value }))} required className="mt-2 w-full rounded-xl border border-gray-300 bg-gray-50 px-4 py-3 outline-none focus:border-green-500" /></label>
-                        <label className="text-sm font-bold text-gray-700">Payment method<select value={form.paymentMethod} onChange={event => setForm(current => ({ ...current, paymentMethod: event.target.value }))} className="mt-2 w-full rounded-xl border border-gray-300 bg-gray-50 px-4 py-3 outline-none focus:border-green-500">{config.paymentMethods.map(method => <option value={method.code} key={method.code}>{method.label}</option>)}</select></label>
-                        {form.paymentMethod === 'cash' && <label className="text-sm font-bold text-gray-700">Amount received (PHP)<input type="number" min="0" step="0.01" value={form.amountReceived} onChange={event => setForm(current => ({ ...current, amountReceived: event.target.value }))} required className="mt-2 w-full rounded-xl border border-gray-300 bg-gray-50 px-4 py-3 outline-none focus:border-green-500" /></label>}
-                        {selectedMethod?.requiresReference && <label className="text-sm font-bold text-gray-700">Payment reference<input value={form.providerReference} maxLength={100} onChange={event => setForm(current => ({ ...current, providerReference: sanitizeInput(event.target.value) }))} required className="mt-2 w-full rounded-xl border border-gray-300 bg-gray-50 px-4 py-3 outline-none focus:border-green-500" /></label>}
-                    </section>
-                    <button disabled={submitting || !!receipt} className="w-full rounded-2xl bg-gray-950 px-5 py-4 font-black text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-40">Review and complete sale</button>
-                </form>
-                <aside className="space-y-4">
-                    <div className="rounded-2xl bg-green-950 p-5 text-white shadow-xl xl:sticky xl:top-0"><p className="text-xs font-black uppercase tracking-[0.2em] text-green-300">Sale summary</p><div className="mt-5 space-y-2 text-sm">{lines.filter(line => line.quantity).map(line => <p key={line.code} className="flex justify-between"><span>{line.quantity} x {line.label}</span><strong>{money(line.totalCents)}</strong></p>)}{!visitorCount && <p className="text-green-200/60">No tickets selected</p>}</div><div className="mt-5 border-t border-white/20 pt-4"><p className="flex justify-between text-sm"><span>Subtotal</span><strong>{money(subtotalCents)}</strong></p><p className="mt-2 flex justify-between text-sm"><span>Discount</span><strong>-{money(discountCents)}</strong></p><p className="mt-4 flex justify-between text-2xl font-black"><span>Total</span><strong>{money(totalCents)}</strong></p>{form.paymentMethod === 'cash' && <p className="mt-2 flex justify-between text-sm text-green-200"><span>Change</span><strong>{money(Math.max(receivedCents - totalCents, 0))}</strong></p>}</div></div>
-                    {receipt && <div className="receipt-preview rounded-2xl border border-gray-300 bg-gray-200 p-3"><div className="mb-3 flex items-center justify-between"><div><strong className="text-sm">Receipt preview</strong><p className="text-[11px] text-gray-500">{printerPreferences.mode === 'windows' ? `Windows: ${printerPreferences.windowsPrinterName}` : printerPreferences.mode === 'usb' ? 'WebUSB Direct ESC/POS' : 'System Print Dialog'} / {paperWidth}</p></div>{sale?.status === 'voided' && <span className="rounded-full bg-red-100 px-2 py-1 text-xs font-black text-red-700">VOIDED</span>}</div><div className="max-h-[60vh] overflow-auto"><ThermalReceipt receipt={receipt} paperWidth={paperWidth} isReprint={isReprint} /></div><div className="mt-3 grid grid-cols-2 gap-2"><button onClick={() => printReceipt(false)} className="flex items-center justify-center gap-2 rounded-xl bg-green-500 px-3 py-3 text-sm font-black text-gray-950"><Print size={18} />Print receipt</button><button onClick={() => printReceipt(true)} className="rounded-xl border border-gray-400 bg-white px-3 py-3 text-sm font-black">Print again</button><button onClick={resetDraft} className="rounded-xl border border-gray-400 bg-white px-3 py-3 text-sm font-black">New walk-in</button><button onClick={() => setShowVoid(true)} disabled={sale?.status === 'voided'} className="flex items-center justify-center gap-2 rounded-xl border border-red-300 bg-red-50 px-3 py-3 text-sm font-black text-red-700 disabled:opacity-40"><Trash size={17} />Void</button></div></div>}
-                </aside>
-            </div>
-            <ConfirmationModal isOpen={showConfirm} title="Complete walk-in sale?" message={`Record ${visitorCount} visitor(s) and collect ${money(totalCents)} through ${selectedMethod?.label}?`} confirmLabel="Complete sale" loading={submitting} onConfirm={completeSale} onClose={() => setShowConfirm(false)} />
-            <ConfirmationModal isOpen={showVoid} title="Void this sale?" message="The sale will remain recorded, its payment will be marked void, and capacity will be released." danger requireInput inputLabel="Void reason" inputValue={voidReason} onInputChange={setVoidReason} confirmDisabled={voidReason.trim().length < 3} loading={submitting} onConfirm={voidSale} onClose={() => setShowVoid(false)} />
+        </header>
+
+        <div className="grid gap-5 lg:grid-cols-[1fr_310px]">
+            <form onSubmit={requestConfirmation} className="space-y-4">
+                <section className="rounded-xl border border-gray-200 bg-white p-4">
+                    <div className="mb-3 flex items-center gap-2"><Ticket size={18} /><h2 className="font-black text-gray-900">Tickets</h2></div>
+                    <div className="divide-y divide-gray-100">{lines.map(category => <div key={category.code} className="flex items-center justify-between gap-3 py-3"><div><p className="text-sm font-bold text-gray-900">{category.label}</p><p className="text-xs text-gray-400">{money(category.unitPriceCents - category.discountCents)}</p></div><div className="flex items-center gap-2"><button type="button" onClick={() => updateQuantity(category.code, -1)} className="h-8 w-8 rounded-md border border-gray-200 text-lg">-</button><output className="w-6 text-center text-sm font-black">{category.quantity}</output><button type="button" onClick={() => updateQuantity(category.code, 1)} className="h-8 w-8 rounded-md bg-gray-900 text-lg text-white">+</button></div></div>)}</div>
+                </section>
+                <section className="grid gap-3 rounded-xl border border-gray-200 bg-gray-50 p-4 sm:grid-cols-2">
+                    <label className="text-xs font-bold text-gray-600">Visitor name <span className="font-normal text-gray-400">optional</span><input value={form.visitorName} maxLength={100} onChange={event => setForm(current => ({ ...current, visitorName: sanitizeInput(event.target.value) }))} className={fieldClass} /></label>
+                    <label className="text-xs font-bold text-gray-600">Contact <span className="font-normal text-gray-400">optional</span><input value={form.visitorPhone} maxLength={20} onChange={event => setForm(current => ({ ...current, visitorPhone: sanitizePhone(event.target.value) }))} className={fieldClass} /></label>
+                    <label className="text-xs font-bold text-gray-600">Visit date<input type="date" min={localDate()} value={form.visitDate} onChange={event => setForm(current => ({ ...current, visitDate: event.target.value }))} required className={fieldClass} /></label>
+                    <label className="text-xs font-bold text-gray-600">Payment<select value={form.paymentMethod} onChange={event => setForm(current => ({ ...current, paymentMethod: event.target.value }))} className={fieldClass}>{config.paymentMethods.map(method => <option value={method.code} key={method.code}>{method.label}</option>)}</select></label>
+                    {form.paymentMethod === 'cash' && <label className="text-xs font-bold text-gray-600">Cash received<input type="number" min="0" step="0.01" value={form.amountReceived} onChange={event => setForm(current => ({ ...current, amountReceived: event.target.value }))} required className={fieldClass} /></label>}
+                    {selectedMethod?.requiresReference && <label className="text-xs font-bold text-gray-600">Payment reference<input value={form.providerReference} maxLength={100} onChange={event => setForm(current => ({ ...current, providerReference: sanitizeInput(event.target.value) }))} required className={fieldClass} /></label>}
+                </section>
+            </form>
+
+            <aside className="space-y-4">
+                {!receipt ? <section className="rounded-xl border border-gray-200 bg-white p-4 lg:sticky lg:top-0"><h2 className="text-sm font-black text-gray-900">Summary</h2><div className="mt-4 space-y-2 text-sm">{lines.filter(line => line.quantity).map(line => <p key={line.code} className="flex justify-between text-gray-500"><span>{line.quantity} x {line.label}</span><strong className="text-gray-900">{money(line.totalCents)}</strong></p>)}{!visitorCount && <p className="text-gray-400">No tickets selected</p>}</div><div className="mt-4 space-y-2 border-t border-gray-100 pt-4 text-sm"><p className="flex justify-between text-gray-500"><span>Discount</span><strong>-{money(discountCents)}</strong></p><p className="flex justify-between text-xl font-black"><span>Total</span><strong>{money(totalCents)}</strong></p>{form.paymentMethod === 'cash' && <p className="flex justify-between text-gray-500"><span>Change</span><strong>{money(Math.max(receivedCents - totalCents, 0))}</strong></p>}</div><button type="button" onClick={requestConfirmation} disabled={submitting} className="mt-5 w-full rounded-lg bg-green-500 px-4 py-3 text-sm font-black text-gray-950 disabled:opacity-40">Complete sale</button></section> : <section className="receipt-preview rounded-xl border border-gray-200 bg-gray-100 p-3"><div className="mb-2 flex items-center justify-between"><div><p className="text-sm font-black">Receipt</p><p className="text-[10px] text-gray-400">{printerStatus}</p></div>{sale?.status === 'voided' && <span className="rounded bg-red-100 px-2 py-1 text-[10px] font-black text-red-700">VOIDED</span>}</div><div className="max-h-[55vh] overflow-auto"><ThermalReceipt receipt={receipt} paperWidth="58mm" isReprint={isReprint} /></div><div className="mt-3 grid grid-cols-2 gap-2"><button onClick={() => printReceipt(false)} className="flex items-center justify-center gap-1 rounded-lg bg-green-500 px-2 py-2.5 text-xs font-black"><Print size={16} />Print</button><button onClick={() => printReceipt(true)} className="rounded-lg border border-gray-300 bg-white px-2 py-2.5 text-xs font-black">Reprint</button><button onClick={resetDraft} className="rounded-lg border border-gray-300 bg-white px-2 py-2.5 text-xs font-black">New sale</button><button onClick={() => setShowVoid(true)} disabled={sale?.status === 'voided'} className="flex items-center justify-center gap-1 rounded-lg border border-red-200 bg-white px-2 py-2.5 text-xs font-black text-red-600 disabled:opacity-40"><Trash size={15} />Void</button></div></section>}
+            </aside>
         </div>
-    );
+        <ConfirmationModal isOpen={showConfirm} title="Complete sale?" message={`${visitorCount} visitor(s) / ${money(totalCents)} / ${selectedMethod?.label}`} confirmLabel="Complete" loading={submitting} onConfirm={completeSale} onClose={() => setShowConfirm(false)} />
+        <ConfirmationModal isOpen={showVoid} title="Void sale?" message="The transaction remains in the audit trail." danger requireInput inputLabel="Reason" inputValue={voidReason} onInputChange={setVoidReason} confirmDisabled={voidReason.trim().length < 3} loading={submitting} onConfirm={voidSale} onClose={() => setShowVoid(false)} />
+    </div>;
 };
 
 export default StaffWalkIn;

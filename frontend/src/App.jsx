@@ -57,7 +57,7 @@ import StaffMessages from './pages/staff/StaffMessages';
 import StaffCommunityModeration from './pages/staff/StaffCommunityModeration';
 import StaffTrash from './pages/staff/StaffTrash';
 import StaffWalkIn from './pages/staff/StaffWalkIn';
-import StaffPrinter from './pages/staff/StaffPrinter';
+import WalkInRecords from './pages/staff/WalkInRecords';
 import AdminLayout from './components/layout/AdminLayout';
 import StaffLayout from './components/layout/StaffLayout';
 import AnimalClassifier from './components/features/ai-scanner/AnimalClassifier';
@@ -273,6 +273,7 @@ function AppRoutes() {
                 </ProtectedRoute>
             } />
             <Route path="/admin/transactions" element={<ProtectedRoute allowedRoles={['admin']}><AdminLayout><AdminTransactions /></AdminLayout></ProtectedRoute>} />
+            <Route path="/admin/walk-in-records" element={<ProtectedRoute allowedRoles={['admin']}><AdminLayout><WalkInRecords /></AdminLayout></ProtectedRoute>} />
 
             <Route path="/admin/profile" element={
                 <ProtectedRoute allowedRoles={['admin']}>
@@ -337,9 +338,9 @@ function AppRoutes() {
                     <StaffLayout><StaffWalkIn /></StaffLayout>
                 </ProtectedRoute>
             } />
-            <Route path="/staff/printer" element={
+            <Route path="/staff/walk-in-records" element={
                 <ProtectedRoute allowedRoles={['admin', 'staff']}>
-                    <StaffLayout><StaffPrinter /></StaffLayout>
+                    <StaffLayout><WalkInRecords /></StaffLayout>
                 </ProtectedRoute>
             } />
             <Route path="/staff/ai-assist" element={

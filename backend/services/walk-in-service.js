@@ -19,8 +19,7 @@ const validateAndCalculate = body => {
     const visitDateObject = parseDate(body?.visitDate);
     if (!visitDateObject) throw new WalkInError('A valid visit date is required.');
 
-    const today = new Date();
-    const localToday = new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()));
+    const localToday = parseDate(parkDateKey());
     const latestDate = new Date(localToday);
     latestDate.setUTCFullYear(latestDate.getUTCFullYear() + 1);
     if (visitDateObject < localToday || visitDateObject > latestDate) {
@@ -96,7 +95,14 @@ const validateAndCalculate = body => {
 };
 
 const hashRequest = payload => crypto.createHash('sha256').update(JSON.stringify(payload)).digest('hex');
-const makeNumber = prefix => `${prefix}-${new Date().toISOString().slice(0, 10).replaceAll('-', '')}-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
+const parkDateKey = (value = new Date()) => {
+    const parts = new Intl.DateTimeFormat('en-US', {
+        timeZone: 'Asia/Manila', year: 'numeric', month: '2-digit', day: '2-digit'
+    }).formatToParts(value);
+    const get = type => parts.find(part => part.type === type)?.value;
+    return `${get('year')}-${get('month')}-${get('day')}`;
+};
+const makeNumber = prefix => `${prefix}-${parkDateKey().replaceAll('-', '')}-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
 const parseSnapshot = value => typeof value === 'string' ? JSON.parse(value) : value;
 const formatDate = value => {
     if (typeof value === 'string') return value.slice(0, 10);
@@ -106,7 +112,8 @@ const formatDate = value => {
 
 const fetchSale = async (connection, saleNumber) => {
     const [rows] = await connection.query(
-        `SELECT s.*, CONCAT(staff.first_name, ' ', staff.last_name) AS staff_name,
+        `SELECT s.*, DATE_FORMAT(s.visit_date, '%Y-%m-%d') AS visit_date_key,
+                CONCAT(staff.first_name, ' ', staff.last_name) AS staff_name,
                 CONCAT(voider.first_name, ' ', voider.last_name) AS voided_by_name,
                 p.method AS payment_method, p.status AS payment_status,
                 p.amount_received_cents, p.change_cents, p.provider_reference
@@ -133,7 +140,7 @@ const fetchSale = async (connection, saleNumber) => {
         status: sale.status,
         visitorName: sale.visitor_name,
         visitorPhone: sale.visitor_phone,
-        visitDate: formatDate(sale.visit_date),
+        visitDate: sale.visit_date_key || formatDate(sale.visit_date),
         staffName: sale.staff_name,
         currency: sale.currency,
         subtotalCents: Number(sale.subtotal_cents),
@@ -150,6 +157,7 @@ const fetchSale = async (connection, saleNumber) => {
         voidReason: sale.void_reason,
         voidedByName: sale.voided_by_name,
         voidedAt: sale.voided_at,
+        checkedInAt: sale.checked_in_at,
         createdAt: sale.created_at,
         receipt: parseSnapshot(sale.receipt_snapshot)
     };
@@ -264,6 +272,70 @@ const createSale = async ({ staff, idempotencyKey, payload, ipAddress, userAgent
 
 const getSale = saleNumber => fetchSale(db, saleNumber);
 
+const listSales = async ({ page = 1, limit = 20, search = '', status = '', visitDate = '' } = {}) => {
+    const safePage = Math.max(Number.parseInt(page, 10) || 1, 1);
+    const safeLimit = Math.min(Math.max(Number.parseInt(limit, 10) || 20, 1), 100);
+    const conditions = [];
+    const parameters = [];
+    if (['completed', 'voided'].includes(status)) {
+        conditions.push('s.status = ?');
+        parameters.push(status);
+    }
+    if (visitDate) {
+        if (!parseDate(visitDate)) throw new WalkInError('A valid visit date is required.');
+        conditions.push('s.visit_date = ?');
+        parameters.push(visitDate);
+    }
+    const safeSearch = typeof search === 'string' ? search.trim().slice(0, 100) : '';
+    if (safeSearch) {
+        conditions.push('(s.sale_number LIKE ? OR s.receipt_number LIKE ? OR s.visitor_name LIKE ? OR s.visitor_phone LIKE ?)');
+        const term = `%${safeSearch.replace(/[\\%_]/g, '\\$&')}%`;
+        parameters.push(term, term, term, term);
+    }
+    const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+    const [countRows] = await db.query(`SELECT COUNT(*) AS total FROM walk_in_sales s ${where}`, parameters);
+    const [rows] = await db.query(
+        `SELECT s.sale_number, s.receipt_number, s.visitor_name, s.visitor_phone,
+                DATE_FORMAT(s.visit_date, '%Y-%m-%d') AS visit_date_key,
+                s.total_cents, s.currency, s.status, s.checked_in_at, s.created_at,
+                CONCAT(u.first_name, ' ', u.last_name) AS staff_name,
+                p.method AS payment_method, p.status AS payment_status,
+                COALESCE(items.total_visitors, 0) AS total_visitors
+         FROM walk_in_sales s
+         JOIN users u ON u.id = s.staff_id
+         JOIN walk_in_payments p ON p.sale_id = s.id
+         LEFT JOIN (SELECT sale_id, SUM(quantity) AS total_visitors FROM walk_in_sale_items GROUP BY sale_id) items ON items.sale_id = s.id
+         ${where}
+         ORDER BY s.created_at DESC
+         LIMIT ? OFFSET ?`,
+        [...parameters, safeLimit, (safePage - 1) * safeLimit]
+    );
+    return {
+        records: rows.map(row => ({
+            saleNumber: row.sale_number,
+            receiptNumber: row.receipt_number,
+            visitorName: row.visitor_name,
+            visitorPhone: row.visitor_phone,
+            visitDate: row.visit_date_key,
+            totalCents: Number(row.total_cents),
+            currency: row.currency,
+            status: row.status,
+            checkedInAt: row.checked_in_at,
+            createdAt: row.created_at,
+            staffName: row.staff_name,
+            paymentMethod: row.payment_method,
+            paymentStatus: row.payment_status,
+            totalVisitors: Number(row.total_visitors)
+        })),
+        pagination: {
+            page: safePage,
+            limit: safeLimit,
+            total: Number(countRows[0].total),
+            pages: Math.max(Math.ceil(Number(countRows[0].total) / safeLimit), 1)
+        }
+    };
+};
+
 const getAvailability = async visitDate => {
     if (!parseDate(visitDate)) throw new WalkInError('A valid visit date is required.');
     const [reservationCapacity] = await db.query(
@@ -311,6 +383,35 @@ const voidSale = async ({ saleNumber, staff, reason, ipAddress, userAgent }) => 
     }
 };
 
+const markUsed = async ({ saleNumber, staff, ipAddress, userAgent }) => {
+    const connection = await db.getConnection();
+    try {
+        await connection.beginTransaction();
+        const [rows] = await connection.query(
+            'SELECT id, sale_number, status, checked_in_at FROM walk_in_sales WHERE sale_number = ? OR receipt_number = ? FOR UPDATE',
+            [saleNumber, saleNumber]
+        );
+        if (!rows[0]) throw new WalkInError('Walk-in sale not found.', 404);
+        if (rows[0].status === 'voided') throw new WalkInError('A voided walk-in receipt cannot be checked in.', 409);
+        if (!rows[0].checked_in_at) {
+            await connection.query('UPDATE walk_in_sales SET checked_in_by = ?, checked_in_at = CURRENT_TIMESTAMP WHERE id = ?', [staff.id, rows[0].id]);
+            await connection.query(
+                `INSERT INTO staff_activity_logs
+                 (staff_id, action_type, action_description, entity_type, entity_id, ip_address, user_agent)
+                 VALUES (?, 'walk_in_check_in', ?, 'walk_in_sale', ?, ?, ?)`,
+                [staff.id, `Checked in walk-in sale ${rows[0].sale_number}`, rows[0].id, ipAddress, userAgent]
+            );
+        }
+        await connection.commit();
+        return fetchSale(db, rows[0].sale_number);
+    } catch (error) {
+        await connection.rollback();
+        throw error;
+    } finally {
+        connection.release();
+    }
+};
+
 const logReceiptEvent = async ({ saleNumber, staff, eventType, ipAddress, userAgent }) => {
     const sale = await fetchSale(db, saleNumber);
     if (!sale) throw new WalkInError('Walk-in sale not found.', 404);
@@ -323,4 +424,4 @@ const logReceiptEvent = async ({ saleNumber, staff, eventType, ipAddress, userAg
     );
 };
 
-module.exports = { WalkInError, validateAndCalculate, createSale, getSale, getAvailability, voidSale, logReceiptEvent };
+module.exports = { WalkInError, parkDateKey, validateAndCalculate, createSale, getSale, listSales, getAvailability, voidSale, markUsed, logReceiptEvent };

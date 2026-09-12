@@ -9,8 +9,7 @@ const requestContext = req => ({
 
 exports.getConfig = async (req, res, next) => {
     try {
-        const now = new Date();
-        const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+        const today = walkInService.parkDateKey();
         const date = typeof req.query.date === 'string' ? req.query.date : today;
         const availability = await walkInService.getAvailability(date);
         res.json({ success: true, config: { ...config, availability } });
@@ -38,6 +37,15 @@ exports.getOne = async (req, res, next) => {
         const sale = await walkInService.getSale(req.params.saleNumber);
         if (!sale) return res.status(404).json({ success: false, message: 'Walk-in sale not found.' });
         res.json({ success: true, sale });
+    } catch (error) {
+        next(error);
+    }
+};
+
+exports.list = async (req, res, next) => {
+    try {
+        const result = await walkInService.listSales(req.query);
+        res.json({ success: true, ...result });
     } catch (error) {
         next(error);
     }

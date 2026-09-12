@@ -6,57 +6,52 @@ const ascii = value => String(value ?? '')
     .replace(/[\u0300-\u036f]/g, '')
     .replace(/[^\x20-\x7E\n]/g, '?');
 
-const money = (cents, currency = 'PHP') => `${currency} ${(Number(cents || 0) / 100).toFixed(2)}`;
-const fit = (left, right, width) => {
-    const safeLeft = ascii(left);
-    const safeRight = ascii(right);
-    const available = Math.max(width - safeRight.length - 1, 1);
-    return `${safeLeft.slice(0, available).padEnd(available)} ${safeRight.slice(0, width)}`;
-};
-const center = (value, width) => {
-    const text = ascii(value).slice(0, width);
-    return text.padStart(text.length + Math.max(Math.floor((width - text.length) / 2), 0));
-};
-
-export const encodeEscPosReceipt = (receipt, { paperWidth = '58mm', reprint = false, cut = true } = {}) => {
-    if (!receipt) throw new Error('Receipt data is required.');
-    const columns = paperWidth === '80mm' ? 48 : 32;
-    const separator = '-'.repeat(columns);
-    const lines = [];
-    if (reprint) lines.push(center('*** REPRINT ***', columns), '');
-    lines.push(center(receipt.organizationName, columns));
-    if (receipt.address) lines.push(center(receipt.address, columns));
-    if (receipt.contact) lines.push(center(receipt.contact, columns));
-    lines.push(separator);
-    lines.push(fit('Receipt', receipt.receiptNumber, columns));
-    lines.push(fit('Date', new Date(receipt.createdAt).toLocaleString(), columns));
-    lines.push(fit('Visit', receipt.visitDate, columns));
-    lines.push(fit('Staff', receipt.staffName, columns));
-    if (receipt.visitorName) lines.push(fit('Visitor', receipt.visitorName, columns));
-    lines.push(separator);
-    for (const item of receipt.items || []) {
-        lines.push(`${item.quantity} x ${ascii(item.categoryLabel)}`.slice(0, columns));
-        lines.push(fit(`  @ ${money(item.unitPriceCents, receipt.currency)}`, money(item.lineTotalCents, receipt.currency), columns));
-        if (Number(item.discountCents) > 0) lines.push(fit('  Discount', `-${money(item.discountCents, receipt.currency)}`, columns));
+const command = values => new Uint8Array(values);
+const combine = parts => {
+    const output = new Uint8Array(parts.reduce((size, part) => size + part.length, 0));
+    let offset = 0;
+    for (const part of parts) {
+        output.set(part, offset);
+        offset += part.length;
     }
-    lines.push(separator);
-    lines.push(fit('Subtotal', money(receipt.subtotalCents, receipt.currency), columns));
-    if (Number(receipt.discountCents) > 0) lines.push(fit('Discount', `-${money(receipt.discountCents, receipt.currency)}`, columns));
-    lines.push(fit('TOTAL', money(receipt.totalCents, receipt.currency), columns));
-    lines.push(fit('Received', money(receipt.payment?.amountReceivedCents, receipt.currency), columns));
-    lines.push(fit('Change', money(receipt.payment?.changeCents, receipt.currency), columns));
-    lines.push(fit('Payment', `${receipt.payment?.methodLabel || receipt.payment?.method} / ${receipt.payment?.status}`, columns));
-    lines.push(separator);
-    if (receipt.qrData) lines.push(center(receipt.qrData, columns));
-    if (receipt.policyNote) lines.push('', center(receipt.policyNote, columns));
-    lines.push('', '', '');
-
-    const text = new TextEncoder().encode(`${lines.join('\n')}\n`);
-    const prefix = new Uint8Array([ESC, 0x40]);
-    const suffix = cut ? new Uint8Array([GS, 0x56, 0x41, 0x03]) : new Uint8Array();
-    const output = new Uint8Array(prefix.length + text.length + suffix.length);
-    output.set(prefix);
-    output.set(text, prefix.length);
-    output.set(suffix, prefix.length + text.length);
     return output;
+};
+
+const qrCommands = value => {
+    const data = new TextEncoder().encode(ascii(value));
+    const length = data.length + 3;
+    return [
+        command([GS, 0x28, 0x6b, 0x04, 0x00, 0x31, 0x41, 0x32, 0x00]),
+        command([GS, 0x28, 0x6b, 0x03, 0x00, 0x31, 0x43, 0x06]),
+        command([GS, 0x28, 0x6b, 0x03, 0x00, 0x31, 0x45, 0x31]),
+        command([GS, 0x28, 0x6b, length & 0xff, (length >> 8) & 0xff, 0x31, 0x50, 0x30]),
+        data,
+        command([GS, 0x28, 0x6b, 0x03, 0x00, 0x31, 0x51, 0x30])
+    ];
+};
+
+export const encodeEscPosReceipt = (receipt, { reprint = false } = {}) => {
+    if (!receipt) throw new Error('Receipt data is required.');
+    const createdAt = new Date(receipt.createdAt);
+    const validDate = !Number.isNaN(createdAt.getTime());
+    const date = validDate ? createdAt.toLocaleDateString('en-PH', { timeZone: 'Asia/Manila', year: 'numeric', month: 'short', day: '2-digit' }) : receipt.createdAt;
+    const time = validDate ? createdAt.toLocaleTimeString('en-PH', { timeZone: 'Asia/Manila', hour: '2-digit', minute: '2-digit' }) : '-';
+    const details = [
+        `Ref.    ${ascii(receipt.receiptNumber)}`,
+        `Date    ${ascii(date)}, ${ascii(time)}`,
+        ...(receipt.items || []).map(item => `Ticket  ${item.quantity} x ${ascii(item.categoryLabel)}`),
+        ''
+    ].join('\n');
+    return combine([
+        command([ESC, 0x40, ESC, 0x61, 0x01, ESC, 0x45, 0x01, GS, 0x21, 0x11]),
+        new TextEncoder().encode('BULUSAN ZOO\n'),
+        command([GS, 0x21, 0x00, ESC, 0x45, 0x00]),
+        new TextEncoder().encode(`${reprint ? '\n*** REPRINT ***\n' : ''}\n`),
+        command([ESC, 0x61, 0x00]),
+        new TextEncoder().encode(`${details}\n`),
+        command([ESC, 0x61, 0x01]),
+        ...qrCommands(receipt.qrData || receipt.receiptNumber),
+        command([ESC, 0x61, 0x00]),
+        new TextEncoder().encode('\n\n\n\n')
+    ]);
 };

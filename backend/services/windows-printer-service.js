@@ -41,7 +41,22 @@ const listPrinters = async () => {
         status: String(printer.PrinterStatus || 'Unknown'),
         type: printer.Type,
         shared: Boolean(printer.Shared),
-        isConfiguredPt210: printer.Name === 'PT210 USB' || printer.PortName === 'USB001'
+        isConfiguredPt210: printer.Name === 'PT210 USB' && printer.PortName === 'USB001'
+    }));
+};
+
+const listUsbDevices = async () => {
+    const command = "Get-PnpDevice -PresentOnly | Where-Object { $_.InstanceId -like 'USB\\VID_0FE6&PID_811E*' } | Select-Object FriendlyName,Status,Class,InstanceId | ConvertTo-Json -Compress";
+    const { stdout } = await runPowerShell(command);
+    if (!stdout.trim()) return [];
+    const parsed = JSON.parse(stdout);
+    return (Array.isArray(parsed) ? parsed : [parsed]).map(device => ({
+        name: device.FriendlyName || 'YICHIP POS58 Printer',
+        status: device.Status || 'Unknown',
+        deviceClass: device.Class || 'USB',
+        instanceId: device.InstanceId,
+        vendorId: '0FE6',
+        productId: '811E'
     }));
 };
 
@@ -103,4 +118,4 @@ const printReceipt = async (printerName, receipt, options = {}) => {
     return selected;
 };
 
-module.exports = { listPrinters, printReceipt };
+module.exports = { listPrinters, listUsbDevices, printReceipt };

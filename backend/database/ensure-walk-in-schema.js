@@ -26,6 +26,8 @@ const ensureWalkInSchema = async () => {
         void_reason VARCHAR(500) DEFAULT NULL,
         voided_by INT DEFAULT NULL,
         voided_at TIMESTAMP NULL DEFAULT NULL,
+        checked_in_by INT DEFAULT NULL,
+        checked_in_at TIMESTAMP NULL DEFAULT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         UNIQUE KEY uk_walk_in_sale_number (sale_number),
@@ -33,7 +35,8 @@ const ensureWalkInSchema = async () => {
         UNIQUE KEY uk_walk_in_idempotency (staff_id, idempotency_key),
         INDEX idx_walk_in_visit_status (visit_date, status),
         CONSTRAINT fk_walk_in_staff FOREIGN KEY (staff_id) REFERENCES users(id) ON DELETE RESTRICT ON UPDATE CASCADE,
-        CONSTRAINT fk_walk_in_voided_by FOREIGN KEY (voided_by) REFERENCES users(id) ON DELETE SET NULL ON UPDATE CASCADE
+        CONSTRAINT fk_walk_in_voided_by FOREIGN KEY (voided_by) REFERENCES users(id) ON DELETE SET NULL ON UPDATE CASCADE,
+        CONSTRAINT fk_walk_in_checked_in_by FOREIGN KEY (checked_in_by) REFERENCES users(id) ON DELETE SET NULL ON UPDATE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`);
 
     await db.query(`CREATE TABLE IF NOT EXISTS walk_in_sale_items (
@@ -65,6 +68,19 @@ const ensureWalkInSchema = async () => {
         UNIQUE KEY uk_walk_in_payment_sale (sale_id),
         CONSTRAINT fk_walk_in_payment_sale FOREIGN KEY (sale_id) REFERENCES walk_in_sales(id) ON DELETE RESTRICT ON UPDATE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`);
+
+    const upgrades = [
+        'ALTER TABLE walk_in_sales ADD COLUMN checked_in_by INT DEFAULT NULL AFTER voided_at',
+        'ALTER TABLE walk_in_sales ADD COLUMN checked_in_at TIMESTAMP NULL DEFAULT NULL AFTER checked_in_by',
+        'ALTER TABLE walk_in_sales ADD CONSTRAINT fk_walk_in_checked_in_by FOREIGN KEY (checked_in_by) REFERENCES users(id) ON DELETE SET NULL ON UPDATE CASCADE'
+    ];
+    for (const statement of upgrades) {
+        try {
+            await db.query(statement);
+        } catch (error) {
+            if (!/duplicate column|duplicate foreign key constraint name/i.test(error.message)) throw error;
+        }
+    }
 };
 
 module.exports = ensureWalkInSchema;

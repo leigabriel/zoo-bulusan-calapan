@@ -110,7 +110,7 @@ export const webUsbPrintAdapter = {
         );
         if (!device) {
             publish('Permission required');
-            throw new Error('Select the USB printer on the Printer Status page first.');
+            throw new Error('Select the PT210 from the print menu on the Walk-In page first.');
         }
         return openDevice(device);
     },

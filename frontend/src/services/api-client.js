@@ -996,6 +996,17 @@ export const staffAPI = {
         return handleResponse(response);
     },
 
+    getWalkInRecords: async (filters = {}) => {
+        const query = new URLSearchParams();
+        Object.entries(filters).forEach(([key, value]) => {
+            if (value !== '' && value !== null && value !== undefined) query.set(key, value);
+        });
+        const response = await fetch(`${API_BASE_URL}/staff/walk-in-records?${query}`, {
+            headers: getAuthHeaders(getCurrentAuthType())
+        });
+        return handleResponse(response);
+    },
+
     createWalkIn: async (payload, idempotencyKey) => {
         const response = await fetch(`${API_BASE_URL}/staff/walk-in`, {
             method: 'POST',
@@ -2130,7 +2141,7 @@ export const reservationAPI = {
     scanReservation: async (qrData, markUsed = false) => {
         const response = await fetch(`${API_BASE_URL}/reservations/scan`, {
             method: 'POST',
-            headers: getAuthHeaders('staff'),
+            headers: getAuthHeaders(getCurrentAuthType()),
             body: JSON.stringify({ qrData, markUsed })
         });
         return handleResponse(response);

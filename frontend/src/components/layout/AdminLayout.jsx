@@ -343,6 +343,7 @@ const AdminLayout = ({ children }) => {
         { path: '/admin/events', label: 'Events', Icon: Calendar },
         { path: '/admin/reservations', label: 'Reservations', Icon: Ticket },
         { path: '/admin/transactions', label: 'Transactions', Icon: Ticket },
+        { path: '/admin/walk-in-records', label: 'Walk-In Records', Icon: Ticket },
         { path: '/admin/animals', label: 'Manage Animals', Icon: Pet },
         { path: '/admin/plants', label: 'Manage Plants', Icon: Leaf },
         { path: '/admin/users', label: 'Manage Users', Icon: People },

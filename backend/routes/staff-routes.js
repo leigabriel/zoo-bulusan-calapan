@@ -56,6 +56,7 @@ router.post('/printers/windows/print', printerController.print);
 
 // Walk-in sales
 router.get('/walk-in/config', walkInController.getConfig);
+router.get('/walk-in-records', walkInController.list);
 router.post('/walk-in', walkInController.create);
 router.get('/walk-in/:saleNumber', walkInController.getOne);
 router.get('/walk-in/:saleNumber/receipt', walkInController.getReceipt);

@@ -5,6 +5,8 @@ import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode';
 import { reservationAPI } from '../../services/api-client';
 import { notify } from '../../utils/toast';
 
+const formatMoney = (cents, currency = 'PHP') => `${currency} ${(Number(cents || 0) / 100).toFixed(2)}`;
+
 const ResultModal = ({ scanResult, loading, onClose, onConfirm }) => {
     if (!scanResult) return null;
 
@@ -25,8 +27,8 @@ const ResultModal = ({ scanResult, loading, onClose, onConfirm }) => {
             <div className="relative flex max-h-[92dvh] w-full max-w-2xl flex-col overflow-hidden rounded-t-[1.75rem] bg-white shadow-2xl sm:max-h-[90dvh] sm:rounded-[1.75rem]">
             <div className="flex items-start justify-between gap-4 border-b border-green-100 bg-green-50/50 px-4 py-4 sm:px-6">
                     <div className="min-w-0">
-                        <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-green-700">Verified reservation</p>
-                        <h2 id="scan-result-title" className="mt-1 truncate text-xl font-extrabold tracking-tight text-gray-900 sm:text-2xl">Ticket details</h2>
+                        <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-green-700">Verified record</p>
+                        <h2 id="scan-result-title" className="mt-1 truncate text-xl font-extrabold tracking-tight text-gray-900 sm:text-2xl">Admission details</h2>
                     </div>
                     <button type="button" onClick={onClose} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-xl text-gray-500 shadow-sm ring-1 ring-gray-200 transition hover:bg-green-50 hover:text-green-700" aria-label="Close ticket details">
                         &times;
@@ -37,7 +39,7 @@ const ResultModal = ({ scanResult, loading, onClose, onConfirm }) => {
                     <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                         <div className="min-w-0">
                             <span className="mb-2 inline-flex rounded-full bg-gray-900 px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-[0.14em] text-white sm:text-xs">
-                                {scanResult.type} reservation
+                                {scanResult.type === 'walk_in' ? 'Walk-in sale' : `${scanResult.type} reservation`}
                             </span>
                             <h3 className="break-all text-2xl font-extrabold tracking-tight text-gray-900 sm:text-3xl">{scanResult.reference}</h3>
                         </div>
@@ -63,7 +65,7 @@ const ResultModal = ({ scanResult, loading, onClose, onConfirm }) => {
 
                         <div>
                             <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-gray-400">Date</p>
-                            <p className="mt-1 text-sm font-bold text-gray-900 sm:text-base">{new Date(scanResult.date).toLocaleDateString(undefined, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}</p>
+                            <p className="mt-1 text-sm font-bold text-gray-900 sm:text-base">{new Date(`${String(scanResult.date).slice(0, 10)}T00:00:00`).toLocaleDateString('en-PH', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}</p>
                         </div>
                         <div>
                             <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-gray-400">Time</p>
@@ -77,7 +79,27 @@ const ResultModal = ({ scanResult, loading, onClose, onConfirm }) => {
                             </p>
                         </div>
 
-                        {scanResult.type === 'ticket' ? (
+                        {scanResult.type === 'walk_in' ? (
+                            <div className="space-y-4 border-t border-gray-200 pt-4 sm:col-span-2">
+                                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+                                    <div><p className="text-[10px] font-bold uppercase text-gray-400">Sale number</p><p className="mt-1 break-all text-sm font-bold text-gray-900">{scanResult.saleNumber}</p></div>
+                                    <div><p className="text-[10px] font-bold uppercase text-gray-400">Cashier</p><p className="mt-1 text-sm font-bold text-gray-900">{scanResult.staffName}</p></div>
+                                    <div><p className="text-[10px] font-bold uppercase text-gray-400">Contact</p><p className="mt-1 text-sm font-bold text-gray-900">{scanResult.phone || 'Not provided'}</p></div>
+                                </div>
+                                <div className="rounded-xl border border-gray-200 bg-white">
+                                    {scanResult.items?.map(item => <div key={item.categoryCode} className="flex items-center justify-between gap-3 border-b border-gray-100 px-3 py-2.5 last:border-0"><div><p className="text-sm font-bold text-gray-900">{item.quantity} x {item.categoryLabel}</p><p className="text-xs text-gray-400">{formatMoney(item.unitPriceCents, scanResult.currency)} each</p></div><strong className="text-sm">{formatMoney(item.lineTotalCents, scanResult.currency)}</strong></div>)}
+                                </div>
+                                <div className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
+                                    <div><p className="text-[10px] font-bold uppercase text-gray-400">Subtotal</p><p className="mt-1 font-black">{formatMoney(scanResult.subtotalCents, scanResult.currency)}</p></div>
+                                    <div><p className="text-[10px] font-bold uppercase text-gray-400">Discount</p><p className="mt-1 font-black">{formatMoney(scanResult.discountCents, scanResult.currency)}</p></div>
+                                    <div><p className="text-[10px] font-bold uppercase text-gray-400">Total</p><p className="mt-1 font-black">{formatMoney(scanResult.totalCents, scanResult.currency)}</p></div>
+                                    <div><p className="text-[10px] font-bold uppercase text-gray-400">Payment</p><p className="mt-1 font-black uppercase">{scanResult.payment?.method} / {scanResult.payment?.status}</p></div>
+                                    <div><p className="text-[10px] font-bold uppercase text-gray-400">Received</p><p className="mt-1 font-black">{formatMoney(scanResult.payment?.amountReceivedCents, scanResult.currency)}</p></div>
+                                    <div><p className="text-[10px] font-bold uppercase text-gray-400">Change</p><p className="mt-1 font-black">{formatMoney(scanResult.payment?.changeCents, scanResult.currency)}</p></div>
+                                    {scanResult.payment?.providerReference && <div className="col-span-2"><p className="text-[10px] font-bold uppercase text-gray-400">Payment reference</p><p className="mt-1 break-all font-black">{scanResult.payment.providerReference}</p></div>}
+                                </div>
+                            </div>
+                        ) : scanResult.type === 'ticket' ? (
                             <div className="grid grid-cols-2 gap-4 border-t border-gray-200 pt-4 sm:col-span-2 sm:grid-cols-4">
                                 <div><p className="text-[10px] font-bold uppercase text-gray-400">Adults</p><p className="mt-1 font-bold text-gray-900">{scanResult.adultQuantity || 0}</p></div>
                                 <div><p className="text-[10px] font-bold uppercase text-gray-400">Children</p><p className="mt-1 font-bold text-gray-900">{scanResult.childQuantity || 0}</p></div>

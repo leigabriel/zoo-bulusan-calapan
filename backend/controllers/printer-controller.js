@@ -20,8 +20,11 @@ const testReceipt = {
 
 exports.list = async (req, res, next) => {
     try {
-        const printers = await printerService.listPrinters();
-        res.json({ success: true, printers });
+        const [printers, usbDevices] = await Promise.all([
+            printerService.listPrinters(),
+            printerService.listUsbDevices()
+        ]);
+        res.json({ success: true, printers, usbDevices });
     } catch (error) {
         next(error);
     }
