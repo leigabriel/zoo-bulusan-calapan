@@ -36,22 +36,26 @@ export const encodeEscPosReceipt = (receipt, { reprint = false } = {}) => {
     const validDate = !Number.isNaN(createdAt.getTime());
     const date = validDate ? createdAt.toLocaleDateString('en-PH', { timeZone: 'Asia/Manila', year: 'numeric', month: 'short', day: '2-digit' }) : receipt.createdAt;
     const time = validDate ? createdAt.toLocaleTimeString('en-PH', { timeZone: 'Asia/Manila', hour: '2-digit', minute: '2-digit' }) : '-';
+    const ticketLines = (receipt.items || []).map(item => `Ticket Type: ${ascii(item.categoryLabel)} x ${item.quantity}`).join('\n');
+    const total = receipt.totalCents != null ? `PHP ${(receipt.totalCents / 100).toFixed(2)}` : '-';
     const details = [
-        `Ref.    ${ascii(receipt.receiptNumber)}`,
-        `Date    ${ascii(date)}, ${ascii(time)}`,
-        ...(receipt.items || []).map(item => `Ticket  ${item.quantity} x ${ascii(item.categoryLabel)}`),
-        ''
+        `Ref. No.: ${ascii(receipt.receiptNumber)}`,
+        `Date: ${ascii(date)}`,
+        `Time: ${ascii(time)}`,
+        ticketLines,
+        `Amount: ${total}`
     ].join('\n');
     return combine([
         command([ESC, 0x40, ESC, 0x61, 0x01, ESC, 0x45, 0x01, GS, 0x21, 0x11]),
-        new TextEncoder().encode('BULUSAN ZOO\n'),
+        new TextEncoder().encode('Bulusan Zoo\n'),
         command([GS, 0x21, 0x00, ESC, 0x45, 0x00]),
         new TextEncoder().encode(`${reprint ? '\n*** REPRINT ***\n' : ''}\n`),
         command([ESC, 0x61, 0x00]),
-        new TextEncoder().encode(`${details}\n`),
+        new TextEncoder().encode(`${details}\n\n`),
         command([ESC, 0x61, 0x01]),
         ...qrCommands(receipt.qrData || receipt.receiptNumber),
         command([ESC, 0x61, 0x00]),
+        new TextEncoder().encode('\nThank You & Enjoy!\n'),
         new TextEncoder().encode('\n\n\n\n')
     ]);
 };

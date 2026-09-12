@@ -29,6 +29,4 @@ backend/uploads/profile-images/*
 frontend/public/profile-img/*
 !frontend/public/profile-img/.gitkeep
 
-tasks.md
-bulusanzoocalapandatabasedevelopment.sql
-sql.txt
+staff-mobile
