@@ -1,0 +1,49 @@
+.thermal-receipt {
+    box-sizing: border-box;
+    margin: 0 auto;
+    padding: 4mm;
+    background: #fff;
+    color: #000;
+    font-family: ui-monospace, "Courier New", monospace;
+    font-size: 11px;
+    line-height: 1.35;
+}
+
+.thermal-receipt.paper-58 { width: 58mm; padding-left: 5mm; padding-right: 5mm; }
+.thermal-receipt.paper-80 { width: 80mm; }
+.receipt-section { border-bottom: 1px dashed #000; padding: 0 0 3mm; margin-bottom: 3mm; }
+.receipt-center { text-align: center; }
+.receipt-center h2 { margin: 0 0 1mm; font-size: 14px; font-weight: 900; }
+.receipt-center p, .receipt-meta p, .receipt-totals p { margin: 0.8mm 0; }
+.receipt-meta p, .receipt-totals p { display: flex; justify-content: space-between; gap: 3mm; }
+.receipt-meta strong { text-align: right; overflow-wrap: anywhere; }
+.receipt-item { display: grid; grid-template-columns: 1fr auto; gap: 1mm 2mm; margin-bottom: 2mm; break-inside: avoid; page-break-inside: avoid; }
+.receipt-item div { display: flex; flex-direction: column; }
+.receipt-item b { align-self: end; }
+.receipt-item small { grid-column: 1 / -1; }
+.receipt-grand-total { border-top: 1px solid #000; padding-top: 2mm; font-size: 13px; }
+.receipt-qr { display: flex; flex-direction: column; align-items: center; margin: 3mm 0; break-inside: avoid; page-break-inside: avoid; }
+.receipt-qr p { margin: 1mm 0 0; }
+.receipt-footer { margin-top: 3mm; }
+.receipt-reprint { border: 2px solid #000; margin-bottom: 3mm; padding: 1mm; text-align: center; font-size: 15px; font-weight: 900; letter-spacing: 0.15em; }
+
+@page { margin: 0; }
+
+@media print {
+    html, body, #root, #root > div, main {
+        height: auto !important;
+        min-height: 0 !important;
+        overflow: visible !important;
+        background: #fff !important;
+    }
+    body * { visibility: hidden !important; }
+    .thermal-receipt, .thermal-receipt * { visibility: visible !important; }
+    .thermal-receipt {
+        position: absolute;
+        top: 0;
+        left: 0;
+        margin: 0;
+        box-shadow: none !important;
+    }
+    .receipt-section, .receipt-item, .receipt-totals, .receipt-qr { break-inside: avoid; page-break-inside: avoid; }
+}

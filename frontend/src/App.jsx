@@ -56,6 +56,8 @@ import StaffHelpCenter from './pages/staff/StaffHelpCenter';
 import StaffMessages from './pages/staff/StaffMessages';
 import StaffCommunityModeration from './pages/staff/StaffCommunityModeration';
 import StaffTrash from './pages/staff/StaffTrash';
+import StaffWalkIn from './pages/staff/StaffWalkIn';
+import StaffPrinter from './pages/staff/StaffPrinter';
 import AdminLayout from './components/layout/AdminLayout';
 import StaffLayout from './components/layout/StaffLayout';
 import AnimalClassifier from './components/features/ai-scanner/AnimalClassifier';
@@ -328,6 +330,16 @@ function AppRoutes() {
                     <StaffLayout>
                         <StaffDashboard />
                     </StaffLayout>
+                </ProtectedRoute>
+            } />
+            <Route path="/staff/walk-in" element={
+                <ProtectedRoute allowedRoles={['admin', 'staff']}>
+                    <StaffLayout><StaffWalkIn /></StaffLayout>
+                </ProtectedRoute>
+            } />
+            <Route path="/staff/printer" element={
+                <ProtectedRoute allowedRoles={['admin', 'staff']}>
+                    <StaffLayout><StaffPrinter /></StaffLayout>
                 </ProtectedRoute>
             } />
             <Route path="/staff/ai-assist" element={

@@ -4,6 +4,8 @@ const staffController = require('../controllers/staff-controller');
 const adminController = require('../controllers/admin-controller');
 const messageController = require('../controllers/message-controller');
 const monitoringController = require('../controllers/monitoring-controller');
+const walkInController = require('../controllers/walk-in-controller');
+const printerController = require('../controllers/printer-controller');
 const { protect, authorize } = require('../middleware/auth');
 const { trackActivity } = require('../middleware/track-activity');
 const multer = require('multer');
@@ -47,6 +49,18 @@ router.get('/dashboard', staffController.getDashboardStats);
 router.get('/recent-tickets', staffController.getRecentTickets);
 router.get('/my-activity-summary', staffController.getMyActivitySummary);
 router.post('/monitoring/heartbeat', monitoringController.heartbeat);
+
+// Local Windows printing (the backend must run on the printer host)
+router.get('/printers/windows', printerController.list);
+router.post('/printers/windows/print', printerController.print);
+
+// Walk-in sales
+router.get('/walk-in/config', walkInController.getConfig);
+router.post('/walk-in', walkInController.create);
+router.get('/walk-in/:saleNumber', walkInController.getOne);
+router.get('/walk-in/:saleNumber/receipt', walkInController.getReceipt);
+router.post('/walk-in/:saleNumber/void', walkInController.void);
+router.post('/walk-in/:saleNumber/receipt-events', walkInController.receiptEvent);
 
 // Animals - Full CRUD for staff
 router.get('/animals', staffController.getAnimals);

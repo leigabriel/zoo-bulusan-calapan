@@ -34,6 +34,7 @@ const ensureTrashSchema = require('./database/ensure-trash-schema');
 const ensureChatSchema = require('./database/ensure-chat-schema');
 const ensureSupportSchema = require('./database/ensure-support-schema');
 const ensureAdminMasterKeySchema = require('./database/ensure-admin-master-key-schema');
+const ensureWalkInSchema = require('./database/ensure-walk-in-schema');
 const { initializeChatSocket } = require('./socket/chat-socket');
 
 const app = express();
@@ -65,7 +66,7 @@ app.use(cors({
     },
     credentials: true,
     methods: ['GET', 'HEAD', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Tab-ID', 'X-Requested-With']
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Tab-ID', 'X-Requested-With', 'Idempotency-Key']
 }));
 
 app.options('*', cors());
@@ -152,7 +153,7 @@ app.use((err, req, res, next) => {
     });
 });
 
-const schemaInitializers = [ensureEventPaymentSchema, ensureAIAssistSchema, ensureAuthSchema, ensureSiteVisitSchema, ensureUserActivitySchema, ensureTrashSchema, ensureChatSchema, ensureSupportSchema, ensureAdminMasterKeySchema];
+const schemaInitializers = [ensureEventPaymentSchema, ensureAIAssistSchema, ensureAuthSchema, ensureSiteVisitSchema, ensureUserActivitySchema, ensureTrashSchema, ensureChatSchema, ensureSupportSchema, ensureAdminMasterKeySchema, ensureWalkInSchema];
 
 initializeChatSocket(server, {
     origin: allowedOrigins,

@@ -972,6 +972,67 @@ export const adminAPI = {
 };
 
 export const staffAPI = {
+    getWindowsPrinters: async () => {
+        const response = await fetch(`${API_BASE_URL}/staff/printers/windows`, {
+            headers: getAuthHeaders(getCurrentAuthType())
+        });
+        return handleResponse(response);
+    },
+
+    printWindowsReceipt: async ({ printerName, saleNumber, reprint = false, test = false }) => {
+        const response = await fetch(`${API_BASE_URL}/staff/printers/windows/print`, {
+            method: 'POST',
+            headers: getAuthHeaders(getCurrentAuthType()),
+            body: JSON.stringify({ printerName, saleNumber, reprint, test })
+        });
+        return handleResponse(response);
+    },
+
+    getWalkInConfig: async (date) => {
+        const query = date ? `?date=${encodeURIComponent(date)}` : '';
+        const response = await fetch(`${API_BASE_URL}/staff/walk-in/config${query}`, {
+            headers: getAuthHeaders(getCurrentAuthType())
+        });
+        return handleResponse(response);
+    },
+
+    createWalkIn: async (payload, idempotencyKey) => {
+        const response = await fetch(`${API_BASE_URL}/staff/walk-in`, {
+            method: 'POST',
+            headers: { ...getAuthHeaders(getCurrentAuthType()), 'Idempotency-Key': idempotencyKey },
+            body: JSON.stringify(payload)
+        });
+        return handleResponse(response);
+    },
+
+    getWalkIn: async (saleNumber) => {
+        const response = await fetch(`${API_BASE_URL}/staff/walk-in/${encodeURIComponent(saleNumber)}`, {
+            headers: getAuthHeaders(getCurrentAuthType())
+        });
+        return handleResponse(response);
+    },
+
+    getWalkInReceipt: async (saleNumber) => {
+        const response = await fetch(`${API_BASE_URL}/staff/walk-in/${encodeURIComponent(saleNumber)}/receipt`, {
+            headers: getAuthHeaders(getCurrentAuthType())
+        });
+        return handleResponse(response);
+    },
+
+    voidWalkIn: async (saleNumber, reason) => {
+        const response = await fetch(`${API_BASE_URL}/staff/walk-in/${encodeURIComponent(saleNumber)}/void`, {
+            method: 'POST', headers: getAuthHeaders(getCurrentAuthType()), body: JSON.stringify({ reason })
+        });
+        return handleResponse(response);
+    },
+
+    logWalkInReceiptEvent: async (saleNumber, eventType) => {
+        const response = await fetch(`${API_BASE_URL}/staff/walk-in/${encodeURIComponent(saleNumber)}/receipt-events`, {
+            method: 'POST', headers: getAuthHeaders(getCurrentAuthType()), body: JSON.stringify({ eventType })
+        });
+        return handleResponse(response);
+    },
+
     getDashboard: async () => {
         const response = await fetch(`${API_BASE_URL}/staff/dashboard`, {
             headers: getAuthHeaders('staff')
