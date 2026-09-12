@@ -50,6 +50,12 @@ const allowedOrigins = [
     'https://bulusanzoo.vercel.app',
     'http://localhost:5173',
     'http://localhost:3000',
+    'http://127.0.0.1:5500',
+    'http://localhost:5500',
+    'capacitor://localhost',
+    'https://localhost',
+    'https://localhost:8100',
+    /^http:\/\/(localhost|127\.0\.0\.1):\d+$/,
     /^http:\/\/10\.\d+\.\d+\.\d+:\d+$/,
     /^http:\/\/192\.168\.\d+\.\d+:\d+$/
 ].filter(Boolean);
