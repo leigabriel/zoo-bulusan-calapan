@@ -14,7 +14,7 @@ const { sendVerificationEmailSync } = require('../utils/email');
 const getDateRange = (period) => {
     const now = new Date();
     let startDate;
-    
+
     switch (period) {
         case 'today':
             startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -31,7 +31,7 @@ const getDateRange = (period) => {
         default:
             startDate = null;
     }
-    
+
     return startDate;
 };
 
@@ -298,7 +298,7 @@ exports.updateUser = async (req, res) => {
             return res.status(403).json({ success: false, message: 'Regular user accounts are view-only' });
         }
 
-        const updated = await User.update(id, { 
+        const updated = await User.update(id, {
             firstName: firstName || user.first_name,
             lastName: lastName || user.last_name,
             username: username || user.username,
@@ -661,7 +661,7 @@ exports.getAnalytics = async (req, res) => {
 exports.getReportData = async (req, res) => {
     try {
         const { startDate, endDate, reportType = 'sales' } = req.query;
-        
+
         // Default to last 30 days if no date range provided
         const now = new Date();
         const defaultStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 30);
@@ -702,8 +702,8 @@ exports.getReportData = async (req, res) => {
                         type: 'Adult Ticket',
                         quantity: row.adult_quantity,
                         amount: row.adult_quantity * 40,
-                        status: row.status === 'completed' || row.status === 'confirmed' ? 'Completed' : 
-                               row.status === 'cancelled' ? 'Cancelled' : 'Pending',
+                        status: row.status === 'completed' || row.status === 'confirmed' ? 'Completed' :
+                            row.status === 'cancelled' ? 'Cancelled' : 'Pending',
                         reference: row.reservation_reference
                     });
                 }
@@ -713,8 +713,8 @@ exports.getReportData = async (req, res) => {
                         type: 'Child Ticket',
                         quantity: row.child_quantity,
                         amount: row.child_quantity * 20,
-                        status: row.status === 'completed' || row.status === 'confirmed' ? 'Completed' : 
-                               row.status === 'cancelled' ? 'Cancelled' : 'Pending',
+                        status: row.status === 'completed' || row.status === 'confirmed' ? 'Completed' :
+                            row.status === 'cancelled' ? 'Cancelled' : 'Pending',
                         reference: row.reservation_reference
                     });
                 }
@@ -724,8 +724,8 @@ exports.getReportData = async (req, res) => {
                         type: 'Bulusan Resident',
                         quantity: row.bulusan_resident_quantity,
                         amount: 0,
-                        status: row.status === 'completed' || row.status === 'confirmed' ? 'Completed' : 
-                               row.status === 'cancelled' ? 'Cancelled' : 'Pending',
+                        status: row.status === 'completed' || row.status === 'confirmed' ? 'Completed' :
+                            row.status === 'cancelled' ? 'Cancelled' : 'Pending',
                         reference: row.reservation_reference
                     });
                 }
@@ -874,16 +874,16 @@ exports.uploadModel = async (req, res) => {
         const weights = req.files['weights'] || [];
 
         if (!modelJson) {
-            return res.status(400).json({ 
-                success: false, 
-                message: 'model.json file is required' 
+            return res.status(400).json({
+                success: false,
+                message: 'model.json file is required'
             });
         }
 
         if (weights.length === 0) {
-            return res.status(400).json({ 
-                success: false, 
-                message: 'At least one weight file (.bin) is required' 
+            return res.status(400).json({
+                success: false,
+                message: 'At least one weight file (.bin) is required'
             });
         }
 
@@ -902,9 +902,9 @@ exports.uploadModel = async (req, res) => {
         });
     } catch (error) {
         console.error('Error uploading model:', error);
-        res.status(500).json({ 
-            success: false, 
-            message: error.message || 'Error uploading model' 
+        res.status(500).json({
+            success: false,
+            message: error.message || 'Error uploading model'
         });
     }
 };
@@ -924,11 +924,11 @@ exports.getModelInfo = async (req, res) => {
 
         // Read model.json to get info
         const modelData = JSON.parse(fs.readFileSync(modelJsonPath, 'utf-8'));
-        
+
         // Get list of weight files
         const files = fs.readdirSync(modelsPath);
         const weightFiles = files.filter(f => f.endsWith('.bin'));
-        
+
         // Get model file stats
         const stats = fs.statSync(modelJsonPath);
 
@@ -944,9 +944,9 @@ exports.getModelInfo = async (req, res) => {
         });
     } catch (error) {
         console.error('Error getting model info:', error);
-        res.status(500).json({ 
-            success: false, 
-            message: 'Error fetching model info' 
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching model info'
         });
     }
 };
@@ -1079,7 +1079,7 @@ exports.suspendUser = async (req, res) => {
         }
 
         const suspended = await User.suspendUser(id, req.user.id, reason.trim());
-        
+
         if (!suspended) {
             return res.status(500).json({ success: false, message: 'Failed to suspend user' });
         }
@@ -1105,7 +1105,7 @@ exports.unsuspendUser = async (req, res) => {
         }
 
         const unsuspended = await User.unsuspendUser(id);
-        
+
         if (!unsuspended) {
             return res.status(500).json({ success: false, message: 'Failed to unsuspend user' });
         }
@@ -1155,7 +1155,7 @@ exports.reviewAppeal = async (req, res) => {
         }
 
         const reviewed = await User.reviewAppeal(id, req.user.id, status, adminResponse);
-        
+
         if (!reviewed) {
             return res.status(500).json({ success: false, message: 'Failed to review appeal' });
         }
@@ -1186,14 +1186,14 @@ exports.reviewAppeal = async (req, res) => {
 exports.markTicketAsPaid = async (req, res) => {
     try {
         const { id } = req.params;
-        
+
         const ticket = await Ticket.findById(id);
         if (!ticket) {
             return res.status(404).json({ success: false, message: 'Ticket not found' });
         }
 
         const marked = await Ticket.markAsPaid(id, req.user.id);
-        
+
         if (!marked) {
             return res.status(500).json({ success: false, message: 'Failed to mark ticket as paid' });
         }
@@ -1220,14 +1220,14 @@ exports.updateVerificationStatus = async (req, res) => {
     try {
         const { id } = req.params;
         const { status } = req.body;
-        
+
         const ticket = await Ticket.findById(id);
         if (!ticket) {
             return res.status(404).json({ success: false, message: 'Ticket not found' });
         }
 
         const updated = await Ticket.updateVerificationStatus(id, status);
-        
+
         if (!updated) {
             return res.status(500).json({ success: false, message: 'Failed to update verification status' });
         }
@@ -1258,7 +1258,7 @@ exports.updateVerificationStatus = async (req, res) => {
 exports.exportTickets = async (req, res) => {
     try {
         const { startDate, endDate, format = 'json' } = req.query;
-        
+
         let tickets;
         if (startDate && endDate) {
             tickets = await Ticket.getByDateRange(startDate, endDate);
@@ -1270,7 +1270,7 @@ exports.exportTickets = async (req, res) => {
             // Generate CSV
             const headers = ['ID', 'Reference', 'Visitor Name', 'Email', 'Adults', 'Children', 'Residents', 'Total Visitors', 'Reservation Date', 'Status', 'Created At'];
             const csvRows = [headers.join(',')];
-            
+
             tickets.forEach(t => {
                 const row = [
                     t.id,
@@ -1313,8 +1313,8 @@ exports.getUserById = async (req, res) => {
         // Get user's ticket count
         const userTickets = await Ticket.findByUserId(id);
 
-        res.json({ 
-            success: true, 
+        res.json({
+            success: true,
             user: {
                 id: user.id,
                 firstName: user.first_name,
