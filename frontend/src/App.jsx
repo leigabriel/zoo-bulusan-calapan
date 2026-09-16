@@ -7,6 +7,7 @@ import Home from './pages/user/Home';
 import Animals from './pages/user/Animals';
 import Plants from './pages/user/Plants';
 import { AnimalDetail, PlantDetail } from './pages/user/CollectionDetail';
+import WildlifeOriginDetail from './pages/user/WildlifeOriginDetail';
 import Events from './pages/user/Events';
 import Reservations from './pages/user/Reservations';
 import AboutUs from './pages/user/AboutUs';
@@ -133,6 +134,7 @@ function AppRoutes() {
             <Route path="/about" element={<AboutUs />} />
             <Route path="/animaldex" element={<AnimalClassifier />} />
             <Route path="/map" element={<Suspense fallback={<MapPageFallback />}><MapPage /></Suspense>} />
+            <Route path="/map/animals/:id" element={<WildlifeOriginDetail />} />
             <Route path="/privacy" element={<PrivacyPolicy />} />
             <Route path="/terms" element={<TermsOfService />} />
             <Route path="/cookies" element={<CookiePolicy />} />

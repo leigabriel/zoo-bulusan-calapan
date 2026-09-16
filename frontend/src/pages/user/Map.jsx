@@ -1,35 +1,12 @@
-import React, { useEffect, useState, useCallback, memo } from 'react';
+import React, { useState, useCallback, memo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { APIProvider, APILoadingStatus, Map3D, MapMode, Marker3D, AltitudeMode, Pin, useApiLoadingStatus } from '@vis.gl/react-google-maps';
-import { fetchAnimalDescription } from '../../services/animal-description-service';
 import { ChevronLeft, Menu, X } from 'reicon-react';
+import animalHabitats from '../../data/animal-habitats';
 
 /* global __GOOGLE_MAPS_API_KEY__ */
 
 const API_KEY = __GOOGLE_MAPS_API_KEY__;
-
-const animalHabitats = [
-    { id: 1, name: 'African Lion', species: 'Panthera leo', habitat: 'Sub-Saharan Africa', region: 'Africa', coordinates: [-1.2921, 36.8219], icon: '🦁', image: 'https://images.unsplash.com/photo-1546182990-dffeafbe841d?auto=format&fit=crop&q=80&w=1000', description: 'The king of the savannah, living in social prides. They are apex predators essential for maintaining the balance of herbivore populations.', category: 'Mammals' },
-    { id: 2, name: 'African Elephant', species: 'Loxodonta africana', habitat: 'Central & Southern Africa', region: 'Africa', coordinates: [-15.4167, 28.2833], icon: '🐘', image: 'https://images.unsplash.com/photo-1557050543-4d5f4e07ef46?auto=format&fit=crop&q=80&w=1000', description: 'The largest land animal on Earth. They are "ecosystem engineers," creating paths and water holes used by other species.', category: 'Mammals' },
-    { id: 3, name: 'Bengal Tiger', species: 'Panthera tigris tigris', habitat: 'Indian Subcontinent', region: 'Asia', coordinates: [22.5726, 88.3639], icon: '🐅', image: 'https://images.unsplash.com/photo-1500642805046-e56455171932?auto=format&fit=crop&q=80&w=1000', description: 'A solitary and powerful hunter found in the mangrove forests of the Sundarbans and various Indian national parks.', category: 'Mammals' },
-    { id: 4, name: 'Giant Panda', species: 'Ailuropoda melanoleuca', habitat: 'South Central China', region: 'Asia', coordinates: [30.6171, 103.8203], icon: '🐼', image: 'https://images.unsplash.com/photo-1564349683136-77e08bef1ed1?auto=format&fit=crop&q=80&w=1000', description: 'An evolutionary unique bear that subsists almost entirely on bamboo. They are a global symbol of wildlife conservation.', category: 'Mammals' },
-    { id: 5, name: 'Red Kangaroo', species: 'Macropus rufus', habitat: 'Central Australia', region: 'Australia & Oceania', coordinates: [-25.2744, 133.7751], icon: '🦘', image: 'https://images.unsplash.com/photo-1591010323317-0f622616467a?auto=format&fit=crop&q=80&w=1000', description: 'The world\'s largest marsupial. They are built for energy-efficient travel across the vast, arid Australian Outback.', category: 'Mammals' },
-    { id: 6, name: 'Jaguar', species: 'Panthera onca', habitat: 'Amazon Basin', region: 'The Americas', coordinates: [-3.4653, -62.2159], icon: '🐆', image: 'https://images.unsplash.com/photo-1543967625-f15da8009930?auto=format&fit=crop&q=80&w=1000', description: 'The strongest feline bite force in the world, allowing them to pierce the shells of turtles and caimans.', category: 'Mammals' },
-    { id: 7, name: 'Polar Bear', species: 'Ursus maritimus', habitat: 'Arctic Circle', region: 'Polar Regions', coordinates: [78.2232, 15.6267], icon: '🐻‍❄️', image: 'https://images.unsplash.com/photo-1589656966895-2f33e7653819?auto=format&fit=crop&q=80&w=1000', description: 'A marine mammal that depends on sea ice for hunting seals. They are highly vulnerable to rising global temperatures.', category: 'Mammals' },
-    { id: 8, name: 'Emperor Penguin', species: 'Aptenodytes forsteri', habitat: 'Antarctica', region: 'Polar Regions', coordinates: [-75.2509, -0.0713], icon: '🐧', image: 'https://images.unsplash.com/photo-1517783999520-f068d7431a60?auto=format&fit=crop&q=80&w=1000', description: 'The tallest and heaviest of all living penguin species, they endure the harshest winters on the planet to breed.', category: 'Birds' },
-    { id: 9, name: 'Bald Eagle', species: 'Haliaeetus leucocephalus', habitat: 'North America', region: 'The Americas', coordinates: [45.0, -110.0], icon: '🦅', image: 'https://images.unsplash.com/photo-1501701314321-4d7a86161491?auto=format&fit=crop&q=80&w=1000', description: 'A majestic bird of prey and a symbol of freedom. They are found near large bodies of open water with an abundance of fish.', category: 'Birds' },
-    { id: 10, name: 'Koala', species: 'Phascolarctos cinereus', habitat: 'Eastern Australia', region: 'Australia & Oceania', coordinates: [-33.8688, 151.2093], icon: '🐨', image: 'https://images.unsplash.com/photo-1542617933-72439110f065?auto=format&fit=crop&q=80&w=1000', description: 'An arboreal herbivorous marsupial. They sleep up to 20 hours a day to conserve energy from their low-calorie eucalyptus diet.', category: 'Mammals' },
-    { id: 11, name: 'Komodo Dragon', species: 'Varanus komodoensis', habitat: 'Indonesian Islands', region: 'Asia', coordinates: [-8.4901, 119.4619], icon: '🦎', image: 'https://images.unsplash.com/photo-1545281358-132039785501?auto=format&fit=crop&q=80&w=1000', description: 'The largest extant species of lizard. They use a combination of powerful bites and venom to take down large prey like deer.', category: 'Reptiles' },
-    { id: 12, name: 'American Bison', species: 'Bison bison', habitat: 'Great Plains', region: 'The Americas', coordinates: [44.4280, -110.5885], icon: '🦬', image: 'https://images.unsplash.com/photo-1533202996923-bb5b2909403d?auto=format&fit=crop&q=80&w=1000', description: 'A keystone species of the American prairies. Once nearly extinct, conservation efforts have restored their numbers significantly.', category: 'Mammals' },
-    { id: 13, name: 'Snow Leopard', species: 'Panthera uncia', habitat: 'Himalayas', region: 'Asia', coordinates: [35.8617, 76.5133], icon: '🐆', image: 'https://images.unsplash.com/photo-1610484826967-09c5720778c7?auto=format&fit=crop&q=80&w=1000', description: 'Known as the "Ghost of the Mountains," these elusive cats are perfectly adapted to the cold, rugged terrain of Central Asia.', category: 'Mammals' },
-    { id: 14, name: 'Meerkat', species: 'Suricata suricatta', habitat: 'Kalahari Desert', region: 'Africa', coordinates: [-26.1551, 22.0226], icon: '🦦', image: 'https://images.unsplash.com/photo-1594145070006-25916f1a4157?auto=format&fit=crop&q=80&w=1000', description: 'Small mongooses known for their upright standing posture and highly social family groups called mobs or gangs.', category: 'Mammals' },
-    { id: 15, name: 'Great White Shark', species: 'Carcharodon carcharias', habitat: 'Coastal Waters', region: 'Australia & Oceania', coordinates: [-34.6191, 19.3518], icon: '🦈', image: 'https://images.unsplash.com/photo-1560273074-c93173ec71dd?auto=format&fit=crop&q=80&w=1000', description: 'A massive predatory fish found in coastal surface waters of all major oceans. They play a vital role in marine ecosystems.', category: 'Fish' },
-    { id: 16, name: 'Platypus', species: 'Ornithorhynchus anatinus', habitat: 'Eastern Australia Rivers', region: 'Australia & Oceania', coordinates: [-37.8136, 144.9631], icon: '🦆', image: 'https://images.unsplash.com/photo-1621255556209-66e8550f443a?auto=format&fit=crop&q=80&w=1000', description: 'One of the few mammals that lay eggs. They use electrolocation to find prey in murky river bottoms.', category: 'Mammals' },
-    { id: 17, name: 'Galápagos Tortoise', species: 'Chelonoidis niger', habitat: 'Galápagos Islands', region: 'The Americas', coordinates: [-0.6394, -90.3518], icon: '🐢', image: 'https://images.unsplash.com/photo-1548141024-343038304958?auto=format&fit=crop&q=80&w=1000', description: 'Giant tortoises that can live for over 100 years. Their shells vary in shape based on the specific island environment.', category: 'Reptiles' },
-    { id: 18, name: 'Iberian Lynx', species: 'Lynx pardinus', habitat: 'Southwestern Spain', region: 'Europe', coordinates: [37.1704, -6.9298], icon: '🐱', image: 'https://images.unsplash.com/photo-1516139008210-96e45d0dd332?auto=format&fit=crop&q=80&w=1000', description: 'The world\'s most endangered feline species, native to the Iberian Peninsula. Intensive conservation is saving them from extinction.', category: 'Mammals' },
-    { id: 19, name: 'Orangutan', species: 'Pongo pygmaeus', habitat: 'Borneo Rainforest', region: 'Asia', coordinates: [1.3521, 110.1903], icon: '🦧', image: 'https://images.unsplash.com/photo-1516934024742-b461fba47600?auto=format&fit=crop&q=80&w=1000', description: 'Highly intelligent great apes that share 97% of their DNA with humans. They are the world\'s largest arboreal mammals.', category: 'Mammals' },
-    { id: 20, name: 'Blue Whale', species: 'Balaenoptera musculus', habitat: 'Open Oceans', region: 'Polar Regions', coordinates: [0.0, -30.0], icon: '🐋', image: 'https://images.unsplash.com/photo-1601618386442-a727d2c3df31?auto=format&fit=crop&q=80&w=1000', description: 'The largest animal to have ever lived. Their heart is the size of a bumper car, and their tongue weighs as much as an elephant.', category: 'Mammals' }
-];
 
 const regionColors = {
     'Africa': '#b8784e',
@@ -51,7 +28,7 @@ const INITIAL_VIEW = {
 const FOCUS_RANGE = 4200000;
 const FOCUS_TILT = 55;
 
-const DiscoveryList = memo(({ isMobile, filterRegion, setFilterRegion, selectedAnimal, onSelect, onClose }) => (
+const DiscoveryList = memo(({ isMobile, filterRegion, setFilterRegion, onSelect, onClose }) => (
     <div className={`flex flex-col h-full bg-[#fffdf8] ${!isMobile && 'border-l border-[#dce5dc] shadow-2xl'}`}>
         <div className="p-5 md:p-8 border-b border-[#dce5dc] bg-[#f1f5ed]">
             <div className="flex items-start justify-between mb-5">
@@ -82,14 +59,14 @@ const DiscoveryList = memo(({ isMobile, filterRegion, setFilterRegion, selectedA
                 <div
                     key={animal.id}
                     onClick={() => onSelect(animal)}
-                      className={`flex items-center gap-4 p-3.5 rounded-2xl transition-all cursor-pointer ${selectedAnimal?.id === animal.id ? 'bg-[#1f3328] text-white shadow-lg' : 'hover:bg-[#edf3eb] hover:translate-x-1'}`}
+                    className="flex items-center gap-4 p-3.5 rounded-2xl transition-all cursor-pointer hover:bg-[#edf3eb] hover:translate-x-1"
                 >
                     <div className="w-12 h-12 rounded-xl bg-white shadow-sm flex items-center justify-center text-2xl flex-shrink-0">
                         {animal.icon}
                     </div>
                     <div className="flex-1 min-w-0">
                         <h4 className="font-bold text-sm truncate">{animal.name}</h4>
-                     <p className={`text-[9px] font-bold uppercase tracking-widest ${selectedAnimal?.id === animal.id ? 'text-[#b9d5bb]' : 'text-[#6d8572]'}`}>{animal.region}</p>
+                        <p className="text-[9px] font-bold uppercase tracking-widest text-[#6d8572]">{animal.region}</p>
                     </div>
                 </div>
             ))}
@@ -97,28 +74,13 @@ const DiscoveryList = memo(({ isMobile, filterRegion, setFilterRegion, selectedA
     </div>
 ));
 
-const GlobeMap = ({ selectedAnimal, filterRegion, onSelectAnimal }) => {
+const GlobeMap = ({ filterRegion, onSelectAnimal }) => {
     const apiStatus = useApiLoadingStatus();
     const [viewProps, setViewProps] = useState(INITIAL_VIEW);
-    const selectedAnimalId = selectedAnimal?.id;
 
     const handleCameraChange = useCallback((ev) => {
         setViewProps(prev => ({ ...prev, ...ev.detail }));
     }, []);
-
-    useEffect(() => {
-        const animal = animalHabitats.find(a => a.id === selectedAnimalId);
-        if (!animal) return;
-        const [lat, lng] = animal.coordinates;
-        setViewProps(prev => ({
-            ...prev,
-            center: { lat, lng, altitude: 0 },
-            range: FOCUS_RANGE,
-            heading: 0,
-            tilt: FOCUS_TILT,
-            roll: 0
-        }));
-    }, [selectedAnimalId]);
 
     const visibleAnimals = filterRegion === 'All'
         ? animalHabitats
@@ -188,43 +150,14 @@ const MapFallback = () => (
 
 const MapPage = () => {
     const navigate = useNavigate();
-    const [selectedAnimal, setSelectedAnimal] = useState(null);
     const [filterRegion, setFilterRegion] = useState('All');
     const [showExitConfirm, setShowExitConfirm] = useState(false);
     const [isMobileListOpen, setIsMobileListOpen] = useState(false);
-    const [animalInfoLoading, setAnimalInfoLoading] = useState(false);
-    const selectedAnimalId = selectedAnimal?.id;
-
-    useEffect(() => {
-        const animal = animalHabitats.find((item) => item.id === selectedAnimalId);
-        if (!animal) return undefined;
-
-        let active = true;
-        setAnimalInfoLoading(true);
-        fetchAnimalDescription(animal.species || animal.name)
-            .then((info) => {
-                if (!active || !info?.success) return;
-                setSelectedAnimal((current) => current?.id === selectedAnimalId
-                    ? {
-                        ...current,
-                        description: info.description || current.description,
-                        image: info.thumbnail || current.image,
-                        species: info.scientificName || current.species,
-                        sourceUrl: info.pageUrl
-                    }
-                    : current);
-            })
-            .finally(() => {
-                if (active) setAnimalInfoLoading(false);
-            });
-
-        return () => { active = false; };
-    }, [selectedAnimalId]);
 
     const handleSelect = useCallback((animal) => {
-        setSelectedAnimal(animal);
+        navigate(`/map/animals/${animal.id}`);
         setIsMobileListOpen(false);
-    }, []);
+    }, [navigate]);
 
     return (
         <div className="wildlife-origins flex flex-col md:flex-row h-[100dvh] w-full bg-[#eef3ed] overflow-hidden text-[#1f3328] antialiased">
@@ -245,7 +178,7 @@ const MapPage = () => {
                 </div>
                 {API_KEY ? (
                     <APIProvider apiKey={API_KEY} libraries={['maps3d', 'marker']}>
-                        <GlobeMap selectedAnimal={selectedAnimal} filterRegion={filterRegion} onSelectAnimal={handleSelect} />
+                        <GlobeMap filterRegion={filterRegion} onSelectAnimal={handleSelect} />
                     </APIProvider>
                 ) : (
                     <MapFallback />
@@ -253,48 +186,14 @@ const MapPage = () => {
             </div>
 
             <aside className="hidden md:block w-80 lg:w-96 h-full z-[1001]">
-                <DiscoveryList filterRegion={filterRegion} setFilterRegion={setFilterRegion} selectedAnimal={selectedAnimal} onSelect={handleSelect} />
+                <DiscoveryList filterRegion={filterRegion} setFilterRegion={setFilterRegion} onSelect={handleSelect} />
             </aside>
 
             {isMobileListOpen && (
                 <div className="fixed inset-0 z-[2000] md:hidden">
                      <div className="absolute inset-0 bg-[#1f3328]/45 backdrop-blur-sm" onClick={() => setIsMobileListOpen(false)} />
                     <div className="absolute bottom-0 left-0 right-0 h-[min(80dvh,42rem)] rounded-t-[2.5rem] overflow-hidden animate-in slide-in-from-bottom duration-300 shadow-2xl">
-                        <DiscoveryList isMobile={true} filterRegion={filterRegion} setFilterRegion={setFilterRegion} selectedAnimal={selectedAnimal} onSelect={handleSelect} onClose={() => setIsMobileListOpen(false)} />
-                    </div>
-                </div>
-            )}
-
-            {selectedAnimal && (
-                <div className="fixed inset-0 z-[2001] flex items-center justify-center p-0 md:p-8">
-                     <div className="absolute inset-0 bg-[#1f3328]/70 backdrop-blur-md animate-in fade-in duration-300" onClick={() => setSelectedAnimal(null)} />
-                    <div className="relative w-full h-full md:h-[min(82dvh,48rem)] md:max-w-4xl bg-[#fffdf8] md:rounded-[2rem] shadow-2xl overflow-hidden flex flex-col md:flex-row animate-in zoom-in-95 duration-300">
-                        <div className="w-full md:w-1/2 h-[38dvh] md:h-auto relative shrink-0">
-                            <img src={selectedAnimal.image} alt={selectedAnimal.name} className="w-full h-full object-cover" />
-                            <button onClick={() => setSelectedAnimal(null)} className="absolute top-6 right-6 w-12 h-12 bg-black/30 backdrop-blur-xl rounded-full text-white flex items-center justify-center border border-white/20">
-                                <X className="h-6 w-6" />
-                            </button>
-                        </div>
-                        <div className="flex-1 p-8 md:p-12 overflow-y-auto hide-scrollbar">
-                             <span className="px-3.5 py-2 rounded-full text-[9px] font-bold uppercase tracking-widest text-[#31533b] mb-5 inline-block bg-[#e5f0e3] border border-[#cfe0cc]">{selectedAnimal.region}</span>
-                             <h2 className="text-4xl md:text-5xl font-black text-[#1f3328] mb-1 leading-tight break-words">{selectedAnimal.name}</h2>
-                             <p className="text-lg italic text-[#6d8572] mb-7 font-medium break-words">{selectedAnimal.species}</p>
-                            <div className="grid grid-cols-2 gap-4 mb-8">
-                                  <div className="p-4 bg-[#f1f5ed] rounded-2xl border border-[#dce5dc]">
-                                      <p className="text-[9px] uppercase font-black text-[#6d8572] mb-1">Native Zone</p>
-                                      <p className="font-bold text-[#1f3328] text-sm">{selectedAnimal.habitat}</p>
-                                  </div>
-                                  <div className="p-4 bg-[#f1f5ed] rounded-2xl border border-[#dce5dc]">
-                                      <p className="text-[9px] uppercase font-black text-[#6d8572] mb-1">GPS Mark</p>
-                                      <p className="font-bold text-[#1f3328] text-sm font-mono break-words">{selectedAnimal.coordinates[0]}°, {selectedAnimal.coordinates[1]}°</p>
-                                 </div>
-                             </div>
-                             <div className="space-y-4">
-                                  <h4 className="text-xs font-black text-[#1f3328] uppercase tracking-widest border-b border-[#dce5dc] pb-2">Ecological Note</h4>
-                                  {animalInfoLoading ? <div className="h-20 animate-pulse rounded-2xl bg-[#edf3eb]" /> : <p className="text-[#52675a] leading-relaxed text-base font-medium italic">"{selectedAnimal.description}"</p>}
-                                  {selectedAnimal.sourceUrl && <a href={selectedAnimal.sourceUrl} target="_blank" rel="noreferrer" className="inline-flex text-xs font-bold uppercase tracking-widest text-[#52745a] underline underline-offset-4">Read source on Wikipedia</a>}
-                             </div>
-                        </div>
+                        <DiscoveryList isMobile={true} filterRegion={filterRegion} setFilterRegion={setFilterRegion} onSelect={handleSelect} onClose={() => setIsMobileListOpen(false)} />
                     </div>
                 </div>
             )}

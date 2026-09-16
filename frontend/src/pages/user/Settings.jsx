@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { notify } from '../../utils/toast';
 import { userAPI } from '../../services/api-client';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
-import { ChevronLeft, Home, Bell, Activity, HelpCircle, ChevronRight, Ticket, Message, Heart, X } from 'reicon-react';
+import { ChevronLeft, Home, Bell, Activity, HelpCircle, ChevronRight, Ticket, Message, Heart, Menu, X } from 'reicon-react';
 
 // Icons
 const LegacyIcons = {
@@ -75,6 +75,9 @@ const Settings = ({ embedded = false, onClose }) => {
     const [activities, setActivities] = useState([]);
     const [activitiesLoading, setActivitiesLoading] = useState(false);
     const [activitiesError, setActivitiesError] = useState(null);
+    const [activityFilter, setActivityFilter] = useState('all');
+    const [activitySort, setActivitySort] = useState('newest');
+    const [settingsMenuOpen, setSettingsMenuOpen] = useState(false);
 
     useEffect(() => {
         if (!user) return;
@@ -187,6 +190,15 @@ const Settings = ({ embedded = false, onClose }) => {
         return activity.title || activity.type?.replaceAll('_', ' ') || 'Activity';
     };
 
+    const activityTypes = [...new Set(activities.filter(Boolean).map(activity => activity.type).filter(Boolean))];
+    const visibleActivities = activities
+        .filter(Boolean)
+        .filter(activity => activityFilter === 'all' || activity.type === activityFilter)
+        .toSorted((first, second) => {
+            const difference = new Date(second.created_at) - new Date(first.created_at);
+            return activitySort === 'newest' ? difference : -difference;
+        });
+
     const renderContent = () => {
         if (isLoading) {
             return (
@@ -236,17 +248,24 @@ const Settings = ({ embedded = false, onClose }) => {
             case 'activities':
                 return (
                     <div className="space-y-6 animate-fade-in">
-                        <div className="flex justify-between items-end mb-6">
+                        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between mb-6">
                             <div>
                                 <h3 className="text-xl font-bold text-gray-800 mb-2">Activity Log</h3>
                                 <p className="text-gray-500 text-sm">A history of your recent interactions and bookings.</p>
                             </div>
-                            <button 
-                                onClick={fetchActivities} 
-                                className="text-sm text-emerald-600 hover:text-emerald-700 font-medium px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition-colors"
-                            >
-                                Refresh
-                            </button>
+                            <div className="flex flex-wrap items-center gap-2">
+                                <label className="sr-only" htmlFor="activity-filter">Filter activity</label>
+                                <select id="activity-filter" value={activityFilter} onChange={(event) => setActivityFilter(event.target.value)} className="min-w-0 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100">
+                                    <option value="all">All actions</option>
+                                    {activityTypes.map(type => <option key={type} value={type}>{type.replaceAll('_', ' ')}</option>)}
+                                </select>
+                                <label className="sr-only" htmlFor="activity-sort">Sort activity</label>
+                                <select id="activity-sort" value={activitySort} onChange={(event) => setActivitySort(event.target.value)} className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100">
+                                    <option value="newest">Newest first</option>
+                                    <option value="oldest">Oldest first</option>
+                                </select>
+                                <button onClick={fetchActivities} className="rounded-lg bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-700 transition-colors hover:bg-emerald-100">Refresh</button>
+                            </div>
                         </div>
                         
                         {activitiesLoading ? (
@@ -272,9 +291,11 @@ const Settings = ({ embedded = false, onClose }) => {
                                 <p className="text-gray-600 font-medium">No activity yet</p>
                                 <p className="text-sm text-gray-500 mt-1">When you book tickets or post in the community, it will show up here.</p>
                             </div>
+                        ) : visibleActivities.length === 0 ? (
+                            <div className="rounded-xl border border-gray-100 bg-gray-50 p-8 text-center text-sm text-gray-500">No activity matches this action.</div>
                         ) : (
                             <div className="space-y-4">
-                                {activities.filter(Boolean).map((activity, index) => (
+                                {visibleActivities.map((activity, index) => (
                                     <div key={activity.id ? `${activity.type || 'activity'}-${activity.id}` : `activity-${index}`} className="flex items-start gap-4 p-4 bg-white border border-gray-100 rounded-xl shadow-sm hover:shadow-md transition-shadow">
                                         <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${getActivityColor(activity.type)}`}>
                                             {getActivityIcon(activity.type)}
@@ -387,62 +408,28 @@ const Settings = ({ embedded = false, onClose }) => {
 
             {/* Main Content */}
             <div className={`flex-grow container mx-auto px-4 ${embedded ? 'py-6' : 'py-8'} max-w-5xl`}>
-                <div className="flex flex-col md:flex-row gap-6 lg:gap-8">
-                    {/* Left Sidebar Menu */}
-                    <div className="md:w-64 lg:w-72 flex-shrink-0">
-                        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden sticky top-24">
-                            {/* Mobile: Horizontal scroll */}
-                            <div className="md:hidden flex overflow-x-auto p-3 gap-2 scrollbar-hide">
+                <div>
+                    <div className="relative mb-4 flex items-center justify-between">
+                        <button type="button" onClick={() => setSettingsMenuOpen(open => !open)} aria-expanded={settingsMenuOpen} aria-haspopup="menu" className="inline-flex items-center gap-2 rounded-xl border border-[#dce5dc] bg-white px-3.5 py-2.5 text-sm font-bold text-gray-800 shadow-sm transition hover:border-emerald-300 hover:bg-emerald-50">
+                            <Menu className="h-5 w-5" />
+                            Settings menu
+                        </button>
+                        <p className="text-sm font-semibold text-emerald-700">{menuItems.find(item => item.id === activeSection)?.label}</p>
+                        {settingsMenuOpen && (
+                            <div role="menu" className="absolute left-0 top-full z-30 mt-2 w-[min(19rem,calc(100vw-2rem))] rounded-2xl border border-[#dce5dc] bg-white p-2 shadow-xl">
                                 {menuItems.map(item => (
-                                    <button
-                                        key={item.id}
-                                        onClick={() => setActiveSection(item.id)}
-                                        className={`flex-shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium text-sm transition-all ${activeSection === item.id
-                                                ? 'bg-emerald-500 text-white shadow-sm'
-                                                : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
-                                            }`}
-                                    >
-                                        <item.icon />
-                                        <span>{item.label}</span>
+                                    <button key={item.id} role="menuitem" onClick={() => { setActiveSection(item.id); setSettingsMenuOpen(false); }} className={`flex w-full items-center gap-3 rounded-xl p-3 text-left transition ${activeSection === item.id ? 'bg-emerald-50 text-emerald-800' : 'text-gray-700 hover:bg-gray-50'}`}>
+                                        <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${activeSection === item.id ? 'bg-emerald-600 text-white' : 'bg-gray-100 text-gray-500'}`}><item.icon /></span>
+                                        <span><span className="block text-sm font-bold">{item.label}</span><span className="block text-xs text-gray-500">{item.description}</span></span>
                                     </button>
                                 ))}
                             </div>
-
-                            {/* Desktop: Vertical list */}
-                            <div className="hidden md:block p-3">
-                                <div className="px-3 pb-3 mb-2 border-b border-gray-100">
-                                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Menu</p>
-                                </div>
-                                {menuItems.map(item => (
-                                    <button
-                                        key={item.id}
-                                        onClick={() => setActiveSection(item.id)}
-                                        className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all mb-1 ${activeSection === item.id
-                                                ? 'bg-emerald-50 border-emerald-100 text-emerald-700'
-                                                : 'text-gray-600 hover:bg-gray-50 border-transparent'
-                                            } border`}
-                                    >
-                                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${activeSection === item.id
-                                                ? 'bg-emerald-500 text-white shadow-sm'
-                                                : 'bg-gray-100 text-gray-500'
-                                            }`}>
-                                            <item.icon />
-                                        </div>
-                                        <div className="text-left">
-                                            <p className="font-semibold text-sm">{item.label}</p>
-                                            <p className="text-xs text-gray-500 line-clamp-1">{item.description}</p>
-                                        </div>
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
+                        )}
                     </div>
-
-                    {/* Right Content Panel */}
-                    <div className="flex-grow">
+                    <div>
                          <div className="bg-white rounded-2xl shadow-sm p-5 sm:p-8 border border-[#dce5dc] min-h-[500px]">
-                            {renderContent()}
-                        </div>
+                             {renderContent()}
+                         </div>
                     </div>
                 </div>
             </div>
