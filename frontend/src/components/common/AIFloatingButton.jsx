@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import AIChatAssistant from '../features/ai-assistant/AIChatAssistant';
 import useScrollLock from '../../hooks/use-scroll-lock';
+import JijiMascot from './JijiMascot';
 
 const MotionDiv = motion.div;
 
@@ -31,22 +32,12 @@ const AIFloatingButton = () => {
         <>
             {!assistantOpen && (
                 <div className="fixed bottom-0 right-0 z-50 flex items-end justify-end p-3 sm:p-4 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-                    <div className="relative">
-                        <button
-                            onClick={() => setAssistantOpen(true)}
-                            type="button"
-                            aria-label="Open Jiji AI assistant"
-                            className="relative cursor-pointer border-0 bg-transparent z-40 flex items-center justify-center
-                       w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20
-                       transition-transform duration-200
-                       active:scale-95 hover:scale-110"
-                         >
-                             <img
-                                 src="/zusan-ai.svg"
-                                 className="w-full h-full object-contain pointer-events-none"
-                                 alt="Open Jiji AI assistant"
-                             />
-                         </button>
+                    <div
+                        className="relative z-40 transition-transform duration-200 active:scale-95 hover:scale-110"
+                        onClick={() => setAssistantOpen(true)}
+                        aria-label="Open Jiji AI assistant"
+                    >
+                        <JijiMascot size={72} />
                     </div>
                 </div>
             )}

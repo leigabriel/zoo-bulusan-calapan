@@ -3,6 +3,7 @@ import { ReactLenis } from 'lenis/react';
 import { useNavigate } from 'react-router-dom';
 import { AI_ASSISTANT_THEME } from '../../../config/ai-assistant-theme';
 import { getAuthHeaders, API_BASE_URL } from '../../../services/api-client';
+import JijiMascot from '../../common/JijiMascot';
 import TicketCard from './TicketCard';
 import ZooCard from './ZooCard';
 
@@ -39,11 +40,7 @@ const TrashIcon = () => (
     </svg>
 );
 
-const Avatar = () => (
-    <div className="w-9 h-9 rounded-xl overflow-hidden shrink-0" style={{ background: THEME.accentSoft }}>
-        <img src="/zusan-ai.svg" alt="Jiji" className="w-full h-full object-contain p-1.5" />
-    </div>
-);
+const Avatar = () => <JijiMascot size={48} className="shrink-0" />;
 
 const SUGGESTIONS = [
     'What animals can I see today?',
@@ -337,7 +334,7 @@ const AIChatAssistant = ({ onClose }) => {
                         <div className="flex items-center gap-3 min-w-0">
                             <button type="button" onClick={() => setSessionSidebarOpen(true)} className="p-2 -ml-2 rounded-lg md:hidden" style={{ color: THEME.textMuted }} aria-label="Open chat history"><MenuIcon /></button>
                             <div className="relative shrink-0">
-                                <div className="w-10 h-10 rounded-xl overflow-hidden" style={{ background: THEME.accentSoft }}><img src="/zusan-ai.svg" alt="Jiji" className="w-full h-full object-contain p-1.5" /></div>
+                                <JijiMascot size={56} />
                                 <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2" style={{ background: THEME.accent, borderColor: THEME.base }} />
                             </div>
                             <div className="min-w-0">
@@ -353,7 +350,7 @@ const AIChatAssistant = ({ onClose }) => {
                     ) : !started ? (
                         <div className="flex-1 min-h-0 flex flex-col px-4 sm:px-7 py-6 sm:py-10 overflow-y-auto overscroll-contain" data-lenis-prevent>
                             <div className="flex-1 flex flex-col gap-7 sm:gap-10">
-                                <div className="w-16 h-16 rounded-2xl overflow-hidden shrink-0" style={{ background: THEME.accentSoft }}><img src="/zusan-ai.svg" alt="Jiji" className="w-full h-full object-contain p-2" /></div>
+                                <JijiMascot size={280} />
                                 <div className="flex flex-col gap-3">
                                     <p className="text-2xl sm:text-3xl font-bold leading-tight" style={{ color: THEME.text }}>Meet Jiji,<br />your zoo guide.</p>
                                     <p className="text-base sm:text-lg leading-relaxed" style={{ color: THEME.textMuted }}>Jiji is an AI assistant for Calapan Bulusan Zoo. Ask about animals, feeding schedules, exhibits, and conservation, or anything about your visit.</p>

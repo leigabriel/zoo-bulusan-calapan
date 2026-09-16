@@ -1,9 +1,10 @@
-const CACHE_VERSION = 'bulusan-static-v1';
+const CACHE_VERSION = 'bulusan-static-v2';
 const STATIC_CACHE = CACHE_VERSION;
 const STATIC_ASSETS = [
     '/',
     '/index.html',
-    '/zusan-ai.svg',
+    '/mascots/deer-directions.webp',
+    '/mascots/deer-reactions.webp',
     '/animal-scan.svg',
     '/bz-url-logo.png',
     '/deer.png',

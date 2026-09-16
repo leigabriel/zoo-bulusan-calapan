@@ -6,6 +6,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 import AIFloatingButton from '../../components/common/AIFloatingButton';
+import JijiMascot from '../../components/common/JijiMascot';
 import { userAPI, communityAPI } from '../../services/api-client';
 import { useAuth } from '../../context/AuthContext';
 import '../../App.css';
@@ -599,7 +600,7 @@ const JijiTeaserSection = ({ openAssistant }) => (
 
             <div data-chat-stage className="relative mx-auto w-full max-w-3xl rounded-[2.5rem] bg-white p-4 text-[#212631] shadow-[0_40px_120px_rgba(0,0,0,0.3)] sm:p-6 lg:p-8">
                 <div className="flex items-center gap-4 border-b border-black/10 pb-5">
-                    <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#c6fe69]"><img src="/zusan-ai.svg" alt="Jiji AI assistant" className="h-12 w-12 object-contain" /></div>
+                    <JijiMascot size={64} />
                     <div><p className="font-black">Jiji AI Assistant</p><p className="text-xs text-black/45">Bulusan Zoo visitor assistant</p></div>
                 </div>
                 <div className="mt-8 space-y-5">
