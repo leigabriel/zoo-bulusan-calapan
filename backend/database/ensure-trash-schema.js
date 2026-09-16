@@ -1,7 +1,7 @@
 const db = require('../config/database');
 
 const ensureTrashSchema = async () => {
-    const tables = ['users', 'animals', 'plants', 'events', 'ticket_reservations', 'event_reservations'];
+    const tables = ['users', 'animals', 'plants', 'events', 'ticket_reservations', 'event_reservations', 'walk_in_sales'];
 
     for (const table of tables) {
         const [columns] = await db.query(`
@@ -38,7 +38,8 @@ const ensureTrashSchema = async () => {
         'ALTER TABLE plants ADD CONSTRAINT fk_plants_deleted_by FOREIGN KEY (deleted_by) REFERENCES users(id) ON DELETE SET NULL ON UPDATE CASCADE',
         'ALTER TABLE events ADD CONSTRAINT fk_events_deleted_by FOREIGN KEY (deleted_by) REFERENCES users(id) ON DELETE SET NULL ON UPDATE CASCADE',
         'ALTER TABLE ticket_reservations ADD CONSTRAINT fk_ticket_reservations_deleted_by FOREIGN KEY (deleted_by) REFERENCES users(id) ON DELETE SET NULL ON UPDATE CASCADE',
-        'ALTER TABLE event_reservations ADD CONSTRAINT fk_event_reservations_deleted_by FOREIGN KEY (deleted_by) REFERENCES users(id) ON DELETE SET NULL ON UPDATE CASCADE'
+        'ALTER TABLE event_reservations ADD CONSTRAINT fk_event_reservations_deleted_by FOREIGN KEY (deleted_by) REFERENCES users(id) ON DELETE SET NULL ON UPDATE CASCADE',
+        'ALTER TABLE walk_in_sales ADD CONSTRAINT fk_walk_in_sales_deleted_by FOREIGN KEY (deleted_by) REFERENCES users(id) ON DELETE SET NULL ON UPDATE CASCADE'
     ];
 
     for (const stmt of fkStatements) {

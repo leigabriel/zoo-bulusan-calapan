@@ -272,11 +272,14 @@ const createSale = async ({ staff, idempotencyKey, payload, ipAddress, userAgent
 
 const getSale = saleNumber => fetchSale(db, saleNumber);
 
-const listSales = async ({ page = 1, limit = 20, search = '', status = '', visitDate = '' } = {}) => {
+const listSales = async ({ page = 1, limit = 20, search = '', status = '', visitDate = '', showTrashed = false } = {}) => {
     const safePage = Math.max(Number.parseInt(page, 10) || 1, 1);
     const safeLimit = Math.min(Math.max(Number.parseInt(limit, 10) || 20, 1), 100);
     const conditions = [];
     const parameters = [];
+    if (!showTrashed) {
+        conditions.push('(s.is_deleted IS NULL OR s.is_deleted = FALSE)');
+    }
     if (['completed', 'voided'].includes(status)) {
         conditions.push('s.status = ?');
         parameters.push(status);
@@ -322,6 +325,141 @@ const listSales = async ({ page = 1, limit = 20, search = '', status = '', visit
             status: row.status,
             checkedInAt: row.checked_in_at,
             createdAt: row.created_at,
+            staffName: row.staff_name,
+            paymentMethod: row.payment_method,
+            paymentStatus: row.payment_status,
+            totalVisitors: Number(row.total_visitors)
+        })),
+        pagination: {
+            page: safePage,
+            limit: safeLimit,
+            total: Number(countRows[0].total),
+            pages: Math.max(Math.ceil(Number(countRows[0].total) / safeLimit), 1)
+        }
+    };
+};
+
+const trashSale = async ({ saleNumber, staff, ipAddress, userAgent }) => {
+    const connection = await db.getConnection();
+    try {
+        await connection.beginTransaction();
+        const [rows] = await connection.query(
+            'SELECT id, sale_number, status, is_deleted FROM walk_in_sales WHERE sale_number = ? OR receipt_number = ? FOR UPDATE',
+            [saleNumber, saleNumber]
+        );
+        if (!rows[0]) throw new WalkInError('Walk-in sale not found.', 404);
+        if (rows[0].is_deleted) throw new WalkInError('This sale is already in the trash.', 409);
+        await connection.query(
+            'UPDATE walk_in_sales SET is_deleted = TRUE, deleted_at = NOW(), deleted_by = ? WHERE id = ?',
+            [staff.id, rows[0].id]
+        );
+        await connection.query(
+            `INSERT INTO staff_activity_logs
+             (staff_id, action_type, action_description, entity_type, entity_id, ip_address, user_agent)
+             VALUES (?, 'walk_in_trash', ?, 'walk_in_sale', ?, ?, ?)`,
+            [staff.id, `Moved walk-in sale ${rows[0].sale_number} to trash`, rows[0].id, ipAddress, userAgent]
+        );
+        await connection.commit();
+        return { saleNumber: rows[0].sale_number };
+    } catch (error) {
+        await connection.rollback();
+        throw error;
+    } finally {
+        connection.release();
+    }
+};
+
+const restoreSale = async ({ saleNumber }) => {
+    const connection = await db.getConnection();
+    try {
+        await connection.beginTransaction();
+        const [rows] = await connection.query(
+            'SELECT id, sale_number, is_deleted FROM walk_in_sales WHERE sale_number = ? OR receipt_number = ? FOR UPDATE',
+            [saleNumber, saleNumber]
+        );
+        if (!rows[0]) throw new WalkInError('Walk-in sale not found.', 404);
+        if (!rows[0].is_deleted) throw new WalkInError('This sale is not in the trash.', 409);
+        await connection.query(
+            'UPDATE walk_in_sales SET is_deleted = FALSE, deleted_at = NULL, deleted_by = NULL WHERE id = ?',
+            [rows[0].id]
+        );
+        await connection.commit();
+        return { saleNumber: rows[0].sale_number };
+    } catch (error) {
+        await connection.rollback();
+        throw error;
+    } finally {
+        connection.release();
+    }
+};
+
+const permanentDeleteSale = async ({ saleNumber }) => {
+    const connection = await db.getConnection();
+    try {
+        await connection.beginTransaction();
+        const [rows] = await connection.query(
+            'SELECT id, sale_number, is_deleted FROM walk_in_sales WHERE sale_number = ? OR receipt_number = ? FOR UPDATE',
+            [saleNumber, saleNumber]
+        );
+        if (!rows[0]) throw new WalkInError('Walk-in sale not found.', 404);
+        if (!rows[0].is_deleted) throw new WalkInError('Only trashed sales can be permanently deleted.', 409);
+        await connection.query('DELETE FROM walk_in_sale_items WHERE sale_id = ?', [rows[0].id]);
+        await connection.query('DELETE FROM walk_in_payments WHERE sale_id = ?', [rows[0].id]);
+        await connection.query('DELETE FROM walk_in_sales WHERE id = ?', [rows[0].id]);
+        await connection.commit();
+        return { saleNumber: rows[0].sale_number };
+    } catch (error) {
+        await connection.rollback();
+        throw error;
+    } finally {
+        connection.release();
+    }
+};
+
+const listTrashedSales = async ({ page = 1, limit = 20, search = '' } = {}) => {
+    const safePage = Math.max(Number.parseInt(page, 10) || 1, 1);
+    const safeLimit = Math.min(Math.max(Number.parseInt(limit, 10) || 20, 1), 100);
+    const conditions = ['s.is_deleted = TRUE'];
+    const parameters = [];
+    const safeSearch = typeof search === 'string' ? search.trim().slice(0, 100) : '';
+    if (safeSearch) {
+        conditions.push('(s.sale_number LIKE ? OR s.receipt_number LIKE ? OR s.visitor_name LIKE ? OR s.visitor_phone LIKE ?)');
+        const term = `%${safeSearch.replace(/[\\%_]/g, '\\$&')}%`;
+        parameters.push(term, term, term, term);
+    }
+    const where = `WHERE ${conditions.join(' AND ')}`;
+    const [countRows] = await db.query(`SELECT COUNT(*) AS total FROM walk_in_sales s ${where}`, parameters);
+    const [rows] = await db.query(
+        `SELECT s.sale_number, s.receipt_number, s.visitor_name, s.visitor_phone,
+                DATE_FORMAT(s.visit_date, '%Y-%m-%d') AS visit_date_key,
+                s.total_cents, s.currency, s.status, s.created_at,
+                s.deleted_at, CONCAT(u.first_name, ' ', u.last_name) AS staff_name,
+                CONCAT(d.first_name, ' ', d.last_name) AS deleted_by_name,
+                p.method AS payment_method, p.status AS payment_status,
+                COALESCE(items.total_visitors, 0) AS total_visitors
+         FROM walk_in_sales s
+         JOIN users u ON u.id = s.staff_id
+         JOIN walk_in_payments p ON p.sale_id = s.id
+         LEFT JOIN users d ON d.id = s.deleted_by
+         LEFT JOIN (SELECT sale_id, SUM(quantity) AS total_visitors FROM walk_in_sale_items GROUP BY sale_id) items ON items.sale_id = s.id
+         ${where}
+         ORDER BY s.deleted_at DESC
+         LIMIT ? OFFSET ?`,
+        [...parameters, safeLimit, (safePage - 1) * safeLimit]
+    );
+    return {
+        records: rows.map(row => ({
+            saleNumber: row.sale_number,
+            receiptNumber: row.receipt_number,
+            visitorName: row.visitor_name,
+            visitorPhone: row.visitor_phone,
+            visitDate: row.visit_date_key,
+            totalCents: Number(row.total_cents),
+            currency: row.currency,
+            status: row.status,
+            createdAt: row.created_at,
+            deletedAt: row.deleted_at,
+            deletedByName: row.deleted_by_name,
             staffName: row.staff_name,
             paymentMethod: row.payment_method,
             paymentStatus: row.payment_status,
@@ -424,4 +562,4 @@ const logReceiptEvent = async ({ saleNumber, staff, eventType, ipAddress, userAg
     );
 };
 
-module.exports = { WalkInError, parkDateKey, validateAndCalculate, createSale, getSale, listSales, getAvailability, voidSale, markUsed, logReceiptEvent };
+module.exports = { WalkInError, parkDateKey, validateAndCalculate, createSale, getSale, listSales, listTrashedSales, getAvailability, voidSale, trashSale, restoreSale, permanentDeleteSale, markUsed, logReceiptEvent };

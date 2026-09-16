@@ -979,6 +979,42 @@ export const adminAPI = {
             body: JSON.stringify({ ids, password })
         });
         return handleResponse(response);
+    },
+
+    // Walk-in trash
+    getTrashWalkIns: async (filters = {}) => {
+        const query = new URLSearchParams();
+        Object.entries(filters).forEach(([key, value]) => {
+            if (value !== '' && value !== null && value !== undefined) query.set(key, value);
+        });
+        const response = await fetch(`${API_BASE_URL}/admin/walk-in-trash?${query}`, {
+            headers: getAuthHeaders('admin')
+        });
+        return handleResponse(response);
+    },
+
+    restoreWalkIn: async (saleNumber) => {
+        const response = await fetch(`${API_BASE_URL}/admin/walk-in/${encodeURIComponent(saleNumber)}/restore`, {
+            method: 'PUT',
+            headers: getAuthHeaders('admin')
+        });
+        return handleResponse(response);
+    },
+
+    permanentDeleteWalkIn: async (saleNumber) => {
+        const response = await fetch(`${API_BASE_URL}/admin/walk-in/${encodeURIComponent(saleNumber)}/permanent`, {
+            method: 'DELETE',
+            headers: getAuthHeaders('admin')
+        });
+        return handleResponse(response);
+    },
+
+    trashWalkIn: async (saleNumber) => {
+        const response = await fetch(`${API_BASE_URL}/admin/walk-in/${encodeURIComponent(saleNumber)}`, {
+            method: 'DELETE',
+            headers: getAuthHeaders('admin')
+        });
+        return handleResponse(response);
     }
 };
 
@@ -1051,6 +1087,33 @@ export const staffAPI = {
     logWalkInReceiptEvent: async (saleNumber, eventType) => {
         const response = await fetch(`${API_BASE_URL}/staff/walk-in/${encodeURIComponent(saleNumber)}/receipt-events`, {
             method: 'POST', headers: getAuthHeaders(getCurrentAuthType()), body: JSON.stringify({ eventType })
+        });
+        return handleResponse(response);
+    },
+
+    trashWalkIn: async (saleNumber) => {
+        const response = await fetch(`${API_BASE_URL}/staff/walk-in/${encodeURIComponent(saleNumber)}`, {
+            method: 'DELETE',
+            headers: getAuthHeaders(getCurrentAuthType())
+        });
+        return handleResponse(response);
+    },
+
+    restoreWalkIn: async (saleNumber) => {
+        const response = await fetch(`${API_BASE_URL}/staff/walk-in/${encodeURIComponent(saleNumber)}/restore`, {
+            method: 'PUT',
+            headers: getAuthHeaders(getCurrentAuthType())
+        });
+        return handleResponse(response);
+    },
+
+    getTrashWalkIns: async (filters = {}) => {
+        const query = new URLSearchParams();
+        Object.entries(filters).forEach(([key, value]) => {
+            if (value !== '' && value !== null && value !== undefined) query.set(key, value);
+        });
+        const response = await fetch(`${API_BASE_URL}/staff/walk-in-trash?${query}`, {
+            headers: getAuthHeaders(getCurrentAuthType())
         });
         return handleResponse(response);
     },

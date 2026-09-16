@@ -5,6 +5,7 @@ const messageController = require('../controllers/message-controller');
 const monitoringController = require('../controllers/monitoring-controller');
 const logsController = require('../controllers/logs-controller');
 const donationController = require('../controllers/donation-controller');
+const walkInController = require('../controllers/walk-in-controller');
 const { readConfig: readEventPaymentConfig, writeConfig: writeEventPaymentConfig } = require('../config/event-payment-config');
 const { protect, authorize, requireAdminMasterKey } = require('../middleware/auth');
 const adminMasterKeyController = require('../controllers/admin-master-key-controller');
@@ -219,5 +220,11 @@ router.put('/events/:id/restore', adminController.restoreEvent);
 router.put('/events-restore-multiple', adminController.restoreMultipleEvents);
 router.delete('/events/:id/permanent', adminController.permanentDeleteEvent);
 router.delete('/events-permanent-multiple', adminController.permanentDeleteMultipleEvents);
+
+// Walk-in trash
+router.get('/walk-in-trash', walkInController.listTrashed);
+router.put('/walk-in/:saleNumber/restore', walkInController.restore);
+router.delete('/walk-in/:saleNumber/permanent', walkInController.permanentDelete);
+router.delete('/walk-in/:saleNumber', walkInController.trash);
 
 module.exports = router;

@@ -80,3 +80,39 @@ exports.receiptEvent = async (req, res, next) => {
         next(error);
     }
 };
+
+exports.trash = async (req, res, next) => {
+    try {
+        await walkInService.trashSale({ ...requestContext(req), saleNumber: req.params.saleNumber });
+        res.json({ success: true, message: 'Walk-in sale moved to trash' });
+    } catch (error) {
+        next(error);
+    }
+};
+
+exports.restore = async (req, res, next) => {
+    try {
+        await walkInService.restoreSale({ saleNumber: req.params.saleNumber });
+        res.json({ success: true, message: 'Walk-in sale restored successfully' });
+    } catch (error) {
+        next(error);
+    }
+};
+
+exports.permanentDelete = async (req, res, next) => {
+    try {
+        await walkInService.permanentDeleteSale({ saleNumber: req.params.saleNumber });
+        res.json({ success: true, message: 'Walk-in sale permanently deleted' });
+    } catch (error) {
+        next(error);
+    }
+};
+
+exports.listTrashed = async (req, res, next) => {
+    try {
+        const result = await walkInService.listTrashedSales(req.query);
+        res.json({ success: true, ...result });
+    } catch (error) {
+        next(error);
+    }
+};

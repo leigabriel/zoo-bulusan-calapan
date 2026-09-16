@@ -11,9 +11,10 @@ const TYPE_BADGES = {
   Event: 'bg-purple-100 text-purple-700',
   'Ticket Reservation': 'bg-cyan-100 text-cyan-700',
   'Event Reservation': 'bg-fuchsia-100 text-fuchsia-700',
+  'Walk-In': 'bg-orange-100 text-orange-700',
 };
 
-const TABS = ['All', 'Users', 'Animals', 'Plants', 'Events', 'Reservations'];
+const TABS = ['All', 'Users', 'Animals', 'Plants', 'Events', 'Reservations', 'Walk-Ins'];
 
 const StaffTrash = () => {
   const [trashItems, setTrashItems] = useState([]);
@@ -27,12 +28,13 @@ const StaffTrash = () => {
   const fetchTrashItems = async () => {
     setLoading(true);
     try {
-      const [users, animals, plants, events, reservations] = await Promise.all([
+      const [users, animals, plants, events, reservations, walkIns] = await Promise.all([
         staffAPI.getTrashUsers(),
         staffAPI.getTrashAnimals(),
         staffAPI.getTrashPlants(),
         staffAPI.getTrashEvents(),
         reservationAPI.getTrashReservations('staff'),
+        staffAPI.getTrashWalkIns(),
       ]);
 
       const all = [
@@ -70,6 +72,7 @@ const StaffTrash = () => {
         })),
         ...(reservations.ticketReservations || []).map(r => ({ id: r.id, name: r.reservation_reference || r.visitor_name, type: 'Ticket Reservation', deleted_at: r.deleted_at, deleted_by: r.deleted_by_name || '—', original: r })),
         ...(reservations.eventReservations || []).map(r => ({ id: r.id, name: r.reservation_reference || r.venue_event_name, type: 'Event Reservation', deleted_at: r.deleted_at, deleted_by: r.deleted_by_name || '—', original: r })),
+        ...(walkIns.records || []).map(w => ({ id: w.saleNumber, name: `${w.receiptNumber} - ${w.visitorName || 'Walk-in visitor'}`, type: 'Walk-In', deleted_at: w.deletedAt, deleted_by: w.deletedByName || '—', original: w })),
       ];
 
       all.sort((a, b) => new Date(b.deleted_at) - new Date(a.deleted_at));
@@ -83,7 +86,11 @@ const StaffTrash = () => {
 
   const filtered = activeTab === 'All'
     ? trashItems
-    : trashItems.filter(i => activeTab === 'Reservations' ? i.type.endsWith('Reservation') : i.type === activeTab.replace(/s$/, ''));
+    : trashItems.filter(i => {
+        if (activeTab === 'Reservations') return i.type.endsWith('Reservation');
+        if (activeTab === 'Walk-Ins') return i.type === 'Walk-In';
+        return i.type === activeTab.replace(/s$/, '');
+      });
 
   const toggleSelect = (key) => {
     setSelected(prev => {
@@ -111,6 +118,7 @@ const StaffTrash = () => {
       else if (item.type === 'Event') await staffAPI.restoreEvent(item.id);
       else if (item.type === 'Ticket Reservation') await reservationAPI.restoreTrashReservations('ticket', [item.id], 'staff');
       else if (item.type === 'Event Reservation') await reservationAPI.restoreTrashReservations('event', [item.id], 'staff');
+      else if (item.type === 'Walk-In') await staffAPI.restoreWalkIn(item.id);
 
       setTrashItems(prev => prev.filter(i => `${i.type}-${i.id}` !== key));
       setSelected(prev => {
@@ -155,11 +163,12 @@ const StaffTrash = () => {
     Plants: trashItems.filter(i => i.type === 'Plant').length,
     Events: trashItems.filter(i => i.type === 'Event').length,
     Reservations: trashItems.filter(i => i.type.endsWith('Reservation')).length,
+    'Walk-Ins': trashItems.filter(i => i.type === 'Walk-In').length,
   };
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-[1800px] mx-auto">
         <div className="flex items-center gap-3 mb-6">
           <div className="text-gray-400">
             <TrashIcon className="w-5 h-5" />

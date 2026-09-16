@@ -23,6 +23,7 @@ const getEntityName = (item) => {
     }
     if (item.type === 'Ticket Reservation') return item.reservation_reference || item.visitor_name || 'Ticket Reservation';
     if (item.type === 'Event Reservation') return item.reservation_reference || item.venue_event_name || 'Event Reservation';
+    if (item.type === 'Walk-In') return item.name || item.receiptNumber || item.saleNumber || 'Walk-In Sale';
     return 'Unknown';
 };
 
@@ -33,6 +34,7 @@ const getEntitySubtitle = (item) => {
     if (item.type === 'Event') return item.description ? item.description.slice(0, 60) + (item.description.length > 60 ? '...' : '') : '';
     if (item.type === 'Ticket Reservation') return item.visitor_name || item.visitor_email || '';
     if (item.type === 'Event Reservation') return item.venue_event_name || item.participant_name || '';
+    if (item.type === 'Walk-In') return item.visitorName || item.visitorPhone || item.visitDate || '';
     return '';
 };
 
@@ -43,6 +45,7 @@ const entityTypeBadgeColors = {
     Event: 'bg-purple-500/20 text-purple-600 border-purple-500/30',
     'Ticket Reservation': 'bg-cyan-500/20 text-cyan-700 border-cyan-500/30',
     'Event Reservation': 'bg-fuchsia-500/20 text-fuchsia-700 border-fuchsia-500/30',
+    'Walk-In': 'bg-orange-500/20 text-orange-600 border-orange-500/30',
 };
 
 const AdminTrash = () => {
@@ -58,18 +61,19 @@ const AdminTrash = () => {
     const [permDeleteLoading, setPermDeleteLoading] = useState(false);
     const [permDeleteTargets, setPermDeleteTargets] = useState([]); // array of { id, type }
 
-    const tabs = ['All', 'Users', 'Animals', 'Plants', 'Events', 'Reservations'];
-    const tabToType = { Users: 'User', Animals: 'Animal', Plants: 'Plant', Events: 'Event' };
+    const tabs = ['All', 'Users', 'Animals', 'Plants', 'Events', 'Reservations', 'Walk-Ins'];
+    const tabToType = { Users: 'User', Animals: 'Animal', Plants: 'Plant', Events: 'Event', 'Walk-Ins': 'Walk-In' };
 
     const fetchAllTrash = useCallback(async () => {
         setLoading(true);
         try {
-            const [usersRes, animalsRes, plantsRes, eventsRes, reservationsRes] = await Promise.all([
+            const [usersRes, animalsRes, plantsRes, eventsRes, reservationsRes, walkInsRes] = await Promise.all([
                 adminAPI.getTrashUsers(),
                 adminAPI.getTrashAnimals(),
                 adminAPI.getTrashPlants(),
                 adminAPI.getTrashEvents(),
                 reservationAPI.getTrashReservations('admin'),
+                adminAPI.getTrashWalkIns(),
             ]);
 
             const items = [];
@@ -88,6 +92,7 @@ const AdminTrash = () => {
             }
             (reservationsRes.ticketReservations || []).forEach(r => items.push({ ...r, type: 'Ticket Reservation' }));
             (reservationsRes.eventReservations || []).forEach(r => items.push({ ...r, type: 'Event Reservation' }));
+            (walkInsRes.records || []).forEach(w => items.push({ ...w, type: 'Walk-In', id: w.saleNumber, name: `${w.receiptNumber} - ${w.visitorName || 'Walk-in visitor'}`, deleted_at: w.deletedAt, deleted_by_name: w.deletedByName || '—' }));
 
             items.sort((a, b) => new Date(b.deleted_at) - new Date(a.deleted_at));
             setTrashedItems(items);
@@ -102,7 +107,7 @@ const AdminTrash = () => {
     useEffect(() => { fetchAllTrash(); }, [fetchAllTrash]);
 
     const filteredItems = trashedItems.filter(item => {
-        const matchesTab = activeTab === 'All' || (activeTab === 'Reservations' ? item.type.endsWith('Reservation') : item.type === tabToType[activeTab]);
+        const matchesTab = activeTab === 'All' || (activeTab === 'Reservations' ? item.type.endsWith('Reservation') : activeTab === 'Walk-Ins' ? item.type === 'Walk-In' : item.type === tabToType[activeTab]);
         if (!matchesTab) return false;
         if (!searchQuery) return true;
         const q = searchQuery.toLowerCase();
@@ -118,6 +123,7 @@ const AdminTrash = () => {
         Plants: trashedItems.filter(i => i.type === 'Plant').length,
         Events: trashedItems.filter(i => i.type === 'Event').length,
         Reservations: trashedItems.filter(i => i.type.endsWith('Reservation')).length,
+        'Walk-Ins': trashedItems.filter(i => i.type === 'Walk-In').length,
     };
     const selectedDeletableItems = trashedItems.filter(item => item.type !== 'User' && selectedIds.includes(`${item.type}-${item.id}`));
 
@@ -146,6 +152,7 @@ const AdminTrash = () => {
                 Event: () => adminAPI.restoreEvent(item.id),
                 'Ticket Reservation': () => reservationAPI.restoreTrashReservations('ticket', [item.id]),
                 'Event Reservation': () => reservationAPI.restoreTrashReservations('event', [item.id]),
+                'Walk-In': () => adminAPI.restoreWalkIn(item.id),
             }[item.type];
 
             if (!restoreFn) return;
@@ -176,6 +183,7 @@ const AdminTrash = () => {
                 grouped.Event && adminAPI.restoreMultipleEvents(grouped.Event),
                 grouped['Ticket Reservation'] && reservationAPI.restoreTrashReservations('ticket', grouped['Ticket Reservation']),
                 grouped['Event Reservation'] && reservationAPI.restoreTrashReservations('event', grouped['Event Reservation']),
+                grouped['Walk-In'] && Promise.all(grouped['Walk-In'].map(id => adminAPI.restoreWalkIn(id))),
             ].filter(Boolean));
 
             setTrashedItems(prev => prev.filter(i => !selectedIds.includes(`${i.type}-${i.id}`)));
@@ -211,6 +219,7 @@ const AdminTrash = () => {
                 grouped.Event && adminAPI.permanentDeleteMultipleEvents(grouped.Event, permDeletePassword),
                 grouped['Ticket Reservation'] && reservationAPI.permanentDeleteTrashReservations('ticket', grouped['Ticket Reservation'], permDeletePassword),
                 grouped['Event Reservation'] && reservationAPI.permanentDeleteTrashReservations('event', grouped['Event Reservation'], permDeletePassword),
+                grouped['Walk-In'] && Promise.all(grouped['Walk-In'].map(id => adminAPI.permanentDeleteWalkIn(id))),
             ].filter(Boolean));
 
             setTrashedItems(prev =>

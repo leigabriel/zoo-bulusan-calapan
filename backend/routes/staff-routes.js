@@ -63,6 +63,11 @@ router.get('/walk-in/:saleNumber/receipt', walkInController.getReceipt);
 router.post('/walk-in/:saleNumber/void', walkInController.void);
 router.post('/walk-in/:saleNumber/receipt-events', walkInController.receiptEvent);
 
+// Walk-in trash
+router.get('/walk-in-trash', walkInController.listTrashed);
+router.put('/walk-in/:saleNumber/restore', walkInController.restore);
+router.delete('/walk-in/:saleNumber', walkInController.trash);
+
 // Animals - Full CRUD for staff
 router.get('/animals', staffController.getAnimals);
 router.get('/animals/:id', staffController.getAnimalById);
