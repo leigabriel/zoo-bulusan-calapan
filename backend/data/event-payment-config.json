@@ -1,5 +1,5 @@
 {
-    "qrphEnabled": true,
+    "qrphEnabled": false,
     "amountPerParticipant": 1,
     "currency": "PHP"
 }

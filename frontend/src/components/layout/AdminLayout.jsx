@@ -43,6 +43,7 @@ const AdminLayout = ({ children }) => {
     const [profileForm, setProfileForm] = useState({ firstName: '', lastName: '', email: '' });
     const [profileLoading, setProfileLoading] = useState(false);
     const [profileSaving, setProfileSaving] = useState(false);
+    const [emailSaving, setEmailSaving] = useState(false);
     const [imageUploading, setImageUploading] = useState(false);
     const [previewImage, setPreviewImage] = useState(null);
     const [passwordForm, setPasswordForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
@@ -235,13 +236,33 @@ const AdminLayout = ({ children }) => {
                 setProfileForm(details);
                 updateUser({ ...user, firstName: details.firstName, lastName: details.lastName });
                 notify.success('Profile updated.');
+                return true;
             } else {
                 notify.error(res.message || "Couldn't save changes.");
+                return false;
             }
         } catch (err) {
-            notify.error("Couldn't save changes.");
+            notify.error(err.message || "Couldn't save changes.");
+            return false;
         } finally {
             setProfileSaving(false);
+        }
+    };
+
+    const saveEmail = async ({ email, currentPassword }) => {
+        try {
+            setEmailSaving(true);
+            const res = await authAPI.updateEmail({ email, currentPassword }, 'admin');
+            if (!res?.success) throw new Error(res?.message);
+            setProfileForm(current => ({ ...current, email: res.email }));
+            updateUser({ ...user, email: res.email });
+            notify.success('Verification sent to your new email address.');
+            return true;
+        } catch (error) {
+            notify.error(error.message || "Couldn't change email.");
+            return false;
+        } finally {
+            setEmailSaving(false);
         }
     };
 
@@ -995,7 +1016,7 @@ const AdminLayout = ({ children }) => {
             </aside>
 
             {/* Profile Modal */}
-            <AccountDetailsModal isOpen={showProfileModal} onClose={() => setShowProfileModal(false)} role="Admin" profile={profileForm} previewImage={previewImage} fileInputRef={fileInputRef} imageUploading={imageUploading} onUploadImage={uploadProfileImage} onSaveDetails={saveProfile} profileSaving={profileSaving} onPassword={() => setShowPasswordModal(true)} onMasterKey={() => setShowRefinedMasterKeyModal(true)} onToggleMasterKey={() => { setMasterKeyToggleForm({ currentPassword: '' }); setShowMasterKeyToggleModal(true); }} masterKeyLabel={masterKeyStatus.configured ? 'Change Master Key' : 'Add Master Key'} masterKeyConfigured={masterKeyStatus.configured} masterKeyEnabled={masterKeyStatus.enabled} />
+            <AccountDetailsModal isOpen={showProfileModal} onClose={() => setShowProfileModal(false)} role="Admin" profile={profileForm} previewImage={previewImage} fileInputRef={fileInputRef} imageUploading={imageUploading} onUploadImage={uploadProfileImage} onSaveDetails={saveProfile} profileSaving={profileSaving} onPassword={() => setShowPasswordModal(true)} onChangeEmail={saveEmail} emailSaving={emailSaving} onMasterKey={() => setShowRefinedMasterKeyModal(true)} onToggleMasterKey={() => { setMasterKeyToggleForm({ currentPassword: '' }); setShowMasterKeyToggleModal(true); }} masterKeyLabel={masterKeyStatus.configured ? 'Change Master Key' : 'Add Master Key'} masterKeyConfigured={masterKeyStatus.configured} masterKeyEnabled={masterKeyStatus.enabled} />
             <MasterKeyModal isOpen={showRefinedMasterKeyModal} onClose={() => setShowRefinedMasterKeyModal(false)} status={masterKeyStatus} form={masterKeyForm} setForm={setMasterKeyForm} saving={masterKeySaving} onSubmit={updateMasterKey} />
             <MasterKeyToggleModal isOpen={showMasterKeyToggleModal} onClose={() => setShowMasterKeyToggleModal(false)} enabled={masterKeyStatus.enabled} form={masterKeyToggleForm} setForm={setMasterKeyToggleForm} saving={masterKeySaving} onSubmit={toggleMasterKey} />
             <AdminSettingsLauncher isOpen={showSettingsLauncher} onClose={() => setShowSettingsLauncher(false)} />

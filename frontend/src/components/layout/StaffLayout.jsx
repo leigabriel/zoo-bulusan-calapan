@@ -41,6 +41,7 @@ const StaffLayout = ({ children }) => {
     const [profileForm, setProfileForm] = useState({ firstName: '', lastName: '', email: '' });
     const [profileLoading, setProfileLoading] = useState(false);
     const [profileSaving, setProfileSaving] = useState(false);
+    const [emailSaving, setEmailSaving] = useState(false);
     const [imageUploading, setImageUploading] = useState(false);
     const [previewImage, setPreviewImage] = useState(null);
     const [passwordForm, setPasswordForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
@@ -374,13 +375,33 @@ const StaffLayout = ({ children }) => {
                 setProfileForm(details);
                 updateUser({ ...user, firstName: details.firstName, lastName: details.lastName });
                 notify.success('Profile updated.');
+                return true;
             } else {
                 notify.error(res.message || "Couldn't save changes.");
+                return false;
             }
         } catch (err) {
-            notify.error("Couldn't save changes.");
+            notify.error(err.message || "Couldn't save changes.");
+            return false;
         } finally {
             setProfileSaving(false);
+        }
+    };
+
+    const saveEmail = async ({ email, currentPassword }) => {
+        try {
+            setEmailSaving(true);
+            const res = await authAPI.updateEmail({ email, currentPassword }, 'staff');
+            if (!res?.success) throw new Error(res?.message);
+            setProfileForm(current => ({ ...current, email: res.email }));
+            updateUser({ ...user, email: res.email });
+            notify.success('Verification sent to your new email address.');
+            return true;
+        } catch (error) {
+            notify.error(error.message || "Couldn't change email.");
+            return false;
+        } finally {
+            setEmailSaving(false);
         }
     };
 
@@ -1120,7 +1141,7 @@ const StaffLayout = ({ children }) => {
             </aside>
 
             {/* Profile Modal */}
-            <AccountDetailsModal isOpen={showProfileModal} onClose={() => setShowProfileModal(false)} role="Staff" profile={profileForm} previewImage={previewImage} fileInputRef={fileInputRef} imageUploading={imageUploading} onUploadImage={uploadProfileImage} onSaveDetails={saveProfile} profileSaving={profileSaving} onPassword={() => setShowPasswordModal(true)} />
+            <AccountDetailsModal isOpen={showProfileModal} onClose={() => setShowProfileModal(false)} role="Staff" profile={profileForm} previewImage={previewImage} fileInputRef={fileInputRef} imageUploading={imageUploading} onUploadImage={uploadProfileImage} onSaveDetails={saveProfile} profileSaving={profileSaving} onPassword={() => setShowPasswordModal(true)} onChangeEmail={saveEmail} emailSaving={emailSaving} />
 
             {false && showProfileModal && (
                 <div className="fixed inset-0 bg-gray-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">

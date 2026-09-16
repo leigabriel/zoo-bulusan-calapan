@@ -139,7 +139,9 @@ const handleResponse = async (response) => {
             error.email = data.email;
             throw error;
         }
-        throw new Error(data.message || 'Request failed');
+        const error = new Error(data.message || 'Request failed');
+        Object.assign(error, data);
+        throw error;
     }
     return data;
 };
@@ -184,6 +186,15 @@ export const authAPI = {
             method: 'PUT',
             headers: getAuthHeaders(type),
             body: JSON.stringify(profileData)
+        });
+        return handleResponse(response);
+    },
+
+    updateEmail: async (emailData, type = 'user') => {
+        const response = await fetch(`${API_BASE_URL}/auth/email`, {
+            method: 'PUT',
+            headers: getAuthHeaders(type),
+            body: JSON.stringify(emailData)
         });
         return handleResponse(response);
     },

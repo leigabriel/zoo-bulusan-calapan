@@ -23,7 +23,8 @@ class User {
         const [rows] = await db.query(
             `SELECT id, first_name, last_name, username, email, phone_number, gender, birthday, 
              role, profile_image, password, auth_provider, google_id, is_active, is_suspended, 
-             suspension_reason, suspended_at, email_verified, notification_settings, created_at, updated_at
+             suspension_reason, suspended_at, email_verified, email_verification_token,
+             email_verification_token_expiry, notification_settings, created_at, updated_at
              FROM users WHERE id = ?`,
             [id]
         );
@@ -57,7 +58,7 @@ class User {
     static async getAll() {
         const [rows] = await db.query(
             `SELECT id, first_name, last_name, username, email, phone_number, gender, birthday, 
-             role, profile_image, is_active, is_suspended, suspension_reason, suspended_at, created_at 
+             role, profile_image, is_active, is_suspended, suspension_reason, suspended_at, email_verified, created_at
              FROM users WHERE (is_deleted IS NULL OR is_deleted = FALSE) ORDER BY created_at DESC`
         );
         return rows;
@@ -140,6 +141,25 @@ class User {
              email_verification_token_expiry = ?, 
              updated_at = NOW() WHERE id = ?`,
             [token, expiresAt, id]
+        );
+        return result.affectedRows > 0;
+    }
+
+    static async changeEmailForVerification(id, email, token, expiresAt) {
+        const [result] = await db.query(
+            `UPDATE users SET email = ?, email_verified = FALSE,
+             email_verification_token = ?, email_verification_token_expiry = ?, updated_at = NOW()
+             WHERE id = ?`,
+            [email, token, expiresAt, id]
+        );
+        return result.affectedRows > 0;
+    }
+
+    static async restoreEmailState(id, email, verified, token, expiresAt) {
+        const [result] = await db.query(
+            `UPDATE users SET email = ?, email_verified = ?, email_verification_token = ?,
+             email_verification_token_expiry = ?, updated_at = NOW() WHERE id = ?`,
+            [email, verified, token, expiresAt, id]
         );
         return result.affectedRows > 0;
     }

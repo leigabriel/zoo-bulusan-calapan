@@ -190,21 +190,21 @@ class Ticket {
 
     static async countTodayTickets() {
         const [rows] = await db.query(
-            'SELECT COUNT(*) as total FROM ticket_reservations WHERE DATE(reservation_date) = CURDATE()'
+            "SELECT COUNT(*) as total FROM ticket_reservations WHERE DATE(reservation_date) = CURDATE() AND status IN ('confirmed', 'completed') AND (is_deleted IS NULL OR is_deleted = FALSE)"
         );
         return rows[0].total;
     }
 
     static async countPendingValidations() {
         const [rows] = await db.query(
-            "SELECT COUNT(*) as total FROM ticket_reservations WHERE status = 'confirmed' AND DATE(reservation_date) = CURDATE()"
+            "SELECT COUNT(*) as total FROM ticket_reservations WHERE status = 'confirmed' AND checked_in_at IS NULL AND DATE(reservation_date) = CURDATE() AND (is_deleted IS NULL OR is_deleted = FALSE)"
         );
         return rows[0].total;
     }
 
     static async countTodayVisitors() {
         const [rows] = await db.query(
-            "SELECT COALESCE(SUM(total_visitors), 0) as total FROM ticket_reservations WHERE DATE(reservation_date) = CURDATE() AND status IN ('confirmed', 'completed')"
+            "SELECT COALESCE(SUM(total_visitors), 0) as total FROM ticket_reservations WHERE DATE(reservation_date) = CURDATE() AND status IN ('confirmed', 'completed') AND (is_deleted IS NULL OR is_deleted = FALSE)"
         );
         return rows[0].total;
     }
@@ -370,10 +370,14 @@ class Ticket {
     static async getAnalyticsDashboard(timeRange = 'week') {
         const days = { week: 7, month: 30, year: 365 }[timeRange] || 7;
         const active = '(is_deleted IS NULL OR is_deleted = FALSE)';
-        const period = `reservation_date BETWEEN DATE_SUB(CURDATE(), INTERVAL ${days - 1} DAY) AND CURDATE()`;
+        const yearly = timeRange === 'year';
+        const period = yearly
+            ? "reservation_date BETWEEN DATE_FORMAT(DATE_SUB(CURDATE(), INTERVAL 11 MONTH), '%Y-%m-01') AND CURDATE()"
+            : `reservation_date BETWEEN DATE_SUB(CURDATE(), INTERVAL ${days - 1} DAY) AND CURDATE()`;
+        const bucket = yearly ? "DATE_FORMAT(reservation_date, '%Y-%m')" : "DATE_FORMAT(reservation_date, '%Y-%m-%d')";
         const included = "status IN ('confirmed', 'completed')";
 
-        const [summaryRows, dailyRows, statusRows, weekdayRows, mixRows] = await Promise.all([
+        const [summaryRows, dailyRows, statusRows, weekdayRows, mixRows, rangeRows] = await Promise.all([
             db.query(`SELECT COUNT(*) AS reservations, COALESCE(SUM(total_visitors), 0) AS scheduledVisitors,
                 COALESCE(SUM(CASE WHEN checked_in_at IS NOT NULL OR status = 'completed' THEN total_visitors ELSE 0 END), 0) AS checkedInVisitors,
                 COALESCE(SUM(adult_quantity * 40 + child_quantity * 20), 0) AS estimatedFees,
@@ -381,12 +385,12 @@ class Ticket {
                 (SELECT COUNT(*) FROM ticket_reservations WHERE ${active} AND ${period} AND status = 'pending') AS pendingReservations,
                 (SELECT COUNT(*) FROM ticket_reservations WHERE ${active} AND ${period} AND verification_status = 'pending' AND bulusan_resident_quantity > 0) AS pendingVerification
                 FROM ticket_reservations WHERE ${active} AND ${period} AND ${included}`),
-            db.query(`SELECT DATE_FORMAT(reservation_date, '%Y-%m-%d') AS date, COUNT(*) AS reservations,
+            db.query(`SELECT ${bucket} AS date, COUNT(*) AS reservations,
                 COALESCE(SUM(total_visitors), 0) AS visitors,
                 COALESCE(SUM(CASE WHEN checked_in_at IS NOT NULL OR status = 'completed' THEN total_visitors ELSE 0 END), 0) AS checkedIn,
                 COALESCE(SUM(adult_quantity * 40 + child_quantity * 20), 0) AS estimatedFees
                 FROM ticket_reservations WHERE ${active} AND ${period} AND ${included}
-                GROUP BY DATE_FORMAT(reservation_date, '%Y-%m-%d') ORDER BY date`),
+                GROUP BY ${bucket} ORDER BY date`),
             db.query(`SELECT status, COUNT(*) AS count, COALESCE(SUM(total_visitors), 0) AS visitors
                 FROM ticket_reservations WHERE ${active} AND ${period} GROUP BY status ORDER BY status`),
             db.query(`SELECT WEEKDAY(reservation_date) AS weekday, DAYNAME(reservation_date) AS day,
@@ -396,11 +400,17 @@ class Ticket {
                 COALESCE(SUM(adult_quantity), 0) AS adults,
                 COALESCE(SUM(child_quantity), 0) AS children,
                 COALESCE(SUM(bulusan_resident_quantity), 0) AS residents
-                FROM ticket_reservations WHERE ${active} AND ${period} AND ${included}`)
+                FROM ticket_reservations WHERE ${active} AND ${period} AND ${included}`),
+            db.query(`SELECT
+                CAST(${yearly ? "DATE_FORMAT(DATE_SUB(CURDATE(), INTERVAL 11 MONTH), '%Y-%m-01')" : `DATE_SUB(CURDATE(), INTERVAL ${days - 1} DAY)`} AS CHAR) AS startDate,
+                CAST(CURDATE() AS CHAR) AS endDate`)
         ]);
 
         return {
             days,
+            granularity: yearly ? 'month' : 'day',
+            startDate: String(rangeRows[0][0].startDate).slice(0, 10),
+            endDate: String(rangeRows[0][0].endDate).slice(0, 10),
             summary: summaryRows[0][0],
             daily: dailyRows[0],
             statuses: statusRows[0],

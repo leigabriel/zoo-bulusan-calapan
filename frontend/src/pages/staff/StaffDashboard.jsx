@@ -1,4 +1,4 @@
-import { More as MoreIcon, TrendUp as TrendUpIcon, Paw as PawIcon, Leaf as LeafIcon, Ticket as TicketIcon, ChevronRight as ChevronRightIcon } from 'reicon-react';
+import { Paw as PawIcon, Leaf as LeafIcon, Ticket as TicketIcon, ChevronRight as ChevronRightIcon, CheckCircle as CheckCircleIcon, Users as UsersIcon, Calendar as CalendarIcon } from 'reicon-react';
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
@@ -15,7 +15,6 @@ const StaffDashboard = () => {
         totalPlants: 0,
         upcomingEvents: 0
     });
-    const [recentTickets, setRecentTickets] = useState([]);
     const [recentAnimals, setRecentAnimals] = useState([]);
     const [recentPlants, setRecentPlants] = useState([]);
     const [activitySummary, setActivitySummary] = useState({
@@ -35,14 +34,10 @@ const StaffDashboard = () => {
 
             const [
                 statsRes,
-                ticketsRes,
                 animalsRes,
                 plantsRes
             ] = await Promise.all([
                 staffAPI.getDashboardStats().catch(() => null),
-                staffAPI.getRecentTickets
-                    ? staffAPI.getRecentTickets().catch(() => null)
-                    : Promise.resolve({ success: true, data: [] }),
                 staffAPI.getAnimals?.().catch(() => null),
                 staffAPI.getPlants?.().catch(() => null)
             ]);
@@ -106,10 +101,6 @@ const StaffDashboard = () => {
                 setRecentPlants(plantsArray.slice(0, 4));
             }
 
-            if (ticketsRes?.success) {
-                setRecentTickets(ticketsRes.data || ticketsRes.tickets || []);
-            }
-
             // Fetch activity summary for this staff member
             try {
                 const activityRes = await staffAPI.getMyActivitySummary?.().catch(() => null);
@@ -134,27 +125,16 @@ const StaffDashboard = () => {
     };
 
     // Stat Card Component - matching admin design
-    const StatCard = ({ title, value, icon, trend, trendValue }) => (
-        <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-green-300 via-green-400 to-green-500 p-5 shadow-lg shadow-green-400/30 transition-all duration-300 hover:scale-[1.01]">
+    const StatCard = ({ title, value, icon, detail, tone = 'emerald' }) => (
+        <div className="relative overflow-hidden rounded-2xl border border-green-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
             <div className="flex items-start justify-between mb-4">
-                <div className="w-12 h-12 rounded-2xl bg-white/30 backdrop-blur-sm flex items-center justify-center text-gray-900 border border-white/20">
+                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${tone === 'amber' ? 'bg-amber-100 text-amber-800' : tone === 'blue' ? 'bg-blue-100 text-blue-800' : 'bg-emerald-100 text-emerald-800'}`}>
                     {icon}
                 </div>
-                    <button className="text-gray-900 hover:text-black transition">
-                    <MoreIcon className="w-5 h-5" />
-                </button>
             </div>
-            <p className="text-gray-900 text-sm mb-1">{title}</p>
+            <p className="text-gray-500 text-sm mb-1">{title}</p>
             <p className="text-3xl font-bold text-gray-900 mb-2 tracking-tight">{value}</p>
-            {trend && (
-                <div className="flex items-center gap-2">
-                    <span className="flex items-center gap-1 text-sm font-semibold text-gray-900">
-                        <TrendUpIcon className="w-4 h-4" />
-                        {trendValue}
-                    </span>
-                    <span className="text-gray-900 text-sm">vs yesterday</span>
-                </div>
-            )}
+            <p className="text-sm text-gray-500">{detail}</p>
         </div>
     );
 
@@ -180,29 +160,33 @@ const StaffDashboard = () => {
                 {/* QR scanner is available from staff navigation. */}
             </div>
 
-            {/* Stats Grid - Only Total Animals, Total Plants, Total Reservations */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
                 <StatCard
-                    title="Total Animals"
-                    value={stats.activeAnimals}
-                    icon={<PawIcon className="w-6 h-6" />}
-                    trend={true}
-                    trendValue="+3%"
-                />
-                <StatCard
-                    title="Total Plants"
-                    value={stats.totalPlants}
-                    icon={<LeafIcon className="w-6 h-6" />}
-                    trend={true}
-                    trendValue="+2%"
-                />
-                <StatCard
-                    title="Total Reservations"
-                    value={stats.todayTickets + stats.upcomingEvents}
+                    title="Today's Reservations"
+                    value={stats.todayTickets.toLocaleString()}
                     icon={<TicketIcon className="w-6 h-6" />}
-                    trend={true}
-                    trendValue="+8%"
+                    detail="Confirmed or completed visits today"
                 />
+                <StatCard
+                    title="Scheduled Visitors"
+                    value={stats.todayVisitors.toLocaleString()}
+                    icon={<UsersIcon className="w-6 h-6" />}
+                    detail="People expected from today's bookings"
+                    tone="blue"
+                />
+                <StatCard
+                    title="Awaiting Check-in"
+                    value={stats.pendingValidations.toLocaleString()}
+                    icon={<CheckCircleIcon className="w-6 h-6" />}
+                    detail="Confirmed bookings not checked in"
+                    tone="amber"
+                />
+                <StatCard title="Upcoming Events" value={stats.upcomingEvents.toLocaleString()} icon={<CalendarIcon className="w-6 h-6" />} detail="Events scheduled from today onward" />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+                <Link to="/staff/animals" className="flex items-center justify-between rounded-2xl bg-gradient-to-br from-green-300 via-green-400 to-green-500 p-5 text-gray-950 shadow-md shadow-green-300/30 transition hover:-translate-y-0.5 hover:shadow-lg"><div><p className="text-sm font-medium text-green-950/75">Animal Records</p><p className="text-2xl font-black">{stats.activeAnimals.toLocaleString()}</p></div><span className="rounded-xl bg-white/35 p-3"><PawIcon className="h-6 w-6" /></span></Link>
+                <Link to="/staff/plants" className="flex items-center justify-between rounded-2xl bg-gradient-to-br from-green-300 via-green-400 to-green-500 p-5 text-gray-950 shadow-md shadow-green-300/30 transition hover:-translate-y-0.5 hover:shadow-lg"><div><p className="text-sm font-medium text-green-950/75">Plant Records</p><p className="text-2xl font-black">{stats.totalPlants.toLocaleString()}</p></div><span className="rounded-xl bg-white/35 p-3"><LeafIcon className="h-6 w-6" /></span></Link>
             </div>
 
             {/* Activity Summary Card */}

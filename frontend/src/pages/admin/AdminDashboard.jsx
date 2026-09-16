@@ -46,7 +46,6 @@ const AdminDashboard = () => {
         totalTickets: 0,
         totalRevenue: 0,
         totalVisitors: 0,
-        totalProfit: 0,
         totalEventReservations: 0,
         periodEventReservations: 0,
         pendingEventReservations: 0,
@@ -71,8 +70,6 @@ const AdminDashboard = () => {
             revenue: Number(day.revenue ?? day.totalRevenue ?? day.amount) || 0
         }));
     };
-
-    const maxVisitors = useMemo(() => Math.max(...weeklyData.map(d => d.visitors), 1), [weeklyData]);
 
     const weeklyCategories = useMemo(() => weeklyData.map(d => d.day), [weeklyData]);
     const weeklyRevenue = useMemo(() => weeklyData.map(d => d.revenue), [weeklyData]);
@@ -198,7 +195,6 @@ const AdminDashboard = () => {
                 totalTickets: 0,
                 totalRevenue: 0,
                 totalVisitors: 0,
-                totalProfit: 0,
                 totalEventReservations: 0,
                 periodEventReservations: 0,
                 pendingEventReservations: 0,
@@ -232,7 +228,6 @@ const AdminDashboard = () => {
                     s.totalRevenue ?? s.total_revenue ?? s.revenue
                 ) || 0;
                 updatedStats.totalVisitors = Number(s.totalVisitors) || 0;
-                updatedStats.totalProfit = Number(s.totalProfit) || 0;
                 updatedStats.totalEventReservations = Number(s.totalEventReservations) || 0;
                 updatedStats.periodEventReservations = Number(s.periodEventReservations) || 0;
                 updatedStats.pendingEventReservations = Number(s.pendingEventReservations) || 0;
@@ -289,115 +284,19 @@ const AdminDashboard = () => {
     }, [fetchDashboardData]);
 
     // Stat Card Component
-    const StatCard = ({ title, value, icon, trend, trendValue, trendLabel }) => (
-        <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-green-300 via-green-400 to-green-500 p-5 shadow-lg shadow-green-400/30 transition-all duration-300 hover:scale-[1.01]">
+    const StatCard = ({ title, value, icon, trendValue, trendLabel, detail }) => {
+        const trend = Number(trendValue) >= 0 ? 'up' : 'down';
+        return <div className="relative overflow-hidden rounded-2xl border border-green-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
             <div className="flex items-start justify-between mb-4">
-                <div className="w-12 h-12 rounded-2xl bg-white/30 backdrop-blur-sm flex items-center justify-center text-gray-900 border border-white/20">
+                <div className="w-12 h-12 rounded-2xl bg-emerald-100 flex items-center justify-center text-emerald-800">
                     {icon}
                 </div>
-                <button className="text-green-800 hover:text-gray-900 transition">
-                    <MoreIcon />
-                </button>
+                {trendValue !== undefined && <span className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold ${trend === 'up' ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}`}>{trend === 'up' ? <ReiconTrendUp className="w-3.5 h-3.5" /> : <TrendDownIcon />}{Number(trendValue) >= 0 ? '+' : ''}{Number(trendValue) || 0}%</span>}
             </div>
-            <p className="text-green-800/85 text-sm mb-1">{title}</p>
+            <p className="text-gray-500 text-sm mb-1">{title}</p>
             <p className="text-3xl font-bold text-gray-900 mb-2 tracking-tight">{value}</p>
-            <div className="flex items-center gap-2">
-                <span className={`flex items-center gap-1 text-sm font-semibold ${trend === 'up' ? 'text-green-800' : 'text-rose-900'
-                    }`}>
-                    {trend === 'up' ? <ReiconTrendUp className="w-4 h-4" /> : <TrendDownIcon />}
-                    {trendValue}
-                </span>
-                <span className="text-green-800/80 text-sm">{trendLabel}</span>
-            </div>
+            <p className="text-sm text-gray-500">{detail || trendLabel}</p>
         </div>
-    );
-
-    // Donut Chart Component
-    const DonutChart = ({ total, label }) => {
-        const segments = [
-            { color: '#4ade80', value: 45 },
-            { color: '#22c55e', value: 25 },
-            { color: '#16a34a', value: 20 },
-            { color: '#86efac', value: 10 },
-        ];
-
-        let cumulativePercent = 0;
-
-        return (
-            <div className="relative w-40 h-40 mx-auto">
-                <svg viewBox="0 0 36 36" className="w-full h-full transform -rotate-90">
-                    {segments.map((segment, index) => {
-                        const strokeDasharray = `${segment.value} ${100 - segment.value}`;
-                        const strokeDashoffset = -cumulativePercent;
-                        cumulativePercent += segment.value;
-
-                        return (
-                            <circle
-                                key={index}
-                                cx="18"
-                                cy="18"
-                                r="14"
-                                fill="none"
-                                stroke={segment.color}
-                                strokeWidth="4"
-                                strokeDasharray={strokeDasharray}
-                                strokeDashoffset={strokeDashoffset}
-                                className="transition-all duration-500"
-                            />
-                        );
-                    })}
-                </svg>
-                <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <span className="text-2xl font-bold text-gray-900">{total}</span>
-                    <span className="text-xs text-gray-500">{label}</span>
-                </div>
-            </div>
-        );
-    };
-
-    // Mini Bar Chart for Revenue
-    const MiniBarChart = ({ data }) => (
-        <div className="flex items-end gap-1 h-16">
-            {data.map((item, index) => (
-                <div
-                    key={index}
-                    className="flex-1 bg-gradient-to-t from-green-300 via-green-400 to-green-500 rounded-t opacity-60 hover:opacity-100 transition-opacity cursor-pointer"
-                    style={{ height: `${(item.visitors / maxVisitors) * 100}%` }}
-                    title={`${item.day}: ${item.visitors} visitors`}
-                />
-            ))}
-        </div>
-    );
-
-    // Area Chart Component
-    const AreaChart = () => {
-        const points = weeklyData.map((d, i) => ({
-            x: (i / (weeklyData.length - 1)) * 100,
-            y: 100 - (d.revenue / 8000) * 100
-        }));
-
-        const pathD = points.map((p, i) =>
-            `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`
-        ).join(' ');
-
-        const areaD = `${pathD} L 100 100 L 0 100 Z`;
-
-        return (
-            <svg viewBox="0 0 100 100" className="w-full h-24" preserveAspectRatio="none">
-                <defs>
-                    <linearGradient id="areaGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                        <stop offset="0%" stopColor="#86efac" stopOpacity="0.3" />
-                        <stop offset="50%" stopColor="#4ade80" stopOpacity="0.15" />
-                        <stop offset="100%" stopColor="#22c55e" stopOpacity="0" />
-                    </linearGradient>
-                </defs>
-                <path d={areaD} fill="url(#areaGradient)" />
-                <path d={pathD} fill="none" stroke="#4ade80" strokeWidth="2" vectorEffect="non-scaling-stroke" />
-                {points.map((p, i) => (
-                    <circle key={i} cx={p.x} cy={p.y} r="2" fill="#4ade80" className="hover:r-3 transition-all" />
-                ))}
-            </svg>
-        );
     };
 
     if (loading) {
@@ -434,61 +333,36 @@ const AdminDashboard = () => {
             </div>
 
             {/* Stats Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
                 <StatCard
-                    title="Total Users"
-                    value={stats.totalUsers.toLocaleString()}
-                    icon={<ReiconUsers className="w-6 h-6" />}
-                    trend="up"
-                    trendValue="Live"
-                    trendLabel="database total"
-                />
-                <StatCard
-                    title="Total Animals"
-                    value={stats.totalAnimals.toLocaleString()}
-                    icon={<ReiconPaw className="w-6 h-6" />}
-                    trend="up"
-                    trendValue="Live"
-                    trendLabel="database total"
-                />
-                <StatCard
-                    title="Total Plants"
-                    value={stats.totalPlants.toLocaleString()}
-                    icon={<ReiconLeaf className="w-6 h-6" />}
-                    trend="up"
-                    trendValue="Live"
-                    trendLabel="database total"
-                />
-                <StatCard
-                    title="Tickets Sold"
+                    title="Scheduled Admissions"
                     value={stats.totalTickets.toLocaleString()}
                     icon={<TicketIcon />}
-                    trend="up"
-                    trendValue={`${stats.trends?.tickets >= 0 ? '+' : ''}${stats.trends?.tickets || 0}%`}
+                    trendValue={stats.trends?.tickets || 0}
                     trendLabel="vs previous period"
                 />
                 <StatCard
-                    title="Revenue"
+                    title="Recorded Revenue"
                     value={`₱${stats.totalRevenue.toLocaleString()}`}
                     icon={<RevenueIcon />}
-                    trend="up"
-                    trendValue={`${stats.trends?.revenue >= 0 ? '+' : ''}${stats.trends?.revenue || 0}%`}
+                    trendValue={stats.trends?.revenue || 0}
                     trendLabel="vs previous period"
                 />
+                <StatCard title="Website Visitors" value={stats.totalVisitors.toLocaleString()} icon={<ReiconUsers className="w-6 h-6" />} trendValue={stats.trends?.visitors || 0} trendLabel="unique visitors vs previous period" />
+                <StatCard title="Pending Event Bookings" value={stats.pendingEventReservations.toLocaleString()} icon={<ReiconCalendar className="w-6 h-6" />} detail="Event reservations requiring review" />
             </div>
 
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                <Link to="/admin/reservations" className="rounded-2xl border border-green-200 bg-white p-5 transition hover:border-green-400 hover:shadow-sm">
-                    <div className="mb-3 flex items-center justify-between"><span className="rounded-xl bg-green-100 p-2 text-green-700"><ReiconCalendar className="h-5 w-5" /></span><span className="text-xs font-semibold text-green-700">{stats.periodEventReservations} this period</span></div>
-                    <p className="text-sm text-gray-500">Event Reservations</p><p className="mt-1 text-2xl font-bold text-gray-900">{stats.totalEventReservations.toLocaleString()}</p>
+            <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
+                <Link to="/admin/users" className="group rounded-2xl bg-gradient-to-br from-green-300 via-green-400 to-green-500 p-5 text-gray-950 shadow-md shadow-green-300/30 transition hover:-translate-y-0.5 hover:shadow-lg"><div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-white/35"><ReiconUsers className="h-5 w-5" /></div><p className="text-sm font-medium text-green-950/75">Registered Accounts</p><p className="mt-1 text-2xl font-black">{stats.totalUsers.toLocaleString()}</p></Link>
+                <Link to="/admin/animals" className="group rounded-2xl bg-gradient-to-br from-green-300 via-green-400 to-green-500 p-5 text-gray-950 shadow-md shadow-green-300/30 transition hover:-translate-y-0.5 hover:shadow-lg"><div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-white/35"><ReiconPaw className="h-5 w-5" /></div><p className="text-sm font-medium text-green-950/75">Animal Records</p><p className="mt-1 text-2xl font-black">{stats.totalAnimals.toLocaleString()}</p></Link>
+                <Link to="/admin/plants" className="group rounded-2xl bg-gradient-to-br from-green-300 via-green-400 to-green-500 p-5 text-gray-950 shadow-md shadow-green-300/30 transition hover:-translate-y-0.5 hover:shadow-lg"><div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-white/35"><ReiconLeaf className="h-5 w-5" /></div><p className="text-sm font-medium text-green-950/75">Plant Records</p><p className="mt-1 text-2xl font-black">{stats.totalPlants.toLocaleString()}</p></Link>
+                <Link to="/admin/reservations" className="rounded-2xl bg-gradient-to-br from-green-300 via-green-400 to-green-500 p-5 text-gray-950 shadow-md shadow-green-300/30 transition hover:-translate-y-0.5 hover:shadow-lg">
+                    <div className="mb-3 flex items-center justify-between"><span className="rounded-xl bg-white/35 p-2"><ReiconCalendar className="h-5 w-5" /></span><span className="text-xs font-bold text-green-950/75">{stats.periodEventReservations} this period</span></div>
+                    <p className="text-sm font-medium text-green-950/75">Event Reservations</p><p className="mt-1 text-2xl font-black">{stats.totalEventReservations.toLocaleString()}</p>
                 </Link>
-                <Link to="/admin/reservations" className="rounded-2xl border border-amber-200 bg-white p-5 transition hover:border-amber-400 hover:shadow-sm">
-                    <div className="mb-3 flex items-center justify-between"><span className="rounded-xl bg-amber-100 p-2 text-amber-700"><ReiconTicket className="h-5 w-5" /></span><span className="text-xs font-semibold text-amber-700">Action needed</span></div>
-                    <p className="text-sm text-gray-500">Pending Event Reservations</p><p className="mt-1 text-2xl font-bold text-gray-900">{stats.pendingEventReservations.toLocaleString()}</p>
-                </Link>
-                <Link to="/admin/messages" className="rounded-2xl border border-blue-200 bg-white p-5 transition hover:border-blue-400 hover:shadow-sm">
-                    <div className="mb-3 flex items-center justify-between"><span className="rounded-xl bg-blue-100 p-2 text-blue-700"><ReiconMessage className="h-5 w-5" /></span><span className="text-xs font-semibold text-blue-700">Inbox</span></div>
-                    <p className="text-sm text-gray-500">Unread Messages</p><p className="mt-1 text-2xl font-bold text-gray-900">{stats.unreadMessages.toLocaleString()}</p>
+                <Link to="/admin/messages" className="rounded-2xl bg-gradient-to-br from-green-300 via-green-400 to-green-500 p-5 text-gray-950 shadow-md shadow-green-300/30 transition hover:-translate-y-0.5 hover:shadow-lg">
+                    <div className="mb-3 flex items-center justify-between"><span className="rounded-xl bg-white/35 p-2"><ReiconMessage className="h-5 w-5" /></span><span className="text-xs font-bold text-green-950/75">Inbox</span></div>
+                    <p className="text-sm font-medium text-green-950/75">Unread Messages</p><p className="mt-1 text-2xl font-black">{stats.unreadMessages.toLocaleString()}</p>
                 </Link>
             </div>
 
@@ -616,16 +490,14 @@ const AdminDashboard = () => {
                     <p className="text-gray-500 text-sm">Selected period</p>
                 </div>
 
-                {/* Total Profit Card */}
+                {/* Revenue total */}
                 <div className="bg-white border border-green-300 rounded-2xl p-6">
                     <div className="flex items-center justify-between mb-4">
-                        <p className="text-gray-500 text-sm">Total Profit</p>
-                        <span className="text-green-800 text-sm font-medium flex items-center gap-1">
-                            Live
-                        </span>
+                        <p className="text-gray-500 text-sm">Recorded Revenue</p>
+                        <span className="text-green-800 text-sm font-medium">Selected period</span>
                     </div>
-                    <p className="text-3xl font-bold text-gray-900 mb-2">₱{stats.totalProfit.toLocaleString()}</p>
-                    <p className="text-gray-500 text-sm mb-2">Selected period revenue</p>
+                    <p className="text-3xl font-bold text-gray-900 mb-2">₱{stats.totalRevenue.toLocaleString()}</p>
+                    <p className="text-gray-500 text-sm mb-2">Ticket and paid event revenue</p>
                     <Chart
                         options={revenueAreaOptions}
                         series={revenueAreaSeries}
@@ -639,7 +511,7 @@ const AdminDashboard = () => {
                     <h3 className="text-lg font-bold text-gray-900 mb-4">Revenue Breakdown</h3>
                     <div className="space-y-4">
                         {stats.revenueBreakdown.map(item => {
-                            const percentage = stats.totalProfit ? Math.round((item.amount / stats.totalProfit) * 100) : 0;
+                            const percentage = stats.totalRevenue ? Math.round((item.amount / stats.totalRevenue) * 100) : 0;
                             return <div key={item.source}>
                                 <div className="flex justify-between text-sm mb-1">
                                     <span className="text-gray-500">{item.source}</span>
@@ -680,7 +552,7 @@ const AdminDashboard = () => {
                 <div className="flex items-center justify-between mb-6">
                     <div>
                         <h3 className="text-lg font-bold text-gray-900">Recently Registered Users</h3>
-                        <p className="text-sm text-gray-500">New users who joined this week</p>
+                        <p className="text-sm text-gray-500">Latest account registrations</p>
                     </div>
                     <Link
                         to="/admin/users"

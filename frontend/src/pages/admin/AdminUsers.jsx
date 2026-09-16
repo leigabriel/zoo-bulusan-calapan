@@ -1,10 +1,10 @@
-import { Ban as ReiconBan, CheckCircle as ReiconCheckCircle, Edit as ReiconEdit, Eye as ReiconEye, Filter as ReiconFilter, Plus as ReiconPlus, RotateLeft as ReiconRotateLeft, Search as ReiconSearch, Trash as ReiconTrash, Users as ReiconUsers, X as ReiconX } from 'reicon-react';
+import { Ban as ReiconBan, CheckCircle as ReiconCheckCircle, Edit as ReiconEdit, Eye as ReiconEye, Filter as ReiconFilter, Plus as ReiconPlus, Search as ReiconSearch, Users as ReiconUsers, X as ReiconX } from 'reicon-react';
 import { useEffect, useState } from 'react';
 import { adminAPI, getProfileImageUrl } from '../../services/api-client';
-import ConfirmModal from '../../components/common/ConfirmModal';
 import { sanitizeInput, sanitizeEmail } from '../../utils/sanitize';
 import { notify } from '../../utils/toast';
 import { useAuth } from '../../context/AuthContext';
+import PasswordInput from '../../components/common/PasswordInput';
 
 // Icons
 const SearchIcon = () => (
@@ -17,10 +17,6 @@ const PlusIcon = () => (
 
 const EditIcon = () => (
     <ReiconEdit strokeWidth="2" className="w-4 h-4" />
-);
-
-const TrashIcon = ({ className = 'w-4 h-4' }) => (
-    <ReiconTrash strokeWidth="2" className={className} />
 );
 
 const BanIcon = () => (
@@ -47,10 +43,6 @@ const FilterIcon = () => (
     <ReiconFilter strokeWidth="2" className="w-4 h-4" />
 );
 
-const RestoreIcon = () => (
-    <ReiconRotateLeft strokeWidth="2" className="w-4 h-4" />
-);
-
 const AdminUsers = ({ globalSearch = '' }) => {
     const { user: currentUser } = useAuth();
     const [users, setUsers] = useState([]);
@@ -60,14 +52,9 @@ const AdminUsers = ({ globalSearch = '' }) => {
     const [showModal, setShowModal] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [roleFilter, setRoleFilter] = useState('all');
-    const [selectedIds, setSelectedIds] = useState([]);
-    const [form, setForm] = useState({ firstName: '', lastName: '', username: '', email: '', role: 'user', password: '' });
+    const emptyForm = { firstName: '', lastName: '', username: '', email: '', role: 'user', password: '', confirmPassword: '' };
+    const [form, setForm] = useState(emptyForm);
     const [saving, setSaving] = useState(false);
-
-    // Trash confirm states
-    const [deleting, setDeleting] = useState(false);
-    const [trashTarget, setTrashTarget] = useState(null);
-    const [showBulkModal, setShowBulkModal] = useState(false);
 
     // Suspend modal states
     const [suspendUser, setSuspendUser] = useState(null);
@@ -115,7 +102,7 @@ const AdminUsers = ({ globalSearch = '' }) => {
 
     const openCreateModal = () => {
         setEditingUser(null);
-        setForm({ firstName: '', lastName: '', username: '', email: '', role: 'user', password: '' });
+        setForm(emptyForm);
         setShowModal(true);
     };
 
@@ -127,7 +114,8 @@ const AdminUsers = ({ globalSearch = '' }) => {
             username: user.username || '',
             email: user.email || '',
             role: user.role || 'user',
-            password: ''
+            password: '',
+            confirmPassword: ''
         });
         setShowModal(true);
     };
@@ -135,14 +123,19 @@ const AdminUsers = ({ globalSearch = '' }) => {
     const closeModal = () => {
         setShowModal(false);
         setEditingUser(null);
-        setForm({ firstName: '', lastName: '', username: '', email: '', role: 'user', password: '' });
+        setForm(emptyForm);
     };
 
     const saveUser = async (e) => {
         e.preventDefault();
+        if (!editingUser && form.password !== form.confirmPassword) {
+            notify.error('Passwords do not match.');
+            return;
+        }
         setSaving(true);
         try {
             const payload = { ...form };
+            delete payload.confirmPassword;
             if (!payload.password) delete payload.password;
             let res;
             if (editingUser) {
@@ -152,7 +145,8 @@ const AdminUsers = ({ globalSearch = '' }) => {
             }
             if (res.success) {
                 await fetchUsers();
-                notify.success(editingUser ? 'User updated.' : 'User created.');
+                if (!editingUser && res.emailSent === false) notify.warning(res.message);
+                else notify.success(editingUser ? 'User updated.' : 'User created. A verification link was sent.');
                 closeModal();
             } else throw new Error(res.message || 'Save failed');
         } catch (err) {
@@ -203,49 +197,6 @@ const AdminUsers = ({ globalSearch = '' }) => {
         }
     };
 
-    // ==================== TRASH HANDLERS ====================
-
-    const trashUser = async (user) => {
-        try {
-            const res = await adminAPI.deleteUser(user.id);
-            if (res.success) {
-                setUsers(users.filter(u => u.id !== user.id));
-                notify.success('User moved to trash.', {
-                    action: {
-                        label: 'Undo',
-                        onClick: async () => {
-                            try {
-                                await adminAPI.restoreUser(user.id);
-                                setUsers(prev => [user, ...prev].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)));
-                                notify.success('User restored.');
-                            } catch {
-                                notify.error('Failed to restore user');
-                            }
-                        },
-                        successLabel: 'Restored'
-                    }
-                });
-            }
-        } catch {
-            notify.error('Failed to move user to trash');
-        }
-    };
-
-    const handleConfirmTrash = async () => {
-        if (!trashTarget) return;
-        setDeleting(true);
-        await trashUser(trashTarget);
-        setTrashTarget(null);
-        setDeleting(false);
-    };
-
-    const handleConfirmBulkTrash = async () => {
-        setDeleting(true);
-        await trashSelected();
-        setShowBulkModal(false);
-        setDeleting(false);
-    };
-
     const getRoleBadgeColor = (role) => {
         switch (role?.toLowerCase()) {
             case 'admin': return 'bg-green-400/20 text-green-800 border-green-400/30';
@@ -275,45 +226,6 @@ const AdminUsers = ({ globalSearch = '' }) => {
         user: users.filter(u => u.role === 'user').length,
         active: users.filter(u => !u.is_suspended && !(u.is_active === false || u.is_active === 0 || u.is_active === '0')).length,
         suspended: users.filter(u => u.is_suspended).length,
-    };
-
-    const allFilteredSelected = filteredUsers.length > 0 && filteredUsers.every(u => selectedIds.includes(u.id));
-
-    const toggleSelect = (id) => {
-        setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
-    };
-
-    const toggleSelectAll = () => {
-        if (allFilteredSelected) setSelectedIds([]);
-        else setSelectedIds([...new Set([...selectedIds, ...filteredUsers.map(u => u.id)])]);
-    };
-
-    const trashSelected = async () => {
-        const selectedUsers = filteredUsers.filter(u => selectedIds.includes(u.id));
-        if (selectedUsers.length === 0) return;
-        try {
-            await Promise.all(selectedUsers.map(u => adminAPI.deleteUser(u.id)));
-            setUsers(prev => prev.filter(u => !selectedIds.includes(u.id)));
-            setSelectedIds([]);
-            const count = selectedUsers.length;
-            notify.success(`${count} user${count > 1 ? 's' : ''} moved to trash.`, {
-                action: {
-                    label: 'Undo',
-                    onClick: async () => {
-                        try {
-                            await Promise.all(selectedUsers.map(u => adminAPI.restoreUser(u.id)));
-                            setUsers(prev => [...selectedUsers, ...prev].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)));
-                            notify.success('Users restored.');
-                        } catch {
-                            notify.error('Failed to restore users');
-                        }
-                    },
-                    successLabel: 'Restored'
-                }
-            });
-        } catch {
-            notify.error('Failed to move users to trash');
-        }
     };
 
     if (loading) {
@@ -427,28 +339,11 @@ const AdminUsers = ({ globalSearch = '' }) => {
                     </div>
                 </div>
 
-                {selectedIds.length > 0 && (
-                    <div className="flex items-center justify-between gap-3 px-6 py-3 bg-green-50 border-b border-green-200">
-                        <span className="text-sm font-medium text-gray-700">{selectedIds.length} selected</span>
-                        <div className="flex items-center gap-2">
-                            <button onClick={() => setSelectedIds([])} className="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition">
-                                Cancel
-                            </button>
-                            <button onClick={() => setShowBulkModal(true)} className="flex items-center gap-2 px-3 py-1.5 text-sm font-semibold text-red-700 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 rounded-lg transition">
-                                <TrashIcon /> Trash selected ({selectedIds.length})
-                            </button>
-                        </div>
-                    </div>
-                )}
-
                 {/* Users Table */}
                 <div className="overflow-x-auto">
                     <table className="w-full">
                         <thead className="bg-green-50">
                             <tr>
-                                <th className="px-6 py-4 text-left w-12">
-                                    <input type="checkbox" checked={allFilteredSelected} onChange={toggleSelectAll} className="w-4 h-4 accent-green-500 cursor-pointer" aria-label="Select all users" />
-                                </th>
                                 <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">User</th>
                                 <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Email</th>
                                 <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Role</th>
@@ -459,7 +354,7 @@ const AdminUsers = ({ globalSearch = '' }) => {
                         <tbody className="divide-y divide-green-200">
                             {filteredUsers.length === 0 ? (
                                 <tr>
-                                    <td colSpan="6" className="px-6 py-12 text-center text-gray-500">
+                                    <td colSpan="5" className="px-6 py-12 text-center text-gray-500">
                                         {searchQuery || roleFilter !== 'all' ? 'No users match your filters' : 'No users found'}
                                     </td>
                                 </tr>
@@ -478,17 +373,6 @@ const AdminUsers = ({ globalSearch = '' }) => {
                                         tabIndex={0}
                                         aria-label={`View ${user.firstName || user.first_name} ${user.lastName || user.last_name}`}
                                     >
-                                        <td className="px-6 py-4 w-12">
-                                            <input
-                                                type="checkbox"
-                                                checked={selectedIds.includes(user.id)}
-                                                onChange={() => toggleSelect(user.id)}
-                                                onClick={(event) => event.stopPropagation()}
-                                                onKeyDown={(event) => event.stopPropagation()}
-                                                className="w-4 h-4 accent-green-500 cursor-pointer"
-                                                aria-label={`Select ${user.firstName || user.first_name} ${user.lastName || user.last_name}`}
-                                            />
-                                        </td>
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-3">
                                                 <div className="w-10 h-10 rounded-full overflow-hidden bg-white flex items-center justify-center border border-green-200">
@@ -515,7 +399,7 @@ const AdminUsers = ({ globalSearch = '' }) => {
                                                 </div>
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4 text-gray-700">{user.email}</td>
+                                        <td className="px-6 py-4 text-gray-700"><p>{user.email}</p><span className={`text-xs font-medium ${user.email_verified ? 'text-emerald-700' : 'text-amber-700'}`}>{user.email_verified ? 'Verified' : 'Verification pending'}</span></td>
                                         <td className="px-6 py-4">
                                             <span className={`inline-flex px-3 py-1 text-xs font-medium rounded-full border capitalize ${getRoleBadgeColor(user.role)}`}>
                                                 {user.role}
@@ -540,7 +424,7 @@ const AdminUsers = ({ globalSearch = '' }) => {
                                                 >
                                                     <EditIcon />
                                                 </button>}
-                                                {user.role === 'user' && (user.is_suspended ? (
+                                                {String(user.id) !== String(currentUser?.id) && (user.is_suspended ? (
                                                     <button
                                                         onClick={(event) => { event.stopPropagation(); setUnsuspendTarget(user); }}
                                                         disabled={suspending}
@@ -558,13 +442,6 @@ const AdminUsers = ({ globalSearch = '' }) => {
                                                         <BanIcon />
                                                     </button>
                                                 ))}
-                                                {user.role !== 'user' && String(user.id) !== String(currentUser?.id) && <button
-                                                    onClick={(event) => { event.stopPropagation(); setTrashTarget(user); }}
-                                                    className="p-2 bg-green-50 hover:bg-red-500/10 border border-green-200 hover:border-red-500/50 text-gray-500 hover:text-red-700 rounded-lg transition-all"
-                                                    title="Move to trash"
-                                                >
-                                                    <TrashIcon />
-                                                </button>}
                                             </div>
                                         </td>
                                     </tr>
@@ -581,28 +458,6 @@ const AdminUsers = ({ globalSearch = '' }) => {
                     </p>
                 </div>
             </div>
-
-            {trashTarget && (
-                <ConfirmModal
-                    title={`Delete ${trashTarget.firstName || trashTarget.first_name || ''} ${trashTarget.lastName || trashTarget.last_name || ''}?`}
-                    message={`Are you sure you want to move this user to the trash? You can undo this action from the toast notification.`}
-                    confirmLabel="Yes, Move to Trash"
-                    loading={deleting}
-                    onCancel={() => setTrashTarget(null)}
-                    onConfirm={handleConfirmTrash}
-                />
-            )}
-
-            {showBulkModal && (
-                <ConfirmModal
-                    title={`Delete ${selectedIds.length} Users?`}
-                    message={`Are you sure you want to move ${selectedIds.length} selected users to the trash? You can undo this action from the toast notification.`}
-                    confirmLabel="Yes, Move to Trash"
-                    loading={deleting}
-                    onCancel={() => setShowBulkModal(false)}
-                    onConfirm={handleConfirmBulkTrash}
-                />
-            )}
 
             {/* Create/Edit Modal */}
             {showModal && (
@@ -638,15 +493,22 @@ const AdminUsers = ({ globalSearch = '' }) => {
                             <div>
                                 <label className="block text-sm font-medium text-gray-500 mb-2">Role</label>
                                 <select value={form.role} onChange={e => setForm({ ...form, role: e.target.value })} className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:border-green-400 transition-all cursor-pointer">
-                                    <option value="user">User</option>
+                                    {!editingUser && <option value="user">User</option>}
                                     <option value="staff">Staff</option>
                                     <option value="admin">Admin</option>
                                 </select>
                             </div>
                             {!editingUser && (
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-500 mb-2">Password</label>
-                                    <input type="password" value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-400 transition-all" placeholder="••••••••" required={!editingUser} />
+                                <div className="grid gap-4 sm:grid-cols-2">
+                                    <div>
+                                     <label className="block text-sm font-medium text-gray-500 mb-2">Password</label>
+                                     <PasswordInput value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} className="bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-400 transition-all" placeholder="At least 8 characters" required />
+                                    </div>
+                                    <div>
+                                     <label className="block text-sm font-medium text-gray-500 mb-2">Confirm Password</label>
+                                     <PasswordInput value={form.confirmPassword} onChange={e => setForm({ ...form, confirmPassword: e.target.value })} className="bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-400 transition-all" placeholder="Repeat password" required />
+                                    </div>
+                                    <p className="text-xs text-gray-500 sm:col-span-2">Use 8+ characters with an uppercase letter, number, and special character.</p>
                                 </div>
                             )}
                             <div className="flex gap-3 pt-4">
@@ -781,6 +643,10 @@ const AdminUsers = ({ globalSearch = '' }) => {
                                     <span className={`text-sm font-medium ${getAccountStatus(viewUser).text}`}>{getAccountStatus(viewUser).label}</span>
                                 </div>
                                 <div className="flex items-center justify-between py-2.5 border-b border-gray-100">
+                                    <span className="text-sm text-gray-500">Email verification</span>
+                                    <span className={`text-sm font-medium ${viewUser.email_verified ? 'text-emerald-700' : 'text-amber-700'}`}>{viewUser.email_verified ? 'Verified' : 'Pending'}</span>
+                                </div>
+                                <div className="flex items-center justify-between py-2.5 border-b border-gray-100">
                                     <span className="text-sm text-gray-500">Joined</span>
                                     <span className="text-sm font-medium text-gray-900">{viewUser.created_at?.split('T')[0] || '-'}</span>
                                 </div>
@@ -800,8 +666,7 @@ const AdminUsers = ({ globalSearch = '' }) => {
 
                             <div className="flex gap-3 pt-2">
                                 {viewUser.role !== 'user' && <button onClick={() => { setViewUser(null); openEditModal(viewUser); }} className="flex-1 py-3 bg-green-400/10 border border-green-400/30 text-green-800 font-medium rounded-xl hover:bg-green-400/20 transition-all">Edit User</button>}
-                                {viewUser.role !== 'user' && String(viewUser.id) !== String(currentUser?.id) && <button onClick={() => { setViewUser(null); setTrashTarget(viewUser); }} className="flex-1 py-3 bg-red-500/10 border border-red-500/30 text-red-700 font-medium rounded-xl hover:bg-red-500/20 transition-all">Move to Trash</button>}
-                                {viewUser.role === 'user' && (viewUser.is_suspended ? (
+                                {String(viewUser.id) !== String(currentUser?.id) && (viewUser.is_suspended ? (
                                     <button onClick={() => { setViewUser(null); setUnsuspendTarget(viewUser); }} className="flex-1 py-3 bg-green-400/10 border border-green-400/30 text-green-800 font-medium rounded-xl hover:bg-green-400/20 transition-all">Unsuspend</button>
                                 ) : (
                                     <button onClick={() => { setViewUser(null); setSuspendUser(viewUser); }} className="flex-1 py-3 bg-red-500/10 border border-red-500/30 text-red-700 font-medium rounded-xl hover:bg-red-500/20 transition-all">Suspend</button>

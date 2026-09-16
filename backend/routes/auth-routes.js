@@ -5,6 +5,7 @@ const {
     login,
     getMe,
     updateProfile,
+    updateEmail,
     updatePassword,
     deleteAccount,
     logout,
@@ -33,6 +34,7 @@ router.post('/reset-password', resetPassword);
 // Protected routes (auth required)
 router.get('/me', protect, getMe);
 router.put('/profile', protect, updateProfile);
+router.put('/email', protect, updateEmail);
 router.post('/profile/image', protect, handleCloudinaryProfileUpload, uploadProfileImage);
 router.delete('/profile/image', protect, deleteProfileImage);
 router.put('/updatepassword', protect, updatePassword);

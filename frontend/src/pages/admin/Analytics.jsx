@@ -66,12 +66,14 @@ const Analytics = () => {
          tooltip: { theme: 'light' },
          noData: { text: 'No data for this period', style: { color: '#64748b', fontSize: '14px' } }
     };
-    const chartDates = daily.map(item => new Date(`${item.date}T00:00:00`).getTime());
+    const chartDates = daily.map(item => new Date(`${item.date}${data?.meta?.granularity === 'month' ? '-01' : ''}T00:00:00`).getTime());
     const dateLabel = timestamp => new Date(timestamp).toLocaleDateString('en-US', timeRange === 'year' ? { month: 'short', year: 'numeric' } : { month: 'short', day: 'numeric' });
     const demandOptions = {
         ...baseChart,
         colors: [colors[0], colors[1]],
-        stroke: { width: [0, 3], curve: 'straight' },
+        stroke: { width: [0, 3], curve: 'smooth' },
+        fill: { opacity: [0.85, 1] },
+        plotOptions: { bar: { borderRadius: 5, columnWidth: timeRange === 'week' ? '48%' : '70%' } },
         xaxis: {
             type: 'datetime',
             categories: chartDates,
@@ -80,9 +82,9 @@ const Analytics = () => {
             tooltip: { enabled: false }
         },
         tooltip: { shared: true, x: { formatter: timestamp => longDate(new Date(timestamp).toISOString().slice(0, 10)) } },
-        yaxis: [{ title: { text: 'Visitors' }, min: 0, forceNiceScale: true }, { opposite: true, title: { text: 'Reservations' }, min: 0, forceNiceScale: true }]
+        yaxis: { title: { text: 'Visitors' }, min: 0, forceNiceScale: true, decimalsInFloat: 0 }
     };
-    const demandSeries = [{ name: 'Scheduled visitors', type: 'column', data: daily.map((item, index) => ({ x: chartDates[index], y: Number(item.visitors) || 0 })) }, { name: 'Reservations', type: 'line', data: daily.map((item, index) => ({ x: chartDates[index], y: Number(item.reservations) || 0 })) }];
+    const demandSeries = [{ name: 'Scheduled visitors', type: 'column', data: daily.map((item, index) => ({ x: chartDates[index], y: Number(item.visitors) || 0 })) }, { name: 'Checked-in visitors', type: 'line', data: daily.map((item, index) => ({ x: chartDates[index], y: Number(item.checkedIn) || 0 })) }];
     const weekdayOptions = { ...baseChart, colors: [colors[3]], plotOptions: { bar: { borderRadius: 6, horizontal: true } }, xaxis: { categories: weekdays.map(item => item.day) } };
     const mixOptions = { ...baseChart, labels: mix.map(item => item.type), colors, plotOptions: { pie: { donut: { size: '68%', labels: { show: true, total: { show: true, label: 'Admissions', formatter: () => numberFormat.format(totalAdmissions) } } } } } };
 
@@ -189,12 +191,12 @@ const Analytics = () => {
 
     return (
         <section className="analytics-report space-y-6 pb-10">
-            <header className="analytics-print-hidden rounded-3xl border border-green-400 bg-gradient-to-r from-green-300 via-green-400 to-green-500 p-6 text-gray-950 md:p-8">
+            <header className="analytics-print-hidden overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-950 via-green-900 to-emerald-700 p-6 text-white shadow-xl shadow-emerald-950/10 md:p-8">
                 <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-                    <div><p className="text-xs font-black uppercase tracking-[0.22em] text-green-950/70">Operational intelligence</p><h1 className="mt-2 text-3xl font-black tracking-tight md:text-5xl">Zoo analytics</h1><p className="mt-2 text-sm text-green-950/75">Visit-date performance for confirmed and completed reservations · {periodLabel}</p></div>
+                    <div><p className="text-xs font-black uppercase tracking-[0.22em] text-emerald-200">Operations report</p><h1 className="mt-2 text-3xl font-black tracking-tight md:text-5xl">Visitor intelligence</h1><p className="mt-2 max-w-2xl text-sm text-emerald-100">Plan staffing and capacity from confirmed and completed reservations scheduled for {periodLabel}.</p></div>
                     <div className="analytics-controls flex flex-wrap gap-2">
                         <button onClick={exportExcel} className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-bold shadow-sm"><Download className="h-4 w-4" />Export Excel</button>
-                        <button onClick={printReport} className="inline-flex items-center gap-2 rounded-xl bg-gray-950 px-4 py-2.5 text-sm font-bold text-white"><Print className="h-4 w-4" />Print / PDF</button>
+                         <button onClick={printReport} className="inline-flex items-center gap-2 rounded-xl bg-emerald-300 px-4 py-2.5 text-sm font-bold text-emerald-950"><Print className="h-4 w-4" />Print / PDF</button>
                     </div>
                 </div>
             </header>
@@ -212,10 +214,10 @@ const Analytics = () => {
                 {[['Cancellation rate', `${cancellationRate.toFixed(1)}%`, Activity], ['All-time users', numberFormat.format(summary.totalUsers || 0), Users], ['Animal inventory', numberFormat.format(summary.totalAnimals || 0), Pet], ['Upcoming events', numberFormat.format(summary.upcomingEvents || 0), Calendar]].map(([label, value, icon]) => <div key={label} className="rounded-2xl border border-green-200 bg-white p-4">{createElement(icon, { className: 'mb-3 h-5 w-5 text-green-700' })}<p className="text-2xl font-black tabular-nums">{value}</p><p className="text-xs font-bold uppercase tracking-wide text-gray-500">{label}</p></div>)}
             </div>
 
-             <div className="analytics-charts grid min-w-0 gap-6 xl:grid-cols-2">
-                 <article className="analytics-chart min-w-0 overflow-hidden rounded-2xl border border-green-200 bg-white p-5"><h2 className="text-lg font-black">Daily visitor demand</h2><p className="text-sm text-gray-500">Chronological reservations and scheduled visitors. Hover any point for its complete date and values.</p><div className="min-w-0"><Chart options={demandOptions} series={demandSeries} type="line" height={360} /></div></article>
+             <div className="analytics-charts grid min-w-0 gap-6 xl:grid-cols-3">
+                 <article className="analytics-chart min-w-0 overflow-hidden rounded-2xl border border-green-200 bg-white p-5 shadow-sm xl:col-span-2"><div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between"><div><h2 className="text-lg font-black">{timeRange === 'year' ? 'Monthly' : 'Daily'} visitor demand</h2><p className="text-sm text-gray-500">Scheduled demand versus visitors already checked in. Dates with no demand are shown as zero.</p></div><span className="w-fit rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">By visit date</span></div><div className="mt-3 min-w-0"><Chart options={demandOptions} series={demandSeries} type="line" height={360} /></div></article>
                  <article className="analytics-chart min-w-0 overflow-hidden rounded-2xl border border-green-200 bg-white p-5"><h2 className="text-lg font-black">Admission mix</h2><p className="text-sm text-gray-500">Adult, child, and Bulusan resident quantities</p><Chart options={mixOptions} series={mix.map(item => item.count)} type="donut" height={320} /></article>
-                 <article className="analytics-chart min-w-0 overflow-hidden rounded-2xl border border-green-200 bg-white p-5"><h2 className="text-lg font-black">Weekday demand profile</h2><p className="text-sm text-gray-500">Aggregate scheduled visitors by day of week</p><Chart options={weekdayOptions} series={[{ name: 'Visitors', data: weekdays.map(item => Number(item.visitors) || 0) }]} type="bar" height={320} /></article>
+                 <article className="analytics-chart min-w-0 overflow-hidden rounded-2xl border border-green-200 bg-white p-5 xl:col-span-3"><h2 className="text-lg font-black">Weekday demand profile</h2><p className="text-sm text-gray-500">Aggregate scheduled visitors by day of week, including zero-demand days</p><Chart options={weekdayOptions} series={[{ name: 'Visitors', data: weekdays.map(item => Number(item.visitors) || 0) }]} type="bar" height={300} /></article>
             </div>
 
             <div className="analytics-details grid gap-6 lg:grid-cols-2">

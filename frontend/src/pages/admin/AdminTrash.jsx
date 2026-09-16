@@ -119,6 +119,7 @@ const AdminTrash = () => {
         Events: trashedItems.filter(i => i.type === 'Event').length,
         Reservations: trashedItems.filter(i => i.type.endsWith('Reservation')).length,
     };
+    const selectedDeletableItems = trashedItems.filter(item => item.type !== 'User' && selectedIds.includes(`${item.type}-${item.id}`));
 
     const toggleSelect = (globalId) => {
         setSelectedIds(prev =>
@@ -187,7 +188,9 @@ const AdminTrash = () => {
     };
 
     const openPermDeleteModal = (targets) => {
-        setPermDeleteTargets(targets);
+        const allowedTargets = targets.filter(target => target.type !== 'User');
+        if (!allowedTargets.length) return;
+        setPermDeleteTargets(allowedTargets);
         setPermDeletePassword('');
         setShowPermDeleteModal(true);
     };
@@ -203,7 +206,6 @@ const AdminTrash = () => {
             });
 
             await Promise.all([
-                grouped.User && adminAPI.permanentDeleteMultipleUsers(grouped.User, permDeletePassword),
                 grouped.Animal && adminAPI.permanentDeleteMultipleAnimals(grouped.Animal, permDeletePassword),
                 grouped.Plant && adminAPI.permanentDeleteMultiplePlants(grouped.Plant, permDeletePassword),
                 grouped.Event && adminAPI.permanentDeleteMultipleEvents(grouped.Event, permDeletePassword),
@@ -339,18 +341,16 @@ const AdminTrash = () => {
                                 <RestoreIcon />
                                 Restore ({selectedIds.length})
                             </button>
-                            <button
+                            {selectedDeletableItems.length > 0 && <button
                                 onClick={() => {
-                                    const targets = trashedItems
-                                        .filter(i => selectedIds.includes(`${i.type}-${i.id}`))
-                                        .map(i => ({ id: i.id, type: i.type }));
+                                    const targets = selectedDeletableItems.map(i => ({ id: i.id, type: i.type }));
                                     openPermDeleteModal(targets);
                                 }}
                                 className="flex items-center gap-2 px-4 py-2.5 bg-red-500/10 border border-red-500/30 text-red-500 font-medium rounded-xl hover:bg-red-500/20 transition-all"
                             >
                                 <TrashIcon />
-                                Delete ({selectedIds.length})
-                            </button>
+                                Delete ({selectedDeletableItems.length})
+                            </button>}
                             <button
                                 onClick={clearSelection}
                                 className="p-2.5 bg-green-50 border border-green-200 text-gray-500 rounded-xl hover:bg-green-100 transition-all"
@@ -432,13 +432,13 @@ const AdminTrash = () => {
                                                     >
                                                         <RestoreIcon />
                                                     </button>
-                                                    <button
+                                                    {item.type !== 'User' && <button
                                                         onClick={() => openPermDeleteModal([{ id: item.id, type: item.type }])}
                                                         className="p-2 bg-green-50 hover:bg-red-500/10 border border-green-200 hover:border-red-500/50 text-gray-500 hover:text-red-700 rounded-lg transition-all"
                                                         title="Permanently delete"
                                                     >
                                                         <TrashIcon />
-                                                    </button>
+                                                    </button>}
                                                 </div>
                                             </td>
                                         </tr>

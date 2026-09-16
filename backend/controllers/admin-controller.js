@@ -6,7 +6,9 @@ const Notification = require('../models/notification-model');
 const Plant = require('../models/plant-model');
 const Reservation = require('../models/reservation-model');
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 const db = require('../config/database');
+const { sendVerificationEmailSync } = require('../utils/email');
 
 // Helper to get date range based on period
 const getDateRange = (period) => {
@@ -53,8 +55,8 @@ exports.getDashboardStats = async (req, res) => {
         const previousEnd = previousStart ? period === 'today' ? 'CURDATE()' : period === 'week' ? 'DATE_SUB(CURDATE(), INTERVAL 6 DAY)' : period === 'month' ? 'DATE_FORMAT(CURDATE(), \'%Y-%m-01\')' : 'MAKEDATE(YEAR(CURDATE()), 1)' : null;
         const ticketDate = periodStart ? `AND tr.reservation_date >= ${periodStart} AND tr.reservation_date < ${currentEnd}` : '';
         const eventDate = periodStart ? `AND er.created_at >= ${periodStart} AND er.created_at < ${currentEnd}` : '';
-        const validTicket = `tr.status IN ('confirmed', 'completed')`;
-        const validEvent = `er.status IN ('confirmed', 'completed') AND er.payment_status = 'paid'`;
+        const validTicket = `tr.status IN ('confirmed', 'completed') AND (tr.is_deleted IS NULL OR tr.is_deleted = FALSE)`;
+        const validEvent = `er.status IN ('confirmed', 'completed') AND er.payment_status = 'paid' AND (er.is_deleted IS NULL OR er.is_deleted = FALSE)`;
 
         const [summaryRows, previousRows, weeklyRows, siteVisitorRows, distributionRows, breakdownRows, eventRows, currentDateRows, reservationRows, messageRows, totalUsers, totalAnimals, totalPlants] = await Promise.all([
             db.query(`SELECT
@@ -65,13 +67,15 @@ exports.getDashboardStats = async (req, res) => {
             db.query(`SELECT
                 COALESCE(SUM(CASE WHEN ${validTicket} AND tr.reservation_date >= ${previousStart} AND tr.reservation_date < ${previousEnd} THEN tr.adult_quantity + tr.child_quantity + tr.bulusan_resident_quantity ELSE 0 END), 0) AS tickets,
                  (SELECT COUNT(*) FROM site_visits WHERE visit_date >= ${previousStart} AND visit_date < ${previousEnd}) AS visitors,
-                COALESCE(SUM(CASE WHEN ${validTicket} AND tr.reservation_date >= ${previousStart} AND tr.reservation_date < ${previousEnd} THEN (tr.adult_quantity * 40) + (tr.child_quantity * 20) ELSE 0 END), 0) AS ticketRevenue
+                COALESCE(SUM(CASE WHEN ${validTicket} AND tr.reservation_date >= ${previousStart} AND tr.reservation_date < ${previousEnd} THEN (tr.adult_quantity * 40) + (tr.child_quantity * 20) ELSE 0 END), 0) AS ticketRevenue,
+                (SELECT COALESCE(SUM(er.payment_amount), 0) FROM event_reservations er
+                 WHERE ${validEvent} AND er.created_at >= ${previousStart} AND er.created_at < ${previousEnd}) AS eventRevenue
              FROM ticket_reservations tr`),
             db.query(`SELECT CAST(DATE_FORMAT(tr.reservation_date, '%Y-%m-%d') AS CHAR) AS date, DAYNAME(tr.reservation_date) AS day,
                 COALESCE(SUM(tr.total_visitors), 0) AS visitors,
                 COALESCE(SUM(CASE WHEN tr.status IN ('confirmed', 'completed') THEN (tr.adult_quantity * 40) + (tr.child_quantity * 20) ELSE 0 END), 0) AS revenue
              FROM ticket_reservations tr
-             WHERE tr.status NOT IN ('cancelled', 'no_show') AND tr.reservation_date >= DATE_SUB(CURDATE(), INTERVAL 6 DAY)
+              WHERE tr.status NOT IN ('cancelled', 'no_show') AND (tr.is_deleted IS NULL OR tr.is_deleted = FALSE) AND tr.reservation_date >= DATE_SUB(CURDATE(), INTERVAL 6 DAY)
                 GROUP BY CAST(DATE_FORMAT(tr.reservation_date, '%Y-%m-%d') AS CHAR), DAYNAME(tr.reservation_date) ORDER BY date ASC`),
             db.query(`SELECT CAST(DATE_FORMAT(visit_date, '%Y-%m-%d') AS CHAR) AS date,
                 COUNT(*) AS visitors
@@ -99,7 +103,7 @@ exports.getDashboardStats = async (req, res) => {
                 COUNT(*) AS totalEventReservations,
                 SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) AS pendingEventReservations,
                 SUM(CASE WHEN created_at >= ${periodStart} AND created_at < ${currentEnd} THEN 1 ELSE 0 END) AS periodEventReservations
-                FROM event_reservations`),
+                 FROM event_reservations WHERE (is_deleted IS NULL OR is_deleted = FALSE)`),
             db.query('SELECT SUM(CASE WHEN is_read = FALSE THEN 1 ELSE 0 END) AS unreadMessages FROM user_messages'),
             User.count(), Animal.count(), Plant.count()
         ]);
@@ -133,7 +137,6 @@ exports.getDashboardStats = async (req, res) => {
                 totalTickets: Number(summary.tickets) || 0,
                 totalVisitors: Number(summary.visitors) || 0,
                 totalRevenue,
-                totalProfit: totalRevenue,
                 upcomingEvents: eventRows[0].length,
                 totalEventReservations: Number(reservationRows[0][0]?.totalEventReservations) || 0,
                 periodEventReservations: Number(reservationRows[0][0]?.periodEventReservations) || 0,
@@ -142,7 +145,7 @@ exports.getDashboardStats = async (req, res) => {
                 trends: {
                     tickets: pct(Number(summary.tickets), Number(previous.tickets)),
                     visitors: pct(Number(summary.visitors), Number(previous.visitors)),
-                    revenue: pct(totalRevenue, Number(previous.ticketRevenue))
+                    revenue: pct(totalRevenue, Number(previous.ticketRevenue || 0) + Number(previous.eventRevenue || 0))
                 },
                 weeklyData,
                 ticketDistribution: distributionRows[0].map(row => ({ type: row.type, count: Number(row.count), revenue: Number(row.revenue) })),
@@ -216,12 +219,26 @@ exports.createUser = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Please provide all required fields' });
         }
 
-        const existingEmail = await User.findByEmail(email);
+        const sanitizedFirstName = String(firstName).trim().replace(/[<>]/g, '');
+        const sanitizedLastName = String(lastName).trim().replace(/[<>]/g, '');
+        const sanitizedUsername = String(username).trim().replace(/[<>]/g, '');
+        const sanitizedEmail = String(email).trim().toLowerCase();
+        if (sanitizedUsername.length < 3) {
+            return res.status(400).json({ success: false, message: 'Username must be at least 3 characters' });
+        }
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(sanitizedEmail)) {
+            return res.status(400).json({ success: false, message: 'Please provide a valid email address' });
+        }
+        if (password.length < 8 || !/[A-Z]/.test(password) || !/[0-9]/.test(password) || !/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+            return res.status(400).json({ success: false, message: 'Password must be at least 8 characters and include an uppercase letter, number, and special character' });
+        }
+
+        const existingEmail = await User.findByEmail(sanitizedEmail);
         if (existingEmail) {
             return res.status(400).json({ success: false, message: 'Email already registered' });
         }
 
-        const existingUsername = await User.findByUsername(username);
+        const existingUsername = await User.findByUsername(sanitizedUsername);
         if (existingUsername) {
             return res.status(400).json({ success: false, message: 'Username already taken' });
         }
@@ -230,10 +247,10 @@ exports.createUser = async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, salt);
 
         const userId = await User.create({
-            firstName,
-            lastName,
-            username,
-            email,
+            firstName: sanitizedFirstName,
+            lastName: sanitizedLastName,
+            username: sanitizedUsername,
+            email: sanitizedEmail,
             phoneNumber: phoneNumber || null,
             gender: gender || 'prefer_not_to_say',
             birthday: birthday || null,
@@ -241,9 +258,22 @@ exports.createUser = async (req, res) => {
             role: role || 'user'
         });
 
+        const verificationToken = crypto.randomBytes(32).toString('hex');
+        await User.setVerificationToken(userId, verificationToken, new Date(Date.now() + 60 * 60 * 1000));
+        let emailSent = false;
+        try {
+            emailSent = await sendVerificationEmailSync(sanitizedEmail, verificationToken, sanitizedFirstName);
+        } catch (emailError) {
+            console.error('Admin-created user verification email failed:', emailError.message);
+        }
+
         res.status(201).json({
             success: true,
-            message: 'User created successfully',
+            message: emailSent
+                ? 'User created. A verification link was sent to their email address.'
+                : 'User created, but the verification email could not be delivered. They can request a new link from the login page.',
+            requiresVerification: true,
+            emailSent,
             userId
         });
     } catch (error) {
@@ -292,22 +322,7 @@ exports.updateUser = async (req, res) => {
 
 exports.deleteUser = async (req, res) => {
     try {
-        const { id } = req.params;
-        const user = await User.findById(id);
-        if (!user) return res.status(404).json({ success: false, message: 'User not found' });
-        if (user.role === 'user') {
-            return res.status(403).json({ success: false, message: 'Regular user accounts cannot be moved to trash' });
-        }
-        if (String(id) === String(req.user.id)) {
-            return res.status(403).json({ success: false, message: 'You cannot move your own account to trash' });
-        }
-        const deleted = await User.softDelete(id, req.user.id);
-
-        if (!deleted) {
-            return res.status(404).json({ success: false, message: 'User not found' });
-        }
-
-        res.json({ success: true, message: 'User moved to trash' });
+        return res.status(403).json({ success: false, message: 'Account deletion is not permitted. Suspend the account instead.' });
     } catch (error) {
         console.error('Error deleting user:', error);
         res.status(500).json({ success: false, message: 'Error deleting user' });
@@ -590,18 +605,35 @@ exports.getAnalytics = async (req, res) => {
             Ticket.getAnalyticsDashboard(timeRange), User.count(), Animal.count(), Event.countUpcoming()
         ]);
         const number = value => Number(value) || 0;
-        const endDate = new Date();
-        const startDate = new Date();
-        startDate.setDate(endDate.getDate() - analytics.days + 1);
+        const rawByDate = new Map(analytics.daily.map(row => [String(row.date), row]));
+        const dailyData = [];
+        if (analytics.granularity === 'month') {
+            const cursor = new Date(`${analytics.startDate}T00:00:00Z`);
+            const end = new Date(`${analytics.endDate}T00:00:00Z`);
+            while (cursor <= end) {
+                const key = cursor.toISOString().slice(0, 7);
+                dailyData.push({ date: key, ...(rawByDate.get(key) || {}) });
+                cursor.setUTCMonth(cursor.getUTCMonth() + 1);
+            }
+        } else {
+            const cursor = new Date(`${analytics.startDate}T00:00:00Z`);
+            const end = new Date(`${analytics.endDate}T00:00:00Z`);
+            while (cursor <= end) {
+                const key = cursor.toISOString().slice(0, 10);
+                dailyData.push({ date: key, ...(rawByDate.get(key) || {}) });
+                cursor.setUTCDate(cursor.getUTCDate() + 1);
+            }
+        }
+        const weekdaysByIndex = new Map(analytics.weekdays.map(row => [number(row.weekday), row]));
 
         res.json({
             success: true,
             data: {
-                meta: { timeRange, startDate: startDate.toISOString().slice(0, 10), endDate: endDate.toISOString().slice(0, 10), dateBasis: 'reservation_date', includedStatuses: ['confirmed', 'completed'], feeAssumptions: { adult: 40, child: 20, resident: 0 }, generatedAt: new Date().toISOString() },
+                meta: { timeRange, granularity: analytics.granularity, startDate: analytics.startDate, endDate: analytics.endDate, dateBasis: 'reservation_date', includedStatuses: ['confirmed', 'completed'], feeAssumptions: { adult: 40, child: 20, resident: 0 }, generatedAt: new Date().toISOString() },
                 summary: { ...Object.fromEntries(Object.entries(analytics.summary).map(([key, value]) => [key, number(value)])), totalUsers, totalAnimals, upcomingEvents },
-                dailyData: analytics.daily.map(row => ({ date: row.date, reservations: number(row.reservations), visitors: number(row.visitors), checkedIn: number(row.checkedIn), estimatedFees: number(row.estimatedFees) })),
+                dailyData: dailyData.map(row => ({ date: row.date, reservations: number(row.reservations), visitors: number(row.visitors), checkedIn: number(row.checkedIn), estimatedFees: number(row.estimatedFees) })),
                 statusDistribution: analytics.statuses.map(row => ({ status: row.status, count: number(row.count), visitors: number(row.visitors) })),
-                weekdayDemand: analytics.weekdays.map(row => ({ day: row.day, weekday: number(row.weekday), visitors: number(row.visitors) })),
+                weekdayDemand: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((day, weekday) => ({ day, weekday, visitors: number(weekdaysByIndex.get(weekday)?.visitors) })),
                 admissionMix: [
                     { type: 'Adult', count: number(analytics.mix.adults), estimatedFees: number(analytics.mix.adults) * 40 },
                     { type: 'Child', count: number(analytics.mix.children), estimatedFees: number(analytics.mix.children) * 20 },
@@ -1032,8 +1064,8 @@ exports.suspendUser = async (req, res) => {
             return res.status(404).json({ success: false, message: 'User not found' });
         }
 
-        if (user.role !== 'user') {
-            return res.status(403).json({ success: false, message: 'Only regular user accounts can be suspended' });
+        if (String(id) === String(req.user.id)) {
+            return res.status(403).json({ success: false, message: 'You cannot suspend your own account' });
         }
 
         const suspended = await User.suspendUser(id, req.user.id, reason.trim());
@@ -1058,8 +1090,8 @@ exports.unsuspendUser = async (req, res) => {
         if (!user) {
             return res.status(404).json({ success: false, message: 'User not found' });
         }
-        if (user.role !== 'user') {
-            return res.status(403).json({ success: false, message: 'Only regular user accounts can be unsuspended' });
+        if (String(id) === String(req.user.id)) {
+            return res.status(403).json({ success: false, message: 'You cannot change your own suspension status' });
         }
 
         const unsuspended = await User.unsuspendUser(id);
@@ -1327,25 +1359,7 @@ exports.restoreMultipleUsers = async (req, res) => {
 
 exports.permanentDeleteUser = async (req, res) => {
     try {
-        const { id } = req.params;
-        const { password } = req.body;
-        if (!password) return res.status(400).json({ success: false, message: 'Password required for permanent deletion' });
-
-        const valid = await verifyPassword(req.user.id, password);
-        if (!valid) return res.status(401).json({ success: false, message: 'Incorrect password' });
-
-        const target = await User.findById(id);
-        if (!target) return res.status(404).json({ success: false, message: 'User not found' });
-        if (target.role === 'user') {
-            return res.status(403).json({ success: false, message: 'Regular user accounts cannot be permanently deleted' });
-        }
-        if (String(id) === String(req.user.id)) {
-            return res.status(403).json({ success: false, message: 'You cannot permanently delete your own account' });
-        }
-
-        const deleted = await User.permanentDelete(id);
-        if (!deleted) return res.status(404).json({ success: false, message: 'User not found' });
-        res.json({ success: true, message: 'User permanently deleted' });
+        return res.status(403).json({ success: false, message: 'Account deletion is not permitted' });
     } catch (error) {
         console.error('Error permanently deleting user:', error);
         res.status(500).json({ success: false, message: 'Error permanently deleting user' });
@@ -1354,25 +1368,7 @@ exports.permanentDeleteUser = async (req, res) => {
 
 exports.permanentDeleteMultipleUsers = async (req, res) => {
     try {
-        const { ids, password } = req.body;
-        if (!ids || !Array.isArray(ids) || ids.length === 0) {
-            return res.status(400).json({ success: false, message: 'No user IDs provided' });
-        }
-        if (!password) return res.status(400).json({ success: false, message: 'Password required for permanent deletion' });
-
-        const valid = await verifyPassword(req.user.id, password);
-        if (!valid) return res.status(401).json({ success: false, message: 'Incorrect password' });
-
-        const targets = await Promise.all(ids.map(id => User.findById(id)));
-        if (targets.some(target => !target || !['admin', 'staff'].includes(target.role))) {
-            return res.status(403).json({ success: false, message: 'Only admin and staff accounts can be permanently deleted' });
-        }
-        if (ids.some(id => String(id) === String(req.user.id))) {
-            return res.status(403).json({ success: false, message: 'You cannot permanently delete your own account' });
-        }
-
-        await User.permanentDeleteMultiple(ids);
-        res.json({ success: true, message: `${ids.length} user(s) permanently deleted` });
+        return res.status(403).json({ success: false, message: 'Account deletion is not permitted' });
     } catch (error) {
         console.error('Error permanently deleting users:', error);
         res.status(500).json({ success: false, message: 'Error permanently deleting users' });

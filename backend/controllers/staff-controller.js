@@ -729,15 +729,7 @@ exports.restoreUser = async (req, res) => {
 
 exports.softDeleteUser = async (req, res) => {
     try {
-        const { id } = req.params;
-        const user = await User.findById(id);
-        if (!user) return res.status(404).json({ success: false, message: 'User not found' });
-        if (user.role !== 'user') {
-            return res.status(403).json({ success: false, message: 'Staff can only delete regular users' });
-        }
-        const deleted = await User.softDelete(id, req.user.id);
-        if (!deleted) return res.status(404).json({ success: false, message: 'User not found' });
-        res.json({ success: true, message: 'User moved to trash' });
+        return res.status(403).json({ success: false, message: 'Account deletion is not permitted' });
     } catch (error) {
         console.error('Error deleting user:', error);
         res.status(500).json({ success: false, message: 'Error deleting user' });

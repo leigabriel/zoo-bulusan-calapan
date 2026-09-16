@@ -6,7 +6,7 @@ const StaffActivity = require('../models/staff-activity-model');
 const UserActivity = require('../models/user-activity-model');
 const { deleteOldProfileImage } = require('../middleware/upload-profile-image');
 const { deleteFromCloudinary, extractPublicId } = require('../middleware/cloudinary-upload');
-const { sendVerificationEmail, sendPasswordResetEmail } = require('../utils/email');
+const { sendVerificationEmail, sendVerificationEmailSync, sendPasswordResetEmail } = require('../utils/email');
 const AdminMasterKey = require('../models/admin-master-key-model');
 
 const VALID_ROLES = ['admin', 'staff', 'user'];
@@ -499,11 +499,11 @@ exports.updateProfile = async (req, res) => {
         }
 
         const updated = await User.updateProfile(req.user.id, {
-            firstName,
-            lastName,
-            phoneNumber,
-            gender,
-            birthday,
+            firstName: firstName !== undefined ? sanitizeInput(firstName) : existingUser.first_name,
+            lastName: lastName !== undefined ? sanitizeInput(lastName) : existingUser.last_name,
+            phoneNumber: phoneNumber !== undefined ? sanitizeInput(phoneNumber) : existingUser.phone_number,
+            gender: gender !== undefined ? gender : existingUser.gender,
+            birthday: birthday !== undefined ? birthday : existingUser.birthday,
             profileImage: req.body.profileImage ?? existingUser.profile_image
         });
 
@@ -547,6 +547,61 @@ exports.updateProfile = async (req, res) => {
     } catch (error) {
         console.error('Update profile error:', error);
         res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
+exports.updateEmail = async (req, res) => {
+    try {
+        const email = sanitizeInput(req.body.email || '').toLowerCase();
+        const { currentPassword } = req.body;
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            return res.status(400).json({ success: false, message: 'Please provide a valid email address' });
+        }
+
+        const user = await User.findById(req.user.id);
+        if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+        if (email === user.email.toLowerCase()) {
+            return res.status(400).json({ success: false, message: 'This is already your email address' });
+        }
+        if (!user.password) {
+            return res.status(400).json({ success: false, message: 'Set an account password before changing your email address' });
+        }
+        if (!currentPassword || !(await bcrypt.compare(currentPassword, user.password))) {
+            return res.status(401).json({ success: false, message: 'Current password is incorrect' });
+        }
+        if (await User.findByEmail(email)) {
+            return res.status(400).json({ success: false, message: 'Email already registered' });
+        }
+
+        const token = crypto.randomBytes(32).toString('hex');
+        const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
+        await User.changeEmailForVerification(user.id, email, token, expiresAt);
+        let delivered = false;
+        try {
+            delivered = await sendVerificationEmailSync(email, token, user.first_name);
+        } catch (emailError) {
+            console.error('Changed-email verification delivery failed:', emailError.message);
+        }
+        if (!delivered) {
+            await User.restoreEmailState(
+                user.id,
+                user.email,
+                user.email_verified,
+                user.email_verification_token,
+                user.email_verification_token_expiry
+            );
+            return res.status(503).json({ success: false, message: 'Could not send the verification email. Your email address was not changed.' });
+        }
+
+        return res.json({
+            success: true,
+            message: 'Email changed. Verify the new address before your next login.',
+            email,
+            requiresVerification: true
+        });
+    } catch (error) {
+        console.error('Update email error:', error);
+        return res.status(500).json({ success: false, message: 'Server error while changing email' });
     }
 };
 
