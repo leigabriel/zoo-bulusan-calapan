@@ -120,6 +120,7 @@ const Header = () => {
     const [showNotificationPanel, setShowNotificationPanel] = useState(false);
     const [showMiniZooGame, setShowMiniZooGame] = useState(false);
     const [notifications, setNotifications] = useState([]);
+    const [notificationUnreadCount, setNotificationUnreadCount] = useState(0);
     const [notificationLoading, setNotificationLoading] = useState(false);
     const [showClearNotificationsConfirm, setShowClearNotificationsConfirm] = useState(false);
     const [clearingNotifications, setClearingNotifications] = useState(false);
@@ -227,6 +228,7 @@ const Header = () => {
         try {
             const res = await userAPI.getNotifications().catch(() => ({ success: false }));
             if (res?.success && Array.isArray(res.notifications)) {
+                setNotificationUnreadCount(Number(res.unreadCount) || 0);
                 setNotifications(res.notifications.map((notification) => ({
                     id: notification.id,
                     type: notification.type || 'message',
@@ -257,11 +259,12 @@ const Header = () => {
     }, [user, fetchNotifications]);
 
     // Read state is server-persisted (same flow as admin/staff notifications).
-    const unreadCount = notifications.filter(n => !n.read).length;
+    const unreadCount = notificationUnreadCount;
 
     const markNotificationRead = async (notificationId) => {
         try {
             await userAPI.markNotificationRead(notificationId);
+            setNotificationUnreadCount(count => Math.max(0, count - (notifications.find(item => item.id === notificationId)?.read ? 0 : 1)));
             setNotifications(prev => prev.map((n) => n.id === notificationId ? { ...n, read: true } : n));
         } catch {
         }
@@ -270,6 +273,7 @@ const Header = () => {
     const markAllNotificationsRead = async () => {
         try {
             await userAPI.markAllNotificationsRead();
+            setNotificationUnreadCount(0);
             setNotifications(prev => prev.map((n) => ({ ...n, read: true })));
         } catch {
         }
@@ -279,6 +283,7 @@ const Header = () => {
         setClearingNotifications(true);
         try {
             await userAPI.clearNotifications();
+            setNotificationUnreadCount(0);
             setNotifications([]);
         } catch {
         } finally {

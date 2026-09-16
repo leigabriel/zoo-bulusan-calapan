@@ -4,7 +4,7 @@ const ensureUserActivitySchema = async () => {
     await db.query(`
         CREATE TABLE IF NOT EXISTS user_activity_logs (
             id INT PRIMARY KEY AUTO_INCREMENT,
-            user_id INT NOT NULL,
+            user_id INT DEFAULT NULL,
             action_type VARCHAR(64) NOT NULL,
             action_description TEXT DEFAULT NULL,
             entity_type VARCHAR(50) DEFAULT NULL,

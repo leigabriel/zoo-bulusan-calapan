@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { notify } from '../../utils/toast';
@@ -81,7 +81,7 @@ const Settings = ({ embedded = false, onClose }) => {
         
         const fetchSettings = async () => {
             try {
-                const response = await userAPI.getSettings();
+                const response = await userAPI.getSettings(user.role);
                 if (response.success && response.settings) {
                     setNotifications(prev => ({
                         ...prev,
@@ -98,11 +98,11 @@ const Settings = ({ embedded = false, onClose }) => {
         fetchSettings();
     }, [user]);
 
-    const fetchActivities = async () => {
+    const fetchActivities = useCallback(async () => {
         setActivitiesLoading(true);
         setActivitiesError(null);
         try {
-            const response = await userAPI.getActivities();
+            const response = await userAPI.getActivities(user.role);
             if (response.success) {
                 setActivities(response.activities || []);
             } else {
@@ -114,20 +114,20 @@ const Settings = ({ embedded = false, onClose }) => {
         } finally {
             setActivitiesLoading(false);
         }
-    };
+    }, [user?.role]);
 
     useEffect(() => {
         if (activeSection === 'activities' && user) {
             fetchActivities();
         }
-    }, [activeSection, user]);
+    }, [activeSection, user, fetchActivities]);
 
     const handleNotificationToggle = async (key, value) => {
         const newSettings = { ...notifications, [key]: value };
         setNotifications(newSettings);
         
         try {
-            await userAPI.updateSettings(newSettings);
+            await userAPI.updateSettings(newSettings, user.role);
             notify.success('Settings updated.');
         } catch (error) {
             console.error("Failed to save settings:", error);
@@ -169,33 +169,22 @@ const Settings = ({ embedded = false, onClose }) => {
     };
 
     const getActivityIcon = (type) => {
-        switch (type) {
-            case 'ticket_reservation': return <Icons.Ticket />;
-            case 'community_post':
-            case 'community_comment': return <Icons.Message />;
-            case 'community_like': return <Icons.Heart />;
-            default: return <Icons.Activity />;
-        }
+        if (type?.includes('ticket') || type?.includes('reservation')) return <Icons.Ticket />;
+        if (type?.includes('like') || type?.includes('heart')) return <Icons.Heart />;
+        if (type?.includes('post') || type?.includes('comment') || type?.includes('message')) return <Icons.Message />;
+        return <Icons.Activity />;
     };
 
     const getActivityColor = (type) => {
-        switch (type) {
-            case 'ticket_reservation': return 'bg-blue-100 text-blue-600';
-            case 'community_post': return 'bg-emerald-100 text-emerald-600';
-            case 'community_comment': return 'bg-purple-100 text-purple-600';
-            case 'community_like': return 'bg-red-100 text-red-600';
-            default: return 'bg-gray-100 text-gray-600';
-        }
+        if (type?.includes('ticket') || type?.includes('reservation')) return 'bg-blue-100 text-blue-600';
+        if (type?.includes('like') || type?.includes('heart')) return 'bg-red-100 text-red-600';
+        if (type?.includes('post')) return 'bg-emerald-100 text-emerald-600';
+        if (type?.includes('comment') || type?.includes('message')) return 'bg-purple-100 text-purple-600';
+        return 'bg-gray-100 text-gray-600';
     };
 
     const getActivityTitle = (activity) => {
-        switch (activity.type) {
-            case 'ticket_reservation': return `Reserved Ticket: ${activity.details || 'General Admission'}`;
-            case 'community_post': return 'Created a Post';
-            case 'community_comment': return 'Commented on a Post';
-            case 'community_like': return 'Liked a Post';
-            default: return 'Activity';
-        }
+        return activity.title || activity.type?.replaceAll('_', ' ') || 'Activity';
     };
 
     const renderContent = () => {
@@ -294,11 +283,6 @@ const Settings = ({ embedded = false, onClose }) => {
                                             <p className="font-semibold text-gray-800 truncate">
                                                 {getActivityTitle(activity)}
                                             </p>
-                                            {activity.details && activity.type !== 'ticket_reservation' && (
-                                                <p className="text-sm text-gray-600 mt-1 line-clamp-2 bg-gray-50 p-2 rounded-lg italic">
-                                                    "{activity.details}"
-                                                </p>
-                                            )}
                                             <div className="flex items-center gap-3 mt-2 text-xs text-gray-500 font-medium">
                                                 <span>{formatDate(activity.created_at)}</span>
                                                 {activity.status && (

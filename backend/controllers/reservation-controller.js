@@ -106,7 +106,7 @@ const removeReservationOwnedEvent = async (reservation) => {
 const notifyReservationUser = async (userId, title, message, link = null) => {
     if (!userId) return;
     try {
-        await Notification.create({ userId, title, message, type: 'event', link });
+        await Notification.create({ userId, title, message, type: 'event', category: 'ticketUpdates', link });
     } catch (error) {
         console.error('Error creating user notification:', error);
     }

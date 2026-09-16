@@ -236,7 +236,7 @@ exports.deletePost = async (req, res) => {
         }
 
         if (isModerator) {
-            await logStaffActivity(req, 'other', 'Deleted community post', 'community', postId);
+            await logStaffActivity(req, 'post_delete', 'Deleted community post', 'community_post', postId);
         } else if (req.user.role === 'user') {
             await logUserActivity(req, 'post_delete', 'Deleted a community post', 'community', postId);
         }
@@ -315,7 +315,7 @@ exports.reviewPost = async (req, res) => {
             console.error('Error notifying post owner after moderation:', error);
         }
 
-        await logStaffActivity(req, 'other', `${action === 'approved' ? 'Approved' : 'Declined'} community post`, 'community', postId);
+        await logStaffActivity(req, 'post_review', `${action === 'approved' ? 'Approved' : 'Declined'} community post`, 'community_post', postId);
 
         return res.json({
             success: true,
@@ -495,7 +495,7 @@ exports.deleteComment = async (req, res) => {
         }
 
         if (isModerator) {
-            await logStaffActivity(req, 'other', 'Deleted community comment', 'comment', commentId);
+            await logStaffActivity(req, 'comment_delete', 'Deleted community comment', 'comment', commentId);
         } else if (req.user.role === 'user') {
             await logUserActivity(req, 'comment_delete', 'Deleted a community comment', 'comment', commentId);
         }
@@ -601,7 +601,7 @@ exports.reviewCommentReport = async (req, res) => {
             return res.status(404).json({ success: false, message: 'Report not found.' });
         }
 
-        await logStaffActivity(req, 'other', `${action === 'reviewed' ? 'Reviewed' : 'Dismissed'} community report`, 'comment_report', reportId);
+        await logStaffActivity(req, 'comment_report_review', `${action === 'reviewed' ? 'Reviewed' : 'Dismissed'} community report`, 'comment_report', reportId);
 
         return res.json({ success: true, message: 'Report updated successfully.' });
     } catch (error) {

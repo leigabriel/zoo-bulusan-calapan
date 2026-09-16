@@ -78,6 +78,10 @@ const actionTypeColors = {
 const staffActionTypes = ['all', 'login', 'logout', 'message_reply', 'reservation_update', 'ticket_update', 'animal_update', 'plant_update', 'event_update', 'user_update', 'other'];
 const userActionTypes = ['all', 'register', 'login', 'logout', 'profile_update', 'password_change', 'settings_update', 'ticket_purchase', 'ticket_reservation', 'event_reservation', 'ticket_archive', 'ticket_unarchive', 'event_archive', 'event_unarchive', 'event_update', 'payment_checkout', 'payment_method_update', 'refund_request', 'message_sent', 'message_delete', 'post_create', 'post_update', 'post_delete', 'post_like', 'comment_create', 'comment_update', 'comment_delete', 'comment_heart', 'comment_report', 'appeal_submit', 'prediction_create', 'account_delete', 'other'];
 
+const formatIdentifier = (value) => value
+    ? value.replaceAll('_', ' ').replace(/\b\w/g, letter => letter.toUpperCase())
+    : 'Unknown';
+
 const formatTimeAgo = (dateString) => {
     if (!dateString) return 'N/A';
     const date = new Date(dateString);
@@ -189,7 +193,12 @@ const AdminLogs = () => {
     const setOffset = activeTab === 'staff' ? setStaffOffset : setUserOffset;
     const currentFilter = activeTab === 'staff' ? staffFilter : userFilter;
     const setFilter = activeTab === 'staff' ? setStaffFilter : setUserFilter;
-    const actionTypes = activeTab === 'staff' ? staffActionTypes : userActionTypes;
+    const configuredActionTypes = activeTab === 'staff' ? staffActionTypes : userActionTypes;
+    const observedActions = activeTab === 'staff' ? summary.staffActionBreakdown : summary.userActionBreakdown;
+    const actionTypes = ['all', ...new Set([
+        ...configuredActionTypes.filter(type => type !== 'all'),
+        ...(observedActions || []).map(item => item.action_type).filter(Boolean)
+    ])];
     const fetchFn = activeTab === 'staff' ? fetchStaffLogs : fetchUserLogs;
     const totalPages = Math.ceil(currentTotal / limit);
     const labels = activeTab === 'staff' ? staffActionLabels : userActionLabels;
@@ -287,7 +296,7 @@ const AdminLogs = () => {
                     >
                         {actionTypes.map((type) => (
                             <option key={type} value={type}>
-                                {type === 'all' ? 'All Actions' : (labels[type] || type)}
+                                {type === 'all' ? 'All Actions' : (labels[type] || formatIdentifier(type))}
                             </option>
                         ))}
                     </select>
@@ -361,7 +370,7 @@ const AdminLogs = () => {
                                         </td>
                                         <td className="px-5 py-3">
                                             <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${actionTypeColors[log.action_type] || 'bg-gray-50 text-gray-600 border border-gray-200'}`}>
-                                                {labels[log.action_type] || log.action_type}
+                                                {labels[log.action_type] || formatIdentifier(log.action_type)}
                                             </span>
                                         </td>
                                         <td className="px-5 py-3 hidden md:table-cell">
@@ -370,7 +379,7 @@ const AdminLogs = () => {
                                         <td className="px-5 py-3 hidden lg:table-cell">
                                             {log.entity_type && (
                                                 <span className="text-xs text-gray-500 bg-gray-50 px-2 py-1 rounded border border-gray-200">
-                                                    {log.entity_type}{log.entity_id ? ` #${log.entity_id}` : ''}
+                                                    {formatIdentifier(log.entity_type)}{log.entity_id ? ` #${log.entity_id}` : ''}
                                                 </span>
                                             )}
                                         </td>

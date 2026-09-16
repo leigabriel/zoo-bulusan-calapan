@@ -3,6 +3,7 @@ const Ticket = require('../models/ticket-model');
 const Event = require('../models/event-model');
 const User = require('../models/user-model');
 const Notification = require('../models/notification-model');
+const UserActivity = require('../models/user-activity-model');
 const crypto = require('crypto');
 const { saveBase64Image } = require('../middleware/upload-resident-id');
 
@@ -96,7 +97,16 @@ exports.getSettings = async (req, res) => {
 exports.updateSettings = async (req, res) => {
     try {
         const { settings } = req.body;
-        const result = await User.updateSettings(req.user.id, settings);
+        const allowedSettings = ['emailNotifications', 'pushNotifications', 'eventReminders', 'ticketUpdates', 'marketingEmails'];
+        if (!settings || typeof settings !== 'object' || Array.isArray(settings)) {
+            return res.status(400).json({ success: false, message: 'Invalid notification settings' });
+        }
+        const currentSettings = await User.getSettings(req.user.id) || {};
+        const nextSettings = { ...currentSettings };
+        for (const key of allowedSettings) {
+            if (Object.hasOwn(settings, key)) nextSettings[key] = Boolean(settings[key]);
+        }
+        const result = await User.updateSettings(req.user.id, nextSettings);
         
         if (result) {
             res.json({ success: true, message: 'Settings updated successfully' });
@@ -111,7 +121,15 @@ exports.updateSettings = async (req, res) => {
 
 exports.getActivities = async (req, res) => {
     try {
-        const activities = await User.getActivities(req.user.id);
+        const { logs } = await UserActivity.getRecentActivities({ userId: req.user.id, limit: 100 });
+        const activities = logs.map(log => ({
+            id: log.id,
+            type: log.action_type,
+            title: log.action_description || log.action_type.replaceAll('_', ' '),
+            entityType: log.entity_type,
+            entityId: log.entity_id,
+            created_at: log.created_at
+        }));
         res.json({ success: true, activities });
     } catch (error) {
         console.error('Error getting activities:', error);
@@ -121,9 +139,13 @@ exports.getActivities = async (req, res) => {
 
 exports.getNotifications = async (req, res) => {
     try {
-        const notifications = await Notification.getByUserId(req.user.id, 50);
+        const [notifications, unreadCount] = await Promise.all([
+            Notification.getByUserId(req.user.id, 50),
+            Notification.getUnreadCount(req.user.id)
+        ]);
         res.json({
             success: true,
+            unreadCount: Number(unreadCount),
             notifications: notifications.map((notification) => ({
                 id: notification.id,
                 title: notification.title,

@@ -120,7 +120,7 @@ router.get('/users-suspended', adminController.getSuspendedUsers);
 
 // appeal management
 router.get('/appeals', adminController.getPendingAppeals);
-router.put('/appeals/:id/review', trackActivity('other', (req) => 'Reviewed appeal'), adminController.reviewAppeal);
+router.put('/appeals/:id/review', trackActivity('appeal_review', () => 'Reviewed account appeal'), adminController.reviewAppeal);
 
 // Notification routes
 router.get('/notifications', adminController.getNotifications);
@@ -130,11 +130,11 @@ router.delete('/notifications', adminController.clearNotifications);
 
 // Donation settings
 router.get('/donation-config', donationController.getConfig);
-router.put('/donation-config', trackActivity('other', 'Updated donation settings'), donationController.updateConfig);
+router.put('/donation-config', trackActivity('donation_config_update', 'Updated donation settings'), donationController.updateConfig);
 router.get('/event-payment-config', (req, res) => {
     res.json({ success: true, config: readEventPaymentConfig() });
 });
-router.put('/event-payment-config', trackActivity('other', 'Updated event payment settings'), (req, res) => {
+router.put('/event-payment-config', trackActivity('payment_config_update', 'Updated event payment settings'), (req, res) => {
     try {
         const updated = writeEventPaymentConfig(req.body.config || {});
         res.json({ success: true, message: 'Event payment settings updated successfully', config: updated });
@@ -148,7 +148,7 @@ router.put('/event-payment-config', trackActivity('other', 'Updated event paymen
 router.post('/upload-model', modelUpload.fields([
     { name: 'modelJson', maxCount: 1 },
     { name: 'weights', maxCount: 50 }
-]), trackActivity('other', 'Uploaded a machine-learning model'), adminController.uploadModel);
+    ]), trackActivity('model_upload', 'Uploaded a machine-learning model'), adminController.uploadModel);
 
 router.get('/model-info', adminController.getModelInfo);
 
@@ -175,7 +175,7 @@ router.get('/messages/:id', messageController.getMessageById);
 router.put('/messages/:id/read', messageController.markAsRead);
 router.put('/messages/read-all', messageController.markAllAsRead);
 router.post('/messages/:id/respond', messageController.respondToMessage);
-router.delete('/messages/:id', trackActivity('other', (req) => 'Deleted message'), messageController.deleteMessage);
+router.delete('/messages/:id', trackActivity('message_delete', () => 'Deleted message'), messageController.deleteMessage);
 router.put('/messages/:id/close', messageController.closeCase);
 // staff monitoring
 router.get('/monitoring/dashboard', monitoringController.getMonitoringDashboard);

@@ -56,6 +56,7 @@ const StaffLayout = ({ children }) => {
 
     // Real notifications state
     const [notifications, setNotifications] = useState([]);
+    const [notificationUnreadCount, setNotificationUnreadCount] = useState(0);
     const [notificationsLoading, setNotificationsLoading] = useState(false);
     const [activitySummary, setActivitySummary] = useState(null);
     const [dailyTaskStats, setDailyTaskStats] = useState({
@@ -133,6 +134,7 @@ const StaffLayout = ({ children }) => {
             const res = await staffAPI.getNotifications();
             if (res.success) {
                 setNotifications(res.notifications || []);
+                setNotificationUnreadCount(Number(res.unreadCount) || 0);
                 setActivitySummary(res.summary || null);
             }
         } catch (err) {
@@ -147,6 +149,7 @@ const StaffLayout = ({ children }) => {
         try {
             await staffAPI.clearNotifications();
             setNotifications([]);
+            setNotificationUnreadCount(0);
         } catch (err) {
             console.error('Error clearing notifications:', err);
         } finally {
@@ -588,7 +591,7 @@ const StaffLayout = ({ children }) => {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, [notificationPanelOpen, dailyTaskPanelOpen]);
 
-    const unreadCount = notifications.filter(n => !n.read).length;
+    const unreadCount = notificationUnreadCount;
 
     return (
         <WorkspaceThemeContext value={true}>
@@ -1075,6 +1078,7 @@ const StaffLayout = ({ children }) => {
                                 onClick={async () => {
                                     if (!notification.read) {
                                         await staffAPI.markNotificationRead(notification.id);
+                                        setNotificationUnreadCount(count => Math.max(0, count - 1));
                                         setNotifications((current) => current.map((item) => item.id === notification.id ? { ...item, read: true } : item));
                                     }
                                     if (notification.link) {
@@ -1127,7 +1131,7 @@ const StaffLayout = ({ children }) => {
 
                 {/* Mark All Read / Clear Buttons */}
                 <div className="border-t border-gray-200 p-4 flex gap-3">
-                    <button onClick={async () => { await staffAPI.markAllNotificationsRead(); setNotifications((current) => current.map((item) => ({ ...item, read: true }))); }} disabled={unreadCount === 0} className="flex-1 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-600 hover:text-gray-900 rounded-xl text-sm font-medium transition disabled:opacity-50">
+                    <button onClick={async () => { await staffAPI.markAllNotificationsRead(); setNotificationUnreadCount(0); setNotifications((current) => current.map((item) => ({ ...item, read: true }))); }} disabled={unreadCount === 0} className="flex-1 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-600 hover:text-gray-900 rounded-xl text-sm font-medium transition disabled:opacity-50">
                         Mark all as read
                     </button>
                     <button

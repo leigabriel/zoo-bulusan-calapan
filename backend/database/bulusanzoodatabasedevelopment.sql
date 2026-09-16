@@ -363,7 +363,7 @@ CREATE TABLE notifications (
     user_id INT NOT NULL,
     title VARCHAR(255) NOT NULL,
     message TEXT NOT NULL,
-    type ENUM('info', 'success', 'warning', 'error', 'event', 'ticket', 'system') DEFAULT 'info',
+    type VARCHAR(32) NOT NULL DEFAULT 'info',
     is_read BOOLEAN DEFAULT FALSE,
     link VARCHAR(255) DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

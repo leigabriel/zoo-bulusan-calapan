@@ -1,4 +1,13 @@
 const db = require('../config/database');
+const { sendNotificationEmail } = require('../utils/email');
+
+const DEFAULT_SETTINGS = {
+    emailNotifications: true,
+    pushNotifications: true,
+    eventReminders: true,
+    ticketUpdates: true,
+    marketingEmails: false
+};
 
 class Notification {
     // Get all notifications for a user
@@ -165,32 +174,35 @@ class Notification {
         return role === 'admin' && link.startsWith('/admin/') ? link : null;
     }
 
-    static async notifyManagement({ title, message, type = 'info', link = null }) {
+    static async notifyManagement({ title, message, type = 'info', link = null, category = null }) {
         try {
-            // One statement gives every eligible recipient an independent read state.
-            await db.query(
-                `INSERT INTO notifications (user_id, title, message, type, link)
-                 SELECT id, ?, ?, ?, CASE WHEN role = 'staff' THEN ? ELSE ? END
-                 FROM users WHERE role IN ('admin', 'staff')
-                 AND is_active = TRUE AND is_suspended = FALSE AND deleted_at IS NULL`,
-                [title, message, type, this.managementLink(link, 'staff'), this.managementLink(link, 'admin')]
+            const [recipients] = await db.query(
+                `SELECT id, role FROM users WHERE role IN ('admin', 'staff')
+                 AND is_active = TRUE AND is_suspended = FALSE AND deleted_at IS NULL`
             );
+            await Promise.all(recipients.map(recipient => this.create({
+                userId: recipient.id,
+                title,
+                message,
+                type,
+                category,
+                link: this.managementLink(link, recipient.role)
+            })));
         } catch (error) {
             // Notification failures must not turn a saved booking/message into a retry.
             console.error('Error creating management notifications:', error);
         }
     }
 
-    static async notifyUsers({ title, message, type = 'info', link = null }) {
+    static async notifyUsers({ title, message, type = 'info', link = null, category = null }) {
         try {
-            await db.query(
-                `INSERT INTO notifications (user_id, title, message, type, link)
-                 SELECT id, ?, ?, ?, ?
-                 FROM users
-                 WHERE role = 'user' AND is_active = TRUE AND is_suspended = FALSE
-                 AND deleted_at IS NULL`,
-                [title, message, type, link]
+            const [recipients] = await db.query(
+                `SELECT id FROM users WHERE role = 'user' AND is_active = TRUE
+                 AND is_suspended = FALSE AND deleted_at IS NULL`
             );
+            await Promise.all(recipients.map(recipient => this.create({
+                userId: recipient.id, title, message, type, link, category
+            })));
         } catch (error) {
             console.error('Error creating user notifications:', error);
         }
@@ -215,13 +227,39 @@ class Notification {
 
     // Create a notification
     static async create(notification) {
-        const { userId, title, message, type = 'info', link = null } = notification;
-        const [result] = await db.query(
-            `INSERT INTO notifications (user_id, title, message, type, link) 
-             VALUES (?, ?, ?, ?, ?)`,
-            [userId, title, message, type, link]
+        const { userId, title, message, type = 'info', link = null, category = null } = notification;
+        const [rows] = await db.query(
+            `SELECT email, first_name, notification_settings FROM users
+             WHERE id = ? AND is_active = TRUE AND deleted_at IS NULL`,
+            [userId]
         );
-        return result.insertId;
+        if (!rows[0]) return null;
+
+        let savedSettings = rows[0].notification_settings;
+        if (typeof savedSettings === 'string') {
+            try {
+                savedSettings = JSON.parse(savedSettings);
+            } catch {
+                savedSettings = {};
+            }
+        }
+        const settings = { ...DEFAULT_SETTINGS, ...(savedSettings || {}) };
+        const preference = category || (type === 'event' ? 'eventReminders' : type === 'ticket' ? 'ticketUpdates' : null);
+        if (preference && settings[preference] === false) return null;
+
+        let insertId = null;
+        if (settings.pushNotifications !== false) {
+            const [result] = await db.query(
+                `INSERT INTO notifications (user_id, title, message, type, link)
+                 VALUES (?, ?, ?, ?, ?)`,
+                [userId, title, message, type, link]
+            );
+            insertId = result.insertId;
+        }
+        if (settings.emailNotifications !== false && (category !== 'marketing' || settings.marketingEmails === true)) {
+            sendNotificationEmail(rows[0].email, rows[0].first_name, title, message, link);
+        }
+        return insertId;
     }
 
     // Mark as read

@@ -101,7 +101,7 @@ router.delete('/events/:id', trackActivity('event_update', (req) => 'Deleted eve
 
 // Appeals management
 router.get('/appeals', staffController.getPendingAppeals);
-router.put('/appeals/:id/review', trackActivity('other', (req) => 'Reviewed appeal'), staffController.reviewAppeal);
+router.put('/appeals/:id/review', trackActivity('appeal_review', () => 'Reviewed account appeal'), staffController.reviewAppeal);
 
 // User suspension management
 router.put('/users/:id/unsuspend', trackActivity('user_update', (req) => 'Unsuspended user'), staffController.unsuspendUser);
@@ -117,7 +117,7 @@ router.get('/messages', messageController.getAllMessages);
 router.put('/messages/:id/read', messageController.markAsRead);
 router.put('/messages/read-all', messageController.markAllAsRead);
 router.put('/messages/:id/respond', messageController.respondToMessage);
-router.delete('/messages/:id', trackActivity('other', (req) => 'Deleted message'), messageController.deleteMessage);
+router.delete('/messages/:id', trackActivity('message_delete', () => 'Deleted message'), messageController.deleteMessage);
 router.put('/messages/:id/close', messageController.closeCase);
 
 // dynamic middleware - checks cloudinary at request time

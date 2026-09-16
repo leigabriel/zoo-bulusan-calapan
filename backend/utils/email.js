@@ -380,10 +380,46 @@ const sendPasswordResetEmail = async (email, token, firstName) => {
     return sendEmailWithRetry(mailOptions);
 };
 
+const escapeHtml = (value) => String(value || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+
+const sendNotificationEmail = (email, firstName, title, message, link = null) => {
+    if (!email) return false;
+
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const destination = link ? new URL(link, frontendUrl).toString() : frontendUrl;
+    const safeTitle = escapeHtml(title);
+    const safeMessage = escapeHtml(message);
+    const safeName = escapeHtml(firstName || 'there');
+
+    sendEmailAsync({
+        from: `"Bulusan Zoo" <${process.env.SMTP_USER}>`,
+        to: email,
+        subject: `${title} - Bulusan Zoo`,
+        html: `
+            <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:32px;color:#1f3328">
+                <h1 style="margin-bottom:24px">Bulusan Zoo</h1>
+                <p>Hello ${safeName},</p>
+                <h2>${safeTitle}</h2>
+                <p style="line-height:1.6">${safeMessage}</p>
+                <p><a href="${escapeHtml(destination)}" style="display:inline-block;padding:13px 22px;background:#1f3328;color:#fff;text-decoration:none;border-radius:8px;font-weight:bold">View update</a></p>
+                <p style="color:#66756b;font-size:13px">You can manage notification delivery in your account settings.</p>
+            </div>
+        `,
+        text: `Hello ${firstName || 'there'},\n\n${title}\n${message}\n\nView update: ${destination}\n\nManage notification delivery in your Bulusan Zoo account settings.`
+    });
+    return true;
+};
+
 module.exports = {
     sendVerificationEmail,
     sendVerificationEmailSync,
     sendPasswordResetEmail,
     sendEmailWithRetry,
-    sendEmailAsync
+    sendEmailAsync,
+    sendNotificationEmail
 };

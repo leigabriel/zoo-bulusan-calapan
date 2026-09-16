@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { ReactLenis } from 'lenis/react';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
 import gsap from 'gsap';
@@ -12,6 +12,7 @@ import { useAuth } from '../../context/AuthContext';
 import { notify } from '../../utils/toast';
 import { Plus, X } from 'reicon-react';
 import Footer from '../../components/Footer';
+import useScrollLock from '../../hooks/use-scroll-lock';
 
 const CommunityPage = () => {
     const { user } = useAuth();
@@ -24,6 +25,24 @@ const CommunityPage = () => {
     const [commentOnly, setCommentOnly] = useState(false);
     const communityTitleRef = useRef(null);
     const communityLetterRefs = useRef([]);
+    useScrollLock(postModalOpen || Boolean(selectedPost));
+
+    useEffect(() => {
+        if (!postModalOpen && !selectedPost) return undefined;
+        const focusTimer = window.setTimeout(() => {
+            document.querySelector('[data-community-modal-close]')?.focus();
+        }, 0);
+        const handleKeyDown = (event) => {
+            if (event.key !== 'Escape') return;
+            if (selectedPost) setSelectedPost(null);
+            else if (!savingPost) setPostModalOpen(false);
+        };
+        document.addEventListener('keydown', handleKeyDown);
+        return () => {
+            window.clearTimeout(focusTimer);
+            document.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [postModalOpen, savingPost, selectedPost]);
 
     const animateCommunityTitle = (isHovering) => {
         const letters = communityLetterRefs.current.filter(Boolean);
@@ -107,7 +126,7 @@ const CommunityPage = () => {
         });
     };
 
-    const loadPosts = async () => {
+    const loadPosts = useCallback(async () => {
         setLoadingPosts(true);
         try {
             const response = await communityAPI.getPosts(user?.role || 'user');
@@ -117,11 +136,11 @@ const CommunityPage = () => {
         } finally {
             setLoadingPosts(false);
         }
-    };
+    }, [user?.role]);
 
     useEffect(() => {
         loadPosts();
-    }, []);
+    }, [loadPosts]);
 
     const confirmPostDelete = async () => {
         return openConfirmation({
@@ -233,10 +252,10 @@ const CommunityPage = () => {
 
                 <AnimatePresence>
                     {postModalOpen && (
-                        <div className="fixed inset-0 z-[150] flex items-center justify-center p-4">
+                        <div className="fixed inset-0 z-[150] flex items-center justify-center overscroll-contain p-4" role="dialog" aria-modal="true" aria-labelledby="community-post-form-title">
                             <Motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => !savingPost && setPostModalOpen(false)} />
-                            <Motion.div initial={{ y: 30, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 30, opacity: 0 }} className="relative z-10 max-h-[92vh] w-full overflow-y-auto rounded-t-3xl bg-white p-5 shadow-2xl sm:max-w-xl sm:rounded-3xl sm:p-8">
-                                <div className="mb-6 flex items-center justify-between"><h2 className="text-xl font-black">{editingPost ? 'Edit post' : 'Create post'}</h2><button onClick={() => !savingPost && setPostModalOpen(false)} className="rounded-full px-3 py-2 text-sm text-[#212631]/60 hover:bg-black/5">Close</button></div>
+                            <Motion.div data-lenis-prevent initial={{ y: 30, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 30, opacity: 0 }} className="relative z-10 max-h-[92vh] w-full overflow-y-auto overscroll-contain rounded-t-3xl bg-white p-5 shadow-2xl sm:max-w-xl sm:rounded-3xl sm:p-8">
+                                <div className="mb-6 flex items-center justify-between"><h2 id="community-post-form-title" className="text-xl font-black">{editingPost ? 'Edit post' : 'Create post'}</h2><button data-community-modal-close onClick={() => !savingPost && setPostModalOpen(false)} className="rounded-full px-3 py-2 text-sm text-[#212631]/60 hover:bg-black/5">Close</button></div>
                                 <PostForm onSubmit={async (data) => { const result = await createOrUpdatePost(data); if (result !== false) setPostModalOpen(false); return result; }} loading={savingPost} initialPost={editingPost} onCancelEdit={() => { setEditingPost(null); setPostModalOpen(false); }} />
                             </Motion.div>
                         </div>
@@ -245,7 +264,7 @@ const CommunityPage = () => {
 
                 <AnimatePresence>
                     {selectedPost && (
-                        <div className="fixed inset-0 z-[200] flex items-center justify-center p-0 md:p-6">
+                        <div className="fixed inset-0 z-[200] flex items-center justify-center overscroll-contain p-0 md:p-6" role="dialog" aria-modal="true" aria-labelledby="community-post-dialog-title">
                              <Motion.div
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
@@ -258,13 +277,14 @@ const CommunityPage = () => {
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, y: 12 }}
                                 transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
-                                 className="relative z-10 flex flex-col rounded-t-3xl bg-white border border-[#212631]/10 w-full h-full md:h-auto md:max-w-4xl md:max-h-[85vh] overflow-hidden md:rounded-3xl"
+                                  className="relative z-10 flex flex-col rounded-t-3xl bg-white border border-[#212631]/10 w-full h-full md:h-auto md:max-w-4xl md:max-h-[85vh] overflow-hidden overscroll-contain md:rounded-3xl"
                             >
                                 <div className="flex items-center justify-between px-5 py-4 border-b border-[#212631]/15 shrink-0 bg-[#ebebeb]">
-                                    <span className="text-[10px] tracking-[0.18em] uppercase font-bold text-[#212631]/70">
+                                    <span id="community-post-dialog-title" className="text-[10px] tracking-[0.18em] uppercase font-bold text-[#212631]/70">
                                         {commentOnly ? 'Comments' : 'Post Details'}
                                     </span>
                                     <button
+                                        data-community-modal-close
                                         onClick={() => setSelectedPost(null)}
                                         className="text-[#212631] opacity-70 hover:opacity-100 transition-opacity cursor-pointer flex items-center gap-2"
                                     >
@@ -273,7 +293,7 @@ const CommunityPage = () => {
                                     </button>
                                 </div>
 
-                                <div className="overflow-y-auto flex-1 p-6 md:p-10">
+                                <div data-lenis-prevent className="overflow-y-auto overscroll-contain flex-1 p-6 md:p-10">
                                     {commentOnly ? (
                                         <div>
                                             <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#212631]/50">Community discussion</p>

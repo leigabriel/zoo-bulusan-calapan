@@ -360,6 +360,16 @@ exports.updateTicketStatus = async (req, res) => {
             return res.status(500).json({ success: false, message: 'Failed to update ticket' });
         }
 
+        if (ticket.user_id && status && status !== ticket.status) {
+            await Notification.create({
+                userId: ticket.user_id,
+                title: 'Ticket Status Updated',
+                message: `Your ticket ${ticket.booking_reference} is now ${status.replaceAll('_', ' ')}.`,
+                type: 'ticket',
+                link: '/tickets'
+            });
+        }
+
         // Log staff activity
         await logStaffActivity(req, 'ticket_update', `Updated ticket #${ticket.booking_reference || ticket.reservation_reference} status to ${status}`, 'reservation', id);
 
@@ -610,6 +620,14 @@ exports.reviewAppeal = async (req, res) => {
             await User.unsuspendUser(appeal.user_id);
         }
 
+        await Notification.create({
+            userId: appeal.user_id,
+            title: 'Appeal Reviewed',
+            message: `Your account appeal was ${status}.${adminResponse ? ` Response: ${adminResponse}` : ''}`,
+            type: status === 'approved' ? 'success' : 'warning',
+            link: '/settings'
+        });
+
         res.json({ success: true, message: `Appeal ${status} successfully` });
     } catch (error) {
         console.error('Error reviewing appeal:', error);
@@ -633,6 +651,16 @@ exports.markTicketAsPaid = async (req, res) => {
         
         if (!marked) {
             return res.status(500).json({ success: false, message: 'Failed to mark ticket as paid' });
+        }
+
+        if (ticket.user_id) {
+            await Notification.create({
+                userId: ticket.user_id,
+                title: 'Ticket Payment Confirmed',
+                message: `Payment for ticket ${ticket.booking_reference} has been confirmed.`,
+                type: 'ticket',
+                link: '/tickets'
+            });
         }
 
         res.json({ success: true, message: 'Ticket marked as paid successfully' });
@@ -662,6 +690,16 @@ exports.updateVerificationStatus = async (req, res) => {
         // If approved and ticket is pending, confirm it
         if (status === 'approved' && ticket.status === 'pending') {
             await Ticket.updateStatus(id, 'confirmed');
+        }
+
+        if (ticket.user_id) {
+            await Notification.create({
+                userId: ticket.user_id,
+                title: 'Resident Verification Updated',
+                message: `Resident verification for ticket ${ticket.booking_reference} was ${status}.`,
+                type: 'ticket',
+                link: '/tickets'
+            });
         }
 
         res.json({ success: true, message: 'Verification status updated successfully' });

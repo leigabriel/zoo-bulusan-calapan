@@ -30,6 +30,7 @@ const ensureAIAssistSchema = require('./database/ensure-ai-assist-schema');
 const ensureAuthSchema = require('./database/ensure-auth-schema');
 const ensureSiteVisitSchema = require('./database/ensure-site-visit-schema');
 const ensureUserActivitySchema = require('./database/ensure-user-activity-schema');
+const ensureNotificationSchema = require('./database/ensure-notification-schema');
 const ensureTrashSchema = require('./database/ensure-trash-schema');
 const ensureChatSchema = require('./database/ensure-chat-schema');
 const ensureSupportSchema = require('./database/ensure-support-schema');
@@ -159,7 +160,7 @@ app.use((err, req, res, next) => {
     });
 });
 
-const schemaInitializers = [ensureEventPaymentSchema, ensureAIAssistSchema, ensureAuthSchema, ensureSiteVisitSchema, ensureUserActivitySchema, ensureTrashSchema, ensureChatSchema, ensureSupportSchema, ensureAdminMasterKeySchema, ensureWalkInSchema];
+const schemaInitializers = [ensureEventPaymentSchema, ensureAIAssistSchema, ensureAuthSchema, ensureSiteVisitSchema, ensureUserActivitySchema, ensureNotificationSchema, ensureTrashSchema, ensureChatSchema, ensureSupportSchema, ensureAdminMasterKeySchema, ensureWalkInSchema];
 
 initializeChatSocket(server, {
     origin: allowedOrigins,

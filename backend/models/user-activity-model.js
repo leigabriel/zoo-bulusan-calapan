@@ -57,11 +57,11 @@ class UserActivity {
             ual.entity_id,
             ual.ip_address,
             ual.created_at,
-            u.first_name,
-            u.last_name,
-            u.email
+            COALESCE(u.first_name, ual.actor_name) AS first_name,
+            COALESCE(u.last_name, '') AS last_name,
+            COALESCE(u.email, ual.actor_email) AS email
          FROM user_activity_logs ual
-         JOIN users u ON ual.user_id = u.id
+         LEFT JOIN users u ON ual.user_id = u.id
          WHERE 1=1`;
 
         const params = [];

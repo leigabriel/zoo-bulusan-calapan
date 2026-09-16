@@ -195,8 +195,8 @@ const Analytics = () => {
                 <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
                     <div><p className="text-xs font-black uppercase tracking-[0.22em] text-emerald-200">Operations report</p><h1 className="mt-2 text-3xl font-black tracking-tight md:text-5xl">Visitor intelligence</h1><p className="mt-2 max-w-2xl text-sm text-emerald-100">Plan staffing and capacity from confirmed and completed reservations scheduled for {periodLabel}.</p></div>
                     <div className="analytics-controls flex flex-wrap gap-2">
-                        <button onClick={exportExcel} className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-bold shadow-sm"><Download className="h-4 w-4" />Export Excel</button>
-                         <button onClick={printReport} className="inline-flex items-center gap-2 rounded-xl bg-emerald-300 px-4 py-2.5 text-sm font-bold text-emerald-950"><Print className="h-4 w-4" />Print / PDF</button>
+                        <button onClick={exportExcel} className="inline-flex items-center gap-2 rounded-xl border border-emerald-800 bg-emerald-900 px-4 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-emerald-800"><Download className="h-4 w-4" />Export Excel</button>
+                         <button onClick={printReport} className="inline-flex items-center gap-2 rounded-xl border border-lime-300 bg-lime-300 px-4 py-2.5 text-sm font-bold text-emerald-950 shadow-sm transition hover:bg-lime-200"><Print className="h-4 w-4" />Print / PDF</button>
                     </div>
                 </div>
             </header>

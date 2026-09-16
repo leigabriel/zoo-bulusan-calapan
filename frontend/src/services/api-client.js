@@ -1602,25 +1602,25 @@ export const userAPI = {
         return handleResponse(response);
     },
 
-    getSettings: async () => {
+    getSettings: async (authType = getCurrentAuthType()) => {
         const response = await fetch(`${API_BASE_URL}/users/settings`, {
-            headers: getAuthHeaders('user')
+            headers: getAuthHeaders(authType)
         });
         return handleResponse(response);
     },
 
-    updateSettings: async (settings) => {
+    updateSettings: async (settings, authType = getCurrentAuthType()) => {
         const response = await fetch(`${API_BASE_URL}/users/settings`, {
             method: 'PUT',
-            headers: getAuthHeaders('user'),
+            headers: getAuthHeaders(authType),
             body: JSON.stringify({ settings })
         });
         return handleResponse(response);
     },
 
-    getActivities: async () => {
+    getActivities: async (authType = getCurrentAuthType()) => {
         const response = await fetch(`${API_BASE_URL}/users/activities`, {
-            headers: getAuthHeaders('user')
+            headers: getAuthHeaders(authType)
         });
         return handleResponse(response);
     },

@@ -41,20 +41,24 @@ const trackActivity = (actionType, getDescription = null) => {
                 let entityType = null;
                 let entityId = null;
 
-                if (req.params.id) {
-                    entityId = parseInt(req.params.id);
-                }
+                const responseEntityId = data.id || data.eventId || data.animalId || data.plantId ||
+                    data.ticketId || data.reservationId || data.userId || data.messageId;
+                entityId = parseInt(req.params.id || req.params.postId || req.params.commentId || responseEntityId, 10) || null;
 
                 const path = req.path.toLowerCase();
-                if (path.includes('animal')) entityType = 'animal';
+                if (actionType.includes('comment')) entityType = 'comment';
+                else if (actionType.includes('post') || path.includes('community')) entityType = 'community_post';
+                else if (actionType.includes('animal') || path.includes('animal')) entityType = 'animal';
                 else if (path.includes('plant')) entityType = 'plant';
                 else if (path.includes('event')) entityType = 'event';
-                else if (path.includes('ticket') || path.includes('reservation')) entityType = 'reservation';
+                else if (path.includes('ticket')) entityType = 'ticket_reservation';
+                else if (path.includes('reservation')) entityType = 'reservation';
                 else if (path.includes('message')) entityType = 'message';
+                else if (path.includes('appeal')) entityType = 'appeal';
+                else if (path.includes('model')) entityType = 'prediction_model';
                 else if (path.includes('user')) entityType = 'user';
-                else if (path.includes('community') || path.includes('post')) entityType = 'community';
-                else if (path.includes('comment')) entityType = 'comment';
-                else if (path.includes('donation') || path.includes('payment')) entityType = 'config';
+                else if (path.includes('donation')) entityType = 'donation_config';
+                else if (path.includes('payment')) entityType = 'payment_config';
 
                 try {
                     if (['staff', 'admin'].includes(req.user.role)) {

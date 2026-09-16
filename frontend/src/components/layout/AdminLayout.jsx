@@ -67,6 +67,7 @@ const AdminLayout = ({ children }) => {
 
     // Real notifications state
     const [notifications, setNotifications] = useState([]);
+    const [notificationUnreadCount, setNotificationUnreadCount] = useState(0);
     const [notificationsLoading, setNotificationsLoading] = useState(false);
     const [activitySummary, setActivitySummary] = useState(null);
 
@@ -77,6 +78,7 @@ const AdminLayout = ({ children }) => {
             const res = await adminAPI.getNotifications();
             if (res.success) {
                 setNotifications(res.notifications || []);
+                setNotificationUnreadCount(Number(res.unreadCount) || 0);
                 setActivitySummary(res.summary || null);
             }
         } catch (err) {
@@ -91,6 +93,7 @@ const AdminLayout = ({ children }) => {
         try {
             await adminAPI.clearNotifications();
             setNotifications([]);
+            setNotificationUnreadCount(0);
         } catch (err) {
             console.error('Error clearing notifications:', err);
         } finally {
@@ -511,7 +514,7 @@ const AdminLayout = ({ children }) => {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, [notificationPanelOpen]);
 
-    const unreadCount = notifications.filter(n => !n.read).length;
+    const unreadCount = notificationUnreadCount;
 
     return (
         <WorkspaceThemeContext value={true}>
@@ -926,6 +929,7 @@ const AdminLayout = ({ children }) => {
                                     if (!notification.read) {
                                         try {
                                             await adminAPI.markNotificationRead(notification.id);
+                                            setNotificationUnreadCount(count => Math.max(0, count - 1));
                                             setNotifications(prev =>
                                                 prev.map(n => n.id === notification.id ? { ...n, read: true } : n)
                                             );
@@ -995,6 +999,7 @@ const AdminLayout = ({ children }) => {
                         onClick={async () => {
                             try {
                                 await adminAPI.markAllNotificationsRead();
+                                setNotificationUnreadCount(0);
                                 setNotifications(prev => prev.map(n => ({ ...n, read: true })));
                             } catch (err) {
                                 console.error('Error marking all as read:', err);
