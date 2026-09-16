@@ -172,8 +172,8 @@ const MapPage = () => {
                     <button onClick={() => setShowExitConfirm(true)} className="h-12 w-12 md:h-14 md:w-14 bg-[#fffdf8] rounded-2xl shadow-lg flex items-center justify-center hover:bg-[#edf3eb] transition-all border border-[#dce5dc]" aria-label="Back">
                         <ChevronLeft className="h-6 w-6 text-[#1f3328]" />
                     </button>
-                     <button onClick={() => setIsMobileListOpen(true)} className="md:hidden h-12 w-12 bg-[#fffdf8] rounded-2xl shadow-lg flex items-center justify-center border border-[#dce5dc]" aria-label="Open wildlife list">
-                         <Menu className="h-6 w-6 text-[#1f3328]" />
+                    <button onClick={() => setIsMobileListOpen(true)} className="md:hidden h-12 w-12 bg-[#fffdf8] rounded-2xl shadow-lg flex items-center justify-center border border-[#dce5dc]" aria-label="Open wildlife list">
+                        <Menu className="h-6 w-6 text-[#1f3328]" />
                     </button>
                 </div>
                 {API_KEY ? (
@@ -191,7 +191,7 @@ const MapPage = () => {
 
             {isMobileListOpen && (
                 <div className="fixed inset-0 z-[2000] md:hidden">
-                     <div className="absolute inset-0 bg-[#1f3328]/45 backdrop-blur-sm" onClick={() => setIsMobileListOpen(false)} />
+                    <div className="absolute inset-0 bg-[#1f3328]/45 backdrop-blur-sm" onClick={() => setIsMobileListOpen(false)} />
                     <div className="absolute bottom-0 left-0 right-0 h-[min(80dvh,42rem)] rounded-t-[2.5rem] overflow-hidden animate-in slide-in-from-bottom duration-300 shadow-2xl">
                         <DiscoveryList isMobile={true} filterRegion={filterRegion} setFilterRegion={setFilterRegion} onSelect={handleSelect} onClose={() => setIsMobileListOpen(false)} />
                     </div>
@@ -200,13 +200,13 @@ const MapPage = () => {
 
             {showExitConfirm && (
                 <div className="fixed inset-0 z-[3000] flex items-center justify-center p-6">
-                     <div className="absolute inset-0 bg-[#1f3328]/70 backdrop-blur-lg" onClick={() => setShowExitConfirm(false)} />
+                    <div className="absolute inset-0 bg-[#1f3328]/70 backdrop-blur-lg" onClick={() => setShowExitConfirm(false)} />
                     <div className="relative bg-[#fffdf8] p-8 rounded-3xl shadow-2xl max-w-sm w-full text-center animate-in zoom-in-95 duration-200">
-                         <h3 className="text-2xl font-black text-[#1f3328] mb-2">Close Expedition?</h3>
-                         <p className="text-[#52675a] mb-8 font-medium leading-relaxed">Your curated discovery view will be cleared.</p>
+                        <h3 className="text-2xl font-black text-[#1f3328] mb-2">Close Expedition?</h3>
+                        <p className="text-[#52675a] mb-8 font-medium leading-relaxed">Your curated discovery view will be cleared.</p>
                         <div className="flex flex-col gap-3">
-                             <button onClick={() => navigate(-1)} className="w-full py-4 bg-[#1f3328] text-white rounded-2xl font-bold hover:bg-[#294536] transition-all shadow-lg active:scale-95">Leave</button>
-                              <button onClick={() => setShowExitConfirm(false)} className="w-full py-4 bg-[#e5f0e3] text-[#1f3328] rounded-2xl font-bold hover:bg-[#d8e8d7] transition-all">Keep Browsing</button>
+                            <button onClick={() => navigate(-1)} className="w-full py-4 bg-[#1f3328] text-white rounded-2xl font-bold hover:bg-[#294536] transition-all shadow-lg active:scale-95">Leave</button>
+                            <button onClick={() => setShowExitConfirm(false)} className="w-full py-4 bg-[#e5f0e3] text-[#1f3328] rounded-2xl font-bold hover:bg-[#d8e8d7] transition-all">Keep Browsing</button>
                         </div>
                     </div>
                 </div>
