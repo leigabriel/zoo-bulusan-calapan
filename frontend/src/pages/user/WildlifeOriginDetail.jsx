@@ -66,7 +66,7 @@ const WildlifeOriginDetail = () => {
         return (
             <div className="min-h-screen bg-[#eef3ed] flex flex-col items-center justify-center p-6 text-center">
                 <p className="text-sm font-bold uppercase tracking-[0.2em] text-[#6d8572]">Animal not found</p>
-                <Link to="/map" className="mt-6 inline-flex items-center gap-2 rounded-2xl bg-[#1f3328] px-5 py-3 text-sm font-bold text-white transition-colors hover:bg-[#294536]">
+                <Link to="/map" replace className="mt-6 inline-flex items-center gap-2 rounded-2xl bg-[#1f3328] px-5 py-3 text-sm font-bold text-white transition-colors hover:bg-[#294536]">
                     <ChevronLeft className="h-4 w-4" /> Back to Wildlife Origins
                 </Link>
             </div>
@@ -79,10 +79,10 @@ const WildlifeOriginDetail = () => {
         <div className="min-h-screen bg-[#eef3ed] text-[#1f3328] antialiased">
             {/* Top bar */}
             <header className="fixed inset-x-0 top-0 z-[200] flex items-center justify-between px-4 py-3 md:px-8 md:py-4">
-                <button onClick={() => navigate('/map')} className="flex items-center gap-2 rounded-2xl bg-white/90 backdrop-blur-md px-4 py-2.5 text-sm font-bold shadow-sm border border-[#dce5dc] transition hover:bg-white" aria-label="Back to map">
+                <button onClick={() => navigate(-1)} className="flex items-center gap-2 rounded-2xl bg-white/90 backdrop-blur-md px-4 py-2.5 text-sm font-bold shadow-sm border border-[#dce5dc] transition hover:bg-white" aria-label="Back to map">
                     <ChevronLeft className="h-5 w-5" /> <span className="hidden sm:inline">Back to Map</span>
                 </button>
-                <Link to="/map" className="flex items-center gap-2 rounded-2xl bg-[#1f3328] px-4 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-[#294536]">
+                <Link to="/map" replace className="flex items-center gap-2 rounded-2xl bg-[#1f3328] px-4 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-[#294536]">
                     <Globe className="h-4 w-4" /> Wildlife Origins
                 </Link>
             </header>
@@ -149,7 +149,7 @@ const WildlifeOriginDetail = () => {
 
                 {/* Back link */}
                 <div className="flex justify-center pt-4 pb-8">
-                    <Link to="/map" className="inline-flex items-center gap-2 rounded-2xl bg-[#1f3328] px-6 py-3.5 text-sm font-bold text-white shadow-md transition hover:bg-[#294536] hover:shadow-lg active:scale-95">
+                    <Link to="/map" replace className="inline-flex items-center gap-2 rounded-2xl bg-[#1f3328] px-6 py-3.5 text-sm font-bold text-white shadow-md transition hover:bg-[#294536] hover:shadow-lg active:scale-95">
                         <ChevronLeft className="h-4 w-4" /> Back to Wildlife Origins
                     </Link>
                 </div>
