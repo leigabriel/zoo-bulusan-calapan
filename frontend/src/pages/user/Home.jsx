@@ -660,33 +660,33 @@ const CommunityPreviewSection = ({ posts, loading, isAuthenticated, navigate }) 
     );
 };
 
-const DonationSection = ({ config, loading, navigate }) => {
-    const enabled = Boolean(config?.enabled);
+// const DonationSection = ({ config, loading, navigate }) => {
+//     const enabled = Boolean(config?.enabled);
 
-    return (
-        <section data-cinema-section className="relative overflow-hidden bg-[#15351f] text-white">
-            <div data-donation-wipe className="absolute inset-y-0 right-0 w-1/2 bg-[#c6fe69]" />
-            <div className="relative mx-auto grid min-h-[82svh] max-w-[1800px] items-center gap-10 px-4 py-16 sm:px-8 lg:grid-cols-[1.1fr_0.9fr] lg:py-24">
-                <div className="relative z-10 max-w-5xl">
-                    <p data-scene-kicker className="text-[10px] font-black uppercase tracking-[0.28em] text-green-200">12 Donation CTA</p>
-                    <h2 data-scene-title className="mt-5 text-[clamp(3.5rem,8vw,8rem)] font-black leading-[0.86] tracking-[-0.065em]">Support wildlife on your terms.</h2>
-                    <p className="mt-6 max-w-2xl text-sm leading-7 text-white/65 sm:text-base">The existing donation flow uses the administrator-controlled donation configuration and GCash details. The donor chooses the amount in GCash.</p>
-                    <div className="mt-8 flex flex-wrap items-center gap-4">
-                        <PrimaryAction onClick={() => enabled && navigate('/donation')} light disabled={loading || !enabled}>{loading ? 'Checking donation status' : enabled ? 'Open Donation' : 'Donations unavailable'} {enabled && <Arrow />}</PrimaryAction>
-                        {!loading && <span className="text-xs font-bold uppercase tracking-[0.18em] text-white/45">{enabled ? 'Currently enabled by the zoo' : 'Currently disabled by the zoo'}</span>}
-                    </div>
-                </div>
-                <div data-scene-frame className="relative z-10 ml-auto aspect-square w-full max-w-xl overflow-hidden rounded-full border border-white/20 bg-black/20 p-[12%] shadow-[0_30px_100px_rgba(0,0,0,0.25)]">
-                    <div className="flex h-full w-full flex-col items-center justify-center rounded-full bg-[#c6fe69] px-8 text-center text-black">
-                        <p className="text-[10px] font-black uppercase tracking-[0.22em]">Donation channel</p>
-                        <p className="mt-3 text-5xl font-black sm:text-7xl">GCash</p>
-                        <p className="mt-3 text-xs font-semibold text-black/60">Recipient details remain on the protected Donation page.</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-    );
-};
+//     return (
+//         <section data-cinema-section className="relative overflow-hidden bg-[#15351f] text-white">
+//             <div data-donation-wipe className="absolute inset-y-0 right-0 w-1/2 bg-[#c6fe69]" />
+//             <div className="relative mx-auto grid min-h-[82svh] max-w-[1800px] items-center gap-10 px-4 py-16 sm:px-8 lg:grid-cols-[1.1fr_0.9fr] lg:py-24">
+//                 <div className="relative z-10 max-w-5xl">
+//                     <p data-scene-kicker className="text-[10px] font-black uppercase tracking-[0.28em] text-green-200">12 Donation CTA</p>
+//                     <h2 data-scene-title className="mt-5 text-[clamp(3.5rem,8vw,8rem)] font-black leading-[0.86] tracking-[-0.065em]">Support wildlife on your terms.</h2>
+//                     <p className="mt-6 max-w-2xl text-sm leading-7 text-white/65 sm:text-base">The existing donation flow uses the administrator-controlled donation configuration and GCash details. The donor chooses the amount in GCash.</p>
+//                     <div className="mt-8 flex flex-wrap items-center gap-4">
+//                         <PrimaryAction onClick={() => enabled && navigate('/donation')} light disabled={loading || !enabled}>{loading ? 'Checking donation status' : enabled ? 'Open Donation' : 'Donations unavailable'} {enabled && <Arrow />}</PrimaryAction>
+//                         {!loading && <span className="text-xs font-bold uppercase tracking-[0.18em] text-white/45">{enabled ? 'Currently enabled by the zoo' : 'Currently disabled by the zoo'}</span>}
+//                     </div>
+//                 </div>
+//                 <div data-scene-frame className="relative z-10 ml-auto aspect-square w-full max-w-xl overflow-hidden rounded-full border border-white/20 bg-black/20 p-[12%] shadow-[0_30px_100px_rgba(0,0,0,0.25)]">
+//                     <div className="flex h-full w-full flex-col items-center justify-center rounded-full bg-[#c6fe69] px-8 text-center text-black">
+//                         <p className="text-[10px] font-black uppercase tracking-[0.22em]">Donation channel</p>
+//                         <p className="mt-3 text-5xl font-black sm:text-7xl">GCash</p>
+//                         <p className="mt-3 text-xs font-semibold text-black/60">Recipient details remain on the protected Donation page.</p>
+//                     </div>
+//                 </div>
+//             </div>
+//         </section>
+//     );
+// };
 
 const BookingProcessSection = ({ navigate }) => {
     const steps = [
@@ -1112,7 +1112,7 @@ const CinematicSections = () => {
             <ScannerTeaserSection navigate={navigate} />
             <JijiTeaserSection openAssistant={openAssistant} />
             <CommunityPreviewSection posts={posts} loading={loading.community} isAuthenticated={isAuthenticated} navigate={navigate} />
-            <DonationSection config={donationConfig} loading={loading.donation} navigate={navigate} />
+            {/* <DonationSection config={donationConfig} loading={loading.donation} navigate={navigate} /> */}
             <BookingProcessSection navigate={navigate} />
             <FAQSection />
             <ContactSupportSection navigate={navigate} />
