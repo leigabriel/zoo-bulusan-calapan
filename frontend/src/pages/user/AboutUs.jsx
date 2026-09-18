@@ -6,6 +6,7 @@ import AIFloatingButton from '../../components/common/AIFloatingButton';
 const CITY_SOURCE = 'https://cityofcalapan.gov.ph/the-city-economic-enterprise-department-ceed/';
 const TOURISM_SOURCE = 'https://www.travelorientalmindoro.ph/place/calapan-nature-park';
 const HISTORY_SOURCE = 'https://pia4b.wordpress.com/2013/04/02/zoological-park-sa-calapan-bukas-na-sa-publiko/';
+const TRAVEL_ADVISORY_SOURCE = 'https://www.travelorientalmindoro.ph/page/travel-advisory';
 const DIRECTIONS_URL = 'https://www.google.com/maps/dir/?api=1&destination=13.40496178,121.1991656';
 
 const usePageMetadata = (title, description, canonical) => {
@@ -104,6 +105,22 @@ const AboutUs = () => {
                     </div>
                 </section>
 
+                <section className="bg-[#f7f5ef] px-4 py-20 sm:px-6 sm:py-28 md:px-10" aria-labelledby="stewardship-title">
+                    <div className="mx-auto max-w-[1500px]">
+                        <div className="grid gap-12 lg:grid-cols-[0.8fr_1.2fr] lg:gap-24">
+                            <div>
+                                <p className="text-xs font-bold uppercase tracking-[0.25em] text-[#212631]/40">City stewardship</p>
+                                <h2 id="stewardship-title" className="mt-5 text-[clamp(2.8rem,7vw,6.5rem)] font-medium leading-[0.9] tracking-[-0.055em] text-black">How the park is managed.</h2>
+                            </div>
+                            <div className="lg:pt-12">
+                                <p className="text-xl font-medium leading-8 sm:text-2xl sm:leading-9">Bulusan Park is one of Calapan City’s economic enterprises under the direct administration, supervision, maintenance, and control of the City Economic Enterprise Department.</p>
+                                <p className="mt-7 text-base leading-7 text-[#212631]/60">The City traces this mandate to its Economic Enterprise Code, identifying Resolution No. 724 and City Ordinance No. 19, Article IV, Section 8. This places the park within a broader municipal public-service framework.</p>
+                                <a href={CITY_SOURCE} target="_blank" rel="noreferrer" className="mt-8 inline-flex min-h-11 items-center border-b border-black pb-1 text-xs font-bold uppercase tracking-[0.2em] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-green-600">Read the City CEED profile</a>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
                 <section className="bg-[#1a211b] px-4 py-20 text-white sm:px-6 sm:py-28 md:px-10" aria-labelledby="nature-title">
                     <div className="mx-auto max-w-[1500px]">
                         <p className="text-xs font-bold uppercase tracking-[0.25em] text-green-300">Nature and recreation</p>
@@ -139,6 +156,22 @@ const AboutUs = () => {
                             <p className="text-xl font-semibold leading-8 text-black/80">The official provincial tourism listing identifies the park as the entry point to the Bulusan eco-trail.</p>
                             <p className="mt-5 text-sm font-medium leading-6 text-black/55">It describes an approximately one-hour route ending at the seashore in Barangay Parang. Visitors should confirm current access, trail conditions, and local guidance before a hike.</p>
                             <a href={TOURISM_SOURCE} target="_blank" rel="noreferrer" className="mt-8 inline-flex min-h-11 items-center border-b border-black pb-1 text-xs font-bold uppercase tracking-[0.2em] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-black">View official tourism information</a>
+                        </div>
+                    </div>
+                </section>
+
+                <section className="bg-white px-4 py-20 sm:px-6 sm:py-28 md:px-10" aria-labelledby="trail-ready-title">
+                    <div className="mx-auto max-w-[1500px]">
+                        <div className="grid gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:gap-24">
+                            <div>
+                                <p className="text-xs font-bold uppercase tracking-[0.25em] text-[#212631]/40">Provincial travel guidance</p>
+                                <h2 id="trail-ready-title" className="mt-5 text-[clamp(2.8rem,6vw,5.8rem)] font-medium leading-[0.92] tracking-[-0.055em] text-black">Go prepared.<br />Leave room to adapt.</h2>
+                            </div>
+                            <div className="grid gap-px overflow-hidden rounded-3xl bg-black/10 sm:grid-cols-2">
+                                <div className="bg-[#f7f5ef] p-6 sm:p-8"><span className="text-xs font-bold tracking-[0.2em] text-green-700">01</span><h3 className="mt-8 text-xl font-semibold">Watch the weather</h3><p className="mt-3 text-sm leading-6 text-[#212631]/55">Oriental Mindoro’s advisory notes that mountain trails can be slippery in the June-October wet season and recommends flexible plans during typhoon season.</p></div>
+                                <div className="bg-[#f7f5ef] p-6 sm:p-8"><span className="text-xs font-bold tracking-[0.2em] text-green-700">02</span><h3 className="mt-8 text-xl font-semibold">Pack for outdoors</h3><p className="mt-3 text-sm leading-6 text-[#212631]/55">The provincial guidance recommends water, sun protection, insect repellent, personal medication, and a basic first-aid kit.</p></div>
+                                <div className="bg-[#f7f5ef] p-6 sm:col-span-2 sm:p-8"><span className="text-xs font-bold tracking-[0.2em] text-green-700">03</span><h3 className="mt-8 text-xl font-semibold">Confirm locally</h3><p className="mt-3 max-w-2xl text-sm leading-6 text-[#212631]/55">These are province-wide recommendations, not park-specific rules. Ask local tourism or park contacts about current trail access and conditions before setting out.</p><a href={TRAVEL_ADVISORY_SOURCE} target="_blank" rel="noreferrer" className="mt-6 inline-flex min-h-11 items-center border-b border-black pb-1 text-xs font-bold uppercase tracking-[0.18em]">Read the travel advisory</a></div>
+                            </div>
                         </div>
                     </div>
                 </section>

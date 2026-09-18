@@ -11,6 +11,7 @@ import '../../App.css';
 gsap.registerPlugin(ScrollTrigger);
 
 const CITY_SOURCE = 'https://cityofcalapan.gov.ph/the-city-economic-enterprise-department-ceed/';
+const CITY_VISITORS_SOURCE = 'https://cityofcalapan.gov.ph/visitors/';
 const TOURISM_SOURCE = 'https://www.travelorientalmindoro.ph/place/calapan-nature-park';
 const DIRECTIONS_URL = 'https://www.google.com/maps/dir/?api=1&destination=13.40496178,121.1991656';
 
@@ -203,6 +204,36 @@ const ExploreSection = () => (
     </section>
 );
 
+const activities = [
+    { title: 'Trek', note: 'Follow the documented eco-trail from the park toward Barangay Parang.' },
+    { title: 'Jog', note: 'Take in the park setting at a comfortable pace.' },
+    { title: 'Ride', note: 'The tourism portal lists mountain biking among the park’s outdoor activities.' },
+    { title: 'Camp', note: 'Picnic and camping grounds are included in the official tourism listing.' },
+];
+
+const ActivitiesSection = () => (
+    <section className="overflow-hidden bg-white py-20 sm:py-28" aria-labelledby="activities-title">
+        <div className="mx-auto max-w-[1500px] px-4 sm:px-6 lg:px-10">
+            <div className="flex flex-col gap-7 border-b border-black/15 pb-10 lg:flex-row lg:items-end lg:justify-between">
+                <div>
+                    <p className="mb-4 text-xs font-black uppercase tracking-[0.24em] text-black/40">Choose your pace</p>
+                    <h2 id="activities-title" className="text-[clamp(3rem,7vw,6.8rem)] font-black leading-[0.88] tracking-[-0.06em] text-black">Ways to move<br />through nature.</h2>
+                </div>
+                <p className="max-w-md text-sm font-semibold leading-6 text-black/55">Activities documented by the official Oriental Mindoro tourism portal. Availability and site conditions can change.</p>
+            </div>
+            <div className="divide-y divide-black/15">
+                {activities.map((activity, index) => (
+                    <article key={activity.title} className="group grid gap-4 py-7 sm:grid-cols-[4rem_0.65fr_1fr] sm:items-center sm:py-9">
+                        <span className="text-xs font-black tracking-[0.2em] text-black/30">0{index + 1}</span>
+                        <h3 className="text-[clamp(2.2rem,5vw,4.8rem)] font-black leading-none tracking-[-0.05em] transition-transform duration-300 group-hover:translate-x-2">{activity.title}</h3>
+                        <p className="max-w-lg text-sm font-medium leading-6 text-black/55 sm:justify-self-end">{activity.note}</p>
+                    </article>
+                ))}
+            </div>
+        </div>
+    </section>
+);
+
 const TrailSection = () => (
     <section className="relative overflow-hidden bg-[#151b16] px-4 py-20 text-white sm:px-6 sm:py-28 lg:px-10" aria-labelledby="trail-title">
         <div className="pointer-events-none absolute -right-24 top-10 h-72 w-72 rounded-full border border-green-300/20 sm:h-[32rem] sm:w-[32rem]" />
@@ -243,6 +274,27 @@ const OfficialRecordsSection = () => (
                     <span><strong className="block text-lg">Travel Oriental Mindoro</strong><span className="mt-1 block text-sm text-black/50">Official destination gallery, recreation details, and directions</span></span>
                     <span aria-hidden="true" className="text-2xl transition-transform group-hover:translate-x-1">&#8599;</span>
                 </a>
+            </div>
+        </div>
+    </section>
+);
+
+const ArrivalSection = () => (
+    <section className="bg-[#f0eee7] px-4 py-20 sm:px-6 sm:py-28 lg:px-10" aria-labelledby="arrival-title">
+        <div className="mx-auto max-w-[1500px]">
+            <div className="grid gap-12 lg:grid-cols-[1.15fr_0.85fr] lg:items-end lg:gap-24">
+                <div>
+                    <p className="text-xs font-black uppercase tracking-[0.24em] text-black/40">Arriving in Calapan</p>
+                    <h2 id="arrival-title" className="mt-5 text-[clamp(3rem,8vw,7.5rem)] font-black leading-[0.86] tracking-[-0.06em] text-black">Port to park,<br />plan the last mile.</h2>
+                </div>
+                <div>
+                    <p className="text-xl font-bold leading-8 text-black/75">The City identifies Calapan City Port as Oriental Mindoro’s main gateway and the most direct arrival point for destinations in Calapan.</p>
+                    <p className="mt-5 text-sm font-medium leading-6 text-black/50">No official source publishes a dedicated public-transport route from the port to Bulusan Park. Use the destination pin for directions and confirm local transport before traveling.</p>
+                    <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+                        <a href={CITY_VISITORS_SOURCE} target="_blank" rel="noreferrer" className="inline-flex min-h-12 items-center justify-center rounded-full bg-black px-6 py-3 text-center text-xs font-black uppercase tracking-[0.15em] text-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-black">Calapan travel guide</a>
+                        <a href={DIRECTIONS_URL} target="_blank" rel="noreferrer" className="inline-flex min-h-12 items-center justify-center rounded-full border-2 border-black px-6 py-3 text-center text-xs font-black uppercase tracking-[0.15em] text-black hover:bg-black hover:text-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-black">Park directions</a>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
@@ -295,8 +347,10 @@ const Home = () => {
                     <HeroSection />
                     <AboutSection />
                     <ExploreSection />
+                    <ActivitiesSection />
                     <TrailSection />
                     <OfficialRecordsSection />
+                    <ArrivalSection />
                     <VisitorSection navigate={navigate} />
                 </main>
                 <div className="relative z-50 w-full"><Footer /></div>

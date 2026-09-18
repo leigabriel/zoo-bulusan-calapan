@@ -35,10 +35,6 @@ You have the right to:
 6. COOKIES
 We use cookies and similar technologies to enhance your experience and gather information about visitors and visits to our website. For more information, please review our Cookie Policy.
 
-7. CONTACT US
-If you have questions about this Privacy Policy, please contact us at:
-Email: privacy@zoobulusan.com
-Address: Bulusan Zoo, Sorsogon, Philippines
 `;
 
 export const TERMS_OF_SERVICE_CONTENT = `
@@ -79,10 +75,6 @@ We reserve the right to modify these Terms at any time. Continued use of our ser
 8. GOVERNING LAW
 These Terms shall be governed by the laws of the Republic of the Philippines.
 
-9. CONTACT INFORMATION
-For questions regarding these Terms, contact us at:
-Email: support@zoobulusan.com
-Phone: +63 (XXX) XXX-XXXX
 `;
 
 export const COOKIE_POLICY_CONTENT = `
@@ -132,10 +124,6 @@ By clicking "Accept" on our cookie banner, you consent to the use of essential, 
 7. CHANGES TO THIS POLICY
 We may update this Cookie Policy from time to time. Any changes will be posted on this page with an updated "Last Updated" date. We encourage you to review this page periodically.
 
-8. CONTACT US
-If you have questions about our use of cookies, please contact us at:
-Email: privacy@zoobulusan.com
-Address: Bulusan Zoo, Sorsogon, Philippines
 `;
 
 export const REFUND_POLICY_CONTENT = `
@@ -180,9 +168,4 @@ Once a refund is approved:
 - GCash / other e-wallet refunds are processed within 3-5 business days.
 - Bank transfer refunds may take up to 14 business days depending on your bank.
 
-8. CONTACT US
-To request a refund or ask questions about this policy, please contact us at:
-Email: support@zoobulusan.com
-Phone: +63 (XXX) XXX-XXXX
-Address: Bulusan Zoo, Sorsogon, Philippines
 `;
