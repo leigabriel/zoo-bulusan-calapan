@@ -1,353 +1,178 @@
-import React, { useRef } from 'react';
-import { ReactLenis } from 'lenis/react';
-import { motion, useInView, useScroll, useTransform } from 'framer-motion';
+import { useEffect } from 'react';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 import AIFloatingButton from '../../components/common/AIFloatingButton';
 
-const E = [0.16, 1, 0.3, 1];
-const OPT = { once: false, margin: '-6%' };
+const CITY_SOURCE = 'https://cityofcalapan.gov.ph/the-city-economic-enterprise-department-ceed/';
+const TOURISM_SOURCE = 'https://www.travelorientalmindoro.ph/place/calapan-nature-park';
+const HISTORY_SOURCE = 'https://pia4b.wordpress.com/2013/04/02/zoological-park-sa-calapan-bukas-na-sa-publiko/';
+const DIRECTIONS_URL = 'https://www.google.com/maps/dir/?api=1&destination=13.40496178,121.1991656';
 
-const Chars = ({ text, className = '', delay = 0, stagger = 0.034 }) => {
-    const ref = useRef(null);
-    const inView = useInView(ref, OPT);
-    return (
-        <span ref={ref} className={`inline-flex flex-wrap ${className}`} aria-label={text}>
-            {text.split('').map((ch, i) => (
-                <span
-                    key={i}
-                    className="overflow-hidden inline-block"
-                    style={{ whiteSpace: ch === ' ' ? 'pre' : 'normal' }}
-                >
-                    <motion.span
-                        className="inline-block"
-                        initial={{ y: '115%', opacity: 0 }}
-                        animate={inView ? { y: '0%', opacity: 1 } : { y: '115%', opacity: 0 }}
-                        transition={{ duration: 0.7, delay: delay + i * stagger, ease: E }}
-                    >
-                        {ch}
-                    </motion.span>
-                </span>
-            ))}
-        </span>
-    );
+const usePageMetadata = (title, description, canonical) => {
+    useEffect(() => {
+        const updates = [
+            ['meta[name="title"]', title],
+            ['meta[name="description"]', description],
+            ['meta[property="og:title"]', title],
+            ['meta[property="og:description"]', description],
+            ['meta[property="og:url"]', canonical],
+            ['meta[name="twitter:title"]', title],
+            ['meta[name="twitter:description"]', description],
+        ];
+        const previousTitle = document.title;
+        const previousValues = updates.map(([selector, value]) => {
+            const element = document.querySelector(selector);
+            const previous = element?.getAttribute('content');
+            if (element) element.setAttribute('content', value);
+            return [element, previous];
+        });
+        const canonicalElement = document.querySelector('link[rel="canonical"]');
+        const previousCanonical = canonicalElement?.getAttribute('href');
+
+        document.title = title;
+        if (canonicalElement) canonicalElement.setAttribute('href', canonical);
+
+        return () => {
+            document.title = previousTitle;
+            previousValues.forEach(([element, value]) => {
+                if (element && value !== null && value !== undefined) element.setAttribute('content', value);
+            });
+            if (canonicalElement && previousCanonical) canonicalElement.setAttribute('href', previousCanonical);
+        };
+    }, [canonical, description, title]);
 };
 
-const Reveal = ({ children, delay = 0, className = '' }) => {
-    const ref = useRef(null);
-    const inView = useInView(ref, OPT);
-    return (
-        <motion.div
-            ref={ref}
-            className={className}
-            initial={{ opacity: 0, y: 24 }}
-            animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 24 }}
-            transition={{ duration: 0.75, delay, ease: E }}
-        >
-            {children}
-        </motion.div>
-    );
-};
-
-const ClipReveal = ({ children, delay = 0, className = '' }) => {
-    const ref = useRef(null);
-    const inView = useInView(ref, OPT);
-    return (
-        <div className={`overflow-hidden ${className}`}>
-            <motion.div
-                ref={ref}
-                initial={{ y: '100%' }}
-                animate={inView ? { y: '0%' } : { y: '100%' }}
-                transition={{ duration: 0.72, delay, ease: E }}
-            >
-                {children}
-            </motion.div>
-        </div>
-    );
-};
-
-const Wire = ({ delay = 0, className = '', vertical = false }) => {
-    const ref = useRef(null);
-    const inView = useInView(ref, OPT);
-    return (
-        <motion.div
-            ref={ref}
-            className={`bg-[#212631]/15 ${vertical ? 'w-px origin-top' : 'h-px origin-left'} ${className}`}
-            initial={{ scale: 0 }}
-            animate={inView ? { scale: 1 } : { scale: 0 }}
-            transition={{ duration: 1.05, delay, ease: E }}
-        />
-    );
-};
-
-const Stat = ({ value, label, delay = 0 }) => {
-    const ref = useRef(null);
-    const inView = useInView(ref, OPT);
-    return (
-        <div ref={ref} className="flex flex-col gap-1">
-            <motion.span
-                className="text-[10px] font-medium uppercase tracking-[0.22em] text-[#212631]/40"
-                initial={{ opacity: 0 }}
-                animate={inView ? { opacity: 1 } : { opacity: 0 }}
-                transition={{ duration: 0.5, delay, ease: E }}
-            >
-                {label}
-            </motion.span>
-            <div className="overflow-hidden">
-                <motion.span
-                    className="block text-5xl sm:text-6xl md:text-7xl font-extralight text-[#212631] tracking-tighter leading-[0.9]"
-                    initial={{ y: '105%' }}
-                    animate={inView ? { y: '0%' } : { y: '105%' }}
-                    transition={{ duration: 0.85, delay: delay + 0.1, ease: E }}
-                >
-                    {value}
-                </motion.span>
-            </div>
-        </div>
-    );
-};
-
-const Feature = ({ title, desc, index }) => {
-    const ref = useRef(null);
-    const inView = useInView(ref, OPT);
-    const d = index * 0.1;
-    return (
-        <div ref={ref} className="group flex flex-col gap-4 py-7 md:py-8">
-            <div className="flex items-start gap-4">
-                <motion.span
-                    className="text-[10px] font-medium text-[#212631]/30 tracking-widest pt-1 shrink-0"
-                    initial={{ opacity: 0 }}
-                    animate={inView ? { opacity: 1 } : { opacity: 0 }}
-                    transition={{ duration: 0.5, delay: d, ease: E }}
-                >
-                    {String(index + 1).padStart(2, '0')}
-                </motion.span>
-                <div className="flex-1">
-                    <ClipReveal delay={d + 0.08}>
-                        <h3 className="text-xl sm:text-2xl md:text-2xl font-medium text-[#212631] tracking-tight leading-snug mb-3">
-                            {title}
-                        </h3>
-                    </ClipReveal>
-                    <motion.p
-                        className="text-sm text-[#212631]/55 leading-relaxed"
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 10 }}
-                        transition={{ duration: 0.65, delay: d + 0.22, ease: E }}
-                    >
-                        {desc}
-                    </motion.p>
-                </div>
-            </div>
-        </div>
-    );
-};
-
-const JournalHero = ({ entry }) => {
-    const ref = useRef(null);
-    const inView = useInView(ref, { once: false, margin: '-3%' });
-    const { scrollYProgress } = useScroll({ target: ref, offset: ['start end', 'end start'] });
-    const imgY = useTransform(scrollYProgress, [0, 1], ['-10%', '10%']);
-    const overlayO = useTransform(scrollYProgress, [0, 0.5, 1], [0.55, 0.35, 0.55]);
-
-    return (
-        <article ref={ref} className={`relative ${entry.grid} group`}>
-            <div className={`relative overflow-hidden mb-6 md:mb-8 ${entry.aspect} bg-[#212631]/5 rounded-sm`}>
-                <motion.div className="absolute w-full h-[120%] -top-[10%]" style={{ y: imgY }}>
-                    <img src={entry.image} alt={entry.title} className="w-full h-full object-cover" />
-                </motion.div>
-                <motion.div className="absolute inset-0 bg-[#212631]" style={{ opacity: overlayO }} />
-                <div className="absolute inset-0 flex items-center justify-center z-10 p-6 sm:p-10">
-                    <div className="overflow-hidden">
-                        <motion.h2
-                            className="text-white text-4xl sm:text-6xl md:text-[7vw] lg:text-[9vw] font-medium tracking-tight uppercase leading-none text-center"
-                            initial={{ y: '110%' }}
-                            animate={inView ? { y: '0%' } : { y: '110%' }}
-                            transition={{ duration: 1.05, delay: 0.12, ease: E }}
-                        >
-                            {entry.title}
-                        </motion.h2>
-                    </div>
-                </div>
-                <motion.div
-                    className="absolute inset-0 bg-[#fff] origin-bottom z-20"
-                    initial={{ scaleY: 1 }}
-                    animate={inView ? { scaleY: 0 } : { scaleY: 1 }}
-                    transition={{ duration: 1.2, ease: E }}
-                />
-            </div>
-            <div className="max-w-lg">
-                <Wire delay={0.3} className="mb-5" />
-                <ClipReveal delay={0.36} className="mb-2">
-                    <h3 className="text-base md:text-lg font-medium text-[#212631] tracking-tight">{entry.title}</h3>
-                </ClipReveal>
-                <Reveal delay={0.5} y={10}>
-                    <p className="text-sm text-[#212631]/55 leading-relaxed mb-5">{entry.desc}</p>
-                    <div className="flex items-center gap-3 cursor-pointer group/cta">
-                        <span className="text-[10px] font-medium uppercase tracking-[0.2em]">Explore Story</span>
-                        <div className="h-px bg-[#212631] w-6 group-hover/cta:w-14 transition-all duration-500 ease-out" />
-                    </div>
-                </Reveal>
-            </div>
-        </article>
-    );
-};
-
-const JournalCard = ({ entry, index }) => {
-    const ref = useRef(null);
-    const inView = useInView(ref, { once: false, margin: '-4%' });
-    const { scrollYProgress } = useScroll({ target: ref, offset: ['start end', 'end start'] });
-    const imgY = useTransform(scrollYProgress, [0, 1], ['-10%', '10%']);
-    const d = (index % 3) * 0.07;
-
-    return (
-        <motion.article
-            ref={ref}
-            className={`relative ${entry.grid} group`}
-            initial={{ opacity: 0, y: 40 }}
-            animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 40 }}
-            transition={{ duration: 0.85, delay: d, ease: E }}
-        >
-            <div className={`relative overflow-hidden mb-5 ${entry.aspect} bg-[#212631]/5 rounded-sm`}>
-                <motion.div className="absolute w-full h-[120%] -top-[10%]" style={{ y: imgY }}>
-                    <img src={entry.image} alt={entry.title} className="w-full h-full object-cover" />
-                </motion.div>
-                <motion.div
-                    className="absolute inset-0 bg-[#fff] origin-top z-10"
-                    initial={{ scaleY: 1 }}
-                    animate={inView ? { scaleY: 0 } : { scaleY: 1 }}
-                    transition={{ duration: 1.0, delay: d + 0.06, ease: E }}
-                />
-            </div>
-            <Wire delay={d + 0.26} className="mb-4" />
-            <ClipReveal delay={d + 0.3} className="mb-2">
-                <h3 className="text-base md:text-lg font-medium text-[#212631] tracking-tight leading-snug">{entry.title}</h3>
-            </ClipReveal>
-            <Reveal delay={d + 0.44} y={8}>
-                <p className="text-sm text-[#212631]/55 leading-relaxed mb-4">{entry.desc}</p>
-                <div className="flex items-center gap-3 cursor-pointer group/cta">
-                    <span className="text-[10px] font-medium uppercase tracking-[0.2em]">Explore Story</span>
-                    <div className="h-px bg-[#212631] w-5 group-hover/cta:w-12 transition-all duration-500 ease-out" />
-                </div>
-            </Reveal>
-        </motion.article>
-    );
-};
+const facts = [
+    { label: 'Formal name', value: 'Calapan City Recreational and Zoological Park' },
+    { label: 'Common name', value: 'Bulusan Park' },
+    { label: 'Location', value: 'Barangay Bulusan, Calapan City, Oriental Mindoro' },
+    { label: 'Administration', value: 'City Economic Enterprise Department, City Government of Calapan' },
+];
 
 const AboutUs = () => {
-    const heroRef = useRef(null);
-    const { scrollYProgress: hp } = useScroll({ target: heroRef, offset: ['start start', 'end start'] });
-
-    const badgeY = useTransform(hp, [0, 1], [0, -60]);
-    const badgeO = useTransform(hp, [0, 0.4], [1, 0]);
-    const titleY = useTransform(hp, [0, 1], [0, -40]);
-    const descY = useTransform(hp, [0, 1], [0, -20]);
-    const statsY = useTransform(hp, [0, 1], [0, -30]);
-
-    const journalEntries = [
-        { id: 1, title: 'BULUSAN ECO-TRAIL', desc: 'Discover the 1-hour immersive trek through century-old forests ending at the shores of Brgy. Parang.', image: 'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09', grid: 'col-span-12', aspect: 'aspect-[4/5] md:aspect-[21/8]', isHero: true },
-        { id: 2, title: 'Native Species Care', desc: 'Our mini zoo focuses on the rehabilitation of endemic wildlife from the Oriental Mindoro region.', image: 'https://images.unsplash.com/photo-1631886131312-be57ef8311c0?q=80&w=685&auto=format&fit=crop', grid: 'col-span-12 md:col-span-4', aspect: 'aspect-square' },
-        { id: 3, title: 'Calapan City Sanctuary', desc: 'Located just 3km from the city market, providing a lush recreational haven for residents and tourists.', image: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e', grid: 'col-span-12 md:col-span-4', aspect: 'aspect-square' },
-        { id: 4, title: 'Join Our Rangers', desc: 'Help protect the biodiversity of MIMAROPA. We are looking for volunteers for our forest monitoring teams.', image: 'https://images.unsplash.com/photo-1568437827868-bab780f2f54e?w=500&auto=format&fit=crop&q=60', grid: 'col-span-12 md:col-span-4', aspect: 'aspect-square' },
-    ];
-
-    const features = [
-        { title: 'Eco-Trail Access', desc: 'Access the famous Bulusan Mountain Trail, a prime route for trekking and bird watching.' },
-        { title: 'Wildlife Rescue', desc: 'Our facilities provide temporary shelter and care for displaced native animals in Oriental Mindoro.' },
-        { title: 'Recreation Area', desc: "Enjoy picnic grounds, camping sites, and wall-climbing facilities within the park's lush interior." },
-    ];
+    const description = 'Learn about Bulusan Park, the Calapan City Recreational and Zoological Park in Barangay Bulusan, its history, natural setting, recreation areas, and community role.';
+    usePageMetadata('About Bulusan Park | Calapan City', description, 'https://bulusanzoo.com/about');
 
     return (
-        <ReactLenis root>
-            <div className="min-h-screen bg-[#fff] text-[#212631] overflow-x-hidden flex flex-col">
-                <Header />
+        <div className="min-h-screen overflow-x-hidden bg-[#f7f5ef] text-[#212631]">
+            <Header />
+            <AIFloatingButton />
 
-                <main className="flex-grow">
+            <main>
+                <section className="mx-auto flex min-h-[92svh] max-w-[1500px] flex-col justify-between px-4 pb-10 pt-28 sm:px-6 md:px-10 md:pb-14 md:pt-32" aria-labelledby="about-title">
+                    <div className="flex items-center gap-3 text-[10px] font-bold uppercase tracking-[0.3em] text-[#212631]/50 sm:text-xs">
+                        <span className="h-2 w-2 rounded-full bg-green-500" />
+                        A park of Calapan City
+                    </div>
 
-                    <section ref={heroRef} className="min-h-screen pt-24 md:pt-28 flex flex-col justify-between mx-auto px-4 sm:px-6 md:px-10 max-w-[1500px]">
+                    <div className="py-16 md:py-20">
+                        <h1 id="about-title" className="max-w-6xl text-[clamp(3.4rem,10vw,9rem)] font-medium leading-[0.82] tracking-[-0.06em] text-black">
+                            Bulusan<br />Park
+                        </h1>
+                        <p className="mt-10 max-w-2xl text-base font-medium leading-7 text-[#212631]/65 sm:text-lg sm:leading-8 md:ml-auto md:mt-14">
+                            Formally the Calapan City Recreational and Zoological Park, Bulusan Park is a City-managed destination for family recreation, environmental education, leisure, and community gatherings.
+                        </p>
+                    </div>
 
-                        <motion.div style={{ y: badgeY, opacity: badgeO }} className="mt-8 md:mt-12">
-                            <Reveal delay={0}>
-                                <p className="text-[10px] sm:text-xs font-medium tracking-[0.3em] text-[#111] uppercase flex items-center gap-2.5">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse flex-shrink-0" />
-                                    Preserving Calapan's Green Heart
-                                </p>
-                            </Reveal>
-                        </motion.div>
-
-                        <motion.div style={{ y: titleY }} className="flex-1 flex items-center py-10 md:py-0">
-                            <div className="w-full">
-                                <h1 className="text-[clamp(3.2rem,9.5vw,8rem)] font-medium tracking-[-0.035em] text-[#000] leading-[0.86] mb-0">
-                                    <Chars text="Bulusan" delay={0.08} stagger={0.044} />
-                                    <br />
-                                    <span className="flex items-baseline gap-[0.15em] flex-wrap">
-                                        <Chars text="Nature" delay={0.36} stagger={0.038} />
-                                        <Chars
-                                            text="Zoo"
-                                            className="text-[#000]"
-                                            delay={0.62}
-                                            stagger={0.044}
-                                        />
-                                    </span>
-                                </h1>
+                    <div className="grid border-y border-[#212631]/15 sm:grid-cols-2 lg:grid-cols-4">
+                        {facts.map((fact) => (
+                            <div key={fact.label} className="border-b border-[#212631]/15 py-5 sm:px-5 sm:odd:border-r lg:border-b-0 lg:border-r lg:first:pl-0 lg:last:border-r-0">
+                                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#212631]/40">{fact.label}</p>
+                                <p className="mt-3 text-sm font-semibold leading-6">{fact.value}</p>
                             </div>
-                        </motion.div>
+                        ))}
+                    </div>
+                </section>
 
-                        <Wire delay={0.2} className="mb-0" />
-
-                        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-8 sm:gap-6 py-8 md:py-10">
-                            <motion.div style={{ y: descY }} className="sm:w-[55%] lg:w-[48%]">
-                                <Reveal delay={0.7}>
-                                    <p className="text-sm sm:text-base text-[#212631]/58 leading-relaxed">
-                                        A 32-acre sanctuary in Calapan City blending century-old rainforests with wildlife education and sustainable eco-tourism.
-                                    </p>
-                                </Reveal>
-                            </motion.div>
-
-                            <motion.div style={{ y: statsY }} className="flex gap-10 sm:gap-12 md:gap-16 sm:justify-end">
-                                <Stat value="98%" label="Deflection" delay={0.45} />
-                                <Stat value="10+" label="Species" delay={0.58} />
-                            </motion.div>
+                <section className="bg-white px-4 py-20 sm:px-6 sm:py-28 md:px-10" aria-labelledby="park-story-title">
+                    <div className="mx-auto grid max-w-[1500px] gap-12 lg:grid-cols-[0.7fr_1.3fr] lg:gap-24">
+                        <div>
+                            <p className="text-xs font-bold uppercase tracking-[0.25em] text-[#212631]/40">Park story</p>
+                            <h2 id="park-story-title" className="mt-5 text-[clamp(2.7rem,6vw,6rem)] font-medium leading-[0.92] tracking-[-0.055em] text-black">A public park with a documented history.</h2>
                         </div>
-                    </section>
-
-                    <section className="mx-auto px-4 sm:px-6 md:px-10 max-w-[1500px] pb-20 md:pb-28">
-                        <Wire delay={0} className="mb-0" />
-                        <div className="divide-y divide-[#212631]/10">
-                            {features.map((f, i) => (
-                                <Feature key={i} title={f.title} desc={f.desc} index={i} />
-                            ))}
+                        <div className="lg:pt-16">
+                            <p className="text-xl font-medium leading-8 text-[#212631] sm:text-2xl sm:leading-9">
+                                A Philippine Information Agency report published on April 2, 2013 described the Calapan Recreational and Zoological Park as newly open to the public in Barangay Bulusan.
+                            </p>
+                            <p className="mt-7 text-base leading-7 text-[#212631]/60">
+                                The report recorded the formal opening by City officials and described the park at that point in time. Its animal and facility details are historical, not a statement of what visitors will find today.
+                            </p>
+                            <a href={HISTORY_SOURCE} target="_blank" rel="noreferrer" className="mt-8 inline-flex min-h-11 items-center border-b border-black pb-1 text-xs font-bold uppercase tracking-[0.2em] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-green-600">
+                                Read the 2013 PIA report
+                            </a>
                         </div>
-                    </section>
+                    </div>
+                </section>
 
-                    <section className="mx-auto px-4 sm:px-6 md:px-10 max-w-[1500px]">
-                        <Wire className="mb-12 md:mb-16" />
+                <section className="bg-[#1a211b] px-4 py-20 text-white sm:px-6 sm:py-28 md:px-10" aria-labelledby="nature-title">
+                    <div className="mx-auto max-w-[1500px]">
+                        <p className="text-xs font-bold uppercase tracking-[0.25em] text-green-300">Nature and recreation</p>
+                        <h2 id="nature-title" className="mt-5 max-w-5xl text-[clamp(3rem,8vw,7.5rem)] font-medium leading-[0.86] tracking-[-0.06em]">Room to learn,<br />gather, and explore.</h2>
 
-                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-10 md:mb-16 gap-4">
-                            <h2 className="text-[clamp(3rem,9vw,8rem)] font-medium tracking-tight leading-none text-[#212631]">
-                                <Chars text="Archive" delay={0} stagger={0.055} />
-                            </h2>
-                            <Reveal delay={0.3}>
-                                <p className="text-[10px] font-medium uppercase tracking-[0.22em] text-[#212631]/38 sm:mb-2">
-                                    Calapan Chronicles / 2026
-                                </p>
-                            </Reveal>
+                        <div className="mt-16 grid border-t border-white/15 md:grid-cols-3 md:divide-x md:divide-white/15">
+                            <article className="border-b border-white/15 py-8 md:border-b-0 md:pr-8">
+                                <span className="text-xs font-bold tracking-[0.2em] text-green-300">01</span>
+                                <h3 className="mt-10 text-2xl font-semibold">Natural setting</h3>
+                                <p className="mt-4 text-sm leading-6 text-white/58">The provincial tourism portal documents century-old trees, picnic and camping areas, recreation space, and wall-climbing facilities within the park.</p>
+                            </article>
+                            <article className="border-b border-white/15 py-8 md:border-b-0 md:px-8">
+                                <span className="text-xs font-bold tracking-[0.2em] text-green-300">02</span>
+                                <h3 className="mt-10 text-2xl font-semibold">Wildlife</h3>
+                                <p className="mt-4 text-sm leading-6 text-white/58">The City describes a mini-zoo with various animal species. Because no current official inventory is published, species lists from historical reports are not presented as current.</p>
+                            </article>
+                            <article className="py-8 md:pl-8">
+                                <span className="text-xs font-bold tracking-[0.2em] text-green-300">03</span>
+                                <h3 className="mt-10 text-2xl font-semibold">Community space</h3>
+                                <p className="mt-4 text-sm leading-6 text-white/58">Landscaped open areas support leisure and recreation, while the multi-purpose pavilion serves events and community gatherings.</p>
+                            </article>
+                        </div>
+                    </div>
+                </section>
+
+                <section className="bg-green-400 px-4 py-20 sm:px-6 sm:py-28 md:px-10" aria-labelledby="eco-trail-title">
+                    <div className="mx-auto grid max-w-[1500px] gap-12 lg:grid-cols-[1.1fr_0.9fr] lg:items-end lg:gap-24">
+                        <div>
+                            <p className="text-xs font-bold uppercase tracking-[0.25em] text-black/45">Bulusan eco-trail</p>
+                            <h2 id="eco-trail-title" className="mt-5 text-[clamp(3rem,8vw,7rem)] font-medium leading-[0.86] tracking-[-0.06em] text-black">A route from<br />park to shore.</h2>
+                        </div>
+                        <div className="border-l border-black/25 pl-5 sm:pl-8">
+                            <p className="text-xl font-semibold leading-8 text-black/80">The official provincial tourism listing identifies the park as the entry point to the Bulusan eco-trail.</p>
+                            <p className="mt-5 text-sm font-medium leading-6 text-black/55">It describes an approximately one-hour route ending at the seashore in Barangay Parang. Visitors should confirm current access, trail conditions, and local guidance before a hike.</p>
+                            <a href={TOURISM_SOURCE} target="_blank" rel="noreferrer" className="mt-8 inline-flex min-h-11 items-center border-b border-black pb-1 text-xs font-bold uppercase tracking-[0.2em] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-black">View official tourism information</a>
+                        </div>
+                    </div>
+                </section>
+
+                <section className="bg-[#f7f5ef] px-4 py-20 sm:px-6 sm:py-28 md:px-10" aria-labelledby="visit-title">
+                    <div className="mx-auto max-w-[1500px]">
+                        <div className="grid gap-12 lg:grid-cols-2 lg:gap-24">
+                            <div>
+                                <p className="text-xs font-bold uppercase tracking-[0.25em] text-[#212631]/40">Visit information</p>
+                                <h2 id="visit-title" className="mt-5 text-[clamp(3rem,7vw,6.5rem)] font-medium leading-[0.9] tracking-[-0.055em] text-black">Plan with current information.</h2>
+                            </div>
+                            <div>
+                                <dl className="divide-y divide-[#212631]/15 border-y border-[#212631]/15">
+                                    <div className="grid gap-2 py-6 sm:grid-cols-[8rem_1fr]"><dt className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#212631]/40">Location</dt><dd className="font-semibold leading-6">Barangay Bulusan, Calapan City, Oriental Mindoro</dd></div>
+                                    <div className="grid gap-2 py-6 sm:grid-cols-[8rem_1fr]"><dt className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#212631]/40">Contact</dt><dd><a href="tel:+63432887291" className="font-semibold underline decoration-black/25 underline-offset-4">(043) 288-7291</a><span className="mt-1 block text-sm text-[#212631]/50">City CEED park contact</span></dd></div>
+                                    <div className="grid gap-2 py-6 sm:grid-cols-[8rem_1fr]"><dt className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#212631]/40">Directions</dt><dd><a href={DIRECTIONS_URL} target="_blank" rel="noreferrer" className="font-semibold underline decoration-black/25 underline-offset-4">Open Google Maps directions</a></dd></div>
+                                </dl>
+                                <p className="mt-6 text-sm leading-6 text-[#212631]/50">Operating schedules, admission arrangements, and available activities may change. Confirm with the City Government of Calapan before visiting.</p>
+                            </div>
                         </div>
 
-                        <div className="grid grid-cols-12 gap-x-4 sm:gap-x-6 md:gap-x-8 gap-y-12 sm:gap-y-16 md:gap-y-20 pb-24 md:pb-32">
-                            {journalEntries.map((entry, i) =>
-                                entry.isHero
-                                    ? <JournalHero key={entry.id} entry={entry} />
-                                    : <JournalCard key={entry.id} entry={entry} index={i} />
-                            )}
+                        <div className="mt-16 flex flex-col gap-4 border-t border-[#212631]/15 pt-8 sm:flex-row sm:items-center sm:justify-between">
+                            <p className="max-w-xl text-sm font-medium leading-6 text-[#212631]/55">Current park information and documentary photographs are available through the official source pages.</p>
+                            <div className="flex flex-col gap-3 sm:flex-row">
+                                <a href={CITY_SOURCE} target="_blank" rel="noreferrer" className="inline-flex min-h-12 items-center justify-center rounded-full bg-black px-6 py-3 text-center text-xs font-bold uppercase tracking-[0.14em] text-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-black">City Government source</a>
+                                <a href={TOURISM_SOURCE} target="_blank" rel="noreferrer" className="inline-flex min-h-12 items-center justify-center rounded-full border border-black px-6 py-3 text-center text-xs font-bold uppercase tracking-[0.14em] text-black hover:bg-black hover:text-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-black">Tourism source</a>
+                            </div>
                         </div>
-                    </section>
+                    </div>
+                </section>
+            </main>
 
-                </main>
-
-                <Footer />
-                <AIFloatingButton />
-            </div>
-        </ReactLenis>
+            <Footer />
+        </div>
     );
 };
 
