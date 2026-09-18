@@ -1,0 +1,17 @@
+User-agent: *
+Allow: /
+
+Disallow: /admin/
+Disallow: /staff/
+Disallow: /auth/
+Disallow: /login
+Disallow: /signup
+Disallow: /reservations
+Disallow: /archived-reservations
+Disallow: /my-events
+Disallow: /profile
+Disallow: /settings
+Disallow: /my-messages
+Disallow: /community
+
+Sitemap: https://bulusanzoo.com/sitemap.xml

@@ -9,6 +9,10 @@
   </url>
 
   <url>
+    <loc>https://bulusanzoo.com/plants</loc>
+  </url>
+
+  <url>
     <loc>https://bulusanzoo.com/events</loc>
   </url>
 
@@ -17,6 +21,30 @@
   </url>
 
   <url>
-    <loc>https://bulusanzoo.com/login</loc>
+    <loc>https://bulusanzoo.com/animaldex</loc>
+  </url>
+
+  <url>
+    <loc>https://bulusanzoo.com/map</loc>
+  </url>
+
+  <url>
+    <loc>https://bulusanzoo.com/help</loc>
+  </url>
+
+  <url>
+    <loc>https://bulusanzoo.com/privacy</loc>
+  </url>
+
+  <url>
+    <loc>https://bulusanzoo.com/terms</loc>
+  </url>
+
+  <url>
+    <loc>https://bulusanzoo.com/cookies</loc>
+  </url>
+
+  <url>
+    <loc>https://bulusanzoo.com/refund-policy</loc>
   </url>
 </urlset>

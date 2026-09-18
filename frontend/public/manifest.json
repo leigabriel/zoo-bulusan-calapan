@@ -1,0 +1,16 @@
+{
+  "name": "Bulusan Zoo",
+  "short_name": "Bulusan Zoo",
+  "description": "Explore Bulusan Zoo in Calapan. Discover animals, plants, and educational exhibits focused on wildlife conservation.",
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#c6fe69",
+  "background_color": "#c6fe69",
+  "icons": [
+    {
+      "src": "/favicon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ]
+}
