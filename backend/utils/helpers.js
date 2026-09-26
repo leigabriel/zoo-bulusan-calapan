@@ -42,3 +42,27 @@ exports.errorResponse = (res, message = 'Error', statusCode = 500) => {
         message
     });
 };
+
+// strips markdown decoration so AI replies render as clean plain text
+exports.sanitizePlainText = (text) => {
+    if (!text) return '';
+
+    return String(text)
+        .replace(/```[\s\S]*?```/g, '')
+        .replace(/(?<![\w*])\*\*([^*\n]+)\*\*(?![\w*])/g, '$1')
+        .replace(/\*\*/g, '')
+        .replace(/(?<![\w*])\*([^*\n]+)\*(?![\w*])/g, '$1')
+        .replace(/(?<![\w_])__([^_\n]+)__(?![\w_])/g, '$1')
+        .replace(/(?<![\w_])_([^_\n]+)_(?![\w_])/g, '$1')
+        .replace(/~~([^~\n]+)~~/g, '$1')
+        .replace(/`([^`\n]+)`/g, '$1')
+        .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
+        .replace(/^#{1,6}[ \t]+/gm, '')
+        .replace(/^[ \t]*>[ \t]?/gm, '')
+        .replace(/^[ \t]*[*•●○][ \t]+/gm, '- ')
+        .replace(/\p{Extended_Pictographic}/gu, '')
+        .replace(/\r\n/g, '\n')
+        .replace(/[ \t]+\n/g, '\n')
+        .replace(/\n{3,}/g, '\n\n')
+        .trim();
+};

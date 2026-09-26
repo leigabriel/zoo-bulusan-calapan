@@ -2,6 +2,9 @@ const express = require('express');
 const router = express.Router();
 const crypto = require('crypto');
 const { protect, authorize, optionalAuth } = require('../middleware/auth');
+const { sanitizePlainText } = require('../utils/helpers');
+const { buildJijiSystemPrompt } = require('../services/jiji-prompt-service');
+const appConfig = require('../config/app-config');
 
 // import models
 const Animal = require('../models/animal-model');
@@ -19,6 +22,41 @@ try {
 } catch (err) {
     console.warn('Optional package @google/generative-ai not installed. AI features will use fallback responses.');
 }
+
+// verified visitor-facing application information shown on the website About and Help pages
+const VISITOR_INFO = {
+    facilityName: 'Calapan City Recreational and Zoological Park (Bulusan Park)',
+    location: 'Barangay Bulusan, Calapan City, Oriental Mindoro, Philippines',
+    operatingHours: '8:00 AM to 5:00 PM daily',
+    email: 'info@bulusanwildlife.com',
+    phone: '(043) 288-7291'
+};
+
+const TICKET_TYPE_LABELS = {
+    adult: 'Adult (18+)',
+    child: 'Child (4-17)',
+    resident: 'Bulusan resident (with valid ID)'
+};
+
+const formatTicketPriceLines = () => Object.values(appConfig.ticketTypes)
+    .map((ticketType) => {
+        const label = TICKET_TYPE_LABELS[ticketType.name] || ticketType.name;
+        const isFree = ticketType.price === 'free' || Number(ticketType.price) === 0;
+        return `- ${label}: ${isFree ? 'Free' : `P${ticketType.price}`}`;
+    })
+    .join('\n');
+
+// current application information supplied to Jiji as context data
+const buildVisitorInfoContext = () => `
+
+CURRENT APPLICATION VISITOR INFORMATION (verified website information - use this when answering):
+- Facility: ${VISITOR_INFO.facilityName}
+- Location: ${VISITOR_INFO.location}
+- Operating hours: ${VISITOR_INFO.operatingHours}
+- Ticket prices (current application configuration):
+${formatTicketPriceLines()}
+- Email: ${VISITOR_INFO.email}
+- Phone: ${VISITOR_INFO.phone}`;
 
 // fetch dynamic zoo data
 const getDynamicZooData = async () => {
@@ -426,7 +464,7 @@ const getFallbackResponse = (message, dynamicData = null, userData = null) => {
     }
 
     if (lowerMsg.includes('ticket') || lowerMsg.includes('price') || lowerMsg.includes('cost') || lowerMsg.includes('fee')) {
-        let response = "Mabuhay! Here are our ticket prices:\n\n- Adult (18+): P50\n- Child (4-17): P30\n- Senior Citizens: P40\n- Students (with ID): P35\n- PWD (with ID): P35\n- Calapan Residents: FREE (with valid ID)\n\nYou can book tickets online through our website!";
+        let response = `Mabuhay! Here are the current ticket prices:\n\n${formatTicketPriceLines()}\n\nYou can book tickets online through our website!`;
         if (dynamicData?.ticketStats) {
             response += `\n\nToday's availability: ${dynamicData.ticketStats.availableSlots}`;
         }
@@ -434,7 +472,7 @@ const getFallbackResponse = (message, dynamicData = null, userData = null) => {
     }
 
     if (lowerMsg.includes('hour') || lowerMsg.includes('open') || lowerMsg.includes('time') || lowerMsg.includes('schedule')) {
-        return "Bulusan Zoo Operating Hours:\n\n- Tuesday to Sunday: 8:00 AM - 5:00 PM\n- Monday: CLOSED (maintenance day)\n- Last entry: 4:00 PM\n\nPlan your visit accordingly and arrive early to enjoy all our exhibits!";
+        return `Bulusan Park Operating Hours:\n\n- ${VISITOR_INFO.operatingHours}\n\nPlan your visit accordingly and arrive early to enjoy all our exhibits!`;
     }
 
     if (lowerMsg.includes('animal') || lowerMsg.includes('species') || lowerMsg.includes('wildlife')) {
@@ -450,11 +488,15 @@ const getFallbackResponse = (message, dynamicData = null, userData = null) => {
     }
 
     if (lowerMsg.includes('zone') || lowerMsg.includes('area') || lowerMsg.includes('exhibit') || lowerMsg.includes('section')) {
-        return "Our Zoo Zones:\n\n- Mammal Kingdom: Home to deer, monkeys, wild boars\n- Bird Sanctuary: Native and migratory birds\n- Reptile House: Snakes, lizards, and crocodiles\n- Aquatic Zone: Freshwater fish native to Oriental Mindoro\n- Children's Zoo: Interactive area for kids\n- Conservation Center: Educational exhibits about wildlife preservation\n\nUse our interactive map to navigate!";
+        const exhibits = [...new Set((dynamicData?.animalCatalog || []).map(a => a.exhibit).filter(Boolean))].slice(0, 6);
+        if (exhibits.length === 0) {
+            return "I do not have enough verified information to confirm the zoo zones right now. Open the Map page from the main menu to see the current exhibits and facilities.";
+        }
+        return `Current exhibits in our records:\n\n${exhibits.map(e => `- ${e}`).join('\n')}\n\nOpen the Map page from the main menu to see exhibits, facilities, and walking routes.`;
     }
 
     if (lowerMsg.includes('location') || lowerMsg.includes('where') || lowerMsg.includes('address') || lowerMsg.includes('direction')) {
-        return "Bulusan Zoo Location:\n\nBulusan Wildlife Park\nCalapan City, Oriental Mindoro\nMIMAROPA Region, Philippines\n\nEmail: info@zoobulusan.com\nPhone: (043) 123-4567";
+        return `Bulusan Park Location:\n\n${VISITOR_INFO.facilityName}\n${VISITOR_INFO.location}\n\nEmail: ${VISITOR_INFO.email}\nPhone: ${VISITOR_INFO.phone}`;
     }
 
     if (lowerMsg.includes('plant') || lowerMsg.includes('flora') || lowerMsg.includes('botanical') || lowerMsg.includes('botany') || lowerMsg.includes('tree')) {
@@ -480,11 +522,11 @@ const getFallbackResponse = (message, dynamicData = null, userData = null) => {
         if (dynamicData?.animalCount) {
             greeting += ` We currently have ${dynamicData.animalCount} amazing animals waiting to meet you!`;
         }
-        greeting += "\n\nHow can I help you today? I can tell you about:\n- Ticket prices and booking\n- Operating hours\n- Any animal (just ask about any animal and I will tell you about it)\n- Zoo zones and facilities\n- Events and activities\n- Ticket availability\n\nJust ask away!";
+        greeting += "\n\nHow can I help you today? I can tell you about:\n- Ticket prices and booking\n- Operating hours\n- Any animal (just ask about any animal and I will tell you about it)\n- Website features and navigation\n- Events and activities\n- Ticket availability\n\nJust ask away!";
         return greeting;
     }
 
-    return "Salamat for your question!\n\nI can help you with:\n- Ticket prices and booking\n- Operating hours (Tue-Sun, 8AM-5PM)\n- Information about any animal you ask about\n- Zoo zones and map\n- Events and activities\n- Current ticket availability\n\nFeel free to ask about any of these topics, or contact us at info@zoobulusan.com for more specific inquiries!";
+    return `Salamat for your question!\n\nI can help you with:\n- Ticket prices and booking\n- Operating hours (${VISITOR_INFO.operatingHours})\n- Information about any animal you ask about\n- Zoo zones and map\n- Events and activities\n- Current ticket availability\n\nFeel free to ask about any of these topics, or contact us at ${VISITOR_INFO.email} for more specific inquiries!`;
 };
 
 const detectCompanionLanguage = (text = '') => {
@@ -691,176 +733,6 @@ Response style:
 `;
 };
 
-const ZOO_BULUSAN_CONTEXT = `
-you are "jiji", the official ai assistant of Bulusan Zoo calapan, a wildlife conservation sanctuary located in calapan city, oriental mindoro, philippines. you provide accurate, professional, and educational information about the zoo, wildlife, conservation, visitor services, and animal protection laws.
-
-general behavior
-
-* provide only factual and verified information
-* remain professional, clear, and helpful
-* be concise but informative
-* do not invent zoo statistics or data
-* if specific zoo information is unavailable, advise the user to visit the official website or contact the zoo directly
-* promote wildlife conservation awareness whenever appropriate
-
-response rules
-
-1. responses must be plain text only
-2. do not use emojis
-3. do not use markdown formatting
-4. do not use asterisks or decorative symbols
-5. use simple dashes (-) for lists only when necessary
-6. keep answers short and conversational
-7. simple questions must be answered in 3 to 5 sentences
-8. maintain a warm but professional tone
-9. occasionally use filipino expressions such as mabuhay, magandang araw, or salamat
-10. include a short conservation reminder when relevant
-
-animal knowledge rules
-
-* you can answer questions about any animal species whether it exists in the zoo or not
-* animal responses must include:
-
-  * common name
-  * scientific name
-  * habitat
-  * diet
-  * behavior
-  * conservation status
-* animal information must be written as short paragraphs, not lists
-* keep explanations concise and educational
-* if the animal exists in Bulusan Zoo, mention where visitors can find it
-* if the animal is not in the zoo, briefly mention similar animals available in the zoo when possible
-
-animal law and protection information
-
-* you can provide accurate information about animal protection laws and wildlife regulations
-* prioritize philippine laws when relevant
-* you may explain:
-
-  * animal welfare laws
-  * wildlife protection laws
-  * conservation regulations
-  * penalties for illegal wildlife activities
-  * responsible wildlife interaction rules
-* provide clear and factual explanations when discussing animal laws
-
-Bulusan Zoo information
-
-name
-
-* Bulusan Zoo calapan
-
-location
-
-* calapan city, oriental mindoro, philippines
-* mimaropa region
-
-type
-
-* community-driven wildlife conservation and eco-tourism destination
-
-features
-
-* native philippine wildlife
-* interactive exhibits
-* nature trails
-* educational programs
-* ai-powered features
-
-ticket prices
-
-* adult (18+): p50
-* child (4-17): p30
-* senior citizens (60+): p40
-* students with valid id: p35
-* pwd with valid id: p35
-* calapan city residents: free with valid government id
-
-operating hours
-
-* tuesday to sunday: 8:00 am to 5:00 pm
-* monday: closed
-* last entry: 4:00 pm
-* holiday schedules may vary
-
-zoo areas
-
-* mammal kingdom
-* bird sanctuary
-* reptile house
-* aquatic zone
-* children's zoo
-* conservation center
-
-website features
-
-online ticket system
-
-* reserve tickets in advance
-* view reservation history
-
-ai animal scanner
-
-* identify animals using camera
-* receive instant animal information
-
-animaldex
-
-* encyclopedia of zoo animals
-
-interactive map
-
-* digital zoo navigation
-
-events calendar
-
-* view upcoming activities and programs
-
-user profiles
-
-* account creation
-* visit tracking
-* reservation history
-
-ai assistant
-
-* instant zoo and animal information
-
-data privacy rules
-
-* never reveal other people's personal information
-* never reveal reservation records, booking details, or payment information of any user other than the person currently chatting with you
-* never reveal passwords, security tokens, or account credentials
-* when the person chatting with you asks about their own reservations or tickets, use only the "logged-in user reservation data" provided in the prompt, and answer directly with what you find
-* if the logged-in user's reservation data is not present in the prompt, explain that you cannot access their reservations unless they are signed in
-* you may provide general statistics such as:
-
-  * total animals
-  * number of events
-  * ticket availability
-
-contact information
-
-* email: [info@zoobulusan.com](mailto:info@zoobulusan.com)
-* phone: (043) 123-4567
-* location: bulusan wildlife park, calapan city, oriental mindoro, philippines
-
-uncertainty handling
-
-* if unsure about zoo-specific data:
-
-  * recommend visiting the official website
-  * recommend contacting Bulusan Zoo directly
-
-mission
-
-* promote wildlife conservation awareness
-* encourage responsible tourism
-* educate visitors about protecting wildlife and natural habitats
-
-`;
-
 const normalizeSessionMessages = (messages) => (Array.isArray(messages) ? messages : [])
     .slice(-50)
     .filter(message => message && ['user', 'assistant'].includes(message.role) && typeof message.content === 'string')
@@ -1011,6 +883,8 @@ ${dynamicData.upcomingEvents.map(e => `- ${e.title} on ${e.event_date}: ${e.desc
 Remember: Only share this general zoo information. Never expose passwords, account credentials, payment card data, or any other person's reservation/booking details.`;
         }
 
+        dynamicContext += buildVisitorInfoContext();
+
         const apiKey = process.env.GEMINI_API_KEY;
 
         if (!apiKey || typeof apiKey !== 'string' || apiKey.trim().length === 0) {
@@ -1060,7 +934,7 @@ Remember: Only share this general zoo information. Never expose passwords, accou
                         parts: [{ text: msg.content }]
                     }));
 
-                const systemPrompt = `${ZOO_BULUSAN_CONTEXT}${dynamicContext}${userReservationContext}\n\nUser's question: ${message}`;
+                const systemPrompt = buildJijiSystemPrompt(dynamicContext, userReservationContext, message);
 
                 const result = await model.generateContent({
                     contents: [
@@ -1079,8 +953,9 @@ Remember: Only share this general zoo information. Never expose passwords, accou
                 const response = result.response;
                 const text = response.text();
 
-                if (text && text.trim().length > 0) {
-                    finalText = text;
+                const cleanedText = sanitizePlainText(text);
+                if (cleanedText) {
+                    finalText = cleanedText;
                     chosen = candidate;
                     break;
                 }
