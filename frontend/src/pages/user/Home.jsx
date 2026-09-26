@@ -6,6 +6,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 import AIFloatingButton from '../../components/common/AIFloatingButton';
+import ConfirmationModal from '../../components/common/ConfirmationModal';
 import '../../App.css';
 
 gsap.registerPlugin(ScrollTrigger);
@@ -14,6 +15,7 @@ const CITY_SOURCE = 'https://cityofcalapan.gov.ph/the-city-economic-enterprise-d
 const CITY_VISITORS_SOURCE = 'https://cityofcalapan.gov.ph/visitors/';
 const TOURISM_SOURCE = 'https://www.travelorientalmindoro.ph/place/calapan-nature-park';
 const DIRECTIONS_URL = 'https://www.google.com/maps/dir/?api=1&destination=13.40496178,121.1991656';
+const ZOOTOPIA_GAME_URL = 'https://adventuregame.bulusanzoo.com/';
 
 const ticketMaskStyle = {
     WebkitMaskImage: 'radial-gradient(circle at 0px 50%, transparent 5px, black 6px), radial-gradient(circle at 100% 50%, transparent 5px, black 6px)',
@@ -204,6 +206,71 @@ const ExploreSection = () => (
     </section>
 );
 
+const zootopiaFeatures = [
+    { number: '01', title: 'Explore nature', text: 'Wander through lush forests and discover amazing wildlife.' },
+    { number: '02', title: 'Feed the animals', text: 'Feed the animals their favourite treats and become the ultimate zookeeper of Bulusan Zootopia.' },
+    { number: '03', title: 'Discover the wild side', text: 'Meet the wildlife and make new furry friends along the way.' },
+];
+
+const ZootopiaSection = () => {
+    const [showPlayConfirm, setShowPlayConfirm] = useState(false);
+
+    const handleQuickPlay = () => {
+        setShowPlayConfirm(false);
+        window.open(ZOOTOPIA_GAME_URL, '_blank', 'noopener,noreferrer');
+    };
+
+    return (
+        <section className="relative overflow-hidden bg-[#151b16] px-4 py-20 text-white sm:px-6 sm:py-28 lg:px-10" aria-labelledby="zootopia-title">
+            <div className="pointer-events-none absolute -left-24 top-14 h-64 w-64 rounded-full bg-green-400/10 blur-2xl sm:h-96 sm:w-96" />
+            <div className="pointer-events-none absolute -right-16 bottom-12 h-56 w-56 rounded-full border border-green-300/20 sm:h-80 sm:w-80" />
+
+            <div className="relative mx-auto max-w-[1500px]">
+                <div className="grid gap-8 border-b border-white/15 pb-10 lg:grid-cols-[0.85fr_1.15fr] lg:items-end">
+                    <div>
+                        <p className="mb-5 text-xs font-black uppercase tracking-[0.24em] text-green-300">Bulusan Zootopia Adventure Game</p>
+                        <h2 id="zootopia-title" className="text-[clamp(2.8rem,7vw,6.5rem)] font-black leading-[0.9] tracking-[-0.055em]">Play the wild<br />side of Bulusan.</h2>
+                    </div>
+                    <p className="max-w-2xl text-base font-semibold leading-7 text-white/70 lg:justify-self-end lg:text-lg">
+                        Welcome to Bulusan Zootopia, a game where you explore the beauty of nature, discover amazing animals, and feed them treats. Wander through lush forests, meet the wildlife, and make new furry friends along the way.
+                    </p>
+                </div>
+
+                <div className="grid sm:grid-cols-3">
+                    {zootopiaFeatures.map((feature) => (
+                        <article key={feature.number} className="border-b border-white/15 py-8 sm:px-6 sm:first:pl-0 lg:min-h-56 lg:border-b-0 lg:border-r lg:last:border-r-0">
+                            <span className="text-xs font-black tracking-[0.2em] text-green-300/70">{feature.number}</span>
+                            <h3 className="mt-8 text-2xl font-black tracking-tight">{feature.title}</h3>
+                            <p className="mt-4 text-sm font-medium leading-6 text-white/58">{feature.text}</p>
+                        </article>
+                    ))}
+                </div>
+
+                <div className="mt-10 flex flex-col gap-4 sm:flex-row sm:items-center">
+                    <button
+                        type="button"
+                        onClick={() => setShowPlayConfirm(true)}
+                        className="min-h-12 shrink-0 rounded-full bg-green-400 px-8 py-3 text-sm font-black text-black transition-transform hover:scale-[1.02] active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-green-300"
+                    >
+                        Quick Play
+                    </button>
+                    <p className="text-sm font-semibold leading-6 text-white/55">Opens adventuregame.bulusanzoo.com in a new tab so you can come back to Bulusan Zoo any time.</p>
+                </div>
+            </div>
+
+            <ConfirmationModal
+                isOpen={showPlayConfirm}
+                title="Open Bulusan Zootopia?"
+                message="Quick Play opens the Bulusan Zootopia Adventure Game at adventuregame.bulusanzoo.com in a new tab."
+                confirmLabel="Play now"
+                cancelLabel="Stay here"
+                onConfirm={handleQuickPlay}
+                onClose={() => setShowPlayConfirm(false)}
+            />
+        </section>
+    );
+};
+
 const activities = [
     { title: 'Trek', note: 'Follow the documented eco-trail from the park toward Barangay Parang.' },
     { title: 'Jog', note: 'Take in the park setting at a comfortable pace.' },
@@ -347,6 +414,7 @@ const Home = () => {
                     <HeroSection />
                     <AboutSection />
                     <ExploreSection />
+                    <ZootopiaSection />
                     <ActivitiesSection />
                     <TrailSection />
                     <OfficialRecordsSection />
