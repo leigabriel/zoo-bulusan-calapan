@@ -518,7 +518,7 @@ const AdminLayout = ({ children }) => {
 
     return (
         <WorkspaceThemeContext value={true}>
-        <div className="flex h-screen bg-gray-50 overflow-hidden font-['JetBrains']">
+        <div className="flex h-screen bg-gray-50 overflow-hidden font-['Inter']">
             {/* Mobile overlay for left sidebar */}
             {sidebarOpen && (
                 <div

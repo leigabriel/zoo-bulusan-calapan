@@ -26,7 +26,7 @@ const getDynamicZooData = async () => {
         // Fetch animals from database
         const animals = await Animal.getAll();
         const animalCount = animals?.length || 0;
-        
+
         // Create a summary of animals by category
         const animalsByStatus = {};
         const animalNames = [];
@@ -39,47 +39,42 @@ const getDynamicZooData = async () => {
                 }
             });
         }
-        
-        // Fetch plants from database
+
         let plants = [];
         try {
             plants = await Plant.getAll() || [];
         } catch (e) {
             console.warn('Could not fetch plants:', e.message);
         }
-        
-        // Fetch upcoming events
+
         let upcomingEvents = [];
         try {
             upcomingEvents = await Event.getUpcoming() || [];
         } catch (e) {
             console.warn('Could not fetch events:', e.message);
         }
-        
-        // Fetch ticket stats (non-sensitive)
+
         let ticketStats = { todayTickets: 0, availableSlots: 'plenty' };
         try {
             const todayTickets = await Ticket.countTodayTickets();
             ticketStats.todayTickets = todayTickets || 0;
-            // Estimate availability (zoo capacity ~500 per day)
             const maxCapacity = 500;
             const remaining = maxCapacity - ticketStats.todayTickets;
             ticketStats.availableSlots = remaining > 100 ? 'plenty' : remaining > 50 ? 'some' : remaining > 0 ? 'limited' : 'sold out';
         } catch (e) {
             console.warn('Could not fetch ticket stats:', e.message);
         }
-        
-        // Normalize a date value to YYYY-MM-DD
+
         const formatDate = (d) => {
             if (!d) return null;
             if (typeof d === 'string') return d.split('T')[0];
             return d;
         };
-        
+
         return {
             animalCount,
             animalsByStatus,
-            animalNames: animalNames.slice(0, 20), // Limit to 20 animals for context
+            animalNames: animalNames.slice(0, 20),
             animalCatalog: (animals || []).slice(0, 8).map(a => ({
                 id: a.id,
                 name: a.name,
@@ -117,9 +112,6 @@ const getDynamicZooData = async () => {
     }
 };
 
-// Operational context for admins and staff. Keep this deliberately narrower
-// than the management APIs: the assistant must never receive private user or
-// payment fields, even though those fields exist on the reservation rows.
 const getCompanionOperationalData = async (dynamicData) => {
     try {
         const [ticketReservations, eventReservations, allEvents] = await Promise.all([
@@ -199,9 +191,6 @@ const buildCompanionCards = (message, dynamicData, operationalData, role = 'staf
     return { cards, action };
 };
 
-// Fetch the logged-in user's OWN reservations only.
-// Returns sanitized non-sensitive booking details.
-// Never returns account credentials, payment records, tokens, or other users' data.
 const getSanitizedUserReservations = async (userId) => {
     if (!userId) return null;
     try {
@@ -246,7 +235,6 @@ const getSanitizedUserReservations = async (userId) => {
     }
 };
 
-// Build a compact prompt section from the sanitized user reservations.
 const buildUserReservationContext = (userData) => {
     if (!userData) return '';
 
@@ -279,7 +267,6 @@ const buildUserReservationContext = (userData) => {
     return text;
 };
 
-// Build structured card data + contextual action buttons for the /chat response.
 const buildChatCards = (message, userData, dynamicData) => {
     const lowerMsg = String(message || '').toLowerCase();
     const cards = [];
@@ -341,12 +328,10 @@ const buildChatCards = (message, userData, dynamicData) => {
         return { cards, action };
     }
 
-    // Zoo catalog questions: animals, plants, and events.
     const asksAnimals = /\b(animal|animals|wildlife|species|mammal|mammals|reptile|reptiles|bird|birds)\b/.test(lowerMsg);
     const asksPlants = /\b(plant|plants|flora|botanical|botany|tree|trees|endangered)\b/.test(lowerMsg);
     const asksEvents = /\b(event|events|activity|activities|upcoming|calendar)\b/.test(lowerMsg);
 
-    // Specific animal mentioned by name.
     if (dynamicData?.animalCatalog?.length) {
         const matched = dynamicData.animalCatalog.filter(a => a.name && lowerMsg.includes(String(a.name).toLowerCase()));
         if (matched.length > 0) {
@@ -356,14 +341,12 @@ const buildChatCards = (message, userData, dynamicData) => {
         }
     }
 
-    // General animal list request.
     if (asksAnimals && dynamicData?.animalCatalog?.length) {
         dynamicData.animalCatalog.slice(0, 5).forEach(a => cards.push({ kind: 'animal', ...a }));
         action = { label: 'View All Animals', href: '/animals', variant: 'primary' };
         return { cards, action };
     }
 
-    // Specific plant mentioned by name.
     if (dynamicData?.plantCatalog?.length) {
         const matched = dynamicData.plantCatalog.filter(p => p.name && lowerMsg.includes(String(p.name).toLowerCase()));
         if (matched.length > 0) {
@@ -373,14 +356,12 @@ const buildChatCards = (message, userData, dynamicData) => {
         }
     }
 
-    // General plant list request.
     if (asksPlants && dynamicData?.plantCatalog?.length) {
         dynamicData.plantCatalog.slice(0, 5).forEach(p => cards.push({ kind: 'plant', ...p }));
         action = { label: 'View All Plants', href: '/plants', variant: 'primary' };
         return { cards, action };
     }
 
-    // Upcoming events request.
     if (asksEvents && dynamicData?.eventCatalog?.length) {
         dynamicData.eventCatalog.slice(0, 5).forEach(e => cards.push({ kind: 'zoo-event', ...e }));
         action = { label: 'View Events Calendar', href: '/events', variant: 'primary' };
@@ -390,7 +371,6 @@ const buildChatCards = (message, userData, dynamicData) => {
     return { cards, action };
 };
 
-// answers a "my reservation / my ticket" request using the user's own data (static fallback when AI is unavailable)
 const getUserReservationFallback = (message, userData) => {
     const lowerMsg = String(message || '').toLowerCase();
 
@@ -437,11 +417,9 @@ const getUserReservationFallback = (message, userData) => {
     return 'You have no reservations on record. When you make a booking, they will show up here. You can reserve tickets on the Reservations page.';
 };
 
-// fallback response for ai
 const getFallbackResponse = (message, dynamicData = null, userData = null) => {
     const lowerMsg = message.toLowerCase();
 
-    // Answer "my reservation / my ticket" questions using the logged-in user's own data.
     const userReservationAnswer = getUserReservationFallback(message, userData);
     if (userReservationAnswer) {
         return userReservationAnswer;
@@ -1012,14 +990,11 @@ router.post('/chat', optionalAuth, async (req, res) => {
             });
         }
 
-        // Fetch dynamic data from database
         const dynamicData = await getDynamicZooData();
-        // Fetch the logged-in user's OWN reservations (sanitized, non-sensitive only)
         const userData = req.user?.id ? await getSanitizedUserReservations(req.user.id) : null;
         const userReservationContext = buildUserReservationContext(userData);
         const cardsPayload = buildChatCards(message, userData, dynamicData);
-        
-        // Build dynamic context section
+
         let dynamicContext = '';
         if (dynamicData) {
             dynamicContext = `
@@ -1038,9 +1013,7 @@ Remember: Only share this general zoo information. Never expose passwords, accou
 
         const apiKey = process.env.GEMINI_API_KEY;
 
-        // Check if API key is configured and not empty
         if (!apiKey || typeof apiKey !== 'string' || apiKey.trim().length === 0) {
-            // fallback response
             return res.json({
                 success: true,
                 response: getFallbackResponse(message, dynamicData, userData),
@@ -1051,7 +1024,6 @@ Remember: Only share this general zoo information. Never expose passwords, accou
             });
         }
 
-        // If the Google generative client isn't available, return fallback.
         if (!GoogleGenerativeAI) {
             return res.json({
                 success: true,
@@ -1065,8 +1037,6 @@ Remember: Only share this general zoo information. Never expose passwords, accou
 
         const genAI = new GoogleGenerativeAI(apiKey);
 
-        // Try a list of candidate models in order until one succeeds.
-        // Updated model names for Google Generative AI SDK (as of late 2024/2025)
         const candidateModels = [
             'gemini-2.0-flash',
             'gemini-2.5-flash',
@@ -1083,7 +1053,6 @@ Remember: Only share this general zoo information. Never expose passwords, accou
             try {
                 const model = genAI.getGenerativeModel({ model: candidate });
 
-                // Build the conversation history for context
                 const conversationHistory = history
                     .filter(msg => msg.content && msg.content.trim())
                     .map(msg => ({
@@ -1091,10 +1060,8 @@ Remember: Only share this general zoo information. Never expose passwords, accou
                         parts: [{ text: msg.content }]
                     }));
 
-                // Create the full prompt with context
                 const systemPrompt = `${ZOO_BULUSAN_CONTEXT}${dynamicContext}${userReservationContext}\n\nUser's question: ${message}`;
 
-                // Use generateContent for simpler, more reliable response
                 const result = await model.generateContent({
                     contents: [
                         ...conversationHistory,
@@ -1122,7 +1089,7 @@ Remember: Only share this general zoo information. Never expose passwords, accou
             }
         }
 
-if (chosen && finalText) {
+        if (chosen && finalText) {
             res.json({
                 success: true,
                 response: finalText,
@@ -1134,7 +1101,6 @@ if (chosen && finalText) {
             return;
         }
 
-// fallback
         return res.json({
             success: true,
             response: getFallbackResponse(message, dynamicData, userData),
