@@ -150,7 +150,7 @@ const sendEmailAsync = (mailOptions) => {
  * @returns {Promise<boolean>} - Returns true immediately (email sent in background)
  */
 const sendVerificationEmail = async (email, token, firstName) => {
-    const backendUrl = process.env.BACKEND_URL || `http://localhost:${process.env.PORT || 5000}`;
+    const backendUrl = process.env.BACKEND_URL || 'http://localhost:5000';
     const verificationLink = `${backendUrl}/api/auth/verify-email?token=${token}`;
 
     const mailOptions = {
