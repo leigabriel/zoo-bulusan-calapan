@@ -7,6 +7,9 @@ const {
     updateProfile,
     updateEmail,
     updatePassword,
+    setUsername,
+    checkUsername,
+    completeOnboarding,
     deleteAccount,
     logout,
     uploadProfileImage,
@@ -38,6 +41,9 @@ router.put('/email', protect, updateEmail);
 router.post('/profile/image', protect, handleCloudinaryProfileUpload, uploadProfileImage);
 router.delete('/profile/image', protect, deleteProfileImage);
 router.put('/updatepassword', protect, updatePassword);
+router.put('/username', protect, setUsername);
+router.get('/username/check', protect, checkUsername);
+router.post('/onboarding/complete', protect, completeOnboarding);
 router.delete('/account', protect, deleteAccount);
 router.post('/logout', protect, logout);
 

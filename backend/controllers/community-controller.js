@@ -1,5 +1,5 @@
 const Community = require('../models/community-model');
-const Notification = require('../models/notification-model');
+const { notifyManagement, notifyUser } = require('../services/notification-service');
 const { deleteFromCloudinary, extractPublicId } = require('../middleware/cloudinary-upload');
 const { logUserActivity, logStaffActivity } = require('../middleware/track-activity');
 
@@ -76,7 +76,7 @@ const normalizeReportedComment = (report) => ({
 });
 
 const createAdminStaffNotifications = async ({ title, message, type = 'community', link = '/admin/community-moderation' }) => {
-  await Notification.notifyManagement({ title, message, type, link });
+  await notifyManagement({ title, message, type, link });
 };
 
 exports.getPublicPosts = async (req, res) => {
@@ -302,15 +302,7 @@ exports.reviewPost = async (req, res) => {
     }
 
     try {
-      await Notification.create({
-        userId: post.user_id,
-        title: action === 'approved' ? 'Post Approved' : 'Post Declined',
-        message: action === 'approved'
-          ? 'Your community post has been approved and is now visible to others.'
-          : `Your community post was declined. Reason: ${moderationNote}`,
-        type: 'info',
-        link: '/community'
-      });
+      await notifyUser(post.user_id, 'post.moderated', { status: action, note: moderationNote }, '/community');
     } catch (error) {
       console.error('Error notifying post owner after moderation:', error);
     }
@@ -381,13 +373,12 @@ exports.createComment = async (req, res) => {
 
     if (postWithAuthor && postWithAuthor.user_id !== req.user.id) {
       try {
-        await Notification.create({
-          userId: postWithAuthor.user_id,
-          title: 'New Comment on Your Post',
-          message: `${req.user.firstName || req.user.username || 'A user'} commented on your post.`,
-          type: 'info',
-          link: '/community'
-        });
+        await notifyUser(
+          postWithAuthor.user_id,
+          'message.replied',
+          { subject: `${req.user.firstName || req.user.username || 'A user'} commented on your post.` },
+          '/community'
+        );
       } catch (error) {
         console.error('Error creating user comment notification:', error);
       }

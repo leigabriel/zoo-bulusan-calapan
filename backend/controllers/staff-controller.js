@@ -4,8 +4,18 @@ const Event = require('../models/event-model');
 const User = require('../models/user-model');
 const Plant = require('../models/plant-model');
 const Notification = require('../models/notification-model');
+const { notifyUser } = require('../services/notification-service');
 const StaffActivity = require('../models/staff-activity-model');
 const { logStaffActivity } = require('../middleware/track-activity');
+
+// Ticket status -> catalog type. Mirrors the table in admin-controller so both
+// portals emit identical visitor-facing copy.
+const TICKET_STATUS_TYPES = {
+    confirmed: 'reservation.confirmed',
+    cancelled: 'reservation.cancelled',
+    completed: 'reservation.completed',
+    no_show: 'reservation.no_show'
+};
 
 exports.getMyActivitySummary = async (req, res) => {
     try {
@@ -266,6 +276,15 @@ exports.markTicketUsed = async (req, res) => {
             confirmedBy: req.user.id
         });
 
+        if (ticket.user_id) {
+            await notifyUser(
+                ticket.user_id,
+                'ticket.checked_in',
+                { reference: ticket.booking_reference || ticket.reservation_reference },
+                '/tickets'
+            );
+        }
+
         // Log staff activity
         await logStaffActivity(req, 'ticket_update', `Checked in ticket #${ticket.booking_reference || ticket.reservation_reference}`, 'reservation', ticket.id);
 
@@ -360,14 +379,14 @@ exports.updateTicketStatus = async (req, res) => {
             return res.status(500).json({ success: false, message: 'Failed to update ticket' });
         }
 
-        if (ticket.user_id && status && status !== ticket.status) {
-            await Notification.create({
-                userId: ticket.user_id,
-                title: 'Ticket Status Updated',
-                message: `Your ticket ${ticket.booking_reference} is now ${status.replaceAll('_', ' ')}.`,
-                type: 'ticket',
-                link: '/tickets'
-            });
+        const statusType = TICKET_STATUS_TYPES[status];
+        if (ticket.user_id && statusType && status !== ticket.status) {
+            await notifyUser(
+                ticket.user_id,
+                statusType,
+                { kind: 'ticket', reference: ticket.booking_reference, status, reason: cancellationReason },
+                '/tickets'
+            );
         }
 
         // Log staff activity
@@ -620,13 +639,12 @@ exports.reviewAppeal = async (req, res) => {
             await User.unsuspendUser(appeal.user_id);
         }
 
-        await Notification.create({
-            userId: appeal.user_id,
-            title: 'Appeal Reviewed',
-            message: `Your account appeal was ${status}.${adminResponse ? ` Response: ${adminResponse}` : ''}`,
-            type: status === 'approved' ? 'success' : 'warning',
-            link: '/settings'
-        });
+        await notifyUser(
+            appeal.user_id,
+            'appeal.reviewed',
+            { status, response: adminResponse },
+            '/settings'
+        );
 
         res.json({ success: true, message: `Appeal ${status} successfully` });
     } catch (error) {
@@ -654,13 +672,12 @@ exports.markTicketAsPaid = async (req, res) => {
         }
 
         if (ticket.user_id) {
-            await Notification.create({
-                userId: ticket.user_id,
-                title: 'Ticket Payment Confirmed',
-                message: `Payment for ticket ${ticket.booking_reference} has been confirmed.`,
-                type: 'ticket',
-                link: '/tickets'
-            });
+            await notifyUser(
+                ticket.user_id,
+                'ticket.paid',
+                { reference: ticket.booking_reference, status: 'paid' },
+                '/tickets'
+            );
         }
 
         res.json({ success: true, message: 'Ticket marked as paid successfully' });
@@ -693,13 +710,12 @@ exports.updateVerificationStatus = async (req, res) => {
         }
 
         if (ticket.user_id) {
-            await Notification.create({
-                userId: ticket.user_id,
-                title: 'Resident Verification Updated',
-                message: `Resident verification for ticket ${ticket.booking_reference} was ${status}.`,
-                type: 'ticket',
-                link: '/tickets'
-            });
+            await notifyUser(
+                ticket.user_id,
+                'reservation.verification',
+                { reference: ticket.booking_reference, status },
+                '/tickets'
+            );
         }
 
         res.json({ success: true, message: 'Verification status updated successfully' });

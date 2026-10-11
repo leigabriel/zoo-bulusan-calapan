@@ -1,12 +1,59 @@
 const db = require('../config/database');
 const { sendNotificationEmail } = require('../utils/email');
+const { DEFAULT_SETTINGS, MARKETING_CATEGORY, STORED_PREFERENCES } = require('../services/notification-service');
 
-const DEFAULT_SETTINGS = {
-    emailNotifications: true,
-    pushNotifications: true,
-    eventReminders: true,
-    ticketUpdates: true,
-    marketingEmails: false
+/**
+ * Merge a visitor's stored notification_settings over the defaults, always returning
+ * every stored preference key. mysql2 returns a JSON column as an object on some paths
+ * and as a string on others, so both are accepted. Unknown keys are discarded.
+ */
+const mergeNotificationSettings = (stored) => {
+    let parsed = stored;
+    if (typeof parsed === 'string') {
+        try {
+            parsed = JSON.parse(parsed);
+        } catch {
+            parsed = null;
+        }
+    }
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+        parsed = {};
+    }
+    const merged = {};
+    for (const key of STORED_PREFERENCES) {
+        merged[key] = key in parsed ? Boolean(parsed[key]) : DEFAULT_SETTINGS[key];
+    }
+    return merged;
+};
+
+// Delivery counters for GET /api/health?full=true. Email failures used to be invisible
+// because sendNotificationEmail returned true unconditionally.
+const emailDeliveryStats = { sent: 0, failed: 0 };
+
+const recordEmailDelivery = (delivered) => {
+    if (delivered) emailDeliveryStats.sent += 1;
+    else emailDeliveryStats.failed += 1;
+};
+
+/**
+ * Decide whether a notification should be inserted in-app and emailed.
+ *
+ * Extracted as a pure function so it is testable without a database.
+ *
+ * @param {object} settings - merged visitor preferences
+ * @param {string|null} category - catalog category gating this notification, or null
+ * @param {boolean} emailByDefault - catalog entry's default email behaviour
+ * @returns {{ push: boolean, email: boolean }}
+ */
+const resolveDelivery = (settings, category, emailByDefault) => {
+    if (category && settings[category] === false) {
+        return { push: false, email: false };
+    }
+    const optedIntoMarketing = category !== MARKETING_CATEGORY || settings.marketingEmails === true;
+    return {
+        push: settings.pushNotifications !== false,
+        email: emailByDefault && optedIntoMarketing && settings.emailNotifications !== false
+    };
 };
 
 class Notification {
@@ -34,11 +81,13 @@ class Notification {
 
     // Get admin/staff system notifications (for dashboard)
     static async getSystemNotifications(limit = 20) {
+        // Types are catalog keys like 'event.announced' / 'reservation.confirmed', so
+        // prefix matching is required — an exact IN list would match nothing.
         const [rows] = await db.query(
-            `SELECT * FROM notifications 
-             WHERE type IN ('system', 'ticket', 'event')
+            `SELECT * FROM notifications
+             WHERE (type LIKE 'event%' OR type LIKE 'ticket%' OR type LIKE 'reservation%' OR type = 'system')
              AND user_id IN (SELECT id FROM users WHERE role IN ('admin', 'staff'))
-             ORDER BY created_at DESC 
+             ORDER BY created_at DESC
              LIMIT ?`,
             [limit]
         );
@@ -174,39 +223,10 @@ class Notification {
         return role === 'admin' && link.startsWith('/admin/') ? link : null;
     }
 
-    static async notifyManagement({ title, message, type = 'info', link = null, category = null }) {
-        try {
-            const [recipients] = await db.query(
-                `SELECT id, role FROM users WHERE role IN ('admin', 'staff')
-                 AND is_active = TRUE AND is_suspended = FALSE AND deleted_at IS NULL`
-            );
-            await Promise.all(recipients.map(recipient => this.create({
-                userId: recipient.id,
-                title,
-                message,
-                type,
-                category,
-                link: this.managementLink(link, recipient.role)
-            })));
-        } catch (error) {
-            // Notification failures must not turn a saved booking/message into a retry.
-            console.error('Error creating management notifications:', error);
-        }
-    }
-
-    static async notifyUsers({ title, message, type = 'info', link = null, category = null }) {
-        try {
-            const [recipients] = await db.query(
-                `SELECT id FROM users WHERE role = 'user' AND is_active = TRUE
-                 AND is_suspended = FALSE AND deleted_at IS NULL`
-            );
-            await Promise.all(recipients.map(recipient => this.create({
-                userId: recipient.id, title, message, type, link, category
-            })));
-        } catch (error) {
-            console.error('Error creating user notifications:', error);
-        }
-    }
+    // notifyManagement / notifyUsers were removed: they now live in
+    // services/notification-service.js alongside the catalog. Every call site was
+    // migrated there, so keeping copies here would reintroduce the drift this
+    // service was created to remove.
 
     // Format time for display
     static formatTime(date) {
@@ -227,28 +247,22 @@ class Notification {
 
     // Create a notification
     static async create(notification) {
-        const { userId, title, message, type = 'info', link = null, category = null } = notification;
+        const { userId, title, message, type = 'info', link = null, category = null, emailByDefault = true } = notification;
         const [rows] = await db.query(
             `SELECT email, first_name, notification_settings FROM users
              WHERE id = ? AND is_active = TRUE AND deleted_at IS NULL`,
             [userId]
         );
-        if (!rows[0]) return null;
+        if (!rows[0]) return { id: null, emailSent: false, skipped: true };
 
-        let savedSettings = rows[0].notification_settings;
-        if (typeof savedSettings === 'string') {
-            try {
-                savedSettings = JSON.parse(savedSettings);
-            } catch {
-                savedSettings = {};
-            }
+        const settings = mergeNotificationSettings(rows[0].notification_settings);
+        const delivery = resolveDelivery(settings, category, emailByDefault);
+        if (!delivery.push && !delivery.email) {
+            return { id: null, emailSent: false, skipped: true };
         }
-        const settings = { ...DEFAULT_SETTINGS, ...(savedSettings || {}) };
-        const preference = category || (type === 'event' ? 'eventReminders' : type === 'ticket' ? 'ticketUpdates' : null);
-        if (preference && settings[preference] === false) return null;
 
         let insertId = null;
-        if (settings.pushNotifications !== false) {
+        if (delivery.push) {
             const [result] = await db.query(
                 `INSERT INTO notifications (user_id, title, message, type, link)
                  VALUES (?, ?, ?, ?, ?)`,
@@ -256,10 +270,20 @@ class Notification {
             );
             insertId = result.insertId;
         }
-        if (settings.emailNotifications !== false && (category !== 'marketing' || settings.marketingEmails === true)) {
-            sendNotificationEmail(rows[0].email, rows[0].first_name, title, message, link);
+
+        let emailSent = false;
+        if (delivery.email) {
+            try {
+                emailSent = await sendNotificationEmail(rows[0].email, rows[0].first_name, title, message, link);
+            } catch (error) {
+                // The in-app row (if any) is already committed; an SMTP fault must not
+                // discard it or propagate into the caller's request.
+                console.error('Notification email failed:', error.message);
+            }
+            recordEmailDelivery(emailSent);
         }
-        return insertId;
+
+        return { id: insertId, emailSent, skipped: false };
     }
 
     // Mark as read
@@ -313,3 +337,6 @@ class Notification {
 }
 
 module.exports = Notification;
+module.exports.resolveDelivery = resolveDelivery;
+module.exports.mergeNotificationSettings = mergeNotificationSettings;
+module.exports.emailDeliveryStats = () => ({ ...emailDeliveryStats });

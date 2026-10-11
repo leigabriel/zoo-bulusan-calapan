@@ -1,4 +1,5 @@
 const db = require('../config/database');
+const { mergeNotificationSettings } = require('./notification-model');
 
 class User {
     static async findByEmail(email) {
@@ -24,7 +25,8 @@ class User {
             `SELECT id, first_name, last_name, username, email, phone_number, gender, birthday, 
              role, profile_image, password, auth_provider, google_id, is_active, is_suspended, 
              suspension_reason, suspended_at, email_verified, email_verification_token,
-             email_verification_token_expiry, notification_settings, created_at, updated_at
+             email_verification_token_expiry, notification_settings,
+             google_onboarding_complete, is_welcome_sent, created_at, updated_at
              FROM users WHERE id = ?`,
             [id]
         );
@@ -470,18 +472,59 @@ class User {
             'SELECT notification_settings FROM users WHERE id = ?',
             [userId]
         );
-        if (rows[0] && rows[0].notification_settings) {
-            return typeof rows[0].notification_settings === 'string' ? JSON.parse(rows[0].notification_settings) : rows[0].notification_settings;
-        }
-        return null;
+        // Always returns the complete preference object, so callers never have to
+        // re-define the defaults. Previously returned null for users who never saved.
+        return mergeNotificationSettings(rows[0]?.notification_settings);
     }
 
     static async updateSettings(userId, settings) {
-        const [result] = await db.query(
+        // Deliberately does NOT return affectedRows > 0: MySQL reports 0 affected rows
+        // when the stored JSON already equals the attempted value, which is a success,
+        // not a failure. Callers confirm the write with checkPersisted() by reading back.
+        await db.query(
             'UPDATE users SET notification_settings = ?, updated_at = NOW() WHERE id = ?',
             [JSON.stringify(settings), userId]
         );
-        return result.affectedRows > 0;
+        return true;
+    }
+
+    // Username management
+
+    static async setUsername(userId, username) {
+        // Returns true once the statement executed; callers confirm with checkPersisted
+        // because an unchanged name is a successful no-op.
+        await db.query(
+            'UPDATE users SET username = ?, updated_at = NOW() WHERE id = ?',
+            [username, userId]
+        );
+        return true;
+    }
+
+    static async isUsernameAvailable(username, excludeUserId = null) {
+        const [rows] = await db.query(
+            'SELECT id FROM users WHERE username = ? AND (? IS NULL OR id <> ?) LIMIT 1',
+            [username, excludeUserId, excludeUserId]
+        );
+        return rows.length === 0;
+    }
+
+    // One-time onboarding and welcome gates. Both are deliberately one-way writes with no
+    // unset path, so a retried request can never un-complete them.
+
+    static async markOnboardingComplete(userId) {
+        await db.query(
+            'UPDATE users SET google_onboarding_complete = TRUE, updated_at = NOW() WHERE id = ?',
+            [userId]
+        );
+        return true;
+    }
+
+    static async markWelcomeSent(userId) {
+        await db.query(
+            'UPDATE users SET is_welcome_sent = TRUE, updated_at = NOW() WHERE id = ?',
+            [userId]
+        );
+        return true;
     }
 
     // User Activities

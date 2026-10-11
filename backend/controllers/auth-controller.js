@@ -6,7 +6,10 @@ const StaffActivity = require('../models/staff-activity-model');
 const UserActivity = require('../models/user-activity-model');
 const { deleteOldProfileImage } = require('../middleware/upload-profile-image');
 const { deleteFromCloudinary, extractPublicId } = require('../middleware/cloudinary-upload');
-const { sendVerificationEmail, sendVerificationEmailSync, sendPasswordResetEmail } = require('../utils/email');
+const { sendVerificationEmail, sendVerificationEmailSync, sendPasswordResetEmail, sendWelcomeEmail } = require('../utils/email');
+const { notifyManagement, notifyUser } = require('../services/notification-service');
+const { validateUsername, RESERVED_USERNAMES } = require('../utils/username-rules');
+const { checkPersisted } = require('../utils/persist-check');
 const AdminMasterKey = require('../models/admin-master-key-model');
 
 const VALID_ROLES = ['admin', 'staff', 'user'];
@@ -37,6 +40,17 @@ const validatePassword = (password) => {
 const sanitizeInput = (input) => {
     if (typeof input !== 'string') return input;
     return input.trim().replace(/[<>]/g, '');
+};
+
+/**
+ * Map a username validation result to an HTTP status.
+ * @param {{ok?: boolean, taken?: boolean}} result
+ * @returns {number|null} 400 invalid, 409 taken, null when the name is usable
+ */
+const usernameErrorStatus = (result) => {
+    if (result && result.taken) return 409;
+    if (!result || result.ok !== true) return 400;
+    return null;
 };
 
 const generateToken = (userId, role, tabId = null) => {
@@ -269,6 +283,22 @@ exports.login = async (req, res) => {
                 ipAddress,
                 userAgent
             });
+
+            // One-time welcome email, on a visitor's first successful login. The gate is
+            // only set on a real delivery so an SMTP fault retries next login.
+            if (!user.is_welcome_sent) {
+                const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+                const delivered = await sendWelcomeEmail({
+                    email: user.email,
+                    firstName: user.first_name,
+                    username: user.username,
+                    profileUrl: `${frontendUrl}/profile`,
+                    hasPassword: Boolean(user.password)
+                });
+                if (delivered) {
+                    await User.markWelcomeSent(user.id);
+                }
+            }
         }
 
         res.json({
@@ -642,6 +672,11 @@ exports.updatePassword = async (req, res) => {
         const tabId = req.headers['x-tab-id'] || req.body.tabId || null;
         const token = generateToken(req.user.id, req.user.role, tabId);
 
+        // Fired without awaiting: this endpoint returns a fresh token the client stores,
+        // so any delay here is directly visible to the person changing their password.
+        notifyUser(req.user.id, 'account.password_set', {}, '/profile')
+            .catch(error => console.error('Password-set notification failed:', error.message));
+
         res.json({
             success: true,
             message: 'Password updated successfully',
@@ -665,6 +700,90 @@ exports.updatePassword = async (req, res) => {
     } catch (error) {
         console.error('Update password error:', error);
         res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
+/**
+ * Set the authenticated user's display name.
+ *
+ * No token is reissued: `username` is not part of the JWT payload, so the existing
+ * session stays valid.
+ */
+exports.setUsername = async (req, res) => {
+    try {
+        const validation = validateUsername(req.body?.username);
+        const status = usernameErrorStatus(validation);
+        if (status) {
+            return res.status(status).json({ success: false, message: validation.error });
+        }
+
+        if (!(await User.isUsernameAvailable(validation.value, req.user.id))) {
+            return res.status(409).json({ success: false, message: 'That name is already taken.' });
+        }
+
+        await User.setUsername(req.user.id, validation.value);
+
+        // Read-back is the source of truth: an unchanged name is a successful no-op.
+        const saved = await User.findById(req.user.id);
+        if (!checkPersisted({ username: saved?.username }, { username: validation.value })) {
+            return res.status(500).json({ success: false, message: 'Could not save your name. Please try again.' });
+        }
+
+        res.json({ success: true, username: saved.username });
+    } catch (error) {
+        console.error('Set username error:', error);
+        res.status(500).json({ success: false, message: 'Server error while saving your name' });
+    }
+};
+
+/** Check whether a username is free. Never reveals the account behind a taken name. */
+exports.checkUsername = async (req, res) => {
+    try {
+        const validation = validateUsername(req.query?.name);
+        if (!validation.ok) {
+            return res.status(400).json({ success: false, message: validation.error });
+        }
+        const available = await User.isUsernameAvailable(validation.value, req.user.id);
+        res.json({ success: true, available });
+    } catch (error) {
+        console.error('Check username error:', error);
+        res.status(500).json({ success: false, message: 'Server error while checking that name' });
+    }
+};
+
+/**
+ * Mark the one-time Google onboarding stepper complete and send the welcome email.
+ *
+ * Reaching done means the visitor was *offered* the choices, not that they took them,
+ * so skipping either step still completes onboarding.
+ */
+exports.completeOnboarding = async (req, res) => {
+    try {
+        await User.markOnboardingComplete(req.user.id);
+
+        const user = await User.findById(req.user.id);
+        if (user && !user.is_welcome_sent) {
+            const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+            const delivered = await sendWelcomeEmail({
+                email: user.email,
+                firstName: user.first_name,
+                username: user.username,
+                profileUrl: `${frontendUrl}/profile`,
+                hasPassword: Boolean(user.password)
+            });
+            // Only consume the welcome on a real success, so a transient SMTP fault
+            // does not permanently skip it.
+            if (delivered) {
+                await User.markWelcomeSent(user.id);
+            }
+        }
+
+        res.json({ success: true });
+    } catch (error) {
+        // Non-fatal for the visitor: the stepper navigates away regardless, and the
+        // worst case is that onboarding is offered again next sign-in.
+        console.error('Complete onboarding error:', error);
+        res.status(500).json({ success: false, message: 'Could not complete setup' });
     }
 };
 
@@ -906,26 +1025,16 @@ exports.submitPublicAppeal = async (req, res) => {
             return res.status(400).json({ success: false, message: 'This action is only available for suspended accounts' });
         }
 
-        const Notification = require('../models/notification-model');
-
         // Create the appeal in user_appeals table (used by admin review flow)
         const appealId = await User.createAppeal(user.id, content.trim());
 
         // Notify admins
-        const admins = await User.getByRole('admin');
-        for (const admin of admins) {
-            try {
-                await Notification.create({
-                    userId: admin.id,
-                    title: 'New Suspension Appeal',
-                    message: `${user.first_name} ${user.last_name} has submitted a suspension appeal`,
-                    type: 'warning',
-                    link: '/admin/messages'
-                });
-            } catch (notifyError) {
-                console.error('Error notifying admin:', notifyError);
-            }
-        }
+        await notifyManagement({
+            title: 'New Suspension Appeal',
+            message: `${user.first_name} ${user.last_name} has submitted a suspension appeal`,
+            type: 'warning',
+            link: '/admin/messages'
+        });
 
         res.status(201).json({ 
             success: true, 
@@ -937,3 +1046,6 @@ exports.submitPublicAppeal = async (req, res) => {
         res.status(500).json({ success: false, message: 'Error submitting appeal' });
     }
 };
+
+// Exported for unit testing only; not routed.
+module.exports.usernameErrorStatus = usernameErrorStatus;

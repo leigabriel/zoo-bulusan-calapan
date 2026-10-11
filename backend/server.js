@@ -135,6 +135,9 @@ app.get('/api/health', async (req, res) => {
             health.database = 'disconnected';
             health.success = false;
         }
+        // Inside the `full` guard: the unauthenticated health check must not expose
+        // operational delivery detail.
+        health.email = require('./models/notification-model').emailDeliveryStats();
     }
     res.status(health.success ? 200 : 503).json(health);
 });

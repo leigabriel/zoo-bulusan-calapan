@@ -2,7 +2,7 @@ const Reservation = require('../models/reservation-model');
 const Event = require('../models/event-model');
 const User = require('../models/user-model');
 const bcrypt = require('bcryptjs');
-const Notification = require('../models/notification-model');
+const { notifyManagement, notifyUser } = require('../services/notification-service');
 const { logStaffActivity, logUserActivity } = require('../middleware/track-activity');
 const crypto = require('crypto');
 const { reservationQrSecret } = require('../config/app-config');
@@ -11,7 +11,7 @@ const walkInService = require('../services/walk-in-service');
 
 // Helper function to create notifications for admin/staff
 const createAdminStaffNotification = async (title, message, type = 'event', link = null) => {
-    await Notification.notifyManagement({ title, message, type, link });
+    await notifyManagement({ title, message, type, link });
 };
 
 const generateReservationReference = () => {
@@ -102,11 +102,19 @@ const removeReservationOwnedEvent = async (reservation) => {
     }
 };
 
-// Notify the reservation owner about confirmation/cancellation.
-const notifyReservationUser = async (userId, title, message, link = null) => {
+// Reservation status -> catalog type. Used by both the ticket and event status handlers.
+const RESERVATION_STATUS_TYPES = {
+    confirmed: 'reservation.confirmed',
+    cancelled: 'reservation.cancelled',
+    completed: 'reservation.completed',
+    no_show: 'reservation.no_show'
+};
+
+// Notify the reservation owner about a status change, event creation or cancellation.
+const notifyReservationUser = async (userId, type, data, link = null) => {
     if (!userId) return;
     try {
-        await Notification.create({ userId, title, message, type: 'event', category: 'ticketUpdates', link });
+        await notifyUser(userId, type, data, link);
     } catch (error) {
         console.error('Error creating user notification:', error);
     }
@@ -477,20 +485,17 @@ exports.updateTicketReservationStatus = async (req, res) => {
             await Reservation.updateTicketReservationStatus(id, status, confirmedBy);
         }
 
-        if (status === 'confirmed') {
+        const statusType = RESERVATION_STATUS_TYPES[status];
+        if (statusType) {
             await notifyReservationUser(
                 existingReservation?.user_id,
-                'Ticket Reservation Confirmed',
-                `Your ticket reservation #${existingReservation?.booking_reference || existingReservation?.reservation_reference || id} has been confirmed.`,
-                '/reservations'
-            );
-        }
-
-        if (status === 'cancelled') {
-            await notifyReservationUser(
-                existingReservation?.user_id,
-                'Ticket Reservation Cancelled',
-                `Your ticket reservation #${existingReservation?.booking_reference || existingReservation?.reservation_reference || id} has been cancelled.`,
+                statusType,
+                {
+                    kind: 'ticket',
+                    reference: `#${existingReservation?.booking_reference || existingReservation?.reservation_reference || id}`,
+                    status,
+                    reason: cancelledReason
+                },
                 '/reservations'
             );
         }
@@ -540,25 +545,26 @@ exports.updateEventReservationStatus = async (req, res) => {
         if (status === 'confirmed') {
             // Create/update the linked event so it appears on the event calendars.
             await createOrUpdateLinkedEvent(existingReservation);
-            await notifyReservationUser(
-                existingReservation?.user_id,
-                'Event Reservation Confirmed',
-                `Your event "${existingReservation?.venue_event_name || 'reservation'}" has been confirmed and added to the events calendar.`,
-                '/my-events'
-            );
         }
 
         if (['cancelled', 'no_show'].includes(status)) {
             // Remove the reservation-created event from the calendars if applicable.
             await removeReservationOwnedEvent(existingReservation);
-            if (status === 'cancelled') {
-                await notifyReservationUser(
-                    existingReservation?.user_id,
-                    'Event Reservation Cancelled',
-                    `Your event "${existingReservation?.venue_event_name || 'reservation'}" has been cancelled.`,
-                    '/my-events'
-                );
-            }
+        }
+
+        const eventStatusType = RESERVATION_STATUS_TYPES[status];
+        if (eventStatusType) {
+            await notifyReservationUser(
+                existingReservation?.user_id,
+                eventStatusType,
+                {
+                    kind: 'event',
+                    reference: `"${existingReservation?.venue_event_name || 'your event'}"`,
+                    status,
+                    reason: cancelledReason
+                },
+                '/my-events'
+            );
         }
 
         if (req.user && ['staff', 'admin'].includes(req.user.role)) {
@@ -587,11 +593,25 @@ exports.updateVerificationStatus = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Invalid verification status' });
         }
 
+        const existingReservation = await Reservation.findTicketReservationById(id);
+
         const updated = await Reservation.updateVerificationStatus(id, status);
 
         if (!updated) {
             return res.status(404).json({ success: false, message: 'Reservation not found' });
         }
+
+        // This path was previously silent while the admin/staff equivalents notified,
+        // so a visitor could not tell their verification had been decided.
+        await notifyReservationUser(
+            existingReservation?.user_id,
+            'reservation.verification',
+            {
+                reference: `#${existingReservation?.booking_reference || existingReservation?.reservation_reference || id}`,
+                status
+            },
+            '/reservations'
+        );
 
         res.json({ success: true, message: 'Verification status updated successfully' });
     } catch (error) {

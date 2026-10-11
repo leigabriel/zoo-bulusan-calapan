@@ -70,6 +70,8 @@ CREATE TABLE users (
     last_login_at TIMESTAMP NULL DEFAULT NULL,
     last_login_ip VARCHAR(45) DEFAULT NULL,
     notification_settings JSON DEFAULT NULL,
+    google_onboarding_complete BOOLEAN DEFAULT FALSE,
+    is_welcome_sent BOOLEAN NOT NULL DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     UNIQUE KEY uk_users_username (username),

@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import GoogleOnboardingFlow from '../../components/auth/GoogleOnboardingFlow';
 
 /**
  * Google OAuth Success Handler
@@ -11,8 +12,38 @@ const GoogleAuthSuccess = () => {
     const navigate = useNavigate();
     const { login } = useAuth();
     const [error, setError] = useState(null);
+    const [onboardingUser, setOnboardingUser] = useState(null);
+
+    // The Google handoff cookie is single-use: GET /auth/google/session deletes it on the
+    // first read. React 19 StrictMode intentionally runs effects twice in development, so
+    // without this guard the second run gets a 401, throws, and bounces a visitor who was
+    // already signed in back to /login after the "Authentication Error" screen.
+    const handoffConsumed = useRef(false);
+    const redirectTimerRef = useRef(null);
+
+    const navigateAfterLogin = useCallback((userData) => {
+        if (userData.role === 'admin') {
+            navigate('/admin/dashboard', { replace: true });
+        } else if (userData.role === 'staff') {
+            navigate('/staff/dashboard', { replace: true });
+        } else {
+            navigate('/', { replace: true });
+        }
+    }, [navigate]);
 
     useEffect(() => {
+        // The Google handoff cookie is SINGLE-USE: GET /auth/google/session deletes it on
+        // the first read. React 19 StrictMode intentionally runs effects twice in dev, so
+        // without this guard the second run gets a 401, throws, and bounces a visitor
+        // who was already signed in back to /login behind the "Authentication Error" screen.
+        //
+        // The ref guard alone is deliberate. An unmount/cancel flag is wrong here: StrictMode
+        // runs cleanup immediately and then re-runs the effect, so such a flag would latch
+        // true and abort the in-flight request that the ref guard already prevents from
+        // being duplicated.
+        if (handoffConsumed.current) return;
+        handoffConsumed.current = true;
+
         const processAuth = async () => {
             try {
                 const backendUrl = import.meta.env.VITE_BACKEND_URL ||
@@ -39,20 +70,21 @@ const GoogleAuthSuccess = () => {
                 // Store authentication in context
                 login(userData, token, 'user');
 
-                // Redirect based on user role
-                if (userData.role === 'admin') {
-                    navigate('/admin/dashboard', { replace: true });
-                } else if (userData.role === 'staff') {
-                    navigate('/staff/dashboard', { replace: true });
-                } else {
-                    navigate('/', { replace: true });
+                // New Google visitor: run the one-time onboarding stepper before landing.
+                // Staff and admin never reach this — master-key admins already returned
+                // above, and the role check covers the rest.
+                if (data.isNewGoogleAccount && userData.role === 'user') {
+                    setOnboardingUser(userData);
+                    return;
                 }
+
+                navigateAfterLogin(userData);
             } catch (err) {
                 console.error("Authentication Error:", err);
                 setError('Failed to complete authentication. Please try again.');
 
                 // Redirect to login after a delay
-                setTimeout(() => {
+                redirectTimerRef.current = setTimeout(() => {
                     navigate('/login', {
                         replace: true,
                         state: { message: 'Authentication failed. Please try again.' }
@@ -62,7 +94,7 @@ const GoogleAuthSuccess = () => {
         };
 
         processAuth();
-    }, [login, navigate]);
+    }, [login, navigate, navigateAfterLogin]);
 
     if (error) {
         return (
@@ -97,6 +129,17 @@ const GoogleAuthSuccess = () => {
                 <h2 className="text-xl sm:text-2xl font-bold text-black mb-3">Completing Sign In</h2>
                 <p className="text-base text-gray-600">Please wait while we complete your authentication...</p>
             </div>
+
+            <GoogleOnboardingFlow
+                isOpen={Boolean(onboardingUser)}
+                user={onboardingUser}
+                hasPassword={Boolean(onboardingUser?.hasPassword)}
+                onComplete={() => {
+                    const finished = onboardingUser;
+                    setOnboardingUser(null);
+                    if (finished) navigateAfterLogin(finished);
+                }}
+            />
         </div>
     );
 };

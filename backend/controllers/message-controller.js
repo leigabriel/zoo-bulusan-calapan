@@ -1,5 +1,6 @@
 const Message = require('../models/message-model');
 const Notification = require('../models/notification-model');
+const { notifyManagement, notifyUser } = require('../services/notification-service');
 const User = require('../models/user-model');
 const { logStaffActivity, logUserActivity } = require('../middleware/track-activity');
 
@@ -30,6 +31,8 @@ exports.sendMessage = async (req, res) => {
                               recipientType === 'all' ? [...admins, ...staffMembers] : admins;
             
             for (const recipient of recipients) {
+                // Management-targeted and role-scoped (admin vs staff vs all), so this
+                // keeps the free-form shape rather than going through the visitor catalog.
                 await Notification.create({
                     userId: recipient.id,
                     title: 'New Message Received',
@@ -77,7 +80,7 @@ exports.replyToMessage = async (req, res) => {
 
         const updated = await Message.replyToMessage(id, req.user.id, content);
         if (!updated) return res.status(404).json({ success: false, message: 'Support case not found or already closed' });
-        await Notification.notifyManagement({
+        await notifyManagement({
             title: 'Support Case Reply',
             message: `${req.user.firstName || req.user.username || 'A user'} replied to a support case.`,
             type: 'info',
@@ -98,13 +101,12 @@ exports.closeCase = async (req, res) => {
         }
         const closed = await Message.closeCase(req.params.id);
         if (!closed) return res.status(404).json({ success: false, message: 'Support case not found' });
-        await Notification.create({
-            userId: supportMessage.sender_id,
-            title: 'Support Case Closed',
-            message: `Your support case "${supportMessage.subject}" has been closed.`,
-            type: 'info',
-            link: '/my-messages'
-        });
+        await notifyUser(
+            supportMessage.sender_id,
+            'message.replied',
+            { subject: `Support case "${supportMessage.subject}" has been closed.` },
+            '/my-messages'
+        );
         res.json({ success: true, message: 'Support case closed' });
     } catch (error) {
         console.error('Error closing support case:', error);
@@ -234,13 +236,12 @@ exports.respondToMessage = async (req, res) => {
 
         // Try to create notification (non-critical)
         try {
-            await Notification.create({
-                userId: message.sender_id,
-                title: 'Response to Your Message',
-                message: `Admin has responded to your message: ${message.subject}`,
-                type: 'info',
-                link: '/my-messages'
-            });
+            await notifyUser(
+                message.sender_id,
+                'message.replied',
+                { subject: `Admin has responded to your message: ${message.subject}` },
+                '/my-messages'
+            );
         } catch (notificationError) {
             console.error('Error creating notification (response was saved):', notificationError);
         }
@@ -290,6 +291,8 @@ exports.submitAppeal = async (req, res) => {
         // Create appeal in user_appeals table (used by admin review flow)
         const appealId = await User.createAppeal(req.user.id, content.trim());
 
+        // Admin-only appeal alerts: notifyManagement would also hit staff, which changes
+        // who sees a suspension appeal. Keeping the explicit admin fan-out.
         const admins = await User.getByRole('admin');
         for (const admin of admins) {
             await Notification.create({

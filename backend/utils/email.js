@@ -387,7 +387,97 @@ const escapeHtml = (value) => String(value || '')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#039;');
 
-const sendNotificationEmail = (email, firstName, title, message, link = null) => {
+const buildWelcomeEmailText = ({ firstName, username, profileUrl, hasPassword }) => {
+    const greeting = firstName ? `Hi ${firstName},` : 'Hi there,';
+    const passwordNote = hasPassword
+        ? null
+        : 'You signed in with Google and do not have a password yet. If you would like to set a password for your account, you can add one any time from your profile so you can also sign in with your email address.';
+
+    const paragraphs = [
+        'Welcome to Bulusan Zoo!',
+        greeting,
+        `Your account is active and ready to use. We will call you @${username}.`,
+        passwordNote,
+        'You can now browse animals, book tickets and reserve events.',
+        `Manage your account: ${profileUrl}`,
+        `© ${new Date().getFullYear()} Bulusan Zoo. All rights reserved.`
+    ].filter(Boolean);
+
+    return paragraphs.join('\n\n').trim();
+};
+
+const buildWelcomeEmailHtml = ({ firstName, username, profileUrl, hasPassword }) => {
+    const safeName = escapeHtml(firstName || 'there');
+    const safeUsername = escapeHtml(username);
+    const safeProfileUrl = escapeHtml(profileUrl);
+    const passwordNote = hasPassword
+        ? ''
+        : `
+                            <p style="margin: 0 0 20px; color: #4b5563; font-size: 15px; line-height: 1.6;">
+                                You signed in with Google and do not have a password yet. If you would like to set a password for your account, you can add one any time from your profile so you can also sign in with your email address.
+                            </p>`;
+
+    return `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to Bulusan Zoo</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6;">
+    <table role="presentation" cellspacing="0" cellpadding="0" width="100%" style="background-color: #f4f7f6; padding: 40px 20px;">
+        <tr>
+            <td align="center">
+                <table role="presentation" cellspacing="0" cellpadding="0" width="100%" style="max-width: 600px; background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+                    <tr>
+                        <td style="background: linear-gradient(135deg, #059669 0%, #047857 100%); padding: 40px 40px 30px; border-radius: 12px 12px 0 0; text-align: center;">
+                            <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: bold;">Bulusan Zoo</h1>
+                            <p style="margin: 10px 0 0; color: rgba(255, 255, 255, 0.9); font-size: 14px;">Wildlife Sanctuary</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 40px;">
+                            <h2 style="margin: 0 0 20px; color: #1f2937; font-size: 24px; font-weight: 600;">Welcome, ${safeName}!</h2>
+                            <p style="margin: 0 0 20px; color: #4b5563; font-size: 15px; line-height: 1.6;">
+                                Your account is active and ready to use. We will call you <strong>@${safeUsername}</strong>.
+                            </p>
+                            ${passwordNote}
+                            <p style="margin: 0 0 25px; color: #4b5563; font-size: 15px; line-height: 1.6;">
+                                You can now browse animals, book tickets and reserve events.
+                            </p>
+                            <table role="presentation" cellspacing="0" cellpadding="0" width="100%">
+                                <tr>
+                                    <td align="center" style="padding: 5px 0 25px;">
+                                        <a href="${safeProfileUrl}"
+                                           style="display: inline-block; background: linear-gradient(135deg, #059669 0%, #047857 100%); color: #ffffff; text-decoration: none; padding: 16px 40px; border-radius: 8px; font-weight: 600; font-size: 16px; box-shadow: 0 4px 14px rgba(5, 150, 105, 0.4);">
+                                            Manage Your Account
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 30px 40px; background-color: #f9fafb; border-radius: 0 0 12px 12px; text-align: center; border-top: 1px solid #e5e7eb;">
+                            <p style="margin: 0 0 10px; color: #6b7280; font-size: 13px;">
+                                &copy; ${new Date().getFullYear()} Bulusan Zoo. All rights reserved.
+                            </p>
+                            <p style="margin: 0; color: #9ca3af; font-size: 12px;">
+                                Sorsogon, Philippines
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
+`;
+};
+
+const sendNotificationEmail = async (email, firstName, title, message, link = null) => {
     if (!email) return false;
 
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
@@ -396,7 +486,7 @@ const sendNotificationEmail = (email, firstName, title, message, link = null) =>
     const safeMessage = escapeHtml(message);
     const safeName = escapeHtml(firstName || 'there');
 
-    sendEmailAsync({
+    const mailOptions = {
         from: `"Bulusan Zoo" <${process.env.SMTP_USER}>`,
         to: email,
         subject: `${title} - Bulusan Zoo`,
@@ -411,8 +501,43 @@ const sendNotificationEmail = (email, firstName, title, message, link = null) =>
             </div>
         `,
         text: `Hello ${firstName || 'there'},\n\n${title}\n${message}\n\nView update: ${destination}\n\nManage notification delivery in your Bulusan Zoo account settings.`
-    });
-    return true;
+    };
+
+    // Awaited rather than fire-and-forget: callers record the real delivery result so a
+    // failed send is visible instead of being reported as delivered.
+    try {
+        return await sendEmailWithRetry(mailOptions);
+    } catch (error) {
+        logEmail('error', 'Notification email failed', { to: email, error: error.message });
+        return false;
+    }
+};
+
+/**
+ * Send the one-time welcome email sent on a visitor's first login.
+ * Awaited by the caller, which only marks the welcome as sent when this returns true.
+ */
+const sendWelcomeEmail = async ({ email, firstName, username, profileUrl, hasPassword }) => {
+    if (!email) return false;
+
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const destination = profileUrl || `${frontendUrl}/profile`;
+    const account = { firstName, username, profileUrl: destination, hasPassword };
+
+    const mailOptions = {
+        from: `"Bulusan Zoo" <${process.env.SMTP_USER}>`,
+        to: email,
+        subject: 'Welcome to Bulusan Zoo',
+        html: buildWelcomeEmailHtml(account),
+        text: buildWelcomeEmailText(account)
+    };
+
+    try {
+        return await sendEmailWithRetry(mailOptions);
+    } catch (error) {
+        logEmail('error', 'Welcome email failed', { to: email, error: error.message });
+        return false;
+    }
 };
 
 module.exports = {
@@ -421,5 +546,8 @@ module.exports = {
     sendPasswordResetEmail,
     sendEmailWithRetry,
     sendEmailAsync,
-    sendNotificationEmail
+    sendNotificationEmail,
+    sendWelcomeEmail,
+    buildWelcomeEmailHtml,
+    buildWelcomeEmailText
 };

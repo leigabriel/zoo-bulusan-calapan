@@ -17,6 +17,17 @@ import {
 
 const MINIZOO_GAME_URL = (typeof process !== 'undefined' && process.env && process.env.VITE_MINIZOO_GAME_URL) ? process.env.VITE_MINIZOO_GAME_URL : 'https://bulusanzootopia.vercel.app';
 
+// Notification types are catalog keys such as 'event.announced' or
+// 'reservation.confirmed' (see backend/services/notification-service.js). Match on the
+// prefix before the dot. Unknown keys fall through to the neutral 'message' tone so a
+// future type renders sensibly instead of appearing blank.
+const notificationTone = (type) => {
+    const prefix = String(type || '').split('.')[0];
+    if (prefix === 'event') return 'event';
+    if (prefix === 'ticket' || prefix === 'reservation') return 'booking';
+    return 'message';
+};
+
 const ICON_COMPONENTS = {
     home: Home,
     animals: Pet,
@@ -813,12 +824,12 @@ const Header = () => {
                                                 }`}
                                             onClick={() => handleNotificationClick(notif)}
                                         >
-                                            <div className={`relative w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${notif.type === 'event' ? 'bg-emerald-50' :
-                                                notif.type === 'ticket' || notif.type === 'reservation' ? 'bg-orange-50' : 'bg-gray-50'
+                                            <div className={`relative w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${notificationTone(notif.type) === 'event' ? 'bg-emerald-50' :
+                                                notificationTone(notif.type) === 'booking' ? 'bg-orange-50' : 'bg-gray-50'
                                                 }`}>
-                                                {notif.type === 'event' ? (
+                                                {notificationTone(notif.type) === 'event' ? (
                                                     <Calendar size={16} className="opacity-55" />
-                                                ) : notif.type === 'ticket' || notif.type === 'reservation' ? (
+                                                ) : notificationTone(notif.type) === 'booking' ? (
                                                     <Ticket size={16} className="opacity-55" />
                                                 ) : (
                                                     <Message size={16} className="opacity-55" />

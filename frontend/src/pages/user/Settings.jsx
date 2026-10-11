@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { notify } from '../../utils/toast';
@@ -63,6 +63,8 @@ const Settings = ({ embedded = false, onClose }) => {
     const [isLoading, setIsLoading] = useState(true);
     
     // Notifications State
+    // Loading placeholder only. The server response is authoritative and always returns
+    // the complete preference set, so these five keys are never the source of truth.
     const [notifications, setNotifications] = useState({
         emailNotifications: true,
         pushNotifications: true,
@@ -78,18 +80,32 @@ const Settings = ({ embedded = false, onClose }) => {
     const [activityFilter, setActivityFilter] = useState('all');
     const [activitySort, setActivitySort] = useState('newest');
     const [settingsMenuOpen, setSettingsMenuOpen] = useState(false);
+    const [pendingKeys, setPendingKeys] = useState(() => new Set());
+    const [statusMessage, setStatusMessage] = useState('');
+    // Last value the server confirmed. Reverts restore from here rather than from a
+    // render closure, which is stale by the time a request settles.
+    const confirmedRef = useRef(null);
+
+    // Read from the ref, not `notifications`: depending on that state would re-fetch the
+    // settings after every successful toggle, which is a loop, not a refresh.
+    const fallbackRef = useRef({
+        emailNotifications: true,
+        pushNotifications: true,
+        eventReminders: true,
+        ticketUpdates: true,
+        marketingEmails: false
+    });
 
     useEffect(() => {
         if (!user) return;
-        
+
         const fetchSettings = async () => {
             try {
                 const response = await userAPI.getSettings(user.role);
                 if (response.success && response.settings) {
-                    setNotifications(prev => ({
-                        ...prev,
-                        ...response.settings
-                    }));
+                    const confirmed = { ...fallbackRef.current, ...response.settings };
+                    confirmedRef.current = confirmed;
+                    setNotifications(confirmed);
                 }
             } catch (error) {
                 console.error("Failed to fetch settings:", error);
@@ -125,18 +141,44 @@ const Settings = ({ embedded = false, onClose }) => {
         }
     }, [activeSection, user, fetchActivities]);
 
+    const NOTIFICATION_LABELS = {
+        emailNotifications: 'Email Notifications',
+        pushNotifications: 'In-App Notifications',
+        eventReminders: 'Event Reminders',
+        ticketUpdates: 'Ticket Updates',
+        marketingEmails: 'Promotions & News'
+    };
+
     const handleNotificationToggle = async (key, value) => {
-        const newSettings = { ...notifications, [key]: value };
-        setNotifications(newSettings);
-        
+        // One save at a time per row. Rapid toggles previously raced: each fired its own
+        // request and a failure reverted from a stale render closure, leaving the UI
+        // disagreeing with what was actually saved.
+        if (pendingKeys.has(key)) return;
+
+        const previous = confirmedRef.current;
+        const nextSettings = { ...previous, [key]: value };
+
+        setNotifications(nextSettings);
+        setPendingKeys(prev => new Set(prev).add(key));
+
         try {
-            await userAPI.updateSettings(newSettings, user.role);
-            notify.success('Settings updated.');
+            const response = await userAPI.updateSettings(nextSettings, user.role);
+            const confirmed = response?.settings ?? nextSettings;
+            confirmedRef.current = confirmed;
+            setNotifications(confirmed);
+            setStatusMessage(`${NOTIFICATION_LABELS[key] || key} preference saved.`);
         } catch (error) {
             console.error("Failed to save settings:", error);
-            // Revert on failure
-            setNotifications(notifications);
+            // Restore from the last server-confirmed snapshot, not from a render closure.
+            setNotifications(previous);
             notify.error("Couldn't update settings.");
+            setStatusMessage('Could not save that preference. It has been changed back.');
+        } finally {
+            setPendingKeys(prev => {
+                const next = new Set(prev);
+                next.delete(key);
+                return next;
+            });
         }
     };
 
@@ -215,7 +257,10 @@ const Settings = ({ embedded = false, onClose }) => {
                         <div>
                             <h3 className="text-xl font-bold text-gray-800 mb-2">Notification Preferences</h3>
                             <p className="text-gray-500 mb-6 text-sm">Choose how you want us to communicate with you.</p>
-                            
+
+                            {/* Announces save results to screen readers; toasts alone are not announced. */}
+                            <p className="sr-only" role="status" aria-live="polite">{statusMessage}</p>
+
                             <div className="space-y-4">
                                 {[
                                     { key: 'emailNotifications', label: 'Email Notifications', desc: 'Receive important updates via email' },
@@ -223,23 +268,30 @@ const Settings = ({ embedded = false, onClose }) => {
                                     { key: 'eventReminders', label: 'Event Reminders', desc: 'Get reminded about upcoming zoo events' },
                                     { key: 'ticketUpdates', label: 'Ticket Updates', desc: 'Updates about your bookings and reservations' },
                                     { key: 'marketingEmails', label: 'Promotions & News', desc: 'Special offers, newsletters and zoo updates' }
-                                ].map(item => (
+                                ].map(item => {
+                                    const isPending = pendingKeys.has(item.key);
+                                    return (
                                     <div key={item.key} className="flex items-start sm:items-center justify-between p-4 bg-gray-50 hover:bg-gray-100/50 rounded-xl transition-colors border border-gray-100">
                                         <div className="pr-4">
                                             <p className="font-semibold text-gray-800">{item.label}</p>
                                             <p className="text-sm text-gray-500 mt-0.5">{item.desc}</p>
+                                            {isPending && (
+                                                <p className="text-xs text-gray-400 mt-1" aria-hidden="true">Saving…</p>
+                                            )}
                                         </div>
                                         <label className="relative inline-flex items-center cursor-pointer shrink-0 mt-1 sm:mt-0">
                                             <input
                                                 type="checkbox"
                                                 checked={notifications[item.key]}
+                                                disabled={isPending}
                                                 onChange={(e) => handleNotificationToggle(item.key, e.target.checked)}
-                                                className="sr-only peer"
+                                                className="sr-only peer disabled:cursor-not-allowed"
                                             />
-                                            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-emerald-300/50 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500 border border-gray-200 peer-checked:border-emerald-500"></div>
+                                            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-emerald-300/50 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500 border border-gray-200 peer-checked:border-emerald-500 peer-disabled:opacity-60"></div>
                                         </label>
                                     </div>
-                                ))}
+                                    );
+                                })}
                             </div>
                         </div>
                     </div>

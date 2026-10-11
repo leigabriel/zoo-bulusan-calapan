@@ -1,7 +1,7 @@
 const crypto = require('crypto');
 const db = require('../config/database');
 const Reservation = require('../models/reservation-model');
-const Notification = require('../models/notification-model');
+const { notifyUser } = require('../services/notification-service');
 const { readConfig } = require('../config/event-payment-config');
 
 const getFrontendUrl = () => (process.env.FRONTEND_URL || 'http://localhost:5173').replace(/\/$/, '');
@@ -105,14 +105,12 @@ const updatePaymentFromWebhook = async (event) => {
         updated = await Reservation.updateEventPayment(reservation.id, { paymentStatus });
     }
     if (updated && paymentStatus && reservation.user_id) {
-        await Notification.create({
-            userId: reservation.user_id,
-            title: 'Event Payment Updated',
-            message: `Payment for reservation ${reservation.reservation_reference} is now ${paymentStatus}.`,
-            type: paymentStatus === 'paid' ? 'success' : 'warning',
-            category: 'ticketUpdates',
-            link: '/reservations'
-        });
+        await notifyUser(
+            reservation.user_id,
+            'ticket.paid',
+            { reference: reservation.reservation_reference, status: paymentStatus },
+            '/reservations'
+        );
     }
     return updated;
 };
@@ -165,14 +163,12 @@ exports.markEventPaid = async (req, res) => {
         if (reservation.status === 'cancelled') return res.status(400).json({ success: false, message: 'Cancelled reservations cannot be marked paid.' });
         await Reservation.updateEventPayment(reservation.id, { paymentStatus: 'paid', paidAt: new Date() });
         if (reservation.user_id) {
-            await Notification.create({
-                userId: reservation.user_id,
-                title: 'Event Payment Confirmed',
-                message: `Payment for reservation ${reservation.reservation_reference} has been confirmed.`,
-                type: 'success',
-                category: 'ticketUpdates',
-                link: '/reservations'
-            });
+            await notifyUser(
+                reservation.user_id,
+                'ticket.paid',
+                { reference: reservation.reservation_reference, status: 'paid' },
+                '/reservations'
+            );
         }
         const updated = await Reservation.findEventReservationById(reservation.id);
         return res.json({ success: true, message: 'Event payment marked as paid.', reservation: updated });

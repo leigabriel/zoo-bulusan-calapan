@@ -398,7 +398,10 @@ exports.handleGoogleCallback = async (req, res) => {
             role: user.role,
             profileImage: user.profile_image || picture,
             authProvider: user.auth_provider || 'google',
-            hasPassword: Boolean(user.password)
+            hasPassword: Boolean(user.password),
+            // Set for all roles; the frontend filters to visitors. Kept out of the
+            // redirect URL — it travels in the single-use handoff payload.
+            isNewGoogleAccount: !Boolean(user.google_onboarding_complete)
         };
 
         console.log('Google auth successful for user:', user.id, user.email);
@@ -438,13 +441,29 @@ exports.getGoogleHandoff = (req, res) => {
     const handoff = handoffCookie?.slice('google_auth_handoff='.length);
     const data = handoff ? googleHandoffStore.get(handoff) : null;
 
-    res.setHeader('Set-Cookie', 'google_auth_handoff=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0');
     if (!data || Date.now() > data.expiresAt) {
+        // Clear only a stale cookie. Previously the cookie was cleared on EVERY read,
+        // including a rejected one, so a single failed or early request destroyed the
+        // handoff and made it unrecoverable — the visitor could not retry and the
+        // still-valid server-side entry became unreachable.
+        if (handoffCookie) {
+            res.setHeader('Set-Cookie', 'google_auth_handoff=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0');
+        }
         return res.status(401).json({ success: false, message: 'Google authentication session expired.' });
     }
 
+    // Single-use: consume the handoff only once a valid session is actually returned.
     googleHandoffStore.delete(handoff);
-     return res.json({ success: true, token: data.token, user: data.userData, masterKeyRequired: data.masterKeyRequired, challengeToken: data.challengeToken });
+    res.setHeader('Set-Cookie', 'google_auth_handoff=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0');
+
+    return res.json({
+        success: true,
+        token: data.token,
+        user: data.userData,
+        masterKeyRequired: data.masterKeyRequired,
+        challengeToken: data.challengeToken,
+        isNewGoogleAccount: Boolean(data.userData?.isNewGoogleAccount)
+    });
 };
 
 /**

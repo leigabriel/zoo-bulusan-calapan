@@ -1,5 +1,5 @@
 const Chat = require('../models/chat-model');
-const Notification = require('../models/notification-model');
+const { notifyUser } = require('../services/notification-service');
 const chatSocket = require('../socket/chat-socket');
 
 const normalizePerson = (row, prefix = '') => ({
@@ -133,13 +133,12 @@ exports.sendMessage = async (req, res) => {
 
         if (req.user.role === 'admin' || req.user.role === 'staff') {
             try {
-                await Notification.create({
-                    userId: result.conversation.user_id,
-                    title: 'New Support Reply',
-                    message: `${req.user.firstName || req.user.username || 'Support'} sent you a new message.`,
-                    type: 'info',
-                    link: '/my-messages'
-                });
+                await notifyUser(
+                    result.conversation.user_id,
+                    'message.replied',
+                    { subject: `${req.user.firstName || req.user.username || 'Support'} sent you a new message.` },
+                    '/my-messages'
+                );
             } catch (notificationError) {
                 console.error('Error creating chat notification:', notificationError);
             }

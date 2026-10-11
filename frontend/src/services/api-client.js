@@ -208,6 +208,30 @@ export const authAPI = {
         return handleResponse(response);
     },
 
+    setUsername: async (username, type = 'user') => {
+        const response = await fetch(`${API_BASE_URL}/auth/username`, {
+            method: 'PUT',
+            headers: getAuthHeaders(type),
+            body: JSON.stringify({ username })
+        });
+        return handleResponse(response);
+    },
+
+    checkUsername: async (name, type = 'user') => {
+        const response = await fetch(`${API_BASE_URL}/auth/username/check?name=${encodeURIComponent(name)}`, {
+            headers: getAuthHeaders(type)
+        });
+        return handleResponse(response);
+    },
+
+    completeOnboarding: async (type = 'user') => {
+        const response = await fetch(`${API_BASE_URL}/auth/onboarding/complete`, {
+            method: 'POST',
+            headers: getAuthHeaders(type)
+        });
+        return handleResponse(response);
+    },
+
     deleteAccount: async (data, type = 'user') => {
         const response = await fetch(`${API_BASE_URL}/auth/account`, {
             method: 'DELETE',

@@ -3,13 +3,15 @@ const Ticket = require('../models/ticket-model');
 const Event = require('../models/event-model');
 const User = require('../models/user-model');
 const Notification = require('../models/notification-model');
+const { notifyManagement, STORED_PREFERENCES } = require('../services/notification-service');
+const { checkPersisted } = require('../utils/persist-check');
 const UserActivity = require('../models/user-activity-model');
 const crypto = require('crypto');
 const { saveBase64Image } = require('../middleware/upload-resident-id');
 
 // Helper function to create notifications for admin/staff
 const createAdminStaffNotification = async (title, message, type = 'ticket', link = null) => {
-    await Notification.notifyManagement({ title, message, type, link });
+    await notifyManagement({ title, message, type, link });
 };
 
 exports.getProfile = async (req, res) => {
@@ -97,22 +99,29 @@ exports.getSettings = async (req, res) => {
 exports.updateSettings = async (req, res) => {
     try {
         const { settings } = req.body;
-        const allowedSettings = ['emailNotifications', 'pushNotifications', 'eventReminders', 'ticketUpdates', 'marketingEmails'];
         if (!settings || typeof settings !== 'object' || Array.isArray(settings)) {
             return res.status(400).json({ success: false, message: 'Invalid notification settings' });
         }
+        // STORED_PREFERENCES is the canonical allow-list; `marketing` is a delivery gate
+        // derived from marketingEmails and must never be accepted as a stored value.
+        const allowedSettings = [...STORED_PREFERENCES];
         const currentSettings = await User.getSettings(req.user.id) || {};
         const nextSettings = { ...currentSettings };
         for (const key of allowedSettings) {
             if (Object.hasOwn(settings, key)) nextSettings[key] = Boolean(settings[key]);
         }
-        const result = await User.updateSettings(req.user.id, nextSettings);
-        
-        if (result) {
-            res.json({ success: true, message: 'Settings updated successfully' });
-        } else {
-            res.status(400).json({ success: false, message: 'Failed to update settings' });
+
+        await User.updateSettings(req.user.id, nextSettings);
+
+        // Confirm by reading back rather than trusting affectedRows: re-enabling a setting
+        // that was already on reports 0 affected rows, which is a success, not a failure.
+        // The old check turned that into HTTP 400, so the UI reverted a saved toggle.
+        const saved = await User.getSettings(req.user.id);
+        if (!checkPersisted(saved, nextSettings)) {
+            return res.status(500).json({ success: false, message: 'Failed to update settings' });
         }
+
+        res.json({ success: true, message: 'Settings updated successfully' });
     } catch (error) {
         console.error('Error updating settings:', error);
         res.status(500).json({ success: false, message: 'Error updating settings' });

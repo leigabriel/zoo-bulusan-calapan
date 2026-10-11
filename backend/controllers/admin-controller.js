@@ -3,12 +3,21 @@ const Animal = require('../models/animal-model');
 const Ticket = require('../models/ticket-model');
 const Event = require('../models/event-model');
 const Notification = require('../models/notification-model');
+const { notifyUser, notifyManagement, broadcastToVisitors } = require('../services/notification-service');
 const Plant = require('../models/plant-model');
 const Reservation = require('../models/reservation-model');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const db = require('../config/database');
 const { sendVerificationEmailSync } = require('../utils/email');
+
+// Ticket status -> catalog type. Shared with staff-controller's equivalent handler.
+const TICKET_STATUS_TYPES = {
+    confirmed: 'reservation.confirmed',
+    cancelled: 'reservation.cancelled',
+    completed: 'reservation.completed',
+    no_show: 'reservation.no_show'
+};
 
 // Helper to get date range based on period
 const getDateRange = (period) => {
@@ -398,12 +407,7 @@ exports.getAllEvents = async (req, res) => {
 exports.createEvent = async (req, res) => {
     try {
         const eventId = await Event.create(req.body);
-        await Notification.notifyUsers({
-            title: 'New Event Available',
-            message: `${req.body.title || 'A new event'} is now available at Bulusan Zoo.`,
-            type: 'event',
-            link: '/events'
-        });
+        await broadcastToVisitors('event.announced', { title: req.body.title }, '/events');
         res.status(201).json({
             success: true,
             message: 'Event created successfully',
@@ -418,11 +422,19 @@ exports.createEvent = async (req, res) => {
 exports.updateEvent = async (req, res) => {
     try {
         const { id } = req.params;
+        // Read before updating so the broadcast can name the event.
+        const existingEvent = await Event.findById(id);
         const updated = await Event.update(id, req.body);
 
         if (!updated) {
             return res.status(404).json({ success: false, message: 'Event not found' });
         }
+
+        await broadcastToVisitors(
+            'event.updated',
+            { title: req.body.title || existingEvent?.title },
+            '/events'
+        );
 
         res.json({ success: true, message: 'Event updated successfully' });
     } catch (error) {
@@ -434,11 +446,15 @@ exports.updateEvent = async (req, res) => {
 exports.deleteEvent = async (req, res) => {
     try {
         const { id } = req.params;
+        // Read before the soft delete so the broadcast can name the event.
+        const existingEvent = await Event.findById(id);
         const deleted = await Event.softDelete(id, req.user.id);
 
         if (!deleted) {
             return res.status(404).json({ success: false, message: 'Event not found' });
         }
+
+        await broadcastToVisitors('event.cancelled', { title: existingEvent?.title }, '/events');
 
         res.json({ success: true, message: 'Event moved to trash' });
     } catch (error) {
@@ -558,14 +574,14 @@ exports.updateTicketStatus = async (req, res) => {
             return res.status(500).json({ success: false, message: 'Failed to update ticket' });
         }
 
-        if (ticket.user_id && status && status !== ticket.status) {
-            await Notification.create({
-                userId: ticket.user_id,
-                title: 'Ticket Status Updated',
-                message: `Your ticket ${ticket.booking_reference} is now ${status.replaceAll('_', ' ')}.`,
-                type: 'ticket',
-                link: '/tickets'
-            });
+        const statusType = TICKET_STATUS_TYPES[status];
+        if (ticket.user_id && statusType && status !== ticket.status) {
+            await notifyUser(
+                ticket.user_id,
+                statusType,
+                { kind: 'ticket', reference: ticket.booking_reference, status, reason: cancellationReason },
+                '/tickets'
+            );
         }
 
         res.json({ success: true, message: 'Ticket updated successfully' });
@@ -1165,13 +1181,12 @@ exports.reviewAppeal = async (req, res) => {
             await User.unsuspendUser(appeal.user_id);
         }
 
-        await Notification.create({
-            userId: appeal.user_id,
-            title: 'Appeal Reviewed',
-            message: `Your account appeal was ${status}.${adminResponse ? ` Response: ${adminResponse}` : ''}`,
-            type: status === 'approved' ? 'success' : 'warning',
-            link: '/settings'
-        });
+        await notifyUser(
+            appeal.user_id,
+            'appeal.reviewed',
+            { status, response: adminResponse },
+            '/settings'
+        );
 
         res.json({ success: true, message: `Appeal ${status} successfully` });
     } catch (error) {
@@ -1199,13 +1214,12 @@ exports.markTicketAsPaid = async (req, res) => {
         }
 
         if (ticket.user_id) {
-            await Notification.create({
-                userId: ticket.user_id,
-                title: 'Ticket Payment Confirmed',
-                message: `Payment for ticket ${ticket.booking_reference} has been confirmed.`,
-                type: 'ticket',
-                link: '/tickets'
-            });
+            await notifyUser(
+                ticket.user_id,
+                'ticket.paid',
+                { reference: ticket.booking_reference, status: 'paid' },
+                '/tickets'
+            );
         }
 
         res.json({ success: true, message: 'Ticket marked as paid successfully' });
@@ -1238,13 +1252,12 @@ exports.updateVerificationStatus = async (req, res) => {
         }
 
         if (ticket.user_id) {
-            await Notification.create({
-                userId: ticket.user_id,
-                title: 'Resident Verification Updated',
-                message: `Resident verification for ticket ${ticket.booking_reference} was ${status}.`,
-                type: 'ticket',
-                link: '/tickets'
-            });
+            await notifyUser(
+                ticket.user_id,
+                'reservation.verification',
+                { reference: ticket.booking_reference, status },
+                '/tickets'
+            );
         }
 
         res.json({ success: true, message: 'Verification status updated successfully' });
