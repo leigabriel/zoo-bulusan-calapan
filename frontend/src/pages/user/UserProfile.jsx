@@ -17,7 +17,10 @@ const VerifiedIcon = () => <CheckCircle className="h-5 w-5 text-blue-500" />;
 const UserProfile = ({ embedded = false, onClose }) => {
     const { user, logout, updateUser } = useAuth();
     const navigate = useNavigate();
-    const hasPassword = user?.hasPassword !== false && user?.authProvider !== 'google';
+    // Derived from the server flag only. Previously this also required
+// authProvider !== 'google', but auth_provider stays 'google' even after a password is
+// set, so a Google visitor who added a password was still shown "Add Password".
+const hasPassword = user?.hasPassword === true;
     const [isEditing, setIsEditing] = useState(false);
     const [loading, setLoading] = useState(false);
     const [showPasswordModal, setShowPasswordModal] = useState(false);
