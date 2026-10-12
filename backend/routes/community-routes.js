@@ -12,9 +12,13 @@ router.put('/posts/:postId', handleCloudinaryImageUpload('community', 'postImage
 router.delete('/posts/:postId', communityController.deletePost);
 router.post('/posts/:postId/like', communityController.togglePostLike);
 
-router.get('/posts/pending', authorize('admin', 'staff'), communityController.getPendingPosts);
+// /posts/reported sits with the other literal /posts/... paths so a future
+// GET /posts/:postId cannot shadow it.
+router.get('/posts/reported', authorize('admin', 'staff'), communityController.getReportedPosts);
 router.get('/posts/all', authorize('admin', 'staff'), communityController.getAllPostsForModeration);
-router.patch('/posts/:postId/review', authorize('admin', 'staff'), communityController.reviewPost);
+router.patch('/posts/:postId/remove', authorize('admin', 'staff'), communityController.removeReportedPost);
+router.post('/posts/:postId/report', communityController.reportPost);
+router.patch('/post-reports/:reportId/review', authorize('admin', 'staff'), communityController.reviewPostReport);
 
 router.get('/posts/:postId/comments', communityController.getCommentsByPost);
 router.post('/posts/:postId/comments', communityController.createComment);

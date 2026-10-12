@@ -2,6 +2,7 @@ const Community = require('../models/community-model');
 const { notifyManagement, notifyUser } = require('../services/notification-service');
 const { deleteFromCloudinary, extractPublicId } = require('../middleware/cloudinary-upload');
 const { logUserActivity, logStaffActivity } = require('../middleware/track-activity');
+const { validatePostReport } = require('../utils/post-report-rules');
 
 const sanitizeText = (value, maxLength = 2000) => {
   if (typeof value !== 'string') return '';
@@ -15,6 +16,9 @@ const normalizePost = (post) => ({
   imageUrl: post.image_url,
   status: post.status,
   moderationNote: post.moderation_note || null,
+  // Computed server-side: the client cannot compare user ids because they arrive as
+  // pid_ ciphertexts, and a fresh random IV makes two of them differ.
+  isOwner: Boolean(post.is_owner),
   createdAt: post.created_at,
   updatedAt: post.updated_at,
   commentCount: Number(post.comment_count || 0),
@@ -36,6 +40,8 @@ const normalizeComment = (comment) => ({
   userId: comment.user_id,
   commentText: comment.comment_text,
   isReported: Boolean(comment.is_reported),
+  // Server-side, for the same reason as posts: the client cannot compare user ids.
+  isOwner: Boolean(comment.is_owner),
   heartCount: Number(comment.heart_count || 0),
   heartedByViewer: Boolean(comment.hearted_by_viewer),
   isHearted: Boolean(comment.hearted_by_viewer),
@@ -67,6 +73,33 @@ const normalizeReportedComment = (report) => ({
     lastName: report.comment_last_name,
     username: report.comment_username,
     profileImage: report.comment_profile_image
+  },
+  reporter: {
+    firstName: report.reporter_first_name,
+    lastName: report.reporter_last_name,
+    username: report.reporter_username
+  }
+});
+
+const normalizeReportedPost = (report) => ({
+  reportId: report.report_id,
+  postId: report.post_id,
+  reason: report.reason,
+  reasonDetail: report.reason_detail || null,
+  status: report.status,
+  reportedAt: report.reported_at,
+  reportedBy: report.reported_by,
+  content: report.content,
+  imageUrl: report.image_url,
+  postStatus: report.post_status,
+  moderationNote: report.moderation_note || null,
+  postCreatedAt: report.post_created_at,
+  postUserId: report.post_user_id,
+  author: {
+    firstName: report.author_first_name,
+    lastName: report.author_last_name,
+    username: report.author_username,
+    profileImage: report.author_profile_image
   },
   reporter: {
     firstName: report.reporter_first_name,
@@ -112,19 +145,13 @@ exports.createPost = async (req, res) => {
       imagePublicId
     });
 
-    await createAdminStaffNotifications({
-      title: 'New Community Post',
-      message: 'A new community post was submitted and is awaiting review.',
-      link: '/admin/community-moderation'
-    });
-
     if (req.user.role === 'user') {
       await logUserActivity(req, 'post_create', 'Created a community post', 'community', postId);
     }
 
     return res.status(201).json({
       success: true,
-      message: 'Your post was submitted for review.',
+      message: 'Your post is live.',
       postId
     });
   } catch (error) {
@@ -182,19 +209,13 @@ exports.updatePost = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Post not found.' });
     }
 
-    await createAdminStaffNotifications({
-      title: 'Community Post Updated',
-      message: 'A community post was updated and returned to moderation review.',
-      link: '/admin/community-moderation'
-    });
-
     if (req.user.role === 'user') {
       await logUserActivity(req, 'post_update', 'Updated a community post', 'community', postId);
     }
 
     return res.json({
       success: true,
-      message: 'Post updated and sent back for review.'
+      message: 'Post updated.'
     });
   } catch (error) {
     console.error('Error updating community post:', error);
@@ -262,33 +283,71 @@ exports.getAllPostsForModeration = async (req, res) => {
   }
 };
 
-exports.getPendingPosts = async (req, res) => {
+// Shared by the "uphold a report" and "remove from All posts" paths so the two cannot
+// drift: both hide the post, close any reports against it, and tell the author why.
+const removePostAsModerator = async (req, post, note) => {
+  await Community.removePostByModerator(post.id, req.user.id, note);
+  await Community.closePostReports(post.id, req.user.id, 'reviewed');
+
   try {
-    await Community.initializeTables();
-    const posts = await Community.getPendingPosts();
-    return res.json({
-      success: true,
-      posts: posts.map(normalizePost)
-    });
+    await notifyUser(post.user_id, 'post.moderated', { note }, '/community');
   } catch (error) {
-    console.error('Error getting pending posts:', error);
-    return res.status(500).json({ success: false, message: 'Could not load pending posts right now.' });
+    console.error('Error notifying post owner after removal:', error);
   }
 };
 
-exports.reviewPost = async (req, res) => {
+exports.reviewPostReport = async (req, res) => {
+  try {
+    await Community.initializeTables();
+    const reportId = Number(req.params.reportId);
+    const action = String(req.body.action || '').toLowerCase();
+    const note = sanitizeText(req.body.note || '', 255);
+
+    if (!reportId || !['reviewed', 'dismissed'].includes(action)) {
+      return res.status(400).json({ success: false, message: 'Invalid review request.' });
+    }
+
+    if (action === 'reviewed' && !note) {
+      return res.status(400).json({ success: false, message: 'Please provide a reason for removing this post.' });
+    }
+
+    const report = await Community.reviewPostReport(reportId, req.user.id, action);
+    if (!report) {
+      return res.status(404).json({ success: false, message: 'Report not found.' });
+    }
+
+    // Upholding the report removes the post and clears every other report on it, so the
+    // queue cannot be left holding an entry for a post that has already been removed.
+    if (action === 'reviewed') {
+      const post = await Community.getPostByIdWithAuthor(report.postId);
+      if (post) {
+        await removePostAsModerator(req, post, note);
+      }
+    }
+
+    await logStaffActivity(req, 'post_report_review', `${action === 'reviewed' ? 'Upheld' : 'Dismissed'} a community post report`, 'community_post', report.postId);
+
+    return res.json({
+      success: true,
+      message: action === 'reviewed' ? 'Post removed.' : 'Report dismissed.'
+    });
+  } catch (error) {
+    console.error('Error reviewing post report:', error);
+    return res.status(500).json({ success: false, message: 'Could not update this report right now.' });
+  }
+};
+
+exports.removeReportedPost = async (req, res) => {
   try {
     await Community.initializeTables();
     const postId = Number(req.params.postId);
-    const action = String(req.body.action || '').toLowerCase();
-    const moderationNote = sanitizeText(req.body.note || '', 255);
+    const note = sanitizeText(req.body.note || '', 255);
 
-    if (!postId || !['approved', 'declined'].includes(action)) {
-      return res.status(400).json({ success: false, message: 'Invalid moderation request.' });
+    if (!postId) {
+      return res.status(400).json({ success: false, message: 'Invalid post request.' });
     }
-
-    if (action === 'declined' && !moderationNote) {
-      return res.status(400).json({ success: false, message: 'Please provide a reason for declining this post.' });
+    if (!note) {
+      return res.status(400).json({ success: false, message: 'Please provide a reason for removing this post.' });
     }
 
     const post = await Community.getPostByIdWithAuthor(postId);
@@ -296,26 +355,73 @@ exports.reviewPost = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Post not found.' });
     }
 
-    const updated = await Community.moderatePost(postId, req.user.id, action, moderationNote || null);
-    if (!updated) {
+    await removePostAsModerator(req, post, note);
+
+    await logStaffActivity(req, 'post_remove', 'Removed community post', 'community_post', postId);
+
+    return res.json({ success: true, message: 'Post removed.' });
+  } catch (error) {
+    console.error('Error removing community post:', error);
+    return res.status(500).json({ success: false, message: 'Could not remove this post right now.' });
+  }
+};
+
+exports.reportPost = async (req, res) => {
+  try {
+    await Community.initializeTables();
+    const postId = Number(req.params.postId);
+    const validation = validatePostReport({ reason: req.body.reason, detail: req.body.detail });
+
+    if (!validation.ok) {
+      return res.status(400).json({ success: false, message: validation.error });
+    }
+
+    const post = await Community.getPostById(postId);
+    if (!post) {
       return res.status(404).json({ success: false, message: 'Post not found.' });
     }
 
-    try {
-      await notifyUser(post.user_id, 'post.moderated', { status: action, note: moderationNote }, '/community');
-    } catch (error) {
-      console.error('Error notifying post owner after moderation:', error);
+    // A post a moderator already removed has nothing left to review, so a stale tab
+    // cannot push it back into the queue.
+    if (post.status === 'declined') {
+      return res.status(404).json({ success: false, message: 'This post is no longer available.' });
     }
 
-    await logStaffActivity(req, 'post_review', `${action === 'approved' ? 'Approved' : 'Declined'} community post`, 'community_post', postId);
+    if (post.user_id === req.user.id) {
+      return res.status(400).json({ success: false, message: 'You cannot report your own post.' });
+    }
 
-    return res.json({
-      success: true,
-      message: action === 'approved' ? 'Post approved successfully.' : 'Post declined successfully.'
+    await Community.reportPost({
+      postId,
+      userId: req.user.id,
+      reason: validation.reason,
+      reasonDetail: validation.detail
     });
+
+    await createAdminStaffNotifications({
+      title: 'Community Post Reported',
+      message: 'A post was reported and needs review.'
+    });
+
+    if (req.user.role === 'user') {
+      await logUserActivity(req, 'post_report', 'Reported a community post', 'community', postId);
+    }
+
+    return res.json({ success: true, message: 'Thanks for reporting. We will review this post.' });
   } catch (error) {
-    console.error('Error reviewing post:', error);
-    return res.status(500).json({ success: false, message: 'Could not complete moderation right now.' });
+    console.error('Error reporting post:', error);
+    return res.status(500).json({ success: false, message: 'Could not submit your report right now.' });
+  }
+};
+
+exports.getReportedPosts = async (req, res) => {
+  try {
+    await Community.initializeTables();
+    const reports = await Community.getReportedPosts();
+    return res.json({ success: true, reports: reports.map(normalizeReportedPost) });
+  } catch (error) {
+    console.error('Error loading reported posts:', error);
+    return res.status(500).json({ success: false, message: 'Could not load reported posts right now.' });
   }
 };
 

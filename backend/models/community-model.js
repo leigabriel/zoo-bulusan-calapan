@@ -74,6 +74,30 @@ class Community {
                 CONSTRAINT fk_community_post_likes_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
         `);
+
+        // Re-issued here as well as in performInitialization: that runs once per process,
+        // whereas ensureSchemaUpgrades runs on every boot and is what creates the table on
+        // a database that predates post reporting.
+        await db.query(`
+            CREATE TABLE IF NOT EXISTS community_post_reports (
+                id INT PRIMARY KEY AUTO_INCREMENT,
+                post_id INT NOT NULL,
+                user_id INT NOT NULL,
+                reason VARCHAR(64) NOT NULL,
+                reason_detail VARCHAR(500) DEFAULT NULL,
+                status ENUM('pending', 'reviewed', 'dismissed') DEFAULT 'pending',
+                reviewed_by INT DEFAULT NULL,
+                reviewed_at TIMESTAMP NULL DEFAULT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                UNIQUE KEY uq_community_post_reports (post_id, user_id),
+                INDEX idx_community_post_reports_post (post_id),
+                INDEX idx_community_post_reports_status (status),
+                CONSTRAINT fk_community_post_reports_post FOREIGN KEY (post_id) REFERENCES community_posts(id) ON DELETE CASCADE ON UPDATE CASCADE,
+                CONSTRAINT fk_community_post_reports_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE,
+                CONSTRAINT fk_community_post_reports_reviewed_by FOREIGN KEY (reviewed_by) REFERENCES users(id) ON DELETE SET NULL ON UPDATE CASCADE
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        `);
     }
 
     static initializeTables() {
@@ -178,6 +202,27 @@ class Community {
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
         `);
 
+        await db.query(`
+            CREATE TABLE IF NOT EXISTS community_post_reports (
+                id INT PRIMARY KEY AUTO_INCREMENT,
+                post_id INT NOT NULL,
+                user_id INT NOT NULL,
+                reason VARCHAR(64) NOT NULL,
+                reason_detail VARCHAR(500) DEFAULT NULL,
+                status ENUM('pending', 'reviewed', 'dismissed') DEFAULT 'pending',
+                reviewed_by INT DEFAULT NULL,
+                reviewed_at TIMESTAMP NULL DEFAULT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                UNIQUE KEY uq_community_post_reports (post_id, user_id),
+                INDEX idx_community_post_reports_post (post_id),
+                INDEX idx_community_post_reports_status (status),
+                CONSTRAINT fk_community_post_reports_post FOREIGN KEY (post_id) REFERENCES community_posts(id) ON DELETE CASCADE ON UPDATE CASCADE,
+                CONSTRAINT fk_community_post_reports_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE,
+                CONSTRAINT fk_community_post_reports_reviewed_by FOREIGN KEY (reviewed_by) REFERENCES users(id) ON DELETE SET NULL ON UPDATE CASCADE
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        `);
+
         await Community.ensureSchemaUpgrades();
         Community.initialized = true;
     }
@@ -185,7 +230,7 @@ class Community {
     static async createPost({ userId, content, imageUrl, imagePublicId }) {
         const [result] = await db.query(
             `INSERT INTO community_posts (user_id, content, image_url, image_public_id, status)
-             VALUES (?, ?, ?, ?, 'pending')`,
+             VALUES (?, ?, ?, ?, 'approved')`,
             [userId, content, imageUrl || null, imagePublicId || null]
         );
         return result.insertId;
@@ -208,42 +253,34 @@ class Community {
                     u.first_name, u.last_name, u.username, u.profile_image,
                 (SELECT COUNT(*) FROM community_comments c WHERE c.post_id = p.id) AS comment_count,
                 (SELECT COUNT(*) FROM community_post_likes pl WHERE pl.post_id = p.id) AS like_count,
-                (SELECT COUNT(*) FROM community_post_likes pl WHERE pl.post_id = p.id AND pl.user_id = ?) AS liked_by_viewer
+                (SELECT COUNT(*) FROM community_post_likes pl WHERE pl.post_id = p.id AND pl.user_id = ?) AS liked_by_viewer,
+                (p.user_id = ?) AS is_owner
              FROM community_posts p
              JOIN users u ON p.user_id = u.id
-             WHERE p.status = 'approved'
+             WHERE p.status IN ('approved', 'pending')
              ORDER BY p.created_at DESC`,
-            [viewerId || 0]
+            [viewerId || 0, viewerId || 0]
         );
 
-        if (!viewerId) return rows;
-
-        const [ownRows] = await db.query(
-            `SELECT p.id, p.user_id, p.content, p.image_url, p.status, p.moderation_note, p.created_at, p.updated_at,
-                    u.first_name, u.last_name, u.username, u.profile_image,
-                    (SELECT COUNT(*) FROM community_comments c WHERE c.post_id = p.id) AS comment_count,
-                    (SELECT COUNT(*) FROM community_post_likes pl WHERE pl.post_id = p.id) AS like_count,
-                    (SELECT COUNT(*) FROM community_post_likes pl WHERE pl.post_id = p.id AND pl.user_id = ?) AS liked_by_viewer
-             FROM community_posts p
-             JOIN users u ON p.user_id = u.id
-             WHERE p.user_id = ? AND p.status IN ('pending', 'declined')
-             ORDER BY p.created_at DESC`,
-            [viewerId, viewerId]
-        );
-
-        return [...ownRows, ...rows];
+        // 'pending' is accepted here only for rows written before instant publishing.
+        // createPost now always writes 'approved' and nothing produces 'pending' any more.
+        // Excluding 'declined' keeps moderator-removed posts hidden.
+        // Ownership is resolved here rather than in the client: ids reach the browser as
+        // pid_ ciphertexts with a random IV each, so two encryptions of the same user id
+        // are never string-equal.
+        return rows;
     }
 
     static async updatePostByOwner(postId, userId, payload) {
+        // An edit is live immediately, like the original post, so `status` is never reset.
+        // The moderation columns are deliberately left alone too: they record that a
+        // moderator removed this post and why, and wiping them on edit would destroy the
+        // audit trail (and would let an author edit a removed post unchallenged).
         const [result] = await db.query(
             `UPDATE community_posts
              SET content = ?,
                  image_url = ?,
                  image_public_id = ?,
-                 status = 'pending',
-                 moderation_note = NULL,
-                 moderated_by = NULL,
-                 moderated_at = NULL,
                  updated_at = NOW()
              WHERE id = ? AND user_id = ?`,
             [payload.content, payload.imageUrl || null, payload.imagePublicId || null, postId, userId]
@@ -267,18 +304,6 @@ class Community {
         return result.affectedRows > 0;
     }
 
-    static async getPendingPosts() {
-        const [rows] = await db.query(
-            `SELECT p.id, p.user_id, p.content, p.image_url, p.status, p.created_at, p.updated_at,
-                    u.first_name, u.last_name, u.username, u.profile_image
-             FROM community_posts p
-             JOIN users u ON p.user_id = u.id
-             WHERE p.status = 'pending'
-             ORDER BY p.created_at ASC`
-        );
-        return rows;
-    }
-
     static async getAllPostsForModeration() {
         const [rows] = await db.query(
             `SELECT p.id, p.user_id, p.content, p.image_url, p.status, p.moderation_note, p.created_at, p.updated_at,
@@ -290,16 +315,6 @@ class Community {
              ORDER BY p.created_at DESC`
         );
         return rows;
-    }
-
-    static async moderatePost(postId, moderatorId, status, moderationNote = null) {
-        const [result] = await db.query(
-            `UPDATE community_posts
-             SET status = ?, moderation_note = ?, moderated_by = ?, moderated_at = NOW(), updated_at = NOW()
-             WHERE id = ?`,
-            [status, moderationNote, moderatorId, postId]
-        );
-        return result.affectedRows > 0;
     }
 
     static async createComment({ postId, parentCommentId = null, userId, commentText }) {
@@ -316,14 +331,15 @@ class Community {
                 `SELECT c.id, c.post_id, c.parent_comment_id, c.user_id, c.comment_text, c.is_reported, c.created_at, c.updated_at,
                     u.first_name, u.last_name, u.username, u.profile_image,
                     COUNT(ch.id) AS heart_count,
-                    MAX(CASE WHEN ch.user_id = ? THEN 1 ELSE 0 END) AS hearted_by_viewer
+                    MAX(CASE WHEN ch.user_id = ? THEN 1 ELSE 0 END) AS hearted_by_viewer,
+                    (c.user_id = ?) AS is_owner
              FROM community_comments c
              JOIN users u ON c.user_id = u.id
              LEFT JOIN community_comment_hearts ch ON ch.comment_id = c.id
              WHERE c.post_id = ?
              GROUP BY c.id
              ORDER BY c.created_at ASC`,
-            [viewerId || 0, postId]
+            [viewerId || 0, viewerId || 0, postId]
         );
         return rows;
     }
@@ -505,6 +521,88 @@ class Community {
         }
 
         return result.affectedRows > 0;
+    }
+
+    static async reportPost({ postId, userId, reason, reasonDetail = null }) {
+        // One report per visitor per post. A repeat report reopens the row rather than
+        // adding a second one, and clears any previous reviewer so a report a moderator
+        // dismissed is not displayed as though they had seen the new one.
+        await db.query(
+            `INSERT INTO community_post_reports (post_id, user_id, reason, reason_detail, status)
+             VALUES (?, ?, ?, ?, 'pending')
+             ON DUPLICATE KEY UPDATE reason = VALUES(reason),
+                                     reason_detail = VALUES(reason_detail),
+                                     status = 'pending',
+                                     reviewed_by = NULL,
+                                     reviewed_at = NULL,
+                                     updated_at = NOW()`,
+            [postId, userId, reason, reasonDetail]
+        );
+    }
+
+    static async getReportedPosts() {
+        // One row per unresolved report, so two reports on one post produce two queue
+        // entries each carrying its own reason. Only posts that are still visible are
+        // returned: a report against an already-removed post has nothing left to review.
+        const [rows] = await db.query(
+            `SELECT r.id AS report_id, r.post_id, r.reason, r.reason_detail, r.status,
+                    r.created_at AS reported_at, r.user_id AS reported_by,
+                    p.content, p.image_url, p.status AS post_status, p.moderation_note,
+                    p.created_at AS post_created_at, p.user_id AS post_user_id,
+                    au.first_name AS author_first_name, au.last_name AS author_last_name,
+                    au.username AS author_username, au.profile_image AS author_profile_image,
+                    ru.first_name AS reporter_first_name, ru.last_name AS reporter_last_name,
+                    ru.username AS reporter_username
+             FROM community_post_reports r
+             JOIN community_posts p ON p.id = r.post_id
+             JOIN users au ON au.id = p.user_id
+             JOIN users ru ON ru.id = r.user_id
+             WHERE r.status = 'pending' AND p.status = 'approved'
+             ORDER BY r.created_at ASC`
+        );
+        return rows;
+    }
+
+    static async reviewPostReport(reportId, reviewerId, status) {
+        const [reportRows] = await db.query(
+            'SELECT post_id FROM community_post_reports WHERE id = ?',
+            [reportId]
+        );
+
+        const report = reportRows[0];
+        if (!report) return null;
+
+        const [result] = await db.query(
+            `UPDATE community_post_reports
+             SET status = ?, reviewed_by = ?, reviewed_at = NOW(), updated_at = NOW()
+             WHERE id = ?`,
+            [status, reviewerId, reportId]
+        );
+
+        return { postId: report.post_id, updated: result.affectedRows > 0 };
+    }
+
+    static async removePostByModerator(postId, reviewerId, note) {
+        const [result] = await db.query(
+            `UPDATE community_posts
+             SET status = 'declined', moderation_note = ?, moderated_by = ?, moderated_at = NOW()
+             WHERE id = ?`,
+            [note, reviewerId, postId]
+        );
+        return result.affectedRows > 0;
+    }
+
+    static async closePostReports(postId, reviewerId, status) {
+        // Every pending report on the post, not just the one being actioned: resolving a
+        // single report would leave the rest in the queue pointing at an already-removed
+        // post that the moderator can then never clear.
+        const [result] = await db.query(
+            `UPDATE community_post_reports
+             SET status = ?, reviewed_by = ?, reviewed_at = NOW(), updated_at = NOW()
+             WHERE post_id = ? AND status = 'pending'`,
+            [status, reviewerId, postId]
+        );
+        return result.affectedRows;
     }
 
     static async getUserProfileById(userId) {

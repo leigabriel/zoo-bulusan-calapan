@@ -131,10 +131,10 @@ const CATALOG = {
         category: null,
         emailByDefault: true,
         reminder: false,
-        title: (data) => (data.status === 'approved' ? 'Post Approved' : 'Post Declined'),
-        message: (data) => (data.status === 'approved'
-            ? 'Your community post has been approved and is now visible to others.'
-            : `Your community post was declined.${data.note ? ` Reason: ${data.note}` : ''}`)
+        // Approval no longer exists, so the old approved/declined split is dead. The key
+        // is kept as-is because it is already stored verbatim in notifications.type.
+        title: () => 'Your Post Was Removed',
+        message: (data) => `A moderator removed your community post because it broke the community guidelines.${data.note ? ` Reason: ${data.note}` : ''}`
     },
     'message.replied': {
         category: null,
