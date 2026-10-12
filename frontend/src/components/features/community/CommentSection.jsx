@@ -144,7 +144,7 @@ const CommentSection = ({ postId, currentUser, refreshTrigger, onRequireConfirma
     const commentTree = buildCommentTree(comments);
 
     const renderComment = (comment, depth = 0) => {
-        const isOwner = currentUser?.id === comment.userId;
+        const isOwner = comment.isOwner === true;
         const maxIndentLevel = 4;
         const clampedDepth = Math.min(depth, maxIndentLevel);
 

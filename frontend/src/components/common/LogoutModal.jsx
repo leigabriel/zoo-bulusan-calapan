@@ -49,8 +49,8 @@ const LogoutModal = ({ isOpen, onClose, onConfirm, userName = 'User' }) => {
                 aria-hidden="true"
             />
 
-            <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-md mx-4 p-6 sm:p-8 overflow-hidden animate-scale-in border border-gray-100">
-                <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-red-50 text-red-500 mb-6">
+            <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-md mx-4 p-5 sm:p-8 max-h-[calc(100dvh-2rem)] overflow-y-auto overscroll-contain animate-scale-in border border-gray-100">
+                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-red-50 text-red-500 mb-5 sm:h-16 sm:w-16 sm:mb-6">
                     <Logout size={28} className="w-7 h-7" aria-hidden="true" />
                 </div>
 

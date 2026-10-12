@@ -64,7 +64,7 @@ const StaffLayout = ({ children }) => {
         plants: 0,
         pendingTicketReservations: 0,
         pendingEventReservations: 0,
-        pendingCommunityPosts: 0,
+        reportedPosts: 0,
         reportedComments: 0
     });
     const [dailyTaskLoading, setDailyTaskLoading] = useState(false);
@@ -117,10 +117,10 @@ const StaffLayout = ({ children }) => {
         },
         {
             id: 'communityPosts',
-            title: 'Check community posts',
-            description: 'Moderate pending posts and reports.',
+            title: 'Review community reports',
+            description: 'Act on reported posts and comments.',
             path: '/staff/community-moderation',
-            count: dailyTaskStats.pendingCommunityPosts + dailyTaskStats.reportedComments,
+            count: dailyTaskStats.reportedPosts + dailyTaskStats.reportedComments,
             countLabel: 'for review'
         }
     ]), [dailyTaskStats]);
@@ -244,12 +244,12 @@ const StaffLayout = ({ children }) => {
     const fetchDailyTaskStats = async () => {
         try {
             setDailyTaskLoading(true);
-            const [animalsRes, plantsRes, ticketRes, eventRes, pendingPostsRes, reportsRes] = await Promise.all([
+            const [animalsRes, plantsRes, ticketRes, eventRes, reportedPostsRes, reportsRes] = await Promise.all([
                 staffAPI.getAnimals().catch(() => null),
                 staffAPI.getPlants().catch(() => null),
                 reservationAPI.getAllTicketReservations('staff').catch(() => null),
                 reservationAPI.getAllEventReservations('staff').catch(() => null),
-                communityAPI.getPendingPosts('staff').catch(() => null),
+                communityAPI.getReportedPosts('staff').catch(() => null),
                 communityAPI.getReportedComments('staff').catch(() => null)
             ]);
 
@@ -257,7 +257,7 @@ const StaffLayout = ({ children }) => {
             const plants = plantsRes?.plants || plantsRes?.data || [];
             const ticketReservations = ticketRes?.reservations || [];
             const eventReservations = eventRes?.reservations || [];
-            const pendingPosts = pendingPostsRes?.posts || [];
+            const reportedPosts = reportedPostsRes?.reports || [];
             const reportedComments = reportsRes?.reports || [];
 
             setDailyTaskStats({
@@ -269,7 +269,7 @@ const StaffLayout = ({ children }) => {
                 pendingEventReservations: Array.isArray(eventReservations)
                     ? eventReservations.filter((r) => r?.status === 'pending').length
                     : 0,
-                pendingCommunityPosts: Array.isArray(pendingPosts) ? pendingPosts.length : 0,
+                reportedPosts: Array.isArray(reportedPosts) ? reportedPosts.length : 0,
                 reportedComments: Array.isArray(reportedComments) ? reportedComments.length : 0
             });
         } catch {

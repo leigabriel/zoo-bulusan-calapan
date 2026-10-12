@@ -168,7 +168,7 @@ const CommunityPage = () => {
                 setEditingPost(null);
             } else {
                 await communityAPI.createPost({ content, imageFile }, user?.role || 'user');
-                notify.success('Post submitted.');
+                notify.success('Your post is live.');
             }
             await loadPosts();
         } catch (error) {

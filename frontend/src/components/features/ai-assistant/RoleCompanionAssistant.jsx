@@ -322,7 +322,7 @@ const RoleCompanionAssistant = ({ onClose, role = 'staff' }) => {
                 )}
 
                 <aside
-                    className={`${sessionSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'} fixed md:relative inset-y-0 left-0 z-30 w-72 shrink-0 flex flex-col transition-transform duration-200 md:transition-none`}
+                    className={`${sessionSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'} fixed md:relative inset-y-0 left-0 z-30 w-64 lg:w-72 shrink-0 flex flex-col transition-transform duration-200 md:transition-none`}
                     style={{ background: '#f7f8f6', borderRight: `1px solid ${THEME.border}` }}
                     aria-label="Chat sessions"
                 >

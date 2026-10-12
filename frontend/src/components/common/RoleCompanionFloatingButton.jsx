@@ -67,7 +67,7 @@ const RoleCompanionFloatingButton = ({ role = 'staff', open, onOpenChange, hideT
                             onClick={closePanels}
                         />
                         <MotionDiv
-                            className="relative w-full md:w-3/4 lg:w-1/2 h-[100dvh] min-h-0 bg-white shadow-2xl flex flex-col overflow-hidden overscroll-contain"
+                            className="relative w-full md:w-[85%] lg:w-[70%] xl:w-[60%] h-[100dvh] min-h-0 bg-white shadow-2xl flex flex-col overflow-hidden overscroll-contain"
                             variants={panelVariants}
                             initial="hidden"
                             animate="visible"

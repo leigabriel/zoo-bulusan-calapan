@@ -1,7 +1,52 @@
+import { useEffect, useRef, useState } from 'react';
 import { communityAPI, getProfileImageUrl } from '../../../services/api-client';
 import { notify } from '../../../utils/toast';
+import PostReportModal from './PostReportModal';
 
 const PostFeed = ({ posts, currentUser, onRefresh, onUpdatePost, onEditPost, onPostClick, onCommentClick, onConfirmDelete }) => {
+
+    const [openMenuId, setOpenMenuId] = useState(null);
+    const [reportTarget, setReportTarget] = useState(null);
+    const [reportLoading, setReportLoading] = useState(false);
+    // One node per post, not a single ref: a shared ref only ever holds the last card's
+    // wrapper, so the outside-click guard misfired on every other card and unmounted the
+    // dropdown on mousedown before the click could reach the menu item.
+    const menuRefs = useRef({});
+
+    useEffect(() => {
+        if (openMenuId === null) return undefined;
+
+        const handlePointerDown = (event) => {
+            const insideMenu = Object.values(menuRefs.current)
+                .some((node) => node && node.contains(event.target));
+            if (!insideMenu) setOpenMenuId(null);
+        };
+        const handleKeyDown = (event) => {
+            if (event.key === 'Escape') setOpenMenuId(null);
+        };
+
+        document.addEventListener('mousedown', handlePointerDown);
+        document.addEventListener('keydown', handleKeyDown);
+        return () => {
+            document.removeEventListener('mousedown', handlePointerDown);
+            document.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [openMenuId]);
+
+    const submitReport = async (reason, detail) => {
+        if (!reportTarget) return;
+        try {
+            setReportLoading(true);
+            await communityAPI.reportPost(reportTarget.id, reason, detail, currentUser?.role || 'user');
+            setReportTarget(null);
+            setOpenMenuId(null);
+            notify.success("Thanks for reporting. We'll review this post.");
+        } catch {
+            notify.error("Couldn't submit your report.");
+        } finally {
+            setReportLoading(false);
+        }
+    };
 
     const togglePostLike = async (postId, e) => {
         e.stopPropagation();
@@ -55,8 +100,7 @@ const PostFeed = ({ posts, currentUser, onRefresh, onUpdatePost, onEditPost, onP
     return (
         <div className="flex flex-col gap-6 md:gap-8">
             {posts.map((post) => {
-                const isOwner = post.userId === currentUser?.id;
-                const isApproved = post.status === 'approved';
+                const isOwner = post.isOwner === true;
 
                 return (
                     <article
@@ -81,13 +125,52 @@ const PostFeed = ({ posts, currentUser, onRefresh, onUpdatePost, onEditPost, onP
                                     <p className="text-[9px] tracking-[0.18em] uppercase font-bold text-[#212631]/65">
                                         {new Date(post.createdAt).toLocaleString()}
                                     </p>
-                                    {isOwner && (
-                                        <p className={`text-[9px] tracking-[0.14em] uppercase font-black mt-1 ${isApproved ? 'text-emerald-700' : 'text-amber-700'}`}>
-                                            {isApproved ? 'Approved' : 'Pending Review'}
-                                        </p>
-                                    )}
                                 </div>
                             </div>
+
+                            {!isOwner && (
+                                <div
+                                    ref={(node) => {
+                                        if (node) menuRefs.current[post.id] = node;
+                                        else delete menuRefs.current[post.id];
+                                    }}
+                                    className="relative shrink-0"
+                                >
+                                    <button
+                                        type="button"
+                                        aria-haspopup="menu"
+                                        aria-expanded={openMenuId === post.id}
+                                        aria-label="Post options"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setOpenMenuId(openMenuId === post.id ? null : post.id);
+                                        }}
+                                        className="flex h-8 w-8 items-center justify-center rounded-full text-[#212631]/55 transition-colors hover:bg-[#212631]/5 hover:text-[#212631]"
+                                    >
+                                        <span aria-hidden="true" className="text-lg leading-none">&#8942;</span>
+                                    </button>
+
+                                    {openMenuId === post.id && (
+                                        <div
+                                            role="menu"
+                                            onClick={(e) => e.stopPropagation()}
+                                            className="absolute right-0 z-20 mt-1 w-44 overflow-hidden rounded-xl border border-[#212631]/15 bg-white py-1 shadow-lg"
+                                        >
+                                            <button
+                                                type="button"
+                                                role="menuitem"
+                                                onClick={() => {
+                                                    setOpenMenuId(null);
+                                                    setReportTarget(post);
+                                                }}
+                                                className="block w-full px-4 py-2 text-left text-xs font-bold uppercase tracking-[0.12em] text-red-700 transition-colors hover:bg-red-50"
+                                            >
+                                                Report post
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
 
                         </div>
 
@@ -118,17 +201,15 @@ const PostFeed = ({ posts, currentUser, onRefresh, onUpdatePost, onEditPost, onP
                                          {post.commentCount || 0}
                                 </button>
 
-                                {isApproved && (
-                                    <button
-                                        onClick={(e) => togglePostLike(post.id, e)}
-                                        className={`flex min-h-14 min-w-14 items-center gap-2 rounded-full px-3 text-base font-semibold transition-colors ${post.likedByViewer ? 'text-red-600' : 'text-[#212631]/70 hover:bg-red-50 hover:text-red-600'}`}
-                                    >
-                                         <svg className={`h-7 w-7 sm:h-8 sm:w-8 ${post.likedByViewer ? 'fill-red-600' : 'fill-none'}`} stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
-                                        </svg>
-                                         {post.likeCount || 0}
-                                     </button>
-                                 )}
+                                <button
+                                    onClick={(e) => togglePostLike(post.id, e)}
+                                    className={`flex min-h-14 min-w-14 items-center gap-2 rounded-full px-3 text-base font-semibold transition-colors ${post.likedByViewer ? 'text-red-600' : 'text-[#212631]/70 hover:bg-red-50 hover:text-red-600'}`}
+                                >
+                                     <svg className={`h-7 w-7 sm:h-8 sm:w-8 ${post.likedByViewer ? 'fill-red-600' : 'fill-none'}`} stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                                    </svg>
+                                     {post.likeCount || 0}
+                                 </button>
                                   <button onClick={(e) => sharePost(post, e)} className="flex min-h-14 min-w-14 items-center justify-center rounded-full text-base font-semibold text-[#212631]/70 hover:bg-[#212631]/5 hover:text-[#212631]" aria-label="Share post">
                                      <svg className="h-7 w-7 sm:h-8 sm:w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M7 17 17 7m0 0H9m8 0v8" /></svg>
                                  </button>
@@ -161,6 +242,13 @@ const PostFeed = ({ posts, currentUser, onRefresh, onUpdatePost, onEditPost, onP
                     <p className="text-[10px] tracking-[0.18em] uppercase font-bold text-[#212631]/75">Be the first to share something.</p>
                 </div>
             )}
+
+            <PostReportModal
+                isOpen={Boolean(reportTarget)}
+                onClose={() => setReportTarget(null)}
+                onSubmit={submitReport}
+                loading={reportLoading}
+            />
         </div>
     );
 };

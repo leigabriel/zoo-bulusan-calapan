@@ -2019,13 +2019,6 @@ export const communityAPI = {
         return handleResponse(response);
     },
 
-    getPendingPosts: async (type = 'admin') => {
-        const response = await fetch(`${API_BASE_URL}/community/posts/pending`, {
-            headers: getAuthHeaders(type)
-        });
-        return handleResponse(response);
-    },
-
     getAllPostsForModeration: async (type = 'admin') => {
         const response = await fetch(`${API_BASE_URL}/community/posts/all`, {
             headers: getAuthHeaders(type)
@@ -2033,8 +2026,33 @@ export const communityAPI = {
         return handleResponse(response);
     },
 
-    reviewPost: async (postId, action, note = '', type = 'admin') => {
-        const response = await fetch(`${API_BASE_URL}/community/posts/${postId}/review`, {
+    getReportedPosts: async (type = 'admin') => {
+        const response = await fetch(`${API_BASE_URL}/community/posts/reported`, {
+            headers: getAuthHeaders(type)
+        });
+        return handleResponse(response);
+    },
+
+    removePost: async (postId, note, type = 'admin') => {
+        const response = await fetch(`${API_BASE_URL}/community/posts/${postId}/remove`, {
+            method: 'PATCH',
+            headers: getAuthHeaders(type),
+            body: JSON.stringify({ note })
+        });
+        return handleResponse(response);
+    },
+
+    reportPost: async (postId, reason, detail = '', type = 'user') => {
+        const response = await fetch(`${API_BASE_URL}/community/posts/${postId}/report`, {
+            method: 'POST',
+            headers: getAuthHeaders(type),
+            body: JSON.stringify({ reason, detail })
+        });
+        return handleResponse(response);
+    },
+
+    reviewPostReport: async (reportId, action, note = '', type = 'admin') => {
+        const response = await fetch(`${API_BASE_URL}/community/post-reports/${reportId}/review`, {
             method: 'PATCH',
             headers: getAuthHeaders(type),
             body: JSON.stringify({ action, note })

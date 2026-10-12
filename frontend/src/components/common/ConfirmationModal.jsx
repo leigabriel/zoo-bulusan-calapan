@@ -17,6 +17,11 @@ const ConfirmationModal = ({
     inputPlaceholder = 'Enter details',
     inputValue = '',
     onInputChange,
+    selectLabel = 'Category',
+    selectPlaceholder = 'Select an option',
+    selectOptions = null,
+    selectValue = '',
+    onSelectChange,
     confirmDisabled = false,
     variant = 'default'
 }) => {
@@ -59,6 +64,32 @@ const ConfirmationModal = ({
                 }`}>
                 <h3 className={`text-lg font-black uppercase tracking-tight ${isModerationVariant ? 'text-white' : 'text-gray-900'}`}>{title}</h3>
                 <p className={`mt-3 text-sm leading-relaxed ${isModerationVariant ? 'text-emerald-100/80' : 'text-gray-600'}`}>{message}</p>
+
+                {selectOptions && (
+                    <div className="mt-4">
+                        <label htmlFor="confirmation-select" className={`block text-[11px] uppercase tracking-[0.15em] font-bold mb-2 ${isModerationVariant ? 'text-emerald-300/80' : 'text-gray-500'}`}>
+                            {selectLabel}
+                        </label>
+                        <select
+                            id="confirmation-select"
+                            value={selectValue}
+                            onChange={(event) => onSelectChange?.(event.target.value)}
+                            className={`w-full px-3 py-2 text-sm outline-none rounded-lg transition-colors ${isModerationVariant
+                                ? 'border border-emerald-900/70 bg-black/30 text-white focus:border-emerald-500'
+                                : workspaceTheme
+                                    ? 'border border-gray-300 bg-green-50 text-gray-900 focus:border-green-400'
+                                    : 'border border-gray-300 bg-white text-gray-900 focus:border-gray-700'
+                                }`}
+                        >
+                            <option value="">{selectPlaceholder}</option>
+                            {selectOptions.map((option) => {
+                                const value = typeof option === 'string' ? option : option.value;
+                                const label = typeof option === 'string' ? option : option.label;
+                                return <option key={value} value={value}>{label}</option>;
+                            })}
+                        </select>
+                    </div>
+                )}
 
                 {requireInput && (
                     <div className="mt-4">
