@@ -21,7 +21,7 @@ const buildCommentTree = (items) => {
     return roots;
 };
 
-const CommentSection = ({ postId, currentUser, refreshTrigger, onRequireConfirmation }) => {
+const CommentSection = ({ postId, currentUser, isGuest = false, onRequireAuth, refreshTrigger, onRequireConfirmation }) => {
     const [comments, setComments] = useState([]);
     const [loading, setLoading] = useState(false);
     const [commentText, setCommentText] = useState('');
@@ -49,6 +49,7 @@ const CommentSection = ({ postId, currentUser, refreshTrigger, onRequireConfirma
     const submitComment = async () => {
         const value = commentText.trim();
         if (!value) return;
+        if (isGuest && onRequireAuth?.()) return;
 
         try {
             await communityAPI.createComment(postId, value, null, currentUser?.role || 'user');
@@ -63,6 +64,7 @@ const CommentSection = ({ postId, currentUser, refreshTrigger, onRequireConfirma
     const submitReply = async (parentCommentId) => {
         const value = replyText.trim();
         if (!value) return;
+        if (isGuest && onRequireAuth?.()) return;
 
         try {
             await communityAPI.createComment(postId, value, parentCommentId, currentUser?.role || 'user');
@@ -112,6 +114,7 @@ const CommentSection = ({ postId, currentUser, refreshTrigger, onRequireConfirma
     };
 
     const toggleHeart = async (commentId) => {
+        if (isGuest && onRequireAuth?.()) return;
         try {
             const result = await communityAPI.toggleCommentHeart(commentId, currentUser?.role || 'user');
             await loadComments();
@@ -122,6 +125,7 @@ const CommentSection = ({ postId, currentUser, refreshTrigger, onRequireConfirma
     };
 
     const handleReport = async (comment) => {
+        if (isGuest && onRequireAuth?.()) return;
         try {
             const reason = await onRequireConfirmation?.({
                 title: 'Report This Comment?',
@@ -287,7 +291,19 @@ const CommentSection = ({ postId, currentUser, refreshTrigger, onRequireConfirma
 
     return (
             <div className="flex flex-col gap-8">
-            <div className="flex flex-col md:flex-row gap-4 items-start rounded-2xl border border-[#212631]/15 p-5 bg-[#ebebeb]">
+            {isGuest ? (
+                <div className="flex flex-col items-center gap-4 rounded-2xl border border-gray-600 p-6 text-center">
+                    <p className="text-sm font-medium text-black/70">Sign in to join the discussion.</p>
+                    <button
+                        type="button"
+                        onClick={() => onRequireAuth?.()}
+                        className="min-h-11 px-6 py-3 bg-black text-white text-[9px] tracking-[0.18em] uppercase font-black hover:bg-black/80 transition-colors"
+                    >
+                        Sign in to comment
+                    </button>
+                </div>
+            ) : (
+            <div className="flex flex-col md:flex-row gap-4 items-start rounded-2xl border border-gray-600 p-5 bg-white">
                 <img
                     src={getProfileImageUrl(currentUser?.profileImage || currentUser?.profile_image) || 'https://via.placeholder.com/48x48?text=U'}
                     alt="You"
@@ -312,6 +328,7 @@ const CommentSection = ({ postId, currentUser, refreshTrigger, onRequireConfirma
                     </div>
                 </div>
             </div>
+            )}
 
             <div className="flex flex-col">
                 {commentTree.map((comment) => renderComment(comment))}

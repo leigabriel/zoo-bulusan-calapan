@@ -50,7 +50,7 @@ const PostReportModal = ({ isOpen, onClose, onSubmit, loading = false }) => {
                 className="absolute inset-0 backdrop-blur-sm bg-black/55"
             />
 
-            <div className="relative w-full max-w-md shadow-2xl p-6 rounded-2xl bg-white border border-gray-200">
+            <div className="relative w-full max-w-md max-h-[90dvh] overflow-y-auto overscroll-contain rounded-md shadow-2xl p-5 sm:p-6 bg-white border border-gray-600">
                 <h3 className="text-lg font-black uppercase tracking-tight text-gray-900">Report This Post</h3>
                 <p className="mt-3 text-sm leading-relaxed text-gray-600">
                     Your report will be sent to admin/staff for moderation review.
@@ -65,7 +65,7 @@ const PostReportModal = ({ isOpen, onClose, onSubmit, loading = false }) => {
                         ref={selectRef}
                         value={reason}
                         onChange={(event) => setReason(event.target.value)}
-                        className="w-full px-3 py-2 text-sm outline-none rounded-lg transition-colors border border-gray-300 text-gray-900 focus:border-gray-700"
+                        className="w-full px-3 py-2 text-sm outline-none rounded-md transition-colors border border-gray-600 bg-white text-gray-900 focus:border-gray-900"
                     >
                         <option value="">Select a reason</option>
                         {POST_REPORT_REASONS.map((option) => (
@@ -86,7 +86,7 @@ const PostReportModal = ({ isOpen, onClose, onSubmit, loading = false }) => {
                         maxLength={DETAIL_MAX}
                         required={needsDetail}
                         placeholder={needsDetail ? 'Briefly describe the problem' : 'Optional — add anything that helps us understand'}
-                        className="w-full px-3 py-2 text-sm outline-none rounded-lg transition-colors border border-gray-300 text-gray-900 placeholder:text-gray-400 focus:border-gray-700"
+                        className="w-full px-3 py-2 text-sm outline-none rounded-md transition-colors border border-gray-600 bg-white text-gray-900 placeholder:text-gray-400 focus:border-gray-900"
                     />
                     <p className="mt-1 text-right text-[10px] uppercase tracking-[0.15em] font-bold text-gray-400">
                         {detail.length}/{DETAIL_MAX}
@@ -98,7 +98,7 @@ const PostReportModal = ({ isOpen, onClose, onSubmit, loading = false }) => {
                         type="button"
                         onClick={onClose}
                         disabled={loading}
-                        className="px-4 py-2 border text-xs font-black uppercase tracking-[0.15em] transition-colors disabled:opacity-50 rounded-lg border-gray-300 text-gray-700 hover:bg-gray-100"
+                        className="px-4 py-2 min-h-11 border text-xs font-black uppercase tracking-[0.15em] transition-colors disabled:opacity-50 rounded-md border-gray-600 text-gray-700 hover:bg-black/5"
                     >
                         Cancel
                     </button>
@@ -106,7 +106,7 @@ const PostReportModal = ({ isOpen, onClose, onSubmit, loading = false }) => {
                         type="button"
                         onClick={handleConfirm}
                         disabled={loading || !canSubmit}
-                        className="px-4 py-2 border text-xs font-black uppercase tracking-[0.15em] transition-colors disabled:opacity-50 rounded-lg bg-[#212631] border-[#212631] text-white hover:bg-black"
+                        className="px-4 py-2 min-h-11 border text-xs font-black uppercase tracking-[0.15em] transition-colors disabled:opacity-50 rounded-md bg-black border-black text-white hover:bg-black/85"
                     >
                         {loading ? 'Processing...' : 'Submit Report'}
                     </button>

@@ -1,11 +1,11 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { ReactLenis } from 'lenis/react';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
-import gsap from 'gsap';
 import Header from '../../components/Header';
 import PostForm from '../../components/features/community/PostForm';
 import PostFeed from '../../components/features/community/PostFeed';
 import CommentSection from '../../components/features/community/CommentSection';
+import SignInModal from '../../components/features/community/SignInModal';
 import ConfirmationModal from '../../components/common/ConfirmationModal';
 import { communityAPI, getProfileImageUrl } from '../../services/api-client';
 import { useAuth } from '../../context/AuthContext';
@@ -16,25 +16,39 @@ import useScrollLock from '../../hooks/use-scroll-lock';
 
 const CommunityPage = () => {
     const { user } = useAuth();
+    const isGuest = !user;
     const [posts, setPosts] = useState([]);
     const [loadingPosts, setLoadingPosts] = useState(false);
     const [savingPost, setSavingPost] = useState(false);
     const [editingPost, setEditingPost] = useState(null);
     const [postModalOpen, setPostModalOpen] = useState(false);
+    const [signInOpen, setSignInOpen] = useState(false);
     const [selectedPost, setSelectedPost] = useState(null);
     const [commentOnly, setCommentOnly] = useState(false);
-    const communityTitleRef = useRef(null);
-    const communityLetterRefs = useRef([]);
-    useScrollLock(postModalOpen || Boolean(selectedPost));
+    useScrollLock(postModalOpen || signInOpen || Boolean(selectedPost));
+
+    // Guests read freely but must sign in before any write action.
+    const requireAuth = useCallback(() => {
+        if (user) return false;
+        setSignInOpen(true);
+        return true;
+    }, [user]);
+
+    const openPostComposer = () => {
+        if (requireAuth()) return;
+        setEditingPost(null);
+        setPostModalOpen(true);
+    };
 
     useEffect(() => {
-        if (!postModalOpen && !selectedPost) return undefined;
+        if (!postModalOpen && !signInOpen && !selectedPost) return undefined;
         const focusTimer = window.setTimeout(() => {
             document.querySelector('[data-community-modal-close]')?.focus();
         }, 0);
         const handleKeyDown = (event) => {
             if (event.key !== 'Escape') return;
             if (selectedPost) setSelectedPost(null);
+            else if (signInOpen) setSignInOpen(false);
             else if (!savingPost) setPostModalOpen(false);
         };
         document.addEventListener('keydown', handleKeyDown);
@@ -42,38 +56,7 @@ const CommunityPage = () => {
             window.clearTimeout(focusTimer);
             document.removeEventListener('keydown', handleKeyDown);
         };
-    }, [postModalOpen, savingPost, selectedPost]);
-
-    const animateCommunityTitle = (isHovering) => {
-        const letters = communityLetterRefs.current.filter(Boolean);
-        if (!letters.length) return;
-
-        letters.forEach((letter, index) => {
-            if (isHovering) {
-                gsap.to(letter, {
-                    y: index % 2 === 0 ? -12 - index : 10 + index,
-                    rotate: index % 2 === 0 ? -5 - index : 4 + index,
-                    scale: index % 3 === 0 ? 1.14 : 1.04,
-                    color: index % 2 === 0 ? '#526f3c' : '#789c2b',
-                    duration: 0.45 + index * 0.035,
-                    delay: index * 0.035,
-                    ease: 'power3.out',
-                    overwrite: 'auto'
-                });
-            } else {
-                gsap.to(letter, {
-                    y: 0,
-                    rotate: 0,
-                    scale: 1,
-                    color: '#000000',
-                    duration: 0.65,
-                    delay: index * 0.025,
-                    ease: 'elastic.out(1, 0.45)',
-                    overwrite: 'auto'
-                });
-            }
-        });
-    };
+    }, [postModalOpen, savingPost, selectedPost, signInOpen]);
     const [confirmState, setConfirmState] = useState({
         isOpen: false,
         title: '',
@@ -181,41 +164,26 @@ const CommunityPage = () => {
 
     return (
         <ReactLenis root>
-            <div className="bg-[#f6f7f4] text-[#212631] relative min-h-screen">
+            <div className="bg-white text-black relative min-h-screen">
                 <Header />
 
-                {/* Intro Section - Clean Style */}
+                {/* Intro Section */}
                 <div className="w-full min-h-[42vh] md:min-h-[54vh] flex flex-col items-center justify-center px-4 pt-20">
-                    <p className="mb-5 rounded-full bg-[#c6fe69] px-4 py-2 text-xs font-bold uppercase tracking-[0.3em] text-[#212631]">Share the wild with us</p>
-                    <h1
-                        ref={communityTitleRef}
-                        onMouseEnter={() => animateCommunityTitle(true)}
-                        onMouseLeave={() => animateCommunityTitle(false)}
-                        className="cursor-pointer text-[4rem] sm:text-[6rem] md:text-[9rem] lg:text-[11rem] leading-none tracking-tight text-black text-center break-words w-full"
-                    >
-                        {Array.from('Community').map((letter, index) => (
-                            <span
-                                key={`${letter}-${index}`}
-                                ref={(element) => { communityLetterRefs.current[index] = element; }}
-                                className="inline-block"
-                                aria-hidden="true"
-                            >
-                                {letter}
-                            </span>
-                        ))}
-                        <span className="sr-only">Community</span>
+                    <p className="mb-6 text-xs font-bold uppercase tracking-[0.3em] text-black/50">Share the wild with us</p>
+                    <h1 className="text-[4rem] sm:text-[6rem] md:text-[9rem] lg:text-[11rem] leading-none tracking-tight text-black text-center break-words w-full">
+                        Community
                     </h1>
                 </div>
 
                 {/* Main Feed Section */}
-                <main id="community-feed" className="relative z-10 w-full bg-[#eef0ec] border-t border-[#212631]/10">
+                <main id="community-feed" className="relative z-10 w-full bg-white">
                     <div className="max-w-[820px] mx-auto min-h-screen">
-                         <div className="bg-[#eef0ec] min-h-screen">
+                         <div className="bg-white min-h-screen">
                              <div className="p-4 sm:p-6 md:p-8">
                                 {loadingPosts ? (
                                     <div className="flex items-center justify-center py-32">
                                         <Motion.div
-                                            className="w-5 h-5 rounded-full border-[1.5px] border-[#212631]/25 border-t-[#212631]"
+                                            className="w-5 h-5 rounded-full border-[1.5px] border-black/25 border-t-black"
                                             animate={{ rotate: 360 }}
                                             transition={{ repeat: Infinity, duration: 0.85, ease: 'linear' }}
                                         />
@@ -224,6 +192,8 @@ const CommunityPage = () => {
                                     <PostFeed
                                         posts={posts}
                                         currentUser={user}
+                                        isGuest={isGuest}
+                                        onRequireAuth={requireAuth}
                                         onRefresh={loadPosts}
                                          onEditPost={(post) => { setEditingPost(post); setPostModalOpen(true); }}
                                          onUpdatePost={(postId, changes) => setPosts((current) => current.map((post) => post.id === postId ? { ...post, ...changes } : post))}
@@ -240,21 +210,21 @@ const CommunityPage = () => {
 
                 <button
                     type="button"
-                    onClick={() => setPostModalOpen(true)}
-                    className="group fixed left-3 top-[92px] z-[80] flex h-14 w-14 items-center justify-center rounded-full border border-[#212631]/10 bg-white/95 p-1.5 text-sm font-black text-[#212631] shadow-[0_10px_30px_rgba(33,38,49,0.16)] backdrop-blur-md transition-all hover:-translate-y-0.5 hover:shadow-[0_14px_34px_rgba(33,38,49,0.22)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#c6fe69] sm:left-6 sm:top-[108px] sm:h-auto sm:w-auto sm:justify-start sm:gap-3 sm:pr-5"
-                    aria-label="Create post"
+                    onClick={openPostComposer}
+                    className="fixed left-3 top-[76px] z-[80] flex h-12 w-12 items-center justify-center rounded-md border border-gray-600 bg-black p-1.5 text-sm font-black text-white transition-colors hover:bg-black/80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black sm:left-6 sm:top-[96px] sm:h-auto sm:w-auto sm:justify-start sm:gap-3 sm:pr-5"
+                    aria-label={isGuest ? 'Sign in to post' : 'Create post'}
                 >
-                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#212631] transition-colors group-hover:bg-[#5c7d16]">
-                    <Plus className="h-8 w-8 text-[#c6fe59]" aria-hidden="true" />
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center">
+                    <Plus className="h-6 w-6 text-white" aria-hidden="true" />
                     </span>
-                    <span className="hidden whitespace-nowrap text-[11px] uppercase tracking-[0.16em] sm:inline">Create post</span>
+                    <span className="hidden whitespace-nowrap text-[11px] uppercase tracking-[0.16em] text-white sm:inline">{isGuest ? 'Sign in to post' : 'Create post'}</span>
                 </button>
 
                 <AnimatePresence>
                     {postModalOpen && (
                         <div className="fixed inset-0 z-[150] flex items-center justify-center overscroll-contain p-4" role="dialog" aria-modal="true" aria-labelledby="community-post-form-title">
                             <Motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => !savingPost && setPostModalOpen(false)} />
-                            <Motion.div data-lenis-prevent initial={{ y: 30, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 30, opacity: 0 }} className="relative z-10 max-h-[92vh] w-full overflow-y-auto overscroll-contain rounded-t-3xl bg-white p-5 shadow-2xl sm:max-w-xl sm:rounded-3xl sm:p-8">
+                            <Motion.div data-lenis-prevent initial={{ y: 30, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 30, opacity: 0 }} className="relative z-10 max-h-[92dvh] w-full overflow-y-auto overscroll-contain rounded-t-md bg-white p-4 shadow-2xl sm:max-w-xl sm:rounded-md sm:border sm:border-gray-600 sm:p-8">
                                 <div className="mb-6 flex items-center justify-between"><h2 id="community-post-form-title" className="text-xl font-black">{editingPost ? 'Edit post' : 'Create post'}</h2><button data-community-modal-close onClick={() => !savingPost && setPostModalOpen(false)} className="rounded-full px-3 py-2 text-sm text-[#212631]/60 hover:bg-black/5">Close</button></div>
                                 <PostForm onSubmit={async (data) => { const result = await createOrUpdatePost(data); if (result !== false) setPostModalOpen(false); return result; }} loading={savingPost} initialPost={editingPost} onCancelEdit={() => { setEditingPost(null); setPostModalOpen(false); }} />
                             </Motion.div>
@@ -277,62 +247,64 @@ const CommunityPage = () => {
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, y: 12 }}
                                 transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
-                                  className="relative z-10 flex flex-col rounded-t-3xl bg-white border border-[#212631]/10 w-full h-full md:h-auto md:max-w-4xl md:max-h-[85vh] overflow-hidden overscroll-contain md:rounded-3xl"
+                                  className="relative z-10 flex flex-col bg-white w-full h-full md:h-auto md:max-w-4xl md:max-h-[85vh] overflow-hidden overscroll-contain md:rounded-md md:border md:border-gray-600"
                             >
-                                <div className="flex items-center justify-between px-5 py-4 border-b border-[#212631]/15 shrink-0 bg-[#ebebeb]">
-                                    <span id="community-post-dialog-title" className="text-[10px] tracking-[0.18em] uppercase font-bold text-[#212631]/70">
+                                <div className="flex items-center justify-between px-4 py-3 sm:px-5 sm:py-4 border-b border-gray-600 shrink-0 bg-white">
+                                    <span id="community-post-dialog-title" className="text-[10px] tracking-[0.18em] uppercase font-bold text-black/70">
                                         {commentOnly ? 'Comments' : 'Post Details'}
                                     </span>
                                     <button
                                         data-community-modal-close
                                         onClick={() => setSelectedPost(null)}
-                                        className="text-[#212631] opacity-70 hover:opacity-100 transition-opacity cursor-pointer flex items-center gap-2"
+                                        className="text-black opacity-70 hover:opacity-100 transition-opacity cursor-pointer flex items-center gap-2"
                                     >
                                         <span className="text-[10px] tracking-widest uppercase font-bold">Close</span>
                                         <X className="h-3.5 w-3.5" />
                                     </button>
                                 </div>
 
-                                <div data-lenis-prevent className="overflow-y-auto overscroll-contain flex-1 p-6 md:p-10">
+                                <div data-lenis-prevent className="overflow-y-auto overscroll-contain flex-1 p-4 sm:p-6 md:p-10">
                                     {commentOnly ? (
                                         <div>
-                                            <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#212631]/50">Community discussion</p>
+                                            <p className="text-xs font-bold uppercase tracking-[0.2em] text-black/50">Community discussion</p>
                                             <h2 className="mt-2 mb-8 text-3xl font-black tracking-tight">Comments</h2>
-                                            <CommentSection postId={selectedPost.id} currentUser={user} refreshTrigger={0} onRequireConfirmation={confirmCommentAction} />
+                                            <CommentSection postId={selectedPost.id} currentUser={user} isGuest={isGuest} onRequireAuth={requireAuth} refreshTrigger={0} onRequireConfirmation={confirmCommentAction} />
                                         </div>
                                     ) : (
                                         <>
-                                    <div className="flex items-center gap-4 mb-8 group w-max">
+                                    <div className="flex items-center gap-4 mb-8 w-max">
                                         <img
                                             src={getProfileImageUrl(selectedPost.author.profileImage) || 'https://via.placeholder.com/64x64?text=U'}
                                             alt="author"
-                                             className="w-12 h-12 rounded-full object-cover transition-all border border-[#212631]/20"
+                                             className="w-12 h-12 rounded-full object-cover"
                                         />
                                         <div className="flex flex-col">
-                                            <span className="font-black uppercase text-[#212631] tracking-tight text-lg group-hover:underline">
+                                            <span className="font-black uppercase text-black tracking-tight text-lg">
                                                 {selectedPost.author.firstName} {selectedPost.author.lastName}
                                             </span>
-                                            <span className="text-[9px] tracking-[0.18em] uppercase font-bold text-[#212631]/65">
+                                            <span className="text-[9px] tracking-[0.18em] uppercase font-bold text-black/60">
                                                 {new Date(selectedPost.createdAt).toLocaleString()}
                                             </span>
                                         </div>
                                     </div>
 
-                                    <p className="text-xl md:text-3xl font-medium leading-[1.3] text-[#212631] whitespace-pre-wrap mb-10 tracking-tight">
+                                    <p className="text-xl md:text-3xl font-medium leading-[1.3] text-black whitespace-pre-wrap mb-10 tracking-tight">
                                         {selectedPost.content}
                                     </p>
 
                                     {selectedPost.imageUrl && (
-                                         <div className="w-full overflow-hidden rounded-2xl border border-[#212631]/15 mb-10 bg-[#212631]/5 flex justify-center">
+                                         <div className="w-full overflow-hidden mb-10 bg-black/[0.03] flex justify-center">
                                             <img src={selectedPost.imageUrl} alt="post" className="max-w-full h-auto max-h-[60vh] object-contain" />
                                         </div>
                                     )}
 
-                                    <div className="pt-10 border-t border-[#212631]/15">
-                                        <h3 className="font-black uppercase text-[#212631] tracking-tighter text-2xl mb-8">Discussion</h3>
+                                    <div className="pt-10 border-t border-black/10">
+                                        <h3 className="font-black uppercase text-black tracking-tighter text-2xl mb-8">Discussion</h3>
                                         <CommentSection
                                             postId={selectedPost.id}
                                             currentUser={user}
+                                            isGuest={isGuest}
+                                            onRequireAuth={requireAuth}
                                             refreshTrigger={0}
                                             onRequireConfirmation={confirmCommentAction}
                                         />
@@ -344,6 +316,8 @@ const CommunityPage = () => {
                         </div>
                     )}
                 </AnimatePresence>
+
+                <SignInModal isOpen={signInOpen} onClose={() => setSignInOpen(false)} />
 
                 <Footer />
 

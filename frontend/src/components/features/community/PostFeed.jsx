@@ -3,7 +3,7 @@ import { communityAPI, getProfileImageUrl } from '../../../services/api-client';
 import { notify } from '../../../utils/toast';
 import PostReportModal from './PostReportModal';
 
-const PostFeed = ({ posts, currentUser, onRefresh, onUpdatePost, onEditPost, onPostClick, onCommentClick, onConfirmDelete }) => {
+const PostFeed = ({ posts, currentUser, isGuest = false, onRequireAuth, onRefresh, onUpdatePost, onEditPost, onPostClick, onCommentClick, onConfirmDelete }) => {
 
     const [openMenuId, setOpenMenuId] = useState(null);
     const [reportTarget, setReportTarget] = useState(null);
@@ -35,6 +35,10 @@ const PostFeed = ({ posts, currentUser, onRefresh, onUpdatePost, onEditPost, onP
 
     const submitReport = async (reason, detail) => {
         if (!reportTarget) return;
+        if (isGuest && onRequireAuth?.()) {
+            setReportTarget(null);
+            return;
+        }
         try {
             setReportLoading(true);
             await communityAPI.reportPost(reportTarget.id, reason, detail, currentUser?.role || 'user');
@@ -50,6 +54,7 @@ const PostFeed = ({ posts, currentUser, onRefresh, onUpdatePost, onEditPost, onP
 
     const togglePostLike = async (postId, e) => {
         e.stopPropagation();
+        if (isGuest && onRequireAuth?.()) return;
         try {
             const result = await communityAPI.togglePostLike(postId, currentUser?.role || 'user');
             onUpdatePost?.(postId, { likedByViewer: result.liked, likeCount: result.likeCount });
@@ -81,6 +86,7 @@ const PostFeed = ({ posts, currentUser, onRefresh, onUpdatePost, onEditPost, onP
 
     const sharePost = async (post, e) => {
         e.stopPropagation();
+        if (isGuest && onRequireAuth?.()) return;
         const url = `${window.location.origin}/community#post-${post.id}`;
 
         try {
@@ -105,10 +111,10 @@ const PostFeed = ({ posts, currentUser, onRefresh, onUpdatePost, onEditPost, onP
                 return (
                     <article
                         key={post.id}
-                        className="min-w-0 bg-white border border-[#212631]/10 rounded-3xl overflow-hidden cursor-pointer group flex flex-col shadow-sm hover:shadow-md hover:border-[#212631]/20 transition-all"
+                        className="min-w-0 bg-white overflow-hidden cursor-pointer group flex flex-col rounded-md border border-gray-600"
                         onClick={() => onPostClick && onPostClick(post)}
                     >
-                        <div className="flex items-start justify-between gap-3 p-4 sm:p-5 md:p-6 border-b border-[#212631]/15">
+                        <div className="flex items-start justify-between gap-3 px-1 py-4 sm:py-5">
                             <div
                                 className="flex items-center gap-4 cursor-pointer"
                                 onClick={(e) => e.stopPropagation()}
@@ -116,13 +122,13 @@ const PostFeed = ({ posts, currentUser, onRefresh, onUpdatePost, onEditPost, onP
                                 <img
                                     src={getProfileImageUrl(post.author.profileImage) || 'https://via.placeholder.com/56x56?text=U'}
                                     alt="author"
-                                    className="w-10 h-10 rounded-full object-cover border border-[#212631]/20 transition-all duration-300"
+                                    className="w-10 h-10 rounded-full object-cover"
                                 />
                                 <div className="flex flex-col">
-                                    <p className="text-sm font-black uppercase text-[#212631] tracking-tight hover:underline">
+                                    <p className="text-sm font-black uppercase text-black tracking-tight">
                                         {post.author.firstName} {post.author.lastName}
                                     </p>
-                                    <p className="text-[9px] tracking-[0.18em] uppercase font-bold text-[#212631]/65">
+                                    <p className="text-[9px] tracking-[0.18em] uppercase font-bold text-black/60">
                                         {new Date(post.createdAt).toLocaleString()}
                                     </p>
                                 </div>
@@ -154,7 +160,7 @@ const PostFeed = ({ posts, currentUser, onRefresh, onUpdatePost, onEditPost, onP
                                         <div
                                             role="menu"
                                             onClick={(e) => e.stopPropagation()}
-                                            className="absolute right-0 z-20 mt-1 w-44 overflow-hidden rounded-xl border border-[#212631]/15 bg-white py-1 shadow-lg"
+                                            className="absolute right-0 z-20 mt-1 w-44 overflow-hidden rounded-md border border-gray-600 bg-white py-1 shadow-lg"
                                         >
                                             <button
                                                 type="button"
@@ -163,7 +169,7 @@ const PostFeed = ({ posts, currentUser, onRefresh, onUpdatePost, onEditPost, onP
                                                     setOpenMenuId(null);
                                                     setReportTarget(post);
                                                 }}
-                                                className="block w-full px-4 py-2 text-left text-xs font-bold uppercase tracking-[0.12em] text-red-700 transition-colors hover:bg-red-50"
+                                                className="block w-full px-4 py-3 text-left text-xs font-bold uppercase tracking-[0.12em] text-red-700 transition-colors hover:bg-red-50"
                                             >
                                                 Report post
                                             </button>
@@ -174,22 +180,22 @@ const PostFeed = ({ posts, currentUser, onRefresh, onUpdatePost, onEditPost, onP
 
                         </div>
 
-                        <div className="p-5 md:p-6">
-                            <p className="text-lg md:text-xl text-[#212631] font-medium leading-relaxed whitespace-pre-wrap tracking-tight">
+                        <div className="px-1 py-2 sm:py-3">
+                            <p className="text-lg md:text-xl text-black font-medium leading-relaxed whitespace-pre-wrap tracking-tight">
                                 {post.content}
                             </p>
                         </div>
 
                         {post.imageUrl && (
-                            <div className="border-t border-b border-[#212631]/15 bg-[#212631]/5 flex items-center justify-center overflow-hidden">
+                            <div className="bg-black/[0.03] flex items-center justify-center overflow-hidden">
                                 <img src={post.imageUrl} alt="post" className="w-full h-auto max-h-[600px] object-cover" />
                             </div>
                         )}
 
-                         <div className="flex flex-wrap items-center justify-between gap-2 p-3 sm:p-4 md:p-5 bg-[#ebebeb] border-t border-[#212631]/15 mt-auto">
+                         <div className="flex flex-wrap items-center justify-between gap-2 px-1 py-3 mt-auto">
                              <div className="flex flex-wrap items-center gap-1 sm:gap-2">
                                 <button
-                                    className="flex min-h-14 min-w-14 items-center gap-2 rounded-full px-3 text-base font-semibold text-[#212631]/70 hover:bg-[#212631]/5 hover:text-[#212631] transition-colors"
+                                    className="flex min-h-11 min-w-11 items-center gap-2 px-3 text-base font-semibold text-black/70 hover:bg-black/5 hover:text-black transition-colors"
                                     onClick={(e) => {
                                         e.stopPropagation();
                                         if (onCommentClick) onCommentClick(post);
@@ -203,14 +209,14 @@ const PostFeed = ({ posts, currentUser, onRefresh, onUpdatePost, onEditPost, onP
 
                                 <button
                                     onClick={(e) => togglePostLike(post.id, e)}
-                                    className={`flex min-h-14 min-w-14 items-center gap-2 rounded-full px-3 text-base font-semibold transition-colors ${post.likedByViewer ? 'text-red-600' : 'text-[#212631]/70 hover:bg-red-50 hover:text-red-600'}`}
+                                    className={`flex min-h-11 min-w-11 items-center gap-2 px-3 text-base font-semibold transition-colors ${post.likedByViewer ? 'text-red-600' : 'text-black/70 hover:bg-red-50 hover:text-red-600'}`}
                                 >
                                      <svg className={`h-7 w-7 sm:h-8 sm:w-8 ${post.likedByViewer ? 'fill-red-600' : 'fill-none'}`} stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
                                     </svg>
                                      {post.likeCount || 0}
                                  </button>
-                                  <button onClick={(e) => sharePost(post, e)} className="flex min-h-14 min-w-14 items-center justify-center rounded-full text-base font-semibold text-[#212631]/70 hover:bg-[#212631]/5 hover:text-[#212631]" aria-label="Share post">
+                                  <button onClick={(e) => sharePost(post, e)} className="flex min-h-11 min-w-11 items-center justify-center text-base font-semibold text-black/70 hover:bg-black/5 hover:text-black" aria-label="Share post">
                                      <svg className="h-7 w-7 sm:h-8 sm:w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M7 17 17 7m0 0H9m8 0v8" /></svg>
                                  </button>
                             </div>
@@ -219,13 +225,13 @@ const PostFeed = ({ posts, currentUser, onRefresh, onUpdatePost, onEditPost, onP
                                 <div className="flex gap-4">
                                     <button
                                         onClick={(e) => handleEditClick(post, e)}
-                                        className="text-[9px] tracking-[0.18em] uppercase font-black text-[#212631]/70 hover:text-[#212631] transition-colors"
+                                        className="text-[9px] tracking-[0.18em] uppercase font-black text-black/70 hover:text-black transition-colors"
                                     >
                                         Edit
                                     </button>
                                     <button
                                         onClick={(e) => deletePost(post.id, e)}
-                                        className="text-[9px] tracking-[0.18em] uppercase font-black text-red-300 hover:text-red-400 transition-colors"
+                                        className="text-[9px] tracking-[0.18em] uppercase font-black text-red-600 hover:text-red-700 transition-colors"
                                     >
                                         Delete
                                     </button>
@@ -237,9 +243,9 @@ const PostFeed = ({ posts, currentUser, onRefresh, onUpdatePost, onEditPost, onP
             })}
 
             {posts.length === 0 && (
-                <div className="border border-[#212631]/10 rounded-3xl p-10 sm:p-16 flex flex-col items-center justify-center text-center bg-white">
-                    <p className="text-2xl font-black uppercase tracking-tighter text-[#212631]/60 mb-2">No Posts Yet</p>
-                    <p className="text-[10px] tracking-[0.18em] uppercase font-bold text-[#212631]/75">Be the first to share something.</p>
+                <div className="rounded-md border border-gray-600 p-10 sm:p-16 flex flex-col items-center justify-center text-center bg-white">
+                    <p className="text-2xl font-black uppercase tracking-tighter text-black/60 mb-2">No Posts Yet</p>
+                    <p className="text-[10px] tracking-[0.18em] uppercase font-bold text-black/60">Be the first to share something.</p>
                 </div>
             )}
 

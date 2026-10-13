@@ -15,7 +15,9 @@ import {
     Headset, Logout, Information, HandHeart
 } from 'reicon-react';
 
-const MINIZOO_GAME_URL = (typeof process !== 'undefined' && process.env && process.env.VITE_MINIZOO_GAME_URL) ? process.env.VITE_MINIZOO_GAME_URL : 'https://bulusanzootopia.vercel.app';
+const env = (typeof process !== 'undefined' && process.env) ? process.env : {};
+const MINIZOO_GAME_URL = env.VITE_MINIZOO_GAME_URL || 'https://bulusanzootopia.vercel.app';
+const MINIZOO_ADVENTURE_GAME_URL = env.VITE_MINIZOO_ADVENTURE_GAME_URL || 'https://adventuregame.bulusanzoo.com/';
 
 // Notification types are catalog keys such as 'event.announced' or
 // 'reservation.confirmed' (see backend/services/notification-service.js). Match on the
@@ -352,6 +354,11 @@ const Header = () => {
     const handleConfirmMiniZooGame = () => {
         setShowMiniZooGame(false);
         window.open(MINIZOO_GAME_URL, '_blank', 'noopener,noreferrer');
+    };
+
+    const handlePlayAdventureGame = () => {
+        setShowMiniZooGame(false);
+        window.open(MINIZOO_ADVENTURE_GAME_URL, '_blank', 'noopener,noreferrer');
     };
 
     const quickItems = [
@@ -883,7 +890,7 @@ const Header = () => {
                         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
                         onClick={() => { setShowMiniZooGame(false); if (user) setShowSidePanel(true); }}
                     />
-                    <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden">
+                    <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-sm mx-4 max-h-[90dvh] overflow-y-auto overscroll-contain">
                         <div className="p-6 text-center">
                             <div className="w-16 h-16 mx-auto mb-4 bg-emerald-100 rounded-full flex items-center justify-center">
                                 <svg className="w-8 h-8 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -893,20 +900,26 @@ const Header = () => {
                             </div>
                             <h3 className="text-xl font-bold text-gray-900 mb-2">Mini Zoo Game</h3>
                             <p className="text-gray-600 text-sm mb-6">
-                                You are about to open the Mini Zoo Game in a new tab. Do you want to continue?
+                                Choose where you want to go. Both open in a new tab.
                             </p>
-                            <div className="flex gap-3">
-                                <button
-                                    onClick={() => { setShowMiniZooGame(false); if (user) setShowSidePanel(true); }}
-                                    className="flex-1 py-2.5 px-4 border border-gray-200 rounded-xl font-medium text-gray-600 hover:bg-gray-50 transition-colors"
-                                >
-                                    Cancel
-                                </button>
+                            <div className="flex flex-col gap-3">
                                 <button
                                     onClick={handleConfirmMiniZooGame}
-                                    className="flex-1 py-2.5 px-4 bg-emerald-500 text-white rounded-xl font-medium hover:bg-emerald-600 transition-colors"
+                                    className="w-full min-h-11 py-3 px-4 rounded-md bg-emerald-500 text-white font-semibold hover:bg-emerald-600 transition-colors"
                                 >
-                                    Continue
+                                    Visit Bulusan Zootopia
+                                </button>
+                                <button
+                                    onClick={handlePlayAdventureGame}
+                                    className="w-full min-h-11 py-3 px-4 rounded-md border border-gray-200 font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
+                                >
+                                    Play the Game
+                                </button>
+                                <button
+                                    onClick={() => { setShowMiniZooGame(false); if (user) setShowSidePanel(true); }}
+                                    className="w-full min-h-11 py-3 px-4 font-medium text-gray-500 hover:text-gray-700 transition-colors"
+                                >
+                                    Cancel
                                 </button>
                             </div>
                         </div>

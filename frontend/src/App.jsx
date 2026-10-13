@@ -190,11 +190,7 @@ function AppRoutes() {
                 </ProtectedRoute>
             } />
             <Route path="/help" element={<Help />} />
-            <Route path="/community" element={
-                <ProtectedRoute allowedRoles={['user', 'staff', 'admin']}>
-                    <CommunityPage />
-                </ProtectedRoute>
-            } />
+            <Route path="/community" element={<CommunityPage />} />
             <Route path="/community/users/:userId" element={
                 <ProtectedRoute allowedRoles={['user', 'staff', 'admin']}>
                     <PublicUserProfile />

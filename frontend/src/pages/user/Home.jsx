@@ -120,7 +120,14 @@ const HeroSection = () => {
     return (
         <div ref={containerRef} className="relative w-full min-h-[100dvh] overflow-hidden bg-white">
             <section className="relative mx-auto max-w-[2000px] w-full min-h-[100dvh] flex flex-col items-center justify-center overflow-hidden">
-                <div className="hero-bg-parallax absolute inset-0 bg-white -z-10 origin-bottom" />
+                {/* Green rises from the bottom only, leaving the headline a clean white
+                    backdrop.
+
+                    z-0, not -z-10: the wrapper is `position: relative` with no z-index, so
+                    it does not create a stacking context. A negative z-index descendant
+                    paints in step 2 of the painting order, before that wrapper's own
+                    `bg-white` in step 6 — the gradient was hidden behind it entirely. */}
+                <div className="hero-bg-parallax absolute inset-0 z-0 origin-bottom bg-[linear-gradient(to_bottom,#ffffff_0%,#ffffff_45%,#bbf7d0_72%,#4ade80_100%)]" />
                 <div className="hero-images absolute inset-0 z-0 overflow-hidden pointer-events-none">
                     <img
                         src="/deer.png"
@@ -145,15 +152,24 @@ const HeroSection = () => {
                             </p>
                         </div>
                     </div>
-                    <button
-                        onClick={() => navigate('/reservations')}
-                        className="hero-btn group pointer-events-auto bg-green-400 text-black p-1 sm:p-1.5 rounded-xl cursor-pointer transition-all duration-300 ease-out hover:scale-110 hover:drop-shadow-xl active:scale-95 focus:outline-none drop-shadow-md transform-gpu"
-                        style={ticketMaskStyle}
-                    >
-                        <span className="w-full h-full rounded-lg flex items-center justify-center py-1.5 sm:py-0.5 px-7 sm:px-9 font-['Mistral',_cursive] text-[1.5rem] sm:text-[2rem] tracking-[1px] mt-1 transition-transform duration-300 ease-out group-hover:scale-105">
-                            Plan a Visit
-                        </span>
-                    </button>
+                    <div className="flex flex-col items-center gap-3 sm:flex-row sm:items-stretch sm:justify-center sm:gap-5">
+                        <button
+                            onClick={() => navigate('/reservations')}
+                            className="hero-btn group pointer-events-auto bg-green-400 text-black p-1 sm:p-1.5 rounded-xl cursor-pointer transition-all duration-300 ease-out hover:scale-105 hover:drop-shadow-xl active:scale-95 focus:outline-none drop-shadow-md transform-gpu"
+                            style={ticketMaskStyle}
+                        >
+                            <span className="w-full h-full rounded-lg flex items-center justify-center py-1.5 sm:py-0.5 px-7 sm:px-9 font-['Mistral',_cursive] text-[1.5rem] sm:text-[2rem] tracking-[1px] mt-1 transition-transform duration-300 ease-out group-hover:scale-105">
+                                Plan a Visit
+                            </span>
+                        </button>
+                        <button
+                            onClick={() => window.open(ZOOTOPIA_GAME_URL, '_blank', 'noopener,noreferrer')}
+                            aria-label="Play our game, opens adventuregame.bulusanzoo.com in a new tab"
+                            className="hero-btn group pointer-events-auto min-h-11 rounded-xl border-2 border-black bg-black px-7 py-3 text-white font-['Mistral',_cursive] text-[1.25rem] sm:text-[1.6rem] tracking-[1px] cursor-pointer transition-all duration-300 ease-out hover:bg-white hover:text-black active:scale-95 focus:outline-none transform-gpu"
+                        >
+                            Play our game
+                        </button>
+                    </div>
                 </div>
             </section>
         </div>

@@ -70,7 +70,7 @@ const PostForm = ({ onSubmit, loading, initialPost = null, onCancelEdit }) => {
 
     return (
         <form onSubmit={submitForm} className="bg-white flex flex-col">
-            <h2 className="text-xl md:text-2xl font-black uppercase text-[#212631] tracking-tighter mb-6 border-b border-[#212631]/15 pb-4">
+            <h2 className="text-xl md:text-2xl font-black uppercase text-black tracking-tighter mb-6 border-b border-gray-600 pb-4">
                 {initialPost ? 'Edit Entry' : 'New Entry'}
             </h2>
 
@@ -78,17 +78,17 @@ const PostForm = ({ onSubmit, loading, initialPost = null, onCancelEdit }) => {
                 value={content}
                 onChange={(event) => setContent(event.target.value)}
                 placeholder="Share an update..."
-                className="w-full min-h-[140px] bg-transparent border border-[#212631]/25 p-4 text-sm md:text-base font-medium text-[#212631] focus:border-[#212631] focus:ring-0 transition-all resize-y outline-none placeholder:uppercase placeholder:tracking-widest placeholder:text-[10px] placeholder:font-bold placeholder:text-[#212631]/50"
+                className="w-full min-h-[140px] bg-white border border-gray-600 p-4 text-sm md:text-base font-medium text-black focus:border-black focus:ring-0 transition-all resize-y outline-none placeholder:uppercase placeholder:tracking-widest placeholder:text-[10px] placeholder:font-bold placeholder:text-black/50"
                 maxLength={3000}
             />
 
             {previewUrl && (
-                <div className="mt-4 relative w-full overflow-hidden rounded-2xl border border-[#212631]/10 bg-[#f8faf6]">
+                <div className="mt-4 relative w-full overflow-hidden rounded-md border border-gray-600 bg-black/[0.03]">
                     <img src={previewUrl} alt="Preview" className="max-h-64 w-full object-cover" />
                     <button
                         type="button"
                         onClick={clearImage}
-                        className="absolute right-3 top-3 flex h-10 w-10 items-center justify-center rounded-full border border-[#212631]/10 bg-white text-[#212631] shadow-sm hover:bg-red-500 hover:text-white hover:border-red-500 transition-colors cursor-pointer"
+                        className="absolute right-3 top-3 flex h-10 w-10 items-center justify-center rounded-md border border-gray-600 bg-white text-black shadow-sm hover:bg-red-500 hover:text-white hover:border-red-500 transition-colors cursor-pointer"
                     >
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
                             <path fillRule="evenodd" d="M5.47 5.47a.75.75 0 011.06 0L12 10.94l5.47-5.47a.75.75 0 111.06 1.06L13.06 12l5.47 5.47a.75.75 0 11-1.06 1.06L12 13.06l-5.47 5.47a.75.75 0 01-1.06-1.06L10.94 12 5.47 6.53a.75.75 0 010-1.06z" clipRule="evenodd" />
@@ -99,7 +99,7 @@ const PostForm = ({ onSubmit, loading, initialPost = null, onCancelEdit }) => {
 
             <div className="mt-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 {!previewUrl ? (
-                    <label className="inline-flex items-center gap-2 rounded-full px-5 py-3 border border-[#212631]/15 text-[#212631] cursor-pointer hover:bg-[#c6fe69] transition-colors text-[10px] tracking-[0.15em] uppercase font-black w-max">
+                    <label className="inline-flex items-center gap-2 rounded-md px-5 py-3 min-h-11 border border-gray-600 text-black cursor-pointer hover:bg-black/5 transition-colors text-[10px] tracking-[0.15em] uppercase font-black w-max">
                         <input type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
@@ -115,7 +115,7 @@ const PostForm = ({ onSubmit, loading, initialPost = null, onCancelEdit }) => {
                         <button
                             type="button"
                             onClick={onCancelEdit}
-                            className="flex-1 rounded-full sm:flex-none px-6 py-3 border border-[#212631]/15 text-[#212631] text-[10px] tracking-[0.15em] uppercase font-black hover:bg-[#212631]/10 transition-colors"
+                            className="flex-1 rounded-md sm:flex-none px-6 py-3 min-h-11 border border-gray-600 text-black text-[10px] tracking-[0.15em] uppercase font-black hover:bg-black/5 transition-colors"
                         >
                             Cancel
                         </button>
@@ -123,9 +123,18 @@ const PostForm = ({ onSubmit, loading, initialPost = null, onCancelEdit }) => {
                     <button
                         type="submit"
                         disabled={loading || !content.trim()}
-                        className="flex-1 rounded-full sm:flex-none px-8 py-3 bg-[#212631] text-white border border-[#212631] text-[10px] tracking-[0.15em] uppercase font-black hover:bg-[#c6fe69] hover:text-[#212631] hover:border-[#c6fe69] disabled:opacity-50 disabled:pointer-events-none transition-colors"
+                        aria-busy={loading}
+                        className="flex-1 sm:flex-none px-8 py-3 min-h-11 rounded-md bg-black text-white text-[10px] tracking-[0.15em] uppercase font-black hover:bg-black/80 disabled:opacity-50 disabled:pointer-events-none transition-colors"
                     >
-                        {loading ? 'Processing...' : initialPost ? 'Save' : 'Publish'}
+                        {loading ? (
+                            <span className="inline-flex items-center gap-2">
+                                <span
+                                    aria-hidden="true"
+                                    className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/40 border-t-white"
+                                />
+                                <span>Publishing...</span>
+                            </span>
+                        ) : initialPost ? 'Save' : 'Publish'}
                     </button>
                 </div>
             </div>
