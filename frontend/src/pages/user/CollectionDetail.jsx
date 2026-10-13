@@ -1,13 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
 import { Link, useParams } from 'react-router-dom';
 import { ReactLenis } from 'lenis/react';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 import AIFloatingButton from '../../components/common/AIFloatingButton';
 import { userAPI } from '../../services/api-client';
-
-const MotionDiv = motion.div;
 
 const collectionConfig = {
     animals: {
@@ -160,14 +157,11 @@ const CollectionDetail = ({ type }) => {
                     )}
 
                     {!error && item && (
-                        <AnimatePresence mode="wait" initial={false}>
-                            <MotionDiv
-                                key={item.id}
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -10 }}
-                                transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-                            >
+                        /* The fade/slide on entry was removed at the partner's request: opening an
+                           animal or plant felt slow, and `mode="wait"` also delayed the panel
+                           until the outgoing one finished. Rendering plainly keeps the content
+                           there the instant it is ready. */
+                        <div key={item.id}>
                             <section className="mx-auto max-w-[1800px] px-4 pb-16 pt-24 sm:px-8 sm:pt-28">
                                 <div className="mt-7 grid overflow-hidden rounded-3xl bg-green-400 md:h-[520px] md:grid-cols-[1fr_0.95fr]">
                                     <ImageFrame item={item} className="aspect-[4/3] min-h-[260px] md:h-full md:aspect-auto md:min-h-0" />
@@ -228,8 +222,7 @@ const CollectionDetail = ({ type }) => {
                                     ) : <p className="mt-8 text-sm text-black/50">This is the only entry in the collection so far.</p>}
                                 </div>
                             </section>
-                            </MotionDiv>
-                        </AnimatePresence>
+                        </div>
                     )}
                 </main>
                 <AIFloatingButton />

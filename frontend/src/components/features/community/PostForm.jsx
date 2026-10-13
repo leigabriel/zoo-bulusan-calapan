@@ -2,50 +2,95 @@ import { useEffect, useState } from 'react';
 import { notify } from '../../../utils/toast';
 
 const MAX_SIZE = 5 * 1024 * 1024;
+// One photo per post for now. Keep in step with MAX_POST_IMAGES in
+// backend/routes/community-routes.js.
+const MAX_IMAGES = 1;
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 
 const PostForm = ({ onSubmit, loading, initialPost = null, onCancelEdit }) => {
     const [content, setContent] = useState('');
-    const [imageFile, setImageFile] = useState(null);
-    const [previewUrl, setPreviewUrl] = useState('');
+    // One array of { file, url } pairs. Previously files and their preview urls lived in two
+    // separate arrays and only the file array was populated on pick, so newly chosen photos
+    // never got a thumbnail and index-based removal desynced the two.
+    const [photos, setPhotos] = useState([]);
+    // Photos already stored against a post being edited.
+    const [existing, setExisting] = useState([]);
     const [removeImage, setRemoveImage] = useState(false);
+
+    const isEditing = Boolean(initialPost);
+    // Editing replaces the image rather than appending to it, so a new pick takes over.
+    const showExisting = isEditing && !removeImage && photos.length === 0;
+    const displayUrls = showExisting ? existing : photos.map((photo) => photo.url);
+    const fileCount = showExisting ? existing.length : photos.length;
 
     useEffect(() => {
         if (initialPost) {
             setContent(initialPost.content || '');
-            setPreviewUrl(initialPost.imageUrl || '');
-            setImageFile(null);
+            setPhotos([]);
+            setExisting(initialPost.images?.length ? initialPost.images : (initialPost.imageUrl ? [initialPost.imageUrl] : []));
             setRemoveImage(false);
         } else {
             setContent('');
-            setImageFile(null);
-            setPreviewUrl('');
+            setPhotos([]);
+            setExisting([]);
             setRemoveImage(false);
         }
     }, [initialPost]);
 
+    // Release object URLs so a long compose session does not leak blobs.
+    useEffect(() => () => {
+        photos.forEach((photo) => URL.revokeObjectURL(photo.url));
+    }, [photos]);
+
     const handleFileChange = (event) => {
-        const file = event.target.files?.[0];
-        if (!file) return;
+        const picked = Array.from(event.target.files || []);
+        // Allow re-picking the same file after a removal.
+        event.target.value = '';
+        if (!picked.length) return;
 
-        if (!ALLOWED_TYPES.includes(file.type)) {
-            notify.warning('Please upload a valid image.');
-            return;
-        }
+        setPhotos((current) => {
+            const accepted = [];
+            for (const file of picked) {
+                if (!ALLOWED_TYPES.includes(file.type)) {
+                    notify.warning(`${file.name} is not a valid image.`);
+                    continue;
+                }
+                if (file.size > MAX_SIZE) {
+                    notify.warning(`${file.name} is over 5MB.`);
+                    continue;
+                }
+                accepted.push({ file, url: URL.createObjectURL(file) });
+            }
 
-        if (file.size > MAX_SIZE) {
-            notify.warning('Image must be under 5MB.');
-            return;
-        }
-
-        setImageFile(file);
-        setRemoveImage(false);
-        setPreviewUrl(URL.createObjectURL(file));
+            const merged = [...current, ...accepted];
+            if (merged.length > MAX_IMAGES) {
+                notify.warning(`You can attach up to ${MAX_IMAGES} photos.`);
+                // Drop the overflow rather than silently sending more than the cap.
+                merged.slice(MAX_IMAGES).forEach((photo) => URL.revokeObjectURL(photo.url));
+                return merged.slice(0, MAX_IMAGES);
+            }
+            return merged;
+        });
+        if (isEditing) setRemoveImage(true);
     };
 
-    const clearImage = () => {
-        setImageFile(null);
-        setPreviewUrl('');
+    const removeImageAt = (index) => {
+        if (showExisting) {
+            setExisting([]);
+            setRemoveImage(true);
+            return;
+        }
+        setPhotos((current) => {
+            const target = current[index];
+            if (target) URL.revokeObjectURL(target.url);
+            return current.filter((_, i) => i !== index);
+        });
+    };
+
+    const clearImages = () => {
+        photos.forEach((photo) => URL.revokeObjectURL(photo.url));
+        setPhotos([]);
+        setExisting([]);
         setRemoveImage(true);
     };
 
@@ -58,18 +103,36 @@ const PostForm = ({ onSubmit, loading, initialPost = null, onCancelEdit }) => {
             return;
         }
 
-        const submitted = await onSubmit({ content: cleanContent, imageFile, removeImage });
+        // Photos are entirely optional; a text-only post is a valid post.
+        const submitted = await onSubmit({
+            content: cleanContent,
+            imageFiles: photos.map((photo) => photo.file),
+            removeImage
+        });
 
         if (!initialPost && submitted !== false) {
             setContent('');
-            setImageFile(null);
-            setPreviewUrl('');
+            photos.forEach((photo) => URL.revokeObjectURL(photo.url));
+            setPhotos([]);
+            setExisting([]);
             setRemoveImage(false);
         }
     };
 
     return (
-        <form onSubmit={submitForm} className="bg-white flex flex-col">
+        <form onSubmit={submitForm} className="bg-white flex flex-col relative">
+            {/* Uploading and publishing is the slowest step in this flow (several Cloudinary
+                round trips). A spinner inside the submit button is easy to miss because the
+                button is small and the label barely changes, so the whole form is covered
+                while the request is in flight. */}
+            {loading && (
+                <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-4 rounded-md bg-white/90 backdrop-blur-[2px]" role="status" aria-live="polite">
+                    <span aria-hidden="true" className="h-9 w-9 animate-spin rounded-full border-[3px] border-black/20 border-t-black" />
+                    <span className="text-xs font-bold uppercase tracking-[0.15em] text-black">
+                        {initialPost ? 'Updating...' : 'Publishing...'}
+                    </span>
+                </div>
+            )}
             <h2 className="text-xl md:text-2xl font-black uppercase text-black tracking-tighter mb-6 border-b border-gray-600 pb-4">
                 {initialPost ? 'Edit Entry' : 'New Entry'}
             </h2>
@@ -82,34 +145,44 @@ const PostForm = ({ onSubmit, loading, initialPost = null, onCancelEdit }) => {
                 maxLength={3000}
             />
 
-            {previewUrl && (
-                <div className="mt-4 relative w-full overflow-hidden rounded-md border border-gray-600 bg-black/[0.03]">
-                    <img src={previewUrl} alt="Preview" className="max-h-64 w-full object-cover" />
-                    <button
-                        type="button"
-                        onClick={clearImage}
-                        className="absolute right-3 top-3 flex h-10 w-10 items-center justify-center rounded-md border border-gray-600 bg-white text-black shadow-sm hover:bg-red-500 hover:text-white hover:border-red-500 transition-colors cursor-pointer"
-                    >
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
-                            <path fillRule="evenodd" d="M5.47 5.47a.75.75 0 011.06 0L12 10.94l5.47-5.47a.75.75 0 111.06 1.06L13.06 12l5.47 5.47a.75.75 0 11-1.06 1.06L12 13.06l-5.47 5.47a.75.75 0 01-1.06-1.06L10.94 12 5.47 6.53a.75.75 0 010-1.06z" clipRule="evenodd" />
-                        </svg>
-                    </button>
+            {displayUrls.length > 0 && (
+                <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    {displayUrls.map((url, index) => (
+                        <div key={`${url}-${index}`} className="relative overflow-hidden rounded-md border border-gray-600 bg-black/[0.03]">
+                            <img src={url} alt={`Attached photo ${index + 1}`} className="h-28 w-full object-cover" />
+                            <button
+                                type="button"
+                                onClick={() => removeImageAt(index)}
+                                aria-label={`Remove photo ${index + 1}`}
+                                className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-md border border-gray-600 bg-white text-black shadow-sm hover:bg-red-500 hover:text-white hover:border-red-500 transition-colors cursor-pointer"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
+                                    <path fillRule="evenodd" d="M5.47 5.47a.75.75 0 011.06 0L12 10.94l5.47-5.47a.75.75 0 111.06 1.06L13.06 12l5.47 5.47a.75.75 0 11-1.06 1.06L12 13.06l-5.47 5.47a.75.75 0 01-1.06-1.06L10.94 12 5.47 6.53a.75.75 0 010-1.06z" clipRule="evenodd" />
+                                </svg>
+                            </button>
+                        </div>
+                    ))}
                 </div>
             )}
 
             <div className="mt-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                {!previewUrl ? (
-                    <label className="inline-flex items-center gap-2 rounded-md px-5 py-3 min-h-11 border border-gray-600 text-black cursor-pointer hover:bg-black/5 transition-colors text-[10px] tracking-[0.15em] uppercase font-black w-max">
-                        <input type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
+                <div className="flex flex-wrap items-center gap-3">
+                    <label className={`inline-flex items-center gap-2 rounded-md px-5 py-3 min-h-11 border border-gray-600 text-black transition-colors text-[10px] tracking-[0.15em] uppercase font-black w-max ${fileCount >= MAX_IMAGES ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer hover:bg-black/5'}`}>
+                        <input type="file" accept="image/*" multiple={MAX_IMAGES > 1} disabled={fileCount >= MAX_IMAGES} className="hidden" onChange={handleFileChange} />
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2.828 2.828 0 012.828 0L16 16m-2-2l1.586-1.586a2.828 2.828 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                         </svg>
-                        Attach Media
+                        {MAX_IMAGES === 1
+                            ? (fileCount ? 'Replace Photo' : 'Attach Photo')
+                            : (fileCount ? 'Add More' : 'Attach Photos')}
                     </label>
-                ) : (
-                    <div></div>
-                )}
-
+                    {fileCount > 0 && (
+                        <button type="button" onClick={clearImages} className="text-[10px] tracking-[0.15em] uppercase font-black text-black/50 hover:text-red-600 transition-colors">Remove</button>
+                    )}
+                    {fileCount > 0 && MAX_IMAGES > 1 && (
+                        <span className="text-[10px] tracking-[0.15em] uppercase font-bold text-black/40">{fileCount} of {MAX_IMAGES}</span>
+                    )}
+                </div>
                 <div className="flex items-center gap-3 w-full sm:w-auto">
                     {initialPost && (
                         <button

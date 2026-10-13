@@ -1972,12 +1972,10 @@ export const communityAPI = {
         return handleResponse(response);
     },
 
-    createPost: async ({ content, imageFile }, type = 'user') => {
+    createPost: async ({ content, imageFiles }, type = 'user') => {
         const formData = new FormData();
         formData.append('content', content);
-        if (imageFile) {
-            formData.append('postImage', imageFile);
-        }
+        (imageFiles || []).forEach((file) => formData.append('postImages', file));
 
         const response = await fetch(`${API_BASE_URL}/community/posts`, {
             method: 'POST',
@@ -2336,18 +2334,22 @@ export const reservationAPI = {
         return handleResponse(response);
     },
 
-    cancelTicketReservation: async (id) => {
-        const response = await fetch(`${API_BASE_URL}/reservations/ticket/${id}`, {
-            method: 'DELETE',
-            headers: getAuthHeaders('user')
+    // Visitor self-service. These previously called DELETE /reservations/{ticket,event}/:id,
+    // which sits below the admin/staff gate and answered 403 for the reservation's owner.
+    cancelTicketReservation: async (id, reason = '', type = 'user') => {
+        const response = await fetch(`${API_BASE_URL}/reservations/ticket/${id}/cancel`, {
+            method: 'PUT',
+            headers: getAuthHeaders(type),
+            body: JSON.stringify({ reason })
         });
         return handleResponse(response);
     },
 
-    cancelEventReservation: async (id) => {
-        const response = await fetch(`${API_BASE_URL}/reservations/event/${id}`, {
-            method: 'DELETE',
-            headers: getAuthHeaders('user')
+    cancelEventReservation: async (id, reason = '', type = 'user') => {
+        const response = await fetch(`${API_BASE_URL}/reservations/event/${id}/cancel`, {
+            method: 'PUT',
+            headers: getAuthHeaders(type),
+            body: JSON.stringify({ reason })
         });
         return handleResponse(response);
     },
@@ -2440,6 +2442,24 @@ export const reservationAPI = {
     permanentDeleteTrashReservations: async (reservationType, ids, password) => {
         const response = await fetch(`${API_BASE_URL}/reservations/trash/${reservationType}/permanent`, {
             method: 'DELETE', headers: getAuthHeaders('admin'), body: JSON.stringify({ ids, password })
+        });
+        return handleResponse(response);
+    },
+
+    updateMyTicketReservation: async (id, payload, type = 'user') => {
+        const response = await fetch(`${API_BASE_URL}/reservations/ticket/${id}/details`, {
+            method: 'PUT',
+            headers: getAuthHeaders(type),
+            body: JSON.stringify(payload)
+        });
+        return handleResponse(response);
+    },
+
+    updateMyEventReservation: async (id, payload, type = 'user') => {
+        const response = await fetch(`${API_BASE_URL}/reservations/event/${id}/details`, {
+            method: 'PUT',
+            headers: getAuthHeaders(type),
+            body: JSON.stringify(payload)
         });
         return handleResponse(response);
     },

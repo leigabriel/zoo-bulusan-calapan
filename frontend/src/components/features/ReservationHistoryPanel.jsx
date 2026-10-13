@@ -51,6 +51,22 @@ const LegacyIcons = {
 };
 const Icons = { Ticket, Calendar, Close: X, Archive, Restore: RotateLeft, CreditCard, Cash: DollarCircle };
 
+// Shared label + control for the self-service edit modal. Mirrors the styling used across
+// the app's forms: white surface, 16px text (no iOS zoom on focus), 52px minimum height.
+const Field = ({ id, label, value, onChange, type = 'text', placeholder }) => (
+    <div>
+        <label htmlFor={id} className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-600">{label}</label>
+        <input
+            id={id}
+            type={type}
+            value={value || ''}
+            placeholder={placeholder}
+            onChange={(e) => onChange(e.target.value)}
+            className="w-full min-h-[52px] rounded-xl border border-slate-300 bg-white px-4 py-3 text-base text-slate-900 placeholder:text-slate-400 outline-none transition focus:border-slate-900 focus:ring-2 focus:ring-slate-900/15"
+        />
+    </div>
+);
+
 const ReservationHistoryPanel = ({ isOpen, onClose, paymentReturn = false }) => {
     const navigate = useNavigate();
     const { isAuthenticated } = useAuth();
@@ -63,6 +79,106 @@ const ReservationHistoryPanel = ({ isOpen, onClose, paymentReturn = false }) => 
     const [filter, setFilter] = useState('all');
     const [showArchived, setShowArchived] = useState(false);
     const [archiving, setArchiving] = useState(false);
+    // Self-service amend/cancel. Only offered while the booking is still pending; the
+    // server re-checks ownership and status, so these are a convenience, not the guard.
+    const [editModal, setEditModal] = useState({ isOpen: false, reservation: null });
+    const [cancelModal, setCancelModal] = useState({ isOpen: false, reservation: null });
+    const [editAdult, setEditAdult] = useState(0);
+    const [editChild, setEditChild] = useState(0);
+    const [editParticipants, setEditParticipants] = useState(1);
+    const [editNotes, setEditNotes] = useState('');
+    const [editError, setEditError] = useState('');
+    const [editDraft, setEditDraft] = useState({});
+    const [selfSaving, setSelfSaving] = useState(false);
+
+    const setEditField = (key, value) => setEditDraft((prev) => ({ ...prev, [key]: value }));
+
+    const openEditModal = (reservation) => {
+        const isEvent = reservation.type === 'event';
+        setEditAdult(Number(reservation.adult_quantity ?? 0) || 0);
+        setEditChild(Number(reservation.child_quantity ?? 0) || 0);
+        setEditParticipants(Number(reservation.number_of_participants ?? 1) || 1);
+        setEditNotes(reservation.notes || '');
+        setEditDraft({
+            name: isEvent ? (reservation.participant_name || '') : (reservation.visitor_name || ''),
+            email: isEvent ? (reservation.participant_email || '') : (reservation.visitor_email || ''),
+            phone: isEvent ? (reservation.participant_phone || '') : (reservation.visitor_phone || ''),
+            date: isEvent ? (reservation.venue_event_date || '') : (reservation.reservation_date || ''),
+            startTime: isEvent ? (reservation.venue_event_start_time || '') : (reservation.reservation_time || ''),
+            endTime: isEvent ? (reservation.venue_event_end_time || '') : '',
+            designation: reservation.venue_event_name || '',
+            description: reservation.venue_event_description || ''
+        });
+        setEditError('');
+        setEditModal({ isOpen: true, reservation });
+    };
+
+    const submitSelfEdit = async () => {
+        const { reservation } = editModal;
+        if (!reservation) return;
+        if (!editDraft.name?.trim()) {
+            setEditError('Please enter a contact name.');
+            return;
+        }
+        setSelfSaving(true);
+        setEditError('');
+        try {
+            if (reservation.type === 'event') {
+                await reservationAPI.updateMyEventReservation(reservation.id, {
+                    numberOfParticipants: editParticipants,
+                    notes: editNotes,
+                    participantName: editDraft.name,
+                    participantEmail: editDraft.email,
+                    participantPhone: editDraft.phone,
+                    venueEventName: editDraft.designation,
+                    venueEventDate: editDraft.date,
+                    venueEventStartTime: editDraft.startTime,
+                    venueEventEndTime: editDraft.endTime,
+                    venueEventDescription: editDraft.description
+                }, 'user');
+            } else {
+                await reservationAPI.updateMyTicketReservation(reservation.id, {
+                    adultQuantity: editAdult,
+                    childQuantity: editChild,
+                    visitorName: editDraft.name,
+                    visitorEmail: editDraft.email,
+                    visitorPhone: editDraft.phone,
+                    reservationDate: editDraft.date,
+                    reservationTime: editDraft.startTime,
+                    notes: editNotes
+                }, 'user');
+            }
+            notify.success('Your booking has been updated.');
+            setEditModal({ isOpen: false, reservation: null });
+            await fetchReservations();
+            setSelectedReservation(null);
+        } catch (error) {
+            setEditError(error?.message || "Couldn't update your booking.");
+        } finally {
+            setSelfSaving(false);
+        }
+    };
+
+    const submitSelfCancel = async () => {
+        const { reservation } = cancelModal;
+        if (!reservation) return;
+        setSelfSaving(true);
+        try {
+            if (reservation.type === 'event') {
+                await reservationAPI.cancelEventReservation(reservation.id, '', 'user');
+            } else {
+                await reservationAPI.cancelTicketReservation(reservation.id, '', 'user');
+            }
+            notify.success('Your booking has been cancelled.');
+            setCancelModal({ isOpen: false, reservation: null });
+            await fetchReservations();
+            setSelectedReservation(null);
+        } catch (error) {
+            notify.error(error?.message || "Couldn't cancel your booking.");
+        } finally {
+            setSelfSaving(false);
+        }
+    };
     const [selectedReservation, setSelectedReservation] = useState(null);
     const receiptRef = useRef(null);
     const [downloading, setDownloading] = useState(false);
@@ -795,6 +911,22 @@ const ReservationHistoryPanel = ({ isOpen, onClose, paymentReturn = false }) => 
                                     Manage Event
                                 </button>
                             )}
+                            {selectedReservation.status === 'pending' && (
+                                <>
+                                    <button
+                                        onClick={() => openEditModal(selectedReservation)}
+                                        className="flex-1 py-3.5 bg-slate-700 hover:bg-slate-800 text-white font-semibold uppercase tracking-wider text-xs rounded-xl shadow-sm transition flex items-center justify-center gap-2"
+                                    >
+                                        Edit
+                                    </button>
+                                    <button
+                                        onClick={() => setCancelModal({ isOpen: true, reservation: selectedReservation })}
+                                        className="flex-1 py-3.5 bg-rose-600 hover:bg-rose-700 text-white font-semibold uppercase tracking-wider text-xs rounded-xl shadow-sm transition flex items-center justify-center gap-2"
+                                    >
+                                        Cancel
+                                    </button>
+                                </>
+                            )}
                             <button
                                 onClick={handleDownload}
                                 disabled={downloading}
@@ -892,6 +1024,131 @@ const ReservationHistoryPanel = ({ isOpen, onClose, paymentReturn = false }) => 
                         </div>
                         <p className="text-[10px] uppercase tracking-widest font-semibold text-slate-300 mt-4">
                         </p>
+                    </div>
+                </div>
+            )}
+
+            {/* Amend a pending booking */}
+            {editModal.isOpen && (
+                <div className="fixed inset-0 z-[260] flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="self-edit-title">
+                    <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => !selfSaving && setEditModal({ isOpen: false, reservation: null })} />
+                    <div className="relative w-full max-w-2xl max-h-[90dvh] flex flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
+                        <div className="flex items-start justify-between gap-4 border-b border-slate-200 px-5 py-4 shrink-0">
+                            <div>
+                                <h3 id="self-edit-title" className="text-lg font-bold text-slate-900">Edit</h3>
+                                <p className="mt-1 text-sm text-slate-500">
+                                    {editModal.reservation?.type === 'event'
+                                        ? 'Update the details of your event booking.'
+                                        : 'Update the details of your visit.'}
+                                </p>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => setEditModal({ isOpen: false, reservation: null })}
+                                disabled={selfSaving}
+                                aria-label="Close"
+                                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 disabled:opacity-50"
+                            >
+                                <Icons.Close className="h-5 w-5" />
+                            </button>
+                        </div>
+
+                        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-5">
+                        {editError && (
+                            <div className="mb-4 rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">{editError}</div>
+                        )}
+
+                        {editError && (
+                            <div className="mt-4 rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">{editError}</div>
+                        )}
+
+                        <div className="grid grid-cols-1 gap-x-5 gap-y-4 sm:grid-cols-2">
+                            {editModal.reservation?.type === 'event' && (
+                                <Field id="self-edit-designation" label="Event Designation" value={editDraft.designation} onChange={(v) => setEditField('designation', v)} placeholder="e.g. Tree Planting Program" />
+                            )}
+
+                            <Field id="self-edit-name" label="Contact Name *" value={editDraft.name} onChange={(v) => setEditField('name', v)} placeholder="e.g. Juan Dela Cruz" />
+                            <Field id="self-edit-email" label="Email Address *" type="email" value={editDraft.email} onChange={(v) => setEditField('email', v)} placeholder="you@example.com" />
+                            <Field id="self-edit-phone" label="Phone (optional)" type="tel" value={editDraft.phone} onChange={(v) => setEditField('phone', v)} placeholder="09XX XXX XXXX" />
+                            <Field id="self-edit-date" label={editModal.reservation?.type === 'event' ? 'Event Date *' : 'Arrival Date *'} type="date" value={editDraft.date} onChange={(v) => setEditField('date', v)} />
+                            <Field id="self-edit-start" label={editModal.reservation?.type === 'event' ? 'Start Time *' : 'Arrival Time *'} type="time" value={editDraft.startTime} onChange={(v) => setEditField('startTime', v)} />
+                            {editModal.reservation?.type === 'event' && (
+                                <Field id="self-edit-end" label="End Time *" type="time" value={editDraft.endTime} onChange={(v) => setEditField('endTime', v)} />
+                            )}
+
+                            {editModal.reservation?.type === 'event' ? (
+                                <div>
+                                    <label htmlFor="self-edit-participants" className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-600">Participants *</label>
+                                    <input id="self-edit-participants" type="number" min="1" inputMode="numeric" value={editParticipants}
+                                        onChange={(e) => setEditParticipants(e.target.value)}
+                                        className="w-full min-h-[52px] rounded-xl border border-slate-300 bg-white px-4 py-3 text-base text-slate-900 outline-none transition focus:border-slate-900 focus:ring-2 focus:ring-slate-900/15" />
+                                </div>
+                            ) : (
+                                // Bulusan resident is intentionally absent: a resident ticket is
+                                // only valid against the ID captured at booking, so the count
+                                // cannot be changed after the fact.
+                                [['adult', 'Adult', editAdult, setEditAdult],
+                                 ['child', 'Child (4-17)', editChild, setEditChild]].map(([key, label, value, setter]) => (
+                                    <div key={key}>
+                                        <label htmlFor={`self-edit-${key}`} className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-600">{label}</label>
+                                        <input id={`self-edit-${key}`} type="number" min="0" inputMode="numeric" value={value}
+                                            onChange={(e) => setter(e.target.value)}
+                                            className="w-full min-h-[52px] rounded-xl border border-slate-300 bg-white px-4 py-3 text-base text-slate-900 outline-none transition focus:border-slate-900 focus:ring-2 focus:ring-slate-900/15" />
+                                    </div>
+                                ))
+                            )}
+
+                            <div className="sm:col-span-2">
+                                {editModal.reservation?.type === 'event' && (
+                                    <div className="mb-4">
+                                        <label htmlFor="self-edit-description" className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-600">Description</label>
+                                        <textarea id="self-edit-description" rows={2} value={editDraft.description} onChange={(e) => setEditField('description', e.target.value)}
+                                            className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-base text-slate-900 outline-none transition focus:border-slate-900 focus:ring-2 focus:ring-slate-900/15" />
+                                    </div>
+                                )}
+                                <label htmlFor="self-edit-notes" className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-600">Notes (optional)</label>
+                                <textarea id="self-edit-notes" rows={2} value={editNotes} onChange={(e) => setEditNotes(e.target.value)}
+                                    className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-base text-slate-900 outline-none transition focus:border-slate-900 focus:ring-2 focus:ring-slate-900/15" />
+                            </div>
+                        </div>
+                        </div>
+
+                        <div className="flex flex-col gap-3 border-t border-slate-200 px-5 py-4 shrink-0 sm:flex-row-reverse">
+                            <button onClick={submitSelfEdit} disabled={selfSaving}
+                                className="min-h-11 flex-1 rounded-xl bg-slate-900 px-5 py-3 text-xs font-bold uppercase tracking-wider text-white transition hover:bg-slate-800 disabled:opacity-50">
+                                {selfSaving ? 'Saving...' : 'Save Changes'}
+                            </button>
+                            <button onClick={() => setEditModal({ isOpen: false, reservation: null })} disabled={selfSaving}
+                                className="min-h-11 flex-1 rounded-xl border border-slate-200 px-5 py-3 text-xs font-bold uppercase tracking-wider text-slate-600 transition hover:bg-slate-50 disabled:opacity-50">
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Cancel a pending booking */}
+            {cancelModal.isOpen && (
+                <div className="fixed inset-0 z-[260] flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="self-cancel-title">
+                    <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => !selfSaving && setCancelModal({ isOpen: false, reservation: null })} />
+                    <div className="relative w-full max-w-sm rounded-2xl bg-white p-6 text-center shadow-2xl">
+                        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-rose-50">
+                            <Icons.Close className="h-6 w-6 text-rose-600" />
+                        </div>
+                        <h3 id="self-cancel-title" className="text-lg font-bold text-slate-900">Cancel this booking?</h3>
+                        <p className="mt-2 text-sm text-slate-500">
+                            This releases your slot and cannot be undone. You can always make a new booking afterwards.
+                        </p>
+                        <div className="mt-7 flex flex-col gap-3 sm:flex-row-reverse">
+                            <button onClick={submitSelfCancel} disabled={selfSaving}
+                                className="min-h-11 flex-1 rounded-xl bg-rose-600 px-5 py-3 text-xs font-bold uppercase tracking-wider text-white transition hover:bg-rose-700 disabled:opacity-50">
+                                {selfSaving ? 'Cancelling...' : 'Yes, Cancel It'}
+                            </button>
+                            <button onClick={() => setCancelModal({ isOpen: false, reservation: null })} disabled={selfSaving}
+                                className="min-h-11 flex-1 rounded-xl border border-slate-200 px-5 py-3 text-xs font-bold uppercase tracking-wider text-slate-600 transition hover:bg-slate-50 disabled:opacity-50">
+                                Keep Booking
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}

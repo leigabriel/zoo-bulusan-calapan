@@ -31,6 +31,14 @@ const TICKET_TYPES = {
 
 const RESUME_KEY = 'bulusan_reservation_resume_v1';
 
+// One shared field style for every input in the reservation forms. Previously each input
+// carried its own className: the date/time ones forced `uppercase tracking-wider` (which
+// mangles the displayed value) and used `h-[54px]` with no radius while the rest used
+// `p-4 rounded-xl`, so the two families rendered at different heights inside one form.
+// White sits on the grey panel so a field reads as a field; text-base is 16px, which stops
+// iOS zooming the viewport on focus; min-h keeps every control the same height.
+const FIELD_INPUT = 'w-full min-h-[52px] rounded-xl border border-[#212631]/20 bg-white px-4 py-3 text-base font-medium text-[#212631] placeholder:text-[#212631]/40 outline-none transition-colors focus:border-[#212631] focus:ring-2 focus:ring-[#212631]/15';
+
 const Reservations = () => {
     const navigate = useNavigate();
     const location = useLocation();
@@ -39,6 +47,9 @@ const Reservations = () => {
     const [loading, setLoading] = useState(true);
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [reservationType, setReservationType] = useState('ticket');
+    // Arriving from the "Zoo Tickets" card offers both forms; arriving from "Event Venue"
+    // locks the modal to the venue form so the tab switcher is not shown at all.
+    const [allowTypeSwitch, setAllowTypeSwitch] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [showConfirmation, setShowConfirmation] = useState(false);
     const [confirmationData, setConfirmationData] = useState(null);
@@ -109,7 +120,10 @@ const Reservations = () => {
             sessionStorage.removeItem(RESUME_KEY);
             const saved = JSON.parse(raw);
             if (!saved) return;
-            if (saved.reservationType) setReservationType(saved.reservationType);
+            if (saved.reservationType) {
+                setReservationType(saved.reservationType);
+                setAllowTypeSwitch(saved.reservationType === 'ticket');
+            }
             if (saved.ticketCounts) setTicketCounts(saved.ticketCounts);
             if (saved.ticketForm) setTicketForm(saved.ticketForm);
             if (saved.eventForm) setEventForm(saved.eventForm);
@@ -121,6 +135,13 @@ const Reservations = () => {
 
     useEffect(() => {
         if (location.state?.reopenModal === 'create') {
+            // Returning from Terms/Privacy must reopen the form the visitor was actually
+            // filling in. Without this the modal reopens on whichever type happened to be
+            // last in state, so a visitor reading the terms mid-way through an event booking
+            // came back to the wrong form.
+            const type = location.state.reservationType === 'event' ? 'event' : 'ticket';
+            setReservationType(type);
+            setAllowTypeSwitch(type === 'ticket');
             setShowCreateModal(true);
             window.history.replaceState({}, '', location.pathname);
         }
@@ -420,7 +441,7 @@ const Reservations = () => {
                     ) : (
                         <div className="w-full max-w-6xl grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
                             {/* Ticket Reservation Card (Ticket Style) */}
-                            <div className="flex flex-col bg-[#ebebeb] text-[#212631] shadow-2xl cursor-pointer group hover:-translate-y-2 transition-transform duration-300 relative rounded-2xl" onClick={() => { setReservationType('ticket'); setShowCreateModal(true); }}>
+                            <div className="flex flex-col bg-[#ebebeb] text-[#212631] shadow-2xl cursor-pointer group hover:-translate-y-2 transition-transform duration-300 relative rounded-2xl" onClick={() => { setReservationType('ticket'); setAllowTypeSwitch(true); setShowCreateModal(true); }}>
                                 {/* Decorative perforated edge effect */}
                                 <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-[#26bc61]"></div>
                                 <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-8 h-8 rounded-full bg-[#26bc61]"></div>
@@ -458,7 +479,7 @@ const Reservations = () => {
                             </div>
 
                             {/* Event Reservation Card (Ticket Style) */}
-                            <div className="flex flex-col bg-[#ebebeb] text-[#212631] shadow-2xl cursor-pointer group hover:-translate-y-2 transition-transform duration-300 relative rounded-2xl" onClick={() => { setReservationType('event'); setShowCreateModal(true); }}>
+                            <div className="flex flex-col bg-[#ebebeb] text-[#212631] shadow-2xl cursor-pointer group hover:-translate-y-2 transition-transform duration-300 relative rounded-2xl" onClick={() => { setReservationType('event'); setAllowTypeSwitch(false); setShowCreateModal(true); }}>
                                 {/* Decorative perforated edge effect */}
                                 <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-[#26bc61]"></div>
                                 <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-8 h-8 rounded-full bg-[#26bc61]"></div>
@@ -541,7 +562,7 @@ const Reservations = () => {
                                     </button>
                                 </div>
 
-                                <div className="grid grid-cols-2 border-b border-[#212631]/10 bg-[#ebebeb]">
+                                <div className={`grid grid-cols-2 border-b border-[#212631]/10 bg-[#ebebeb] ${allowTypeSwitch ? '' : 'hidden'}`}>
                                     <button
                                         type="button"
                                         onClick={() => setReservationType('ticket')}
@@ -599,23 +620,23 @@ const Reservations = () => {
                                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                                                         <div className="flex flex-col gap-2">
                                                             <label className="text-[9px] tracking-[0.2em] uppercase font-bold text-[#212631]">Primary Contact Name *</label>
-                                                            <input type="text" value={ticketForm.visitorName} onChange={e => setTicketForm({ ...ticketForm, visitorName: sanitizeInput(e.target.value) })} className="w-full bg-[#ebebeb] border border-[#212631]/20 p-4 text-sm font-semibold text-[#212631] focus:border-[#212631] outline-none transition-colors rounded-xl" required />
+                                                            <input type="text" value={ticketForm.visitorName} onChange={e => setTicketForm({ ...ticketForm, visitorName: sanitizeInput(e.target.value) })} className={FIELD_INPUT} placeholder="e.g. Juan Dela Cruz" autoComplete="name" required />
                                                         </div>
                                                         <div className="flex flex-col gap-2">
                                                             <label className="text-[9px] tracking-[0.2em] uppercase font-bold text-[#212631]">Email Address *</label>
-                                                            <input type="email" value={ticketForm.visitorEmail} onChange={e => setTicketForm({ ...ticketForm, visitorEmail: sanitizeEmail(e.target.value) })} className="w-full bg-[#ebebeb] border border-[#212631]/20 p-4 text-sm font-semibold text-[#212631] focus:border-[#212631] outline-none transition-colors rounded-xl" required />
+                                                            <input type="email" value={ticketForm.visitorEmail} onChange={e => setTicketForm({ ...ticketForm, visitorEmail: sanitizeEmail(e.target.value) })} className={FIELD_INPUT} placeholder="you@example.com" autoComplete="email" required />
                                                         </div>
                                                     </div>
 
                                                     <div className="flex flex-col gap-2">
                                                         <label className="text-[9px] tracking-[0.2em] uppercase font-bold text-[#212631]">Arrival Date *</label>
-                                                        <input type="date" value={ticketForm.reservationDate} onChange={e => setTicketForm({ ...ticketForm, reservationDate: e.target.value, reservationTime: '' })} min={getMinDate()} max={getMaxDate()} className="w-full bg-[#ebebeb] border border-[#212631]/20 p-4 text-sm font-semibold text-[#212631] focus:border-[#212631] outline-none transition-colors uppercase tracking-wider h-[54px]" required />
+                                                        <input type="date" value={ticketForm.reservationDate} onChange={e => setTicketForm({ ...ticketForm, reservationDate: e.target.value, reservationTime: '' })} min={getMinDate()} max={getMaxDate()} className={FIELD_INPUT} required />
                                                     </div>
 
                                                     {ticketForm.reservationDate && (
                                                         <div className="flex flex-col gap-2">
                                                             <label className="text-[9px] tracking-[0.2em] uppercase font-bold text-[#212631]">Arrival Time *</label>
-                                                            <input type="time" value={ticketForm.reservationTime} onChange={e => setTicketForm({ ...ticketForm, reservationTime: e.target.value })} className="w-full bg-[#ebebeb] border border-[#212631]/20 p-4 text-sm font-semibold text-[#212631] focus:border-[#212631] outline-none transition-colors h-[54px]" required />
+                                                            <input type="time" value={ticketForm.reservationTime} onChange={e => setTicketForm({ ...ticketForm, reservationTime: e.target.value })} className={FIELD_INPUT} required />
                                                         </div>
                                                     )}
 
@@ -625,51 +646,51 @@ const Reservations = () => {
                                             <div className="flex flex-col gap-5 pt-2">
                                                 <div className="flex flex-col gap-2">
                                                     <label className="text-[9px] tracking-[0.2em] uppercase font-bold text-[#212631]">Event Designation *</label>
-                                                    <input type="text" value={eventForm.venueEventName} onChange={e => setEventForm({ ...eventForm, venueEventName: sanitizeInput(e.target.value) })} className="w-full bg-[#ebebeb] border border-[#212631]/20 p-4 text-sm font-semibold text-[#212631] focus:border-[#212631] outline-none transition-colors rounded-xl" required />
+                                                    <input type="text" value={eventForm.venueEventName} onChange={e => setEventForm({ ...eventForm, venueEventName: sanitizeInput(e.target.value) })} className={FIELD_INPUT} placeholder="e.g. Tree Planting Program" required />
                                                 </div>
 
                                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                                                     <div className="flex flex-col gap-2">
                                                         <label className="text-[9px] tracking-[0.2em] uppercase font-bold text-[#212631]">Event Date *</label>
-                                                        <input type="date" value={eventForm.venueEventDate} onChange={e => setEventForm({ ...eventForm, venueEventDate: e.target.value })} min={getMinDate()} className="w-full bg-[#ebebeb] border border-[#212631]/20 p-4 text-sm font-semibold text-[#212631] focus:border-[#212631] outline-none transition-colors uppercase tracking-wider h-[54px]" required />
+                                                        <input type="date" value={eventForm.venueEventDate} onChange={e => setEventForm({ ...eventForm, venueEventDate: e.target.value })} min={getMinDate()} className={FIELD_INPUT} required />
                                                     </div>
                                                     <div className="flex flex-col gap-2">
                                                         <label className="text-[9px] tracking-[0.2em] uppercase font-bold text-[#212631]">Event Start Time *</label>
-                                                        <input type="time" value={eventForm.venueEventStartTime} onChange={e => setEventForm({ ...eventForm, venueEventStartTime: e.target.value })} className="w-full bg-[#ebebeb] border border-[#212631]/20 p-4 text-sm font-semibold text-[#212631] focus:border-[#212631] outline-none transition-colors h-[54px]" required />
+                                                        <input type="time" value={eventForm.venueEventStartTime} onChange={e => setEventForm({ ...eventForm, venueEventStartTime: e.target.value })} className={FIELD_INPUT} required />
                                                     </div>
                                                 </div>
                                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                                                     <div className="flex flex-col gap-2">
                                                         <label className="text-[9px] tracking-[0.2em] uppercase font-bold text-[#212631]">Event End Time *</label>
-                                                        <input type="time" value={eventForm.venueEventEndTime} onChange={e => setEventForm({ ...eventForm, venueEventEndTime: e.target.value })} className="w-full bg-[#ebebeb] border border-[#212631]/20 p-4 text-sm font-semibold text-[#212631] focus:border-[#212631] outline-none transition-colors h-[54px]" required />
+                                                        <input type="time" value={eventForm.venueEventEndTime} onChange={e => setEventForm({ ...eventForm, venueEventEndTime: e.target.value })} className={FIELD_INPUT} required />
                                                     </div>
                                                 </div>
 
                                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                                                     <div className="flex flex-col gap-2">
                                                         <label className="text-[9px] tracking-[0.2em] uppercase font-bold text-[#212631]">Headcount</label>
-                                                        <input type="number" value={eventForm.numberOfParticipants} onChange={e => setEventForm({ ...eventForm, numberOfParticipants: e.target.value })} min="1" max="100" className="w-full bg-[#ebebeb] border border-[#212631]/20 p-4 text-sm font-semibold text-[#212631] focus:border-[#212631] outline-none transition-colors rounded-xl" required />
+                                                        <input type="number" value={eventForm.numberOfParticipants} onChange={e => setEventForm({ ...eventForm, numberOfParticipants: e.target.value })} min="1" max="100" inputMode="numeric" className={FIELD_INPUT} placeholder="How many people?" required />
                                                     </div>
                                                     <div className="flex flex-col gap-2">
                                                         <label className="text-[9px] tracking-[0.2em] uppercase font-bold text-[#212631]">Contact Phone</label>
-                                                        <input type="tel" value={eventForm.participantPhone} onChange={e => setEventForm({ ...eventForm, participantPhone: sanitizePhone(e.target.value) })} className="w-full bg-[#ebebeb] border border-[#212631]/20 p-4 text-sm font-semibold text-[#212631] focus:border-[#212631] outline-none transition-colors rounded-xl" />
+                                                        <input type="tel" value={eventForm.participantPhone} onChange={e => setEventForm({ ...eventForm, participantPhone: sanitizePhone(e.target.value) })} className={FIELD_INPUT} placeholder="09XX XXX XXXX" autoComplete="tel" />
                                                     </div>
                                                 </div>
 
                                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                                                     <div className="flex flex-col gap-2">
                                                         <label className="text-[9px] tracking-[0.2em] uppercase font-bold text-[#212631]">Organizer Name *</label>
-                                                        <input type="text" value={eventForm.participantName} onChange={e => setEventForm({ ...eventForm, participantName: sanitizeInput(e.target.value) })} className="w-full bg-[#ebebeb] border border-[#212631]/20 p-4 text-sm font-semibold text-[#212631] focus:border-[#212631] outline-none transition-colors rounded-xl" required />
+                                                        <input type="text" value={eventForm.participantName} onChange={e => setEventForm({ ...eventForm, participantName: sanitizeInput(e.target.value) })} className={FIELD_INPUT} placeholder="e.g. Maria Santos" autoComplete="name" required />
                                                     </div>
                                                     <div className="flex flex-col gap-2">
                                                         <label className="text-[9px] tracking-[0.2em] uppercase font-bold text-[#212631]">Organizer Email *</label>
-                                                        <input type="email" value={eventForm.participantEmail} onChange={e => setEventForm({ ...eventForm, participantEmail: sanitizeEmail(e.target.value) })} className="w-full bg-[#ebebeb] border border-[#212631]/20 p-4 text-sm font-semibold text-[#212631] focus:border-[#212631] outline-none transition-colors rounded-xl" required />
+                                                        <input type="email" value={eventForm.participantEmail} onChange={e => setEventForm({ ...eventForm, participantEmail: sanitizeEmail(e.target.value) })} className={FIELD_INPUT} placeholder="you@example.com" autoComplete="email" required />
                                                     </div>
                                                 </div>
 
                                                 <div className="flex flex-col gap-2">
                                                     <label className="text-[9px] tracking-[0.2em] uppercase font-bold text-[#212631]">Event Details & Requirements</label>
-                                                    <textarea value={eventForm.venueEventDescription} onChange={e => setEventForm({ ...eventForm, venueEventDescription: sanitizeInput(e.target.value) })} className="w-full bg-[#ebebeb] border border-[#212631]/20 p-4 text-sm font-semibold text-[#212631] focus:border-[#212631] outline-none transition-colors resize-y min-h-[120px]" />
+                                                    <textarea value={eventForm.venueEventDescription} onChange={e => setEventForm({ ...eventForm, venueEventDescription: sanitizeInput(e.target.value) })} className={`${FIELD_INPUT} resize-y min-h-[120px]`} placeholder="What is this event about?" />
                                                 </div>
                                             </div>
                                         )}
@@ -681,7 +702,7 @@ const Reservations = () => {
                                                     <svg className="absolute w-3 h-3 text-[#ebebeb] pointer-events-none opacity-0 peer-checked:opacity-100 transition-opacity" viewBox="0 0 14 10" fill="none"><path d="M1 5L5 9L13 1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
                                                 </div>
                                                 <p className="text-[10px] tracking-[0.18em] uppercase font-bold text-[#212631]/60 leading-relaxed pt-0.5">
-                                                    I acknowledge the <Link to="/terms" state={{ from: '/reservations', reopenModal: 'create' }} onClick={saveReservationResume} className="text-[#212631] hover:underline">Terms of Service</Link> & <Link to="/privacy" state={{ from: '/reservations', reopenModal: 'create' }} onClick={saveReservationResume} className="text-[#212631] hover:underline">Privacy Policy</Link>.
+                                                    I acknowledge the <Link to="/terms" state={{ from: '/reservations', reopenModal: 'create', reservationType }} onClick={saveReservationResume} className="text-[#212631] hover:underline">Terms of Service</Link> & <Link to="/privacy" state={{ from: '/reservations', reopenModal: 'create', reservationType }} onClick={saveReservationResume} className="text-[#212631] hover:underline">Privacy Policy</Link>.
                                                 </p>
                                             </label>
 

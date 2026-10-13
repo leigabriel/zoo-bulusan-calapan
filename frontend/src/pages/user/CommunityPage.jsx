@@ -138,19 +138,19 @@ const CommunityPage = () => {
         return openConfirmation(options);
     };
 
-    const createOrUpdatePost = async ({ content, imageFile, removeImage }) => {
+    const createOrUpdatePost = async ({ content, imageFiles, removeImage }) => {
         setSavingPost(true);
         try {
             if (editingPost) {
                 await communityAPI.updatePost(
                     editingPost.id,
-                    { content, imageFile, removeImage },
+                    { content, imageFile: imageFiles?.[0], removeImage },
                     user?.role || 'user'
                 );
                 notify.success('Post updated.');
                 setEditingPost(null);
             } else {
-                await communityAPI.createPost({ content, imageFile }, user?.role || 'user');
+                await communityAPI.createPost({ content, imageFiles }, user?.role || 'user');
                 notify.success('Your post is live.');
             }
             await loadPosts();

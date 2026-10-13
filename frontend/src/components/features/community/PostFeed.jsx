@@ -3,6 +3,86 @@ import { communityAPI, getProfileImageUrl } from '../../../services/api-client';
 import { notify } from '../../../utils/toast';
 import PostReportModal from './PostReportModal';
 
+// Instagram-style gallery: swipe / arrows move between photos, dots show position.
+// A single photo renders as a plain image with no controls.
+const PostCarousel = ({ postId, images }) => {
+    const [index, setIndex] = useState(0);
+    const touchStartX = useRef(null);
+
+    useEffect(() => {
+        setIndex(0);
+    }, [postId, images.length]);
+
+    if (images.length === 1) {
+        return (
+            <div className="bg-black/[0.03] flex items-center justify-center overflow-hidden">
+                <img src={images[0]} alt="Post photo" className="w-full h-auto max-h-[600px] object-cover" />
+            </div>
+        );
+    }
+
+    const go = (delta) => setIndex((current) => (current + delta + images.length) % images.length);
+
+    return (
+        <div
+            className="relative bg-black/[0.03] overflow-hidden select-none"
+            onTouchStart={(e) => { touchStartX.current = e.touches[0].clientX; }}
+            onTouchEnd={(e) => {
+                if (touchStartX.current === null) return;
+                const delta = e.changedTouches[0].clientX - touchStartX.current;
+                if (Math.abs(delta) > 40) go(delta < 0 ? 1 : -1);
+                touchStartX.current = null;
+            }}
+        >
+            <div
+                className="flex transition-transform duration-300 ease-out"
+                style={{ transform: `translateX(-${index * 100}%)` }}
+            >
+                {images.map((src, i) => (
+                    <img
+                        key={`${src}-${i}`}
+                        src={src}
+                        alt={`Post photo ${i + 1} of ${images.length}`}
+                        className="w-full shrink-0 h-auto max-h-[600px] object-cover"
+                        draggable={false}
+                    />
+                ))}
+            </div>
+
+            <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); go(-1); }}
+                aria-label="Previous photo"
+                className="absolute left-2 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-black/60 text-white transition hover:bg-black/80"
+            >
+                <span aria-hidden="true">&#8249;</span>
+            </button>
+            <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); go(1); }}
+                aria-label="Next photo"
+                className="absolute right-2 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-black/60 text-white transition hover:bg-black/80"
+            >
+                <span aria-hidden="true">&#8250;</span>
+            </button>
+
+            <div className="pointer-events-none absolute inset-x-0 bottom-3 flex items-center justify-center gap-1.5">
+                {images.map((_, i) => (
+                    <span
+                        key={i}
+                        aria-current={i === index}
+                        className={`rounded-full transition-all ${i === index ? 'h-2 w-2 bg-white' : 'h-1.5 w-1.5 bg-white/60'}`}
+                    />
+                ))}
+            </div>
+
+            <span className="absolute right-3 top-3 rounded-full bg-black/60 px-2 py-0.5 text-[11px] font-bold text-white">
+                {index + 1}/{images.length}
+            </span>
+        </div>
+    );
+};
+
 const PostFeed = ({ posts, currentUser, isGuest = false, onRequireAuth, onRefresh, onUpdatePost, onEditPost, onPostClick, onCommentClick, onConfirmDelete }) => {
 
     const [openMenuId, setOpenMenuId] = useState(null);
@@ -107,6 +187,9 @@ const PostFeed = ({ posts, currentUser, isGuest = false, onRequireAuth, onRefres
         <div className="flex flex-col gap-6 md:gap-8">
             {posts.map((post) => {
                 const isOwner = post.isOwner === true;
+                const images = Array.isArray(post.images) && post.images.length
+                    ? post.images
+                    : (post.imageUrl ? [post.imageUrl] : []);
 
                 return (
                     <article
@@ -186,10 +269,8 @@ const PostFeed = ({ posts, currentUser, isGuest = false, onRequireAuth, onRefres
                             </p>
                         </div>
 
-                        {post.imageUrl && (
-                            <div className="bg-black/[0.03] flex items-center justify-center overflow-hidden">
-                                <img src={post.imageUrl} alt="post" className="w-full h-auto max-h-[600px] object-cover" />
-                            </div>
+                        {images.length > 0 && (
+                            <PostCarousel postId={post.id} images={images} />
                         )}
 
                          <div className="flex flex-wrap items-center justify-between gap-2 px-1 py-3 mt-auto">
