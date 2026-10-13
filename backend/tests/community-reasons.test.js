@@ -125,3 +125,47 @@ test('normalizeComment exposes an isOwner flag', () => {
     const normalizer = source.slice(source.indexOf('const normalizeComment'));
     assert.match(normalizer.slice(0, source.indexOf('const normalizeReportedComment')), /isOwner:\s*Boolean\(comment\.is_owner\)/);
 });
+
+// Guests can read the community, so the router no longer runs `protect` globally.
+// `authorize` reads req.user.role directly and throws on an undefined req.user, so any
+// route that is not one of the three public reads MUST still carry protect itself.
+
+const readCommunityRoutes = () => {
+    const { readFileSync } = require('node:fs');
+    const { join } = require('node:path');
+    return readFileSync(join(__dirname, '..', 'routes', 'community-routes.js'), 'utf8');
+};
+
+const PUBLIC_READS = [
+    "router.get('/posts'",
+    "router.get('/posts/:postId/comments'",
+    "router.get('/users/:userId/profile'"
+];
+
+const ROUTE_LINE = /^router\.(get|post|put|patch|delete)\(/;
+
+const communityRouteLines = () => readCommunityRoutes()
+    .split('\n')
+    .map((line) => line.trim())
+    .filter((line) => ROUTE_LINE.test(line));
+
+test('the community router resolves the viewer optionally rather than requiring auth', () => {
+    const source = readCommunityRoutes();
+    assert.match(source, /router\.use\(optionalAuth\)/);
+    assert.doesNotMatch(source, /router\.use\(protect\)/);
+});
+
+test('exactly three read routes stay open to guests', () => {
+    const lines = communityRouteLines();
+    const isPublic = (line) => PUBLIC_READS.some((prefix) => line.includes(prefix));
+    assert.equal(lines.filter(isPublic).length, PUBLIC_READS.length);
+});
+
+test('every write and staff-only route still requires protect', () => {
+    const lines = communityRouteLines();
+    const isPublic = (line) => PUBLIC_READS.some((prefix) => line.includes(prefix));
+    for (const line of lines) {
+        if (isPublic(line)) continue;
+        assert.match(line, /protect/, `route must keep protect: ${line}`);
+    }
+});
