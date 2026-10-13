@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { PAGE_BG_GRADIENT } from '../../config/page-gradient';
 import { Link } from 'react-router-dom';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -133,7 +134,7 @@ const Animals = () => {
 
     return (
         <ReactLenis root>
-            <div className="bg-white text-black relative min-h-screen">
+            <div className={`text-black relative min-h-screen ${PAGE_BG_GRADIENT}`}>
                 <Header />
 
                 {/* Hero Section - Clean Style */}
@@ -142,7 +143,7 @@ const Animals = () => {
                 </div>
 
                 {/* Grid Section */}
-                <main ref={gridRef} className="relative z-10 w-full bg-white min-h-screen px-4 md:px-8 pb-32 max-w-[1800px] mx-auto">
+                <main ref={gridRef} className="relative z-10 w-full min-h-screen px-4 md:px-8 pb-32 max-w-[1800px] mx-auto">
                     {loading && (
                         <div className="flex items-center justify-center py-40">
                             <div className="w-8 h-8 rounded-full border-2 border-gray-200 border-t-black animate-spin" />

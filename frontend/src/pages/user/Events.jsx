@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { PAGE_BG_GRADIENT } from '../../config/page-gradient';
 import { AnimatePresence, motion as Motion } from 'framer-motion';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -269,7 +270,7 @@ const Events = () => {
 
     return (
         <ReactLenis root>
-            <div ref={containerRef} className="min-h-screen bg-white text-black">
+            <div ref={containerRef} className={`min-h-screen text-black ${PAGE_BG_GRADIENT}`}>
                 <Header />
 
                 <div className="w-full min-h-[40vh] md:min-h-[60vh] flex flex-col items-center justify-center px-4 pt-24 pb-8">
@@ -399,7 +400,7 @@ const Events = () => {
                     )}
                 </div>
 
-                <section className="bg-[#c6fe69] py-16 md:py-32 px-4 border-t border-gray-200">
+                <section className="bg-green-400 py-16 md:py-32 px-4 border-t border-gray-200">
                     <div className="max-w-4xl mx-auto section-anim">
                         <div className="text-center mb-10 md:mb-16">
                             <h2 className="text-3xl md:text-5xl lg:text-6xl text-black mb-4">Plan Your Own Event</h2>

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { PAGE_BG_GRADIENT } from '../../config/page-gradient';
 import { ReactLenis } from 'lenis/react';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
 import Header from '../../components/Header';
@@ -164,7 +165,7 @@ const CommunityPage = () => {
 
     return (
         <ReactLenis root>
-            <div className="bg-white text-black relative min-h-screen">
+            <div className={`text-black relative min-h-screen ${PAGE_BG_GRADIENT}`}>
                 <Header />
 
                 {/* Intro Section */}
@@ -176,9 +177,9 @@ const CommunityPage = () => {
                 </div>
 
                 {/* Main Feed Section */}
-                <main id="community-feed" className="relative z-10 w-full bg-white">
+                <main id="community-feed" className="relative z-10 w-full">
                     <div className="max-w-[820px] mx-auto min-h-screen">
-                         <div className="bg-white min-h-screen">
+                         <div className="min-h-screen">
                              <div className="p-4 sm:p-6 md:p-8">
                                 {loadingPosts ? (
                                     <div className="flex items-center justify-center py-32">

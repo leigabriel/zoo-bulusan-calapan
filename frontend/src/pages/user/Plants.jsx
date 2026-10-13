@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { PAGE_BG_GRADIENT } from '../../config/page-gradient';
 import { Link } from 'react-router-dom';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -72,12 +73,12 @@ const Plants = () => {
 
     return (
         <ReactLenis root>
-            <div className="relative min-h-screen bg-white text-black">
+            <div className={`relative min-h-screen text-black ${PAGE_BG_GRADIENT}`}>
                 <Header />
                 <div className="flex min-h-[50vh] w-full flex-col items-center justify-center px-4 pt-20 md:min-h-[60vh]">
                     <h1 className="w-full max-w-full text-center text-[clamp(3rem,11vw,10rem)] font-bold leading-[1.05] tracking-tight">Discover Our Plants</h1>
                 </div>
-                <main ref={gridRef} className="relative z-10 mx-auto min-h-screen w-full max-w-[1800px] bg-white px-4 pb-32 md:px-8">
+                <main ref={gridRef} className="relative z-10 mx-auto min-h-screen w-full max-w-[1800px] px-4 pb-32 md:px-8">
                     {loading && <div className="flex items-center justify-center py-40"><div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-200 border-t-black" /></div>}
                     {!loading && error && <div className="flex flex-col items-center gap-4 px-6 py-32"><p className="text-center text-sm font-bold uppercase tracking-widest text-gray-400">{error}</p><button onClick={fetchPlants} className="cursor-pointer border-2 border-black px-6 py-3 text-xs font-black uppercase tracking-widest transition-colors hover:bg-black hover:text-white">Retry</button></div>}
                     {!loading && !error && plants.length === 0 && <p className="py-40 text-center text-4xl text-gray-300 md:text-6xl">No plants available</p>}
