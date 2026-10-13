@@ -203,6 +203,19 @@ class Community {
         `);
 
         await db.query(`
+            CREATE TABLE IF NOT EXISTS community_post_images (
+                id INT PRIMARY KEY AUTO_INCREMENT,
+                post_id INT NOT NULL,
+                image_url VARCHAR(500) NOT NULL,
+                image_public_id VARCHAR(255) DEFAULT NULL,
+                position INT NOT NULL DEFAULT 0,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                INDEX idx_community_post_images_post (post_id, position),
+                CONSTRAINT fk_community_post_images_post FOREIGN KEY (post_id) REFERENCES community_posts(id) ON DELETE CASCADE ON UPDATE CASCADE
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        `);
+
+        await db.query(`
             CREATE TABLE IF NOT EXISTS community_post_reports (
                 id INT PRIMARY KEY AUTO_INCREMENT,
                 post_id INT NOT NULL,
@@ -236,6 +249,66 @@ class Community {
         return result.insertId;
     }
 
+    // Posts may carry up to MAX_POST_IMAGES photos. community_posts.image_url keeps holding
+    // the first photo so every existing query, the moderation queue and the cover fallback
+    // keep working; the full set lives in community_post_images.
+    static async addPostImages(postId, images = []) {
+        if (!images.length) return;
+        const values = images.map(() => '(?, ?, ?, ?)').join(', ');
+        const params = [];
+        images.forEach((image, index) => {
+            params.push(postId, image.secure_url, image.public_id || null, index);
+        });
+        await db.query(
+            `INSERT INTO community_post_images (post_id, image_url, image_public_id, position) VALUES ${values}`,
+            params
+        );
+    }
+
+    static async getPostImages(postId) {
+        const [rows] = await db.query(
+            'SELECT image_url, image_public_id FROM community_post_images WHERE post_id = ? ORDER BY position ASC, id ASC',
+            [postId]
+        );
+        return rows;
+    }
+
+    static async getPostImagesForPosts(postIds = []) {
+        if (!postIds.length) return new Map();
+        const placeholders = postIds.map(() => '?').join(', ');
+        const [rows] = await db.query(
+            `SELECT post_id, image_url FROM community_post_images
+             WHERE post_id IN (${placeholders}) ORDER BY post_id, position ASC, id ASC`,
+            postIds
+        );
+        const grouped = new Map();
+        rows.forEach((row) => {
+            if (!grouped.has(row.post_id)) grouped.set(row.post_id, []);
+            grouped.get(row.post_id).push(row.image_url);
+        });
+        return grouped;
+    }
+
+    // Every Cloudinary public id belonging to a post, so a hard delete can reclaim all of
+    // them rather than just the cover. The cover column is included too, because posts
+    // created before this table existed have no rows here.
+    static async getPostImagePublicIds(postId) {
+        const [galleryRows] = await db.query(
+            'SELECT image_public_id, image_url FROM community_post_images WHERE post_id = ? ORDER BY position ASC, id ASC',
+            [postId]
+        );
+        const [postRows] = await db.query(
+            'SELECT image_public_id, image_url FROM community_posts WHERE id = ?',
+            [postId]
+        );
+        return [...galleryRows, ...postRows];
+    }
+
+    static async replacePostImages(postId, images = []) {
+        await db.query('DELETE FROM community_post_images WHERE post_id = ?', [postId]);
+        await Community.addPostImages(postId, images);
+    }
+
     static async getPostById(postId) {
         const [rows] = await db.query(
             `SELECT p.*, u.first_name, u.last_name, u.username, u.profile_image
@@ -261,6 +334,15 @@ class Community {
              ORDER BY p.created_at DESC`,
             [viewerId || 0, viewerId || 0]
         );
+
+        // Attach the full gallery in one extra round trip rather than per post.
+        const galleries = await Community.getPostImagesForPosts(rows.map((row) => row.id));
+        rows.forEach((row) => {
+            const images = galleries.get(row.id) || [];
+            // Fall back to the cover column so posts uploaded before galleries existed still
+            // render a photo.
+            row.images = images.length ? images : (row.image_url ? [row.image_url] : []);
+        });
 
         // 'pending' is accepted here only for rows written before instant publishing.
         // createPost now always writes 'approved' and nothing produces 'pending' any more.
@@ -560,6 +642,12 @@ class Community {
              WHERE r.status = 'pending' AND p.status = 'approved'
              ORDER BY r.created_at ASC`
         );
+
+        const galleries = await Community.getPostImagesForPosts(rows.map((row) => row.post_id));
+        rows.forEach((row) => {
+            const images = galleries.get(row.post_id) || [];
+            row.images = images.length ? images : (row.image_url ? [row.image_url] : []);
+        });
         return rows;
     }
 

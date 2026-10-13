@@ -57,6 +57,13 @@ router.put('/ticket/:id/unarchive', trackActivity('ticket_unarchive', (req) => '
 router.put('/event/:id/archive', trackActivity('event_archive', (req) => 'Archived event reservation'), reservationController.archiveEventReservation);
 router.put('/event/:id/unarchive', trackActivity('event_unarchive', (req) => 'Unarchived event reservation'), reservationController.unarchiveEventReservation);
 
+// Visitor self-service. Declared above the admin/staff gate below so the reservation owner
+// can amend or cancel their own pending booking.
+router.put('/ticket/:id/cancel', trackActivity('reservation_cancel', (req) => 'Cancelled a ticket reservation'), reservationController.cancelTicketReservation);
+router.put('/event/:id/cancel', trackActivity('reservation_cancel', (req) => 'Cancelled an event reservation'), reservationController.cancelEventReservation);
+router.put('/ticket/:id/details', trackActivity('reservation_update', (req) => 'Updated a ticket reservation'), reservationController.updateMyTicketReservation);
+router.put('/event/:id/details', trackActivity('reservation_update', (req) => 'Updated an event reservation'), reservationController.updateMyEventReservation);
+
 router.use(authorize('admin', 'staff'));
 
 router.get('/', reservationController.getAllReservations);

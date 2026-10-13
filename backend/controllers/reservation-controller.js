@@ -6,6 +6,7 @@ const { notifyManagement, notifyUser } = require('../services/notification-servi
 const { logStaffActivity, logUserActivity } = require('../middleware/track-activity');
 const crypto = require('crypto');
 const { reservationQrSecret } = require('../config/app-config');
+const { validateTicketEdit, validateParticipantEdit } = require('../utils/reservation-edit-rules');
 const { readConfig: readEventPaymentConfig } = require('../config/event-payment-config');
 const walkInService = require('../services/walk-in-service');
 
@@ -901,6 +902,141 @@ exports.getUpcomingReservations = async (req, res) => {
     } catch (error) {
         console.error('Error getting upcoming reservations:', error);
         res.status(500).json({ success: false, message: 'Error fetching reservations' });
+    }
+};
+
+// --- Visitor self-service -----------------------------------------------------------
+// Reachable by the reservation's owner only; the model enforces both `user_id` and
+// `status = 'pending'`, so a staff-confirmed booking cannot be edited or cancelled here.
+
+const selfServiceDeny = (res) => res.status(404).json({
+    success: false,
+    message: 'Reservation not found, or it can no longer be changed.'
+});
+
+// A visitor amending or cancelling changes what staff will see at the gate, so both actions
+// raise a management notification rather than silently mutating the queue.
+const notifyManagementOfSelfService = async ({ action, kind }) => {
+    await notifyManagement({
+        title: `Reservation ${action} by Visitor`,
+        message: `A visitor ${action} their own ${kind} reservation.`,
+        type: 'reservation',
+        link: '/admin/reservations'
+    });
+};
+
+exports.cancelTicketReservation = async (req, res) => {
+    try {
+        const reason = String(req.body?.reason || '').trim().slice(0, 255) || null;
+        const ok = await Reservation.cancelTicketReservationByOwner(req.params.id, req.user.id, reason);
+        if (!ok) return selfServiceDeny(res);
+
+        await notifyUser(req.user.id, 'reservation.cancelled', { reason }, '/reservations');
+        await notifyManagementOfSelfService({ action: 'cancelled', kind: 'ticket' });
+        await logUserActivity(req, 'reservation_cancel', 'Cancelled a ticket reservation', 'reservation', req.params.id);
+
+        return res.json({ success: true, message: 'Your reservation has been cancelled.' });
+    } catch (error) {
+        console.error('Error cancelling ticket reservation:', error);
+        return res.status(500).json({ success: false, message: 'Could not cancel your reservation right now.' });
+    }
+};
+
+exports.cancelEventReservation = async (req, res) => {
+    try {
+        const reason = String(req.body?.reason || '').trim().slice(0, 255) || null;
+        const ok = await Reservation.cancelEventReservationByOwner(req.params.id, req.user.id, reason);
+        if (!ok) return selfServiceDeny(res);
+
+        await notifyUser(req.user.id, 'reservation.cancelled', { reason }, '/reservations');
+        await notifyManagementOfSelfService({ action: 'cancelled', kind: 'event' });
+        await logUserActivity(req, 'reservation_cancel', 'Cancelled an event reservation', 'reservation', req.params.id);
+
+        return res.json({ success: true, message: 'Your reservation has been cancelled.' });
+    } catch (error) {
+        console.error('Error cancelling event reservation:', error);
+        return res.status(500).json({ success: false, message: 'Could not cancel your reservation right now.' });
+    }
+};
+
+exports.updateMyTicketReservation = async (req, res) => {
+    try {
+        const validation = validateTicketEdit({
+            adult: req.body?.adultQuantity,
+            child: req.body?.childQuantity,
+            resident: req.body?.residentQuantity
+        });
+        if (!validation.ok) {
+            return res.status(400).json({ success: false, message: validation.error });
+        }
+
+        const str = (value, max) => (typeof value === 'string' && value.trim() ? value.trim().slice(0, max) : null);
+        const email = str(req.body?.visitorEmail, 255);
+        if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            return res.status(400).json({ success: false, message: 'Please enter a valid email address.' });
+        }
+
+        const ok = await Reservation.updateTicketReservationByOwner(req.params.id, req.user.id, {
+            adult: validation.quantities.adult,
+            child: validation.quantities.child,
+            totalVisitors: validation.totalVisitors,
+            visitorName: str(req.body?.visitorName, 255),
+            visitorEmail: email,
+            visitorPhone: str(req.body?.visitorPhone, 20),
+            reservationDate: str(req.body?.reservationDate, 10),
+            reservationTime: typeof req.body?.reservationTime === 'string' ? req.body.reservationTime : null,
+            notes: str(req.body?.notes, 1000)
+        });
+        if (!ok) return selfServiceDeny(res);
+
+        await notifyManagementOfSelfService({ action: 'updated', kind: 'ticket' });
+        await logUserActivity(req, 'reservation_update', 'Updated a ticket reservation', 'reservation', req.params.id);
+
+        return res.json({
+            success: true,
+            message: 'Your reservation has been updated.',
+            totalVisitors: validation.totalVisitors
+        });
+    } catch (error) {
+        console.error('Error updating ticket reservation:', error);
+        return res.status(500).json({ success: false, message: 'Could not update your reservation right now.' });
+    }
+};
+
+exports.updateMyEventReservation = async (req, res) => {
+    try {
+        const validation = validateParticipantEdit({ participants: req.body?.numberOfParticipants });
+        if (!validation.ok) {
+            return res.status(400).json({ success: false, message: validation.error });
+        }
+
+        const str = (value, max) => (typeof value === 'string' && value.trim() ? value.trim().slice(0, max) : null);
+        const email = str(req.body?.participantEmail, 255);
+        if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            return res.status(400).json({ success: false, message: 'Please enter a valid email address.' });
+        }
+
+        const ok = await Reservation.updateEventReservationByOwner(req.params.id, req.user.id, {
+            participants: validation.participants,
+            participantName: str(req.body?.participantName, 255),
+            participantEmail: email,
+            participantPhone: str(req.body?.participantPhone, 20),
+            notes: str(req.body?.notes, 1000),
+            venueEventName: str(req.body?.venueEventName, 255),
+            venueEventDate: str(req.body?.venueEventDate, 10),
+            venueEventStartTime: typeof req.body?.venueEventStartTime === 'string' ? req.body.venueEventStartTime : null,
+            venueEventEndTime: typeof req.body?.venueEventEndTime === 'string' ? req.body.venueEventEndTime : null,
+            venueEventDescription: str(req.body?.venueEventDescription, 2000)
+        });
+        if (!ok) return selfServiceDeny(res);
+
+        await notifyManagementOfSelfService({ action: 'updated', kind: 'event' });
+        await logUserActivity(req, 'reservation_update', 'Updated an event reservation', 'reservation', req.params.id);
+
+        return res.json({ success: true, message: 'Your reservation has been updated.' });
+    } catch (error) {
+        console.error('Error updating event reservation:', error);
+        return res.status(500).json({ success: false, message: 'Could not update your reservation right now.' });
     }
 };
 

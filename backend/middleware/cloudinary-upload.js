@@ -310,6 +310,108 @@ const handleCloudinaryImageUpload = (type = 'general', fieldName = 'image') => {
 };
 
 /**
+ * Upload several images to Cloudinary for one request (community post galleries).
+ * Populates req.cloudinaryResults (array); req.cloudinaryResult stays in sync with the first
+ * image so existing single-image consumers keep working unchanged.
+ *
+ * @param {string} type - Cloudinary folder config key
+ * @param {string} fieldName - Form field name
+ * @param {number} maxCount - Maximum files accepted
+ */
+const handleCloudinaryMultiImageUpload = (type = 'general', fieldName = 'images', maxCount = 5, legacyFieldName = null) => {
+    return (req, res, next) => {
+        const upload = createUpload(MAX_FILE_SIZE);
+        // Accept the legacy single-file field alongside the gallery one. A cached client still
+        // posting the old field name would otherwise trip multer's LIMIT_UNEXPECTED_FILE and
+        // come back as a confusing "you can attach up to 5 photos" 400.
+        const expected = legacyFieldName
+            ? [{ name: fieldName, maxCount }, { name: legacyFieldName, maxCount: 1 }]
+            : [{ name: fieldName, maxCount }];
+        const uploadMiddleware = upload.fields(expected);
+
+        uploadMiddleware(req, res, async (err) => {
+            if (err instanceof multer.MulterError) {
+                if (err.code === 'LIMIT_FILE_SIZE') {
+                    return res.status(400).json({ success: false, message: 'File too large. Maximum size is 5MB.' });
+                }
+                if (err.code === 'LIMIT_FILE_COUNT') {
+                    const noun = maxCount === 1 ? 'photo' : 'photos';
+                    return res.status(400).json({ success: false, message: `You can attach up to ${maxCount} ${noun}.` });
+                }
+                return res.status(400).json({ success: false, message: `Upload error: ${err.message}` });
+            } else if (err) {
+                return res.status(400).json({ success: false, message: err.message });
+            }
+
+            // `fields()` yields an object keyed by field name; flatten it with the primary
+            // field first so the cover photo is the first entry of the gallery.
+            const groups = (req.files && !Array.isArray(req.files)) ? req.files : {};
+            const picked = [...(groups[fieldName] || []), ...(groups[legacyFieldName] || [])];
+
+            // Images are optional: a text-only post is a valid post.
+            if (picked.length === 0) {
+                req.cloudinaryResults = [];
+                return next();
+            }
+
+            try {
+                const config = uploadConfig[type] || uploadConfig.general;
+                const userId = req.user?.id || 'system';
+
+                // Cloudinary's Upload API is rate-unlimited and takes one asset per request, so
+                // each photo is its own call. Uploading them sequentially makes the visitor wait
+                // through every round trip; opening all of them at once is needlessly rude.
+                // Three at a time is the compromise.
+                const CONCURRENCY = 3;
+                const results = new Array(picked.length).fill(null);
+                const failed = [];
+                let cursor = 0;
+
+                const workers = Array.from(
+                    { length: Math.min(CONCURRENCY, picked.length) },
+                    async () => {
+                        while (cursor < picked.length) {
+                            const index = cursor;
+                            cursor += 1;
+                            try {
+                                results[index] = await uploadToCloudinary(picked[index].buffer, {
+                                    ...config,
+                                    public_id: generatePublicId(type, userId)
+                                });
+                            } catch (fileError) {
+                                // One rejected photo must not cost the visitor the whole post.
+                                console.error(`Cloudinary upload failed for ${picked[index].originalname}:`, fileError.message);
+                                failed.push(picked[index].originalname);
+                            }
+                        }
+                    }
+                );
+                await Promise.all(workers);
+
+                const uploaded = results.filter(Boolean);
+                if (!uploaded.length) {
+                    return res.status(502).json({
+                        success: false,
+                        message: 'We could not upload your photos. Please try again.'
+                    });
+                }
+
+                req.cloudinaryResults = uploaded;
+                req.cloudinaryResult = uploaded[0];
+                if (failed.length) {
+                    console.warn(`Continuing without ${failed.length} photo(s): ${failed.join(', ')}`);
+                    req.uploadWarnings = failed;
+                }
+                next();
+            } catch (uploadError) {
+                console.error('Cloudinary multi-upload error:', uploadError);
+                return res.status(500).json({ success: false, message: 'Error uploading images to cloud storage.' });
+            }
+        });
+    };
+};
+
+/**
  * Upload base64 image to Cloudinary
  * @param {string} base64Data - Base64 encoded image data
  * @param {string} type - Type of upload (profile, residentId, animal, etc.)
@@ -360,5 +462,6 @@ module.exports = {
     // Middleware handlers
     handleCloudinaryProfileUpload,
     handleCloudinaryResidentIdUpload,
-    handleCloudinaryImageUpload
+    handleCloudinaryImageUpload,
+    handleCloudinaryMultiImageUpload
 };

@@ -2,7 +2,12 @@ const express = require('express');
 const router = express.Router();
 const communityController = require('../controllers/community-controller');
 const { protect, authorize, optionalAuth } = require('../middleware/auth');
-const { handleCloudinaryImageUpload } = require('../middleware/cloudinary-upload');
+const { handleCloudinaryImageUpload, handleCloudinaryMultiImageUpload } = require('../middleware/cloudinary-upload');
+
+// One photo per post for now. The gallery table and the multi-upload middleware stay in place,
+// so raising this back to 5 is a one-line change here and in the PostForm constant, and posts
+// that already carry several images keep rendering through the existing carousel.
+const MAX_POST_IMAGES = 1;
 
 // Guests may read the community, so auth is resolved optionally rather than enforced:
 // optionalAuth fills req.user when a valid token is present and otherwise passes through, so
@@ -18,7 +23,7 @@ router.get('/posts/:postId/comments', communityController.getCommentsByPost);
 router.get('/users/:userId/profile', communityController.getUserProfile);
 
 // --- Any signed-in user ---
-router.post('/posts', protect, handleCloudinaryImageUpload('community', 'postImage'), communityController.createPost);
+router.post('/posts', protect, handleCloudinaryMultiImageUpload('community', 'postImages', MAX_POST_IMAGES, 'postImage'), communityController.createPost);
 router.put('/posts/:postId', protect, handleCloudinaryImageUpload('community', 'postImage'), communityController.updatePost);
 router.delete('/posts/:postId', protect, communityController.deletePost);
 router.post('/posts/:postId/like', protect, communityController.togglePostLike);

@@ -118,6 +118,36 @@ test('the comment feed computes comment ownership server-side', () => {
     assert.match(sql, /\(c\.user_id\s*=\s*\?\)\s*AS is_owner/);
 });
 
+// Deleting a post must reclaim EVERY image it owns from Cloudinary, not just the cover:
+// the community_post_images rows cascade away with the post, so an asset left on the remote
+// has no remaining trace anywhere and silently consumes the storage quota forever.
+test('deleting a post reclaims every image it owns from Cloudinary', () => {
+    const { readFileSync } = require('node:fs');
+    const { join } = require('node:path');
+    const source = readFileSync(join(__dirname, '..', 'controllers', 'community-controller.js'), 'utf8');
+    const handler = source.slice(
+        source.indexOf('exports.deletePost'),
+        source.indexOf('exports.getAllPostsForModeration')
+    );
+    assert.match(handler, /getPostImagePublicIds/, 'must gather all of the post\'s images');
+    assert.match(handler, /deleteFromCloudinary/);
+    assert.ok(
+        handler.indexOf('deleteFromCloudinary') > handler.indexOf('getPostImagePublicIds'),
+        'cleanup must iterate the gathered ids rather than only the cover column'
+    );
+});
+
+test('a Cloudinary cleanup failure does not block the post delete', () => {
+    const { readFileSync } = require('node:fs');
+    const { join } = require('node:path');
+    const source = readFileSync(join(__dirname, '..', 'controllers', 'community-controller.js'), 'utf8');
+    const handler = source.slice(
+        source.indexOf('exports.deletePost'),
+        source.indexOf('exports.getAllPostsForModeration')
+    );
+    assert.match(handler, /catch\s*\(cloudError\)/);
+});
+
 test('normalizeComment exposes an isOwner flag', () => {
     const { readFileSync } = require('node:fs');
     const { join } = require('node:path');

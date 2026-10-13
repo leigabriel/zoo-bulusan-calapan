@@ -14,6 +14,7 @@ const normalizePost = (post) => ({
   userId: post.user_id,
   content: post.content,
   imageUrl: post.image_url,
+  images: Array.isArray(post.images) ? post.images : (post.image_url ? [post.image_url] : []),
   status: post.status,
   moderationNote: post.moderation_note || null,
   // Computed server-side: the client cannot compare user ids because they arrive as
@@ -91,6 +92,7 @@ const normalizeReportedPost = (report) => ({
   reportedBy: report.reported_by,
   content: report.content,
   imageUrl: report.image_url,
+  images: Array.isArray(report.images) ? report.images : (report.image_url ? [report.image_url] : []),
   postStatus: report.post_status,
   moderationNote: report.moderation_note || null,
   postCreatedAt: report.post_created_at,
@@ -135,8 +137,9 @@ exports.createPost = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Please write something before posting.' });
     }
 
-    const imageUrl = req.cloudinaryResult?.secure_url || null;
-    const imagePublicId = req.cloudinaryResult?.public_id || null;
+    const uploads = req.cloudinaryResults || [];
+    const imageUrl = uploads[0]?.secure_url || req.cloudinaryResult?.secure_url || null;
+    const imagePublicId = uploads[0]?.public_id || req.cloudinaryResult?.public_id || null;
 
     const postId = await Community.createPost({
       userId: req.user.id,
@@ -145,13 +148,19 @@ exports.createPost = async (req, res) => {
       imagePublicId
     });
 
+    if (uploads.length) {
+      await Community.addPostImages(postId, uploads);
+    }
+
     if (req.user.role === 'user') {
       await logUserActivity(req, 'post_create', 'Created a community post', 'community', postId);
     }
 
     return res.status(201).json({
       success: true,
-      message: 'Your post is live.',
+      message: req.uploadWarnings?.length
+        ? `Your post is live, but ${req.uploadWarnings.length} photo(s) could not be uploaded.`
+        : 'Your post is live.',
       postId
     });
   } catch (error) {
@@ -209,6 +218,14 @@ exports.updatePost = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Post not found.' });
     }
 
+    // Keep the gallery in step with the cover. Rows left over from when a post could carry
+    // several photos would otherwise keep rendering in the carousel after an edit.
+    if (req.cloudinaryResult) {
+      await Community.replacePostImages(postId, [req.cloudinaryResult]);
+    } else if (removeImage) {
+      await Community.replacePostImages(postId, []);
+    }
+
     if (req.user.role === 'user') {
       await logUserActivity(req, 'post_update', 'Updated a community post', 'community', postId);
     }
@@ -242,10 +259,21 @@ exports.deletePost = async (req, res) => {
       return res.status(403).json({ success: false, message: 'You can only delete your own post.' });
     }
 
-    if (currentPost.image_public_id || currentPost.image_url) {
-      const publicId = currentPost.image_public_id || extractPublicId(currentPost.image_url);
-      if (publicId) {
+    // Reclaim every image this post owns from Cloudinary, not just the cover. Gallery rows
+    // cascade away with the post row, so the only lasting trace is the remote asset - left
+    // behind it stays in the bucket forever and silently eats the storage quota. A cleanup
+    // failure is logged but never blocks the delete: the row is gone either way, and a
+    // stranded asset is a smaller problem than a post the user cannot remove.
+    const ownedImages = await Community.getPostImagePublicIds(postId);
+    const cleaned = new Set();
+    for (const image of ownedImages) {
+      const publicId = image.image_public_id || extractPublicId(image.image_url);
+      if (!publicId || cleaned.has(publicId)) continue;
+      cleaned.add(publicId);
+      try {
         await deleteFromCloudinary(publicId);
+      } catch (cloudError) {
+        console.error(`Cloudinary cleanup failed for post ${postId} asset ${publicId}:`, cloudError.message);
       }
     }
 

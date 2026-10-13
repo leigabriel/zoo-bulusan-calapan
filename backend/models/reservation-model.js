@@ -590,6 +590,90 @@ class Reservation {
         );
         return result.affectedRows > 0;
     }
+
+    // --- Visitor self-service -----------------------------------------------------
+    // Each of these carries `AND user_id = ?` and `AND status = 'pending'`, so a visitor can
+    // only ever touch their own booking and only before staff act on it. Once confirmed or
+    // cancelled the reservation is settled and must be changed by staff instead.
+
+    static async cancelTicketReservationByOwner(id, userId, reason = null) {
+        const [result] = await db.query(
+            `UPDATE ticket_reservations
+             SET status = 'cancelled', cancelled_at = NOW(), cancelled_reason = ?, updated_at = NOW()
+             WHERE id = ? AND user_id = ? AND status = 'pending' AND (is_deleted IS NULL OR is_deleted = FALSE)`,
+            [reason, id, userId]
+        );
+        return result.affectedRows > 0;
+    }
+
+    static async cancelEventReservationByOwner(id, userId, reason = null) {
+        const [result] = await db.query(
+            `UPDATE event_reservations
+             SET status = 'cancelled', cancelled_at = NOW(), cancelled_reason = ?, updated_at = NOW()
+             WHERE id = ? AND user_id = ? AND status = 'pending' AND (is_deleted IS NULL OR is_deleted = FALSE)`,
+            [reason, id, userId]
+        );
+        return result.affectedRows > 0;
+    }
+
+    // Bulusan resident quantity is deliberately NOT editable here: a resident ticket is only
+    // valid against a verified resident ID captured at booking time, so letting the number be
+    // edited afterwards would let a booking gain free passes without a check.
+    static async updateTicketReservationByOwner(id, userId, {
+        adult, child, totalVisitors, visitorName, visitorEmail, visitorPhone,
+        reservationDate, reservationTime, notes
+    }) {
+        const [result] = await db.query(
+            `UPDATE ticket_reservations
+             SET adult_quantity = ?, child_quantity = ?, total_visitors = ?,
+                 visitor_name = COALESCE(?, visitor_name),
+                 visitor_email = COALESCE(?, visitor_email),
+                 visitor_phone = ?,
+                 reservation_date = COALESCE(?, reservation_date),
+                 reservation_time = ?,
+                 notes = COALESCE(?, notes),
+                 updated_at = NOW()
+             WHERE id = ? AND user_id = ? AND status = 'pending' AND (is_deleted IS NULL OR is_deleted = FALSE)`,
+            [
+                adult, child, totalVisitors,
+                visitorName ?? null, visitorEmail ?? null,
+                visitorPhone ?? null,
+                reservationDate ?? null, reservationTime || null,
+                notes ?? null,
+                id, userId
+            ]
+        );
+        return result.affectedRows > 0;
+    }
+
+    static async updateEventReservationByOwner(id, userId, {
+        participants, participantName, participantEmail, participantPhone, notes,
+        venueEventName, venueEventDate, venueEventStartTime, venueEventEndTime, venueEventDescription
+    }) {
+        const [result] = await db.query(
+            `UPDATE event_reservations
+             SET number_of_participants = ?,
+                 participant_name = COALESCE(?, participant_name),
+                 participant_email = COALESCE(?, participant_email),
+                 participant_phone = ?,
+                 notes = COALESCE(?, notes),
+                 venue_event_name = COALESCE(?, venue_event_name),
+                 venue_event_date = COALESCE(?, venue_event_date),
+                 venue_event_start_time = ?,
+                 venue_event_end_time = ?,
+                 venue_event_description = COALESCE(?, venue_event_description),
+                 updated_at = NOW()
+             WHERE id = ? AND user_id = ? AND status = 'pending' AND (is_deleted IS NULL OR is_deleted = FALSE)`,
+            [
+                participants,
+                participantName ?? null, participantEmail ?? null, participantPhone ?? null, notes ?? null,
+                venueEventName ?? null, venueEventDate ?? null,
+                venueEventStartTime || null, venueEventEndTime || null, venueEventDescription ?? null,
+                id, userId
+            ]
+        );
+        return result.affectedRows > 0;
+    }
 }
 
 module.exports = Reservation;
