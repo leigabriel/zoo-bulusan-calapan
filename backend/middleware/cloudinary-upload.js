@@ -49,14 +49,17 @@ const fileFilter = (req, file, cb) => {
 
 /**
  * Create multer upload instance with specified options
+ * @param {number} maxSize - Per-file size ceiling in bytes
+ * @param {number} maxFiles - Total files accepted across all fields. Defaults to 1 for the
+ *   single-image routes; the gallery route raises it to match its own cap.
  */
-const createUpload = (maxSize = MAX_FILE_SIZE) => {
+const createUpload = (maxSize = MAX_FILE_SIZE, maxFiles = 1) => {
     return multer({
         storage: storage,
         fileFilter: fileFilter,
         limits: {
             fileSize: maxSize,
-            files: 1
+            files: maxFiles
         }
     });
 };
@@ -320,7 +323,11 @@ const handleCloudinaryImageUpload = (type = 'general', fieldName = 'image') => {
  */
 const handleCloudinaryMultiImageUpload = (type = 'general', fieldName = 'images', maxCount = 5, legacyFieldName = null) => {
     return (req, res, next) => {
-        const upload = createUpload(MAX_FILE_SIZE);
+        // `limits.files` counts every file across every field, so the legacy single-file field
+        // has to be included in the ceiling or a client still posting both would be cut off at
+        // maxCount before multer ever looks at the field-level caps.
+        const maxFiles = legacyFieldName ? maxCount + 1 : maxCount;
+        const upload = createUpload(MAX_FILE_SIZE, maxFiles);
         // Accept the legacy single-file field alongside the gallery one. A cached client still
         // posting the old field name would otherwise trip multer's LIMIT_UNEXPECTED_FILE and
         // come back as a confusing "you can attach up to 5 photos" 400.
@@ -358,35 +365,25 @@ const handleCloudinaryMultiImageUpload = (type = 'general', fieldName = 'images'
                 const config = uploadConfig[type] || uploadConfig.general;
                 const userId = req.user?.id || 'system';
 
-                // Cloudinary's Upload API is rate-unlimited and takes one asset per request, so
-                // each photo is its own call. Uploading them sequentially makes the visitor wait
-                // through every round trip; opening all of them at once is needlessly rude.
-                // Three at a time is the compromise.
-                const CONCURRENCY = 3;
+                // Cloudinary's Upload API takes a single asset per request, so five photos are
+                // five calls. They are sent strictly one at a time: the client shows a running
+                // total across the batch, and a queued sequence keeps the request rate
+                // predictable instead of bursting three at once.
                 const results = new Array(picked.length).fill(null);
                 const failed = [];
-                let cursor = 0;
 
-                const workers = Array.from(
-                    { length: Math.min(CONCURRENCY, picked.length) },
-                    async () => {
-                        while (cursor < picked.length) {
-                            const index = cursor;
-                            cursor += 1;
-                            try {
-                                results[index] = await uploadToCloudinary(picked[index].buffer, {
-                                    ...config,
-                                    public_id: generatePublicId(type, userId)
-                                });
-                            } catch (fileError) {
-                                // One rejected photo must not cost the visitor the whole post.
-                                console.error(`Cloudinary upload failed for ${picked[index].originalname}:`, fileError.message);
-                                failed.push(picked[index].originalname);
-                            }
-                        }
+                for (let index = 0; index < picked.length; index += 1) {
+                    try {
+                        results[index] = await uploadToCloudinary(picked[index].buffer, {
+                            ...config,
+                            public_id: generatePublicId(type, userId)
+                        });
+                    } catch (fileError) {
+                        // One rejected photo must not cost the visitor the whole post.
+                        console.error(`Cloudinary upload failed for ${picked[index].originalname}:`, fileError.message);
+                        failed.push(picked[index].originalname);
                     }
-                );
-                await Promise.all(workers);
+                }
 
                 const uploaded = results.filter(Boolean);
                 if (!uploaded.length) {

@@ -4,10 +4,9 @@ const communityController = require('../controllers/community-controller');
 const { protect, authorize, optionalAuth } = require('../middleware/auth');
 const { handleCloudinaryImageUpload, handleCloudinaryMultiImageUpload } = require('../middleware/cloudinary-upload');
 
-// One photo per post for now. The gallery table and the multi-upload middleware stay in place,
-// so raising this back to 5 is a one-line change here and in the PostForm constant, and posts
-// that already carry several images keep rendering through the existing carousel.
-const MAX_POST_IMAGES = 1;
+// Up to five photos per post. Images are sent one at a time to Cloudinary (its Upload API
+// takes a single asset per request), which is why the client shows a running total.
+const MAX_POST_IMAGES = 5;
 
 // Guests may read the community, so auth is resolved optionally rather than enforced:
 // optionalAuth fills req.user when a valid token is present and otherwise passes through, so

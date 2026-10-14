@@ -95,9 +95,14 @@ const uploadConfig = {
     community: {
         folder: 'zoo-bulusan/community-posts',
         transformation: [
-            { width: 1400, height: 1400, crop: 'limit' },
+            // 540p: a 16:9 photo lands at exactly 960x540, and `crop: limit` fits anything
+            // inside 960x960 without cropping or distorting. The stored ORIGINAL is the main
+            // storage cost (derived assets are CDN-cached), so capping it here is what keeps
+            // the bucket small.
+            { width: 960, height: 960, crop: 'limit' },
             { quality: 'auto:good' },
-            { fetch_format: 'auto' }
+            { fetch_format: 'auto' },
+            { flags: 'progressive' }
         ],
         allowed_formats: ['jpg', 'jpeg', 'png', 'webp', 'gif'],
         resource_type: 'image'
