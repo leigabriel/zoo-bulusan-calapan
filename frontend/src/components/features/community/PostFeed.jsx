@@ -146,14 +146,23 @@ const PostFeed = ({ posts, currentUser, isGuest = false, onRequireAuth, onRefres
 
     const deletePost = async (postId, e) => {
         e.stopPropagation();
-        if (onConfirmDelete) {
-            const confirmed = await onConfirmDelete(postId);
-            if (!confirmed) return;
-        }
-        try {
+        // The removal itself is handed to the confirmation dialog, which awaits it while showing
+        // its busy state. Doing the request here instead would mean the dialog closed before the
+        // post was actually gone, leaving a card on screen that no longer exists.
+        const remove = async () => {
             await communityAPI.deletePost(postId, currentUser?.role || 'user');
             notify.success('Post removed.');
             onRefresh();
+        };
+
+        if (onConfirmDelete) {
+            const confirmed = await onConfirmDelete(remove);
+            if (!confirmed) return;
+            return;
+        }
+
+        try {
+            await remove();
         } catch {
             notify.error("Couldn't remove post.");
         }
@@ -197,7 +206,7 @@ const PostFeed = ({ posts, currentUser, isGuest = false, onRequireAuth, onRefres
                         className="min-w-0 bg-white overflow-hidden cursor-pointer group flex flex-col rounded-md border border-gray-600"
                         onClick={() => onPostClick && onPostClick(post)}
                     >
-                        <div className="flex items-start justify-between gap-3 px-1 py-4 sm:py-5">
+                        <div className="flex items-start justify-between gap-3 px-4 py-4 sm:px-5 sm:py-5">
                             <div
                                 className="flex items-center gap-4 cursor-pointer"
                                 onClick={(e) => e.stopPropagation()}
@@ -263,7 +272,7 @@ const PostFeed = ({ posts, currentUser, isGuest = false, onRequireAuth, onRefres
 
                         </div>
 
-                        <div className="px-1 py-2 sm:py-3">
+                        <div className="px-4 py-2 sm:px-5 sm:py-3">
                             <p className="text-lg md:text-xl text-black font-medium leading-relaxed whitespace-pre-wrap tracking-tight">
                                 {post.content}
                             </p>
@@ -273,7 +282,7 @@ const PostFeed = ({ posts, currentUser, isGuest = false, onRequireAuth, onRefres
                             <PostCarousel postId={post.id} images={images} />
                         )}
 
-                         <div className="flex flex-wrap items-center justify-between gap-2 px-1 py-3 mt-auto">
+                         <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-3 sm:px-5 mt-auto">
                              <div className="flex flex-wrap items-center gap-1 sm:gap-2">
                                 <button
                                     className="flex min-h-11 min-w-11 items-center gap-2 px-3 text-base font-semibold text-black/70 hover:bg-black/5 hover:text-black transition-colors"

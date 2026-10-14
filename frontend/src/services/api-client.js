@@ -1972,18 +1972,50 @@ export const communityAPI = {
         return handleResponse(response);
     },
 
-    createPost: async ({ content, imageFiles }, type = 'user') => {
+    // Creates a community post, reporting upload progress as the bytes go up.
+    // XHR rather than fetch: fetch has no upload-progress event, so a real progress bar is
+    // impossible with it. Used by the community post queue so the feed card can advance while
+    // the upload is genuinely in flight.
+    createPostWithProgress: ({ content, imageFiles = [] }, onProgress, type = 'user') => new Promise((resolve, reject) => {
         const formData = new FormData();
         formData.append('content', content);
-        (imageFiles || []).forEach((file) => formData.append('postImages', file));
+        imageFiles.forEach((file) => formData.append('postImages', file));
 
-        const response = await fetch(`${API_BASE_URL}/community/posts`, {
-            method: 'POST',
-            headers: getAuthHeadersMultipart(type),
-            body: formData
-        });
-        return handleResponse(response);
-    },
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', `${API_BASE_URL}/community/posts`);
+        const token = getToken(type);
+        const tabId = getTabId();
+        if (token) xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+        if (tabId) xhr.setRequestHeader('X-Tab-ID', tabId);
+
+        // Bytes sent is the useful signal while uploading. It is capped at 95% because the
+        // remaining time is server processing plus one Cloudinary round trip per photo, and
+        // letting the bar hit 100% before the post exists would be a lie.
+        xhr.upload.onprogress = (event) => {
+            if (!onProgress) return;
+            const sent = event.lengthComputable && event.total > 0 ? event.loaded / event.total : 0;
+            onProgress(Math.min(0.95, sent * 0.95));
+        };
+
+        xhr.onload = () => {
+            let data = {};
+            try {
+                data = JSON.parse(xhr.responseText);
+            } catch {
+                reject(new Error('Invalid server response'));
+                return;
+            }
+            if (xhr.status >= 200 && xhr.status < 300) {
+                onProgress?.(1);
+                resolve(data);
+            } else {
+                reject(Object.assign(new Error(data.message || 'Request failed'), data, { status: xhr.status }));
+            }
+        };
+        xhr.onerror = () => reject(new Error('Network error while uploading your post.'));
+        xhr.onabort = () => reject(new Error('Upload cancelled'));
+        xhr.send(formData);
+    }),
 
     updatePost: async (postId, { content, imageFile, removeImage = false }, type = 'user') => {
         const formData = new FormData();

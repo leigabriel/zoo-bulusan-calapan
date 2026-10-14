@@ -3,6 +3,7 @@ import { useEffect, lazy, Suspense } from 'react';
 import { GooeyToaster } from 'goey-toast';
 import 'goey-toast/styles.css';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import PostUploadProvider from './context/PostUploadContext';
 import Home from './pages/user/Home';
 import Animals from './pages/user/Animals';
 import Plants from './pages/user/Plants';
@@ -427,20 +428,24 @@ function AppRoutes() {
 function App() {
     return (
         <AuthProvider>
-            <Router>
-                <VisitTracker />
-                <AppRoutes />
-                <CookieConsentBanner />
-                <GooeyToaster
-                    position="top-right"
-                    duration={3000}
-                    closeButton="top-right"
-                    showTimestamp={false}
-                    visibleToasts={3}
-                    maxQueue={8}
-                    theme="dark"
-                />
-            </Router>
+            {/* Sits outside the Router so an in-flight community post survives navigation:
+                unmounting a page must not abort an upload the visitor already started. */}
+            <PostUploadProvider>
+                <Router>
+                    <VisitTracker />
+                    <AppRoutes />
+                    <CookieConsentBanner />
+                    <GooeyToaster
+                        position="top-right"
+                        duration={3000}
+                        closeButton="top-right"
+                        showTimestamp={false}
+                        visibleToasts={3}
+                        maxQueue={8}
+                        theme="dark"
+                    />
+                </Router>
+            </PostUploadProvider>
         </AuthProvider>
     );
 }

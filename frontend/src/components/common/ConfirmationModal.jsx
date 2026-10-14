@@ -12,6 +12,7 @@ const ConfirmationModal = ({
     onClose,
     danger = false,
     loading = false,
+    loadingLabel = 'Processing...',
     requireInput = false,
     inputLabel = 'Reason',
     inputPlaceholder = 'Enter details',
@@ -140,7 +141,15 @@ const ConfirmationModal = ({
                                 : 'bg-[#212631] border-[#212631] text-white hover:bg-black')
                             }`}
                     >
-                        {loading ? 'Processing...' : confirmLabel}
+                        {loading ? (
+                            <span className="inline-flex items-center gap-2">
+                                <span
+                                    aria-hidden="true"
+                                    className={`h-3 w-3 animate-spin rounded-full border-2 border-white/40 border-t-white ${(!danger && workspaceTheme) ? 'border-black/30 border-t-black' : ''}`}
+                                />
+                                {loadingLabel}
+                            </span>
+                        ) : confirmLabel}
                     </button>
                 </div>
             </div>

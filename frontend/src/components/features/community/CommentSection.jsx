@@ -100,9 +100,17 @@ const CommentSection = ({ postId, currentUser, isGuest = false, onRequireAuth, r
                     title: 'Delete This Comment?',
                     message: 'This action cannot be undone.',
                     confirmLabel: 'Delete Comment',
-                    danger: true
+                    danger: true,
+                    loadingLabel: 'Deleting...',
+                    // Handed to the dialog so it can show progress while the request runs.
+                    onConfirmAsync: async () => {
+                        await communityAPI.deleteComment(commentId, currentUser?.role || 'user');
+                        await loadComments();
+                        notify.success('Comment removed.');
+                    }
                 });
                 if (!confirmed) return;
+                return;
             }
 
             await communityAPI.deleteComment(commentId, currentUser?.role || 'user');

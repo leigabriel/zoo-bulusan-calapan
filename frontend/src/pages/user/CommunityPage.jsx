@@ -5,11 +5,13 @@ import { motion as Motion, AnimatePresence } from 'framer-motion';
 import Header from '../../components/Header';
 import PostForm from '../../components/features/community/PostForm';
 import PostFeed from '../../components/features/community/PostFeed';
+import PostUploadCard from '../../components/features/community/PostUploadCard';
 import CommentSection from '../../components/features/community/CommentSection';
 import SignInModal from '../../components/features/community/SignInModal';
 import ConfirmationModal from '../../components/common/ConfirmationModal';
 import { communityAPI, getProfileImageUrl } from '../../services/api-client';
 import { useAuth } from '../../context/AuthContext';
+import { usePostUploads } from '../../context/PostUploadContext';
 import { notify } from '../../utils/toast';
 import { Plus, X } from 'reicon-react';
 import Footer from '../../components/Footer';
@@ -17,7 +19,13 @@ import useScrollLock from '../../hooks/use-scroll-lock';
 
 const CommunityPage = () => {
     const { user } = useAuth();
+    // Posts still uploading. The queue lives above the router, so these survive navigating
+    // away and a post started here can finish over on another page.
+    const { items: uploads, enqueue, completedCount } = usePostUploads();
     const isGuest = !user;
+    // Only ever render a pending card to the person who started it, so signing out and back in
+    // as someone else cannot expose an in-flight draft.
+    const myUploads = user ? uploads.filter((item) => item.ownerId === user.id) : [];
     const [posts, setPosts] = useState([]);
     const [loadingPosts, setLoadingPosts] = useState(false);
     const [savingPost, setSavingPost] = useState(false);
@@ -66,8 +74,13 @@ const CommunityPage = () => {
         cancelLabel: 'Cancel',
         danger: false,
         requireInput: false,
-        inputValue: ''
+        inputValue: '',
+        onConfirmAsync: null
     });
+
+    // True only while an onConfirmAsync action is in flight. Drives the modal's loading state so
+    // a delete cannot be fired twice and the dialog does not vanish mid-request.
+    const [confirmBusy, setConfirmBusy] = useState(false);
 
     const openConfirmation = ({
         title,
@@ -77,7 +90,9 @@ const CommunityPage = () => {
         danger = false,
         requireInput = false,
         inputLabel = 'Reason',
-        inputPlaceholder = 'Enter details'
+        inputPlaceholder = 'Enter details',
+        loadingLabel = 'Processing...',
+        onConfirmAsync = null
     }) => new Promise((resolve) => {
         setConfirmState({
             isOpen: true,
@@ -89,25 +104,44 @@ const CommunityPage = () => {
             requireInput,
             inputLabel,
             inputPlaceholder,
+            loadingLabel,
             inputValue: '',
+            onConfirmAsync,
             resolve
         });
     });
 
-    const closeConfirmation = (confirmed) => {
+    const resetConfirmation = () => setConfirmState({
+        isOpen: false,
+        title: '',
+        message: '',
+        confirmLabel: 'Confirm',
+        cancelLabel: 'Cancel',
+        danger: false,
+        requireInput: false,
+        inputValue: '',
+        onConfirmAsync: null
+    });
+
+    const closeConfirmation = async (confirmed) => {
+        // The action runs here rather than in the caller so the dialog stays mounted, shows its
+        // busy state, and blocks Escape and the backdrop until the request settles. The caller
+        // still gets the same boolean it always did.
+        if (confirmed && typeof confirmState.onConfirmAsync === 'function') {
+            setConfirmBusy(true);
+            try {
+                await confirmState.onConfirmAsync();
+            } catch (error) {
+                notify.error(error?.message || "Couldn't complete that action.");
+            } finally {
+                setConfirmBusy(false);
+            }
+        }
+
         if (typeof confirmState.resolve === 'function') {
             confirmState.resolve(confirmed && confirmState.requireInput ? confirmState.inputValue.trim() : Boolean(confirmed));
         }
-        setConfirmState({
-            isOpen: false,
-            title: '',
-            message: '',
-            confirmLabel: 'Confirm',
-            cancelLabel: 'Cancel',
-            danger: false,
-            requireInput: false,
-            inputValue: ''
-        });
+        resetConfirmation();
     };
 
     const loadPosts = useCallback(async () => {
@@ -126,12 +160,16 @@ const CommunityPage = () => {
         loadPosts();
     }, [loadPosts]);
 
-    const confirmPostDelete = async () => {
+    // The caller supplies the actual removal so the dialog can hold the spinner for the duration
+    // of the request instead of closing the moment Confirm is pressed.
+    const confirmPostDelete = (removePost) => {
         return openConfirmation({
             title: 'Delete This Post?',
             message: 'This action cannot be undone.',
             confirmLabel: 'Delete Post',
-            danger: true
+            danger: true,
+            loadingLabel: 'Deleting...',
+            onConfirmAsync: removePost
         });
     };
 
@@ -140,20 +178,23 @@ const CommunityPage = () => {
     };
 
     const createOrUpdatePost = async ({ content, imageFiles, removeImage }) => {
+        // A new post goes into the upload queue and returns straight away. The feed renders it
+        // as a card with a progress bar, the modal closes, and the queue notifies on completion
+        // no matter which page the visitor has moved to.
+        if (!editingPost) {
+            enqueue({ content, files: imageFiles || [], ownerId: user?.id ?? null });
+            return true;
+        }
+
         setSavingPost(true);
         try {
-            if (editingPost) {
-                await communityAPI.updatePost(
-                    editingPost.id,
-                    { content, imageFile: imageFiles?.[0], removeImage },
-                    user?.role || 'user'
-                );
-                notify.success('Post updated.');
-                setEditingPost(null);
-            } else {
-                await communityAPI.createPost({ content, imageFiles }, user?.role || 'user');
-                notify.success('Your post is live.');
-            }
+            await communityAPI.updatePost(
+                editingPost.id,
+                { content, imageFile: imageFiles?.[0], removeImage },
+                user?.role || 'user'
+            );
+            notify.success('Post updated.');
+            setEditingPost(null);
             await loadPosts();
         } catch (error) {
             notify.error(error.message || "Couldn't save post.");
@@ -162,6 +203,13 @@ const CommunityPage = () => {
             setSavingPost(false);
         }
     };
+
+    // A queued upload that finished while this page was mounted needs the feed refetched so the
+    // real post replaces its progress card.
+    useEffect(() => {
+        if (completedCount === 0) return;
+        loadPosts();
+    }, [completedCount, loadPosts]);
 
     return (
         <ReactLenis root>
@@ -181,6 +229,16 @@ const CommunityPage = () => {
                     <div className="max-w-[820px] mx-auto min-h-screen">
                          <div className="min-h-screen">
                              <div className="p-4 sm:p-6 md:p-8">
+                                {/* In-flight posts sit above the feed so they read as newest,
+                                    matching the order the server will return them in once
+                                    they land. */}
+                                {myUploads.length > 0 && (
+                                    <div className="mb-6 flex flex-col gap-6 sm:gap-8">
+                                        {myUploads.map((item) => (
+                                            <PostUploadCard key={item.id} item={item} currentUser={user} />
+                                        ))}
+                                    </div>
+                                )}
                                 {loadingPosts ? (
                                     <div className="flex items-center justify-center py-32">
                                         <Motion.div
@@ -226,7 +284,21 @@ const CommunityPage = () => {
                         <div className="fixed inset-0 z-[150] flex items-center justify-center overscroll-contain p-4" role="dialog" aria-modal="true" aria-labelledby="community-post-form-title">
                             <Motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => !savingPost && setPostModalOpen(false)} />
                             <Motion.div data-lenis-prevent initial={{ y: 30, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 30, opacity: 0 }} className="relative z-10 max-h-[92dvh] w-full overflow-y-auto overscroll-contain rounded-t-md bg-white p-4 shadow-2xl sm:max-w-xl sm:rounded-md sm:border sm:border-gray-600 sm:p-8">
-                                <div className="mb-6 flex items-center justify-between"><h2 id="community-post-form-title" className="text-xl font-black">{editingPost ? 'Edit post' : 'Create post'}</h2><button data-community-modal-close onClick={() => !savingPost && setPostModalOpen(false)} className="rounded-full px-3 py-2 text-sm text-[#212631]/60 hover:bg-black/5">Close</button></div>
+                                <div className="mb-6 flex items-center justify-between gap-4 border-b border-gray-600 pb-4">
+                                    <h2 id="community-post-form-title" className="text-lg font-black uppercase tracking-tight text-black sm:text-xl">
+                                        {editingPost ? 'Edit post' : 'Create post'}
+                                    </h2>
+                                    <button
+                                        type="button"
+                                        data-community-modal-close
+                                        onClick={() => !savingPost && setPostModalOpen(false)}
+                                        aria-label="Close post composer"
+                                        className="flex h-9 shrink-0 items-center gap-1.5 rounded-md px-2.5 text-[10px] font-bold uppercase tracking-[0.15em] text-black/60 transition-colors hover:bg-black/5 hover:text-black"
+                                    >
+                                        Close
+                                        <X className="h-3.5 w-3.5" aria-hidden="true" />
+                                    </button>
+                                </div>
                                 <PostForm onSubmit={async (data) => { const result = await createOrUpdatePost(data); if (result !== false) setPostModalOpen(false); return result; }} loading={savingPost} initialPost={editingPost} onCancelEdit={() => { setEditingPost(null); setPostModalOpen(false); }} />
                             </Motion.div>
                         </div>
@@ -335,6 +407,8 @@ const CommunityPage = () => {
                     inputValue={confirmState.inputValue}
                     onInputChange={(inputValue) => setConfirmState((current) => ({ ...current, inputValue }))}
                     confirmDisabled={confirmState.requireInput && !confirmState.inputValue.trim()}
+                    loading={confirmBusy}
+                    loadingLabel={confirmState.loadingLabel}
                     onConfirm={() => closeConfirmation(true)}
                     onClose={() => closeConfirmation(false)}
                 />

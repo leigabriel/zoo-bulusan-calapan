@@ -2,9 +2,9 @@ import { useEffect, useState } from 'react';
 import { notify } from '../../../utils/toast';
 
 const MAX_SIZE = 5 * 1024 * 1024;
-// One photo per post for now. Keep in step with MAX_POST_IMAGES in
+// Up to five photos per post. Keep in step with MAX_POST_IMAGES in
 // backend/routes/community-routes.js.
-const MAX_IMAGES = 1;
+const MAX_IMAGES = 5;
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 
 const PostForm = ({ onSubmit, loading, initialPost = null, onCancelEdit }) => {
@@ -121,11 +121,11 @@ const PostForm = ({ onSubmit, loading, initialPost = null, onCancelEdit }) => {
 
     return (
         <form onSubmit={submitForm} className="bg-white flex flex-col relative">
-            {/* Uploading and publishing is the slowest step in this flow (several Cloudinary
-                round trips). A spinner inside the submit button is easy to miss because the
-                button is small and the label barely changes, so the whole form is covered
-                while the request is in flight. */}
-            {loading && (
+            {/* Creating a post no longer blocks: it is handed to the upload queue, which shows
+                the post in the feed immediately with a progress bar, so covering this form
+                would hide the thing the visitor just wrote for no reason. An edit still runs
+                in this page with no progress surface of its own, so it keeps the overlay. */}
+            {loading && initialPost && (
                 <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-4 rounded-md bg-white/90 backdrop-blur-[2px]" role="status" aria-live="polite">
                     <span aria-hidden="true" className="h-9 w-9 animate-spin rounded-full border-[3px] border-black/20 border-t-black" />
                     <span className="text-xs font-bold uppercase tracking-[0.15em] text-black">
@@ -133,9 +133,8 @@ const PostForm = ({ onSubmit, loading, initialPost = null, onCancelEdit }) => {
                     </span>
                 </div>
             )}
-            <h2 className="text-xl md:text-2xl font-black uppercase text-black tracking-tighter mb-6 border-b border-gray-600 pb-4">
-                {initialPost ? 'Edit Entry' : 'New Entry'}
-            </h2>
+            {/* No heading here: the surrounding modal already labels itself ("Create post" /
+                "Edit post"), so a second one stacked underneath was just a duplicate. */}
 
             <textarea
                 value={content}
@@ -165,7 +164,7 @@ const PostForm = ({ onSubmit, loading, initialPost = null, onCancelEdit }) => {
                 </div>
             )}
 
-            <div className="mt-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
                 <div className="flex flex-wrap items-center gap-3">
                     <label className={`inline-flex items-center gap-2 rounded-md px-5 py-3 min-h-11 border border-gray-600 text-black transition-colors text-[10px] tracking-[0.15em] uppercase font-black w-max ${fileCount >= MAX_IMAGES ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer hover:bg-black/5'}`}>
                         <input type="file" accept="image/*" multiple={MAX_IMAGES > 1} disabled={fileCount >= MAX_IMAGES} className="hidden" onChange={handleFileChange} />
@@ -183,12 +182,12 @@ const PostForm = ({ onSubmit, loading, initialPost = null, onCancelEdit }) => {
                         <span className="text-[10px] tracking-[0.15em] uppercase font-bold text-black/40">{fileCount} of {MAX_IMAGES}</span>
                     )}
                 </div>
-                <div className="flex items-center gap-3 w-full sm:w-auto">
+                <div className="flex w-full items-center gap-3 sm:w-auto">
                     {initialPost && (
                         <button
                             type="button"
                             onClick={onCancelEdit}
-                            className="flex-1 rounded-md sm:flex-none px-6 py-3 min-h-11 border border-gray-600 text-black text-[10px] tracking-[0.15em] uppercase font-black hover:bg-black/5 transition-colors"
+                            className="flex-1 rounded-md border border-gray-600 px-5 py-3 min-h-11 text-black text-[10px] tracking-[0.15em] uppercase font-black hover:bg-black/5 transition-colors sm:flex-none sm:px-6"
                         >
                             Cancel
                         </button>
@@ -197,7 +196,7 @@ const PostForm = ({ onSubmit, loading, initialPost = null, onCancelEdit }) => {
                         type="submit"
                         disabled={loading || !content.trim()}
                         aria-busy={loading}
-                        className="flex-1 sm:flex-none px-8 py-3 min-h-11 rounded-md bg-black text-white text-[10px] tracking-[0.15em] uppercase font-black hover:bg-black/80 disabled:opacity-50 disabled:pointer-events-none transition-colors"
+                        className="flex-1 rounded-md bg-black px-7 py-3 min-h-11 text-white text-[10px] tracking-[0.15em] uppercase font-black hover:bg-black/80 disabled:opacity-50 disabled:pointer-events-none transition-colors sm:flex-none sm:px-8"
                     >
                         {loading ? (
                             <span className="inline-flex items-center gap-2">
