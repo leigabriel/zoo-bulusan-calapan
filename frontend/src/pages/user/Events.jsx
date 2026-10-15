@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { PAGE_BG_GRADIENT } from '../../config/page-gradient';
 import { AnimatePresence, motion as Motion } from 'framer-motion';
 import gsap from 'gsap';
@@ -13,7 +13,8 @@ import { useAuth } from '../../hooks/use-auth';
 import { sanitizeInput, sanitizeEmail, sanitizePhone } from '../../utils/sanitize';
 import { notify } from '../../utils/toast';
 import useScrollLock from '../../hooks/use-scroll-lock';
-import { X, ChevronLeft, ChevronRight, Location, Clock, CheckCircle } from 'reicon-react';
+import EventViews, { ViewToggle } from '../../components/features/events/EventViews';
+import { X, Location, Clock, CheckCircle } from 'reicon-react';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -25,14 +26,13 @@ const DEFAULT_EVENT_IMAGES = [
     'https://images.unsplash.com/photo-1551085254-e96b210db58a?w=800',
 ];
 
-const DAYS_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 const FILTERS = ['all', 'upcoming', 'ongoing', 'past'];
+
+// Remembers whether the visitor last read events as a calendar, a list or a grid.
+const VIEW_STORAGE_KEY = 'bulusan_zoo_events_view';
 
 const Icons = {
     Close: () => <X className="w-5 h-5" />,
-    ChevronLeft: () => <ChevronLeft className="w-5 h-5" />,
-    ChevronRight: () => <ChevronRight className="w-5 h-5" />,
     Location: () => <Location className="w-4 h-4 flex-shrink-0" />,
     Clock: () => <Clock className="w-4 h-4 flex-shrink-0" />,
     Check: () => <CheckCircle className="w-8 h-8" />
@@ -56,6 +56,17 @@ const Events = () => {
     const [, setError] = useState('');
     const [selectedEvent, setSelectedEvent] = useState(null);
     const [filter, setFilter] = useState('all');
+    const [view, setView] = useState(() => {
+        try {
+            const stored = window.localStorage.getItem(VIEW_STORAGE_KEY);
+            // Mirrors the ids in EventViews' VIEWS; kept as literals so this file stays a plain
+            // consumer and the view module exports components only.
+            return ['calendar', 'list', 'grid'].includes(stored) ? stored : 'calendar';
+        } catch {
+            // Private browsing or a blocked storage partition: the default view is fine.
+            return 'calendar';
+        }
+    });
     const [calendarDate, setCalendarDate] = useState(new Date());
 
     const [eventForm, setEventForm] = useState({
@@ -172,37 +183,20 @@ const Events = () => {
 
     const getMinDate = () => new Date().toISOString().split('T')[0];
 
-    const calYear = calendarDate.getFullYear();
-    const calMonth = calendarDate.getMonth();
-    const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
-    const firstDayOfWeek = new Date(calYear, calMonth, 1).getDay();
-
-    const calendarCells = [];
-    for (let i = 0; i < firstDayOfWeek; i++) calendarCells.push(null);
-    for (let d = 1; d <= daysInMonth; d++) calendarCells.push(d);
-
-    const isToday = (day) => {
-        const now = new Date();
-        return day === now.getDate() && calMonth === now.getMonth() && calYear === now.getFullYear();
+    const changeView = (next) => {
+        setView(next);
+        // Remembering the choice is a nicety, never a reason to fail the interaction.
+        try {
+            window.localStorage.setItem(VIEW_STORAGE_KEY, next);
+        } catch {
+            // Storage unavailable; the view still changes for this session.
+        }
     };
 
-    const getFilteredEvents = () => {
-        if (filter === 'all') return events;
-        return events.filter(e => e.status === filter);
-    };
-
-    const filteredEvents = getFilteredEvents();
-
-    const getEventsForDay = (day) => {
-        if (!day) return [];
-        const dateStr = `${calYear}-${String(calMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-        return filteredEvents.filter(e => e.eventDate === dateStr);
-    };
-
-    const hasAnyEventInMonth = calendarCells.some(day => day && getEventsForDay(day).length > 0);
-
-    const prevMonth = () => setCalendarDate(new Date(calYear, calMonth - 1, 1));
-    const nextMonth = () => setCalendarDate(new Date(calYear, calMonth + 1, 1));
+    const filteredEvents = useMemo(
+        () => (filter === 'all' ? events : events.filter((e) => e.status === filter)),
+        [events, filter]
+    );
 
     const handleSubmitAttempt = (e) => {
         e.preventDefault();
@@ -298,105 +292,20 @@ const Events = () => {
                             <div className="w-8 h-8 border-2 border-gray-200 border-t-black rounded-full animate-spin" />
                         </div>
                     ) : (
-                        <div className="section-anim bg-white border border-gray-200 rounded-xl md:rounded-2xl shadow-sm overflow-hidden">
-                            <div className="flex flex-col sm:flex-row items-center justify-between p-4 md:p-8 border-b border-gray-200 gap-4">
-                                <h2 className="text-2xl sm:text-3xl md:text-4xl text-black">
-                                    {MONTHS[calMonth]} {calYear}
-                                </h2>
-                                <div className="flex items-center gap-2 md:gap-4">
-                                    <button onClick={prevMonth} className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center rounded-full border border-gray-200 hover:bg-gray-50 transition-colors">
-                                        <Icons.ChevronLeft />
-                                    </button>
-                                    <button onClick={() => setCalendarDate(new Date())} className="px-4 md:px-6 h-10 md:h-12 rounded-full border border-gray-200 hover:bg-gray-50 text-[10px] md:text-xs font-bold uppercase tracking-widest transition-colors">
-                                        Today
-                                    </button>
-                                    <button onClick={nextMonth} className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center rounded-full border border-gray-200 hover:bg-gray-50 transition-colors">
-                                        <Icons.ChevronRight />
-                                    </button>
-                                </div>
+                        <>
+                            <div className="section-anim flex justify-center mb-8 md:mb-12">
+                                <ViewToggle view={view} onViewChange={changeView} count={filteredEvents.length} />
                             </div>
-
-                            <div className="grid grid-cols-7 border-b border-gray-200 bg-gray-50">
-                                {DAYS_SHORT.map(day => (
-                                    <div key={day} className="py-2 md:py-4 text-center border-r border-gray-200 last:border-r-0">
-                                        <span className="text-[10px] md:text-xs uppercase tracking-widest font-bold text-gray-400">{day}</span>
-                                    </div>
-                                ))}
+                            <div className="section-anim">
+                                <EventViews
+                                    view={view}
+                                    events={filteredEvents}
+                                    calendarDate={calendarDate}
+                                    onCalendarDateChange={setCalendarDate}
+                                    onSelect={setSelectedEvent}
+                                />
                             </div>
-
-                            <div className="grid grid-cols-7 bg-[#F2F0EB]">
-                                <AnimatePresence mode="wait">
-                                     <Motion.div
-                                        key={`${calYear}-${calMonth}-${filter}`}
-                                        className="contents"
-                                        initial={{ opacity: 0 }}
-                                        animate={{ opacity: 1 }}
-                                        exit={{ opacity: 0 }}
-                                        transition={{ duration: 0.3 }}
-                                    >
-                                        {calendarCells.map((day, i) => {
-                                            const dayEvents = getEventsForDay(day);
-                                            const isCurrentDay = isToday(day);
-                                            const featuredEvent = dayEvents[0];
-
-                                            return (
-                                                <div
-                                                    key={i}
-                                                    className={`min-h-[120px] sm:min-h-[150px] md:min-h-[220px] border-r border-b border-gray-300 relative overflow-hidden group ${day ? 'hover:bg-black/5 cursor-pointer transition-colors' : 'bg-transparent'}`}
-                                                    onClick={() => featuredEvent && setSelectedEvent(featuredEvent)}
-                                                >
-                                                    {day && (
-                                                        <>
-                                                            {featuredEvent && featuredEvent.imageUrl ? (
-                                                                <div className="absolute inset-0 w-full h-full">
-                                                                    <img
-                                                                        src={featuredEvent.imageUrl}
-                                                                        alt={featuredEvent.title}
-                                                                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                                                                    />
-                                                                    <div className="absolute top-3 left-3 md:top-4 md:left-4 z-10">
-                                                                        <span className={`inline-flex items-center justify-center w-6 h-6 sm:w-8 sm:h-8 rounded-full text-[10px] sm:text-xs font-bold ${isCurrentDay ? 'bg-blue-600 text-white' : 'bg-black text-white shadow-md'}`}>
-                                                                            {day}
-                                                                        </span>
-                                                                    </div>
-                                                                </div>
-                                                            ) : (
-                                                                <div className="p-3 md:p-4 h-full flex flex-col">
-                                                                    <span className={`inline-flex items-center justify-center w-6 h-6 sm:w-8 sm:h-8 text-[10px] sm:text-xs font-bold mb-3 md:mb-4 ${dayEvents.length > 0 || isCurrentDay ? 'bg-black text-white rounded-full' : 'text-black'}`}>
-                                                                        {day}
-                                                                    </span>
-
-                                                                    {dayEvents.length > 0 && (
-                                                                        <div className="flex flex-col gap-3 mt-1">
-                                                                            {dayEvents.map((event) => (
-                                                                                <div key={event.id} className="text-left w-full group-hover:opacity-80 transition-opacity">
-                                                                                    <div className="font-medium text-[10px] sm:text-[11px] md:text-sm text-black leading-tight">
-                                                                                        {event.title}
-                                                                                    </div>
-                                                                                    <div className="text-[9px] sm:text-[10px] md:text-xs text-gray-500 mt-1 uppercase tracking-widest">
-                                                                                        {formatTime(event.startTime)}
-                                                                                    </div>
-                                                                                </div>
-                                                                            ))}
-                                                                        </div>
-                                                                    )}
-                                                                </div>
-                                                            )}
-                                                        </>
-                                                    )}
-                                                </div>
-                                            );
-                                        })}
-                                     </Motion.div>
-                                </AnimatePresence>
-                            </div>
-
-                            {!hasAnyEventInMonth && (
-                                <div className="p-8 md:p-12 text-center text-gray-400 text-xs md:text-sm tracking-widest uppercase">
-                                    No events scheduled for this month.
-                                </div>
-                            )}
-                        </div>
+                        </>
                     )}
                 </div>
 
