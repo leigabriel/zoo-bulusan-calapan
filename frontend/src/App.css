@@ -138,6 +138,34 @@ canvas {
     background: #6b7280;
 }
 
+/* Double-tap-to-like burst on community posts. Scales past full size and settles, then drifts
+   up and fades, so it reads as a reaction rather than a static icon. */
+@keyframes heart-burst {
+
+    0% {
+        opacity: 0;
+        transform: scale(0.4);
+    }
+
+    15% {
+        opacity: 1;
+        transform: scale(1.15);
+    }
+
+    30% {
+        transform: scale(0.95);
+    }
+
+    45% {
+        transform: scale(1);
+    }
+
+    100% {
+        opacity: 0;
+        transform: scale(1.25) translateY(-24px);
+    }
+}
+
 @keyframes bounce {
 
     0%,

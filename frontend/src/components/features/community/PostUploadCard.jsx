@@ -5,16 +5,25 @@ import { getProfileImageUrl } from '../../../services/api-client';
 // the real post once the server has it. The card is deliberately inert — none of the normal
 // like/comment/report affordances are rendered, because there is nothing on the server to act
 // on yet.
-const PostUploadCard = ({ item, currentUser }) => {
+const PostUploadCard = ({ item, currentUser, onRetry, onDiscard }) => {
     const percent = Math.round((item.progress || 0) * 100);
     const failed = item.status === 'failed';
     const done = item.status === 'done';
 
     const statusLabel = failed
-        ? (item.error || "Couldn't upload your post.")
+        ? 'Not posted'
         : done
             ? 'Posted'
             : `Uploading ${percent}%`;
+
+    // Prefer a message that names the cause. friendlyMessage already rewrites "network error"
+    // and "offline" server-side of the toast, but this card shows the raw error, so the common
+    // connectivity case is translated here where the reader is actually looking.
+    const errorDetail = failed
+        ? (/network|offline|failed to fetch|load failed/i.test(item.error || '')
+            ? "You're offline. Check your connection, then try again."
+            : (item.error || "Couldn't upload your post."))
+        : null;
 
     return (
         <article
@@ -67,9 +76,35 @@ const PostUploadCard = ({ item, currentUser }) => {
                         style={{ width: `${failed ? 100 : Math.max(2, percent)}%` }}
                     />
                 </div>
-                <p className={`mt-2 text-[10px] font-bold uppercase tracking-[0.18em] ${failed ? 'text-red-600' : 'text-black/50'}`}>
-                    {statusLabel}
-                </p>
+
+                {failed ? (
+                    <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <p className="text-[11px] leading-relaxed text-red-600 sm:shrink-0">
+                            <span className="font-black uppercase tracking-[0.18em]">{statusLabel}.</span>{' '}
+                            {errorDetail}
+                        </p>
+                        <div className="flex items-center gap-2">
+                            <button
+                                type="button"
+                                onClick={() => onRetry?.(item.id)}
+                                className="min-h-9 rounded-md bg-black px-4 text-[10px] font-black uppercase tracking-[0.15em] text-white transition-colors hover:bg-black/80"
+                            >
+                                Retry
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => onDiscard?.(item.id)}
+                                className="min-h-9 rounded-md border border-gray-600 px-4 text-[10px] font-black uppercase tracking-[0.15em] text-black/60 transition-colors hover:bg-black/5 hover:text-black"
+                            >
+                                Discard
+                            </button>
+                        </div>
+                    </div>
+                ) : (
+                    <p className="mt-2 text-[10px] font-bold uppercase tracking-[0.18em] text-black/50">
+                        {statusLabel}
+                    </p>
+                )}
             </div>
         </article>
     );

@@ -156,6 +156,22 @@ exports.createPost = async (req, res) => {
       await logUserActivity(req, 'post_create', 'Created a community post', 'community', postId);
     }
 
+    // Confirm the post reached the feed in the notification panel, not just as a toast. The
+    // client uploads asynchronously and may be on another page by the time this resolves, so
+    // the panel entry is the durable record that it succeeded.
+    try {
+      await notifyUser(
+        req.user.id,
+        'post.published',
+        { photos: uploads.length },
+        '/community'
+      );
+    } catch (error) {
+      // The post is already saved. A notification fault must not turn a successful publish
+      // into a failed request the visitor then retries and duplicates.
+      console.error('Error creating post.published notification:', error);
+    }
+
     return res.status(201).json({
       success: true,
       message: req.uploadWarnings?.length

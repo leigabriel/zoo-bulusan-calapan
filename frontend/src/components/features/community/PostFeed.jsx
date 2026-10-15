@@ -3,6 +3,10 @@ import { communityAPI, getProfileImageUrl } from '../../../services/api-client';
 import { notify } from '../../../utils/toast';
 import PostReportModal from './PostReportModal';
 
+// Two taps closer together than this count as a double-tap. Long enough to be forgiving of a
+// shaky thumb, short enough that a deliberate second tap does not feel laggy.
+const DOUBLE_TAP_MS = 240;
+
 // Instagram-style gallery: swipe / arrows move between photos, dots show position.
 // A single photo renders as a plain image with no controls.
 const PostCarousel = ({ postId, images }) => {
@@ -88,6 +92,12 @@ const PostFeed = ({ posts, currentUser, isGuest = false, onRequireAuth, onRefres
     const [openMenuId, setOpenMenuId] = useState(null);
     const [reportTarget, setReportTarget] = useState(null);
     const [reportLoading, setReportLoading] = useState(false);
+    // Post id whose heart burst is currently playing, or null.
+    const [burstId, setBurstId] = useState(null);
+    // Double-tap state. The first tap is held here rather than acted on immediately, so a single
+    // tap still opens the post while a second tap inside the window turns the pair into a heart.
+    const lastTapRef = useRef({ id: null, at: 0 });
+    const tapTimerRef = useRef(null);
     // One node per post, not a single ref: a shared ref only ever holds the last card's
     // wrapper, so the outside-click guard misfired on every other card and unmounted the
     // dropdown on mousedown before the click could reach the menu item.
@@ -138,11 +148,53 @@ const PostFeed = ({ posts, currentUser, isGuest = false, onRequireAuth, onRefres
         try {
             const result = await communityAPI.togglePostLike(postId, currentUser?.role || 'user');
             onUpdatePost?.(postId, { likedByViewer: result.liked, likeCount: result.likeCount });
-            notify.success(result.liked ? 'Post liked.' : 'Like removed.');
         } catch {
             notify.error("Couldn't update like.");
         }
     };
+
+    // Double-tap always hearts, never un-hearts. Toggling would mean a second double-tap on an
+    // already-liked post silently removed the like, which is not what a double-tap means.
+    const heartPost = async (post) => {
+        if (isGuest && onRequireAuth?.()) return;
+
+        setBurstId(post.id);
+        window.setTimeout(() => setBurstId((current) => (current === post.id ? null : current)), 900);
+
+        if (post.likedByViewer) return;
+
+        try {
+            const result = await communityAPI.togglePostLike(post.id, currentUser?.role || 'user');
+            onUpdatePost?.(post.id, { likedByViewer: result.liked, likeCount: result.likeCount });
+        } catch {
+            notify.error("Couldn't update like.");
+        }
+    };
+
+    // A tap opens the post, unless a second tap lands inside DOUBLE_TAP_MS — then the pair is a
+    // double-tap and the pending open is cancelled in favour of the heart. Handling both in the
+    // click (rather than onClick + onDoubleClick) means the second tap acts the moment it
+    // arrives, and a pending timer can still be cancelled.
+    const handleCardTap = (post, e) => {
+        // Buttons, the overflow menu, and the attach label own their own clicks.
+        if (e.target.closest('button, a, label, input')) return;
+
+        const now = Date.now();
+        const tap = lastTapRef.current;
+
+        if (tap.id === post.id && now - tap.at < DOUBLE_TAP_MS) {
+            window.clearTimeout(tapTimerRef.current);
+            lastTapRef.current = { id: null, at: 0 };
+            heartPost(post);
+            return;
+        }
+
+        lastTapRef.current = { id: post.id, at: now };
+        tapTimerRef.current = window.setTimeout(() => onPostClick?.(post), DOUBLE_TAP_MS);
+    };
+
+    // A pending open must not fire into a post that has since been deleted or re-rendered.
+    useEffect(() => () => window.clearTimeout(tapTimerRef.current), []);
 
     const deletePost = async (postId, e) => {
         e.stopPropagation();
@@ -203,9 +255,25 @@ const PostFeed = ({ posts, currentUser, isGuest = false, onRequireAuth, onRefres
                 return (
                     <article
                         key={post.id}
-                        className="min-w-0 bg-white overflow-hidden cursor-pointer group flex flex-col rounded-md border border-gray-600"
-                        onClick={() => onPostClick && onPostClick(post)}
+                        className="min-w-0 bg-white overflow-hidden cursor-pointer group flex flex-col relative rounded-md border border-gray-600"
+                        onClick={(e) => handleCardTap(post, e)}
                     >
+                        {/* Heart burst sits above the card content and is purely decorative:
+                            pointer-events-none keeps it from swallowing the taps that triggered it. */}
+                        {burstId === post.id && (
+                            <span
+                                aria-hidden="true"
+                                className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center"
+                            >
+                                <svg
+                                    viewBox="0 0 24 24"
+                                    fill="#ef4444"
+                                    className="h-24 w-24 animate-[heart-burst_900ms_ease-out_forwards] drop-shadow-lg"
+                                >
+                                    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                                </svg>
+                            </span>
+                        )}
                         <div className="flex items-start justify-between gap-3 px-4 py-4 sm:px-5 sm:py-5">
                             <div
                                 className="flex items-center gap-4 cursor-pointer"

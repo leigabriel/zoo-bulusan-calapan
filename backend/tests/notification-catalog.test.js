@@ -7,7 +7,7 @@ const EXPECTED_TYPES = [
     'reservation.confirmed', 'reservation.cancelled', 'reservation.completed',
     'reservation.no_show', 'reservation.verification',
     'ticket.paid', 'ticket.checked_in',
-    'appeal.reviewed', 'post.moderated', 'message.replied',
+    'appeal.reviewed', 'post.moderated', 'post.published', 'message.replied',
     'account.password_set', 'marketing.broadcast'
 ];
 
@@ -55,9 +55,23 @@ test('throws on an unknown type rather than sending an empty notification', () =
     assert.throws(() => resolveNotification('nope.not.real', {}), /Unknown notification type: nope\.not\.real/);
 });
 
-test('marketing is the only entry that defaults to no email', () => {
+test('marketing and the visitor\'s own post confirmation are the only entries that skip email', () => {
+    // marketing.broadcast is opt-in bulk mail. post.published tells someone their own post
+    // went live — they watched it happen seconds earlier, so emailing it is noise, not news.
     const off = Object.entries(CATALOG).filter(([, e]) => e.emailByDefault === false).map(([k]) => k);
-    assert.deepEqual(off, ['marketing.broadcast']);
+    assert.deepEqual(off.sort(), ['marketing.broadcast', 'post.published']);
+});
+
+test('post.published confirms the visitor\'s own post and stays in-app', () => {
+    const entry = CATALOG['post.published'];
+    // No preference gate: a visitor who muted every category must still be told their own
+    // post succeeded, otherwise a silent publish is indistinguishable from a lost one.
+    assert.equal(entry.category, null);
+    assert.equal(entry.emailByDefault, false);
+
+    const resolved = resolveNotification('post.published', { photos: 3 });
+    assert.match(resolved.title, /Post Posted/i);
+    assert.match(resolved.message, /3 photos/);
 });
 
 test('every key fits the notifications.type VARCHAR(32) column', () => {

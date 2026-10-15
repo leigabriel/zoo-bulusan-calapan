@@ -55,7 +55,7 @@ const CommentSection = ({ postId, currentUser, isGuest = false, onRequireAuth, r
             await communityAPI.createComment(postId, value, null, currentUser?.role || 'user');
             setCommentText('');
             await loadComments();
-            notify.success('Comment posted.');
+            // No toast: the comment appearing in the list is the confirmation.
         } catch {
             notify.error("Couldn't add comment.");
         }
@@ -71,7 +71,7 @@ const CommentSection = ({ postId, currentUser, isGuest = false, onRequireAuth, r
             setReplyText('');
             setReplyingToId(null);
             await loadComments();
-            notify.success('Reply posted.');
+            // No toast: the reply appearing in the thread is the confirmation.
         } catch {
             notify.error("Couldn't add reply.");
         }
@@ -86,7 +86,7 @@ const CommentSection = ({ postId, currentUser, isGuest = false, onRequireAuth, r
             setEditingId(null);
             setEditingText('');
             await loadComments();
-            notify.success('Comment updated.');
+            // No toast: the updated text appearing in place is the confirmation.
         } catch {
             notify.error("Couldn't update comment.");
         }
@@ -124,9 +124,9 @@ const CommentSection = ({ postId, currentUser, isGuest = false, onRequireAuth, r
     const toggleHeart = async (commentId) => {
         if (isGuest && onRequireAuth?.()) return;
         try {
-            const result = await communityAPI.toggleCommentHeart(commentId, currentUser?.role || 'user');
+            await communityAPI.toggleCommentHeart(commentId, currentUser?.role || 'user');
             await loadComments();
-            notify.success(result.hearted ? 'Comment hearted.' : 'Heart removed.');
+            // No toast: the heart filling in and the count changing is the confirmation.
         } catch {
             notify.error("Couldn't update heart.");
         }

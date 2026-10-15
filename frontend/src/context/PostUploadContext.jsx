@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useMemo, useState } from 'react';
+import { createContext, useCallback, useContext, useMemo, useRef, useState } from 'react';
 import { communityAPI } from '../services/api-client';
 import { notify } from '../utils/toast';
 
@@ -19,6 +19,10 @@ const nextId = () => `pending_${Date.now()}_${(sequence += 1)}`;
 
 export const PostUploadProvider = ({ children }) => {
     const [items, setItems] = useState([]);
+    // Mirror of `items` for callbacks that need to read current state without being re-created
+    // (and re-triggering their consumers) on every progress tick.
+    const itemsRef = useRef(items);
+    itemsRef.current = items;
     // Bumped every time a post lands successfully. The community feed watches this to know it
     // should refetch, which is what makes an upload that finished on another page (or another
     // tab's worth of time) show up in the feed without a manual refresh.
@@ -45,14 +49,26 @@ export const PostUploadProvider = ({ children }) => {
             // Let the finished card linger briefly so the bar is seen to complete, then drop it
             // and let the feed refresh to show the real post.
             window.setTimeout(() => remove(item.id), 1200);
+            // The toaster is mounted at app level, so this reaches the visitor wherever they have
+            // navigated to — which is the whole point of handing the upload off to the queue.
             notify.success(item.files.length
-                ? `Your post is live with ${item.files.length} photo${item.files.length > 1 ? 's' : ''}.`
-                : 'Your post is live.');
+                ? `Your post was posted with ${item.files.length} photo${item.files.length > 1 ? 's' : ''}.`
+                : 'Your post was posted.');
         } catch (error) {
             patch(item.id, { status: 'failed', error: error?.message || "Couldn't upload your post." });
             notify.error(error?.message || "Couldn't upload your post.");
         }
     }, [patch, remove]);
+
+    // Re-runs a failed upload with the same files. The File handles are still held by the queue
+    // item, so a dropped connection costs the visitor nothing beyond the wait. Declared after
+    // `run` because its dependency array reads `run` during render.
+    const retry = useCallback((id) => {
+        const item = itemsRef.current.find((candidate) => candidate.id === id);
+        if (!item || item.status === 'uploading') return;
+        patch(id, { status: 'queued', progress: 0, error: null });
+        run(item);
+    }, [patch, run]);
 
     const enqueue = useCallback(({ content, files = [], ownerId = null }) => {
         const item = {
@@ -74,8 +90,8 @@ export const PostUploadProvider = ({ children }) => {
     }, [run]);
 
     const value = useMemo(
-        () => ({ items, enqueue, remove, completedCount }),
-        [items, enqueue, remove, completedCount]
+        () => ({ items, enqueue, remove, retry, completedCount }),
+        [items, enqueue, remove, retry, completedCount]
     );
 
     return <PostUploadContext.Provider value={value}>{children}</PostUploadContext.Provider>;

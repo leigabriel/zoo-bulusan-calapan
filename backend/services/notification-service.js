@@ -136,6 +136,18 @@ const CATALOG = {
         title: () => 'Your Post Was Removed',
         message: (data) => `A moderator removed your community post because it broke the community guidelines.${data.note ? ` Reason: ${data.note}` : ''}`
     },
+    // Confirmation that the visitor's own post reached the feed. Deliberately not email-gated:
+    // `post.moderated` is a real event worth an email, but someone telling themselves their own
+    // post went live — seconds after watching it happen — is not. `category: null` also keeps it
+    // out of the preference gates, so muting every category cannot hide the confirmation that a
+    // post actually succeeded.
+    'post.published': {
+        category: null,
+        emailByDefault: false,
+        reminder: false,
+        title: () => 'Post Posted',
+        message: (data) => `Your post was added to the community feed.${data.photos ? ` It went live with ${data.photos} photo${data.photos > 1 ? 's' : ''}.` : ''}`
+    },
     'message.replied': {
         category: null,
         emailByDefault: true,

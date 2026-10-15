@@ -21,7 +21,7 @@ const CommunityPage = () => {
     const { user } = useAuth();
     // Posts still uploading. The queue lives above the router, so these survive navigating
     // away and a post started here can finish over on another page.
-    const { items: uploads, enqueue, completedCount } = usePostUploads();
+    const { items: uploads, enqueue, retry, remove, completedCount } = usePostUploads();
     const isGuest = !user;
     // Only ever render a pending card to the person who started it, so signing out and back in
     // as someone else cannot expose an in-flight draft.
@@ -235,7 +235,13 @@ const CommunityPage = () => {
                                 {myUploads.length > 0 && (
                                     <div className="mb-6 flex flex-col gap-6 sm:gap-8">
                                         {myUploads.map((item) => (
-                                            <PostUploadCard key={item.id} item={item} currentUser={user} />
+                                            <PostUploadCard
+                                                key={item.id}
+                                                item={item}
+                                                currentUser={user}
+                                                onRetry={retry}
+                                                onDiscard={remove}
+                                            />
                                         ))}
                                     </div>
                                 )}
