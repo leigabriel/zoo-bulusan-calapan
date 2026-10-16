@@ -22,8 +22,27 @@ const modelStorage = multer.diskStorage({
         cb(null, modelsPath);
     },
     filename: function (req, file, cb) {
-        // Keep original filename for model files
-        cb(null, file.originalname);
+        // The client supplies this name and it may contain path separators, so it
+        // cannot be passed through as-is. It also cannot simply be replaced: the
+        // frontend loads /model/bulusanzoo_machine_learning/model.json by a fixed
+        // name (see frontend/src/config/ai-service-config.js), so "model.json" and
+        // "group1-shard1of3.bin" have to survive intact.
+        //
+        // Reduce it to a bare, safe name: basename() strips any directory part,
+        // the charset filter drops separators and control characters, and leading
+        // dots are removed so neither ".." nor a dotfile can survive.
+        const supplied = String(file.originalname || '').trim();
+        if (!supplied) {
+            return cb(new Error('Invalid file name'), '');
+        }
+
+        const base = path.basename(supplied);
+        const safeName = base.replace(/[^A-Za-z0-9._-]/g, '_').replace(/^\.+/, '');
+        if (!safeName) {
+            return cb(new Error('Invalid file name'), '');
+        }
+
+        return cb(null, safeName);
     }
 });
 

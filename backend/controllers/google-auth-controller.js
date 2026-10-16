@@ -3,6 +3,9 @@ const jwt = require('jsonwebtoken');
 const https = require('https');
 const User = require('../models/user-model');
 const AdminMasterKey = require('../models/admin-master-key-model');
+const { jwtSecret, jwtExpire } = require('../config/secrets');
+const { buildAllowedOrigins, resolveTrustedFrontendOrigin } = require('../utils/cors-origins');
+const { newTokenId } = require('../models/revoked-token-model');
 
 const GOOGLE_AUTH_URL = 'https://accounts.google.com/o/oauth2/v2/auth';
 const GOOGLE_TOKEN_URL = 'https://oauth2.googleapis.com/token';
@@ -174,12 +177,12 @@ const verifyGoogleIdToken = async (idToken, clientId) => {
  * Generate JWT token for authenticated user
  */
 const generateToken = (userId, role, tabId = null) => {
-    const payload = { id: userId, role };
+    const payload = { id: userId, role, jti: newTokenId() };
     if (tabId) payload.tabId = tabId;
     return jwt.sign(
         payload,
-        process.env.JWT_SECRET || 'your-secret-key',
-        { expiresIn: process.env.JWT_EXPIRE || '7d' }
+        jwtSecret,
+        { expiresIn: jwtExpire }
     );
 };
 
@@ -191,22 +194,11 @@ exports.initiateGoogleAuth = (req, res) => {
     try {
         const { clientId, callbackUrl } = getGoogleConfig();
 
-        // Capture the origin for redirect back after OAuth
-        // This allows both localhost and network IP access
+        // Only ever redirect back to an origin we already trust for CORS. The previous
+        // check (port 5173, or a path containing '/login') was satisfiable by any host,
+        // so a victim could be bounced to an attacker's site right after signing in.
         const referer = req.get('referer') || req.get('origin');
-        let frontendOrigin = process.env.FRONTEND_URL || 'http://localhost:5173';
-        
-        if (referer) {
-            try {
-                const refererUrl = new URL(referer);
-                // Only allow same port (5173) to prevent redirect attacks
-                if (refererUrl.port === '5173' || refererUrl.pathname.includes('/login')) {
-                    frontendOrigin = `${refererUrl.protocol}//${refererUrl.host}`;
-                }
-            } catch (e) {
-                console.log('Could not parse referer URL:', e.message);
-            }
-        }
+        const frontendOrigin = resolveTrustedFrontendOrigin(referer, buildAllowedOrigins(process.env), process.env);
 
         // Generate CSRF state token with origin embedded
         const state = generateState();
@@ -383,7 +375,7 @@ exports.handleGoogleCallback = async (req, res) => {
         let challengeToken = null;
         if (user.role === 'admin' && (await AdminMasterKey.getStatus(user.id)).enabled) {
             masterKeyRequired = true;
-            challengeToken = jwt.sign({ id: user.id, role: 'admin', purpose: 'admin-master-key' }, process.env.JWT_SECRET || 'your-secret-key', { expiresIn: '5m' });
+            challengeToken = jwt.sign({ id: user.id, role: 'admin', purpose: 'admin-master-key' }, jwtSecret, { expiresIn: '5m' });
         } else {
             token = generateToken(user.id, user.role);
         }
@@ -400,7 +392,7 @@ exports.handleGoogleCallback = async (req, res) => {
             authProvider: user.auth_provider || 'google',
             hasPassword: Boolean(user.password),
             // Set for all roles; the frontend filters to visitors. Kept out of the
-            // redirect URL — it travels in the single-use handoff payload.
+            // redirect URL â€” it travels in the single-use handoff payload.
             isNewGoogleAccount: !Boolean(user.google_onboarding_complete)
         };
 
@@ -444,7 +436,7 @@ exports.getGoogleHandoff = (req, res) => {
     if (!data || Date.now() > data.expiresAt) {
         // Clear only a stale cookie. Previously the cookie was cleared on EVERY read,
         // including a rejected one, so a single failed or early request destroyed the
-        // handoff and made it unrecoverable — the visitor could not retry and the
+        // handoff and made it unrecoverable â€” the visitor could not retry and the
         // still-valid server-side entry became unreachable.
         if (handoffCookie) {
             res.setHeader('Set-Cookie', 'google_auth_handoff=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0');

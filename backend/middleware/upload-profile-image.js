@@ -14,6 +14,11 @@ if (!fs.existsSync(PROFILE_IMAGE_DIR)) {
 // allowed image types
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
+// allowed extensions for locally stored files.
+// generateSecureFilename() derives the extension from the client filename, so the
+// set is limited to the formats the fileFilter above actually accepts.
+const ALLOWED_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp'];
+
 // max file size 2mb
 const MAX_FILE_SIZE = 2 * 1024 * 1024;
 
@@ -109,23 +114,68 @@ const handleProfileImageUpload = (req, res, next) => {
 };
 
 /**
+ * Resolve a stored profile image value to an absolute path that is provably
+ * inside PROFILE_IMAGE_DIR, or return null when the value is not a local file.
+ *
+ * The value originates from users.profile_image, which is attacker-reachable
+ * through the profile update endpoint, so it must never be trusted as a path.
+ * Every check below fails closed: anything unrecognised returns null and the
+ * caller skips the delete rather than touching an unexpected file.
+ *
+ * @param {unknown} value - Raw stored value (filename, legacy relative path, etc.)
+ * @returns {string|null} Absolute path inside PROFILE_IMAGE_DIR, or null
+ */
+const resolveProfileImagePath = (value) => {
+    if (typeof value !== 'string') return null;
+
+    const trimmed = value.trim();
+    if (!trimmed) return null;
+
+    // Legacy rows may hold '/uploads/profile-images/<file>'; basename strips
+    // every directory component, so traversal segments cannot survive this.
+    const base = path.basename(trimmed);
+    if (!base || base === '.' || base === '..') return null;
+
+    // Plain filenames only: no separators, no control characters, no null bytes
+    if (!/^[A-Za-z0-9._-]+$/.test(base)) return null;
+
+    // Reject dotfiles such as '.env' or '.htaccess'
+    if (base.startsWith('.')) return null;
+
+    // The extension must be an image type this module accepts on upload
+    if (!ALLOWED_EXTENSIONS.includes(path.extname(base).toLowerCase())) return null;
+
+    // Containment check: the resolved path must sit directly in the profile dir
+    const resolvedRoot = path.resolve(PROFILE_IMAGE_DIR);
+    const resolved = path.resolve(resolvedRoot, base);
+    if (path.dirname(resolved) !== resolvedRoot) return null;
+
+    return resolved;
+};
+
+/**
  * Delete old profile image file if it exists
- * @param {string} filename - The filename (not full path) of the image to delete
+ * @param {string} filename - The stored profile image value
  */
 const deleteOldProfileImage = (filename) => {
     if (!filename || filename === 'default-avatar.svg') {
         return;
     }
 
-    const filePath = path.join(PROFILE_IMAGE_DIR, filename);
+    const filePath = resolveProfileImagePath(filename);
+
+    // Not a local file we own (remote URL, avatar key, traversal attempt, ...)
+    if (!filePath) {
+        return;
+    }
 
     // Check if the file exists before attempting to delete
     if (fs.existsSync(filePath)) {
         try {
             fs.unlinkSync(filePath);
-            console.log(`Deleted old profile image: ${filename}`);
+            console.log(`Deleted old profile image: ${path.basename(filePath)}`);
         } catch (error) {
-            console.error(`Failed to delete old profile image: ${filename}`, error);
+            console.error(`Failed to delete old profile image: ${path.basename(filePath)}`, error);
         }
     }
 };
@@ -146,6 +196,7 @@ const getProfileImagePath = (filename) => {
 module.exports = {
     handleProfileImageUpload,
     deleteOldProfileImage,
+    resolveProfileImagePath,
     getProfileImagePath,
     PROFILE_IMAGE_DIR,
     ALLOWED_TYPES,

@@ -4,7 +4,26 @@ const { deleteFromCloudinary, extractPublicId } = require('../middleware/cloudin
 const { logUserActivity, logStaffActivity } = require('../middleware/track-activity');
 const { validatePostReport } = require('../utils/post-report-rules');
 
-const sanitizeText = (value, maxLength = 2000) => {
+/**
+ * Normalise a user-supplied plain-text field: collapse runs of whitespace and
+ * cap the length.
+ *
+ * This is NOT HTML sanitisation and must never be treated as a security
+ * control. Post, comment, report and note content is stored and returned as
+ * plain text; the database is allowed to hold markup because no consumer
+ * interprets this field as HTML. Escaping is the responsibility of whatever
+ * renders the value (React's JSX auto-escapes it today).
+ *
+ * The name is deliberate: an earlier helper called `sanitizeText` implied it
+ * removed markup when it did not, which invites developers to skip escaping.
+ * See tests/community-content-safety.test.js, which fails if an HTML sink is
+ * ever introduced on this content.
+ *
+ * @param {unknown} value Untrusted input
+ * @param {number} maxLength Maximum characters to keep
+ * @returns {string}
+ */
+const normalizePlainText = (value, maxLength = 2000) => {
   if (typeof value !== 'string') return '';
   return value.replace(/\s+/g, ' ').trim().slice(0, maxLength);
 };
@@ -131,7 +150,7 @@ exports.getPublicPosts = async (req, res) => {
 exports.createPost = async (req, res) => {
   try {
     await Community.initializeTables();
-    const content = sanitizeText(req.body.content, 3000);
+    const content = normalizePlainText(req.body.content, 3000);
 
     if (!content) {
       return res.status(400).json({ success: false, message: 'Please write something before posting.' });
@@ -201,7 +220,7 @@ exports.updatePost = async (req, res) => {
       return res.status(403).json({ success: false, message: 'You can only edit your own post.' });
     }
 
-    const content = sanitizeText(req.body.content, 3000);
+    const content = normalizePlainText(req.body.content, 3000);
     if (!content) {
       return res.status(400).json({ success: false, message: 'Please write something before updating.' });
     }
@@ -345,7 +364,7 @@ exports.reviewPostReport = async (req, res) => {
     await Community.initializeTables();
     const reportId = Number(req.params.reportId);
     const action = String(req.body.action || '').toLowerCase();
-    const note = sanitizeText(req.body.note || '', 255);
+    const note = normalizePlainText(req.body.note || '', 255);
 
     if (!reportId || !['reviewed', 'dismissed'].includes(action)) {
       return res.status(400).json({ success: false, message: 'Invalid review request.' });
@@ -385,7 +404,7 @@ exports.removeReportedPost = async (req, res) => {
   try {
     await Community.initializeTables();
     const postId = Number(req.params.postId);
-    const note = sanitizeText(req.body.note || '', 255);
+    const note = normalizePlainText(req.body.note || '', 255);
 
     if (!postId) {
       return res.status(400).json({ success: false, message: 'Invalid post request.' });
@@ -492,7 +511,7 @@ exports.createComment = async (req, res) => {
   try {
     await Community.initializeTables();
     const postId = Number(req.params.postId);
-    const commentText = sanitizeText(req.body.commentText, 1200);
+    const commentText = normalizePlainText(req.body.commentText, 1200);
     const parentCommentId = req.body.parentCommentId ? Number(req.body.parentCommentId) : null;
 
     if (!postId || !commentText) {
@@ -588,7 +607,7 @@ exports.updateComment = async (req, res) => {
   try {
     await Community.initializeTables();
     const commentId = Number(req.params.commentId);
-    const commentText = sanitizeText(req.body.commentText, 1200);
+    const commentText = normalizePlainText(req.body.commentText, 1200);
 
     if (!commentId || !commentText) {
       return res.status(400).json({ success: false, message: 'Please write a comment before updating.' });
@@ -687,7 +706,7 @@ exports.reportComment = async (req, res) => {
   try {
     await Community.initializeTables();
     const commentId = Number(req.params.commentId);
-    const reason = sanitizeText(req.body.reason, 255);
+    const reason = normalizePlainText(req.body.reason, 255);
 
     if (!commentId || !reason) {
       return res.status(400).json({ success: false, message: 'Please provide a reason for this report.' });

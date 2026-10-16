@@ -1,11 +1,12 @@
 const crypto = require('crypto');
+const { publicIdSecret } = require('../config/secrets');
 
 const PREFIX = 'pid_';
 const IV_LENGTH = 12;
 const TAG_LENGTH = 16;
 
 const getKey = () => crypto.createHash('sha256')
-    .update(process.env.PUBLIC_ID_SECRET || process.env.JWT_SECRET || 'development-only-public-id-secret')
+    .update(publicIdSecret)
     .digest();
 
 const isOpaqueId = value => typeof value === 'string' && value.startsWith(PREFIX);

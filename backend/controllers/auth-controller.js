@@ -11,6 +11,8 @@ const { notifyManagement, notifyUser } = require('../services/notification-servi
 const { validateUsername, RESERVED_USERNAMES } = require('../utils/username-rules');
 const { checkPersisted } = require('../utils/persist-check');
 const AdminMasterKey = require('../models/admin-master-key-model');
+const { jwtSecret, jwtExpire } = require('../config/secrets');
+const { newTokenId, revoke } = require('../models/revoked-token-model');
 
 const VALID_ROLES = ['admin', 'staff', 'user'];
 const VALID_GENDERS = ['male', 'female', 'other', 'prefer_not_to_say'];
@@ -42,6 +44,50 @@ const sanitizeInput = (input) => {
     return input.trim().replace(/[<>]/g, '');
 };
 
+// Built-in avatar keys. Must stay in sync with AVATAR_KEYS in
+// frontend/src/utils/profile-avatars.js (DEFAULT_AVATARS).
+const VALID_AVATAR_KEYS = ['deer', 'owl', 'dove', 'eagle', 'horse', 'tiger', 'monkey', 'ostrich', 'parrot', 'rabbit'];
+
+/**
+ * Validate a client-supplied profile image value.
+ *
+ * profileImage is persisted to users.profile_image, which is later fed to
+ * deleteOldProfileImage() as a path. Accepting arbitrary strings here would let
+ * a client store a traversal payload, so only these forms are allowed:
+ *   - a built-in avatar key    -> the AvatarSelector feature
+ *   - the value already on record -> previously issued by the upload endpoint
+ * Absent or nullish input keeps the stored value, matching the previous
+ * `req.body.profileImage ?? existing` behaviour. Anything else (relative path,
+ * traversal string, foreign URL) is rejected with 400.
+ * Removing an image is a separate concern handled by deleteProfileImage().
+ *
+ * @param {unknown} value - Raw value from the request body
+ * @param {string} existingValue - The value currently stored for this user
+ * @returns {{ok: true, value: string|null}|{ok: false}}
+ */
+const resolveProfileImageInput = (value, existingValue) => {
+    if (value === undefined || value === null || value === '') {
+        return { ok: true, value: existingValue ?? null };
+    }
+    if (typeof value !== 'string') {
+        return { ok: false };
+    }
+
+    const trimmed = value.trim();
+
+    if (VALID_AVATAR_KEYS.includes(trimmed)) {
+        return { ok: true, value: trimmed };
+    }
+
+    // Keep the caller's existing value: a URL previously issued by the upload
+    // endpoint, or an avatar key. Anything else is refused.
+    if (typeof existingValue === 'string' && existingValue === value) {
+        return { ok: true, value: existingValue };
+    }
+
+    return { ok: false };
+};
+
 /**
  * Map a username validation result to an HTTP status.
  * @param {{ok?: boolean, taken?: boolean}} result
@@ -54,12 +100,12 @@ const usernameErrorStatus = (result) => {
 };
 
 const generateToken = (userId, role, tabId = null) => {
-    const payload = { id: userId, role };
+    const payload = { id: userId, role, jti: newTokenId() };
     if (tabId) payload.tabId = tabId;
     return jwt.sign(
         payload,
-        process.env.JWT_SECRET || 'your-secret-key',
-        { expiresIn: process.env.JWT_EXPIRE || '7d' }
+        jwtSecret,
+        { expiresIn: jwtExpire }
     );
 };
 
@@ -101,13 +147,21 @@ exports.register = async (req, res) => {
         }
 
         const existingEmail = await User.findByEmail(sanitizedEmail);
+// One response for both collisions. Saying which field collided let anyone with
+// a list of emails enumerate every registered account; the same generic shape
+// requestPasswordReset() already returns is used here.
+const ALREADY_IN_USE_RESPONSE = {
+    status: 400,
+    body: { success: false, message: 'Email or username is already in use.' }
+};
+
         if (existingEmail) {
-            return res.status(400).json({ success: false, message: 'Email already registered' });
+            return res.status(ALREADY_IN_USE_RESPONSE.status).json(ALREADY_IN_USE_RESPONSE.body);
         }
 
         const existingUsername = await User.findByUsername(sanitizedUsername);
         if (existingUsername) {
-            return res.status(400).json({ success: false, message: 'Username already taken' });
+            return res.status(ALREADY_IN_USE_RESPONSE.status).json(ALREADY_IN_USE_RESPONSE.body);
         }
 
         const salt = await bcrypt.genSalt(10);
@@ -230,7 +284,7 @@ exports.login = async (req, res) => {
                 const tabId = req.headers['x-tab-id'] || req.body.tabId || null;
                 const challengeToken = jwt.sign(
                     { id: user.id, role: 'admin', purpose: 'admin-master-key', ...(tabId ? { tabId } : {}) },
-                    process.env.JWT_SECRET || 'your-secret-key',
+                    jwtSecret,
                     { expiresIn: '5m' }
                 );
                 return res.json({
@@ -522,10 +576,20 @@ exports.getMe = async (req, res) => {
 
 exports.updateProfile = async (req, res) => {
     try {
-        const { firstName, lastName, phoneNumber, gender, birthday } = req.body;
+        const { firstName, lastName, phoneNumber, gender, birthday, profileImage } = req.body;
         const existingUser = await User.findById(req.user.id);
         if (!existingUser) {
             return res.status(404).json({ success: false, message: 'User not found' });
+        }
+
+        // profileImage must not be taken from the body unchecked: it is persisted
+        // and later used as a filesystem path. See resolveProfileImageInput().
+        const resolvedImage = resolveProfileImageInput(profileImage, existingUser.profile_image);
+        if (!resolvedImage.ok) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid profile image value'
+            });
         }
 
         const updated = await User.updateProfile(req.user.id, {
@@ -534,7 +598,7 @@ exports.updateProfile = async (req, res) => {
             phoneNumber: phoneNumber !== undefined ? sanitizeInput(phoneNumber) : existingUser.phone_number,
             gender: gender !== undefined ? gender : existingUser.gender,
             birthday: birthday !== undefined ? birthday : existingUser.birthday,
-            profileImage: req.body.profileImage ?? existingUser.profile_image
+            profileImage: resolvedImage.value
         });
 
         if (!updated) {
@@ -893,6 +957,20 @@ exports.deleteAccount = async (req, res) => {
 };
 
 exports.logout = async (req, res) => {
+  // Actually invalidate the presented token. Logout previously only recorded an
+  // activity row, so a stolen JWT stayed usable right up to its 7 day expiry.
+  try {
+    const header = req.headers.authorization || '';
+    const presented = header.startsWith('Bearer ') ? header.slice(7) : null;
+    if (presented) {
+      // Decoded, not verified: protect() already checked the signature on this
+      // route, and only the jti/exp claims are needed here.
+      await revoke(jwt.decode(presented));
+    }
+  } catch (revokeError) {
+    console.error('Could not revoke token on logout:', revokeError.message);
+  }
+
     try {
         // Track logout for staff/admin
         if (req.user && ['staff', 'admin'].includes(req.user.role)) {
@@ -1098,3 +1176,4 @@ exports.submitPublicAppeal = async (req, res) => {
 
 // Exported for unit testing only; not routed.
 module.exports.usernameErrorStatus = usernameErrorStatus;
+module.exports.resolveProfileImageInput = resolveProfileImageInput;

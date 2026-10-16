@@ -46,20 +46,62 @@ const extractCheckout = (event) => {
     };
 };
 
+/**
+ * PayMongo signs "<timestamp>.<body>". The timestamp was read but never checked,
+ * so a captured request stayed replayable indefinitely - the HMAC is valid forever.
+ * Five minutes is comfortably longer than any legitimate retry.
+ */
+const WEBHOOK_TIMESTAMP_TOLERANCE_MS = 5 * 60 * 1000;
+
+/**
+ * Reject a webhook whose signed timestamp is missing or outside the window.
+ * @param {string|undefined} timestamp parts.t from the signature header
+ * @param {number} [toleranceMs]
+ * @returns {boolean}
+ */
+const isTimestampFresh = (timestamp, toleranceMs = WEBHOOK_TIMESTAMP_TOLERANCE_MS) => {
+    if (!timestamp || !/^\d+$/.test(String(timestamp))) return false;
+    const age = Date.now() - Number(timestamp) * 1000;
+    // A little clock skew into the future is normal; more than that is not.
+    return age <= toleranceMs && age >= -toleranceMs;
+};
+
+/**
+ * Stable id for an event, so replays can be detected.
+ * @param {any} event parsed webhook body
+ * @param {Buffer} rawBody
+ * @returns {string}
+ */
+const webhookEventId = (event, rawBody) =>
+    event?.id || event?.data?.id || crypto.createHash('sha256').update(rawBody).digest('hex');
+
 const verifyWebhook = (req) => {
     const secret = process.env.PAYMONGO_WEBHOOK_SECRET;
-    if (!secret) return process.env.NODE_ENV !== 'production';
+    if (!secret) {
+        // Fail closed in production. Locally there is no real PayMongo traffic to
+        // protect, and blocking a developer without a secret helps nobody.
+        if (process.env.NODE_ENV === 'production') {
+            console.error('[security] PAYMONGO_WEBHOOK_SECRET is unset; rejecting all webhooks.');
+            return false;
+        }
+        console.warn('[security] PAYMONGO_WEBHOOK_SECRET is unset; accepting unsigned webhooks (development only).');
+        return true;
+    }
 
     const signature = req.headers['paymongo-signature'];
     if (!signature) return false;
+
     const parts = Object.fromEntries(signature.split(',').map(part => {
         const separator = part.indexOf('=');
         return separator === -1 ? [part, ''] : [part.slice(0, separator), part.slice(separator + 1)];
     }));
-    const timestamp = parts.t;
-    if (!timestamp || !Buffer.isBuffer(req.body)) return false;
-    const signedPayload = `${timestamp}.${req.body.toString('utf8')}`;
+
+    if (!parts.t || !Buffer.isBuffer(req.body)) return false;
+    if (!isTimestampFresh(parts.t)) return false;
+
+    const signedPayload = `${parts.t}.${req.body.toString('utf8')}`;
     const expected = crypto.createHmac('sha256', secret).update(signedPayload).digest('hex');
+
     return [parts.li, parts.te].some(provided => {
         if (!provided || provided.length !== expected.length) return false;
         return crypto.timingSafeEqual(Buffer.from(provided, 'utf8'), Buffer.from(expected, 'utf8'));
@@ -259,30 +301,46 @@ exports.createEventCheckout = async (req, res) => {
             checkoutSessionId: checkout.id
         });
     } catch (error) {
+        // Full detail goes to the log; the client gets a safe, fixed message.
         console.error('Error creating PayMongo checkout:', error);
-        res.status(500).json({ success: false, message: error.message || 'Unable to start QR Ph payment.' });
+        res.status(500).json({ success: false, message: 'Unable to start QR Ph payment.' });
     }
 };
 
 exports.handleWebhook = async (req, res) => {
-    try {
-        if (!verifyWebhook(req)) {
-            console.warn('PayMongo webhook signature validation failed.');
-            return res.status(400).json({ success: false, message: 'Invalid webhook signature.' });
-        }
-        let event;
-        try {
-            event = JSON.parse(req.body.toString('utf8'));
-        } catch {
-            console.warn('PayMongo webhook contained invalid JSON.');
-            return res.status(400).json({ success: false, message: 'Invalid webhook body.' });
-        }
-        await updatePaymentFromWebhook(event);
-        const eventId = event?.id || event?.data?.id || crypto.createHash('sha256').update(req.body).digest('hex');
-        await db.query('INSERT IGNORE INTO paymongo_webhook_events (event_id) VALUES (?)', [eventId]);
-        return res.status(200).json({ success: true });
-    } catch (error) {
-        console.error('Error handling PayMongo webhook:', error);
-        return res.status(500).json({ success: false, message: 'Webhook processing failed.' });
+  try {
+    if (!verifyWebhook(req)) {
+      console.warn('PayMongo webhook rejected (bad signature, stale timestamp, or missing secret).');
+      return res.status(400).json({ success: false, message: 'Invalid webhook signature.' });
     }
+
+    let event;
+    try {
+      event = JSON.parse(req.body.toString('utf8'));
+    } catch {
+      console.warn('PayMongo webhook contained invalid JSON.');
+      return res.status(400).json({ success: false, message: 'Invalid webhook body.' });
+    }
+
+    // Claim the event id BEFORE processing. The row used to be inserted afterwards,
+    // so a replayed webhook ran updatePaymentFromWebhook() a second time and only
+    // then had its INSERT IGNORE silently dropped - the dedupe protected nothing.
+    const eventId = webhookEventId(event, req.body);
+    const [claim] = await db.query(
+      'INSERT IGNORE INTO paymongo_webhook_events (event_id) VALUES (?)',
+      [eventId]
+    );
+
+    if (!claim || claim.affectedRows === 0) {
+      console.log(`PayMongo webhook ${eventId} already processed; ignoring replay.`);
+      return res.status(200).json({ success: true, duplicate: true });
+    }
+
+    await updatePaymentFromWebhook(event);
+
+    return res.status(200).json({ success: true });
+  } catch (error) {
+    console.error('Error handling PayMongo webhook:', error);
+    return res.status(500).json({ success: false, message: 'Webhook processing failed.' });
+  }
 };

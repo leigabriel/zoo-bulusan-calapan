@@ -1,5 +1,7 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/user-model');
+const { jwtSecret } = require('../config/secrets');
+const { isRevoked } = require('../models/revoked-token-model');
 
 exports.protect = async (req, res, next) => {
     let token;
@@ -13,7 +15,11 @@ exports.protect = async (req, res, next) => {
     }
 
     try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const decoded = jwt.verify(token, jwtSecret);
+        // A valid signature is not enough: this token may have been revoked at logout.
+        if (await isRevoked(decoded)) {
+            return res.status(401).json({ success: false, message: 'Session has ended. Please sign in again.' });
+        }
         const user = await User.findAuthenticatedById(decoded.id);
 
         if (!user) {
@@ -83,7 +89,10 @@ exports.optionalAuth = async (req, res, next) => {
 
     if (token) {
         try {
-            const decoded = jwt.verify(token, process.env.JWT_SECRET);
+            const decoded = jwt.verify(token, jwtSecret);
+            if (await isRevoked(decoded)) {
+                return; // treat a revoked token as absent
+            }
             const user = await User.findAuthenticatedById(decoded.id);
 
             if (user) {

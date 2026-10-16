@@ -5,6 +5,9 @@ const config = require('../config/walk-in-config');
 class WalkInError extends Error {
     constructor(message, status = 400) {
         super(message);
+        // Named so middleware/error-handler.js can recognise this as an authored,
+        // client-safe error and forward its message.
+        this.name = 'WalkInError';
         this.status = status;
     }
 }

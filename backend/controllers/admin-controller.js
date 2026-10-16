@@ -917,10 +917,11 @@ exports.uploadModel = async (req, res) => {
             }
         });
     } catch (error) {
+        // Full detail goes to the log; the client gets a safe, fixed message.
         console.error('Error uploading model:', error);
         res.status(500).json({
             success: false,
-            message: error.message || 'Error uploading model'
+            message: 'Error uploading model'
         });
     }
 };

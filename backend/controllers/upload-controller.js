@@ -11,6 +11,8 @@ const {
     extractPublicId,
     uploadBase64ToCloudinary 
 } = require('../middleware/cloudinary-upload');
+const { canDeleteAsset } = require('../utils/cloudinary-ownership');
+const { validateBase64Image, allowedTypesForRole } = require('../utils/cloudinary-upload-rules');
 
 /**
  * Upload a generic image to Cloudinary
@@ -228,10 +230,18 @@ exports.uploadBase64Image = async (req, res) => {
     try {
         const { image, type = 'general' } = req.body;
 
-        if (!image) {
-            return res.status(400).json({
+        // This route is reachable by any signed-in user, so the payload and the
+        // target folder both have to be validated before they reach Cloudinary.
+        const parsed = validateBase64Image(image);
+        if (!parsed.ok) {
+            return res.status(400).json({ success: false, message: parsed.error });
+        }
+
+        const allowedTypes = allowedTypesForRole(req.user?.role);
+        if (!allowedTypes.includes(type)) {
+            return res.status(403).json({
                 success: false,
-                message: 'No image data provided.'
+                message: 'You are not allowed to upload to that category.'
             });
         }
 
@@ -243,7 +253,7 @@ exports.uploadBase64Image = async (req, res) => {
         }
 
         const userId = req.user?.id || 'unknown';
-        const imageUrl = await uploadBase64ToCloudinary(image, type, userId);
+        const imageUrl = await uploadBase64ToCloudinary(parsed.dataUrl, type, userId);
 
         if (!imageUrl) {
             return res.status(500).json({
@@ -294,6 +304,16 @@ exports.deleteImage = async (req, res) => {
             return res.status(400).json({
                 success: false,
                 message: 'Could not determine image public ID.'
+            });
+        }
+
+        // Without this check any staff account could delete any other user's
+        // profile picture or resident ID document simply by supplying the id.
+        const permission = canDeleteAsset(imagePublicId, req.user);
+        if (!permission.ok) {
+            return res.status(403).json({
+                success: false,
+                message: permission.reason
             });
         }
 

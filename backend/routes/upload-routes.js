@@ -4,10 +4,11 @@ const express = require('express');
 const router = express.Router();
 const uploadController = require('../controllers/upload-controller');
 const { protect, authorize } = require('../middleware/auth');
-const { 
+const {
     handleCloudinaryImageUpload,
-    handleCloudinaryResidentIdUpload 
+    handleCloudinaryResidentIdUpload
 } = require('../middleware/cloudinary-upload');
+const { uploadLimiter } = require('../middleware/rate-limit');
 
 // require auth
 router.use(protect);
@@ -55,7 +56,7 @@ router.post(
 );
 
 // Base64 image upload (available to all authenticated users)
-router.post('/base64', uploadController.uploadBase64Image);
+router.post('/base64', uploadLimiter, uploadController.uploadBase64Image);
 
 // Delete image (admin and staff only)
 router.delete(

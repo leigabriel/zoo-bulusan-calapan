@@ -24,7 +24,10 @@ router.put('/notifications/read-all', userController.markAllNotificationsRead);
 router.delete('/notifications', userController.clearNotifications);
 
 // Ticket routes
-router.post('/tickets/purchase', trackActivity('ticket_purchase', 'Purchased a ticket'), userController.purchaseTicket);
+// NOTE: POST /tickets/purchase was removed. It was a duplicate of
+// POST /api/reservations/ticket and required an uploaded resident/student ID
+// image. Resident admission is now verified on site against a physical ID, so
+// the live booking flow is reservationController.createTicketReservation.
 router.get('/tickets', userController.getMyTickets);
 router.get('/tickets/active', userController.getActiveTickets);
 router.get('/tickets/archived', userController.getArchivedTickets);

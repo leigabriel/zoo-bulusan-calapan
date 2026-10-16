@@ -2,9 +2,11 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user-model');
 const AdminMasterKey = require('../models/admin-master-key-model');
+const { jwtSecret, jwtExpire } = require('../config/secrets');
+const { newTokenId } = require('../models/revoked-token-model');
 
 const validKey = value => typeof value === 'string' && value.length >= 8 && value.length <= 128;
-const challengeSecret = () => process.env.JWT_SECRET || 'your-secret-key';
+const challengeSecret = () => jwtSecret;
 
 const publicUser = user => ({
     id: user.id,
@@ -22,9 +24,9 @@ const publicUser = user => ({
 });
 
 const generateAdminToken = (userId, tabId) => jwt.sign(
-    { id: userId, role: 'admin', ...(tabId ? { tabId } : {}), masterKeyVerified: true },
+    { id: userId, role: 'admin', jti: newTokenId(), ...(tabId ? { tabId } : {}), masterKeyVerified: true },
     challengeSecret(),
-    { expiresIn: process.env.JWT_EXPIRE || '7d' }
+    { expiresIn: jwtExpire }
 );
 
 exports.verifyLoginMasterKey = async (req, res) => {
@@ -90,7 +92,20 @@ exports.toggle = async (req, res) => {
     try {
         const { currentPassword, masterKey, enabled } = req.body;
         const nextEnabled = enabled === true || enabled === 1 || enabled === '1' || enabled === 'true';
-        if (!await verifyPassword(req.user.id, currentPassword)) return res.status(401).json({ success: false, message: 'Current account password is incorrect.' });
+
+        if (!await verifyPassword(req.user.id, currentPassword)) {
+            return res.status(401).json({ success: false, message: 'Current account password is incorrect.' });
+        }
+
+        // Disabling the second factor is the dangerous direction. Without this
+        // check, anyone holding the admin password could switch the Master Key
+        // off and then sign in without it, which defeats the purpose entirely.
+        // Enabling stays password-only because it increases protection.
+        // allowDisabled=true so the stored hash is still checked either way.
+        if (!nextEnabled && (!validKey(masterKey) || !(await AdminMasterKey.verify(req.user.id, masterKey, true)))) {
+            return res.status(401).json({ success: false, message: 'Master Key is required to turn off Master Key verification.' });
+        }
+
         await AdminMasterKey.setEnabled(req.user.id, nextEnabled);
         res.json({ success: true, status: { configured: true, enabled: nextEnabled } });
     } catch (error) {

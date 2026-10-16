@@ -7,6 +7,7 @@ const { logStaffActivity, logUserActivity } = require('../middleware/track-activ
 const crypto = require('crypto');
 const { reservationQrSecret } = require('../config/app-config');
 const { validateTicketEdit, validateParticipantEdit } = require('../utils/reservation-edit-rules');
+const { validateTicketBooking } = require('../utils/reservation-quantity-rules');
 const { validateArchiveSelection, validatePermanentDelete } = require('../utils/reservation-archive-rules');
 const { readConfig: readEventPaymentConfig } = require('../config/event-payment-config');
 const walkInService = require('../services/walk-in-service');
@@ -275,18 +276,20 @@ exports.createTicketReservation = async (req, res) => {
             });
         }
 
-        // parse quantities from formdata strings
-        const adult = parseInt(adultQuantity) || 0;
-        const child = parseInt(childQuantity) || 0;
-        const bulusanResident = parseInt(bulusanResidentQuantity) || 0;
-        const totalVisitors = adult + child + bulusanResident;
-        
-        if (totalVisitors === 0) {
-            return res.status(400).json({ 
-                success: false, 
-                message: 'At least one visitor is required' 
-            });
+        // Quantities arrive as formdata strings. They must be whole numbers of zero
+        // or more: parseInt would accept '-3', and a negative total both slips past
+        // a zero check and understates the capacity projection below.
+        const quantityCheck = validateTicketBooking({
+            adult: adultQuantity,
+            child: childQuantity,
+            resident: bulusanResidentQuantity
+        });
+        if (!quantityCheck.ok) {
+            return res.status(400).json({ success: false, message: quantityCheck.error });
         }
+
+        const { adult, child, resident: bulusanResident } = quantityCheck.quantities;
+        const totalVisitors = quantityCheck.totalVisitors;
 
         const dailyTotals = await Reservation.getTicketTotalsByDate(reservationDate);
         const projectedTotal = (dailyTotals?.total_visitors || 0) + totalVisitors;
@@ -383,7 +386,13 @@ exports.createEventReservation = async (req, res) => {
             });
         }
 
-        const participants = parseInt(numberOfParticipants, 10) || 1;
+        // parseInt would accept '-5', and a negative count both slips past a zero
+        // check and understates the capacity projection below.
+        const participantCheck = validateParticipantEdit({ participants: numberOfParticipants });
+        if (!participantCheck.ok) {
+            return res.status(400).json({ success: false, message: participantCheck.error });
+        }
+        const participants = participantCheck.participants;
 
         const eventTotals = await Reservation.getEventTotalsByDate(venueEventDate);
         const projectedTotal = (eventTotals?.total_participants || 0) + participants;
@@ -756,7 +765,11 @@ exports.updateUserHostedEvent = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Event name and date are required' });
         }
 
-        const participants = parseInt(numberOfParticipants, 10) || 1;
+        const participantCheck = validateParticipantEdit({ participants: numberOfParticipants });
+        if (!participantCheck.ok) {
+            return res.status(400).json({ success: false, message: participantCheck.error });
+        }
+        const participants = participantCheck.participants;
         const existingReservation = await Reservation.findEventReservationById(id);
         if (!existingReservation || Number(existingReservation.user_id) !== Number(userId)) {
             return res.status(404).json({ success: false, message: 'Event not found or you are not authorized to edit it' });

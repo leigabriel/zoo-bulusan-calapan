@@ -5,6 +5,8 @@ const { protect, authorize, optionalAuth } = require('../middleware/auth');
 const { sanitizePlainText } = require('../utils/helpers');
 const { buildJijiSystemPrompt } = require('../services/jiji-prompt-service');
 const appConfig = require('../config/app-config');
+const { aiLimiter } = require('../middleware/rate-limit');
+const { normalizeMessage, normalizeHistory } = require('../utils/ai-input');
 
 // import models
 const Animal = require('../models/animal-model');
@@ -851,16 +853,19 @@ router.delete('/sessions/:sessionId', protect, authorize('user'), async (req, re
     }
 });
 
-router.post('/chat', optionalAuth, async (req, res) => {
+router.post('/chat', optionalAuth, aiLimiter, async (req, res) => {
     try {
-        const { message, history = [] } = req.body;
-
-        if (!message) {
+        // This route is reachable without authentication, so both fields are
+        // untrusted and are bounded before reaching the metered Gemini call.
+        const parsedMessage = normalizeMessage(req.body.message);
+        if (!parsedMessage.ok) {
             return res.status(400).json({
                 success: false,
                 message: 'Message is required'
             });
         }
+        const message = parsedMessage.message;
+        const history = normalizeHistory(req.body.history);
 
         const dynamicData = await getDynamicZooData();
         const userData = req.user?.id ? await getSanitizedUserReservations(req.user.id) : null;
@@ -927,12 +932,8 @@ Remember: Only share this general zoo information. Never expose passwords, accou
             try {
                 const model = genAI.getGenerativeModel({ model: candidate });
 
-                const conversationHistory = history
-                    .filter(msg => msg.content && msg.content.trim())
-                    .map(msg => ({
-                        role: msg.role === 'user' ? 'user' : 'model',
-                        parts: [{ text: msg.content }]
-                    }));
+                // Already normalised and bounded by normalizeHistory().
+                const conversationHistory = history;
 
                 const systemPrompt = buildJijiSystemPrompt(dynamicContext, userReservationContext, message);
 
@@ -996,13 +997,16 @@ Remember: Only share this general zoo information. Never expose passwords, accou
     }
 });
 
-router.post('/companion/chat', protect, authorize('admin', 'staff'), async (req, res) => {
+router.post('/companion/chat', protect, authorize('admin', 'staff'), aiLimiter, async (req, res) => {
     try {
-        const { message, history = [] } = req.body;
+        // Same bounds as /chat, even though this route requires admin or staff.
+        const parsedMessage = normalizeMessage(req.body.message);
+        const message = parsedMessage.ok ? parsedMessage.message : req.body.message;
+        const history = normalizeHistory(req.body.history);
         const role = req.user?.role;
         const preferredLanguage = detectCompanionLanguage(message);
 
-        if (!message) {
+        if (!parsedMessage.ok) {
             return res.status(400).json({
                 success: false,
                 message: 'Message is required'
@@ -1070,12 +1074,8 @@ SAFE OPERATIONAL LISTS (reference, date, status, and visitor totals only; no per
             try {
                 const model = genAI.getGenerativeModel({ model: candidate });
 
-                const conversationHistory = history
-                    .filter(msg => msg.content && msg.content.trim())
-                    .map(msg => ({
-                        role: msg.role === 'user' ? 'user' : 'model',
-                        parts: [{ text: msg.content }]
-                    }));
+                // Already normalised and bounded by normalizeHistory().
+                const conversationHistory = history;
 
                 const systemPrompt = `${getCompanionSystemContext(role, preferredLanguage)}${dynamicContext}${operationalContext}\n\nUser request: ${message}`;
 
@@ -1143,7 +1143,9 @@ SAFE OPERATIONAL LISTS (reference, date, status, and visitor totals only; no per
     }
 });
 
-router.get('/status', (req, res) => {
+// Reports whether GEMINI_API_KEY and the SDK are present, which is server
+// configuration an anonymous caller has no need to see.
+router.get('/status', protect, authorize('admin', 'staff'), (req, res) => {
     const apiKey = process.env.GEMINI_API_KEY;
     const isConfigured = !!(apiKey && apiKey.trim().length > 0);
     const hasGoogleAI = !!GoogleGenerativeAI;

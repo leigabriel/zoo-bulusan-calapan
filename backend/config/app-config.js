@@ -1,7 +1,12 @@
+// Secrets live in config/secrets.js, which fails fast when JWT_SECRET is
+// missing or is a known placeholder. Re-exported here so existing importers
+// of this module keep working.
+const { jwtSecret, jwtExpire, reservationQrSecret } = require('./secrets');
+
 module.exports = {
-    jwtSecret: process.env.JWT_SECRET || 'your-secret-key',
-    jwtExpire: process.env.JWT_EXPIRE || '7d',
-    reservationQrSecret: process.env.RESERVATION_QR_SECRET || 'zoo-bulusan-reservation-secret',
+    jwtSecret,
+    jwtExpire,
+    reservationQrSecret,
     roles: {
         ADMIN: 'admin',
         STAFF: 'staff',

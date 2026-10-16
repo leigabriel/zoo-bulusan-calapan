@@ -2,6 +2,8 @@ const jwt = require('jsonwebtoken');
 const { Server } = require('socket.io');
 const db = require('../config/database');
 const { encodePublicId } = require('../middleware/public-identifiers');
+const { jwtSecret } = require('../config/secrets');
+const { isRevoked } = require('../models/revoked-token-model');
 
 let io;
 
@@ -36,7 +38,9 @@ const initializeChatSocket = (httpServer, corsOptions) => {
                 || (authorization.startsWith('Bearer ') ? authorization.slice(7) : null);
             const token = suppliedToken?.startsWith('Bearer ') ? suppliedToken.slice(7) : suppliedToken;
             if (!token) return next(new Error('Authentication required'));
-            const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+            const decoded = jwt.verify(token, jwtSecret);
+            // A revoked token must not open a socket either.
+            if (await isRevoked(decoded)) return next(new Error('Authentication failed'));
             const [rows] = await db.query(
                 `SELECT id, role FROM users WHERE id = ? AND role IN ('user', 'staff', 'admin')
                  AND is_active = TRUE AND is_suspended = FALSE
