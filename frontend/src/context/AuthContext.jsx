@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { authAPI } from '../services/api-client';
 
 const AuthContext = createContext(null);
 
@@ -130,6 +131,13 @@ export const AuthProvider = ({ children }) => {
             localStorage.removeItem(keys.user);
         }
 
+
+        // Best effort: tell the server so it can end the staff session and record
+        // the activity. Deliberately not awaited - logout must never be blocked
+        // by the network - and never throws. This records the logout; it does not
+        // revoke the JWT, which is stateless (see B-H11).
+        const role = sessionType || 'user';
+        authAPI.logout(role).catch(() => {});
         setToken(null);
         setUser(null);
         setSessionType(null);

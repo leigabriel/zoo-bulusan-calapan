@@ -30,6 +30,7 @@ import TermsOfService from './pages/legal/TermsOfService';
 import CookiePolicy from './pages/legal/CookiePolicy';
 import RefundPolicy from './pages/legal/RefundPolicy';
 import CookieConsentBanner from './components/CookieConsentBanner';
+import SessionExpiryListener from './components/auth/SessionExpiryListener';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminEvents from './pages/admin/AdminEvents';
 import Analytics from './pages/admin/Analytics';
@@ -433,6 +434,7 @@ function App() {
             <PostUploadProvider>
                 <Router>
                     <VisitTracker />
+                <SessionExpiryListener />
                     <AppRoutes />
                     <CookieConsentBanner />
                     <GooeyToaster

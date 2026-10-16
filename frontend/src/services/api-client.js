@@ -29,6 +29,8 @@ const getBackendBaseUrl = () => {
 };
 
 // API Base URL - ensure no trailing slash
+import { emitAuthExpired, isSessionExpiry } from './auth-events';
+
 const API_BASE_URL = getApiBaseUrl();
 
 let backendWarmupPromise = null;
@@ -36,7 +38,8 @@ let backendWarmupPromise = null;
 export const warmUpBackend = () => {
     if (backendWarmupPromise) return backendWarmupPromise;
 
-    backendWarmupPromise = fetch(`${API_BASE_URL}/health?full=true`, {
+    // Plain probe: the detailed report (?full=true) now requires staff credentials.
+    backendWarmupPromise = fetch(`${API_BASE_URL}/health`, {
         method: 'HEAD',
         cache: 'no-store'
     }).catch(() => null).finally(() => {
@@ -105,7 +108,38 @@ const getAuthHeadersMultipart = (type = 'user') => {
     };
 };
 
+/**
+ * Is any role token currently stored for this tab?
+ *
+ * Without this guard a logged-out visitor hitting a protected endpoint would emit a
+ * session-expired event on every request and fight the router.
+ * @returns {boolean}
+ */
+const hasStoredToken = () => {
+    if (typeof window === 'undefined') return false;
+    try {
+        for (const keys of Object.values(STORAGE_KEYS)) {
+            if (sessionStorage.getItem(keys.token) || localStorage.getItem(keys.token)) return true;
+            // Tab-scoped variants are the token key suffixed with the per-tab id.
+            for (let i = 0; i < sessionStorage.length; i++) {
+                const key = sessionStorage.key(i);
+                if (key && key.startsWith(keys.token)) return true;
+            }
+        }
+    } catch (e) {
+        return false;
+    }
+    return false;
+};
+
 const handleResponse = async (response) => {
+    // A 401 on a credential endpoint means "wrong password", not "session expired".
+    // Anything else means the stored token is no longer accepted, so clear the
+    // session instead of leaving the UI stuck on a page that cannot load.
+    if (isSessionExpiry(response.status, response.url) && hasStoredToken()) {
+        emitAuthExpired({ status: response.status, path: response.url });
+    }
+
     // Handle empty responses
     const text = await response.text();
 

@@ -195,6 +195,13 @@ const LoginPage = () => {
             setMasterKeyChallenge(location.state.masterKeyChallenge);
             window.history.replaceState(null, '', '/login');
         }
+        // Set by SessionExpiryListener when the API rejects the stored token.
+        // Without this the user is bounced to the login page with no explanation.
+        if (location.state?.sessionExpired) {
+            notify.info('Your session expired. Please sign in again.');
+            window.history.replaceState(null, '', '/login');
+        }
+
         if (location.state?.message) {
             notify.success(location.state.message);
         }

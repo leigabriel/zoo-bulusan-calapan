@@ -55,7 +55,7 @@ const AdminLayout = ({ children }) => {
     const [showRefinedMasterKeyModal, setShowRefinedMasterKeyModal] = useState(false);
     const [showMasterKeyToggleModal, setShowMasterKeyToggleModal] = useState(false);
     const [showSettingsLauncher, setShowSettingsLauncher] = useState(false);
-    const [masterKeyToggleForm, setMasterKeyToggleForm] = useState({ currentPassword: '' });
+    const [masterKeyToggleForm, setMasterKeyToggleForm] = useState({ currentPassword: '', masterKey: '' });
     const [masterKeyVisible, setMasterKeyVisible] = useState(false);
     const [aiAssistOpen, setAiAssistOpen] = useState(false);
     const [openNavGroups, setOpenNavGroups] = useState({ main: true, management: true, communication: true, insights: true });
@@ -349,7 +349,7 @@ const AdminLayout = ({ children }) => {
             if (!response?.success) throw new Error(response?.message || 'Unable to update Master Key protection.');
             const statusResponse = await adminAPI.getMasterKeyStatus();
             setMasterKeyStatus(statusResponse?.success ? statusResponse.status : response.status);
-            setMasterKeyToggleForm({ currentPassword: '' });
+            setMasterKeyToggleForm({ currentPassword: '', masterKey: '' });
             setShowMasterKeyToggleModal(false);
             notify.success(`Master Key protection ${enabled ? 'enabled' : 'disabled'}.`);
         } catch (error) {
@@ -1021,7 +1021,7 @@ const AdminLayout = ({ children }) => {
             </aside>
 
             {/* Profile Modal */}
-            <AccountDetailsModal isOpen={showProfileModal} onClose={() => setShowProfileModal(false)} role="Admin" profile={profileForm} previewImage={previewImage} fileInputRef={fileInputRef} imageUploading={imageUploading} onUploadImage={uploadProfileImage} onSaveDetails={saveProfile} profileSaving={profileSaving} onPassword={() => setShowPasswordModal(true)} onChangeEmail={saveEmail} emailSaving={emailSaving} onMasterKey={() => setShowRefinedMasterKeyModal(true)} onToggleMasterKey={() => { setMasterKeyToggleForm({ currentPassword: '' }); setShowMasterKeyToggleModal(true); }} masterKeyLabel={masterKeyStatus.configured ? 'Change Master Key' : 'Add Master Key'} masterKeyConfigured={masterKeyStatus.configured} masterKeyEnabled={masterKeyStatus.enabled} />
+            <AccountDetailsModal isOpen={showProfileModal} onClose={() => setShowProfileModal(false)} role="Admin" profile={profileForm} previewImage={previewImage} fileInputRef={fileInputRef} imageUploading={imageUploading} onUploadImage={uploadProfileImage} onSaveDetails={saveProfile} profileSaving={profileSaving} onPassword={() => setShowPasswordModal(true)} onChangeEmail={saveEmail} emailSaving={emailSaving} onMasterKey={() => setShowRefinedMasterKeyModal(true)} onToggleMasterKey={() => { setMasterKeyToggleForm({ currentPassword: '', masterKey: '' }); setShowMasterKeyToggleModal(true); }} masterKeyLabel={masterKeyStatus.configured ? 'Change Master Key' : 'Add Master Key'} masterKeyConfigured={masterKeyStatus.configured} masterKeyEnabled={masterKeyStatus.enabled} />
             <MasterKeyModal isOpen={showRefinedMasterKeyModal} onClose={() => setShowRefinedMasterKeyModal(false)} status={masterKeyStatus} form={masterKeyForm} setForm={setMasterKeyForm} saving={masterKeySaving} onSubmit={updateMasterKey} />
             <MasterKeyToggleModal isOpen={showMasterKeyToggleModal} onClose={() => setShowMasterKeyToggleModal(false)} enabled={masterKeyStatus.enabled} form={masterKeyToggleForm} setForm={setMasterKeyToggleForm} saving={masterKeySaving} onSubmit={toggleMasterKey} />
             <AdminSettingsLauncher isOpen={showSettingsLauncher} onClose={() => setShowSettingsLauncher(false)} />
