@@ -64,6 +64,12 @@ router.put('/event/:id/cancel', trackActivity('reservation_cancel', (req) => 'Ca
 router.put('/ticket/:id/details', trackActivity('reservation_update', (req) => 'Updated a ticket reservation'), reservationController.updateMyTicketReservation);
 router.put('/event/:id/details', trackActivity('reservation_update', (req) => 'Updated an event reservation'), reservationController.updateMyEventReservation);
 
+// Archive / Trash flow. Archiving is reversible and takes no password; permanent deletion is
+// irreversible and is gated on the visitor's account password inside the controller.
+router.put('/archive', trackActivity('reservation_archive', (req) => 'Archived reservations'), reservationController.archiveSelectedReservations);
+router.put('/restore', trackActivity('reservation_unarchive', (req) => 'Restored reservations from archive'), reservationController.restoreSelectedReservations);
+router.delete('/archived', trackActivity('reservation_update', (req) => 'Permanently deleted reservations'), reservationController.permanentlyDeleteArchivedReservations);
+
 router.use(authorize('admin', 'staff'));
 
 router.get('/', reservationController.getAllReservations);

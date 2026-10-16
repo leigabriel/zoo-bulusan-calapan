@@ -2526,6 +2526,48 @@ export const reservationAPI = {
             headers: getAuthHeaders('user')
         });
         return handleResponse(response);
+    },
+
+    // Archive several reservations in one request. Reversible: they can be unarchived, or
+    // permanently deleted from the archive view.
+    archiveSelectedReservations: async ({ type, ids }) => {
+        const response = await fetch(`${API_BASE_URL}/reservations/archive`, {
+            method: 'PUT',
+            headers: getAuthHeaders('user'),
+            body: JSON.stringify({ type, ids })
+        });
+        return handleResponse(response);
+    },
+
+    // Bring archived reservations back to the active list.
+    restoreSelectedReservations: async ({ type, ids }) => {
+        const response = await fetch(`${API_BASE_URL}/reservations/restore`, {
+            method: 'PUT',
+            headers: getAuthHeaders('user'),
+            body: JSON.stringify({ type, ids })
+        });
+        return handleResponse(response);
+    },
+
+    // Irreversible. The server re-checks the password and ownership, so this is not a
+    // confirmation the client can be trusted to enforce on its own.
+    permanentlyDeleteArchivedReservations: async ({ type, ids, password }) => {
+        const response = await fetch(`${API_BASE_URL}/reservations/archived`, {
+            method: 'DELETE',
+            headers: getAuthHeaders('user'),
+            body: JSON.stringify({ type, ids, password })
+        });
+        return handleResponse(response);
+    },
+
+    // For accounts with no password yet (Google sign-in). Rejected server-side if one exists.
+    setInitialPassword: async ({ newPassword, confirmPassword }) => {
+        const response = await fetch(`${API_BASE_URL}/auth/password/initial`, {
+            method: 'POST',
+            headers: getAuthHeaders('user'),
+            body: JSON.stringify({ newPassword, confirmPassword })
+        });
+        return handleResponse(response);
     }
 };
 

@@ -787,6 +787,55 @@ exports.completeOnboarding = async (req, res) => {
     }
 };
 
+/**
+ * Create a password for an account that has none.
+ *
+ * Google sign-in leaves users.password NULL, which blocks any password-gated action —
+ * permanently deleting archived reservations, changing the email address, deleting the
+ * account. This endpoint exists solely to close that gap.
+ *
+ * It refuses to run when a password already exists, so it can never be used to silently
+ * take over a local account; changing an existing password stays on /updatepassword, which
+ * asks for the current one.
+ */
+exports.setInitialPassword = async (req, res) => {
+    try {
+        const { newPassword, confirmPassword } = req.body || {};
+
+        const user = await User.findById(req.user.id);
+        if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+
+        if (user.password) {
+            return res.status(409).json({
+                success: false,
+                message: 'This account already has a password. Use the change-password form instead.'
+            });
+        }
+
+        const passwordErrors = validatePassword(newPassword);
+        if (passwordErrors.length) {
+            return res.status(400).json({ success: false, message: passwordErrors[0], errors: passwordErrors });
+        }
+
+        if (newPassword !== confirmPassword) {
+            return res.status(400).json({ success: false, message: 'Passwords do not match' });
+        }
+
+        await User.updatePassword(req.user.id, await bcrypt.hash(newPassword, 12));
+
+        try {
+            notifyUser(req.user.id, 'account.password_set', {}, '/profile');
+        } catch (notifyError) {
+            console.error('Password-set notification failed:', notifyError.message);
+        }
+
+        return res.json({ success: true, message: 'Password created for your account.' });
+    } catch (error) {
+        console.error('Error setting initial password:', error);
+        return res.status(500).json({ success: false, message: 'Could not create a password right now.' });
+    }
+};
+
 exports.deleteAccount = async (req, res) => {
     try {
         const { password } = req.body;

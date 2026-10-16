@@ -591,6 +591,75 @@ class Reservation {
         return result.affectedRows > 0;
     }
 
+    // Mirror of the bulk archive pair: bring archived rows back to the active list.
+    // `AND is_archived = TRUE` keeps this a no-op for rows that are already active, so
+    // restoring a selection twice cannot silently re-activate something already there.
+    static async restoreTicketReservationsByIds(userId, ids) {
+        const [result] = await db.query(
+            `UPDATE ticket_reservations SET is_archived = FALSE, updated_at = NOW()
+             WHERE id IN (?) AND user_id = ? AND is_archived = TRUE
+               AND (is_deleted IS NULL OR is_deleted = FALSE)`,
+            [ids, userId]
+        );
+        return result.affectedRows;
+    }
+
+    static async restoreEventReservationsByIds(userId, ids) {
+        const [result] = await db.query(
+            `UPDATE event_reservations SET is_archived = FALSE, updated_at = NOW()
+             WHERE id IN (?) AND user_id = ? AND is_archived = TRUE
+               AND (is_deleted IS NULL OR is_deleted = FALSE)`,
+            [ids, userId]
+        );
+        return result.affectedRows;
+    }
+
+    // --- Visitor bulk archive / permanent delete -----------------------------------
+    // Every query below re-states `AND user_id = ?`. The controller also validates the id
+    // list, but ownership is enforced here in SQL so a hand-crafted request naming someone
+    // else's reservation id updates zero rows rather than someone else's booking.
+
+    static async archiveTicketReservationsByIds(userId, ids) {
+        const [result] = await db.query(
+            `UPDATE ticket_reservations SET is_archived = TRUE, updated_at = NOW()
+             WHERE id IN (?) AND user_id = ? AND is_archived = FALSE
+               AND (is_deleted IS NULL OR is_deleted = FALSE)`,
+            [ids, userId]
+        );
+        return result.affectedRows;
+    }
+
+    static async archiveEventReservationsByIds(userId, ids) {
+        const [result] = await db.query(
+            `UPDATE event_reservations SET is_archived = TRUE, updated_at = NOW()
+             WHERE id IN (?) AND user_id = ? AND is_archived = FALSE
+               AND (is_deleted IS NULL OR is_deleted = FALSE)`,
+            [ids, userId]
+        );
+        return result.affectedRows;
+    }
+
+    // Deletion is irreversible, so it is deliberately narrower than the admin trash purge:
+    // only rows the visitor has already archived, and only their own. A request naming an
+    // active reservation id deletes nothing.
+    static async permanentlyDeleteArchivedTicketReservations(userId, ids) {
+        const [result] = await db.query(
+            `DELETE FROM ticket_reservations
+             WHERE id IN (?) AND user_id = ? AND is_archived = TRUE`,
+            [ids, userId]
+        );
+        return result.affectedRows;
+    }
+
+    static async permanentlyDeleteArchivedEventReservations(userId, ids) {
+        const [result] = await db.query(
+            `DELETE FROM event_reservations
+             WHERE id IN (?) AND user_id = ? AND is_archived = TRUE`,
+            [ids, userId]
+        );
+        return result.affectedRows;
+    }
+
     // --- Visitor self-service -----------------------------------------------------
     // Each of these carries `AND user_id = ?` and `AND status = 'pending'`, so a visitor can
     // only ever touch their own booking and only before staff act on it. Once confirmed or

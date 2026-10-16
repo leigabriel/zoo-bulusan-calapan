@@ -7,6 +7,7 @@ const { logStaffActivity, logUserActivity } = require('../middleware/track-activ
 const crypto = require('crypto');
 const { reservationQrSecret } = require('../config/app-config');
 const { validateTicketEdit, validateParticipantEdit } = require('../utils/reservation-edit-rules');
+const { validateArchiveSelection, validatePermanentDelete } = require('../utils/reservation-archive-rules');
 const { readConfig: readEventPaymentConfig } = require('../config/event-payment-config');
 const walkInService = require('../services/walk-in-service');
 
@@ -1037,6 +1038,144 @@ exports.updateMyEventReservation = async (req, res) => {
     } catch (error) {
         console.error('Error updating event reservation:', error);
         return res.status(500).json({ success: false, message: 'Could not update your reservation right now.' });
+    }
+};
+
+// Both bulk endpoints funnel through here. The shape of the received body is logged on a
+// rejection because a malformed selection is otherwise indistinguishable from an empty one
+// in the server log — a client sending `[null]` and one sending `[]` both land here.
+const readSelection = (req, res) => {
+    const body = req.body || {};
+    const selection = validateArchiveSelection({ type: body.type, ids: body.ids });
+    if (!selection.ok) {
+        console.warn('[reservations] rejected selection:', JSON.stringify({
+            type: body.type,
+            typeofIds: Array.isArray(body.ids) ? 'array' : typeof body.ids,
+            ids: body.ids
+        }));
+        res.status(400).json({ success: false, message: selection.error });
+        return null;
+    }
+    return selection;
+};
+
+/**
+ * Archive a selection of the visitor's own reservations in one call. Archiving is reversible
+ * (they can unarchive, or permanently delete from the archive view), so it carries no password
+ * gate — that is reserved for the irreversible step.
+ */
+exports.archiveSelectedReservations = async (req, res) => {
+    try {
+        const selection = readSelection(req, res);
+        if (!selection) return undefined;
+
+        const count = selection.type === 'ticket'
+            ? await Reservation.archiveTicketReservationsByIds(req.user.id, selection.ids)
+            : await Reservation.archiveEventReservationsByIds(req.user.id, selection.ids);
+
+        // Zero is a legitimate answer: the ids may belong to someone else, already be
+        // archived, or already be in the trash. The response deliberately does not
+        // distinguish those cases.
+        return res.json({
+            success: true,
+            count,
+            message: count
+                ? `${count} reservation${count > 1 ? 's' : ''} moved to archive.`
+                : 'Those reservations could not be archived.'
+        });
+    } catch (error) {
+        console.error('Error archiving reservations:', error);
+        return res.status(500).json({ success: false, message: 'Could not archive those reservations.' });
+    }
+};
+
+/**
+ * Permanently delete a selection of the visitor's own already-archived reservations.
+ *
+ * Gated on the account password. An account with no password at all (Google sign-in) is
+ * told to create one rather than being allowed through, because there is nothing to
+ * compare against and a silent bypass would make the guard meaningless.
+ */
+exports.permanentlyDeleteArchivedReservations = async (req, res) => {
+    try {
+        const { type, ids, password } = req.body || {};
+        const account = await User.findById(req.user.id);
+        if (!account) {
+            return res.status(404).json({ success: false, message: 'Account not found.' });
+        }
+
+        const check = validatePermanentDelete({
+            type,
+            ids,
+            password,
+            hasPassword: Boolean(account.password)
+        });
+
+        if (!check.ok) {
+            const status = check.reason === 'invalid_selection' ? 400 : 401;
+            return res.status(status).json({
+                success: false,
+                message: check.error,
+                reason: check.reason
+            });
+        }
+
+        // Only hash-compare once the selection is known to be well-formed, so a malformed
+        // request cannot be used to probe whether an account has a password.
+        const isMatch = await bcrypt.compare(password, account.password);
+        if (!isMatch) {
+            return res.status(401).json({
+                success: false,
+                message: 'That password is incorrect.',
+                reason: 'password_incorrect'
+            });
+        }
+
+        const count = check.type === 'ticket'
+            ? await Reservation.permanentlyDeleteArchivedTicketReservations(req.user.id, check.ids)
+            : await Reservation.permanentlyDeleteArchivedEventReservations(req.user.id, check.ids);
+
+        if (!count) {
+            return res.status(404).json({
+                success: false,
+                message: 'Those reservations could not be deleted.'
+            });
+        }
+
+        return res.json({
+            success: true,
+            count,
+            message: `${count} reservation${count > 1 ? 's' : ''} permanently deleted.`
+        });
+    } catch (error) {
+        console.error('Error permanently deleting reservations:', error);
+        return res.status(500).json({ success: false, message: 'Could not delete those reservations.' });
+    }
+};
+
+/**
+ * Bring a selection of the visitor's own archived reservations back into the active list.
+ * The inverse of archiveSelectedReservations, and equally reversible.
+ */
+exports.restoreSelectedReservations = async (req, res) => {
+    try {
+        const selection = readSelection(req, res);
+        if (!selection) return undefined;
+
+        const count = selection.type === 'ticket'
+            ? await Reservation.restoreTicketReservationsByIds(req.user.id, selection.ids)
+            : await Reservation.restoreEventReservationsByIds(req.user.id, selection.ids);
+
+        return res.json({
+            success: true,
+            count,
+            message: count
+                ? `${count} reservation${count > 1 ? 's' : ''} restored.`
+                : 'Those reservations could not be restored.'
+        });
+    } catch (error) {
+        console.error('Error restoring reservations:', error);
+        return res.status(500).json({ success: false, message: 'Could not restore those reservations.' });
     }
 };
 

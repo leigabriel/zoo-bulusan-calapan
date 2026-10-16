@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../hooks/use-auth';
-import { reservationAPI } from '../../services/api-client';
+import { reservationAPI, userAPI } from '../../services/api-client';
 import { formatSafeDate, getDateTimestamp } from '../../utils/format-date';
 import { QRCodeSVG } from 'qrcode.react';
 import { notify } from '../../utils/toast';
@@ -79,6 +79,19 @@ const ReservationHistoryPanel = ({ isOpen, onClose, paymentReturn = false }) => 
     const [filter, setFilter] = useState('all');
     const [showArchived, setShowArchived] = useState(false);
     const [archiving, setArchiving] = useState(false);
+    // Keys are `${type}:${id}` so a ticket and an event that share an id cannot collide.
+    // Keyed by `type:id` so the Map deduplicates like a Set, but carries the structured
+// { type, id } record as its value.
+    const [selected, setSelected] = useState(() => new Map());
+    const [deleteModal, setDeleteModal] = useState({ isOpen: false, keys: [] });
+    const [deletePassword, setDeletePassword] = useState('');
+    const [deleteError, setDeleteError] = useState('');
+    const [deleting, setDeleting] = useState(false);
+    const [passwordModal, setPasswordModal] = useState({ isOpen: false, pendingKeys: [] });
+    const [newPassword, setNewPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [passwordError, setPasswordError] = useState('');
+    const [passwordSaving, setPasswordSaving] = useState(false);
     // Self-service amend/cancel. Only offered while the booking is still pending; the
     // server re-checks ownership and status, so these are a convenience, not the guard.
     const [editModal, setEditModal] = useState({ isOpen: false, reservation: null });
@@ -478,6 +491,201 @@ const ReservationHistoryPanel = ({ isOpen, onClose, paymentReturn = false }) => 
         ...eventReservations.map(r => ({ ...r, type: 'event' }))
     ];
 
+    const selectionKey = (reservation) => `${reservation.type}:${reservation.id}`;
+
+    // Reservation ids are OPAQUE `pid_` tokens, not database integers — the API encodes every
+    // id field before sending it. Coercing one with Number() yields NaN, which is what made
+    // selection silently do nothing (NaN is rejected as a row) and, before the selection was
+    // stored as data, serialize to `null` and produce an opaque "Select at least one
+    // reservation" from the server. The token is sent through untouched; the server's
+    // decodeRequestIdentifiers middleware turns it back into the real id.
+    const toSelectable = (reservation) => {
+        const raw = reservation?.id;
+        let id = null;
+        if (typeof raw === 'string' && raw.trim() !== '') {
+            id = raw.trim();
+        } else if (typeof raw === 'number' && Number.isInteger(raw) && raw > 0) {
+            id = raw;
+        }
+        if (id === null) return null;
+
+        const type = reservation?.type;
+        if (type !== 'ticket' && type !== 'event') return null;
+        return { type, id };
+    };
+
+    const toggleSelected = (reservation) => {
+        const entry = toSelectable(reservation);
+        if (!entry) return;
+        const key = selectionKey(reservation);
+        setSelected((current) => {
+            const next = new Map(current);
+            if (next.has(key)) next.delete(key);
+            else next.set(key, entry);
+            return next;
+        });
+    };
+
+    // "Select all" applies to what is currently on screen, so it can never quietly select
+    // rows hidden behind the active tab or status filter.
+    const selectAllVisible = (visible) => {
+        setSelected((current) => {
+            const next = new Map(current);
+            const allSelected = visible.length > 0
+                && visible.every((r) => current.has(selectionKey(r)));
+            visible.forEach((r) => {
+                const entry = toSelectable(r);
+                if (!entry) return;
+                if (allSelected) next.delete(selectionKey(r));
+                else next.set(selectionKey(r), entry);
+            });
+            return next;
+        });
+    };
+
+    // The bulk endpoints take one reservation type per call, so a mixed selection is split.
+    // Reads the stored {type, id} records directly — no string splitting.
+    const groupSelectionByType = (entries) => {
+        const byType = { ticket: [], event: [] };
+        entries.forEach(({ type, id }) => {
+            if (byType[type]) byType[type].push(id);
+        });
+        return byType;
+    };
+
+    // A 404 here means the API process predates the archive routes, which reads as "nothing
+// happened" with no clue why. Name the actual cause instead of a generic failure.
+const explainFailure = (error, fallback) => {
+    if (/404/.test(error?.message || '')) {
+        return 'This server is running an older version. Restart the backend, then try again.';
+    }
+    return error?.message || fallback;
+};
+
+    const archiveSelected = async () => {
+        const entries = [...selected.values()];
+        if (!entries.length || archiving) return;
+
+        setArchiving(true);
+        try {
+            const groups = groupSelectionByType(entries);
+            // Sequential rather than parallel: the panel refetches once at the end anyway.
+            for (const type of ['ticket', 'event']) {
+                if (!groups[type].length) continue;
+                const res = await reservationAPI.archiveSelectedReservations({ type, ids: groups[type] });
+                if (!res.success) {
+                    notify.error(res.message || "Couldn't archive those reservations.");
+                    return;
+                }
+            }
+            notify.success(`${entries.length} reservation${entries.length > 1 ? 's' : ''} moved to archive.`);
+            setSelected(new Map());
+            await fetchReservations();
+        } catch (error) {
+            notify.error(explainFailure(error, "Couldn't archive those reservations."));
+        } finally {
+            setArchiving(false);
+        }
+    };
+
+    const restoreSelected = async () => {
+        const entries = [...selected.values()];
+        if (!entries.length || archiving) return;
+
+        setArchiving(true);
+        try {
+            const groups = groupSelectionByType(entries);
+            for (const type of ['ticket', 'event']) {
+                if (!groups[type].length) continue;
+                const res = await reservationAPI.restoreSelectedReservations({ type, ids: groups[type] });
+                if (!res.success) {
+                    notify.error(res.message || "Couldn't restore those reservations.");
+                    return;
+                }
+            }
+            notify.success(`${entries.length} reservation${entries.length > 1 ? 's' : ''} restored.`);
+            setSelected(new Map());
+            await fetchReservations();
+        } catch (error) {
+            notify.error(explainFailure(error, "Couldn't restore those reservations."));
+        } finally {
+            setArchiving(false);
+        }
+    };
+
+    const openPermanentDelete = () => {
+        const entries = [...selected.values()];
+        if (!entries.length) return;
+        setDeletePassword('');
+        setDeleteError('');
+        setDeleteModal({ isOpen: true, keys: entries });
+    };
+
+    const confirmPermanentDelete = async () => {
+        if (deleting) return;
+        setDeleting(true);
+        setDeleteError('');
+        try {
+            const groups = groupSelectionByType(deleteModal.keys);
+            let total = 0;
+            for (const type of ['ticket', 'event']) {
+                if (!groups[type].length) continue;
+                const res = await reservationAPI.permanentlyDeleteArchivedReservations({
+                    type,
+                    ids: groups[type],
+                    password: deletePassword
+                });
+                if (!res.success) {
+                    // A missing password is a setup problem, not a wrong guess: hand off to
+                    // the create-password modal rather than leaving them to retry blindly.
+                    if (res.reason === 'password_setup_required') {
+                        const keys = deleteModal.keys;
+                        setDeleteModal({ isOpen: false, keys });
+                        setPasswordModal({ isOpen: true, pendingKeys: keys });
+                        return;
+                    }
+                    setDeleteError(res.message || "Couldn't delete those reservations.");
+                    return;
+                }
+                total += res.count || 0;
+            }
+            notify.success(`${total} reservation${total > 1 ? 's' : ''} permanently deleted.`);
+            setDeleteModal({ isOpen: false, keys: [] });
+            setDeletePassword('');
+            setSelected(new Map());
+            await fetchReservations();
+        } catch (error) {
+            setDeleteError(explainFailure(error, "Couldn't delete those reservations."));
+        } finally {
+            setDeleting(false);
+        }
+    };
+
+    const submitInitialPassword = async () => {
+        if (passwordSaving) return;
+        setPasswordSaving(true);
+        setPasswordError('');
+        try {
+            const res = await userAPI.setInitialPassword({ newPassword, confirmPassword });
+            if (!res.success) {
+                setPasswordError(res.message || "Couldn't create a password.");
+                return;
+            }
+            notify.success('Password created. You can continue.');
+            const keys = passwordModal.pendingKeys;
+            setPasswordModal({ isOpen: false, pendingKeys: [] });
+            setNewPassword('');
+            setConfirmPassword('');
+            // Re-open the confirmation step now that the account has a password.
+            setDeleteModal({ isOpen: true, keys });
+            setDeletePassword('');
+        } catch (error) {
+            setPasswordError(error.message || "Couldn't create a password.");
+        } finally {
+            setPasswordSaving(false);
+        }
+    };
+
     const filteredReservations = (showArchived ? archivedReservations : (
         activeTab === 'all' ? combinedReservations :
             activeTab === 'tickets' ? ticketReservations.map(r => ({ ...r, type: 'ticket' })) :
@@ -636,6 +844,68 @@ const ReservationHistoryPanel = ({ isOpen, onClose, paymentReturn = false }) => 
                                 <option value="completed">Completed</option>
                                 <option value="cancelled">Cancelled</option>
                             </select>
+
+                            {/* Selection toolbar. The destructive action only appears in the
+                                Archived tab, because an active reservation is not in a state
+                                where it could be permanently deleted. */}
+                            <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
+                                <button
+                                    type="button"
+                                    onClick={() => selectAllVisible(filteredReservations)}
+                                    className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 hover:text-slate-800 transition"
+                                >
+                                    {filteredReservations.length > 0
+                                        && filteredReservations.every((r) => selected.has(selectionKey(r)))
+                                        ? 'Clear selection'
+                                        : `Select all (${filteredReservations.length})`}
+                                </button>
+
+                                {selected.size > 0 && (
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                                            {selected.size} selected
+                                        </span>
+                                        {showArchived ? (
+                                            <>
+                                                {/* Restore is the safe, reversible action, so it
+                                                    is the default-looking one. Delete is red and
+                                                    always goes through the password gate. */}
+                                                <button
+                                                    type="button"
+                                                    onClick={restoreSelected}
+                                                    disabled={archiving}
+                                                    className="px-4 py-2 rounded-lg bg-slate-700 text-white text-[11px] font-semibold uppercase tracking-wider hover:bg-slate-800 disabled:opacity-50 transition shadow-sm"
+                                                >
+                                                    {archiving ? 'Working...' : 'Restore'}
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={openPermanentDelete}
+                                                    className="px-4 py-2 rounded-lg bg-red-600 text-white text-[11px] font-semibold uppercase tracking-wider hover:bg-red-700 transition shadow-sm"
+                                                >
+                                                    Delete Permanently
+                                                </button>
+                                            </>
+                                        ) : (
+                                            <button
+                                                type="button"
+                                                onClick={archiveSelected}
+                                                disabled={archiving}
+                                                className="px-4 py-2 rounded-lg bg-slate-700 text-white text-[11px] font-semibold uppercase tracking-wider hover:bg-slate-800 disabled:opacity-50 transition shadow-sm"
+                                            >
+                                                {archiving ? 'Archiving...' : 'Archive'}
+                                            </button>
+                                        )}
+                                        <button
+                                            type="button"
+                                            onClick={() => setSelected(new Map())}
+                                            className="px-3 py-2 rounded-lg border border-slate-200 text-slate-600 text-[11px] font-semibold uppercase tracking-wider hover:bg-slate-100 transition"
+                                        >
+                                            Clear
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
                         </div>
 
                         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-4 space-y-4" data-lenis-prevent>
@@ -660,6 +930,20 @@ const ReservationHistoryPanel = ({ isOpen, onClose, paymentReturn = false }) => 
                                              className="relative bg-white border border-slate-200 shadow-sm hover:shadow-md rounded-xl p-4 cursor-pointer transition-all duration-200 group"
                                          >
                                              <div className="flex items-start gap-4 pr-10">
+                                                {/* Checkbox sits outside the card's click handler so
+                                                    selecting never opens the detail modal. */}
+                                                <label
+                                                    className="flex-shrink-0 pt-2 cursor-pointer"
+                                                    onClick={(e) => e.stopPropagation()}
+                                                >
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={selected.has(selectionKey(reservation))}
+                                                        onChange={() => toggleSelected(reservation)}
+                                                        aria-label={`Select reservation ${reservation.reservation_reference}`}
+                                                        className="h-4 w-4 rounded border-slate-300 text-slate-700 focus:ring-slate-400 cursor-pointer"
+                                                    />
+                                                </label>
                                                 <div className={`w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 ${reservation.type === 'ticket' ? 'bg-indigo-50 text-indigo-500' : 'bg-teal-50 text-teal-500'
                                                     }`}>
                                                     {reservation.type === 'ticket' ? <Icons.Ticket /> : <Icons.Calendar />}
@@ -1147,6 +1431,137 @@ const ReservationHistoryPanel = ({ isOpen, onClose, paymentReturn = false }) => 
                             <button onClick={() => setCancelModal({ isOpen: false, reservation: null })} disabled={selfSaving}
                                 className="min-h-11 flex-1 rounded-xl border border-slate-200 px-5 py-3 text-xs font-bold uppercase tracking-wider text-slate-600 transition hover:bg-slate-50 disabled:opacity-50">
                                 Keep Booking
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Password confirmation for permanent deletion. This is the last gate before an
+                irreversible action, so it names the consequence plainly. */}
+            {deleteModal.isOpen && !passwordModal.isOpen && (
+                <div className="fixed inset-0 z-[280] flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="perm-delete-title">
+                    <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => !deleting && setDeleteModal({ isOpen: false, keys: [], needsPassword: false })} />
+                    <div className="relative w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl">
+                        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-red-50">
+                            <Icons.Close className="h-6 w-6 text-red-600" />
+                        </div>
+                        <h3 id="perm-delete-title" className="text-center text-lg font-bold text-slate-900">
+                            Delete {deleteModal.keys.length} reservation{deleteModal.keys.length > 1 ? 's' : ''}?
+                        </h3>
+                        <p className="mt-2 text-center text-sm text-slate-500">
+                            This permanently removes your booking history and cannot be undone.
+                        </p>
+
+                        <label htmlFor="perm-delete-password" className="mt-5 mb-2 block text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                            Your password
+                        </label>
+                        <input
+                            id="perm-delete-password"
+                            type="password"
+                            autoComplete="current-password"
+                            value={deletePassword}
+                            onChange={(e) => { setDeletePassword(e.target.value); setDeleteError(''); }}
+                            onKeyDown={(e) => { if (e.key === 'Enter') confirmPermanentDelete(); }}
+                            className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200"
+                        />
+                        {deleteError && (
+                            <p role="alert" className="mt-2 text-[11px] font-semibold text-red-600">{deleteError}</p>
+                        )}
+
+                        {/* Signed up with Google and never set a password? Offer the step up
+                            front rather than letting them guess and fail. The server reports
+                            `password_setup_required` independently, so this is a shortcut, not
+                            the gate. */}
+                        <button
+                            type="button"
+                            onClick={() => setPasswordModal({ isOpen: true, pendingKeys: deleteModal.keys })}
+                            className="mt-3 text-[11px] font-semibold uppercase tracking-wider text-slate-500 underline underline-offset-2 hover:text-slate-800 transition"
+                        >
+                            No password yet? Create one
+                        </button>
+
+                        <div className="mt-6 flex flex-col gap-3 sm:flex-row-reverse">
+                            <button
+                                type="button"
+                                onClick={confirmPermanentDelete}
+                                disabled={deleting || !deletePassword.trim()}
+                                className="min-h-11 flex-1 rounded-xl bg-red-600 px-5 py-3 text-xs font-bold uppercase tracking-wider text-white transition hover:bg-red-700 disabled:opacity-50"
+                            >
+                                {deleting ? 'Deleting...' : 'Delete Forever'}
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setDeleteModal({ isOpen: false, keys: [] })}
+                                disabled={deleting}
+                                className="min-h-11 flex-1 rounded-xl border border-slate-200 px-5 py-3 text-xs font-bold uppercase tracking-wider text-slate-600 transition hover:bg-slate-50 disabled:opacity-50"
+                            >
+                                Keep
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Create-a-password step for accounts that signed up with Google. */}
+            {passwordModal.isOpen && (
+                <div className="fixed inset-0 z-[290] flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="set-password-title">
+                    <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => !passwordSaving && setPasswordModal({ isOpen: false, pendingKeys: [] })} />
+                    <div className="relative w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl">
+                        <h3 id="set-password-title" className="text-lg font-bold text-slate-900">Create a password</h3>
+                        <p className="mt-2 text-sm text-slate-500">
+                            Needed once to confirm permanent deletion. At least 8 characters, with an
+                            uppercase letter, a number and a special character.
+                        </p>
+
+                        <label htmlFor="new-password" className="mt-5 mb-2 block text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                            New password
+                        </label>
+                        <input
+                            id="new-password"
+                            type="password"
+                            autoComplete="new-password"
+                            value={newPassword}
+                            onChange={(e) => { setNewPassword(e.target.value); setPasswordError(''); }}
+                            className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200"
+                        />
+                        <label htmlFor="confirm-new-password" className="mt-4 mb-2 block text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                            Confirm password
+                        </label>
+                        <input
+                            id="confirm-new-password"
+                            type="password"
+                            autoComplete="new-password"
+                            value={confirmPassword}
+                            onChange={(e) => { setConfirmPassword(e.target.value); setPasswordError(''); }}
+                            onKeyDown={(e) => { if (e.key === 'Enter') submitInitialPassword(); }}
+                            className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200"
+                        />
+                        {passwordError && (
+                            <p role="alert" className="mt-2 text-[11px] font-semibold text-red-600">{passwordError}</p>
+                        )}
+
+                        <div className="mt-6 flex flex-col gap-3 sm:flex-row-reverse">
+                            <button
+                                type="button"
+                                onClick={submitInitialPassword}
+                                disabled={passwordSaving || !newPassword || !confirmPassword}
+                                className="min-h-11 flex-1 rounded-xl bg-slate-800 px-5 py-3 text-xs font-bold uppercase tracking-wider text-white transition hover:bg-slate-900 disabled:opacity-50"
+                            >
+                                {passwordSaving ? 'Saving...' : 'Create Password'}
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setPasswordModal({ isOpen: false, pendingKeys: [] });
+                                    setNewPassword('');
+                                    setConfirmPassword('');
+                                    setPasswordError('');
+                                }}
+                                disabled={passwordSaving}
+                                className="min-h-11 flex-1 rounded-xl border border-slate-200 px-5 py-3 text-xs font-bold uppercase tracking-wider text-slate-600 transition hover:bg-slate-50 disabled:opacity-50"
+                            >
+                                Cancel
                             </button>
                         </div>
                     </div>
