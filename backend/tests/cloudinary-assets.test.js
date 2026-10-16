@@ -1,4 +1,4 @@
-﻿const test = require('node:test');
+const test = require('node:test');
 const assert = require('node:assert');
 
 const { parseAssetId, canDeleteAsset } = require('../utils/cloudinary-ownership');

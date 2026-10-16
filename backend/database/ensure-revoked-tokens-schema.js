@@ -1,4 +1,4 @@
-﻿const db = require('../config/database');
+const db = require('../config/database');
 
 /**
  * Table backing JWT revocation (models/revoked-token-model.js).

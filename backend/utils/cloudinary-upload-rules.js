@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Validation rules for client-supplied image data.
  *
  * POST /api/upload/base64 sits behind `protect` only, so any signed-in visitor

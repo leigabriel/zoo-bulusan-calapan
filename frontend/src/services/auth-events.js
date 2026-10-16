@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Session-expiry signal.
  *
  * Deliberately dependency-free: the API client emits, AuthContext-adjacent UI

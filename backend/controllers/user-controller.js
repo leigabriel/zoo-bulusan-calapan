@@ -1,4 +1,4 @@
-﻿const Animal = require('../models/animal-model');
+const Animal = require('../models/animal-model');
 const Ticket = require('../models/ticket-model');
 const Event = require('../models/event-model');
 const User = require('../models/user-model');

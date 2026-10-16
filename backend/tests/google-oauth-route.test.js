@@ -1,4 +1,4 @@
-﻿const test = require('node:test');
+const test = require('node:test');
 const assert = require('node:assert');
 
 // Configure before requiring the controller: getGoogleConfig() throws without these.

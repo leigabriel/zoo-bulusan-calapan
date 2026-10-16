@@ -1,4 +1,4 @@
-﻿const test = require('node:test');
+const test = require('node:test');
 const assert = require('node:assert');
 
 const { validateTicketBooking, MAX_TICKETS_PER_BOOKING } = require('../utils/reservation-quantity-rules');

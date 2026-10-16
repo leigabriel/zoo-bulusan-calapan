@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Central error handling.
  *
  * Two rules this module enforces:

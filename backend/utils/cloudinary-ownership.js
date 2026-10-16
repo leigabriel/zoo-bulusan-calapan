@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Ownership rules for Cloudinary assets.
  *
  * Every upload mints a publicId of the form:

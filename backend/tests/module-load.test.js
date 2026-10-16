@@ -1,4 +1,4 @@
-﻿const test = require('node:test');
+const test = require('node:test');
 const { after } = require('node:test');
 const assert = require('node:assert');
 const fs = require('node:fs');

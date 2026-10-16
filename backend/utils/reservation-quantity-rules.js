@@ -1,4 +1,4 @@
-﻿// Rules for ticket quantities on a NEW booking. Pure so the tests can reach them without a
+// Rules for ticket quantities on a NEW booking. Pure so the tests can reach them without a
 // database, matching backend/utils/reservation-edit-rules.js.
 //
 // Why this exists separately from validateTicketEdit: the create path previously used
