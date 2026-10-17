@@ -57,7 +57,6 @@ const trackActivity = (actionType, getDescription = null) => {
                 else if (path.includes('appeal')) entityType = 'appeal';
                 else if (path.includes('model')) entityType = 'prediction_model';
                 else if (path.includes('user')) entityType = 'user';
-                else if (path.includes('donation')) entityType = 'donation_config';
                 else if (path.includes('payment')) entityType = 'payment_config';
 
                 try {

@@ -211,6 +211,56 @@ class Reservation {
         return result.affectedRows > 0;
     }
 
+    /**
+     * Resolve a ticket reservation from PayMongo webhook/checkout identifiers.
+     *
+     * This is the ticket counterpart of findEventReservationByPaymentReference.
+     * The webhook needs both: event and ticket reservations live in separate
+     * tables, so looking only in event_reservations would throw a mismatch error
+     * and the visitor's payment would never be reconciled.
+     */
+    static async findTicketReservationByPaymentReference(checkoutSessionId, reservationReference, paymentId, reservationId) {
+        const [rows] = await db.query(
+            `SELECT * FROM ticket_reservations
+             WHERE ((paymongo_checkout_session_id = ? AND ? IS NOT NULL)
+                OR (reservation_reference = ? AND ? IS NOT NULL)
+                OR (paymongo_payment_id = ? AND ? IS NOT NULL)
+                 OR (id = ? AND ? IS NOT NULL))
+             LIMIT 1`,
+            [checkoutSessionId || null, checkoutSessionId || null, reservationReference || null, reservationReference || null,
+                paymentId || null, paymentId || null, reservationId || null, reservationId || null]
+        );
+        return rows[0];
+    }
+
+    static async updateTicketPayment(id, data) {
+        const updates = [];
+        const params = [];
+        const fields = {
+            paymentAmount: 'payment_amount',
+            paymentMethod: 'payment_method',
+            paymentStatus: 'payment_status',
+            checkoutSessionId: 'paymongo_checkout_session_id',
+            paymentId: 'paymongo_payment_id',
+            paidAt: 'payment_paid_at',
+            refundStatus: 'refund_status',
+            refundRequestedAt: 'refund_requested_at'
+        };
+        Object.entries(fields).forEach(([key, column]) => {
+            if (Object.prototype.hasOwnProperty.call(data, key)) {
+                updates.push(`${column} = ?`);
+                params.push(data[key]);
+            }
+        });
+        if (!updates.length) return false;
+        params.push(id);
+        const [result] = await db.query(
+            `UPDATE ticket_reservations SET ${updates.join(', ')}
+             WHERE id = ? AND (is_deleted IS NULL OR is_deleted = FALSE)`,
+            params
+        );
+        return result.affectedRows > 0;
+    }
     static async updateTicketReservationStatus(id, status, confirmedBy = null) {
         let query = 'UPDATE ticket_reservations SET status = ?';
         const params = [status];

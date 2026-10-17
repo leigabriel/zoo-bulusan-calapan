@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { reservationAPI, getResidentIdImageUrl } from '../../services/api-client';
 import { formatSafeDate } from '../../utils/format-date';
 import { notify } from '../../utils/toast';
+import { paymentStatusBadge, paymentStatusLabel, paymentMethodLabel } from '../../utils/payment-status';
 
 
 const AdminReservations = ({ globalSearch = '' }) => {
@@ -18,6 +19,9 @@ const AdminReservations = ({ globalSearch = '' }) => {
     const [actionLoading, setActionLoading] = useState(false);
     const [deleteConfirm, setDeleteConfirm] = useState(null);
     const [confirmAction, setConfirmAction] = useState(null);
+    // Marking a reservation paid is irreversible from the UI, so it is gated behind
+    // its own confirmation rather than firing straight from the button.
+    const [markPaidConfirm, setMarkPaidConfirm] = useState(null);
 
     useEffect(() => { fetchReservations(); }, []);
 
@@ -69,14 +73,29 @@ const AdminReservations = ({ globalSearch = '' }) => {
         }
     };
 
-    const markEventPaid = async (reservation) => {
+    // Opens the confirmation. The write only happens in performMarkPaid.
+    const confirmMarkPaid = (reservation) => setMarkPaidConfirm(reservation);
+
+    const cancelMarkPaid = () => setMarkPaidConfirm(null);
+
+    const performMarkPaid = async (reservation) => {
         setActionLoading(true);
         try {
-            const res = await reservationAPI.markEventPaymentPaid(reservation.id, 'admin');
+            // Ticket reservations live in a different table, so they need the
+    // /payments/ticket endpoint rather than /payments/event.
+    const res = reservation.type === 'ticket'
+        ? await reservationAPI.markTicketPaymentPaid(reservation.id, 'admin')
+        : await reservationAPI.markEventPaymentPaid(reservation.id, 'admin');
             if (!res.success) throw new Error(res.message || "Couldn't mark payment as paid.");
             await fetchReservations();
-            setSelectedReservation(current => current ? { ...current, ...(res.reservation || {}), type: 'event' } : current);
-            notify.success('Event payment marked as paid.');
+            // Preserve the reservation's real kind. This used to force type: 'event',
+            // so confirming a ticket payment relabelled the open record as an event.
+            setSelectedReservation(current => (current
+                ? { ...current, ...(res.reservation || {}), type: reservation.type }
+                : current));
+            setShowModal(false);
+            setMarkPaidConfirm(null);
+            notify.success(`${reservation.type === 'ticket' ? 'Ticket' : 'Event'} payment marked as paid.`);
         } catch (err) {
             notify.error(err.message || "Couldn't mark payment as paid.");
         } finally {
@@ -318,7 +337,12 @@ const AdminReservations = ({ globalSearch = '' }) => {
                                                 {reservation.status}
                                             </span>
                                         </td>
-                                        <td className="px-6 py-4">{activeTab === 'events' ? <div><p className="text-xs font-semibold text-gray-700">{reservation.payment_method === 'pay_at_bulusan' ? 'Pay at Bulusan' : reservation.payment_method === 'qrph' || reservation.payment_method === 'paymongo_qr_ph' ? 'QR Ph' : 'Not selected'}</p><span className={`text-xs font-bold uppercase ${reservation.payment_status === 'paid' ? 'text-emerald-600' : 'text-amber-600'}`}>{reservation.payment_status || 'unpaid'}</span></div> : <span className="text-gray-400">-</span>}</td>
+                                        <td className="px-6 py-4">{<div>
+                                            <p className="text-xs font-semibold text-gray-700">{paymentMethodLabel(reservation.payment_method)}</p>
+                                            <span className={`inline-flex w-fit rounded-full border px-2 py-0.5 text-xs font-medium ${paymentStatusBadge(reservation.payment_status)}`}>
+                                                {paymentStatusLabel(reservation.payment_status)}
+                                            </span>
+                                        </div>}</td>
                                         <td className="px-6 py-4">
                                             <div className="flex items-center justify-end gap-2">
                                                 <button
@@ -370,7 +394,7 @@ const AdminReservations = ({ globalSearch = '' }) => {
                             </button>
                         </div>
                                         <div className="p-6 space-y-4">
-                            {selectedReservation.type === 'event' && selectedReservation.payment_status === 'paid' && (
+                            {selectedReservation.payment_status === 'paid' && (
                                 <div className="rounded-xl border border-green-300 bg-green-50 px-4 py-3">
                                     <p className="text-sm font-bold text-green-800">Payment successful</p>
                                     <p className="mt-1 text-xs text-green-800">{selectedReservation.payment_method === 'pay_at_bulusan' ? 'Pay at Bulusan payment was collected and marked paid.' : 'PayMongo QR Ph payment confirmed.'}</p>
@@ -448,20 +472,20 @@ const AdminReservations = ({ globalSearch = '' }) => {
                                         <p className="text-green-800 font-bold">₱{selectedReservation.total_amount}</p>
                                     </div>
                                 )}
-                                 {selectedReservation.type === 'event' && (
+                                 {(
                                     <div className="col-span-2 border-t border-gray-100 pt-4">
-                                        <p className="text-xs text-gray-500 uppercase mb-2">Event Payment</p>
+                                        <p className="text-xs text-gray-500 uppercase mb-2">{selectedReservation.type === 'ticket' ? 'Ticket Payment' : 'Event Payment'}</p>
                                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
                                             <div><span className="block text-gray-500">Amount</span><strong className="text-gray-900">₱{Number(selectedReservation.payment_amount || 0).toFixed(2)}</strong></div>
-                                            <div><span className="block text-gray-500">Method</span><strong className="text-gray-900">{['qrph', 'gcash'].includes(selectedReservation.payment_method) ? 'QR Ph via PayMongo' : selectedReservation.payment_method === 'pay_at_bulusan' ? 'Pay at Bulusan' : 'Not selected'}</strong></div>
-                                            <div><span className="block text-gray-500">Status</span><strong className={selectedReservation.payment_status === 'paid' ? 'text-green-800' : 'text-amber-600'}>{(selectedReservation.payment_status || 'unpaid').toUpperCase()}</strong></div>
+                                            <div><span className="block text-gray-500">Method</span><strong className="text-gray-900">{paymentMethodLabel(selectedReservation.payment_method)}</strong></div>
+                                            <div><span className="block text-gray-500">Status</span><strong className={`inline-flex rounded-full border px-2 py-0.5 text-xs font-medium ${paymentStatusBadge(selectedReservation.payment_status)}`}>{paymentStatusLabel(selectedReservation.payment_status)}</strong></div>
                                             {selectedReservation.payment_paid_at && <div><span className="block text-gray-500">Paid on</span><strong className="text-gray-900">{formatDate(selectedReservation.payment_paid_at)}</strong></div>}
                                             <div><span className="block text-gray-500">Reference</span><strong className="text-gray-900 break-all">{selectedReservation.paymongo_payment_id || selectedReservation.paymongo_checkout_session_id || '—'}</strong></div>
                                         </div>
                                     </div>
                                  )}
-                                 {selectedReservation.type === 'event' && selectedReservation.payment_method === 'pay_at_bulusan' && selectedReservation.payment_status !== 'paid' && (
-                                     <div className="col-span-2 flex items-center justify-between gap-4 rounded-xl border border-amber-200 bg-amber-50 p-4"><div><p className="font-bold text-amber-800">Payment collection</p><p className="text-xs text-amber-700">Collect payment at Bulusan, then record it here.</p></div><button type="button" disabled={actionLoading} onClick={() => markEventPaid(selectedReservation)} className="shrink-0 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-emerald-700 disabled:opacity-50">{actionLoading ? 'Saving...' : 'Mark as paid'}</button></div>
+                                 {selectedReservation.payment_method === 'pay_at_bulusan' && selectedReservation.payment_status !== 'paid' && (
+                                     <div className="col-span-2 flex items-center justify-between gap-4 rounded-xl border border-amber-200 bg-amber-50 p-4"><div><p className="font-bold text-amber-800">Payment collection</p><p className="text-xs text-amber-700">Collect payment at Bulusan, then record it here.</p></div><button type="button" disabled={actionLoading} onClick={() => confirmMarkPaid(selectedReservation)} className="shrink-0 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-emerald-700 disabled:opacity-50">{actionLoading ? 'Saving...' : 'Mark as paid'}</button></div>
                                  )}
                             </div>
                             {(selectedReservation.notes || selectedReservation.participant_details) && (
@@ -494,6 +518,42 @@ const AdminReservations = ({ globalSearch = '' }) => {
                 </div>
             )}
 
+            {markPaidConfirm && (
+                <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[70] flex items-center justify-center p-4">
+                    <div className="bg-white border border-green-300 rounded-2xl w-full max-w-sm p-6 text-center">
+                        <div className="w-16 h-16 bg-green-400/20 rounded-full flex items-center justify-center mx-auto mb-4 text-green-700">
+                            <ReiconCheck className="w-8 h-8" />
+                        </div>
+                        <h3 className="text-xl font-bold text-gray-900 mb-2">Mark as Paid?</h3>
+                        <p className="text-gray-500 text-sm mb-1">
+                            Reservation <span className="font-mono text-gray-900">{markPaidConfirm.reservation_reference}</span>
+                        </p>
+                        <p className="text-gray-500 text-sm">
+                            {markPaidConfirm.type === 'ticket' ? 'Ticket' : 'Event'} payment will be recorded as paid
+                            via {paymentMethodLabel(markPaidConfirm.payment_method)}.
+                        </p>
+                        <p className="mt-2 text-xs text-gray-400">This cannot be undone from this page.</p>
+                        <div className="flex gap-3 mt-6">
+                            <button
+                                type="button"
+                                onClick={cancelMarkPaid}
+                                disabled={actionLoading}
+                                className="flex-1 py-3 bg-green-50 hover:bg-green-100 text-gray-700 font-medium rounded-xl transition-all disabled:opacity-50"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => performMarkPaid(markPaidConfirm)}
+                                disabled={actionLoading}
+                                className="flex-1 py-3 bg-gradient-to-r from-green-300 via-green-400 to-green-500 text-gray-900 font-semibold rounded-xl hover:shadow-lg transition-all disabled:opacity-50"
+                            >
+                                {actionLoading ? 'Saving...' : 'Mark as Paid'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
             {deleteConfirm && (
                 <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
                     <div className="bg-white border border-green-300 rounded-2xl w-full max-w-sm p-6 text-center">

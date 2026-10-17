@@ -1,4 +1,5 @@
 const Reservation = require('../models/reservation-model');
+const { readConfig: readTicketPaymentConfig } = require('../config/ticket-payment-config');
 const Event = require('../models/event-model');
 const User = require('../models/user-model');
 const bcrypt = require('bcryptjs');
@@ -1363,6 +1364,23 @@ exports.getEventAvailability = async (req, res) => {
     }
 };
 
+/**
+ * Face-value amount for a scanned ticket reservation, using the configured
+ * prices rather than the old hardcoded 40/20 pair.
+ *
+ * @param {object} reservation
+ * @returns {number}
+ */
+const ticketAmountFor = (reservation) => {
+    const config = readTicketPaymentConfig();
+    const priceOf = (quantity, price) => (Number(quantity) || 0) * (Number(price) || 0);
+    return Math.round((
+        priceOf(reservation.adult_quantity, config.adultPrice) +
+        priceOf(reservation.child_quantity, config.childPrice) +
+        priceOf(reservation.bulusan_resident_quantity, config.residentPrice)
+    ) * 100) / 100;
+};
+
 exports.scanReservation = async (req, res) => {
     try {
         const { qrData, markUsed } = req.body;
@@ -1485,13 +1503,17 @@ exports.scanReservation = async (req, res) => {
                 adultQuantity: isTicket ? reservation.adult_quantity : null,
                 childQuantity: isTicket ? reservation.child_quantity : null,
                 residentQuantity: isTicket ? reservation.bulusan_resident_quantity : null,
-                ticketAmount: isTicket ? ((reservation.adult_quantity * 40) + (reservation.child_quantity * 20)) : null,
+                ticketAmount: isTicket ? ticketAmountFor(reservation) : null,
                 eventName: isTicket ? null : (reservation.venue_event_name || reservation.event_title),
                 eventDescription: isTicket ? null : reservation.venue_event_description,
                 eventEndTime: isTicket ? null : reservation.venue_event_end_time,
-                paymentAmount: isTicket ? null : reservation.payment_amount,
-                paymentMethod: isTicket ? null : reservation.payment_method,
-                paymentStatus: isTicket ? null : reservation.payment_status
+                paymentAmount: reservation.payment_amount,
+                paymentMethod: reservation.payment_method,
+                paymentStatus: reservation.payment_status,
+                // The scanner shows these so staff can see when a booking was
+                // settled and reconcile it against the PayMongo dashboard.
+                paymentPaidAt: reservation.payment_paid_at || null,
+                paymentReference: reservation.paymongo_payment_id || reservation.paymongo_checkout_session_id || null
             }
         });
     } catch (error) {

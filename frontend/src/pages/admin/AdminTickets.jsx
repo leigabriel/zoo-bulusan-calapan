@@ -2,6 +2,14 @@ import { AlertTriangle as ReiconAlertTriangle, Calendar as ReiconCalendar, Check
 import { useState, useEffect } from 'react';
 import { adminAPI, getResidentIdImageUrl } from '../../services/api-client';
 import { notify } from '../../utils/toast';
+import {
+    PAYMENT_STATUSES,
+    paymentStatusBadge,
+    paymentStatusLabel,
+    paymentMethodLabel,
+    ticketPaymentAmount,
+    canMarkAsPaid
+} from '../../utils/payment-status';
 
 
 const AdminTickets = ({ globalSearch = '' }) => {
@@ -46,13 +54,22 @@ const AdminTickets = ({ globalSearch = '' }) => {
                     type: t.ticket_type || t.type,
                     purchasedBy: t.visitor_name || t.purchasedBy || `User #${t.user_id}`,
                     email: t.visitor_email || t.email,
-                    price: t.total_amount || t.price,
+                    price: Number(t.payment_amount) || Number(t.price) || 0,
                     purchaseDate: t.created_at,
                     visitDate: t.visit_date,
                     status: t.status,
-                    paymentStatus: t.payment_status || 'pending',
-                    paymentMethod: t.payment_method || 'cash',
+                    paymentStatus: t.payment_status || 'unpaid',
+                    paymentMethod: t.payment_method || null,
+                    paymentAmount: Number(t.payment_amount) || 0,
+                    paymentPaidAt: t.payment_paid_at || null,
+                    paymentReference: t.paymongo_payment_id || t.paymongo_checkout_session_id || null,
+                    refundStatus: t.refund_status || null,
+                    // A booking with no recorded amount still has a face value.
+                    totalVisitors: t.total_visitors || ((t.adult_quantity || 0) + (t.child_quantity || 0) + (t.bulusan_resident_quantity || 0)),
                     quantity: t.quantity || 1,
+                    adultQuantity: t.adult_quantity || 0,
+                    childQuantity: t.child_quantity || 0,
+                    residentQuantity: t.bulusan_resident_quantity || 0,
                     notes: t.notes,
                     residentIdImage: t.resident_id_image,
                     verificationStatus: t.verification_status || 'pending'
@@ -79,16 +96,10 @@ const AdminTickets = ({ globalSearch = '' }) => {
         }
     };
 
-    const getPaymentBadge = (status) => {
-        switch (status?.toLowerCase()) {
-            case 'paid': return 'bg-green-400/20 text-green-800 border-green-400/30';
-            case 'pending': return 'bg-yellow-500/20 text-yellow-700 border-yellow-500/30';
-            case 'not paid': return 'bg-orange-500/20 text-orange-700 border-orange-500/30';
-            case 'free': return 'bg-green-400/20 text-green-800 border-green-400/30';
-            case 'refunded': return 'bg-blue-500/20 text-blue-700 border-blue-500/30';
-            default: return 'bg-gray-500/20 text-gray-500 border-gray-500/30';
-        }
-    };
+    // Delegates to the shared helper so every status in the backend enum has a
+    // colour. The old local switch handled only 5 of 6, so 'unpaid', 'failed'
+    // and 'expired' all fell through to an undifferentiated grey.
+    const getPaymentBadge = (status) => paymentStatusBadge(status);
 
     const updateTicketStatus = async (ticketId, newStatus, reason = null) => {
         try {
@@ -401,9 +412,9 @@ const AdminTickets = ({ globalSearch = '' }) => {
                                     className="appearance-none bg-green-50 border border-green-300 rounded-xl py-2.5 pl-10 pr-8 text-sm text-gray-900 focus:outline-none focus:border-green-400 cursor-pointer"
                                 >
                                     <option value="all">All Payments</option>
-                                    <option value="pending">Payment Pending</option>
-                                    <option value="paid">Paid</option>
-                                    <option value="refunded">Refunded</option>
+                                    {PAYMENT_STATUSES.map((status) => (
+                                        <option key={status} value={status}>{paymentStatusLabel(status)}</option>
+                                    ))}
                                 </select>
                                 <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none">
                                     <ReiconCalendar className="w-4 h-4" />
@@ -484,13 +495,15 @@ const AdminTickets = ({ globalSearch = '' }) => {
                                         </td>
                                         <td className="px-6 py-4 text-gray-700">{ticket.visitDate?.split('T')[0]}</td>
                                         <td className="px-6 py-4 text-gray-900 font-medium">
-                                            {ticket.price === 0 ? 'FREE' : `₱${ticket.price?.toLocaleString()}`}
+                                            {ticketPaymentAmount(ticket) === 0
+                                                ? 'FREE'
+                                                : `P${ticketPaymentAmount(ticket).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
                                         </td>
                                         <td className="px-6 py-4">
                                             <div className="flex flex-col gap-1">
-                                                <span className="text-gray-900 capitalize text-sm">{ticket.paymentMethod || 'cash'}</span>
-                                                <span className={`inline-flex w-fit px-2 py-0.5 text-xs font-medium rounded-full border capitalize ${getPaymentBadge(ticket.paymentStatus)}`}>
-                                                    {ticket.paymentStatus}
+                                                <span className="text-gray-900 capitalize text-sm">{paymentMethodLabel(ticket.paymentMethod)}</span>
+                                                <span className={`inline-flex w-fit px-2 py-0.5 text-xs font-medium rounded-full border ${getPaymentBadge(ticket.paymentStatus)}`}>
+                                                    {paymentStatusLabel(ticket.paymentStatus)}
                                                 </span>
                                             </div>
                                         </td>
@@ -508,7 +521,7 @@ const AdminTickets = ({ globalSearch = '' }) => {
                                                 >
                                                     <ReiconEye className="w-4 h-4" />
                                                 </button>
-                                                {(ticket.paymentStatus === 'pending' || ticket.paymentStatus === 'not_paid' || ticket.paymentStatus === 'not paid') && (
+                                                {canMarkAsPaid(ticket.paymentStatus) && (
                                                     <button
                                                         onClick={() => handleMarkAsPaid(ticket.id)}
                                                         className="p-2 bg-green-50 hover:bg-green-400/10 border border-green-300 hover:border-green-400/50 text-gray-500 hover:text-green-800 rounded-lg transition-all"
@@ -587,10 +600,48 @@ const AdminTickets = ({ globalSearch = '' }) => {
                                 </div>
                                 <div>
                                     <span className="text-gray-500 text-sm">Payment</span>
-                                    <span className={`ml-2 inline-flex px-3 py-1 text-sm font-medium rounded-full border capitalize ${getPaymentBadge(selectedTicket.paymentStatus)}`}>
-                                        {selectedTicket.paymentStatus}
+                                    <span className={`ml-2 inline-flex px-3 py-1 text-sm font-medium rounded-full border ${getPaymentBadge(selectedTicket.paymentStatus)}`}>
+                                        {paymentStatusLabel(selectedTicket.paymentStatus)}
                                     </span>
                                 </div>
+                            </div>
+
+                            {/* Full payment detail. The table only needs the status; staff
+                                also need how it was paid, for how much, and the PayMongo
+                                reference when reconciling against the dashboard. */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div>
+                                    <span className="text-gray-500 text-sm">Payment method</span>
+                                    <p className="text-gray-900 text-sm font-medium">{paymentMethodLabel(selectedTicket.paymentMethod)}</p>
+                                </div>
+                                <div>
+                                    <span className="text-gray-500 text-sm">Amount paid</span>
+                                    <p className="text-gray-900 text-sm font-medium">
+                                        {ticketPaymentAmount(selectedTicket) === 0
+                                            ? 'FREE'
+                                            : `P${ticketPaymentAmount(selectedTicket).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                                    </p>
+                                </div>
+                                {selectedTicket.paymentPaidAt && (
+                                    <div>
+                                        <span className="text-gray-500 text-sm">Paid on</span>
+                                        <p className="text-gray-900 text-sm font-medium">
+                                            {new Date(selectedTicket.paymentPaidAt).toLocaleString()}
+                                        </p>
+                                    </div>
+                                )}
+                                {selectedTicket.refundStatus && (
+                                    <div>
+                                        <span className="text-gray-500 text-sm">Refund</span>
+                                        <p className="text-gray-900 text-sm font-medium capitalize">{selectedTicket.refundStatus}</p>
+                                    </div>
+                                )}
+                                {selectedTicket.paymentReference && (
+                                    <div className="sm:col-span-2">
+                                        <span className="text-gray-500 text-sm">PayMongo reference</span>
+                                        <p className="text-gray-900 text-sm font-medium break-all">{selectedTicket.paymentReference}</p>
+                                    </div>
+                                )}
                             </div>
 
                             {/* QR Code */}
@@ -719,7 +770,7 @@ const AdminTickets = ({ globalSearch = '' }) => {
                             )}
 
                             {/* Mark as Paid Button */}
-                            {(selectedTicket.paymentStatus === 'pending' || selectedTicket.paymentStatus === 'not_paid' || selectedTicket.paymentStatus === 'not paid') && (
+                            {canMarkAsPaid(selectedTicket.paymentStatus) && (
                                 <button
                                     onClick={() => handleMarkAsPaid(selectedTicket.id)}
                                     disabled={actionLoading}

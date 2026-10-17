@@ -353,7 +353,9 @@ const PostFeed = ({ posts, currentUser, isGuest = false, onRequireAuth, onRefres
                          <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-3 sm:px-5 mt-auto">
                              <div className="flex flex-wrap items-center gap-1 sm:gap-2">
                                 <button
-                                    className="flex min-h-11 min-w-11 items-center gap-2 px-3 text-base font-semibold text-black/70 hover:bg-black/5 hover:text-black transition-colors"
+                                    disabled={!onCommentClick}
+                                    title={onCommentClick ? 'View comments' : 'Comments unavailable here'}
+                                    className="flex min-h-11 min-w-11 items-center gap-2 px-3 text-base font-semibold text-black/70 hover:bg-black/5 hover:text-black transition-colors disabled:cursor-default disabled:opacity-40 disabled:hover:bg-transparent"
                                     onClick={(e) => {
                                         e.stopPropagation();
                                         if (onCommentClick) onCommentClick(post);

@@ -81,9 +81,9 @@ const TicketCard = ({ data }) => {
                     <Row label="Participants" value={String(data.participants ?? '—')} />
                 ) : (
                     <>
-                        {data.adults > 0 && <Row label="Adults" value={`${data.adults} × P40`} />}
-                        {data.children > 0 && <Row label="Children" value={`${data.children} × P20`} />}
-                        {data.residents > 0 && <Row label="Residents" value={`${data.residents} (FREE)`} />}
+                        {data.adults > 0 && <Row label="Adults" value={`${data.adults} x P${Number(data.adultPrice) || 0}`} />}
+                        {data.children > 0 && <Row label="Children" value={`${data.children} x P${Number(data.childPrice) || 0}`} />}
+                        {data.residents > 0 && <Row label="Residents" value={Number(data.residentPrice) > 0 ? `${data.residents} x P${Number(data.residentPrice)}` : `${data.residents} (FREE)`} />}
                         {data.visitors > 0 && <Row label="Visitors" value={String(data.visitors)} />}
                     </>
                 )}

@@ -1,0 +1,7 @@
+{
+    "qrphEnabled": true,
+    "adultPrice": 40,
+    "childPrice": 20,
+    "residentPrice": 0,
+    "currency": "PHP"
+}

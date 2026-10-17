@@ -1,15 +1,7 @@
-import { Gift as ReiconGift, Phone as ReiconPhone, Save as ReiconSave } from 'reicon-react';
+import { Save as ReiconSave } from 'reicon-react';
 import { useEffect, useState } from 'react';
 import { adminAPI } from '../../services/api-client';
 import { notify } from '../../utils/toast';
-
-const GiftIcon = ({ className = 'w-6 h-6' }) => (
-    <ReiconGift strokeWidth="2" className={className} />
-);
-
-const PhoneIcon = () => (
-    <ReiconPhone strokeWidth="2" className="w-5 h-5" />
-);
 
 const SaveIcon = () => (
     <ReiconSave strokeWidth="2" className="w-5 h-5" />
@@ -33,33 +25,30 @@ const Toggle = ({ checked, onChange, label }) => (
 const AdminSettings = ({ modalSection = null, onClose = null }) => {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
-    const [config, setConfig] = useState({
-        enabled: true,
-        gcashNumber: '',
-        accountName: '',
-        note: ''
-    });
     const [eventPayment, setEventPayment] = useState({ qrphEnabled: false, amountPerParticipant: 0 });
+    // Ticket payment is configured and stored entirely separately from event
+    // payment, so an admin can enable one without disturbing the other.
+    const [ticketPayment, setTicketPayment] = useState({ qrphEnabled: false, adultPrice: 40, childPrice: 20, residentPrice: 0 });
 
     useEffect(() => {
         const loadConfig = async () => {
             try {
-                const [res, paymentRes] = await Promise.all([
-                    adminAPI.getDonationConfig(),
-                    adminAPI.getEventPaymentConfig()
+                const [paymentRes, ticketRes] = await Promise.all([
+                    adminAPI.getEventPaymentConfig(),
+                    adminAPI.getTicketPaymentConfig()
                 ]);
-                if (res.success && res.config) {
-                    setConfig({
-                        enabled: Boolean(res.config.enabled),
-                        gcashNumber: res.config.gcashNumber || '',
-                        accountName: res.config.accountName || '',
-                        note: res.config.note || ''
-                    });
-                }
                 if (paymentRes.success && paymentRes.config) {
                     setEventPayment({
                         qrphEnabled: Boolean(paymentRes.config.qrphEnabled ?? paymentRes.config.enabled),
                         amountPerParticipant: Number(paymentRes.config.amountPerParticipant) || 0
+                    });
+                }
+                if (ticketRes.success && ticketRes.config) {
+                    setTicketPayment({
+                        qrphEnabled: Boolean(ticketRes.config.qrphEnabled ?? ticketRes.config.enabled),
+                        adultPrice: Number(ticketRes.config.adultPrice) || 0,
+                        childPrice: Number(ticketRes.config.childPrice) || 0,
+                        residentPrice: Number(ticketRes.config.residentPrice) || 0
                     });
                 }
             } catch {
@@ -74,16 +63,16 @@ const AdminSettings = ({ modalSection = null, onClose = null }) => {
     const handleSave = async () => {
         setSaving(true);
         try {
-            const [donationRes, eventPaymentRes] = await Promise.all([
-                adminAPI.updateDonationConfig(config),
-                adminAPI.updateEventPaymentConfig(eventPayment)
+            const [eventPaymentRes, ticketPaymentRes] = await Promise.all([
+                adminAPI.updateEventPaymentConfig(eventPayment),
+                adminAPI.updateTicketPaymentConfig(ticketPayment)
             ]);
 
-            if (donationRes?.success && eventPaymentRes?.success) {
+            if (eventPaymentRes?.success && ticketPaymentRes?.success) {
                 notify.success('Settings saved.');
             } else {
-                const failedResponse = !donationRes?.success ? donationRes : eventPaymentRes;
-                notify.error(failedResponse?.message || "Couldn't save settings.");
+                const failed = !eventPaymentRes?.success ? eventPaymentRes : ticketPaymentRes;
+                notify.error(failed?.message || "Couldn't save settings.");
             }
         } catch {
             notify.error("Couldn't save settings. Please try again.");
@@ -101,9 +90,9 @@ const AdminSettings = ({ modalSection = null, onClose = null }) => {
                 <div className="relative flex flex-col justify-between gap-6 md:flex-row md:items-end">
                     <div>
                         <p className="mb-3 text-xs font-bold uppercase tracking-[0.18em] text-green-950">Administration</p>
-                        <h1 className="text-3xl font-bold tracking-tight md:text-4xl">{modalSection ? (modalSection === 'donations' ? 'Donation settings' : 'Event payment settings') : 'System settings'}</h1>
+                        <h1 className="text-3xl font-bold tracking-tight md:text-4xl">{modalSection === 'tickets' ? 'Ticket payment settings' : modalSection === 'events' ? 'Event payment settings' : 'System settings'}</h1>
                         <p className="mt-2 max-w-2xl text-sm leading-6 text-green-950/80 md:text-base">
-                            Control visitor donations and event reservation payments from one place.
+                            Control zoo admission and event reservation payments separately.
                         </p>
                     </div>
                     {!loading && !modalSection && (
@@ -131,9 +120,9 @@ const AdminSettings = ({ modalSection = null, onClose = null }) => {
                                 <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-100 text-xs text-emerald-700">01</span>
                                 Overview
                             </a>
-                            <a href="#donations" className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-emerald-50 hover:text-emerald-800">
+                            <a href="#tickets" className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-emerald-50 hover:text-emerald-800">
                                 <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-100 text-xs text-emerald-700">02</span>
-                                Donations
+                                Ticket payments
                             </a>
                             <a href="#events" className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-emerald-50 hover:text-emerald-800">
                                 <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-100 text-xs text-emerald-700">03</span>
@@ -157,10 +146,10 @@ const AdminSettings = ({ modalSection = null, onClose = null }) => {
                             <div className="grid gap-3 sm:grid-cols-2">
                                 <div className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
                                     <div className="flex items-center gap-3">
-                                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700"><GiftIcon className="h-5 w-5" /></span>
-                                        <div><p className="font-semibold text-slate-900">Online donations</p><p className="text-xs text-slate-500">Visitor-facing feature</p></div>
+                                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 font-bold text-emerald-700">₱</span>
+                                        <div><p className="font-semibold text-slate-900">Ticket payments</p><p className="text-xs text-slate-500">PayMongo QR Ph</p></div>
                                     </div>
-                                    <StatusBadge enabled={config.enabled} />
+                                     <StatusBadge enabled={ticketPayment.qrphEnabled} />
                                 </div>
                                 <div className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
                                     <div className="flex items-center gap-3">
@@ -172,31 +161,84 @@ const AdminSettings = ({ modalSection = null, onClose = null }) => {
                             </div>
                         </section>}
 
-                        {(!modalSection || modalSection === 'donations') && <section id="donations" className="scroll-mt-6 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+                        
+                                                {(!modalSection || modalSection === 'tickets') && <section id="tickets" className="scroll-mt-6 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
                             <div className="flex flex-col gap-4 border-b border-slate-100 p-5 sm:flex-row sm:items-center sm:justify-between md:p-6">
                                 <div className="flex items-start gap-4">
-                                    <span className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700"><GiftIcon /></span>
-                                    <div><h2 className="text-lg font-bold text-slate-900">Donation settings</h2><p className="mt-1 text-sm text-slate-500">Publish your GCash details on the visitor donation page.</p></div>
+                                    <span className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-lg font-bold text-emerald-700">&#8369;</span>
+                                    <div>
+                                        <h2 className="text-lg font-bold text-slate-900">Ticket payments</h2>
+                                        <p className="mt-1 text-sm text-slate-500">Accept PayMongo QR Ph payments for zoo admission tickets.</p>
+                                    </div>
                                 </div>
-                                <div className="flex items-center justify-between gap-3 sm:justify-end"><StatusBadge enabled={config.enabled} /><Toggle label="Enable online donations" checked={config.enabled} onChange={(e) => setConfig((current) => ({ ...current, enabled: e.target.checked }))} /></div>
+                                <div className="flex items-center justify-between gap-3 sm:justify-end">
+                                    <StatusBadge enabled={ticketPayment.qrphEnabled} />
+                                    <Toggle
+                                        label="Enable ticket payments"
+                                        checked={ticketPayment.qrphEnabled}
+                                        onChange={(e) => setTicketPayment((current) => ({ ...current, qrphEnabled: e.target.checked }))}
+                                    />
+                                </div>
                             </div>
                             <div className="p-5 md:p-6">
-                                <div className="mb-5 flex items-center gap-3">
-                                    <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-100 text-blue-600"><PhoneIcon /></span>
-                                    <div><h3 className="font-semibold text-slate-900">GCash payment details</h3><p className="text-xs text-slate-500">Visible to visitors when donations are enabled.</p></div>
+                                <div className="mb-5">
+                                    <p className="font-semibold text-slate-900">Admission prices</p>
+                                    <p className="text-xs text-slate-500">These rates drive the checkout total, the admin dashboard and every revenue report.</p>
                                 </div>
-                                <div className="grid gap-5 md:grid-cols-2">
-                                    <div><label htmlFor="gcash-number" className="mb-2 block text-sm font-semibold text-slate-700">GCash number</label><input id="gcash-number" type="text" value={config.gcashNumber} onChange={(e) => setConfig((current) => ({ ...current, gcashNumber: e.target.value.slice(0, 20) }))} placeholder="e.g. 09171234567" className={inputClassName} /></div>
-                                    <div><label htmlFor="account-name" className="mb-2 block text-sm font-semibold text-slate-700">Account name</label><input id="account-name" type="text" value={config.accountName} onChange={(e) => setConfig((current) => ({ ...current, accountName: e.target.value.slice(0, 60) }))} placeholder="e.g. Bulusan Zoo & Wildlife Park" className={inputClassName} /></div>
+                                <div className="grid gap-5 md:grid-cols-3">
+                                    <div>
+                                        <label htmlFor="adult-price" className="mb-2 block text-sm font-semibold text-slate-700">Adult (18+)</label>
+                                        <div className="relative">
+                                            <span className="absolute inset-y-0 left-0 flex items-center border-r border-slate-200 px-4 font-semibold text-slate-500">PHP</span>
+                                            <input
+                                                id="adult-price"
+                                                type="number"
+                                                min="0"
+                                                step="0.01"
+                                                value={ticketPayment.adultPrice}
+                                                onChange={(e) => setTicketPayment((current) => ({ ...current, adultPrice: e.target.value }))}
+                                                className={`${inputClassName} pl-20`}
+                                            />
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label htmlFor="child-price" className="mb-2 block text-sm font-semibold text-slate-700">Child (4-17)</label>
+                                        <div className="relative">
+                                            <span className="absolute inset-y-0 left-0 flex items-center border-r border-slate-200 px-4 font-semibold text-slate-500">PHP</span>
+                                            <input
+                                                id="child-price"
+                                                type="number"
+                                                min="0"
+                                                step="0.01"
+                                                value={ticketPayment.childPrice}
+                                                onChange={(e) => setTicketPayment((current) => ({ ...current, childPrice: e.target.value }))}
+                                                className={`${inputClassName} pl-20`}
+                                            />
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label htmlFor="resident-price" className="mb-2 block text-sm font-semibold text-slate-700">Bulusan resident</label>
+                                        <div className="relative">
+                                            <span className="absolute inset-y-0 left-0 flex items-center border-r border-slate-200 px-4 font-semibold text-slate-500">PHP</span>
+                                            <input
+                                                id="resident-price"
+                                                type="number"
+                                                min="0"
+                                                step="0.01"
+                                                value={ticketPayment.residentPrice}
+                                                onChange={(e) => setTicketPayment((current) => ({ ...current, residentPrice: e.target.value }))}
+                                                className={`${inputClassName} pl-20`}
+                                            />
+                                        </div>
+                                    </div>
                                 </div>
-                                <div className="mt-5">
-                                    <div className="mb-2 flex items-center justify-between"><label htmlFor="donor-note" className="text-sm font-semibold text-slate-700">Message to donors <span className="font-normal text-slate-400">(optional)</span></label><span className="text-xs text-slate-400">{config.note.length}/300</span></div>
-                                    <textarea id="donor-note" value={config.note} onChange={(e) => setConfig((current) => ({ ...current, note: e.target.value.slice(0, 300) }))} rows={4} placeholder="A short thank-you note or message shown on the donation page." className={`${inputClassName} resize-none`} />
+                                <p className="mt-3 text-xs text-slate-500">Residents verify on-site with a valid ID. Set their price to 0 for free entry; a booking made up entirely of free tickets has nothing to pay online.</p>
+                                <div className="mt-5 rounded-xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm leading-6 text-blue-800">
+                                    PayMongo credentials must be configured on the backend before enabling this option. Event reservation payments are configured separately below.
                                 </div>
                             </div>
                         </section>}
-
-                        {(!modalSection || modalSection === 'events') && <section id="events" className="scroll-mt-6 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+{(!modalSection || modalSection === 'events') && <section id="events" className="scroll-mt-6 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
                             <div className="flex flex-col gap-4 border-b border-slate-100 p-5 sm:flex-row sm:items-center sm:justify-between md:p-6">
                                 <div className="flex items-start gap-4">
                                     <span className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-blue-100 text-lg font-bold text-blue-700">₱</span>
@@ -211,7 +253,7 @@ const AdminSettings = ({ modalSection = null, onClose = null }) => {
                         </section>}
 
                         <div className="sticky bottom-3 z-10 flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white/95 p-3 shadow-lg backdrop-blur-sm sm:flex-row sm:items-center sm:justify-between sm:px-4">
-                            <p className="text-xs text-slate-500 sm:text-sm">Review both sections before applying your changes.</p>
+                            <p className="text-xs text-slate-500 sm:text-sm">Review the settings before applying your changes.</p>
                             <button type="button" onClick={handleSave} disabled={saving} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-emerald-600 px-6 py-3 font-semibold text-white shadow-sm transition hover:bg-emerald-700 focus:outline-none focus:ring-4 focus:ring-emerald-200 disabled:cursor-not-allowed disabled:opacity-60">
                                 {saving ? <span className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" /> : <SaveIcon />}
                                 {saving ? 'Saving settings...' : 'Save settings'}

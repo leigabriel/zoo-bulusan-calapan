@@ -4,8 +4,79 @@ import { useAuth } from '../../context/AuthContext';
 import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode';
 import { reservationAPI } from '../../services/api-client';
 import { notify } from '../../utils/toast';
+import { paymentStatusBadge, paymentStatusLabel, paymentMethodLabel, isPaidAtVenue } from '../../utils/payment-status';
 
 const formatMoney = (cents, currency = 'PHP') => `${currency} ${(Number(cents || 0) / 100).toFixed(2)}`;
+
+/**
+ * Read-only payment summary for a scanned reservation.
+ *
+ * Ticket reservations previously showed no payment information at all, and event
+ * reservations showed the status but not the method - so staff could not tell a
+ * settled QR Ph booking from one still owed at the gate. There is no refund
+ * action here on purpose: this is a check-in screen, and 'Pay at Bulusan' is
+ * cash settled at the gate, so it can never be reversed here.
+ */
+// The peso sign must be the real character, not the HTML entity. JSX decodes
+// "&#8369;" when it appears as literal text in the markup, but a JS string is
+// rendered verbatim - so this helper used to print the entity itself.
+const peso = (value) =>
+    `₱${Number(value || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+const ScannedPayment = ({ scanResult }) => {
+    const status = scanResult.paymentStatus;
+    const method = scanResult.paymentMethod;
+    const recorded = Number(scanResult.paymentAmount || 0);
+    // A ticket grid above this block already shows the live face value, so
+    // repeating it here produced two different "Amount" figures on one screen -
+    // the current rate and whatever was stored when the booking was made.
+    const showRecorded = scanResult.type === 'event' || recorded > 0;
+    return (
+        <div className="border-t border-gray-200 pt-4 sm:col-span-2">
+            <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-gray-400">Payment</p>
+            <div className="mt-2 grid grid-cols-2 gap-4 sm:grid-cols-4">
+                <div>
+                    <p className="text-[10px] font-bold uppercase text-gray-400">Method</p>
+                    <p className="mt-1 text-sm font-bold text-gray-900">{paymentMethodLabel(method)}</p>
+                </div>
+                <div>
+                    <p className="text-[10px] font-bold uppercase text-gray-400">Status</p>
+                    <span className={`mt-1 inline-flex rounded-full border px-2 py-0.5 text-xs font-bold ${paymentStatusBadge(status)}`}>
+                        {paymentStatusLabel(status)}
+                    </span>
+                </div>
+                {showRecorded && (
+                    <div>
+                        <p className="text-[10px] font-bold uppercase text-gray-400">
+                            {scanResult.type === 'event' ? 'Amount' : 'Amount paid'}
+                        </p>
+                        <p className="mt-1 text-sm font-bold text-gray-900">
+                            {recorded === 0 ? 'Free entry' : peso(recorded)}
+                        </p>
+                    </div>
+                )}
+                {scanResult.paymentPaidAt && (
+                    <div>
+                        <p className="text-[10px] font-bold uppercase text-gray-400">Paid on</p>
+                        <p className="mt-1 text-sm font-bold text-gray-900">
+                            {new Date(scanResult.paymentPaidAt).toLocaleString()}
+                        </p>
+                    </div>
+                )}
+            </div>
+            {isPaidAtVenue(method) && (
+                <p className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5 text-xs leading-5 text-amber-800">
+                    Settled in cash at the gate, so no online refund applies to this booking.
+                </p>
+            )}
+            {scanResult.paymentReference && (
+                <p className="mt-2 break-all text-[11px] text-gray-500">
+                    PayMongo reference: <span className="font-mono">{scanResult.paymentReference}</span>
+                </p>
+            )}
+        </div>
+    );
+};
 
 const ResultModal = ({ scanResult, loading, onClose, onConfirm }) => {
     if (!scanResult) return null;
@@ -104,14 +175,20 @@ const ResultModal = ({ scanResult, loading, onClose, onConfirm }) => {
                                 <div><p className="text-[10px] font-bold uppercase text-gray-400">Adults</p><p className="mt-1 font-bold text-gray-900">{scanResult.adultQuantity || 0}</p></div>
                                 <div><p className="text-[10px] font-bold uppercase text-gray-400">Children</p><p className="mt-1 font-bold text-gray-900">{scanResult.childQuantity || 0}</p></div>
                                 <div><p className="text-[10px] font-bold uppercase text-gray-400">Residents</p><p className="mt-1 font-bold text-gray-900">{scanResult.residentQuantity || 0}</p></div>
-                                <div><p className="text-[10px] font-bold uppercase text-gray-400">Amount</p><p className="mt-1 font-bold text-gray-900">&#8369;{Number(scanResult.ticketAmount || 0).toLocaleString()}</p></div>
+                                <div className="min-w-0"><p className="text-[10px] font-bold uppercase text-gray-400">Amount due</p><p className="mt-1 break-words font-bold text-gray-900">{peso(scanResult.ticketAmount)}</p></div>
                             </div>
                         ) : (
-                            <div className="grid grid-cols-2 gap-4 border-t border-gray-200 pt-4 sm:col-span-2">
-                                <div><p className="text-[10px] font-bold uppercase text-gray-400">Payment</p><p className="mt-1 font-bold text-gray-900">&#8369;{Number(scanResult.paymentAmount || 0).toLocaleString()}</p></div>
-                                <div><p className="text-[10px] font-bold uppercase text-gray-400">Payment status</p><p className="mt-1 font-bold uppercase text-gray-900">{scanResult.paymentStatus || 'unpaid'}</p></div>
+                            /* Events keep only the end time here; the payment block below covers both. */
+                            <div className="grid grid-cols-2 gap-4 sm:col-span-2">
                                 {scanResult.eventEndTime && <div><p className="text-[10px] font-bold uppercase text-gray-400">End time</p><p className="mt-1 font-bold text-gray-900">{scanResult.eventEndTime}</p></div>}
                             </div>
+                        )}
+
+                        {/* Ticket and event reservations both surface their payment
+                            state here. Walk-in sales already itemise cash in their own
+                            block above, so they are excluded. */}
+                        {scanResult.type !== 'walk_in' && (
+                            <ScannedPayment scanResult={scanResult} />
                         )}
                     </div>
                 </div>

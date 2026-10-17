@@ -5,6 +5,7 @@ import { getProfileImageUrl, messageAPI, userAPI } from '../services/api-client'
 import LogoutModal from './common/LogoutModal';
 import AnimalClassifier from './features/ai-scanner/AnimalClassifier';
 import ReservationHistoryPanel from './features/ReservationHistoryPanel';
+import MyPostsPanel from './features/MyPostsPanel';
 import Settings from '../pages/user/Settings';
 import UserProfile from '../pages/user/UserProfile';
 import ConfirmModal from './common/ConfirmModal';
@@ -12,7 +13,7 @@ import useScrollLock from '../hooks/use-scroll-lock';
 import {
     Home, Pet, Leaf, Calendar, Bell, Menu, CloseCircle, Ticket,
     People, Message, Globe, Game, Setting, Camera, Lifebuoy,
-    Headset, Logout, Information, HandHeart
+    Headset, Logout, Information, NoteText
 } from 'reicon-react';
 
 const env = (typeof process !== 'undefined' && process.env) ? process.env : {};
@@ -49,7 +50,7 @@ const ICON_COMPONENTS = {
     support: Headset,
     logout: Logout,
     about: Information,
-    donation: HandHeart,
+    posts: NoteText,
 };
 
 const NAV_LINKS = [
@@ -128,6 +129,7 @@ const Header = () => {
     const [showSidePanel, setShowSidePanel] = useState(false);
     const [showAIScanner, setShowAIScanner] = useState(false);
     const [showHistoryPanel, setShowHistoryPanel] = useState(false);
+    const [showMyPostsPanel, setShowMyPostsPanel] = useState(false);
     const [showSettingsPanel, setShowSettingsPanel] = useState(false);
     const [showProfilePanel, setShowProfilePanel] = useState(false);
     const [showNotificationPanel, setShowNotificationPanel] = useState(false);
@@ -146,7 +148,6 @@ const Header = () => {
     const [emailSent, setEmailSent] = useState(false);
     const [emailError, setEmailError] = useState('');
     const [isLoggingOut, setIsLoggingOut] = useState(false);
-    const [donationEnabled, setDonationEnabled] = useState(false);
 
     const navigate = useNavigate();
     const location = useLocation();
@@ -154,6 +155,7 @@ const Header = () => {
     const notificationPanelRef = useRef(null);
     const lastScrollY = useRef(0);
     const hasOpenOverlay = isMenuOpen || showSidePanel || showAIScanner || showHistoryPanel
+        || showMyPostsPanel
         || showSettingsPanel || showProfilePanel || showNotificationPanel || showMiniZooGame
         || showEmailModal || showLogoutModal;
 
@@ -181,20 +183,6 @@ const Header = () => {
         window.addEventListener('scroll', onScroll, { passive: true });
         return () => window.removeEventListener('scroll', onScroll);
     }, [isMenuOpen]);
-
-    useEffect(() => {
-        const loadDonationConfig = async () => {
-            try {
-                const res = await userAPI.getDonationConfig();
-                if (res?.success && res.config) {
-                    setDonationEnabled(Boolean(res.config.enabled));
-                }
-            } catch {
-                setDonationEnabled(false);
-            }
-        };
-        loadDonationConfig();
-    }, []);
 
     useEffect(() => {
         setIsMenuOpen(false);
@@ -348,6 +336,7 @@ const Header = () => {
     };
 
     const handleOpenReservationHistory = () => { closeSidePanel(); setShowHistoryPanel(true); };
+    const handleOpenMyPosts = () => { closeSidePanel(); setShowMyPostsPanel(true); };
     const handleOpenSettings = () => { setShowSettingsPanel(true); };
     const handleOpenProfile = () => { setShowProfilePanel(true); };
     const handleOpenMiniZooGame = () => { setShowMiniZooGame(true); };
@@ -368,6 +357,7 @@ const Header = () => {
 
     const accountItems = [
         { iconKey: 'ticket', label: 'My Reservations', action: handleOpenReservationHistory },
+        { iconKey: 'posts', label: 'My Posts', action: handleOpenMyPosts },
         { iconKey: 'events', label: 'My Events', path: '/my-events' },
         { iconKey: 'messages', label: 'My Messages', path: '/my-messages' },
     ];
@@ -375,7 +365,6 @@ const Header = () => {
     const exploreItems = [
         { iconKey: 'wildlife', label: 'Wildlife Origins', path: '/map' },
         { iconKey: 'game', label: 'Mini Zoo Game', action: handleOpenMiniZooGame },
-        ...(donationEnabled ? [{ iconKey: 'donation', label: 'Donate', path: '/donation' }] : []),
     ];
 
     const avatarSrc = getProfileImageUrl(user?.profileImage || user?.profile_image) || '/profile-img/default-avatar.svg';
@@ -882,6 +871,11 @@ const Header = () => {
             <ReservationHistoryPanel
                 isOpen={showHistoryPanel}
                 onClose={() => setShowHistoryPanel(false)}
+            />
+
+            <MyPostsPanel
+                isOpen={showMyPostsPanel}
+                onClose={() => setShowMyPostsPanel(false)}
             />
 
             {showMiniZooGame && (

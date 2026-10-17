@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { CloseCircle, Gift, Calendar } from 'reicon-react';
+import { CloseCircle, Calendar, Ticket } from 'reicon-react';
 import AdminSettings from '../../pages/admin/AdminSettings';
 
 const categories = [
-    { id: 'donations', title: 'Donation settings', description: 'Manage GCash details and online donations.', Icon: Gift },
+    { id: 'tickets', title: 'Ticket payments', description: 'Manage zoo admission prices and PayMongo payments.', Icon: Ticket },
     { id: 'events', title: 'Event payments', description: 'Manage reservation fees and PayMongo payments.', Icon: Calendar }
 ];
 

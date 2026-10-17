@@ -94,7 +94,7 @@ const Help = () => {
         { id: 'all', label: 'All Topics', icon: Icons.Book },
         { id: 'tickets', label: 'Tickets & Entry', icon: Icons.Ticket },
         { id: 'reservations', label: 'Reservations & Events', icon: Icons.Clock },
-        { id: 'payments', label: 'Donations & Payments', icon: Icons.Ticket },
+        { id: 'payments', label: 'Payments', icon: Icons.Ticket },
         { id: 'ai', label: 'AI Scanner & Assistant', icon: Icons.Robot },
         { id: 'map', label: 'Map & Navigation', icon: Icons.Map },
         { id: 'account', label: 'Account & Profile', icon: Icons.User },
@@ -171,11 +171,6 @@ const Help = () => {
             category: 'community',
             question: 'How do I report a post or message?',
             answer: 'Use the Report option on a post or message to flag content. Our staff review reports and take action based on guidelines.'
-        },
-        {
-            category: 'payments',
-            question: 'How do I make a donation?',
-            answer: 'Open Donation from the menu, copy the displayed GCash number, send your chosen amount in the GCash app, then keep your transaction reference for your records.'
         },
         {
             category: 'payments',

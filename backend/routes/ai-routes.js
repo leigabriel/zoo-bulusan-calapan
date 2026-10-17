@@ -1,4 +1,16 @@
+// Ticket prices for AI-summarised booking totals. Read once per request
+// by refreshTicketPrices(); kept as a snapshot so the template literal
+// below can reference it directly.
+let ticketPrices = { adult: 40, child: 20, resident: 0 };
+const refreshTicketPrices = () => {
+    const config = readTicketPaymentConfig();
+    const safe = (v, f) => (Number.isFinite(Number(v)) && Number(v) >= 0 ? Number(v) : f);
+    ticketPrices = { adult: safe(config.adultPrice, 40), child: safe(config.childPrice, 20), resident: safe(config.residentPrice, 0) };
+    return ticketPrices;
+};
+
 const express = require('express');
+const { readConfig: readTicketPaymentConfig } = require('../config/ticket-payment-config');
 const router = express.Router();
 const crypto = require('crypto');
 const { protect, authorize, optionalAuth } = require('../middleware/auth');
@@ -40,13 +52,23 @@ const TICKET_TYPE_LABELS = {
     resident: 'Bulusan resident (with valid ID)'
 };
 
-const formatTicketPriceLines = () => Object.values(appConfig.ticketTypes)
-    .map((ticketType) => {
-        const label = TICKET_TYPE_LABELS[ticketType.name] || ticketType.name;
-        const isFree = ticketType.price === 'free' || Number(ticketType.price) === 0;
-        return `- ${label}: ${isFree ? 'Free' : `P${ticketType.price}`}`;
-    })
-    .join('\n');
+// Read at call time, not module load, so the assistant quotes whatever the
+// admin last saved. Previously this read appConfig.ticketTypes, whose 40/20
+// defaults were a second, independent copy of the prices.
+const formatTicketPriceLines = () => {
+    const config = readTicketPaymentConfig();
+    return [
+        { name: 'adult', price: config.adultPrice },
+        { name: 'child', price: config.childPrice },
+        { name: 'resident', price: config.residentPrice }
+    ]
+        .map((ticketType) => {
+            const label = TICKET_TYPE_LABELS[ticketType.name] || ticketType.name;
+            const isFree = Number(ticketType.price) === 0;
+            return `- ${label}: ${isFree ? 'Free' : `P${ticketType.price}`}`;
+        })
+        .join('\n');
+};
 
 // current application information supplied to Jiji as context data
 const buildVisitorInfoContext = () => `
@@ -308,6 +330,10 @@ const buildUserReservationContext = (userData) => {
 };
 
 const buildChatCards = (message, userData, dynamicData) => {
+    // Refresh before building any totals. Declared-but-never-called left
+    // ticketPrices pinned to the 40/20 defaults, so an admin price change would
+    // never reach the assistant's quoted totals.
+    refreshTicketPrices();
     const lowerMsg = String(message || '').toLowerCase();
     const cards = [];
     let action = null;
@@ -331,7 +357,10 @@ const buildChatCards = (message, userData, dynamicData) => {
                     children: t.children,
                     residents: t.residents,
                     visitors: t.totalVisitors,
-                    total: ((t.adults || 0) * 40) + ((t.children || 0) * 20),
+                    adultPrice: ticketPrices.adult,
+                    childPrice: ticketPrices.child,
+                    residentPrice: ticketPrices.resident,
+                    total: ((t.adults || 0) * ticketPrices.adult) + ((t.children || 0) * ticketPrices.child),
                     status: t.status
                 }));
 

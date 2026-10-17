@@ -1,4 +1,28 @@
 const db = require('../config/database');
+const { readConfig: readTicketPaymentConfig } = require('../config/ticket-payment-config');
+
+/**
+ * Adult/child/resident prices from the admin-editable ticket payment config.
+ * These were bare 40/20 literals repeated throughout this file, so a price
+ * change in settings did not reach the ticket pages at all. Values are coerced
+ * to finite non-negative numbers and interpolated as numeric literals so the
+ * config file cannot inject SQL.
+ *
+ * @returns {{adult: number, child: number, resident: number}}
+ */
+const ticketPriceLiterals = () => {
+    const config = readTicketPaymentConfig();
+    const safe = (value, fallback) => {
+        const amount = Number(value);
+        return Number.isFinite(amount) && amount >= 0 ? amount : fallback;
+    };
+    return {
+        adult: safe(config.adultPrice, 40),
+        child: safe(config.childPrice, 20),
+        resident: safe(config.residentPrice, 0)
+    };
+};
+
 
 class Ticket {
     // Dashboard statistics - uses ticket_reservations table
@@ -91,12 +115,13 @@ class Ticket {
     }
 
     static async getTotalRevenue() {
+        const P = ticketPriceLiterals();
         // Ticket reservations are free entry system - return 0 or calculate from visitor counts
         // Since this zoo uses reservations (not purchases), revenue is calculated differently
         const [rows] = await db.query(
             `SELECT COALESCE(SUM(
-                (adult_quantity * 40) + 
-                (child_quantity * 20) + 
+                (adult_quantity * ${P.adult}) + 
+                (child_quantity * ${P.child}) + 
                 (bulusan_resident_quantity * 0)
             ), 0) as total FROM ticket_reservations WHERE status IN ('confirmed', 'completed')`
         );
@@ -104,9 +129,10 @@ class Ticket {
     }
 
     static async getRevenueByDateRange(startDate, endDate) {
+        const P = ticketPriceLiterals();
         const [rows] = await db.query(
             `SELECT DATE(created_at) as date, 
-                    COALESCE(SUM((adult_quantity * 40) + (child_quantity * 20)), 0) as revenue, 
+                    COALESCE(SUM((adult_quantity * ${P.adult}) + (child_quantity * ${P.child})), 0) as revenue, 
                     COUNT(*) as count 
              FROM ticket_reservations 
              WHERE created_at BETWEEN ? AND ? AND status NOT IN ('cancelled', 'no_show')
@@ -248,6 +274,7 @@ class Ticket {
 
     // Get weekly analytics data (last 7 days)
     static async getWeeklyAnalytics(timeRange = 'week') {
+        const P = ticketPriceLiterals();
         let dateCondition = 'DATE_SUB(CURDATE(), INTERVAL 7 DAY)';
         if (timeRange === 'month') {
             dateCondition = 'DATE_SUB(CURDATE(), INTERVAL 30 DAY)';
@@ -261,7 +288,7 @@ class Ticket {
                 DAYNAME(reservation_date) as day,
                 COUNT(*) as tickets,
                 COALESCE(SUM(total_visitors), 0) as visitors,
-                COALESCE(SUM((adult_quantity * 40) + (child_quantity * 20)), 0) as revenue
+                COALESCE(SUM((adult_quantity * ${P.adult}) + (child_quantity * ${P.child})), 0) as revenue
              FROM ticket_reservations 
              WHERE reservation_date >= ${dateCondition}
              AND status IN ('confirmed', 'completed')
@@ -273,6 +300,7 @@ class Ticket {
 
     // Get monthly analytics data (variable based on timeRange)
     static async getMonthlyAnalytics(timeRange = 'week') {
+        const P = ticketPriceLiterals();
         let intervalMonths = 12;
         if (timeRange === 'week') {
             intervalMonths = 3;
@@ -288,7 +316,7 @@ class Ticket {
                 DATE_FORMAT(reservation_date, '%b') as monthName,
                 COUNT(*) as tickets,
                 COALESCE(SUM(total_visitors), 0) as visitors,
-                COALESCE(SUM((adult_quantity * 40) + (child_quantity * 20)), 0) as revenue
+                COALESCE(SUM((adult_quantity * ${P.adult}) + (child_quantity * ${P.child})), 0) as revenue
              FROM ticket_reservations 
              WHERE reservation_date >= DATE_SUB(CURDATE(), INTERVAL ${intervalMonths} MONTH)
              AND status IN ('confirmed', 'completed')
@@ -300,6 +328,7 @@ class Ticket {
 
     // Get ticket type distribution (with optional timeRange filter)
     static async getTicketTypeDistribution(timeRange = 'week') {
+        const P = ticketPriceLiterals();
         let dateCondition = '';
         if (timeRange === 'week') {
             dateCondition = 'AND reservation_date >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)';
@@ -313,14 +342,14 @@ class Ticket {
             `SELECT 
                 'adult' as type,
                 COALESCE(SUM(adult_quantity), 0) as count,
-                COALESCE(SUM(adult_quantity * 40), 0) as revenue
+                COALESCE(SUM(adult_quantity * ${P.adult}), 0) as revenue
              FROM ticket_reservations 
              WHERE status IN ('confirmed', 'completed') ${dateCondition}
              UNION ALL
              SELECT 
                 'child' as type,
                 COALESCE(SUM(child_quantity), 0) as count,
-                COALESCE(SUM(child_quantity * 20), 0) as revenue
+                COALESCE(SUM(child_quantity * ${P.child}), 0) as revenue
              FROM ticket_reservations 
              WHERE status IN ('confirmed', 'completed') ${dateCondition}
              UNION ALL
@@ -336,6 +365,7 @@ class Ticket {
 
     // Get tickets and revenue for a specific time range
     static async getStatsForTimeRange(timeRange = 'week') {
+        const P = ticketPriceLiterals();
         let dateCondition = 'DATE_SUB(CURDATE(), INTERVAL 7 DAY)';
         if (timeRange === 'month') {
             dateCondition = 'DATE_SUB(CURDATE(), INTERVAL 30 DAY)';
@@ -346,7 +376,7 @@ class Ticket {
         const [rows] = await db.query(
             `SELECT 
                 COUNT(*) as totalTickets,
-                COALESCE(SUM((adult_quantity * 40) + (child_quantity * 20)), 0) as totalRevenue,
+                COALESCE(SUM((adult_quantity * ${P.adult}) + (child_quantity * ${P.child})), 0) as totalRevenue,
                 COALESCE(SUM(total_visitors), 0) as totalVisitors
              FROM ticket_reservations 
              WHERE reservation_date >= ${dateCondition}
@@ -357,17 +387,19 @@ class Ticket {
 
     // Get daily stats for comparison
     static async getDailyComparison() {
+        const P = ticketPriceLiterals();
         const [rows] = await db.query(
             `SELECT 
                 (SELECT COUNT(*) FROM ticket_reservations WHERE DATE(created_at) = CURDATE()) as today_tickets,
                 (SELECT COUNT(*) FROM ticket_reservations WHERE DATE(created_at) = DATE_SUB(CURDATE(), INTERVAL 1 DAY)) as yesterday_tickets,
-                (SELECT COALESCE(SUM((adult_quantity * 40) + (child_quantity * 20)), 0) FROM ticket_reservations WHERE DATE(created_at) = CURDATE() AND status NOT IN ('cancelled', 'no_show')) as today_revenue,
-                (SELECT COALESCE(SUM((adult_quantity * 40) + (child_quantity * 20)), 0) FROM ticket_reservations WHERE DATE(created_at) = DATE_SUB(CURDATE(), INTERVAL 1 DAY) AND status NOT IN ('cancelled', 'no_show')) as yesterday_revenue`
+                (SELECT COALESCE(SUM((adult_quantity * ${P.adult}) + (child_quantity * ${P.child})), 0) FROM ticket_reservations WHERE DATE(created_at) = CURDATE() AND status NOT IN ('cancelled', 'no_show')) as today_revenue,
+                (SELECT COALESCE(SUM((adult_quantity * ${P.adult}) + (child_quantity * ${P.child})), 0) FROM ticket_reservations WHERE DATE(created_at) = DATE_SUB(CURDATE(), INTERVAL 1 DAY) AND status NOT IN ('cancelled', 'no_show')) as yesterday_revenue`
         );
         return rows[0];
     }
 
     static async getAnalyticsDashboard(timeRange = 'week') {
+        const P = ticketPriceLiterals();
         const days = { week: 7, month: 30, year: 365 }[timeRange] || 7;
         const active = '(is_deleted IS NULL OR is_deleted = FALSE)';
         const yearly = timeRange === 'year';
@@ -380,7 +412,7 @@ class Ticket {
         const [summaryRows, dailyRows, statusRows, weekdayRows, mixRows, rangeRows] = await Promise.all([
             db.query(`SELECT COUNT(*) AS reservations, COALESCE(SUM(total_visitors), 0) AS scheduledVisitors,
                 COALESCE(SUM(CASE WHEN checked_in_at IS NOT NULL OR status = 'completed' THEN total_visitors ELSE 0 END), 0) AS checkedInVisitors,
-                COALESCE(SUM(adult_quantity * 40 + child_quantity * 20), 0) AS estimatedFees,
+                COALESCE(SUM(adult_quantity * ${P.adult} + child_quantity * ${P.child}), 0) AS estimatedFees,
                 COALESCE(AVG(total_visitors), 0) AS averagePartySize,
                 (SELECT COUNT(*) FROM ticket_reservations WHERE ${active} AND ${period} AND status = 'pending') AS pendingReservations,
                 (SELECT COUNT(*) FROM ticket_reservations WHERE ${active} AND ${period} AND verification_status = 'pending' AND bulusan_resident_quantity > 0) AS pendingVerification
@@ -388,7 +420,7 @@ class Ticket {
             db.query(`SELECT ${bucket} AS date, COUNT(*) AS reservations,
                 COALESCE(SUM(total_visitors), 0) AS visitors,
                 COALESCE(SUM(CASE WHEN checked_in_at IS NOT NULL OR status = 'completed' THEN total_visitors ELSE 0 END), 0) AS checkedIn,
-                COALESCE(SUM(adult_quantity * 40 + child_quantity * 20), 0) AS estimatedFees
+                COALESCE(SUM(adult_quantity * ${P.adult} + child_quantity * ${P.child}), 0) AS estimatedFees
                 FROM ticket_reservations WHERE ${active} AND ${period} AND ${included}
                 GROUP BY ${bucket} ORDER BY date`),
             db.query(`SELECT status, COUNT(*) AS count, COALESCE(SUM(total_visitors), 0) AS visitors

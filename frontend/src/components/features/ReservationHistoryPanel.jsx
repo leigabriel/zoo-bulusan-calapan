@@ -7,6 +7,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import { notify } from '../../utils/toast';
 import useScrollLock from '../../hooks/use-scroll-lock';
 import { appendConsentRecord } from '../../utils/consent';
+import { canRequestRefund, isPaidAtVenue, paymentMethodLabel } from '../../utils/payment-status';
 import { Ticket, Calendar, X, Archive, RotateLeft, CreditCard, DollarCircle } from 'reicon-react';
 
 const LegacyIcons = {
@@ -74,6 +75,9 @@ const ReservationHistoryPanel = ({ isOpen, onClose, paymentReturn = false }) => 
     const [ticketReservations, setTicketReservations] = useState([]);
     const [eventReservations, setEventReservations] = useState([]);
     const [eventPaymentConfig, setEventPaymentConfig] = useState({ enabled: false, qrphEnabled: false, amountPerParticipant: 0 });
+    // Ticket admission pricing is configured separately on the backend, so it is
+    // fetched separately and must never fall back to the event figures.
+    const [ticketPaymentConfig, setTicketPaymentConfig] = useState({ qrphEnabled: false, adultPrice: 40, childPrice: 20, residentPrice: 0 });
     const [archivedReservations, setArchivedReservations] = useState([]);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState('all');
@@ -278,8 +282,8 @@ const ReservationHistoryPanel = ({ isOpen, onClose, paymentReturn = false }) => 
             y += 40;
 
             if (selectedReservation.type === 'ticket') {
-                if (selectedReservation.adult_quantity > 0) addRow('Adults', `${selectedReservation.adult_quantity} × P40`);
-                if (selectedReservation.child_quantity > 0) addRow('Children', `${selectedReservation.child_quantity} × P20`);
+                if (selectedReservation.adult_quantity > 0) addRow('Adults', `${selectedReservation.adult_quantity} x P${ticketPrice('adultPrice', 40)}`);
+                if (selectedReservation.child_quantity > 0) addRow('Children', `${selectedReservation.child_quantity} x P${ticketPrice('childPrice', 20)}`);
                 if (selectedReservation.bulusan_resident_quantity > 0) addRow('Bulusan Residents', `${selectedReservation.bulusan_resident_quantity} (FREE)`);
 
                 y += 10;
@@ -362,10 +366,15 @@ const ReservationHistoryPanel = ({ isOpen, onClose, paymentReturn = false }) => 
             ctx.strokeStyle = '#cbd5e1';
             ctx.beginPath(); ctx.moveTo(40, 140); ctx.lineTo(width - 40, 140); ctx.stroke();
             ctx.textAlign = 'left';
+            const isTicketReceipt = selectedReservation.type === 'ticket';
+            const receiptAmount = isTicketReceipt
+                ? calculateTotal(selectedReservation)
+                : getEventAmount(selectedReservation);
             const rows = [
-                ['Status', 'PAID'],
-                ['Payment method', 'QR Ph via PayMongo'],
-                ['Amount', `P${getEventAmount(selectedReservation).toFixed(2)}`],
+                ['Status', (selectedReservation.payment_status || 'paid').toUpperCase()],
+                ['Payment method', ['qrph', 'gcash'].includes(selectedReservation.payment_method) ? 'QR Ph via PayMongo' : selectedReservation.payment_method === 'pay_at_bulusan' ? 'Pay at Bulusan' : 'Not selected'],
+                ['Amount', receiptAmount > 0 ? `P${receiptAmount.toFixed(2)}` : 'Free entry'],
+                ...(isTicketReceipt ? [['Booking', 'Zoo admission'], ['Visitors', String(selectedReservation.total_visitors ?? '')]] : []),
                 ['Reservation', selectedReservation.reservation_reference || '-'],
                 ['Payment reference', selectedReservation.paymongo_payment_id || selectedReservation.paymongo_checkout_session_id || '-'],
                 ['Paid on', formatSafeDate(selectedReservation.payment_paid_at, { dateStyle: 'medium', timeStyle: 'short' })]
@@ -418,10 +427,11 @@ const ReservationHistoryPanel = ({ isOpen, onClose, paymentReturn = false }) => 
     const fetchReservations = async () => {
         try {
             setLoading(true);
-            const [ticketRes, eventRes, paymentConfigRes] = await Promise.all([
+            const [ticketRes, eventRes, paymentConfigRes, ticketPaymentConfigRes] = await Promise.all([
                 reservationAPI.getMyTicketReservations(),
                 reservationAPI.getMyEventReservations(),
-                reservationAPI.getEventPaymentConfig()
+                reservationAPI.getEventPaymentConfig(),
+                reservationAPI.getTicketPaymentConfig()
             ]);
 
             if (ticketRes.success) {
@@ -438,6 +448,9 @@ const ReservationHistoryPanel = ({ isOpen, onClose, paymentReturn = false }) => 
             }
             if (paymentConfigRes.success && paymentConfigRes.config) {
                 setEventPaymentConfig(paymentConfigRes.config);
+            }
+            if (ticketPaymentConfigRes.success && ticketPaymentConfigRes.config) {
+                setTicketPaymentConfig(ticketPaymentConfigRes.config);
             }
         } catch {
             notify.error("Couldn't load reservations.");
@@ -711,14 +724,27 @@ const explainFailure = (error, fallback) => {
         return styles[status] || styles.pending;
     };
 
-    const calculateTotal = (r) => ((r.adult_quantity || 0) * 40) + ((r.child_quantity || 0) * 20);
+    // Prices come from the ticket payment config. These were hardcoded 40/20, so a
+    // price change in settings left the receipt and card totals stale.
+    const ticketPrice = (key, fallback) => {
+        const value = Number(ticketPaymentConfig[key]);
+        return Number.isFinite(value) && value >= 0 ? value : fallback;
+    };
+    const calculateTotal = (r) => Math.round((
+        ((r.adult_quantity || 0) * ticketPrice('adultPrice', 40)) +
+        ((r.child_quantity || 0) * ticketPrice('childPrice', 20)) +
+        ((r.bulusan_resident_quantity || 0) * ticketPrice('residentPrice', 0))
+    ) * 100) / 100;
     const getEventAmount = (reservation) => {
         const storedAmount = Number(reservation?.payment_amount || 0);
         if (storedAmount > 0) return storedAmount;
         return Number(eventPaymentConfig.amountPerParticipant || 0);
     };
 
-    const handleEventPayment = async () => {
+    // Handles both reservation kinds. `type` decides which backend endpoints are
+    // called and which config gate applies; the flow itself is identical.
+    const handleReservationPayment = async () => {
+        const isTicketPayment = selectedReservation?.type === 'ticket';
         if (!selectedReservation || paymentLoading) return;
         if (!paymentConsent) {
             notify.warning('Please agree to the terms before proceeding with payment.');
@@ -727,18 +753,20 @@ const explainFailure = (error, fallback) => {
         try {
             setPaymentLoading(true);
             appendConsentRecord({
-                type: 'event_payment',
-                summary: `Event payment consent for reservation ${selectedReservation.reservation_reference} (${paymentOption === 'now' ? 'PayMongo QR Ph' : 'Pay at Bulusan'})`,
+                type: isTicketPayment ? 'ticket_payment' : 'event_payment',
+                summary: `${isTicketPayment ? 'Ticket' : 'Event'} payment consent for reservation ${selectedReservation.reservation_reference} (${paymentOption === 'now' ? 'PayMongo QR Ph' : 'Pay at Bulusan'})`,
                 data: {
                     reservationReference: selectedReservation.reservation_reference,
-                    eventName: selectedReservation.venue_event_name || selectedReservation.event_title,
+                    eventName: isTicketPayment ? 'Zoo admission' : (selectedReservation.venue_event_name || selectedReservation.event_title),
                     paymentMethod: paymentOption === 'now' ? 'paymongo_qr_ph' : 'pay_at_bulusan',
-                    amount: Number(selectedReservation.payment_amount || 0),
+                    amount: isTicketPayment ? calculateTotal(selectedReservation) : Number(selectedReservation.payment_amount || 0),
                     consented: true
                 }
             });
             if (paymentOption === 'now') {
-                const response = await reservationAPI.createEventPaymentCheckout(selectedReservation.id);
+                const response = isTicketPayment
+                    ? await reservationAPI.createTicketPaymentCheckout(selectedReservation.id)
+                    : await reservationAPI.createEventPaymentCheckout(selectedReservation.id);
                 if (!response.success || !response.checkoutUrl) {
                 throw new Error(response.message || 'Unable to start QR Ph payment.');
                 }
@@ -746,7 +774,9 @@ const explainFailure = (error, fallback) => {
                 return;
             }
 
-            const response = await reservationAPI.setEventPayAtBulusan(selectedReservation.id);
+            const response = isTicketPayment
+                    ? await reservationAPI.setTicketPayAtBulusan(selectedReservation.id)
+                    : await reservationAPI.setEventPayAtBulusan(selectedReservation.id);
             if (!response.success) throw new Error(response.message || 'Unable to select payment method.');
             notify.success('Payment method saved: Pay at Bulusan.');
             setShowPaymentDemo(false);
@@ -763,7 +793,9 @@ const explainFailure = (error, fallback) => {
         if (!selectedReservation || refundLoading) return;
         try {
             setRefundLoading(true);
-            const response = await reservationAPI.requestEventRefund(selectedReservation.id);
+            const response = selectedReservation.type === 'ticket'
+                ? await reservationAPI.requestTicketRefund(selectedReservation.id)
+                : await reservationAPI.requestEventRefund(selectedReservation.id);
             if (!response.success) throw new Error(response.message || 'Unable to request a refund.');
             notify.success('Refund request submitted for review.');
             setSelectedReservation(prev => prev ? { ...prev, refund_status: response.refundStatus || 'requested' } : prev);
@@ -1088,7 +1120,72 @@ const explainFailure = (error, fallback) => {
                                         </>
                                     )}
 
-                                     {selectedReservation.type === 'event' && (
+                                                                          {selectedReservation.type === 'ticket' && (
+                                         <>
+                                            <div className="pt-4">
+                                                <p className="text-xs text-slate-400 uppercase tracking-widest mb-3 font-semibold">Ticket Payment</p>
+                                                {selectedReservation.payment_status === 'paid' && (
+                                                    <div className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3">
+                                                        <p className="text-sm font-bold text-emerald-700">Payment successful</p>
+                                                        <p className="mt-1 text-xs text-emerald-600">{selectedReservation.payment_method === 'pay_at_bulusan' ? 'Your Pay at Bulusan payment has been recorded as paid.' : 'Your QR Ph payment has been confirmed and marked as paid.'}</p>
+                                                    </div>
+                                                )}
+                                                <div className="space-y-2 text-sm">
+                                                    <div className="flex justify-between gap-3"><span className="text-slate-500">Amount</span><span className="font-bold text-slate-800">{calculateTotal(selectedReservation) > 0 ? `${selectedReservation.currency === 'USD' ? '$' : 'P'}${calculateTotal(selectedReservation).toFixed(2)}` : 'Free entry'}</span></div>
+                                                    <div className="flex justify-between gap-3"><span className="text-slate-500">Method</span><span className="font-semibold text-slate-800">{['qrph', 'gcash'].includes(selectedReservation.payment_method) ? 'QR Ph via PayMongo' : selectedReservation.payment_method === 'pay_at_bulusan' ? 'Pay at Bulusan' : 'Not selected'}</span></div>
+                                                    <div className="flex justify-between gap-3"><span className="text-slate-500">Status</span><span className={`font-bold uppercase ${selectedReservation.payment_status === 'paid' ? 'text-emerald-600' : 'text-amber-600'}`}>{selectedReservation.payment_status || 'unpaid'}</span></div>
+                                                    {selectedReservation.payment_paid_at && <div className="flex justify-between gap-3"><span className="text-slate-500">Paid on</span><span className="font-semibold text-slate-800">{formatSafeDate(selectedReservation.payment_paid_at, { dateStyle: 'medium', timeStyle: 'short' })}</span></div>}
+                                                    {selectedReservation.paymongo_payment_id && <div className="flex justify-between gap-3"><span className="text-slate-500">Payment reference</span><span className="max-w-[55%] break-all text-right font-semibold text-slate-800">{selectedReservation.paymongo_payment_id}</span></div>}
+                                                </div>
+                                                {selectedReservation.payment_status === 'paid' ? (
+                                                    <div className="mt-4 space-y-2">
+                                                        <button
+                                                            onClick={handleDownloadPaymentReceipt}
+                                                            disabled={downloadingPayment}
+                                                            className="w-full rounded-xl border border-emerald-200 bg-emerald-50 py-3 text-xs font-bold uppercase tracking-wider text-emerald-700 transition hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-60"
+                                                        >
+                                                            {downloadingPayment ? 'Preparing...' : 'Download Receipt'}
+                                                        </button>
+                                                        {/* Only a PayMongo charge can be reversed here. "Pay at
+                                                            Bulusan" is settled in cash at the gate, so no refund
+                                                            button is offered - and the reason is spelled out so the
+                                                            single button does not look broken. */}
+                                                        {canRequestRefund(selectedReservation.payment_method, selectedReservation.payment_status) ? (
+                                                            <button
+                                                                onClick={handleRefundRequest}
+                                                                disabled={refundLoading || Boolean(selectedReservation.refund_status)}
+                                                                className="w-full rounded-xl border border-amber-200 bg-amber-50 py-3 text-xs font-bold uppercase tracking-wider text-amber-700 transition hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-60"
+                                                            >
+                                                                {refundLoading ? 'Submitting...' : selectedReservation.refund_status ? `Refund ${selectedReservation.refund_status}` : 'Request Refund'}
+                                                            </button>
+                                                        ) : isPaidAtVenue(selectedReservation.payment_method) && (
+                                                            <p className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-xs leading-5 text-slate-500">
+                                                                Paid at Bulusan in cash, so there is no online charge to refund. Any refund is settled at the gate.
+                                                            </p>
+                                                        )}
+                                                    </div>
+                                                ) : calculateTotal(selectedReservation) > 0 && (
+                                                    <div className="flex flex-col sm:flex-row gap-3 mt-4">
+                                                        {ticketPaymentConfig.qrphEnabled && <button
+                                                            onClick={() => { setPaymentOption('now'); setPaymentConsent(false); setShowPaymentDemo(true); }}
+                                                            className="flex-1 py-3 bg-slate-800 text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-slate-900 transition flex items-center justify-center gap-2 shadow-sm"
+                                                        >
+                                                            <Icons.CreditCard />
+                                                            Pay with QR Ph
+                                                        </button>}
+                                                        <button
+                                                            onClick={() => { setPaymentOption('bulusan'); setPaymentConsent(false); setShowPaymentDemo(true); }}
+                                                            className="flex-1 py-3 bg-emerald-600 text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-emerald-700 transition flex items-center justify-center gap-2 shadow-sm"
+                                                        >
+                                                            <Icons.Cash />
+                                                            Pay at Bulusan
+                                                        </button>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </>
+                                     )}
+{selectedReservation.type === 'event' && (
                                          <>
                                             <div className="flex justify-between items-center py-2 border-b border-slate-100">
                                                 <span className="text-slate-500">Participants</span>
@@ -1114,22 +1211,30 @@ const explainFailure = (error, fallback) => {
                                                        {selectedReservation.paymongo_payment_id && <div className="flex justify-between gap-3"><span className="text-slate-500">Payment reference</span><span className="max-w-[55%] break-all text-right font-semibold text-slate-800">{selectedReservation.paymongo_payment_id}</span></div>}
                                                   </div>
                                                    {selectedReservation.payment_status === 'paid' ? (
-                                                       <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
-                                                           <button
-                                                               onClick={handleDownloadPaymentReceipt}
-                                                               disabled={downloadingPayment}
-                                                               className="rounded-xl border border-emerald-200 bg-emerald-50 py-3 text-xs font-bold uppercase tracking-wider text-emerald-700 transition hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-60"
-                                                           >
-                                                               {downloadingPayment ? 'Preparing...' : 'Download Receipt'}
-                                                           </button>
-                                                           <button
-                                                               onClick={handleRefundRequest}
-                                                               disabled={refundLoading || Boolean(selectedReservation.refund_status)}
-                                                               className="rounded-xl border border-amber-200 bg-amber-50 py-3 text-xs font-bold uppercase tracking-wider text-amber-700 transition hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-60"
-                                                           >
-                                                               {refundLoading ? 'Submitting...' : selectedReservation.refund_status ? `Refund ${selectedReservation.refund_status}` : 'Request Refund'}
-                                                           </button>
-                                                       </div>
+                                                           <div className="mt-4 space-y-2">
+                                                                   <button
+                                                                       onClick={handleDownloadPaymentReceipt}
+                                                                       disabled={downloadingPayment}
+                                                                       className="w-full rounded-xl border border-emerald-200 bg-emerald-50 py-3 text-xs font-bold uppercase tracking-wider text-emerald-700 transition hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-60"
+                                                                   >
+                                                                       {downloadingPayment ? 'Preparing...' : 'Download Receipt'}
+                                                                   </button>
+                                                                   {/* Same rule as tickets: only a PayMongo charge can be reversed
+                                                                       online. 'Pay at Bulusan' is settled in cash at the gate. */}
+                                                                   {canRequestRefund(selectedReservation.payment_method, selectedReservation.payment_status) ? (
+                                                                       <button
+                                                                           onClick={handleRefundRequest}
+                                                                           disabled={refundLoading || Boolean(selectedReservation.refund_status)}
+                                                                           className="w-full rounded-xl border border-amber-200 bg-amber-50 py-3 text-xs font-bold uppercase tracking-wider text-amber-700 transition hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-60"
+                                                                       >
+                                                                           {refundLoading ? 'Submitting...' : selectedReservation.refund_status ? `Refund ${selectedReservation.refund_status}` : 'Request Refund'}
+                                                                       </button>
+                                                                   ) : isPaidAtVenue(selectedReservation.payment_method) && (
+                                                                       <p className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-xs leading-5 text-slate-500">
+                                                                           Paid via {paymentMethodLabel(selectedReservation.payment_method)}, so there is no online charge to refund. Any refund is settled at the gate.
+                                                                       </p>
+                                                                   )}
+                                                           </div>
                                                     ) : getEventAmount(selectedReservation) > 0 && (
                                                       <div className="flex flex-col sm:flex-row gap-3 mt-4">
                                                           {eventPaymentConfig.qrphEnabled && <button
@@ -1263,8 +1368,8 @@ const explainFailure = (error, fallback) => {
                         </p>
                         <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 mt-6 text-left">
                             <div className="flex justify-between items-start gap-3 py-1.5">
-                                <span className="text-xs text-slate-500 flex-shrink-0">Event</span>
-                                <span className="text-xs font-semibold text-slate-800 text-right break-words">{selectedReservation?.venue_event_name || selectedReservation?.event_title}</span>
+                                <span className="text-xs text-slate-500 flex-shrink-0">{selectedReservation?.type === 'ticket' ? 'Booking' : 'Event'}</span>
+                                <span className="text-xs font-semibold text-slate-800 text-right break-words">{selectedReservation?.type === 'ticket' ? 'Zoo admission' : (selectedReservation?.venue_event_name || selectedReservation?.event_title)}</span>
                             </div>
                             <div className="flex justify-between items-center py-1.5">
                                 <span className="text-xs text-slate-500">Reference</span>
@@ -1293,7 +1398,7 @@ const explainFailure = (error, fallback) => {
                                 </p>
                             </label>
                             <button
-                                 onClick={handleEventPayment}
+                                 onClick={handleReservationPayment}
                                  disabled={paymentLoading}
                                  className="w-full py-3 bg-slate-800 text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-slate-900 transition"
                              >

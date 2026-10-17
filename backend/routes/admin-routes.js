@@ -4,9 +4,9 @@ const adminController = require('../controllers/admin-controller');
 const messageController = require('../controllers/message-controller');
 const monitoringController = require('../controllers/monitoring-controller');
 const logsController = require('../controllers/logs-controller');
-const donationController = require('../controllers/donation-controller');
 const walkInController = require('../controllers/walk-in-controller');
 const { readConfig: readEventPaymentConfig, writeConfig: writeEventPaymentConfig } = require('../config/event-payment-config');
+const { readConfig: readTicketPaymentConfig, writeConfig: writeTicketPaymentConfig } = require('../config/ticket-payment-config');
 const { protect, authorize, requireAdminMasterKey } = require('../middleware/auth');
 const adminMasterKeyController = require('../controllers/admin-master-key-controller');
 const { trackActivity } = require('../middleware/track-activity');
@@ -148,9 +148,6 @@ router.put('/notifications/:id/read', adminController.markNotificationRead);
 router.put('/notifications/read-all', adminController.markAllNotificationsRead);
 router.delete('/notifications', adminController.clearNotifications);
 
-// Donation settings
-router.get('/donation-config', donationController.getConfig);
-router.put('/donation-config', trackActivity('donation_config_update', 'Updated donation settings'), donationController.updateConfig);
 router.get('/event-payment-config', (req, res) => {
     res.json({ success: true, config: readEventPaymentConfig() });
 });
@@ -161,6 +158,21 @@ router.put('/event-payment-config', trackActivity('payment_config_update', 'Upda
     } catch (error) {
         console.error('Error updating event payment config:', error);
         res.status(500).json({ success: false, message: 'Unable to update event payment settings.' });
+    }
+});
+// Ticket payment settings, stored separately from event payments.
+router.get('/ticket-payment-config', (req, res) => {
+    res.json({ success: true, config: readTicketPaymentConfig() });
+});
+
+
+router.put('/ticket-payment-config', trackActivity('ticket_payment_config_update', 'Updated ticket payment settings'), (req, res) => {
+    try {
+        const updated = writeTicketPaymentConfig(req.body.config || {});
+        res.json({ success: true, message: 'Ticket payment settings updated successfully', config: updated });
+    } catch (error) {
+        console.error('Error updating ticket payment config:', error);
+        res.status(500).json({ success: false, message: 'Error updating ticket payment config' });
     }
 });
 

@@ -832,23 +832,6 @@ export const adminAPI = {
         return handleResponse(response);
     },
 
-    // Donation settings
-    getDonationConfig: async () => {
-        const response = await fetch(`${API_BASE_URL}/admin/donation-config`, {
-            headers: getAuthHeaders('admin')
-        });
-        return handleResponse(response);
-    },
-
-    updateDonationConfig: async (config) => {
-        const response = await fetch(`${API_BASE_URL}/admin/donation-config`, {
-            method: 'PUT',
-            headers: getAuthHeaders('admin'),
-            body: JSON.stringify({ config })
-        });
-        return handleResponse(response);
-    },
-
     getEventPaymentConfig: async () => {
         const response = await fetch(`${API_BASE_URL}/admin/event-payment-config`, {
             headers: getAuthHeaders('admin')
@@ -858,6 +841,22 @@ export const adminAPI = {
 
     updateEventPaymentConfig: async (config) => {
         const response = await fetch(`${API_BASE_URL}/admin/event-payment-config`, {
+            method: 'PUT',
+            headers: getAuthHeaders('admin'),
+            body: JSON.stringify({ config })
+        });
+        return handleResponse(response);
+    },
+
+    getTicketPaymentConfig: async () => {
+        const response = await fetch(`${API_BASE_URL}/admin/ticket-payment-config`, {
+            headers: getAuthHeaders('admin')
+        });
+        return handleResponse(response);
+    },
+
+    updateTicketPaymentConfig: async (config) => {
+        const response = await fetch(`${API_BASE_URL}/admin/ticket-payment-config`, {
             method: 'PUT',
             headers: getAuthHeaders('admin'),
             body: JSON.stringify({ config })
@@ -1843,10 +1842,6 @@ export const userAPI = {
         return handleResponse(response);
     },
 
-    getDonationConfig: async () => {
-        const response = await fetch(`${API_BASE_URL}/users/donation-config`);
-        return handleResponse(response);
-    }
 };
 
 export const messageAPI = {
@@ -2394,6 +2389,47 @@ export const reservationAPI = {
 
     requestEventRefund: async (id) => {
         const response = await fetch(`${API_BASE_URL}/payments/event/${id}/refund`, {
+            method: 'POST',
+            headers: getAuthHeaders('user')
+        });
+        return handleResponse(response);
+    },
+
+    // Ticket payment mirrors the event lifecycle but targets /payments/ticket,
+    // which is backed by ticket_reservations rather than event_reservations.
+    getTicketPaymentConfig: async () => {
+        const response = await fetch(`${API_BASE_URL}/payments/ticket/config`, {
+            headers: getAuthHeaders('user')
+        });
+        return handleResponse(response);
+    },
+
+    createTicketPaymentCheckout: async (id) => {
+        const response = await fetch(`${API_BASE_URL}/payments/ticket/${id}/checkout`, {
+            method: 'POST',
+            headers: getAuthHeaders('user')
+        });
+        return handleResponse(response);
+    },
+
+    setTicketPayAtBulusan: async (id) => {
+        const response = await fetch(`${API_BASE_URL}/payments/ticket/${id}/pay-at-bulusan`, {
+            method: 'POST',
+            headers: getAuthHeaders('user')
+        });
+        return handleResponse(response);
+    },
+
+    markTicketPaymentPaid: async (id, type = 'admin') => {
+        const response = await fetch(`${API_BASE_URL}/payments/ticket/${id}/mark-paid`, {
+            method: 'POST',
+            headers: getAuthHeaders(type)
+        });
+        return handleResponse(response);
+    },
+
+    requestTicketRefund: async (id) => {
+        const response = await fetch(`${API_BASE_URL}/payments/ticket/${id}/refund`, {
             method: 'POST',
             headers: getAuthHeaders('user')
         });

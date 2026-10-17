@@ -2,6 +2,14 @@ import { Ticket as TicketIcon, Search as SearchIcon, Refresh as RefreshIcon, Eye
 import { useState, useEffect } from 'react';
 import { staffAPI, getResidentIdImageUrl } from '../../services/api-client';
 import { notify } from '../../utils/toast';
+import {
+    PAYMENT_STATUSES,
+    paymentStatusBadge,
+    paymentStatusLabel,
+    paymentMethodLabel,
+    ticketPaymentAmount,
+    canMarkAsPaid
+} from '../../utils/payment-status';
 
 // Icons
 
@@ -46,13 +54,20 @@ const StaffTickets = () => {
                     type: t.ticket_type || t.type,
                     purchasedBy: t.user_name || t.visitor_name || t.purchasedBy || `User #${t.user_id}`,
                     email: t.user_email || t.visitor_email || t.email,
-                    price: t.total_amount || t.price,
+                    price: Number(t.payment_amount) || Number(t.price) || 0,
                     purchaseDate: t.created_at,
                     visitDate: t.visit_date,
                     status: t.status,
-                    paymentStatus: t.payment_status || 'pending',
-                    paymentMethod: t.payment_method || 'cash',
+                    paymentStatus: t.payment_status || 'unpaid',
+                    paymentMethod: t.payment_method || null,
+                    paymentAmount: Number(t.payment_amount) || 0,
+                    paymentPaidAt: t.payment_paid_at || null,
+                    paymentReference: t.paymongo_payment_id || t.paymongo_checkout_session_id || null,
+                    refundStatus: t.refund_status || null,
                     quantity: t.quantity || 1,
+                    adultQuantity: t.adult_quantity || 0,
+                    childQuantity: t.child_quantity || 0,
+                    residentQuantity: t.bulusan_resident_quantity || 0,
                     notes: t.notes,
                     residentIdImage: t.resident_id_image,
                     verificationStatus: t.verification_status || 'pending'
@@ -78,16 +93,9 @@ const StaffTickets = () => {
         }
     };
 
-    const getPaymentBadge = (paymentStatus) => {
-        switch (paymentStatus?.toLowerCase()) {
-            case 'paid': return 'bg-green-400/20 text-green-800 border-green-400/30';
-            case 'pending': return 'bg-yellow-500/20 text-yellow-700 border-yellow-500/30';
-            case 'not paid': return 'bg-orange-500/20 text-orange-700 border-orange-500/30';
-            case 'free': return 'bg-green-400/20 text-green-800 border-green-400/30';
-            case 'refunded': return 'bg-purple-500/20 text-purple-700 border-purple-500/30';
-            default: return 'bg-gray-500/20 text-gray-500 border-gray-500/30';
-        }
-    };
+    // Shared with the admin page so the two cannot drift. This local switch only
+    // covered 5 of the 6 statuses in the backend enum.
+    const getPaymentBadge = (paymentStatus) => paymentStatusBadge(paymentStatus);
 
     const updateTicketStatus = async (ticketId, newStatus, reason = null) => {
         try {
@@ -204,7 +212,7 @@ const StaffTickets = () => {
             ticket.user_email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
             ticket.visitor_email?.toLowerCase().includes(searchQuery.toLowerCase());
         const matchesStatus = statusFilter === 'all' || ticket.status === statusFilter;
-        const matchesPayment = paymentFilter === 'all' || ticket.payment_status === paymentFilter;
+        const matchesPayment = paymentFilter === 'all' || paymentStatusLabel(ticket.paymentStatus) === paymentFilter;
         return matchesSearch && matchesStatus && matchesPayment;
     });
 
@@ -320,9 +328,9 @@ const StaffTickets = () => {
                         className="bg-white border border-green-200 rounded-xl px-4 py-2 text-gray-900 outline-none"
                     >
                         <option value="all">All Payments</option>
-                        <option value="pending">Payment Pending</option>
-                        <option value="paid">Paid</option>
-                        <option value="refunded">Refunded</option>
+                        {PAYMENT_STATUSES.map((status) => (
+                            <option key={status} value={paymentStatusLabel(status)}>{paymentStatusLabel(status)}</option>
+                        ))}
                     </select>
                     <button
                         onClick={fetchTickets}
@@ -366,17 +374,17 @@ const StaffTickets = () => {
                                         <td className="p-4 text-gray-900 capitalize">{ticket.ticket_type}</td>
                                         <td className="p-4 text-gray-700">{formatDate(ticket.visit_date)}</td>
                                         <td className="p-4 text-gray-900 font-medium">
-                                            {ticket.total_amount === 0 ? (
+                                            {ticketPaymentAmount(ticket) === 0 ? (
                                                 <span className="text-green-800">FREE</span>
                                             ) : (
-                                                formatCurrency(ticket.total_amount)
+                                                formatCurrency(ticketPaymentAmount(ticket))
                                             )}
                                         </td>
                                         <td className="p-4">
                                             <div className="flex flex-col gap-1">
-                                                <span className="text-gray-900 capitalize text-sm">{ticket.payment_method || 'cash'}</span>
-                                                <span className={`w-fit px-2 py-0.5 rounded-lg text-xs font-medium border ${getPaymentBadge(ticket.payment_status)}`}>
-                                                    {ticket.payment_status || 'pending'}
+                                                <span className="text-gray-900 capitalize text-sm">{paymentMethodLabel(ticket.paymentMethod)}</span>
+                                                <span className={`w-fit px-2 py-0.5 rounded-lg text-xs font-medium border ${getPaymentBadge(ticket.paymentStatus)}`}>
+                                                    {paymentStatusLabel(ticket.paymentStatus)}
                                                 </span>
                                             </div>
                                         </td>
@@ -394,7 +402,7 @@ const StaffTickets = () => {
                                                 >
                                                     <EyeIcon className="w-4 h-4" />
                                                 </button>
-                                                {(ticket.payment_status === 'pending' || ticket.payment_status === 'not_paid' || ticket.payment_status === 'not paid') && (
+                                                {canMarkAsPaid(ticket.paymentStatus) && (
                                                     <button
                                                         onClick={() => handleMarkAsPaid(ticket.id)}
                                                         className="p-2 hover:bg-green-400/10 rounded-lg text-green-800 transition"
@@ -478,17 +486,17 @@ const StaffTickets = () => {
                                 <div>
                                     <p className="text-gray-500 text-sm">Total Amount</p>
                                     <p className="text-gray-900 font-bold">
-                                        {selectedTicket.total_amount === 0 ? 'FREE' : formatCurrency(selectedTicket.total_amount)}
+                                        {ticketPaymentAmount(selectedTicket) === 0 ? 'FREE' : formatCurrency(ticketPaymentAmount(selectedTicket))}
                                     </p>
                                 </div>
                                 <div>
                                     <p className="text-gray-500 text-sm">Payment Method</p>
-                                    <p className="text-gray-900 capitalize">{selectedTicket.payment_method || 'cash'}</p>
+                                    <p className="text-gray-900 capitalize">{paymentMethodLabel(selectedTicket.paymentMethod)}</p>
                                 </div>
                                 <div>
                                     <p className="text-gray-500 text-sm">Payment Status</p>
-                                    <span className={`px-2 py-1 rounded-lg text-xs font-medium border ${getPaymentBadge(selectedTicket.payment_status)}`}>
-                                        {selectedTicket.payment_status || 'pending'}
+                                    <span className={`px-2 py-1 rounded-lg text-xs font-medium border ${getPaymentBadge(selectedTicket.paymentStatus)}`}>
+                                        {paymentStatusLabel(selectedTicket.paymentStatus)}
                                     </span>
                                 </div>
                                 <div>
@@ -566,7 +574,7 @@ const StaffTickets = () => {
                             )}
 
                             {/* Mark as Paid Button */}
-                            {(selectedTicket.payment_status === 'pending' || selectedTicket.payment_status === 'not_paid' || selectedTicket.payment_status === 'not paid') && (
+                            {canMarkAsPaid(selectedTicket.paymentStatus) && (
                                 <button
                                     onClick={() => handleMarkAsPaid(selectedTicket.id)}
                                     disabled={updating}

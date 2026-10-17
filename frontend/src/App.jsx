@@ -19,7 +19,6 @@ import Help from './pages/user/Help';
 import UserMessages from './pages/user/UserMessages';
 import CommunityPage from './pages/user/CommunityPage';
 import PublicUserProfile from './pages/user/PublicUserProfile';
-import Donation from './pages/user/Donation';
 import MyEvents from './pages/user/MyEvents';
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
@@ -184,11 +183,6 @@ function AppRoutes() {
             <Route path="/my-messages" element={
                 <ProtectedRoute allowedRoles={['user']}>
                     <UserMessages />
-                </ProtectedRoute>
-            } />
-            <Route path="/donation" element={
-                <ProtectedRoute allowedRoles={['user', 'staff', 'admin']}>
-                    <Donation />
                 </ProtectedRoute>
             } />
             <Route path="/help" element={<Help />} />

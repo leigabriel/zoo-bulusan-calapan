@@ -10,6 +10,7 @@ const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const db = require('../config/database');
 const { sendVerificationEmailSync } = require('../utils/email');
+const { readConfig: readTicketPaymentConfig } = require('../config/ticket-payment-config');
 
 // Ticket status -> catalog type. Shared with staff-controller's equivalent handler.
 const TICKET_STATUS_TYPES = {
@@ -44,7 +45,34 @@ const getDateRange = (period) => {
     return startDate;
 };
 
+
+/**
+ * Adult/child/resident prices, taken from the admin-editable ticket payment
+ * config. These were previously hardcoded as bare literals inside the SQL below
+ * (and twice more in JavaScript), so changing a price in settings left the
+ * dashboard, analytics and reports still showing the old figure.
+ *
+ * Each value is coerced to a finite non-negative number and interpolated as a
+ * numeric literal, never as raw text, so the config file cannot inject SQL.
+ *
+ * @returns {{adult: number, child: number, resident: number}}
+ */
+const ticketPriceLiterals = () => {
+    const config = readTicketPaymentConfig();
+    const safe = (value, fallback) => {
+        const amount = Number(value);
+        return Number.isFinite(amount) && amount >= 0 ? amount : fallback;
+    };
+    return {
+        adult: safe(config.adultPrice, 40),
+        child: safe(config.childPrice, 20),
+        resident: safe(config.residentPrice, 0)
+    };
+};
+
 exports.getDashboardStats = async (req, res) => {
+    // Prices come from settings so the dashboard tracks the configured rates.
+    const P = ticketPriceLiterals();
     try {
         const requestedPeriod = req.query.period || 'today';
         const period = ['today', 'week', 'month', 'year'].includes(requestedPeriod) ? requestedPeriod : 'today';
@@ -71,18 +99,18 @@ exports.getDashboardStats = async (req, res) => {
             db.query(`SELECT
                 (SELECT COALESCE(SUM(tr.adult_quantity + tr.child_quantity + tr.bulusan_resident_quantity), 0) FROM ticket_reservations tr WHERE ${validTicket} ${ticketDate}) AS tickets,
                 (SELECT COUNT(*) FROM site_visits WHERE visit_date >= ${periodStart} AND visit_date < ${currentEnd}) AS visitors,
-                (SELECT COALESCE(SUM((tr.adult_quantity * 40) + (tr.child_quantity * 20)), 0) FROM ticket_reservations tr WHERE ${validTicket} ${ticketDate}) AS ticketRevenue,
+                (SELECT COALESCE(SUM((tr.adult_quantity * ${P.adult}) + (tr.child_quantity * ${P.child})), 0) FROM ticket_reservations tr WHERE ${validTicket} ${ticketDate}) AS ticketRevenue,
                 (SELECT COALESCE(SUM(er.payment_amount), 0) FROM event_reservations er WHERE ${validEvent} ${eventDate}) AS eventRevenue`),
             db.query(`SELECT
                 COALESCE(SUM(CASE WHEN ${validTicket} AND tr.reservation_date >= ${previousStart} AND tr.reservation_date < ${previousEnd} THEN tr.adult_quantity + tr.child_quantity + tr.bulusan_resident_quantity ELSE 0 END), 0) AS tickets,
                  (SELECT COUNT(*) FROM site_visits WHERE visit_date >= ${previousStart} AND visit_date < ${previousEnd}) AS visitors,
-                COALESCE(SUM(CASE WHEN ${validTicket} AND tr.reservation_date >= ${previousStart} AND tr.reservation_date < ${previousEnd} THEN (tr.adult_quantity * 40) + (tr.child_quantity * 20) ELSE 0 END), 0) AS ticketRevenue,
+                COALESCE(SUM(CASE WHEN ${validTicket} AND tr.reservation_date >= ${previousStart} AND tr.reservation_date < ${previousEnd} THEN (tr.adult_quantity * ${P.adult}) + (tr.child_quantity * ${P.child}) ELSE 0 END), 0) AS ticketRevenue,
                 (SELECT COALESCE(SUM(er.payment_amount), 0) FROM event_reservations er
                  WHERE ${validEvent} AND er.created_at >= ${previousStart} AND er.created_at < ${previousEnd}) AS eventRevenue
              FROM ticket_reservations tr`),
             db.query(`SELECT CAST(DATE_FORMAT(tr.reservation_date, '%Y-%m-%d') AS CHAR) AS date, DAYNAME(tr.reservation_date) AS day,
                 COALESCE(SUM(tr.total_visitors), 0) AS visitors,
-                COALESCE(SUM(CASE WHEN tr.status IN ('confirmed', 'completed') THEN (tr.adult_quantity * 40) + (tr.child_quantity * 20) ELSE 0 END), 0) AS revenue
+                COALESCE(SUM(CASE WHEN tr.status IN ('confirmed', 'completed') THEN (tr.adult_quantity * ${P.adult}) + (tr.child_quantity * ${P.child}) ELSE 0 END), 0) AS revenue
              FROM ticket_reservations tr
               WHERE tr.status NOT IN ('cancelled', 'no_show') AND (tr.is_deleted IS NULL OR tr.is_deleted = FALSE) AND tr.reservation_date >= DATE_SUB(CURDATE(), INTERVAL 6 DAY)
                 GROUP BY CAST(DATE_FORMAT(tr.reservation_date, '%Y-%m-%d') AS CHAR), DAYNAME(tr.reservation_date) ORDER BY date ASC`),
@@ -93,12 +121,12 @@ exports.getDashboardStats = async (req, res) => {
              GROUP BY CAST(DATE_FORMAT(visit_date, '%Y-%m-%d') AS CHAR)
              ORDER BY date ASC`),
             db.query(`SELECT type, count, revenue FROM (
-                SELECT 'Adult' AS type, COALESCE(SUM(adult_quantity), 0) AS count, COALESCE(SUM(adult_quantity * 40), 0) AS revenue FROM ticket_reservations tr WHERE ${validTicket} ${ticketDate}
-                UNION ALL SELECT 'Child', COALESCE(SUM(child_quantity), 0), COALESCE(SUM(child_quantity * 20), 0) FROM ticket_reservations tr WHERE ${validTicket} ${ticketDate}
+                SELECT 'Adult' AS type, COALESCE(SUM(adult_quantity), 0) AS count, COALESCE(SUM(adult_quantity * ${P.adult}), 0) AS revenue FROM ticket_reservations tr WHERE ${validTicket} ${ticketDate}
+                UNION ALL SELECT 'Child', COALESCE(SUM(child_quantity), 0), COALESCE(SUM(child_quantity * ${P.child}), 0) FROM ticket_reservations tr WHERE ${validTicket} ${ticketDate}
                 UNION ALL SELECT 'Bulusan Resident', COALESCE(SUM(bulusan_resident_quantity), 0), 0 FROM ticket_reservations tr WHERE ${validTicket} ${ticketDate}
             ) ticket_types WHERE count > 0`),
             db.query(`SELECT source, amount FROM (
-                SELECT 'Ticket Sales' AS source, COALESCE(SUM((adult_quantity * 40) + (child_quantity * 20)), 0) AS amount FROM ticket_reservations tr WHERE ${validTicket} ${ticketDate}
+                SELECT 'Ticket Sales' AS source, COALESCE(SUM((adult_quantity * ${P.adult}) + (child_quantity * ${P.child})), 0) AS amount FROM ticket_reservations tr WHERE ${validTicket} ${ticketDate}
                 UNION ALL SELECT 'Event Reservations', COALESCE(SUM(payment_amount), 0) FROM event_reservations er WHERE ${validEvent} ${eventDate}
             ) revenue_sources`),
             db.query(`SELECT e.id, e.title, e.event_date, e.status,
@@ -622,6 +650,8 @@ exports.getRevenueReport = async (req, res) => {
 
 // Comprehensive analytics endpoint
 exports.getAnalytics = async (req, res) => {
+    // Prices come from settings so the dashboard tracks the configured rates.
+    const P = ticketPriceLiterals();
     try {
         const { timeRange = 'week' } = req.query;
         if (!['week', 'month', 'year'].includes(timeRange)) {
@@ -655,15 +685,15 @@ exports.getAnalytics = async (req, res) => {
         res.json({
             success: true,
             data: {
-                meta: { timeRange, granularity: analytics.granularity, startDate: analytics.startDate, endDate: analytics.endDate, dateBasis: 'reservation_date', includedStatuses: ['confirmed', 'completed'], feeAssumptions: { adult: 40, child: 20, resident: 0 }, generatedAt: new Date().toISOString() },
+                meta: { timeRange, granularity: analytics.granularity, startDate: analytics.startDate, endDate: analytics.endDate, dateBasis: 'reservation_date', includedStatuses: ['confirmed', 'completed'], feeAssumptions: { adult: P.adult, child: P.child, resident: P.resident }, generatedAt: new Date().toISOString() },
                 summary: { ...Object.fromEntries(Object.entries(analytics.summary).map(([key, value]) => [key, number(value)])), totalUsers, totalAnimals, upcomingEvents },
                 dailyData: dailyData.map(row => ({ date: row.date, reservations: number(row.reservations), visitors: number(row.visitors), checkedIn: number(row.checkedIn), estimatedFees: number(row.estimatedFees) })),
                 statusDistribution: analytics.statuses.map(row => ({ status: row.status, count: number(row.count), visitors: number(row.visitors) })),
                 weekdayDemand: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((day, weekday) => ({ day, weekday, visitors: number(weekdaysByIndex.get(weekday)?.visitors) })),
                 admissionMix: [
-                    { type: 'Adult', count: number(analytics.mix.adults), estimatedFees: number(analytics.mix.adults) * 40 },
-                    { type: 'Child', count: number(analytics.mix.children), estimatedFees: number(analytics.mix.children) * 20 },
-                    { type: 'Resident', count: number(analytics.mix.residents), estimatedFees: 0 }
+                    { type: 'Adult', count: number(analytics.mix.adults), estimatedFees: number(analytics.mix.adults) * P.adult },
+                    { type: 'Child', count: number(analytics.mix.children), estimatedFees: number(analytics.mix.children) * P.child },
+                    { type: 'Resident', count: number(analytics.mix.residents), estimatedFees: number(analytics.mix.residents) * P.resident }
                 ]
             }
         });
@@ -675,6 +705,8 @@ exports.getAnalytics = async (req, res) => {
 
 // Comprehensive Report Data endpoint
 exports.getReportData = async (req, res) => {
+    // Prices come from settings so the dashboard tracks the configured rates.
+    const P = ticketPriceLiterals();
     try {
         const { startDate, endDate, reportType = 'sales' } = req.query;
 
@@ -703,7 +735,7 @@ exports.getReportData = async (req, res) => {
                     tr.total_visitors,
                     tr.status,
                     CASE WHEN tr.status IN ('confirmed', 'completed')
-                        THEN (tr.adult_quantity * 40) + (tr.child_quantity * 20) ELSE 0 END as amount
+                        THEN (tr.adult_quantity * ${P.adult}) + (tr.child_quantity * ${P.child}) ELSE 0 END as amount
                  FROM ticket_reservations tr
                  WHERE DATE(tr.created_at) BETWEEN ? AND ?
                  ORDER BY tr.created_at DESC`,
@@ -717,7 +749,7 @@ exports.getReportData = async (req, res) => {
                         date: row.date,
                         type: 'Adult Ticket',
                         quantity: row.adult_quantity,
-                        amount: row.adult_quantity * 40,
+                        amount: row.adult_quantity * P.adult,
                         status: row.status === 'completed' || row.status === 'confirmed' ? 'Completed' :
                             row.status === 'cancelled' ? 'Cancelled' : 'Pending',
                         reference: row.reservation_reference
@@ -728,7 +760,7 @@ exports.getReportData = async (req, res) => {
                         date: row.date,
                         type: 'Child Ticket',
                         quantity: row.child_quantity,
-                        amount: row.child_quantity * 20,
+                        amount: row.child_quantity * P.child,
                         status: row.status === 'completed' || row.status === 'confirmed' ? 'Completed' :
                             row.status === 'cancelled' ? 'Cancelled' : 'Pending',
                         reference: row.reservation_reference
@@ -750,7 +782,7 @@ exports.getReportData = async (req, res) => {
             // Get totals for the date range
             const [totals] = await db.query(
                 `SELECT 
-                    COALESCE(SUM((adult_quantity * 40) + (child_quantity * 20)), 0) as totalRevenue,
+                    COALESCE(SUM((adult_quantity * ${P.adult}) + (child_quantity * ${P.child})), 0) as totalRevenue,
                     COALESCE(SUM(adult_quantity + child_quantity + bulusan_resident_quantity), 0) as ticketsSold,
                     COALESCE(SUM(total_visitors), 0) as visitors
                  FROM ticket_reservations
@@ -856,10 +888,12 @@ exports.getReportData = async (req, res) => {
 
 // Get quick stats for reports page
 exports.getQuickStats = async (req, res) => {
+    // Prices come from settings so the dashboard tracks the configured rates.
+    const P = ticketPriceLiterals();
     try {
         const [stats] = await db.query(
             `SELECT 
-                COALESCE(SUM((adult_quantity * 40) + (child_quantity * 20)), 0) as totalRevenue,
+                COALESCE(SUM((adult_quantity * ${P.adult}) + (child_quantity * ${P.child})), 0) as totalRevenue,
                 COALESCE(SUM(adult_quantity + child_quantity + bulusan_resident_quantity), 0) as ticketsSold,
                 COALESCE(SUM(total_visitors), 0) as visitors
              FROM ticket_reservations

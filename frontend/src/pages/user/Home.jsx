@@ -422,7 +422,7 @@ const Home = () => {
     }, []);
 
     return (
-        <ReactLenis root options={{ lerp: reduceMotion ? 1 : 0.05, duration: reduceMotion ? 0 : 1.5, smoothWheel: !reduceMotion, smoothTouch: false, wheelMultiplier: 1.05, touchMultiplier: 2, infinite: false }}>
+        <ReactLenis root>
             <div className="relative min-h-[100dvh] bg-white">
                 <Header />
                 <AIFloatingButton />
