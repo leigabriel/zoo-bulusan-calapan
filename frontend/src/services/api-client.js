@@ -765,6 +765,19 @@ export const adminAPI = {
         return handleResponse(response);
     },
 
+    getAllLogs: async (options = {}) => {
+        const params = new URLSearchParams();
+        Object.entries(options).forEach(([key, value]) => {
+            if (value !== undefined && value !== null && value !== '') {
+                params.append(key, value);
+            }
+        });
+        const response = await fetch(`${API_BASE_URL}/admin/logs/all?${params}`, {
+            headers: getAuthHeaders('admin')
+        });
+        return handleResponse(response);
+    },
+
     getStaffLogs: async (options = {}) => {
         const params = new URLSearchParams();
         Object.entries(options).forEach(([key, value]) => {

@@ -218,6 +218,7 @@ router.get('/monitoring/staff/:staffId/timeline', monitoringController.getStaffT
 router.post('/monitoring/heartbeat', monitoringController.heartbeat);
 
 // logs
+router.get('/logs/all', logsController.getAllLogs);
 router.get('/logs/staff', logsController.getStaffLogs);
 router.get('/logs/users', logsController.getUserLogs);
 router.get('/logs/summary', logsController.getLogsSummary);

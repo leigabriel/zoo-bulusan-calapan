@@ -197,27 +197,84 @@ exports.getDashboardStats = async (req, res) => {
     }
 };
 
+// Timestamp helper used to order transactions newest-first when a payment
+// record has no payment_paid_at (pending/failed rows fall back to booking time).
+const transactionTimestamp = value => {
+    const parsed = new Date(value).getTime();
+    return Number.isNaN(parsed) ? 0 : parsed;
+};
+
+// Only bookings that reached a real payment attempt are transactions; a booking
+// that was never paid for has nothing to reconcile.
+const isPayableTransaction = record => record.payment_status && record.payment_status !== 'unpaid';
+
 exports.getTransactions = async (req, res) => {
     try {
-        const reservations = await Reservation.getAllEventReservations();
-        return res.json({
-            success: true,
-            transactions: reservations
-                .filter(reservation => reservation.payment_status && reservation.payment_status !== 'unpaid')
-                .map(reservation => ({
-                    id: reservation.id,
-                    reference: reservation.reservation_reference,
-                    customer: reservation.participant_name,
-                    email: reservation.participant_email,
-                    event: reservation.venue_event_name || reservation.event_title || 'Event reservation',
-                    amount: Number(reservation.payment_amount || 0),
-                    method: reservation.payment_method,
-                    status: reservation.payment_status,
-                    refundStatus: reservation.refund_status,
-                    paidAt: reservation.payment_paid_at,
-                    paymentReference: reservation.paymongo_payment_id || reservation.paymongo_checkout_session_id
-                }))
-        });
+        // Ticket reservations carry the same payment columns as event
+        // reservations (see database/ensure-ticket-payment-schema.js), so both
+        // belong in the finance list. Previously only events were returned and
+        // every ticket payment was missing from this page.
+        const [eventReservations, ticketReservations] = await Promise.all([
+            Reservation.getAllEventReservations(),
+            Reservation.getAllTicketReservations()
+        ]);
+
+        const eventTransactions = eventReservations
+            .filter(isPayableTransaction)
+            .map(reservation => ({
+                id: reservation.id,
+                type: 'event',
+                reference: reservation.reservation_reference,
+                customer: reservation.participant_name,
+                email: reservation.participant_email,
+                phone: reservation.participant_phone,
+                event: reservation.venue_event_name || reservation.event_title || 'Event reservation',
+                scheduleDate: reservation.venue_event_date || reservation.event_date,
+                scheduleTime: reservation.venue_event_time || null,
+                participants: Number(reservation.number_of_participants) || 1,
+                notes: reservation.notes || reservation.participant_details || null,
+                amount: Number(reservation.payment_amount || 0),
+                method: reservation.payment_method,
+                status: reservation.payment_status,
+                reservationStatus: reservation.status,
+                refundStatus: reservation.refund_status,
+                paidAt: reservation.payment_paid_at,
+                paymentReference: reservation.paymongo_payment_id || reservation.paymongo_checkout_session_id,
+                createdAt: reservation.created_at
+            }));
+
+        const ticketTransactions = ticketReservations
+            .filter(isPayableTransaction)
+            .map(reservation => ({
+                id: reservation.id,
+                type: 'ticket',
+                reference: reservation.reservation_reference,
+                customer: reservation.visitor_name,
+                email: reservation.visitor_email,
+                phone: reservation.visitor_phone,
+                event: 'Ticket reservation',
+                scheduleDate: reservation.reservation_date,
+                scheduleTime: reservation.reservation_time || null,
+                participants: Number(reservation.total_visitors) || 0,
+                notes: reservation.notes || null,
+                adultQuantity: Number(reservation.adult_quantity) || 0,
+                childQuantity: Number(reservation.child_quantity) || 0,
+                residentQuantity: Number(reservation.bulusan_resident_quantity) || 0,
+                verificationStatus: reservation.verification_status,
+                amount: Number(reservation.payment_amount || 0),
+                method: reservation.payment_method,
+                status: reservation.payment_status,
+                reservationStatus: reservation.status,
+                refundStatus: reservation.refund_status,
+                paidAt: reservation.payment_paid_at,
+                paymentReference: reservation.paymongo_payment_id || reservation.paymongo_checkout_session_id,
+                createdAt: reservation.created_at
+            }));
+
+        const transactions = [...eventTransactions, ...ticketTransactions]
+            .sort((a, b) => transactionTimestamp(b.paidAt || b.createdAt) - transactionTimestamp(a.paidAt || a.createdAt));
+
+        return res.json({ success: true, transactions });
     } catch (error) {
         console.error('Error getting payment transactions:', error);
         return res.status(500).json({ success: false, message: 'Error fetching transactions.' });
@@ -836,6 +893,13 @@ exports.getReportData = async (req, res) => {
             ticketsSold = parseInt(totals[0]?.ticketsSold) || 0;
 
         } else if (reportType === 'events') {
+            // A reservation belongs to the report when it was booked inside the
+            // range OR when the event itself falls inside it. Filtering on the
+            // event date alone (the previous behaviour) hid every reservation
+            // booked for an event scheduled outside the range, so the report
+            // came back empty even though event reservations existed.
+            // Both dates are matched independently, so a reservation is still
+            // counted once.
             const [rows] = await db.query(
                 `SELECT 
                     er.reservation_reference AS reference,
@@ -847,9 +911,10 @@ exports.getReportData = async (req, res) => {
                     COALESCE(er.number_of_participants, 1) AS participants
                  FROM event_reservations er
                  LEFT JOIN events e ON e.id = er.event_id
-                 WHERE DATE(COALESCE(er.venue_event_date, e.event_date, er.created_at)) BETWEEN ? AND ?
+                 WHERE DATE(er.created_at) BETWEEN ? AND ?
+                    OR DATE(COALESCE(er.venue_event_date, e.event_date)) BETWEEN ? AND ?
                  ORDER BY COALESCE(er.venue_event_date, e.event_date, er.created_at) DESC`,
-                [start, end]
+                [start, end, start, end]
             );
 
             items = rows.map(row => ({

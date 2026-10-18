@@ -1,6 +1,7 @@
 const crypto = require('crypto');
 const db = require('../config/database');
 const config = require('../config/walk-in-config');
+const StaffActivity = require('../models/staff-activity-model');
 
 class WalkInError extends Error {
     constructor(message, status = 400) {
@@ -247,12 +248,15 @@ const createSale = async ({ staff, idempotencyKey, payload, ipAddress, userAgent
             [saleResult.insertId, payload.payment.method, payload.totalCents, payload.payment.amountReceivedCents,
                 payload.payment.changeCents, payload.payment.providerReference]
         );
-        await connection.query(
-            `INSERT INTO staff_activity_logs
-             (staff_id, action_type, action_description, entity_type, entity_id, ip_address, user_agent)
-             VALUES (?, 'walk_in_sale', ?, 'walk_in_sale', ?, ?, ?)`,
-            [staff.id, `Completed walk-in sale ${saleNumber}`, saleResult.insertId, ipAddress, userAgent]
-        );
+        await StaffActivity.logActivityWithConnection(connection, {
+            staffId: staff.id,
+            actionType: 'walk_in_sale',
+            actionDescription: `Completed walk-in sale ${saleNumber}`,
+            entityType: 'walk_in_sale',
+            entityId: saleResult.insertId,
+            ipAddress,
+            userAgent
+        });
         await connection.commit();
         return { sale: await fetchSale(db, saleNumber), replayed: false };
     } catch (error) {
@@ -356,12 +360,15 @@ const trashSale = async ({ saleNumber, staff, ipAddress, userAgent }) => {
             'UPDATE walk_in_sales SET is_deleted = TRUE, deleted_at = NOW(), deleted_by = ? WHERE id = ?',
             [staff.id, rows[0].id]
         );
-        await connection.query(
-            `INSERT INTO staff_activity_logs
-             (staff_id, action_type, action_description, entity_type, entity_id, ip_address, user_agent)
-             VALUES (?, 'walk_in_trash', ?, 'walk_in_sale', ?, ?, ?)`,
-            [staff.id, `Moved walk-in sale ${rows[0].sale_number} to trash`, rows[0].id, ipAddress, userAgent]
-        );
+        await StaffActivity.logActivityWithConnection(connection, {
+            staffId: staff.id,
+            actionType: 'walk_in_trash',
+            actionDescription: `Moved walk-in sale ${rows[0].sale_number} to trash`,
+            entityType: 'walk_in_sale',
+            entityId: rows[0].id,
+            ipAddress,
+            userAgent
+        });
         await connection.commit();
         return { saleNumber: rows[0].sale_number };
     } catch (error) {
@@ -508,12 +515,15 @@ const voidSale = async ({ saleNumber, staff, reason, ipAddress, userAgent }) => 
             [reason, staff.id, rows[0].id]
         );
         await connection.query("UPDATE walk_in_payments SET status = 'voided' WHERE sale_id = ?", [rows[0].id]);
-        await connection.query(
-            `INSERT INTO staff_activity_logs
-             (staff_id, action_type, action_description, entity_type, entity_id, ip_address, user_agent)
-             VALUES (?, 'walk_in_void', ?, 'walk_in_sale', ?, ?, ?)`,
-            [staff.id, `Voided walk-in sale ${saleNumber}: ${reason}`, rows[0].id, ipAddress, userAgent]
-        );
+        await StaffActivity.logActivityWithConnection(connection, {
+            staffId: staff.id,
+            actionType: 'walk_in_void',
+            actionDescription: `Voided walk-in sale ${saleNumber}: ${reason}`,
+            entityType: 'walk_in_sale',
+            entityId: rows[0].id,
+            ipAddress,
+            userAgent
+        });
         await connection.commit();
         return fetchSale(db, saleNumber);
     } catch (error) {
@@ -536,12 +546,15 @@ const markUsed = async ({ saleNumber, staff, ipAddress, userAgent }) => {
         if (rows[0].status === 'voided') throw new WalkInError('A voided walk-in receipt cannot be checked in.', 409);
         if (!rows[0].checked_in_at) {
             await connection.query('UPDATE walk_in_sales SET checked_in_by = ?, checked_in_at = CURRENT_TIMESTAMP WHERE id = ?', [staff.id, rows[0].id]);
-            await connection.query(
-                `INSERT INTO staff_activity_logs
-                 (staff_id, action_type, action_description, entity_type, entity_id, ip_address, user_agent)
-                 VALUES (?, 'walk_in_check_in', ?, 'walk_in_sale', ?, ?, ?)`,
-                [staff.id, `Checked in walk-in sale ${rows[0].sale_number}`, rows[0].id, ipAddress, userAgent]
-            );
+            await StaffActivity.logActivityWithConnection(connection, {
+                staffId: staff.id,
+                actionType: 'walk_in_check_in',
+                actionDescription: `Checked in walk-in sale ${rows[0].sale_number}`,
+                entityType: 'walk_in_sale',
+                entityId: rows[0].id,
+                ipAddress,
+                userAgent
+            });
         }
         await connection.commit();
         return fetchSale(db, rows[0].sale_number);
@@ -558,11 +571,14 @@ const logReceiptEvent = async ({ saleNumber, staff, eventType, ipAddress, userAg
     if (!sale) throw new WalkInError('Walk-in sale not found.', 404);
     const allowed = ['print_requested', 'reprint_requested', 'print_failed'];
     if (!allowed.includes(eventType)) throw new WalkInError('Invalid receipt event.');
-    await db.query(
-        `INSERT INTO staff_activity_logs (staff_id, action_type, action_description, entity_type, ip_address, user_agent)
-         VALUES (?, ?, ?, 'walk_in_sale', ?, ?)`,
-        [staff.id, eventType, `${eventType.replaceAll('_', ' ')} for ${sale.saleNumber}`, ipAddress, userAgent]
-    );
+    await StaffActivity.logActivityWithConnection(db, {
+        staffId: staff.id,
+        actionType: eventType,
+        actionDescription: `${eventType.replaceAll('_', ' ')} for ${sale.saleNumber}`,
+        entityType: 'walk_in_sale',
+        ipAddress,
+        userAgent
+    });
 };
 
 module.exports = { WalkInError, parkDateKey, validateAndCalculate, createSale, getSale, listSales, listTrashedSales, getAvailability, voidSale, trashSale, restoreSale, permanentDeleteSale, markUsed, logReceiptEvent };

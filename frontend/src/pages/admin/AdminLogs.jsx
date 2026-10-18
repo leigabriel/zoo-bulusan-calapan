@@ -1,17 +1,33 @@
 import { useState, useEffect, useCallback } from 'react';
-import { ClipboardList, Users, Activity, Filter, ChevronLeft, ChevronRight, Refresh } from 'reicon-react';
+import { ClipboardList, Users, Activity, Filter, ChevronLeft, ChevronRight, Refresh, Search } from 'reicon-react';
 import { adminAPI, getProfileImageUrl } from '../../services/api-client';
+import { formatSafeDate } from '../../utils/format-date';
+import { describeUserAgent } from '../../utils/user-agent';
 
 const staffActionLabels = {
     login: 'Login',
     logout: 'Logout',
     message_reply: 'Message Reply',
     reservation_update: 'Reservation Update',
+    reservation_cancel: 'Reservation Cancel',
+    reservation_archive: 'Reservation Archive',
+    reservation_unarchive: 'Reservation Unarchive',
     ticket_update: 'Ticket Update',
     animal_update: 'Animal Update',
     plant_update: 'Plant Update',
     event_update: 'Event Update',
     user_update: 'User Update',
+    appeal_review: 'Appeal Review',
+    payment_config_update: 'Payment Config Update',
+    ticket_payment_config_update: 'Ticket Payment Config Update',
+    model_upload: 'Model Upload',
+    walk_in_sale: 'Walk-in Sale',
+    walk_in_check_in: 'Walk-in Check-in',
+    walk_in_void: 'Walk-in Void',
+    walk_in_trash: 'Walk-in Trash',
+    print_requested: 'Print Receipt',
+    reprint_requested: 'Reprint Receipt',
+    print_failed: 'Print Failed',
     other: 'Other',
 };
 
@@ -75,8 +91,30 @@ const actionTypeColors = {
     other: 'bg-gray-50 text-gray-600 border border-gray-200',
 };
 
+const roleLabels = {
+    admin: 'Admin',
+    staff: 'Staff',
+    user: 'Visitor'
+};
+
+const roleStyles = {
+    admin: 'bg-purple-50 text-purple-700 border-purple-200',
+    staff: 'bg-sky-50 text-sky-700 border-sky-200',
+    user: 'bg-green-50 text-green-700 border-green-200'
+};
+
 const staffActionTypes = ['all', 'login', 'logout', 'message_reply', 'reservation_update', 'ticket_update', 'animal_update', 'plant_update', 'event_update', 'user_update', 'other'];
+
+// One request shape per tab. The "all" tab merges admin, staff and visitor
+// activity server-side, so the page shows a single chronological stream.
+const LOG_REQUESTS = {
+    all: adminAPI.getAllLogs,
+    staff: adminAPI.getStaffLogs,
+    user: adminAPI.getUserLogs
+};
 const userActionTypes = ['all', 'register', 'login', 'logout', 'profile_update', 'password_change', 'settings_update', 'ticket_purchase', 'ticket_reservation', 'event_reservation', 'ticket_archive', 'ticket_unarchive', 'event_archive', 'event_unarchive', 'event_update', 'payment_checkout', 'payment_method_update', 'refund_request', 'message_sent', 'message_delete', 'post_create', 'post_update', 'post_delete', 'post_like', 'comment_create', 'comment_update', 'comment_delete', 'comment_heart', 'comment_report', 'appeal_submit', 'prediction_create', 'account_delete', 'other'];
+
+const ALL_ACTION_LABELS = { ...staffActionLabels, ...userActionLabels };
 
 const formatIdentifier = (value) => value
     ? value.replaceAll('_', ' ').replace(/\b\w/g, letter => letter.toUpperCase())
@@ -97,71 +135,56 @@ const formatTimeAgo = (dateString) => {
     return date.toLocaleDateString();
 };
 
-const formatDateTime = (dateString) => {
-    if (!dateString) return 'N/A';
-    return new Date(dateString).toLocaleString('en-US', {
-        month: 'short', day: 'numeric', year: 'numeric',
-        hour: '2-digit', minute: '2-digit'
-    });
+const formatClockTime = (dateString) => {
+    if (!dateString) return '-';
+    const date = new Date(dateString);
+    if (Number.isNaN(date.getTime())) return '-';
+    return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 };
 
 const AdminLogs = () => {
-    const [activeTab, setActiveTab] = useState('staff');
-    const [staffLogs, setStaffLogs] = useState([]);
-    const [userLogs, setUserLogs] = useState([]);
+    const [activeTab, setActiveTab] = useState('all');
+    const [logs, setLogs] = useState({ all: [], staff: [], user: [] });
+    const [totals, setTotals] = useState({ all: 0, staff: 0, user: 0 });
     const [summary, setSummary] = useState({});
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const [error, setError] = useState('');
-    const [staffFilter, setStaffFilter] = useState('all');
-    const [userFilter, setUserFilter] = useState('all');
-    const [staffOffset, setStaffOffset] = useState(0);
-    const [userOffset, setUserOffset] = useState(0);
-    const [staffTotal, setStaffTotal] = useState(0);
-    const [userTotal, setUserTotal] = useState(0);
+    const [actionFilter, setActionFilter] = useState('all');
+    const [roleFilter, setRoleFilter] = useState('all');
+    const [search, setSearch] = useState('');
+    const [offset, setOffset] = useState(0);
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
     const limit = 20;
 
-    const fetchStaffLogs = useCallback(async (offset = 0, showRefreshing = false) => {
+    const fetchLogs = useCallback(async (nextOffset = 0, tab = activeTab, showRefreshing = false) => {
+        const request = LOG_REQUESTS[tab];
+        if (!request) return;
         try {
             if (showRefreshing) setRefreshing(true);
-            const data = await adminAPI.getStaffLogs({
+            const data = await request({
                 limit,
-                offset,
-                actionType: staffFilter === 'all' ? '' : staffFilter,
+                offset: nextOffset,
+                actionType: actionFilter === 'all' ? '' : actionFilter,
+                // A visitor tab has no admins or staff in it to filter for.
+                role: tab === 'staff' ? (roleFilter === 'user' ? '' : roleFilter) : roleFilter,
+                search,
                 startDate,
                 endDate
             });
-            setStaffLogs(Array.isArray(data.logs) ? data.logs : []);
-            setStaffTotal(Number(data.total) || 0);
+            setLogs(previous => ({ ...previous, [tab]: Array.isArray(data.logs) ? data.logs : [] }));
+            setTotals(previous => ({ ...previous, [tab]: Number(data.total) || 0 }));
             setError('');
         } catch (requestError) {
-            setStaffLogs([]);
-            setStaffTotal(0);
-            setError(requestError.message || 'Could not load staff logs.');
-        } finally { setLoading(false); setRefreshing(false); }
-    }, [staffFilter, startDate, endDate]);
-
-    const fetchUserLogs = useCallback(async (offset = 0, showRefreshing = false) => {
-        try {
-            if (showRefreshing) setRefreshing(true);
-            const data = await adminAPI.getUserLogs({
-                limit,
-                offset,
-                actionType: userFilter === 'all' ? '' : userFilter,
-                startDate,
-                endDate
-            });
-            setUserLogs(Array.isArray(data.logs) ? data.logs : []);
-            setUserTotal(Number(data.total) || 0);
-            setError('');
-        } catch (requestError) {
-            setUserLogs([]);
-            setUserTotal(0);
-            setError(requestError.message || 'Could not load user logs.');
-        } finally { setLoading(false); setRefreshing(false); }
-    }, [userFilter, startDate, endDate]);
+            setLogs(previous => ({ ...previous, [tab]: [] }));
+            setTotals(previous => ({ ...previous, [tab]: 0 }));
+            setError(requestError.message || 'Could not load activity logs.');
+        } finally {
+            setLoading(false);
+            setRefreshing(false);
+        }
+    }, [activeTab, actionFilter, roleFilter, search, startDate, endDate]);
 
     const fetchSummary = useCallback(async () => {
         try {
@@ -174,34 +197,28 @@ const AdminLogs = () => {
 
     useEffect(() => {
         setLoading(true);
-        setStaffOffset(0);
-        setUserOffset(0);
-        fetchStaffLogs(0);
-        fetchUserLogs(0);
+        setOffset(0);
+        fetchLogs(0, activeTab);
         fetchSummary();
-    }, [fetchStaffLogs, fetchUserLogs, fetchSummary]);
+    }, [activeTab, fetchLogs, fetchSummary]);
 
     const handleRefresh = () => {
-        if (activeTab === 'staff') fetchStaffLogs(staffOffset, true);
-        else fetchUserLogs(userOffset, true);
+        fetchLogs(offset, activeTab, true);
         fetchSummary();
     };
 
-    const currentLogs = activeTab === 'staff' ? staffLogs : userLogs;
-    const currentTotal = activeTab === 'staff' ? staffTotal : userTotal;
-    const currentOffset = activeTab === 'staff' ? staffOffset : userOffset;
-    const setOffset = activeTab === 'staff' ? setStaffOffset : setUserOffset;
-    const currentFilter = activeTab === 'staff' ? staffFilter : userFilter;
-    const setFilter = activeTab === 'staff' ? setStaffFilter : setUserFilter;
-    const configuredActionTypes = activeTab === 'staff' ? staffActionTypes : userActionTypes;
-    const observedActions = activeTab === 'staff' ? summary.staffActionBreakdown : summary.userActionBreakdown;
+    const currentLogs = logs[activeTab] || [];
+    const currentTotal = totals[activeTab] || 0;
+    const totalPages = Math.ceil(currentTotal / limit);
+    const labels = activeTab === 'all' ? ALL_ACTION_LABELS : (activeTab === 'user' ? userActionLabels : staffActionLabels);
+    const observedActions = activeTab === 'all'
+        ? [...(summary.staffActionBreakdown || []), ...(summary.userActionBreakdown || [])]
+        : (activeTab === 'staff' ? summary.staffActionBreakdown : summary.userActionBreakdown);
+    const configuredActionTypes = activeTab === 'user' ? userActionTypes : staffActionTypes;
     const actionTypes = ['all', ...new Set([
         ...configuredActionTypes.filter(type => type !== 'all'),
         ...(observedActions || []).map(item => item.action_type).filter(Boolean)
     ])];
-    const fetchFn = activeTab === 'staff' ? fetchStaffLogs : fetchUserLogs;
-    const totalPages = Math.ceil(currentTotal / limit);
-    const labels = activeTab === 'staff' ? staffActionLabels : userActionLabels;
 
     if (loading) {
         return (
@@ -224,7 +241,7 @@ const AdminLogs = () => {
                     </div>
                     <div>
                         <h1 className="text-2xl font-bold text-gray-900">Logs</h1>
-                        <p className="text-sm text-gray-500">Activity logs for all staff and users.</p>
+                        <p className="text-sm text-gray-500">Every action by admins, staff and visitors, with device and location details.</p>
                     </div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -246,13 +263,17 @@ const AdminLogs = () => {
             )}
 
             {/* Summary Cards */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 <div className="bg-white border border-green-200 rounded-2xl p-4">
-                    <div className="flex items-center gap-2 text-gray-500 text-xs mb-2"><Activity size={14} /> Staff Actions</div>
+                    <div className="flex items-center gap-2 text-gray-500 text-xs mb-2"><Activity size={14} /> Total Activity</div>
+                    <p className="text-2xl font-bold text-gray-900">{summary.totalActivity ?? 0}</p>
+                </div>
+                <div className="bg-white border border-green-200 rounded-2xl p-4">
+                    <div className="flex items-center gap-2 text-gray-500 text-xs mb-2"><Activity size={14} /> Admin &amp; Staff Actions</div>
                     <p className="text-2xl font-bold text-gray-900">{summary.totalStaffActions || 0}</p>
                 </div>
                 <div className="bg-white border border-green-200 rounded-2xl p-4">
-                    <div className="flex items-center gap-2 text-gray-500 text-xs mb-2"><Users size={14} /> User Actions</div>
+                    <div className="flex items-center gap-2 text-gray-500 text-xs mb-2"><Users size={14} /> Visitor Actions</div>
                     <p className="text-2xl font-bold text-gray-900">{summary.totalUserActions || 0}</p>
                 </div>
                 <div className="bg-white border border-green-200 rounded-2xl p-4">
@@ -263,26 +284,23 @@ const AdminLogs = () => {
 
             {/* Tabs */}
             <div className="flex gap-1 bg-gray-100 rounded-xl p-1 w-fit">
-                <button
-                    onClick={() => setActiveTab('staff')}
-                    className={`px-5 py-2.5 rounded-lg text-sm font-semibold transition ${
-                        activeTab === 'staff'
-                            ? 'bg-white text-gray-900 shadow-sm'
-                            : 'text-gray-500 hover:text-gray-700'
-                    }`}
-                >
-                    Staff Logs
-                </button>
-                <button
-                    onClick={() => setActiveTab('users')}
-                    className={`px-5 py-2.5 rounded-lg text-sm font-semibold transition ${
-                        activeTab === 'users'
-                            ? 'bg-white text-gray-900 shadow-sm'
-                            : 'text-gray-500 hover:text-gray-700'
-                    }`}
-                >
-                    User Logs
-                </button>
+                {[
+                    { key: 'all', label: 'All Activity' },
+                    { key: 'staff', label: 'Admin & Staff' },
+                    { key: 'user', label: 'Visitors' }
+                ].map(tab => (
+                    <button
+                        key={tab.key}
+                        onClick={() => { setActiveTab(tab.key); setActionFilter('all'); setRoleFilter('all'); setOffset(0); }}
+                        className={`px-5 py-2.5 rounded-lg text-sm font-semibold transition ${
+                            activeTab === tab.key
+                                ? 'bg-white text-gray-900 shadow-sm'
+                                : 'text-gray-500 hover:text-gray-700'
+                        }`}
+                    >
+                        {tab.label}
+                    </button>
+                ))}
             </div>
 
             {/* Filters */}
@@ -290,8 +308,9 @@ const AdminLogs = () => {
                 <div className="flex items-center gap-2">
                     <Filter size={16} className="text-gray-400" />
                     <select
-                        value={currentFilter}
-                        onChange={(e) => { setFilter(e.target.value); setOffset(0); }}
+                        value={actionFilter}
+                        onChange={(e) => { setActionFilter(e.target.value); setOffset(0); }}
+                        aria-label="Filter by action"
                         className="bg-white border border-green-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:border-green-400"
                     >
                         {actionTypes.map((type) => (
@@ -301,21 +320,48 @@ const AdminLogs = () => {
                         ))}
                     </select>
                 </div>
+                <div className="flex items-center gap-2">
+                    <Users size={16} className="text-gray-400" />
+                    <select
+                        value={roleFilter}
+                        onChange={(e) => { setRoleFilter(e.target.value); setOffset(0); }}
+                        aria-label="Filter by role"
+                        className="bg-white border border-green-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:border-green-400"
+                    >
+                        <option value="all">All Roles</option>
+                        {(activeTab === 'user' ? ['user'] : ['admin', 'staff', 'user']).map(role => (
+                            <option key={role} value={role}>{roleLabels[role]}s</option>
+                        ))}
+                    </select>
+                </div>
+                <div className="relative">
+                    <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" aria-hidden="true" />
+                    <input
+                        type="search"
+                        value={search}
+                        onChange={(e) => { setSearch(e.target.value); setOffset(0); }}
+                        placeholder="Search user, action, description, IP or device"
+                        aria-label="Search activity"
+                        className="bg-white border border-green-200 rounded-lg pl-9 pr-3 py-2 text-sm text-gray-900 focus:outline-none focus:border-green-400"
+                    />
+                </div>
                 <input
                     type="date"
                     value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
+                    onChange={(e) => { setStartDate(e.target.value); setOffset(0); }}
+                    aria-label="Start date"
                     className="bg-white border border-green-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:border-green-400"
                 />
                 <input
                     type="date"
                     value={endDate}
-                    onChange={(e) => setEndDate(e.target.value)}
+                    onChange={(e) => { setEndDate(e.target.value); setOffset(0); }}
+                    aria-label="End date"
                     className="bg-white border border-green-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:border-green-400"
                 />
-                {(startDate || endDate || currentFilter !== 'all') && (
+                {(startDate || endDate || roleFilter !== 'all' || search || actionFilter !== 'all') && (
                     <button
-                        onClick={() => { setStartDate(''); setEndDate(''); setFilter('all'); setOffset(0); }}
+                        onClick={() => { setStartDate(''); setEndDate(''); setRoleFilter('all'); setSearch(''); setActionFilter('all'); setOffset(0); }}
                         className="text-sm text-gray-500 hover:text-gray-900 underline"
                     >
                         Clear filters
@@ -332,64 +378,79 @@ const AdminLogs = () => {
                             <tr className="bg-green-50 border-b border-green-200">
                                 <th className="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">User</th>
                                 <th className="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Action</th>
-                                <th className="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider hidden md:table-cell">Description</th>
-                                <th className="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider hidden lg:table-cell">Entity</th>
+                                <th className="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Description</th>
+                                <th className="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Date</th>
                                 <th className="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Time</th>
+                                <th className="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider hidden lg:table-cell">IP Address</th>
+                                <th className="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider hidden lg:table-cell">Device</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
                             {currentLogs.length === 0 ? (
                                 <tr>
-                                    <td colSpan="5" className="px-5 py-12 text-center text-gray-500">
+                                    <td colSpan="7" className="px-5 py-12 text-center text-gray-500">
                                         No logs found.
                                     </td>
                                 </tr>
                             ) : (
-                                currentLogs.map((log, index) => (
-                                    <tr key={log.id || index} className="hover:bg-green-50/50 transition">
-                                        <td className="px-5 py-3">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-8 h-8 rounded-full overflow-hidden bg-green-100 flex items-center justify-center text-green-700 text-xs font-bold flex-shrink-0">
-                                                    {log.profile_image ? (
-                                                        <img
-                                                            src={getProfileImageUrl(log.profile_image)}
-                                                            alt={log.first_name}
-                                                            className="w-full h-full object-cover"
-                                                            onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
-                                                        />
-                                                    ) : null}
-                                                    <span className={`${log.profile_image ? 'hidden' : 'flex'} items-center justify-center w-full h-full`}>
-                                                        {log.first_name?.[0] || '?'}{log.last_name?.[0] || ''}
-                                                    </span>
+                                currentLogs.map((log) => {
+                                    const device = describeUserAgent(log.user_agent);
+                                    const role = log.role || (log.source === 'staff' ? 'staff' : 'user');
+                                    const name = log.actor_name || `${log.first_name || ''} ${log.last_name || ''}`.trim() || 'Deleted account';
+                                    const handle = log.username ? `@${log.username}` : (log.email || log.actor_email || '');
+                                    return (
+                                        <tr key={`${log.source}-${log.id}`} className="hover:bg-green-50/50 transition align-top">
+                                            <td className="px-5 py-3">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-8 h-8 rounded-full overflow-hidden bg-green-100 flex items-center justify-center text-green-700 text-xs font-bold flex-shrink-0">
+                                                        {log.profile_image ? (
+                                                            <img
+                                                                src={getProfileImageUrl(log.profile_image)}
+                                                                alt={name}
+                                                                className="w-full h-full object-cover"
+                                                                onError={(e) => { e.target.style.display = 'none'; }}
+                                                            />
+                                                        ) : (
+                                                            <span className="flex items-center justify-center w-full h-full">
+                                                                {`${log.first_name?.[0] || ''}${log.last_name?.[0] || name.charAt(0)}`}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <div className="min-w-0">
+                                                        <p className="text-sm font-medium text-gray-900 truncate">{name}</p>
+                                                        <p className="text-xs text-gray-500 truncate">{handle}</p>
+                                                        <span className={`mt-1 inline-block rounded-full border px-2 py-0.5 text-[10px] font-semibold ${roleStyles[role] || roleStyles.user}`}>
+                                                            {roleLabels[role] || role}
+                                                        </span>
+                                                    </div>
                                                 </div>
-                                                <div className="min-w-0">
-                                                    <p className="text-sm font-medium text-gray-900 truncate">{log.actor_name || `${log.first_name || ''} ${log.last_name || ''}`.trim() || 'Deleted user'}</p>
-                                                    <p className="text-xs text-gray-500 truncate">{log.username ? `@${log.username}` : log.email}</p>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td className="px-5 py-3">
-                                            <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${actionTypeColors[log.action_type] || 'bg-gray-50 text-gray-600 border border-gray-200'}`}>
-                                                {labels[log.action_type] || formatIdentifier(log.action_type)}
-                                            </span>
-                                        </td>
-                                        <td className="px-5 py-3 hidden md:table-cell">
-                                            <p className="text-sm text-gray-600 max-w-xs truncate">{log.action_description}</p>
-                                        </td>
-                                        <td className="px-5 py-3 hidden lg:table-cell">
-                                            {log.entity_type && (
-                                                <span className="text-xs text-gray-500 bg-gray-50 px-2 py-1 rounded border border-gray-200">
-                                                    {formatIdentifier(log.entity_type)}{log.entity_id ? ` #${log.entity_id}` : ''}
+                                            </td>
+                                            <td className="px-5 py-3">
+                                                <span className={`text-xs px-2.5 py-1 rounded-full font-medium whitespace-nowrap ${actionTypeColors[log.action_type] || 'bg-gray-50 text-gray-600 border border-gray-200'}`}>
+                                                    {labels[log.action_type] || formatIdentifier(log.action_type)}
                                                 </span>
-                                            )}
-                                        </td>
-                                        <td className="px-5 py-3">
-                                            <div className="text-xs text-gray-500" title={formatDateTime(log.created_at)}>
-                                                {formatTimeAgo(log.created_at)}
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))
+                                            </td>
+                                            <td className="px-5 py-3">
+                                                <p className="text-sm text-gray-600 max-w-xs" title={log.action_description}>{log.action_description || '-'}</p>
+                                            </td>
+                                            <td className="px-5 py-3">
+                                                <div className="text-xs text-gray-700 whitespace-nowrap">{formatSafeDate(log.created_at, { dateStyle: 'medium' })}</div>
+                                                <div className="text-[10px] text-gray-400 whitespace-nowrap">{formatTimeAgo(log.created_at)}</div>
+                                            </td>
+                                            <td className="px-5 py-3">
+                                                <div className="text-xs font-mono text-gray-700 whitespace-nowrap">{formatClockTime(log.created_at)}</div>
+                                            </td>
+                                            <td className="px-5 py-3">
+                                                <div className="text-xs font-mono text-gray-700 whitespace-nowrap">{log.ip_address || '-'}</div>
+                                            </td>
+                                            <td className="px-5 py-3 hidden lg:table-cell">
+                                                <div className="text-xs text-gray-700 whitespace-nowrap" title={log.user_agent || 'No device information recorded'}>
+                                                    {device.label}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    );
+                                })
                             )}
                         </tbody>
                     </table>
@@ -399,18 +460,18 @@ const AdminLogs = () => {
                 {totalPages > 1 && (
                     <div className="flex items-center justify-between px-5 py-3 border-t border-green-200 bg-green-50/50">
                         <button
-                            onClick={() => { const newOffset = Math.max(0, currentOffset - limit); setOffset(newOffset); fetchFn(newOffset); }}
-                            disabled={currentOffset === 0}
+                            onClick={() => { const newOffset = Math.max(0, offset - limit); setOffset(newOffset); fetchLogs(newOffset, activeTab); }}
+                            disabled={offset === 0}
                             className="flex items-center gap-1 px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 disabled:opacity-40 disabled:cursor-not-allowed transition"
                         >
                             <ChevronLeft size={16} /> Previous
                         </button>
                         <span className="text-xs text-gray-500">
-                            Page {Math.floor(currentOffset / limit) + 1} of {totalPages}
+                            Page {Math.floor(offset / limit) + 1} of {totalPages}
                         </span>
                         <button
-                            onClick={() => { const newOffset = currentOffset + limit; setOffset(newOffset); fetchFn(newOffset); }}
-                            disabled={currentOffset + limit >= currentTotal}
+                            onClick={() => { const newOffset = offset + limit; setOffset(newOffset); fetchLogs(newOffset, activeTab); }}
+                            disabled={offset + limit >= currentTotal}
                             className="flex items-center gap-1 px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 disabled:opacity-40 disabled:cursor-not-allowed transition"
                         >
                             Next <ChevronRight size={16} />

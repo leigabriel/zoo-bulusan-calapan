@@ -490,11 +490,14 @@ CREATE TABLE IF NOT EXISTS `site_visits` (
 -- ------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS `staff_activity_logs` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `staff_id` int NOT NULL,
+  `staff_id` int DEFAULT NULL,
   `action_type` varchar(64) NOT NULL,
   `action_description` text,
   `entity_type` varchar(50) DEFAULT NULL,
   `entity_id` int DEFAULT NULL,
+  `actor_name` varchar(201) DEFAULT NULL,
+  `actor_email` varchar(255) DEFAULT NULL,
+  `actor_role` varchar(20) DEFAULT NULL,
   `ip_address` varchar(45) DEFAULT NULL,
   `user_agent` text,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
@@ -502,7 +505,7 @@ CREATE TABLE IF NOT EXISTS `staff_activity_logs` (
   KEY `idx_staff_activity_staff_id` (`staff_id`),
   KEY `idx_staff_activity_action_type` (`action_type`),
   KEY `idx_staff_activity_created_at` (`created_at`),
-  CONSTRAINT `fk_staff_activity_staff` FOREIGN KEY (`staff_id`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+  CONSTRAINT `fk_staff_activity_staff` FOREIGN KEY (`staff_id`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS `staff_sessions` (

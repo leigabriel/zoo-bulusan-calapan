@@ -5,22 +5,37 @@ class StaffActivity {
      * Log a staff activity
      */
     static async logActivity(activityData) {
-        const { 
-            staffId, 
-            actionType, 
-            actionDescription, 
-            entityType, 
-            entityId, 
-            ipAddress, 
-            userAgent 
+        return StaffActivity.logActivityWithConnection(db, activityData);
+    }
+
+    /**
+     * Same insert, but on a caller-supplied connection so it can join an
+     * existing transaction (walk-in sales write their log inside the sale
+     * transaction).
+     *
+     * @param {object} runner - a mysql2 connection or pool with .query()
+     */
+    static async logActivityWithConnection(runner, activityData) {
+        const {
+            staffId,
+            actionType,
+            actionDescription,
+            entityType,
+            entityId,
+            ipAddress,
+            userAgent
         } = activityData;
 
         try {
-            const [result] = await db.query(
+            // The actor snapshot is written alongside the row so the entry stays
+            // readable (and auditable) even after the account is deleted.
+            const [result] = await runner.query(
                 `INSERT INTO staff_activity_logs 
-                 (staff_id, action_type, action_description, entity_type, entity_id, ip_address, user_agent)
-                 VALUES (?, ?, ?, ?, ?, ?, ?)`,
-                [staffId, actionType, actionDescription, entityType, entityId, ipAddress, userAgent]
+                 (staff_id, action_type, action_description, entity_type, entity_id,
+                  actor_name, actor_email, actor_role, ip_address, user_agent)
+                 SELECT u.id, ?, ?, ?, ?, CONCAT(u.first_name, ' ', u.last_name), u.email, u.role, ?, ?
+                 FROM users u WHERE u.id = ?`,
+                [actionType, actionDescription, entityType, entityId, ipAddress, userAgent, staffId]
             );
             return result.insertId;
         } catch (error) {
