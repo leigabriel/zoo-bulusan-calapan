@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+﻿import { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../hooks/use-auth';
 import { reservationAPI, userAPI } from '../../services/api-client';
@@ -68,7 +68,10 @@ const Field = ({ id, label, value, onChange, type = 'text', placeholder }) => (
     </div>
 );
 
-const ReservationHistoryPanel = ({ isOpen, onClose, paymentReturn = false }) => {
+// focusReference: open a freshly created reservation's receipt as soon as the
+// list has loaded, so "Pay Now" lands on the booking the visitor just made
+// instead of making them find it in the list. onFocusHandled clears the request.
+const ReservationHistoryPanel = ({ isOpen, onClose, paymentReturn = false, focusReference = null, onFocusHandled = null }) => {
     const navigate = useNavigate();
     const { isAuthenticated } = useAuth();
     const [activeTab, setActiveTab] = useState('all');
@@ -499,12 +502,27 @@ const ReservationHistoryPanel = ({ isOpen, onClose, paymentReturn = false }) => 
         }
     };
 
-    const combinedReservations = [
+    // Memoised so the focus effect below is not re-run on every render.
+    const combinedReservations = useMemo(() => [
         ...ticketReservations.map(r => ({ ...r, type: 'ticket' })),
         ...eventReservations.map(r => ({ ...r, type: 'event' }))
-    ];
+    ], [ticketReservations, eventReservations]);
 
     const selectionKey = (reservation) => `${reservation.type}:${reservation.id}`;
+
+    // The list arrives asynchronously, so this waits for the reference to appear
+    // rather than opening an empty modal on the first render.
+    useEffect(() => {
+        if (!isOpen || !focusReference) return;
+        const match = [...combinedReservations, ...archivedReservations]
+            .find(reservation => reservation.reservation_reference === focusReference);
+        if (!match) return;
+        setSelectedReservation(match);
+        setActiveTab('all');
+        setFilter('all');
+        setShowArchived(archivedReservations.includes(match));
+        if (onFocusHandled) onFocusHandled();
+    }, [isOpen, focusReference, combinedReservations, archivedReservations, onFocusHandled]);
 
     // Reservation ids are OPAQUE `pid_` tokens, not database integers — the API encodes every
     // id field before sending it. Coercing one with Number() yields NaN, which is what made

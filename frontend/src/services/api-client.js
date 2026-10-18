@@ -33,6 +33,30 @@ import { emitAuthExpired, isSessionExpiry } from './auth-events';
 
 const API_BASE_URL = getApiBaseUrl();
 
+/**
+ * A booking must not hang the UI forever. fetch() has no timeout of its own, so
+ * a backend that never answers leaves the button on "Processing..." indefinitely
+ * and invites a second submission that duplicates the reservation.
+ *
+ * The message names the risk, because the request may still have been saved
+ * server-side after the client gives up on it.
+ */
+const BOOKING_TIMEOUT_MS = 30000;
+const BOOKING_TIMEOUT_MESSAGE = 'The server took too long to respond. Check your reservations before booking again, so you do not end up with two.';
+
+const fetchWithTimeout = async (url, options, timeoutMs, timeoutMessage) => {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+        return await fetch(url, { ...options, signal: controller.signal });
+    } catch (error) {
+        if (error?.name === 'AbortError') throw new Error(timeoutMessage);
+        throw error;
+    } finally {
+        clearTimeout(timer);
+    }
+};
+
 let backendWarmupPromise = null;
 
 export const warmUpBackend = () => {
@@ -355,6 +379,11 @@ export const adminAPI = {
 
     changeMasterKey: async (data) => {
         const response = await fetch(`${API_BASE_URL}/admin/master-key/change`, { method: 'PUT', headers: getAuthHeaders('admin'), body: JSON.stringify(data) });
+        return handleResponse(response);
+    },
+
+    removeMasterKey: async (data) => {
+        const response = await fetch(`${API_BASE_URL}/admin/master-key`, { method: 'DELETE', headers: getAuthHeaders('admin'), body: JSON.stringify(data) });
         return handleResponse(response);
     },
 
@@ -2352,20 +2381,20 @@ export const reservationAPI = {
             formData.append('residentIdImage', reservationData.residentIdImage);
         }
 
-        const response = await fetch(`${API_BASE_URL}/reservations/ticket`, {
+        const response = await fetchWithTimeout(`${API_BASE_URL}/reservations/ticket`, {
             method: 'POST',
             headers: getAuthHeadersMultipart('user'),
             body: formData
-        });
+        }, BOOKING_TIMEOUT_MS, BOOKING_TIMEOUT_MESSAGE);
         return handleResponse(response);
     },
 
     createEventReservation: async (reservationData) => {
-        const response = await fetch(`${API_BASE_URL}/reservations/event`, {
+        const response = await fetchWithTimeout(`${API_BASE_URL}/reservations/event`, {
             method: 'POST',
             headers: getAuthHeaders('user'),
             body: JSON.stringify(reservationData)
-        });
+        }, BOOKING_TIMEOUT_MS, BOOKING_TIMEOUT_MESSAGE);
         return handleResponse(response);
     },
 

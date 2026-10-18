@@ -57,6 +57,8 @@ const Reservations = () => {
     const [ticketForm, setTicketForm] = useState({ reservationDate: '', reservationTime: '', visitorName: '', visitorEmail: '' });
     const [eventForm, setEventForm] = useState({ venueEventName: '', venueEventDate: '', venueEventStartTime: '', venueEventEndTime: '', venueEventDescription: '', numberOfParticipants: 1, participantName: '', participantEmail: '', participantPhone: '', notes: '' });
     const [showHistoryPanel, setShowHistoryPanel] = useState(false);
+    // Reservation whose receipt the ledger should open for us (set by "Pay Now").
+    const [focusReference, setFocusReference] = useState(null);
     const [paymentReturn, setPaymentReturn] = useState(false);
     const [ticketAvailability, setTicketAvailability] = useState([]);
     const [eventAvailability, setEventAvailability] = useState([]);
@@ -315,7 +317,8 @@ const Reservations = () => {
                         eventDate: eventForm.venueEventDate,
                         eventStartTime: eventForm.venueEventStartTime,
                         eventEndTime: eventForm.venueEventEndTime,
-                        participants: eventForm.numberOfParticipants
+                        participants: eventForm.numberOfParticipants,
+                        amount: res.paymentAmount
                     });
                     setShowConfirmation(true);
                     resetForms();
@@ -336,6 +339,24 @@ const Reservations = () => {
         const fullName = user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : '';
         setTicketForm({ reservationDate: '', visitorName: fullName, visitorEmail: user?.email || '' });
         setEventForm({ venueEventName: '', venueEventDate: '', venueEventStartTime: '', venueEventEndTime: '', venueEventDescription: '', numberOfParticipants: 1, participantName: fullName, participantEmail: user?.email || '', participantPhone: '', notes: '' });
+    };
+
+    // Only a booking with a balance can be paid; free entries keep the old buttons.
+    const confirmationAmount = confirmationData
+        ? (confirmationData.type === 'ticket' ? Number(confirmationData.total || 0) : Number(confirmationData.amount || 0))
+        : 0;
+
+    // "Pay Now" jumps into the ledger with this booking's receipt already open,
+    // which is where the QR Ph / pay-at-Bulusan options live.
+    const handlePayNow = () => {
+        const reference = confirmationData?.reference;
+        closeModal();
+        setFocusReference(reference);
+        setShowHistoryPanel(true);
+    };
+
+    const handlePayLater = () => {
+        closeModal();
     };
 
     const hasFormData = () => {
@@ -809,12 +830,25 @@ const Reservations = () => {
                                 </div>
 
                                 <div className="w-full flex flex-col gap-3">
-                                    <button onClick={closeModal} className="w-full py-4 border border-[#212631]/20 text-[9px] tracking-[0.18em] uppercase font-black text-[#212631] hover:bg-[#212631]/5 transition-colors cursor-pointer rounded-xl">
-                                        Dismiss
-                                    </button>
-                                    <button onClick={() => { closeModal(); setShowHistoryPanel(true); }} className="w-full py-4 bg-[#212631] border border-[#212631] text-[9px] tracking-[0.18em] uppercase font-black text-[#ebebeb] hover:bg-transparent hover:text-[#212631] transition-colors cursor-pointer rounded-xl">
-                                        Open Ledger
-                                    </button>
+                                    {confirmationAmount > 0 ? (
+                                        <>
+                                            <button onClick={handlePayNow} className="w-full py-4 bg-[#212631] border border-[#212631] text-[9px] tracking-[0.18em] uppercase font-black text-[#ebebeb] hover:bg-[#26bc61] hover:border-[#26bc61] transition-colors cursor-pointer rounded-xl">
+                                                Pay Now
+                                            </button>
+                                            <button onClick={handlePayLater} className="w-full py-4 border border-[#212631]/20 text-[9px] tracking-[0.18em] uppercase font-black text-[#212631] hover:bg-[#212631]/5 transition-colors cursor-pointer rounded-xl">
+                                                Pay Later
+                                            </button>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <button onClick={closeModal} className="w-full py-4 border border-[#212631]/20 text-[9px] tracking-[0.18em] uppercase font-black text-[#212631] hover:bg-[#212631]/5 transition-colors cursor-pointer rounded-xl">
+                                                Dismiss
+                                            </button>
+                                            <button onClick={() => { closeModal(); setShowHistoryPanel(true); }} className="w-full py-4 bg-[#212631] border border-[#212631] text-[9px] tracking-[0.18em] uppercase font-black text-[#ebebeb] hover:bg-transparent hover:text-[#212631] transition-colors cursor-pointer rounded-xl">
+                                                Open Ledger
+                                            </button>
+                                        </>
+                                    )}
                                 </div>
                             </motion.div>
                         </div>
@@ -845,7 +879,7 @@ const Reservations = () => {
                     )}
                 </AnimatePresence>
 
-                <ReservationHistoryPanel isOpen={showHistoryPanel} paymentReturn={paymentReturn} onClose={() => setShowHistoryPanel(false)} />
+                <ReservationHistoryPanel isOpen={showHistoryPanel} paymentReturn={paymentReturn} focusReference={focusReference} onFocusHandled={() => setFocusReference(null)} onClose={() => { setFocusReference(null); setShowHistoryPanel(false); }} />
                 <Footer />
                 <AIFloatingButton />
             </div>

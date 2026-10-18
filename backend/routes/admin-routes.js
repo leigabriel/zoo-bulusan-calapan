@@ -97,6 +97,7 @@ router.get('/master-key/status', adminMasterKeyController.getStatus);
 router.post('/master-key/create', adminMasterKeyController.create);
 router.put('/master-key/change', adminMasterKeyController.change);
 router.put('/master-key/toggle', adminMasterKeyController.toggle);
+router.delete('/master-key', trackActivity('master_key_delete', 'Deleted the admin Master Key'), adminMasterKeyController.remove);
 
 // Master Key management authenticates each change with the admin password and key.
 // Keep these routes usable even when an older session lacks the verification claim.

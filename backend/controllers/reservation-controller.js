@@ -333,13 +333,11 @@ exports.createTicketReservation = async (req, res) => {
             qrData
         });
 
-        await createAdminStaffNotification(
-            'New Ticket Reservation',
-            `${visitorName} booked ${totalVisitors} visitor(s) for ${reservationDate} (${reservationReference}). Pending confirmation.`,
-            'ticket',
-            '/admin/reservations'
-        );
-
+        // Respond before notifying admin/staff. That notification emails every active
+        // admin and staff member inline, and a slow or failing mail transport
+        // used to hold this response open for its whole retry budget (tens of
+        // seconds), leaving the visitor stuck on "Processing...". The booking is
+        // already saved here, so the reply never depends on the mail provider.
         res.status(201).json({
             success: true,
             message: 'Ticket reservation created successfully',
@@ -348,13 +346,25 @@ exports.createTicketReservation = async (req, res) => {
             qrData
         });
 
+        // Best-effort work after the response. notifyManagement swallows its own
+        // failures, and the headersSent guard below stops a late error from
+        // trying to write a second response.
+        await createAdminStaffNotification(
+            'New Ticket Reservation',
+            `${visitorName} booked ${totalVisitors} visitor(s) for ${reservationDate} (${reservationReference}). Pending confirmation.`,
+            'ticket',
+            '/admin/reservations'
+        );
+
         // Log user ticket reservation
         if (userId) {
             await logUserActivity(req, 'ticket_reservation', 'Reserved a ticket', 'reservation', reservationId);
         }
     } catch (error) {
         console.error('Error creating ticket reservation:', error);
-        res.status(500).json({ success: false, message: 'Error creating reservation' });
+        if (!res.headersSent) {
+            res.status(500).json({ success: false, message: 'Error creating reservation' });
+        }
     }
 };
 
@@ -444,14 +454,6 @@ exports.createEventReservation = async (req, res) => {
             paymentAmount
         });
 
-        // Create notification for admin/staff
-        await createAdminStaffNotification(
-            'New Event Reservation',
-            `${participantName} reserved ${venueEventName} for ${new Date(venueEventDate).toLocaleDateString()}`,
-            'event',
-            `/admin/reservations?event=${reservationId}`
-        );
-
         res.status(201).json({
             success: true,
             message: 'Event reservation created successfully',
@@ -462,13 +464,23 @@ exports.createEventReservation = async (req, res) => {
             paymentStatus: 'unpaid'
         });
 
+        // Notify admin/staff only after replying: see the ticket handler above.
+        await createAdminStaffNotification(
+            'New Event Reservation',
+            `${participantName} reserved ${venueEventName} for ${new Date(venueEventDate).toLocaleDateString()}`,
+            'event',
+            `/admin/reservations?event=${reservationId}`
+        );
+
         // Log user event reservation
         if (userId) {
             await logUserActivity(req, 'event_reservation', 'Reserved an event', 'reservation', reservationId);
         }
     } catch (error) {
         console.error('Error creating event reservation:', error);
-        res.status(500).json({ success: false, message: 'Error creating reservation' });
+        if (!res.headersSent) {
+            res.status(500).json({ success: false, message: 'Error creating event reservation' });
+        }
     }
 };
 

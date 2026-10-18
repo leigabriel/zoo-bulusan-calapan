@@ -88,6 +88,32 @@ exports.change = async (req, res) => {
     }
 };
 
+exports.remove = async (req, res) => {
+    try {
+        // Confirmed with the account password only, as requested. Note this is
+        // weaker than disabling the key, which additionally demands the key
+        // itself: whoever holds an admin password can now delete the second
+        // factor without ever knowing it. The request is authenticated, audited
+        // and rate limited by the admin router's middleware.
+        const { currentPassword } = req.body;
+
+        if (!await verifyPassword(req.user.id, currentPassword)) {
+            return res.status(401).json({ success: false, message: 'Current account password is incorrect.' });
+        }
+
+        const status = await AdminMasterKey.getStatus(req.user.id);
+        if (!status.configured) {
+            return res.status(409).json({ success: false, message: 'No Master Key is configured.' });
+        }
+
+        await AdminMasterKey.remove(req.user.id);
+        res.json({ success: true, status: { configured: false, enabled: false } });
+    } catch (error) {
+        console.error('Error deleting admin Master Key:', error);
+        res.status(500).json({ success: false, message: 'Unable to delete Master Key.' });
+    }
+};
+
 exports.toggle = async (req, res) => {
     try {
         const { currentPassword, masterKey, enabled } = req.body;

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+﻿import { useState, useEffect, useCallback } from 'react';
 import { ClipboardList, Users, Activity, Filter, ChevronLeft, ChevronRight, Refresh, Search } from 'reicon-react';
 import { adminAPI, getProfileImageUrl } from '../../services/api-client';
 import { formatSafeDate } from '../../utils/format-date';
@@ -19,6 +19,7 @@ const staffActionLabels = {
     user_update: 'User Update',
     appeal_review: 'Appeal Review',
     payment_config_update: 'Payment Config Update',
+    master_key_delete: 'Master Key Deleted',
     ticket_payment_config_update: 'Ticket Payment Config Update',
     model_upload: 'Model Upload',
     walk_in_sale: 'Walk-in Sale',

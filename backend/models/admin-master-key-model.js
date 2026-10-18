@@ -36,6 +36,14 @@ class AdminMasterKey {
         return result.affectedRows > 0;
     }
 
+    // Removes the stored key entirely, so admin login stops asking for it.
+    // Deleting the row (rather than clearing a flag) is what makes "Add Master
+    // Key" available again without leaving a hash behind.
+    static async remove(adminId) {
+        const [result] = await db.query('DELETE FROM admin_master_keys WHERE admin_id = ?', [adminId]);
+        return result.affectedRows > 0;
+    }
+
     static async setEnabled(adminId, enabled) {
         const [result] = await db.query(
             'UPDATE admin_master_keys SET enabled = ?, updated_at = NOW() WHERE admin_id = ?',
