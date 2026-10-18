@@ -1,5 +1,110 @@
 const nodemailer = require('nodemailer');
 
+/**
+ * Transactional email is handed to Brevo's HTTP API, not relayed from this
+ * server. Gmail's SMTP endpoint rejects or throttles connections from datacenter
+ * IPs such as Render's, so sending was unreliable in production; Brevo accepts
+ * the message over plain HTTPS and delivers it from its own infrastructure.
+ *
+ * Docs: https://developers.brevo.com/reference/sendtransacemail
+ *   POST https://api.brevo.com/v3/smtp/email
+ *   header: api-key: <BREVO_API_KEY>
+ *   body:   { sender: { name, email }, to: [{ email, name }], subject, htmlContent, textContent }
+ *   201 -> { messageId }
+ *
+ * SMTP is kept only as a fallback for a deployment with no Brevo key configured,
+ * so nothing breaks while the new credentials are being added.
+ */
+const BREVO_API_URL = 'https://api.brevo.com/v3/smtp/email';
+const BREVO_TIMEOUT_MS = 10000;
+const DEFAULT_SENDER_NAME = 'Bulusan Zoo';
+
+const brevoSettings = () => ({
+    apiKey: (process.env.BREVO_API_KEY || '').trim(),
+    senderEmail: (process.env.BREVO_SENDER_EMAIL || '').trim(),
+    senderName: (process.env.BREVO_SENDER_NAME || '').trim() || DEFAULT_SENDER_NAME
+});
+
+// Both halves are needed: a key without a verified sender is rejected by Brevo.
+const isBrevoConfigured = () => {
+    const { apiKey, senderEmail } = brevoSettings();
+    return Boolean(apiKey && senderEmail);
+};
+
+/**
+ * "Name" <address> for the nodemailer-shaped mailOptions every template builds,
+ * so the sender comes from Brevo once it is configured.
+ */
+const senderAddress = () => {
+    const { senderEmail, senderName } = brevoSettings();
+    const address = isBrevoConfigured() ? senderEmail : process.env.SMTP_USER;
+    return `"${senderName}" <${address}>`;
+};
+
+/**
+ * True when a failure is worth retrying. A rejected key, a bad payload or an
+ * unverified sender will fail identically on every attempt; a timeout, a 429 or
+ * a 5xx may succeed later.
+ */
+const isPermanentFailure = (status) => status === 400 || status === 401 || status === 403 || status === 404;
+
+/**
+ * Send one message through Brevo. Resolves to { messageId } on success and
+ * throws an Error carrying `status` / `retryable` otherwise.
+ */
+const sendViaBrevo = async (mailOptions) => {
+    const { apiKey, senderName, senderEmail } = brevoSettings();
+
+    if (!apiKey || !senderEmail) {
+        throw new Error('Missing Brevo configuration. Please check environment variables.');
+    }
+
+    const payload = {
+        sender: { name: senderName, email: senderEmail },
+        to: [{ email: mailOptions.to }],
+        subject: mailOptions.subject,
+        htmlContent: mailOptions.html
+    };
+    // A plain-text alternative avoids multipart/related weirdness in clients
+    // that render only the text part.
+    if (mailOptions.text) payload.textContent = mailOptions.text;
+
+    const response = await fetch(BREVO_API_URL, {
+        method: 'POST',
+        headers: {
+            'api-key': apiKey,
+            'Content-Type': 'application/json',
+            accept: 'application/json'
+        },
+        body: JSON.stringify(payload),
+        signal: AbortSignal.timeout(BREVO_TIMEOUT_MS)
+    });
+
+    if (!response.ok) {
+        // Brevo answers { code, message }; never echo the raw body into logs
+        // beyond the message, which can include the recipient address.
+        let detail = '';
+        try {
+            const body = await response.json();
+            detail = body?.message || body?.code || '';
+        } catch {
+            detail = await response.text().catch(() => '');
+        }
+        const error = new Error(`Brevo rejected the message (HTTP ${response.status})${detail ? `: ${detail}` : ''}`);
+        error.status = response.status;
+        error.retryable = !isPermanentFailure(response.status);
+        throw error;
+    }
+
+    let messageId = null;
+    try {
+        messageId = (await response.json())?.messageId || null;
+    } catch {
+        // A 201 with an unreadable body is still a successful send.
+    }
+    return { messageId };
+};
+
 // cached transporter
 let cachedTransporter = null;
 
@@ -72,16 +177,45 @@ const logEmail = (level, message, meta = {}) => {
  * @param {number} retryDelay - Delay between retries in ms
  * @returns {Promise<boolean>}
  */
+// One warning per process: a deployment missing its Brevo variables silently
+// keeps relaying through SMTP, which looks like the Brevo change never landed.
+let hasWarnedAboutSmtpFallback = false;
+
 const sendEmailWithRetry = async (mailOptions, maxRetries = 3, retryDelay = 2000) => {
-    const transporter = getTransporter();
+    const useBrevo = isBrevoConfigured();
+    let transporter = null;
+    if (!useBrevo) {
+        if (!hasWarnedAboutSmtpFallback) {
+            hasWarnedAboutSmtpFallback = true;
+            logEmail('warn', 'Brevo is not configured - relaying through SMTP instead', {
+                missing: ['BREVO_API_KEY', 'BREVO_SENDER_EMAIL'].filter(key => !process.env[key])
+            });
+        }
+        // No Brevo key: fall back to SMTP. When neither transport is configured
+        // this used to throw, which turned a missing-email-credentials problem
+        // into a failed request for every caller that returns this value
+        // directly. Every caller here works in booleans ("was it delivered?"),
+        // so report that honestly instead.
+        try {
+            transporter = getTransporter();
+        } catch (error) {
+            logEmail('error', 'No email transport configured', {
+                to: mailOptions.to,
+                subject: mailOptions.subject,
+                error: error.message
+            });
+            return false;
+        }
+    }
     let lastError = null;
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
         try {
-            const info = await transporter.sendMail(mailOptions);
+            const info = useBrevo ? await sendViaBrevo(mailOptions) : await transporter.sendMail(mailOptions);
             logEmail('info', 'Email sent successfully', {
                 to: mailOptions.to,
                 subject: mailOptions.subject,
+                provider: useBrevo ? 'brevo' : 'smtp',
                 messageId: info.messageId,
                 attempt
             });
@@ -93,13 +227,14 @@ const sendEmailWithRetry = async (mailOptions, maxRetries = 3, retryDelay = 2000
                 subject: mailOptions.subject,
                 error: error.message,
                 code: error.code,
+                status: error.status,
                 attempt,
                 maxRetries
             });
 
             // Don't retry on authentication or configuration errors
-            if (error.code === 'EAUTH' || error.responseCode === 535) {
-                logEmail('error', 'Email authentication failed - not retrying', {
+            if (error.code === 'EAUTH' || error.responseCode === 535 || error.retryable === false) {
+                logEmail('error', 'Email rejected permanently - not retrying', {
                     to: mailOptions.to,
                     error: error.message
                 });
@@ -154,7 +289,7 @@ const sendVerificationEmail = async (email, token, firstName) => {
     const verificationLink = `${backendUrl}/api/auth/verify-email?token=${token}`;
 
     const mailOptions = {
-        from: `"Bulusan Zoo" <${process.env.SMTP_USER}>`,
+        from: senderAddress(),
         to: email,
         subject: 'Verify Your Email - Bulusan Zoo',
         html: `
@@ -263,7 +398,7 @@ const sendVerificationEmailSync = async (email, token, firstName) => {
     const verificationLink = `${backendUrl}/api/auth/verify-email?token=${token}`;
 
     const mailOptions = {
-        from: `"Bulusan Zoo" <${process.env.SMTP_USER}>`,
+        from: senderAddress(),
         to: email,
         subject: 'Verify Your Email - Bulusan Zoo',
         html: generateVerificationEmailHtml(firstName, verificationLink),
@@ -361,7 +496,7 @@ const sendPasswordResetEmail = async (email, token, firstName) => {
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
     const resetLink = `${frontendUrl}/login?resetToken=${encodeURIComponent(token)}`;
     const mailOptions = {
-        from: `"Bulusan Zoo" <${process.env.SMTP_USER}>`,
+        from: senderAddress(),
         to: email,
         subject: 'Reset Your Password - Bulusan Zoo',
         html: `
@@ -487,7 +622,7 @@ const sendNotificationEmail = async (email, firstName, title, message, link = nu
     const safeName = escapeHtml(firstName || 'there');
 
     const mailOptions = {
-        from: `"Bulusan Zoo" <${process.env.SMTP_USER}>`,
+        from: senderAddress(),
         to: email,
         subject: `${title} - Bulusan Zoo`,
         html: `
@@ -525,7 +660,7 @@ const sendWelcomeEmail = async ({ email, firstName, username, profileUrl, hasPas
     const account = { firstName, username, profileUrl: destination, hasPassword };
 
     const mailOptions = {
-        from: `"Bulusan Zoo" <${process.env.SMTP_USER}>`,
+        from: senderAddress(),
         to: email,
         subject: 'Welcome to Bulusan Zoo',
         html: buildWelcomeEmailHtml(account),
