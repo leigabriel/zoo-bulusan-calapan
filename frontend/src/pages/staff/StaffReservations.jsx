@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { reservationAPI, getResidentIdImageUrl } from '../../services/api-client';
 import { notify } from '../../utils/toast';
 import { paymentStatusBadge, paymentStatusLabel, paymentMethodLabel } from '../../utils/payment-status';
+import { formatTime12, formatTimeRange12 } from '../../utils/time-format';
 
 
 const StaffReservations = ({ globalSearch = '' }) => {
@@ -100,15 +101,6 @@ const StaffReservations = ({ globalSearch = '' }) => {
         } finally {
             setActionLoading(false);
         }
-    };
-
-    // Venue bookings store a start and an end; hosted events only have the
-    // times on the event row. Both are shown so the window is unambiguous.
-    const formatEventTime = (reservation) => {
-        const start = reservation?.venue_event_time || reservation?.start_time || '';
-        const end = reservation?.venue_event_end_time || reservation?.end_time || '';
-        if (!start && !end) return '';
-        return end ? `${start} - ${end}` : start;
     };
 
     const formatDate = (dateStr) => {
@@ -346,8 +338,8 @@ const StaffReservations = ({ globalSearch = '' }) => {
                                         </td>
                                         <td className="px-6 py-4 text-gray-700 whitespace-nowrap">
                                             {activeTab === 'tickets'
-                                                ? (reservation.reservation_time || '-')
-                                                : formatEventTime(reservation)}
+                                                ? (formatTime12(reservation.reservation_time) || '-')
+                                                : (formatTimeRange12(reservation.venue_event_time || reservation.start_time, reservation.venue_event_end_time || reservation.end_time) || '-')}
                                         </td>
                                         <td className="px-6 py-4">
                                             <span className={`inline-flex px-3 py-1 text-xs font-medium rounded-full border capitalize ${getStatusBadge(reservation.status)}`}>
@@ -443,8 +435,15 @@ const StaffReservations = ({ globalSearch = '' }) => {
                                         }
                                     </p>
                                     {selectedReservation.type === 'event' && (selectedReservation.venue_event_date || selectedReservation.event_date) && <p className="text-sm text-gray-500">{formatDate(selectedReservation.venue_event_date || selectedReservation.event_date)}</p>}
-                                    {selectedReservation.type === 'ticket' && selectedReservation.reservation_time && <p className="text-sm text-gray-500">{selectedReservation.reservation_time}</p>}
-                                    {(selectedReservation.type === 'event' ? formatEventTime(selectedReservation) : '') !== '' && <p className="text-sm text-gray-500">{formatEventTime(selectedReservation)}</p>}
+                                </div>
+                                <div>
+                                    <p className="text-xs text-gray-500 uppercase mb-1">Time</p>
+                                    <p className="text-gray-900">
+                                        {selectedReservation.type === 'ticket'
+                                            ? (formatTime12(selectedReservation.reservation_time) || '-')
+                                            : (formatTimeRange12(selectedReservation.venue_event_time || selectedReservation.start_time, selectedReservation.venue_event_end_time || selectedReservation.end_time) || '-')
+                                        }
+                                    </p>
                                 </div>
                                 {selectedReservation.type === 'event' && selectedReservation.venue_event_description && (
                                     <div className="col-span-2">
