@@ -102,6 +102,15 @@ const StaffReservations = ({ globalSearch = '' }) => {
         }
     };
 
+    // Venue bookings store a start and an end; hosted events only have the
+    // times on the event row. Both are shown so the window is unambiguous.
+    const formatEventTime = (reservation) => {
+        const start = reservation?.venue_event_time || reservation?.start_time || '';
+        const end = reservation?.venue_event_end_time || reservation?.end_time || '';
+        if (!start && !end) return '';
+        return end ? `${start} - ${end}` : start;
+    };
+
     const formatDate = (dateStr) => {
         if (!dateStr) return '-';
         return new Date(dateStr).toLocaleDateString('en-US', {
@@ -290,6 +299,7 @@ const StaffReservations = ({ globalSearch = '' }) => {
                                 <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">User</th>
                                 <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">{activeTab === 'tickets' ? 'Ticket Type' : 'Event Name'}</th>
                                 <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Reservation Date</th>
+                                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Time</th>
                                 <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
                                 <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Payment</th>
                                 <th className="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
@@ -298,7 +308,7 @@ const StaffReservations = ({ globalSearch = '' }) => {
                         <tbody className="divide-y divide-green-300">
                             {filteredReservations.length === 0 ? (
                                 <tr>
-                                    <td colSpan="7" className="px-6 py-12 text-center text-gray-500">
+                                    <td colSpan="8" className="px-6 py-12 text-center text-gray-500">
                                         No reservations found
                                     </td>
                                 </tr>
@@ -333,6 +343,11 @@ const StaffReservations = ({ globalSearch = '' }) => {
                                                 ? formatDate(reservation.reservation_date)
                                                 : formatDate(reservation.venue_event_date || reservation.event_date)
                                             }
+                                        </td>
+                                        <td className="px-6 py-4 text-gray-700 whitespace-nowrap">
+                                            {activeTab === 'tickets'
+                                                ? (reservation.reservation_time || '-')
+                                                : formatEventTime(reservation)}
                                         </td>
                                         <td className="px-6 py-4">
                                             <span className={`inline-flex px-3 py-1 text-xs font-medium rounded-full border capitalize ${getStatusBadge(reservation.status)}`}>
@@ -428,7 +443,8 @@ const StaffReservations = ({ globalSearch = '' }) => {
                                         }
                                     </p>
                                     {selectedReservation.type === 'event' && (selectedReservation.venue_event_date || selectedReservation.event_date) && <p className="text-sm text-gray-500">{formatDate(selectedReservation.venue_event_date || selectedReservation.event_date)}</p>}
-                                    {selectedReservation.type === 'event' && selectedReservation.venue_event_time && <p className="text-sm text-gray-500">{selectedReservation.venue_event_time}</p>}
+                                    {selectedReservation.type === 'ticket' && selectedReservation.reservation_time && <p className="text-sm text-gray-500">{selectedReservation.reservation_time}</p>}
+                                    {(selectedReservation.type === 'event' ? formatEventTime(selectedReservation) : '') !== '' && <p className="text-sm text-gray-500">{formatEventTime(selectedReservation)}</p>}
                                 </div>
                                 {selectedReservation.type === 'event' && selectedReservation.venue_event_description && (
                                     <div className="col-span-2">
