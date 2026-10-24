@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { ReactLenis } from 'lenis/react';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
@@ -51,6 +51,54 @@ const facts = [
     { label: 'Administration', value: 'City Economic Enterprise Department, City Government of Calapan' },
 ];
 
+// Only the 4:5 portraits are listed so every tile in the strip keeps the same crop.
+const parkPhotos = [
+    { src: '/bulusanzoo-images/bz1.jpg', alt: 'Brick walkway curving toward the pavilion at Bulusan Park' },
+    { src: '/bulusanzoo-images/bz2.jpg', alt: 'White arched gateway framing a walkway into Bulusan Park' },
+    { src: '/bulusanzoo-images/bz5.jpg', alt: 'Rock-lined waterfall spilling into a pond at Bulusan Park' },
+    { src: '/bulusanzoo-images/bz6.jpg', alt: 'Garden path lined with red and green foliage at Bulusan Park' },
+    { src: '/bulusanzoo-images/bz10.jpg', alt: 'Wall climbing tower rising among the trees at Bulusan Park' },
+    { src: '/bulusanzoo-images/bz11.jpg', alt: 'Century-old trees casting shade across the open lawn at Bulusan Park' },
+    { src: '/bulusanzoo-images/bz12.jpg', alt: 'Wooden footbridge leading to the park gateway' },
+];
+
+const pickRandomPhotos = (count) => {
+    const shuffled = [...parkPhotos];
+    for (let i = shuffled.length - 1; i > 0; i -= 1) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled.slice(0, count);
+};
+
+const PhotoStrip = () => {
+    // Picked once per visit so the strip feels fresh without reshuffling on every render.
+    const photos = useMemo(() => pickRandomPhotos(4), []);
+
+    return (
+        <section className="bg-[#f7f5ef] px-4 pb-20 sm:px-6 sm:pb-28 md:px-10" aria-labelledby="park-photos-title">
+            <div className="mx-auto max-w-[1500px]">
+                <div className="flex flex-col gap-3 pt-10 sm:flex-row sm:items-end sm:justify-between sm:pt-12">
+                    <h2 id="park-photos-title" className="text-xs font-bold uppercase tracking-[0.25em] text-[#212631]/40">Scenes from the park</h2>
+                    <p className="max-w-md text-sm font-medium leading-6 text-[#212631]/50">Shaded walkways, garden ponds, and the open grounds visitors pass through on the way to the pavilion.</p>
+                </div>
+                <div className="mt-6 grid grid-cols-2 gap-3 sm:mt-8 sm:gap-5 lg:grid-cols-4">
+                    {photos.map((photo) => (
+                        <figure key={photo.src} className="group aspect-[4/5] overflow-hidden rounded-2xl bg-black/5">
+                            <img
+                                src={photo.src}
+                                alt={photo.alt}
+                                loading="lazy"
+                                className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]"
+                            />
+                        </figure>
+                    ))}
+                </div>
+            </div>
+        </section>
+    );
+};
+
 const AboutUs = () => {
     const description = 'Learn about Bulusan Park, the Calapan City Recreational and Zoological Park in Barangay Bulusan, its history, natural setting, recreation areas, and community role.';
     usePageMetadata('About Bulusan Park | Calapan City', description, 'https://bulusanzoo.com/about');
@@ -86,6 +134,8 @@ const AboutUs = () => {
                             ))}
                         </div>
                     </section>
+
+                    <PhotoStrip />
 
                     <section className="bg-white px-4 py-20 sm:px-6 sm:py-28 md:px-10" aria-labelledby="park-story-title">
                         <div className="mx-auto grid max-w-[1500px] gap-12 lg:grid-cols-[0.7fr_1.3fr] lg:gap-24">

@@ -176,16 +176,160 @@ const HeroSection = () => {
     );
 };
 
+const aboutGallery = [
+    {
+        src: '/bulusanzoo-images/bz5.jpg',
+        caption: 'Rock garden and pond',
+        alt: 'Rock-lined waterfall spilling into a pond at Bulusan Park',
+    },
+    {
+        src: '/bulusanzoo-images/bz2.jpg',
+        caption: 'White arch gateway',
+        alt: 'White arched gateway framing the walkway into Bulusan Park',
+    },
+    {
+        src: '/bulusanzoo-images/bz11.jpg',
+        caption: 'Century-old trees',
+        alt: 'Century-old trees casting shade across the open lawn at Bulusan Park',
+    },
+];
+
+// Three portraits sit side by side on larger screens. Phones get a single frame that advances on
+// its own so the gallery never becomes a cramped strip of thumbnails.
+const AboutGallery = () => {
+    const [index, setIndex] = useState(0);
+    const [autoplay, setAutoplay] = useState(false);
+    const touchStartX = useRef(null);
+
+    useEffect(() => {
+        const mobile = window.matchMedia('(max-width: 639px)');
+        const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+        const update = () => setAutoplay(mobile.matches && !reducedMotion.matches);
+        update();
+        mobile.addEventListener('change', update);
+        reducedMotion.addEventListener('change', update);
+        return () => {
+            mobile.removeEventListener('change', update);
+            reducedMotion.removeEventListener('change', update);
+        };
+    }, []);
+
+    useEffect(() => {
+        if (!autoplay) {
+            setIndex(0);
+            return undefined;
+        }
+        const timer = window.setInterval(() => {
+            setIndex((current) => (current + 1) % aboutGallery.length);
+        }, 1500);
+        return () => window.clearInterval(timer);
+    }, [autoplay]);
+
+    const go = (delta) => setIndex((current) => (current + delta + aboutGallery.length) % aboutGallery.length);
+
+    return (
+        <div>
+            <div className="mb-5 flex items-end justify-between gap-4 sm:mb-7">
+                <p className="text-xs font-black uppercase tracking-[0.25em] text-black/55">Park in pictures</p>
+                <p className="hidden text-[11px] font-bold uppercase tracking-[0.2em] text-black/40 sm:block">Three stops inside the park</p>
+            </div>
+
+            <div className="sm:hidden">
+                <div
+                    className="relative overflow-hidden rounded-[1.25rem] shadow-lg shadow-green-900/10"
+                    onTouchStart={(event) => { touchStartX.current = event.touches[0].clientX; }}
+                    onTouchEnd={(event) => {
+                        if (touchStartX.current === null) return;
+                        const delta = event.changedTouches[0].clientX - touchStartX.current;
+                        if (Math.abs(delta) > 40) go(delta < 0 ? 1 : -1);
+                        touchStartX.current = null;
+                    }}
+                >
+                    <div
+                        className="flex transition-transform duration-700 ease-out"
+                        style={{ transform: `translateX(-${index * 100}%)` }}
+                    >
+                        {aboutGallery.map((photo) => (
+                            <figure key={photo.src} className="relative aspect-[4/5] w-full shrink-0">
+                                <img
+                                    src={photo.src}
+                                    alt={photo.alt}
+                                    loading="lazy"
+                                    draggable={false}
+                                    className="h-full w-full object-cover"
+                                />
+                                <figcaption className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 via-black/25 to-transparent px-5 pb-5 pt-16">
+                                    <span className="text-sm font-black text-white">{photo.caption}</span>
+                                </figcaption>
+                            </figure>
+                        ))}
+                    </div>
+                </div>
+
+                <div className="mt-4 flex items-center justify-center gap-1">
+                    {aboutGallery.map((photo, dotIndex) => (
+                        <button
+                            key={photo.src}
+                            type="button"
+                            onClick={() => setIndex(dotIndex)}
+                            aria-label={`Show ${photo.caption}`}
+                            aria-current={dotIndex === index}
+                            className="min-h-0 p-1.5"
+                        >
+                            <span className={`block rounded-full transition-all duration-300 ${dotIndex === index ? 'h-2 w-6 bg-black' : 'h-2 w-2 bg-black/30'}`} />
+                        </button>
+                    ))}
+                </div>
+            </div>
+
+            <ul className="hidden gap-4 sm:grid sm:grid-cols-3 sm:gap-5 lg:gap-6">
+                {aboutGallery.map((photo) => (
+                    <li key={photo.src} className="group relative aspect-[4/5] overflow-hidden rounded-[1.25rem] bg-green-300 shadow-lg shadow-green-900/10">
+                        <img
+                            src={photo.src}
+                            alt={photo.alt}
+                            loading="lazy"
+                            className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]"
+                        />
+                        <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent px-4 pb-4 pt-16 sm:px-5 sm:pb-5" />
+                        <p className="absolute inset-x-4 bottom-4 text-sm font-black text-white sm:inset-x-5 sm:bottom-5">{photo.caption}</p>
+                    </li>
+                ))}
+            </ul>
+        </div>
+    );
+};
+
 const AboutSection = () => (
-    <section className="relative w-full min-h-[78svh] p-4 sm:p-8 flex items-center justify-center bg-green-400">
-        <div className="w-full mx-auto max-w-[1500px] flex flex-col items-center justify-center text-center rounded-[1.5rem] sm:rounded-[2rem] bg-green-400 px-3 py-16 sm:px-10 sm:py-24">
-            <p className="mb-7 text-xs font-black uppercase tracking-[0.25em] text-black/55">About Bulusan Park</p>
-            <h2 className="max-w-[1300px] text-black text-[clamp(2.15rem,6vw,5.8rem)] font-black leading-[1.02] tracking-[-0.045em]">
-                The Calapan City Recreational and Zoological Park, commonly known as Bulusan Park, brings recreation, environmental education, and leisure together in Barangay Bulusan.
-            </h2>
-            <p className="mt-8 max-w-3xl text-base font-semibold leading-7 text-black/65 sm:text-lg">
-                Managed by the City Economic Enterprise Department, the park includes a mini-zoo, landscaped open spaces, and a multi-purpose pavilion for events and community gatherings.
-            </p>
+    <section className="relative w-full overflow-hidden bg-green-400" aria-labelledby="about-park-title">
+        {/* Park walkthrough footage sits under a green veil so the section keeps its green identity. */}
+        <video
+            className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-60"
+            src="/bulusanzoo-images/bzv2.mp4"
+            poster="/bulusanzoo-images/bzv2-poster.jpg"
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="metadata"
+            aria-hidden="true"
+            tabIndex={-1}
+        />
+        {/* Green stays the section colour; the veil is strongest behind the copy and eases off
+            toward the edges so the walkthrough footage reads at the top and bottom. */}
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(120%_95%_at_50%_35%,rgba(74,222,128,0.95)_0%,rgba(74,222,128,0.95)_42%,rgba(74,222,128,0.52)_100%)]" aria-hidden="true" />
+
+        <div className="relative mx-auto flex w-full max-w-[1500px] flex-col gap-10 px-4 py-16 sm:gap-14 sm:px-6 sm:py-24 lg:px-10">
+            <div className="flex flex-col items-center text-center">
+                <p className="mb-7 text-xs font-black uppercase tracking-[0.25em] text-black/55">About Bulusan Park</p>
+                <h2 id="about-park-title" className="max-w-[1300px] text-black text-[clamp(2.15rem,6vw,5.8rem)] font-black leading-[1.02] tracking-[-0.045em]">
+                    The Calapan City Recreational and Zoological Park, commonly known as Bulusan Park, brings recreation, environmental education, and leisure together in Barangay Bulusan.
+                </h2>
+                <p className="mt-8 max-w-3xl text-base font-semibold leading-7 text-black/65 sm:text-lg">
+                    Managed by the City Economic Enterprise Department, the park includes a mini-zoo, landscaped open spaces, and a multi-purpose pavilion for events and community gatherings.
+                </p>
+            </div>
+            <AboutGallery />
         </div>
     </section>
 );
@@ -198,8 +342,12 @@ const parkFeatures = [
 ];
 
 const ExploreSection = () => (
-    <section className="bg-[#f7f5ef] px-4 py-20 sm:px-6 sm:py-28 lg:px-10" aria-labelledby="explore-park-title">
-        <div className="mx-auto max-w-[1500px]">
+    <section className="relative overflow-hidden bg-[#f7f5ef] px-4 py-20 sm:px-6 sm:py-28 lg:px-10" aria-labelledby="explore-park-title">
+        <div className="pointer-events-none absolute inset-0" aria-hidden="true">
+            <img src="/bulusanzoo-images/bz3.jpg" alt="" loading="lazy" className="h-full w-full object-cover opacity-25" />
+            <div className="absolute inset-0 bg-[linear-gradient(to_bottom,#f7f5ef_0%,rgba(247,245,239,0.55)_30%,rgba(247,245,239,0.55)_70%,#f7f5ef_100%)]" />
+        </div>
+        <div className="relative mx-auto max-w-[1500px]">
             <div className="grid gap-8 border-b border-black/15 pb-10 lg:grid-cols-[0.8fr_1.2fr] lg:items-end">
                 <div>
                     <p className="mb-4 text-xs font-black uppercase tracking-[0.24em] text-black/45">Inside the park</p>
@@ -238,6 +386,10 @@ const ZootopiaSection = () => {
 
     return (
         <section className="relative overflow-hidden bg-[#151b16] px-4 py-20 text-white sm:px-6 sm:py-28 lg:px-10" aria-labelledby="zootopia-title">
+            <div className="pointer-events-none absolute inset-0" aria-hidden="true">
+                <img src="/bulusanzoo-images/bz8.jpg" alt="" loading="lazy" className="h-full w-full object-cover opacity-40" />
+                <div className="absolute inset-0 bg-[linear-gradient(to_bottom,#151b16_0%,rgba(21,27,22,0.72)_30%,rgba(21,27,22,0.72)_70%,#151b16_100%)]" />
+            </div>
             <div className="pointer-events-none absolute -left-24 top-14 h-64 w-64 rounded-full bg-green-400/10 blur-2xl sm:h-96 sm:w-96" />
             <div className="pointer-events-none absolute -right-16 bottom-12 h-56 w-56 rounded-full border border-green-300/20 sm:h-80 sm:w-80" />
 
@@ -319,6 +471,10 @@ const ActivitiesSection = () => (
 
 const TrailSection = () => (
     <section className="relative overflow-hidden bg-[#151b16] px-4 py-20 text-white sm:px-6 sm:py-28 lg:px-10" aria-labelledby="trail-title">
+        <div className="pointer-events-none absolute inset-0" aria-hidden="true">
+            <img src="/bulusanzoo-images/bz4.jpg" alt="" loading="lazy" className="h-full w-full object-cover opacity-40" />
+            <div className="absolute inset-0 bg-[linear-gradient(to_bottom,#151b16_0%,rgba(21,27,22,0.72)_30%,rgba(21,27,22,0.72)_70%,#151b16_100%)]" />
+        </div>
         <div className="pointer-events-none absolute -right-24 top-10 h-72 w-72 rounded-full border border-green-300/20 sm:h-[32rem] sm:w-[32rem]" />
         <div className="pointer-events-none absolute -right-8 top-28 h-44 w-44 rounded-full bg-green-400/10 blur-2xl sm:h-80 sm:w-80" />
         <div className="relative mx-auto grid max-w-[1500px] gap-14 lg:grid-cols-[1.15fr_0.85fr] lg:items-end">
@@ -342,8 +498,12 @@ const TrailSection = () => (
 );
 
 const OfficialRecordsSection = () => (
-    <section className="bg-white px-4 py-20 sm:px-6 sm:py-28 lg:px-10" aria-labelledby="official-records-title">
-        <div className="mx-auto max-w-[1500px] rounded-[2rem] border border-black/10 p-6 sm:p-10 lg:grid lg:grid-cols-[0.85fr_1.15fr] lg:gap-16 lg:p-14">
+    <section className="relative overflow-hidden bg-white px-4 py-20 sm:px-6 sm:py-28 lg:px-10" aria-labelledby="official-records-title">
+        <div className="pointer-events-none absolute inset-0" aria-hidden="true">
+            <img src="/bulusanzoo-images/bz7.jpg" alt="" loading="lazy" className="h-full w-full object-cover opacity-20" />
+            <div className="absolute inset-0 bg-[linear-gradient(to_bottom,#ffffff_0%,rgba(255,255,255,0.6)_30%,rgba(255,255,255,0.6)_70%,#ffffff_100%)]" />
+        </div>
+        <div className="relative mx-auto max-w-[1500px] rounded-[2rem] border border-black/10 p-6 sm:p-10 lg:grid lg:grid-cols-[0.85fr_1.15fr] lg:gap-16 lg:p-14">
             <div>
                 <p className="text-xs font-black uppercase tracking-[0.24em] text-black/40">Documentary sources</p>
                 <h2 id="official-records-title" className="mt-5 text-[clamp(2.4rem,5vw,5rem)] font-black leading-[0.95] tracking-[-0.05em]">See the park through official channels.</h2>
