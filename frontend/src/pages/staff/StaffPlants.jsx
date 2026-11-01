@@ -1,9 +1,24 @@
 import { Leaf as PlantIcon, Search as SearchIcon, Sort as SortIcon, Plus as PlusIcon, Edit as EditIcon, Trash as TrashIcon, X as CloseIcon } from 'reicon-react';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { plantAPI, staffAPI } from '../../services/api-client';
 import ConfirmModal from '../../components/common/ConfirmModal';
+import useScrollLock from '../../hooks/use-scroll-lock';
 import { sanitizeInput } from '../../utils/sanitize';
 import { notify } from '../../utils/toast';
+
+// Mirrors the plants.category ENUM so every option can actually be saved.
+const PLANT_CATEGORIES = ['trees', 'shrubs', 'flowers', 'ferns', 'grasses', 'palms', 'succulents', 'vines', 'herbs', 'aquatic'];
+
+const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
+
+const emptyForm = () => ({
+    name: '',
+    scientificName: '',
+    category: 'trees',
+    description: '',
+    imageUrl: ''
+});
 
 const StaffPlants = ({ globalSearch = '' }) => {
     const [plants, setPlants] = useState([]);
@@ -19,22 +34,13 @@ const StaffPlants = ({ globalSearch = '' }) => {
     const [deleting, setDeleting] = useState(false);
     const [trashTarget, setTrashTarget] = useState(null);
     const [showBulkModal, setShowBulkModal] = useState(false);
-    const [form, setForm] = useState({
-        name: '',
-        scientificName: '',
-        category: 'trees',
-        description: '',
-        location: '',
-        status: 'healthy',
-        imageUrl: ''
-    });
+    const [form, setForm] = useState(emptyForm);
     const [saving, setSaving] = useState(false);
-    const [imageInputMode, setImageInputMode] = useState('upload');
     const [imageFile, setImageFile] = useState(null);
     const [imagePreview, setImagePreview] = useState(null);
+    const fileInputRef = useRef(null);
 
-    const categoryOptions = ['trees', 'shrubs', 'flowers', 'ferns', 'palms', 'succulents', 'aquatic', 'medicinal'];
-    const statusOptions = ['healthy', 'growing', 'dormant', 'sick', 'treatment'];
+    useScrollLock(showModal);
 
     useEffect(() => { fetchPlants(); }, []);
 
@@ -93,18 +99,10 @@ const StaffPlants = ({ globalSearch = '' }) => {
 
     const openCreateModal = () => {
         setEditingPlant(null);
-        setForm({
-            name: '',
-            scientificName: '',
-            category: 'trees',
-            description: '',
-            location: '',
-            status: 'healthy',
-            imageUrl: ''
-        });
-        setImageInputMode('upload');
+        setForm(emptyForm());
         setImageFile(null);
         setImagePreview(null);
+        if (fileInputRef.current) fileInputRef.current.value = '';
         setShowModal(true);
     };
 
@@ -115,53 +113,78 @@ const StaffPlants = ({ globalSearch = '' }) => {
             scientificName: plant.scientific_name || '',
             category: plant.category || 'trees',
             description: plant.description || '',
-            location: plant.location || '',
-            status: plant.status || 'healthy',
             imageUrl: plant.image_url || ''
         });
-        setImageInputMode('upload');
         setImageFile(null);
         setImagePreview(null);
+        if (fileInputRef.current) fileInputRef.current.value = '';
         setShowModal(true);
     };
 
-    const closeModal = () => {
+    const closeModal = useCallback(() => {
         setShowModal(false);
         setEditingPlant(null);
-        setForm({
-            name: '',
-            scientificName: '',
-            category: 'trees',
-            description: '',
-            location: '',
-            status: 'healthy',
-            imageUrl: ''
-        });
-        setImageInputMode('upload');
+        setForm(emptyForm());
         setImageFile(null);
         setImagePreview(null);
-    };
+        if (fileInputRef.current) fileInputRef.current.value = '';
+    }, []);
+
+    useEffect(() => {
+        if (!showModal) return undefined;
+
+        const handleKeyDown = (event) => {
+            if (event.key === 'Escape' && !saving) closeModal();
+        };
+
+        document.addEventListener('keydown', handleKeyDown);
+        return () => document.removeEventListener('keydown', handleKeyDown);
+    }, [showModal, saving, closeModal]);
 
     const handleImageFileChange = (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            setImageFile(file);
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setImagePreview(reader.result);
-            };
-            reader.readAsDataURL(file);
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+            notify.error('Please choose a JPG, PNG, or WebP image.');
+            e.target.value = '';
+            return;
         }
+
+        if (file.size > MAX_IMAGE_SIZE) {
+            notify.error('Image must be 5 MB or smaller.');
+            e.target.value = '';
+            return;
+        }
+
+        setImageFile(file);
+        const reader = new FileReader();
+        reader.onloadend = () => setImagePreview(reader.result);
+        reader.readAsDataURL(file);
+    };
+
+    const handleRemoveImage = () => {
+        setImageFile(null);
+        setImagePreview(null);
+        setForm(prev => ({ ...prev, imageUrl: '' }));
+        if (fileInputRef.current) fileInputRef.current.value = '';
     };
 
     const savePlant = async (e) => {
         e.preventDefault();
+
+        const name = form.name.trim();
+        if (!name) {
+            notify.error('Plant name is required.');
+            return;
+        }
+
         setSaving(true);
         try {
             let imageUrl = form.imageUrl;
 
             // if file was selected for upload, upload it first
-            if (imageInputMode === 'upload' && imageFile) {
+            if (imageFile) {
                 const uploadRes = await staffAPI.uploadPlantImage(imageFile);
                 if (uploadRes.success) {
                     imageUrl = uploadRes.imageUrl;
@@ -171,13 +194,11 @@ const StaffPlants = ({ globalSearch = '' }) => {
             }
 
             const plantData = {
-                name: form.name,
-                scientificName: form.scientificName,
+                name,
+                scientificName: form.scientificName.trim() || null,
                 category: form.category,
-                description: form.description,
-                location: form.location,
-                status: form.status,
-                imageUrl: imageUrl
+                description: form.description.trim() || null,
+                imageUrl: imageUrl || null
             };
 
             let res;
@@ -245,7 +266,7 @@ const StaffPlants = ({ globalSearch = '' }) => {
     const plantCounts = {
         total: plants.length,
         healthy: plants.filter(p => p.status === 'healthy').length,
-        needsAttention: plants.filter(p => p.status === 'needs_attention').length,
+        needsAttention: plants.filter(p => p.status === 'sick' || p.status === 'treatment').length,
         endangered: plants.filter(p => p.is_endangered).length,
     };
 
@@ -556,13 +577,28 @@ const StaffPlants = ({ globalSearch = '' }) => {
             )}
 
             {showModal && (
-                <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-white border border-green-200 rounded-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
-                        <div className="p-6 border-b border-green-200 flex items-center justify-between sticky top-0 bg-white">
-                            <h3 className="text-xl font-bold text-gray-900">
+                <div
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm"
+                    onClick={(event) => {
+                        if (event.target === event.currentTarget && !saving) closeModal();
+                    }}
+                >
+                    <div
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby="plant-modal-title"
+                        className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-2xl border border-green-200 bg-white"
+                    >
+                        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-green-200 bg-white p-6">
+                            <h3 id="plant-modal-title" className="text-xl font-bold text-gray-900">
                                 {editingPlant ? 'Edit Plant' : 'Add New Plant'}
                             </h3>
-                            <button onClick={closeModal} className="p-2 hover:bg-green-50 rounded-lg text-gray-500 hover:text-gray-900 transition">
+                            <button
+                                type="button"
+                                onClick={closeModal}
+                                className="rounded-lg p-2 text-gray-500 transition hover:bg-green-50 hover:text-gray-900"
+                                aria-label="Close plant form"
+                            >
                                 <CloseIcon className="w-5 h-5" />
                             </button>
                         </div>
@@ -577,6 +613,7 @@ const StaffPlants = ({ globalSearch = '' }) => {
                                         onChange={e => setForm({ ...form, name: sanitizeInput(e.target.value) })}
                                         className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-400 transition-all"
                                         placeholder="e.g., Narra Tree"
+                                        maxLength={100}
                                         required
                                     />
                                 </div>
@@ -588,45 +625,22 @@ const StaffPlants = ({ globalSearch = '' }) => {
                                         onChange={e => setForm({ ...form, scientificName: sanitizeInput(e.target.value) })}
                                         className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-400 transition-all italic"
                                         placeholder="e.g., Pterocarpus indicus"
+                                        maxLength={150}
                                     />
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-500 mb-2">Category</label>
-                                    <select
-                                        value={form.category}
-                                        onChange={e => setForm({ ...form, category: e.target.value })}
-                                        className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:border-green-400 transition-all capitalize"
-                                    >
-                                        {categoryOptions.map(cat => (
-                                            <option key={cat} value={cat} className="capitalize">{cat}</option>
-                                        ))}
-                                    </select>
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-500 mb-2">Status</label>
-                                    <select
-                                        value={form.status}
-                                        onChange={e => setForm({ ...form, status: e.target.value })}
-                                        className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:border-green-400 transition-all capitalize"
-                                    >
-                                        {statusOptions.map(s => (
-                                            <option key={s} value={s} className="capitalize">{s}</option>
-                                        ))}
-                                    </select>
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-500 mb-2">Location</label>
-                                    <input
-                                        type="text"
-                                        value={form.location}
-                                        onChange={e => setForm({ ...form, location: sanitizeInput(e.target.value) })}
-                                        className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-400 transition-all"
-                                        placeholder="e.g., Garden Area A"
-                                    />
-                                </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-500 mb-2">Category</label>
+                                <select
+                                    value={form.category}
+                                    onChange={e => setForm({ ...form, category: e.target.value })}
+                                    className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:border-green-400 transition-all capitalize"
+                                >
+                                    {PLANT_CATEGORIES.map(cat => (
+                                        <option key={cat} value={cat} className="capitalize">{cat}</option>
+                                    ))}
+                                </select>
                             </div>
 
                             <div>
@@ -645,32 +659,30 @@ const StaffPlants = ({ globalSearch = '' }) => {
 
                                 <div className="space-y-3">
                                     <input
+                                        ref={fileInputRef}
                                         type="file"
-                                        accept="image/*"
+                                        accept="image/jpeg,image/png,image/webp"
                                         onChange={handleImageFileChange}
                                         className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-green-400 file:text-gray-900 file:font-medium file:cursor-pointer hover:file:bg-green-400"
                                     />
+                                    <p className="text-xs text-gray-500">JPG, PNG, or WebP. Maximum 5 MB.</p>
                                     {(imagePreview || form.imageUrl) && (
                                         <div className="relative">
                                             <img
                                                 src={imagePreview || form.imageUrl}
-                                                alt="Preview"
+                                                alt={form.name ? `${form.name} preview` : 'Plant image preview'}
                                                 className="w-full h-40 object-cover rounded-xl"
-                                                onError={(e) => e.target.style.display = 'none'}
-                                                onLoad={(e) => e.target.style.display = 'block'}
+                                                onError={(e) => { e.target.style.display = 'none'; }}
+                                                onLoad={(e) => { e.target.style.display = 'block'; }}
                                             />
-                                            {imagePreview && (
-                                                <button
-                                                    type="button"
-                                                    onClick={() => {
-                                                        setImageFile(null);
-                                                        setImagePreview(null);
-                                                    }}
-                                                    className="absolute top-2 right-2 p-1.5 bg-red-600 rounded-lg text-white hover:bg-red-700"
-                                                >
-                                                    <CloseIcon strokeWidth="2" className="w-4 h-4" />
-                                                </button>
-                                            )}
+                                            <button
+                                                type="button"
+                                                onClick={handleRemoveImage}
+                                                className="absolute top-2 right-2 p-1.5 bg-red-600 rounded-lg text-white hover:bg-red-700"
+                                                aria-label="Remove image"
+                                            >
+                                                <CloseIcon strokeWidth="2" className="w-4 h-4" />
+                                            </button>
                                         </div>
                                     )}
                                 </div>

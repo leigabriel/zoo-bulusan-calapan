@@ -30,10 +30,10 @@ const PlantCard = ({ plant }) => {
                 {plant.imageUrl ? <img ref={imgRef} src={plant.imageUrl} alt={plant.name} className="h-full w-full origin-center object-cover" /> : <div ref={imgRef} className="flex h-full w-full items-center justify-center bg-gray-100"><span className="text-5xl font-bold uppercase text-gray-300">{plant.name[0]}</span></div>}
             </div>
             <div className="mb-1 flex items-baseline justify-between gap-3">
-                <span className="text-lg font-medium text-black">{plant.name}</span>
-                <span className="text-sm font-medium text-black">Bulusan Zoo</span>
+                <span className="min-w-0 truncate text-lg font-medium text-black">{plant.name}</span>
+                <span className="max-w-[55%] shrink-0 truncate text-right text-sm font-medium italic text-black/60">{plant.scientificName || 'Bulusan Zoo'}</span>
             </div>
-            <div className="text-sm text-gray-500">{plant.category}</div>
+            <div className="text-sm capitalize text-gray-500">{plant.category}</div>
         </Link>
     );
 };
@@ -50,7 +50,7 @@ const Plants = () => {
             setError('');
             const response = await userAPI.getPlants();
             if (response.success && Array.isArray(response.plants)) {
-                setPlants(deduplicateById(response.plants.map((p) => ({ id: p.id, name: p.name, category: p.category || 'Flora', description: p.description || '', imageUrl: p.image_url || null }))));
+                setPlants(deduplicateById(response.plants.map((p) => ({ id: p.id, name: p.name, scientificName: p.scientific_name || '', category: p.category || 'Flora', description: p.description || '', imageUrl: p.image_url || null }))));
             } else setPlants([]);
         } catch {
             setError('Failed to load plants. Please try again.');

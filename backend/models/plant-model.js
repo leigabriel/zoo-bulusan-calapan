@@ -1,5 +1,27 @@
 const db = require('../config/database');
 
+// Maps the camelCase fields used by the controllers to their database columns.
+// Keeping this list in one place lets update() touch only the fields a caller
+// actually provided, so a partial edit cannot wipe the rest of the record.
+const PLANT_COLUMNS = {
+    name: 'name',
+    scientificName: 'scientific_name',
+    category: 'category',
+    description: 'description',
+    habitat: 'habitat',
+    origin: 'origin',
+    careLevel: 'care_level',
+    sunlightRequirement: 'sunlight_requirement',
+    waterRequirement: 'water_requirement',
+    height: 'height',
+    bloomSeason: 'bloom_season',
+    isEndangered: 'is_endangered',
+    imageUrl: 'image_url',
+    status: 'status',
+    location: 'location',
+    arrivalDate: 'arrival_date',
+};
+
 class Plant {
     static async getAll() {
         const [rows] = await db.query(
@@ -45,23 +67,22 @@ class Plant {
     }
 
     static async update(id, plantData) {
-        const { 
-            name, scientificName, category, description, habitat, origin,
-            careLevel, sunlightRequirement, waterRequirement, height,
-            bloomSeason, isEndangered, imageUrl, status, location, arrivalDate
-        } = plantData;
-        
+        const assignments = [];
+        const values = [];
+
+        for (const [field, column] of Object.entries(PLANT_COLUMNS)) {
+            if (plantData[field] !== undefined) {
+                assignments.push(`${column} = ?`);
+                values.push(plantData[field]);
+            }
+        }
+
+        if (assignments.length === 0) return false;
+
+        values.push(id);
         const [result] = await db.query(
-            `UPDATE plants SET name = ?, scientific_name = ?, category = ?, description = ?,
-                habitat = ?, origin = ?, care_level = ?, sunlight_requirement = ?,
-                water_requirement = ?, height = ?, bloom_season = ?, is_endangered = ?,
-                image_url = ?, status = ?, location = ?, arrival_date = ?
-             WHERE id = ?`,
-            [
-                name, scientificName, category, description, habitat, origin,
-                careLevel, sunlightRequirement, waterRequirement, height,
-                bloomSeason, isEndangered, imageUrl, status, location, arrivalDate, id
-            ]
+            `UPDATE plants SET ${assignments.join(', ')} WHERE id = ?`,
+            values
         );
         return result.affectedRows > 0;
     }

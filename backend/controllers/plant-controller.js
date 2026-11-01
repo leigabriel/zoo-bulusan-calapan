@@ -31,21 +31,21 @@ exports.createPlant = async (req, res) => {
         // Map snake_case from frontend to camelCase for model
         const plantData = {
             name: req.body.name,
-            scientificName: req.body.scientific_name || req.body.scientificName,
+            scientificName: req.body.scientific_name ?? req.body.scientificName,
             category: req.body.category,
             description: req.body.description,
             habitat: req.body.habitat,
             origin: req.body.origin,
-            careLevel: req.body.care_level || req.body.careLevel,
-            sunlightRequirement: req.body.sunlight_requirement || req.body.sunlightRequirement,
-            waterRequirement: req.body.water_requirement || req.body.waterRequirement,
+            careLevel: req.body.care_level ?? req.body.careLevel,
+            sunlightRequirement: req.body.sunlight_requirement ?? req.body.sunlightRequirement,
+            waterRequirement: req.body.water_requirement ?? req.body.waterRequirement,
             height: req.body.height,
-            bloomSeason: req.body.bloom_season || req.body.bloomSeason,
-            isEndangered: req.body.is_endangered || req.body.isEndangered,
-            imageUrl: req.body.image_url || req.body.imageUrl,
+            bloomSeason: req.body.bloom_season ?? req.body.bloomSeason,
+            isEndangered: req.body.is_endangered ?? req.body.isEndangered,
+            imageUrl: req.body.image_url ?? req.body.imageUrl,
             status: req.body.status,
             location: req.body.location,
-            arrivalDate: req.body.arrival_date || req.body.arrivalDate
+            arrivalDate: req.body.arrival_date ?? req.body.arrivalDate
         };
         const plantId = await Plant.create(plantData);
         res.status(201).json({
@@ -65,21 +65,21 @@ exports.updatePlant = async (req, res) => {
         // Map snake_case from frontend to camelCase for model
         const plantData = {
             name: req.body.name,
-            scientificName: req.body.scientific_name || req.body.scientificName,
+            scientificName: req.body.scientific_name ?? req.body.scientificName,
             category: req.body.category,
             description: req.body.description,
             habitat: req.body.habitat,
             origin: req.body.origin,
-            careLevel: req.body.care_level || req.body.careLevel,
-            sunlightRequirement: req.body.sunlight_requirement || req.body.sunlightRequirement,
-            waterRequirement: req.body.water_requirement || req.body.waterRequirement,
+            careLevel: req.body.care_level ?? req.body.careLevel,
+            sunlightRequirement: req.body.sunlight_requirement ?? req.body.sunlightRequirement,
+            waterRequirement: req.body.water_requirement ?? req.body.waterRequirement,
             height: req.body.height,
-            bloomSeason: req.body.bloom_season || req.body.bloomSeason,
-            isEndangered: req.body.is_endangered || req.body.isEndangered,
-            imageUrl: req.body.image_url || req.body.imageUrl,
+            bloomSeason: req.body.bloom_season ?? req.body.bloomSeason,
+            isEndangered: req.body.is_endangered ?? req.body.isEndangered,
+            imageUrl: req.body.image_url ?? req.body.imageUrl,
             status: req.body.status,
             location: req.body.location,
-            arrivalDate: req.body.arrival_date || req.body.arrivalDate
+            arrivalDate: req.body.arrival_date ?? req.body.arrivalDate
         };
         const updated = await Plant.update(id, plantData);
 

@@ -39,6 +39,7 @@ const collectionConfig = {
         map: (item) => ({
             id: item.id ?? item.plant_id,
             name: item.name,
+            scientificName: item.scientific_name || item.scientificName || '',
             category: item.category || 'Flora',
             location: item.location || 'Bulusan Zoo',
             description: item.description || '',
@@ -67,10 +68,10 @@ const ImageFrame = ({ item, className = '' }) => (
     </div>
 );
 
-const DetailStat = ({ label, value }) => value ? (
+const DetailStat = ({ label, value, capitalize = false }) => value ? (
     <div className="border-t border-black/15 pt-3">
         <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-black/50">{label}</p>
-        <p className="mt-1 text-sm font-semibold text-black">{value}</p>
+        <p className={`mt-1 text-sm font-semibold text-black ${capitalize ? 'capitalize' : ''}`}>{value}</p>
     </div>
 ) : null;
 
@@ -170,9 +171,10 @@ const CollectionDetail = ({ type }) => {
                                             <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#315b37]">{config.eyebrow}</p>
                                             <div className="mt-4 flex flex-wrap items-center gap-3 text-xs font-bold uppercase tracking-[0.16em] text-black/60">
                                                 {status && <><span className={`h-2 w-2 rounded-full ${status.dot}`} /> {status.label}</>}
-                                                <span>{item.category}</span>
+                                                <span className="capitalize">{item.category}</span>
                                             </div>
                                             <h1 ref={titleRef} tabIndex="-1" className="mt-5 max-w-lg text-5xl font-black leading-[0.92] tracking-[-0.05em] outline-none sm:text-6xl">{item.name}</h1>
+                                            {item.scientificName && <p className="mt-2 text-sm font-medium italic text-black/60">{item.scientificName}</p>}
                                             <p className="mt-6 max-w-lg text-base leading-7 text-black/75">{item.description || `Learn more about this ${config.singular} in the Bulusan Zoo collection.`}</p>
                                         </div>
                                         <div className="mt-9 border-t border-black/15 pt-4">
@@ -197,7 +199,10 @@ const CollectionDetail = ({ type }) => {
                                             <DetailStat label="Length" value={item.length} />
                                             <DetailStat label="Habitat" value={item.habitat} />
                                             <DetailStat label="Diet" value={item.diet} />
-                                        </> : <DetailStat label="Category" value={item.category} />}
+                                        </> : <>
+                                            <DetailStat label="Scientific name" value={item.scientificName} />
+                                            <DetailStat label="Category" value={item.category} capitalize />
+                                        </>}
                                     </div>
                                 </div>
                             </section>
@@ -215,7 +220,7 @@ const CollectionDetail = ({ type }) => {
                                                 <Link key={relatedItem.id} to={`/${config.plural}/${relatedItem.id}`} className="group min-w-0">
                                                     <ImageFrame item={relatedItem} className="aspect-square rounded-2xl transition-transform duration-300 group-hover:scale-[1.02]" />
                                                     <h3 className="mt-3 truncate text-base font-bold">{relatedItem.name}</h3>
-                                                    <p className="mt-1 truncate text-sm text-black/50">{relatedItem.category}</p>
+                                                    <p className="mt-1 truncate text-sm capitalize text-black/50">{relatedItem.category}</p>
                                                 </Link>
                                             ))}
                                         </div>
