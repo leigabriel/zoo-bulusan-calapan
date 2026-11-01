@@ -63,6 +63,10 @@ const Reservations = () => {
     const [ticketAvailability, setTicketAvailability] = useState([]);
     const [eventAvailability, setEventAvailability] = useState([]);
     const [loadingSlots, setLoadingSlots] = useState(false);
+    // Booking availability set by the admin. Defaults keep the page usable if the
+    // availability request fails, and the backend still enforces the real state.
+    const [reservationConfig, setReservationConfig] = useState({ pageEnabled: true, ticketEnabled: true, eventEnabled: true });
+    const [configLoading, setConfigLoading] = useState(true);
 
     // Confirmation modal states
     const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
@@ -70,6 +74,21 @@ const Reservations = () => {
 
     useEffect(() => {
         const loadData = async () => {
+            try {
+                const configRes = await reservationAPI.getReservationConfig();
+                if (configRes?.success && configRes.config) {
+                    setReservationConfig({
+                        pageEnabled: configRes.config.pageEnabled !== false,
+                        ticketEnabled: configRes.config.ticketEnabled !== false,
+                        eventEnabled: configRes.config.eventEnabled !== false
+                    });
+                }
+            } catch {
+                // Keep bookings open when availability cannot be checked.
+            } finally {
+                setConfigLoading(false);
+            }
+
             if (isAuthenticated) {
                 await fetchEvents();
             }
@@ -148,6 +167,31 @@ const Reservations = () => {
             window.history.replaceState({}, '', location.pathname);
         }
     }, []);
+
+    // A resumed form or a return from the terms page can target a booking type the
+    // admin has since closed. Move to the other open type, or close the form.
+    useEffect(() => {
+        if (configLoading) return;
+        if (!reservationConfig.pageEnabled) {
+            setShowCreateModal(false);
+            return;
+        }
+        if (reservationType === 'ticket' && !reservationConfig.ticketEnabled) {
+            if (reservationConfig.eventEnabled) {
+                setReservationType('event');
+                setAllowTypeSwitch(false);
+            } else {
+                setShowCreateModal(false);
+            }
+        } else if (reservationType === 'event' && !reservationConfig.eventEnabled) {
+            if (reservationConfig.ticketEnabled) {
+                setReservationType('ticket');
+                setAllowTypeSwitch(false);
+            } else {
+                setShowCreateModal(false);
+            }
+        }
+    }, [configLoading, reservationConfig, reservationType]);
 
     useEffect(() => {
         const fetchAvailability = async () => {
@@ -411,7 +455,7 @@ const Reservations = () => {
         document.getElementById('reservation-content')?.scrollIntoView({ behavior: 'smooth' });
     };
 
-    if (loading) {
+    if (loading || configLoading) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-[#ebebeb]">
                 <div className="w-12 h-12 border-[1.5px] border-[#212631]/15 border-t-[#212631] rounded-full animate-spin"></div>
@@ -438,17 +482,30 @@ const Reservations = () => {
                             Book your next adventure. Secure tickets for a daily visit or reserve a spot at our exclusive upcoming events.
                         </p>
 
+                        {reservationConfig.pageEnabled && (
                             <button
                                 onClick={scrollToContent}
                                 className="px-8 py-4 bg-[#212631] text-[#ebebeb] border border-[#212631] text-[10px] tracking-[0.2em] uppercase font-black hover:bg-transparent hover:text-[#212631] transition-colors duration-300 cursor-pointer rounded-xl"
                             >
-                            Start Booking
-                        </button>
+                                Start Booking
+                            </button>
+                        )}
                     </div>
                 </div>
 
                 <main id="reservation-content" className="relative z-10 w-full bg-[#26bc61] min-h-[80vh] flex flex-col items-center pt-20 pb-40 px-4 md:px-8 border-t border-white/20">
-                    {!isAuthenticated ? (
+                    {!reservationConfig.pageEnabled ? (
+                        <div className="w-full max-w-xl bg-transparent border border-white/20 p-12 md:p-16 flex flex-col items-center text-center rounded-2xl">
+                            <span className="text-[10px] tracking-[0.18em] uppercase font-bold text-white/50 mb-6">Reservations Closed</span>
+                            <h2 className="text-2xl md:text-4xl font-black uppercase tracking-tighter text-white mb-4">Reservation Page is not currently available</h2>
+                            <p className="text-xs tracking-widest uppercase font-bold text-white/70 mb-10 leading-relaxed">
+                                Online booking is temporarily closed. Please check back later or contact the zoo for assistance.
+                            </p>
+                            <button onClick={() => navigate('/')} className="px-10 py-4 bg-white text-[#26bc61] text-[10px] tracking-[0.18em] uppercase font-black hover:bg-transparent hover:text-white border border-white transition-colors w-full sm:w-auto cursor-pointer rounded-xl">
+                                Back to Home
+                            </button>
+                        </div>
+                    ) : !isAuthenticated ? (
                         <div className="w-full max-w-xl bg-transparent border border-white/20 p-12 md:p-16 flex flex-col items-center text-center rounded-2xl">
                             <span className="text-[10px] tracking-[0.18em] uppercase font-bold text-white/50 mb-6">Access Restricted</span>
                             <h2 className="text-2xl md:text-4xl font-black uppercase tracking-tighter text-white mb-4">Account Required</h2>
@@ -462,7 +519,11 @@ const Reservations = () => {
                     ) : (
                         <div className="w-full max-w-6xl grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
                             {/* Ticket Reservation Card (Ticket Style) */}
-                            <div className="flex flex-col bg-[#ebebeb] text-[#212631] shadow-2xl cursor-pointer group hover:-translate-y-2 transition-transform duration-300 relative rounded-2xl" onClick={() => { setReservationType('ticket'); setAllowTypeSwitch(true); setShowCreateModal(true); }}>
+                            <div
+                                className={`flex flex-col bg-[#ebebeb] text-[#212631] shadow-2xl relative rounded-2xl ${reservationConfig.ticketEnabled ? 'cursor-pointer group hover:-translate-y-2 transition-transform duration-300' : 'cursor-not-allowed opacity-60'}`}
+                                onClick={reservationConfig.ticketEnabled ? () => { setReservationType('ticket'); setAllowTypeSwitch(true); setShowCreateModal(true); } : undefined}
+                                aria-disabled={!reservationConfig.ticketEnabled}
+                            >
                                 {/* Decorative perforated edge effect */}
                                 <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-[#26bc61]"></div>
                                 <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-8 h-8 rounded-full bg-[#26bc61]"></div>
@@ -493,14 +554,18 @@ const Reservations = () => {
                                     </div>
                                     <div className="flex items-center justify-center pt-6 mt-auto border-t border-[#212631]/10">
                                         <span className="text-[10px] tracking-[0.18em] uppercase font-black text-[#212631] flex items-center gap-2 group-hover:tracking-[0.3em] transition-all">
-                                            Initiate Booking <Icons.ArrowRight />
+                                            {reservationConfig.ticketEnabled ? <>Initiate Booking <Icons.ArrowRight /></> : 'Currently Unavailable'}
                                         </span>
                                     </div>
                                 </div>
                             </div>
 
                             {/* Event Reservation Card (Ticket Style) */}
-                            <div className="flex flex-col bg-[#ebebeb] text-[#212631] shadow-2xl cursor-pointer group hover:-translate-y-2 transition-transform duration-300 relative rounded-2xl" onClick={() => { setReservationType('event'); setAllowTypeSwitch(false); setShowCreateModal(true); }}>
+                            <div
+                                className={`flex flex-col bg-[#ebebeb] text-[#212631] shadow-2xl relative rounded-2xl ${reservationConfig.eventEnabled ? 'cursor-pointer group hover:-translate-y-2 transition-transform duration-300' : 'cursor-not-allowed opacity-60'}`}
+                                onClick={reservationConfig.eventEnabled ? () => { setReservationType('event'); setAllowTypeSwitch(false); setShowCreateModal(true); } : undefined}
+                                aria-disabled={!reservationConfig.eventEnabled}
+                            >
                                 {/* Decorative perforated edge effect */}
                                 <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-[#26bc61]"></div>
                                 <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-8 h-8 rounded-full bg-[#26bc61]"></div>
@@ -521,12 +586,12 @@ const Reservations = () => {
                                         </p>
                                         <div className="mt-4 py-2 border-t border-b border-[#212631]/10 flex flex-col items-center justify-center">
                                             <span className="text-[9px] tracking-[0.18em] uppercase font-bold text-[#212631]/40 mb-1">Status</span>
-                                            <span className="text-xs tracking-[0.2em] uppercase font-black text-green-600">Accepting Slots</span>
+                                            <span className={`text-xs tracking-[0.2em] uppercase font-black ${reservationConfig.eventEnabled ? 'text-green-600' : 'text-[#212631]/50'}`}>{reservationConfig.eventEnabled ? 'Accepting Slots' : 'Not Accepting Slots'}</span>
                                         </div>
                                     </div>
                                     <div className="flex items-center justify-center pt-6 mt-auto border-t border-[#212631]/10">
                                         <span className="text-[10px] tracking-[0.18em] uppercase font-black text-[#212631] flex items-center gap-2 group-hover:tracking-[0.3em] transition-all">
-                                            Select Schedule <Icons.ArrowRight />
+                                            {reservationConfig.eventEnabled ? <>Select Schedule <Icons.ArrowRight /></> : 'Currently Unavailable'}
                                         </span>
                                     </div>
                                 </div>
@@ -583,7 +648,7 @@ const Reservations = () => {
                                     </button>
                                 </div>
 
-                                <div className={`grid grid-cols-2 border-b border-[#212631]/10 bg-[#ebebeb] ${allowTypeSwitch ? '' : 'hidden'}`}>
+                                <div className={`grid grid-cols-2 border-b border-[#212631]/10 bg-[#ebebeb] ${allowTypeSwitch && reservationConfig.ticketEnabled && reservationConfig.eventEnabled ? '' : 'hidden'}`}>
                                     <button
                                         type="button"
                                         onClick={() => setReservationType('ticket')}

@@ -11,7 +11,25 @@ const { validateTicketEdit, validateParticipantEdit } = require('../utils/reserv
 const { validateTicketBooking } = require('../utils/reservation-quantity-rules');
 const { validateArchiveSelection, validatePermanentDelete } = require('../utils/reservation-archive-rules');
 const { readConfig: readEventPaymentConfig } = require('../config/event-payment-config');
+const { readConfig: readReservationConfig } = require('../config/reservation-config');
 const walkInService = require('../services/walk-in-service');
+
+// Booking availability is enforced on the server as well as hidden in the UI, so
+// a stale tab or a direct API call cannot create a reservation while the page or
+// the booking type is closed.
+const isBookingOpen = (type) => {
+    const config = readReservationConfig();
+    if (!config.pageEnabled) {
+        return { open: false, message: 'Reservation Page is not currently available.' };
+    }
+    if (type === 'ticket' && !config.ticketEnabled) {
+        return { open: false, message: 'Ticket reservations are not currently available.' };
+    }
+    if (type === 'event' && !config.eventEnabled) {
+        return { open: false, message: 'Event reservations are not currently available.' };
+    }
+    return { open: true };
+};
 
 // Helper function to create notifications for admin/staff
 const createAdminStaffNotification = async (title, message, type = 'event', link = null) => {
@@ -251,6 +269,11 @@ exports.getEventReservationById = async (req, res) => {
 
 exports.createTicketReservation = async (req, res) => {
     try {
+        const availability = isBookingOpen('ticket');
+        if (!availability.open) {
+            return res.status(503).json({ success: false, message: availability.message });
+        }
+
         const { 
             visitorName, visitorEmail, visitorPhone, reservationDate,
             reservationTime, adultQuantity, childQuantity, bulusanResidentQuantity,
@@ -370,6 +393,11 @@ exports.createTicketReservation = async (req, res) => {
 
 exports.createEventReservation = async (req, res) => {
     try {
+        const availability = isBookingOpen('event');
+        if (!availability.open) {
+            return res.status(503).json({ success: false, message: availability.message });
+        }
+
         const { 
             eventId, participantName, participantEmail, participantPhone,
             numberOfParticipants, participantDetails, notes,

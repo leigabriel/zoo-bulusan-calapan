@@ -1,4 +1,4 @@
-import { Save as ReiconSave } from 'reicon-react';
+import { Save as ReiconSave, ToggleOn } from 'reicon-react';
 import { useEffect, useState } from 'react';
 import { adminAPI } from '../../services/api-client';
 import { notify } from '../../utils/toast';
@@ -29,13 +29,17 @@ const AdminSettings = ({ modalSection = null, onClose = null }) => {
     // Ticket payment is configured and stored entirely separately from event
     // payment, so an admin can enable one without disturbing the other.
     const [ticketPayment, setTicketPayment] = useState({ qrphEnabled: false, adultPrice: 40, childPrice: 20, residentPrice: 0 });
+    // Availability is independent of payments: the page, ticket bookings and
+    // event bookings can each be closed without touching any price.
+    const [reservationAccess, setReservationAccess] = useState({ pageEnabled: true, ticketEnabled: true, eventEnabled: true });
 
     useEffect(() => {
         const loadConfig = async () => {
             try {
-                const [paymentRes, ticketRes] = await Promise.all([
+                const [paymentRes, ticketRes, reservationRes] = await Promise.all([
                     adminAPI.getEventPaymentConfig(),
-                    adminAPI.getTicketPaymentConfig()
+                    adminAPI.getTicketPaymentConfig(),
+                    adminAPI.getReservationConfig()
                 ]);
                 if (paymentRes.success && paymentRes.config) {
                     setEventPayment({
@@ -51,6 +55,13 @@ const AdminSettings = ({ modalSection = null, onClose = null }) => {
                         residentPrice: Number(ticketRes.config.residentPrice) || 0
                     });
                 }
+                if (reservationRes.success && reservationRes.config) {
+                    setReservationAccess({
+                        pageEnabled: reservationRes.config.pageEnabled !== false,
+                        ticketEnabled: reservationRes.config.ticketEnabled !== false,
+                        eventEnabled: reservationRes.config.eventEnabled !== false
+                    });
+                }
             } catch {
                 notify.error("Couldn't load settings.");
             } finally {
@@ -63,15 +74,16 @@ const AdminSettings = ({ modalSection = null, onClose = null }) => {
     const handleSave = async () => {
         setSaving(true);
         try {
-            const [eventPaymentRes, ticketPaymentRes] = await Promise.all([
+            const [eventPaymentRes, ticketPaymentRes, reservationAccessRes] = await Promise.all([
                 adminAPI.updateEventPaymentConfig(eventPayment),
-                adminAPI.updateTicketPaymentConfig(ticketPayment)
+                adminAPI.updateTicketPaymentConfig(ticketPayment),
+                adminAPI.updateReservationConfig(reservationAccess)
             ]);
 
-            if (eventPaymentRes?.success && ticketPaymentRes?.success) {
+            if (eventPaymentRes?.success && ticketPaymentRes?.success && reservationAccessRes?.success) {
                 notify.success('Settings saved.');
             } else {
-                const failed = !eventPaymentRes?.success ? eventPaymentRes : ticketPaymentRes;
+                const failed = [eventPaymentRes, ticketPaymentRes, reservationAccessRes].find((result) => !result?.success);
                 notify.error(failed?.message || "Couldn't save settings.");
             }
         } catch {
@@ -90,9 +102,9 @@ const AdminSettings = ({ modalSection = null, onClose = null }) => {
                 <div className="relative flex flex-col justify-between gap-6 md:flex-row md:items-end">
                     <div>
                         <p className="mb-3 text-xs font-bold uppercase tracking-[0.18em] text-green-950">Administration</p>
-                        <h1 className="text-3xl font-bold tracking-tight md:text-4xl">{modalSection === 'tickets' ? 'Ticket payment settings' : modalSection === 'events' ? 'Event payment settings' : 'System settings'}</h1>
+                        <h1 className="text-3xl font-bold tracking-tight md:text-4xl">{modalSection === 'tickets' ? 'Ticket payment settings' : modalSection === 'events' ? 'Event payment settings' : modalSection === 'reservations' ? 'Reservation access settings' : 'System settings'}</h1>
                         <p className="mt-2 max-w-2xl text-sm leading-6 text-green-950/80 md:text-base">
-                            Control zoo admission and event reservation payments separately.
+                            Control zoo admission, event reservation payments, and booking availability.
                         </p>
                     </div>
                     {!loading && !modalSection && (
@@ -128,6 +140,10 @@ const AdminSettings = ({ modalSection = null, onClose = null }) => {
                                 <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-100 text-xs text-emerald-700">03</span>
                                 Event payments
                             </a>
+                            <a href="#reservations" className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-emerald-50 hover:text-emerald-800">
+                                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-100 text-xs text-emerald-700">04</span>
+                                Reservation access
+                            </a>
                         </nav>
                         <div className="hidden rounded-2xl border border-amber-200 bg-amber-50 p-4 text-xs leading-5 text-amber-800 lg:block">
                             Changes only take effect after you select <strong>Save settings</strong>.
@@ -141,9 +157,9 @@ const AdminSettings = ({ modalSection = null, onClose = null }) => {
                                     <p className="text-xs font-bold uppercase tracking-wider text-emerald-600">At a glance</p>
                                     <h2 className="mt-1 text-xl font-bold text-slate-900">Service status</h2>
                                 </div>
-                                <span className="text-xs text-slate-400">2 configurable services</span>
+                                <span className="text-xs text-slate-400">3 configurable services</span>
                             </div>
-                            <div className="grid gap-3 sm:grid-cols-2">
+                            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
                                 <div className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
                                     <div className="flex items-center gap-3">
                                         <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 font-bold text-emerald-700">₱</span>
@@ -157,6 +173,13 @@ const AdminSettings = ({ modalSection = null, onClose = null }) => {
                                         <div><p className="font-semibold text-slate-900">Event payments</p><p className="text-xs text-slate-500">PayMongo QR Ph</p></div>
                                     </div>
                                      <StatusBadge enabled={eventPayment.qrphEnabled} />
+                                </div>
+                                <div className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                                    <div className="flex items-center gap-3">
+                                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-100 text-xs font-bold text-amber-700">01</span>
+                                        <div><p className="font-semibold text-slate-900">Reservation page</p><p className="text-xs text-slate-500">Booking availability</p></div>
+                                    </div>
+                                     <StatusBadge enabled={reservationAccess.pageEnabled} />
                                 </div>
                             </div>
                         </section>}
@@ -249,6 +272,65 @@ const AdminSettings = ({ modalSection = null, onClose = null }) => {
                             <div className="p-5 md:p-6">
                                 <div className="max-w-md"><label htmlFor="event-fee" className="mb-2 block text-sm font-semibold text-slate-700">Fixed reservation fee per participant</label><div className="relative"><span className="absolute inset-y-0 left-0 flex items-center border-r border-slate-200 px-4 font-semibold text-slate-500">PHP</span><input id="event-fee" type="number" min="0" step="0.01" value={eventPayment.amountPerParticipant} onChange={(e) => setEventPayment((current) => ({ ...current, amountPerParticipant: e.target.value }))} className={`${inputClassName} pl-20`} /></div></div>
                                 <div className="mt-5 rounded-xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm leading-6 text-blue-800">PayMongo credentials must be configured on the backend before enabling this option. Ticket reservations are not affected.</div>
+                            </div>
+                        </section>}
+
+                        {(!modalSection || modalSection === 'reservations') && <section id="reservations" className="scroll-mt-6 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+                            <div className="flex items-start gap-4 border-b border-slate-100 p-5 md:p-6">
+                                <span className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-amber-100 text-amber-700"><ToggleOn className="h-5 w-5" /></span>
+                                <div>
+                                    <h2 className="text-lg font-bold text-slate-900">Reservation access</h2>
+                                    <p className="mt-1 text-sm text-slate-500">Control whether visitors can open the reservation page and which booking types are available.</p>
+                                </div>
+                            </div>
+                            <div className="divide-y divide-slate-100">
+                                <div className="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between md:px-6">
+                                    <div className="min-w-0">
+                                        <p className="font-semibold text-slate-900">Reservation page</p>
+                                        <p className="mt-1 text-xs leading-5 text-slate-500">When disabled, visitors see "Reservation Page is not currently available" instead of the booking options.</p>
+                                    </div>
+                                    <div className="flex items-center justify-between gap-3 sm:justify-end">
+                                        <StatusBadge enabled={reservationAccess.pageEnabled} />
+                                        <Toggle
+                                            label="Enable the reservation page"
+                                            checked={reservationAccess.pageEnabled}
+                                            onChange={(e) => setReservationAccess((current) => ({ ...current, pageEnabled: e.target.checked }))}
+                                        />
+                                    </div>
+                                </div>
+                                <div className="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between md:px-6">
+                                    <div className="min-w-0">
+                                        <p className="font-semibold text-slate-900">Zoo ticket reservations</p>
+                                        <p className="mt-1 text-xs leading-5 text-slate-500">Hide and block the daily admission ticket booking while leaving events open.</p>
+                                    </div>
+                                    <div className="flex items-center justify-between gap-3 sm:justify-end">
+                                        <StatusBadge enabled={reservationAccess.ticketEnabled} />
+                                        <Toggle
+                                            label="Enable zoo ticket reservations"
+                                            checked={reservationAccess.ticketEnabled}
+                                            onChange={(e) => setReservationAccess((current) => ({ ...current, ticketEnabled: e.target.checked }))}
+                                        />
+                                    </div>
+                                </div>
+                                <div className="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between md:px-6">
+                                    <div className="min-w-0">
+                                        <p className="font-semibold text-slate-900">Event reservations</p>
+                                        <p className="mt-1 text-xs leading-5 text-slate-500">Hide and block the event venue booking while leaving zoo tickets open.</p>
+                                    </div>
+                                    <div className="flex items-center justify-between gap-3 sm:justify-end">
+                                        <StatusBadge enabled={reservationAccess.eventEnabled} />
+                                        <Toggle
+                                            label="Enable event reservations"
+                                            checked={reservationAccess.eventEnabled}
+                                            onChange={(e) => setReservationAccess((current) => ({ ...current, eventEnabled: e.target.checked }))}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="border-t border-slate-100 p-5 md:px-6">
+                                <div className="rounded-xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm leading-6 text-blue-800">
+                                    Ticket and event bookings are only offered while the reservation page is enabled. Existing reservations and tickets are not affected.
+                                </div>
                             </div>
                         </section>}
 

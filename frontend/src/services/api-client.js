@@ -906,6 +906,22 @@ export const adminAPI = {
         return handleResponse(response);
     },
 
+    getReservationConfig: async () => {
+        const response = await fetch(`${API_BASE_URL}/admin/reservation-config`, {
+            headers: getAuthHeaders('admin')
+        });
+        return handleResponse(response);
+    },
+
+    updateReservationConfig: async (config) => {
+        const response = await fetch(`${API_BASE_URL}/admin/reservation-config`, {
+            method: 'PUT',
+            headers: getAuthHeaders('admin'),
+            body: JSON.stringify({ config })
+        });
+        return handleResponse(response);
+    },
+
     // ==================== TRASH API ====================
 
     // Users trash
@@ -2293,6 +2309,11 @@ export const plantAPI = {
 };
 
 export const reservationAPI = {
+    getReservationConfig: async () => {
+        const response = await fetch(`${API_BASE_URL}/reservations/config`, { cache: 'no-store' });
+        return handleResponse(response);
+    },
+
     getMyTicketReservations: async () => {
         const response = await fetch(`${API_BASE_URL}/reservations/ticket/my`, {
             headers: getAuthHeaders('user')

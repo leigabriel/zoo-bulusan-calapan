@@ -7,6 +7,7 @@ const logsController = require('../controllers/logs-controller');
 const walkInController = require('../controllers/walk-in-controller');
 const { readConfig: readEventPaymentConfig, writeConfig: writeEventPaymentConfig } = require('../config/event-payment-config');
 const { readConfig: readTicketPaymentConfig, writeConfig: writeTicketPaymentConfig } = require('../config/ticket-payment-config');
+const { readConfig: readReservationConfig, writeConfig: writeReservationConfig } = require('../config/reservation-config');
 const { protect, authorize, requireAdminMasterKey } = require('../middleware/auth');
 const adminMasterKeyController = require('../controllers/admin-master-key-controller');
 const { trackActivity } = require('../middleware/track-activity');
@@ -174,6 +175,22 @@ router.put('/ticket-payment-config', trackActivity('ticket_payment_config_update
     } catch (error) {
         console.error('Error updating ticket payment config:', error);
         res.status(500).json({ success: false, message: 'Error updating ticket payment config' });
+    }
+});
+
+// Reservation availability. Controls the visitor reservation page as a whole and
+// the ticket and event booking types individually.
+router.get('/reservation-config', (req, res) => {
+    res.json({ success: true, config: readReservationConfig() });
+});
+
+router.put('/reservation-config', trackActivity('reservation_config_update', 'Updated reservation availability settings'), (req, res) => {
+    try {
+        const updated = writeReservationConfig(req.body.config || {});
+        res.json({ success: true, message: 'Reservation availability settings updated successfully', config: updated });
+    } catch (error) {
+        console.error('Error updating reservation config:', error);
+        res.status(500).json({ success: false, message: 'Unable to update reservation availability settings.' });
     }
 });
 

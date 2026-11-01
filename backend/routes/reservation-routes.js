@@ -7,6 +7,7 @@ const { protect, authorize } = require('../middleware/auth');
 const { trackActivity } = require('../middleware/track-activity');
 const { handleCloudinaryResidentIdUpload, handleCloudinaryImageUpload } = require('../middleware/cloudinary-upload');
 const { isConfigured: isCloudinaryConfigured } = require('../config/cloudinary');
+const { readConfig: readReservationConfig } = require('../config/reservation-config');
 
 // Multer local storage for user event image uploads (used when Cloudinary is not configured)
 const eventImageStorage = multer.diskStorage({
@@ -40,6 +41,12 @@ const dynamicEventImageUpload = (req, res, next) => {
         eventImageUpload.single('image')(req, res, next);
     }
 };
+
+// Public: lets the reservation page know whether booking is open before a
+// visitor signs in, so a closed page shows a notice instead of the booking form.
+router.get('/config', (req, res) => {
+    res.json({ success: true, config: readReservationConfig() });
+});
 
 router.use(protect);
 

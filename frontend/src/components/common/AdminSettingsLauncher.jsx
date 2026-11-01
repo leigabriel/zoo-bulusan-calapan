@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { CloseCircle, Calendar, Ticket } from 'reicon-react';
+import { CloseCircle, Calendar, Ticket, ToggleOn } from 'reicon-react';
 import AdminSettings from '../../pages/admin/AdminSettings';
 
 const categories = [
     { id: 'tickets', title: 'Ticket payments', description: 'Manage zoo admission prices and PayMongo payments.', Icon: Ticket },
-    { id: 'events', title: 'Event payments', description: 'Manage reservation fees and PayMongo payments.', Icon: Calendar }
+    { id: 'events', title: 'Event payments', description: 'Manage reservation fees and PayMongo payments.', Icon: Calendar },
+    { id: 'reservations', title: 'Reservation access', description: 'Open or close the reservation page, zoo tickets, and event bookings.', Icon: ToggleOn }
 ];
 
 const AdminSettingsLauncher = ({ isOpen, onClose }) => {
