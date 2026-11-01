@@ -141,7 +141,7 @@ const HeroSection = () => {
                         Welcome to
                     </p>
                     <div className="mb-5 sm:mb-[30px]">
-                        <h1 className="text-[clamp(2.5rem,8vw,6rem)] font-semibold text-black leading-none tracking-tight overflow-hidden py-2 sm:py-4">
+                        <h1 className="text-[clamp(2.5rem,8vw,6rem)] font-normal font-['Gravelad',_sans-serif] text-black leading-none tracking-tight overflow-hidden py-2 sm:py-4">
                             <span className="block overflow-hidden">
                                 <span className="hero-line block" style={{ clipPath: 'inset(100% 0% 0% 0%)' }}>BULUSAN ZOO</span>
                             </span>

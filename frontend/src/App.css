@@ -7,10 +7,18 @@
     font-style: normal;
 }
 
+/* Use with font-family: 'Helvetica Neue Light', sans-serif; */
+@font-face {
+    font-family: 'Helvetica Neue Light';
+    src: url('/font/HelveticaNeueLight.otf') format('opentype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
 body {
-    /* font-family: 'Geist', sans-serif; */
     font-family: 'Inter', sans-serif;
-    /* font-family: 'JetBrains Mono', monospace; */
+    /* font-family: 'Helvetica Neue Light', sans-serif; */
     font-size: 16px;
     font-weight: 400;
     -webkit-font-smoothing: antialiased;
