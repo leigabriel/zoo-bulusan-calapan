@@ -46,10 +46,8 @@ const Reservations = () => {
     const [events, setEvents] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showCreateModal, setShowCreateModal] = useState(false);
+    // Each card opens its own form, so the modal never mixes ticket and event booking.
     const [reservationType, setReservationType] = useState('ticket');
-    // Arriving from the "Zoo Tickets" card offers both forms; arriving from "Event Venue"
-    // locks the modal to the venue form so the tab switcher is not shown at all.
-    const [allowTypeSwitch, setAllowTypeSwitch] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [showConfirmation, setShowConfirmation] = useState(false);
     const [confirmationData, setConfirmationData] = useState(null);
@@ -143,7 +141,6 @@ const Reservations = () => {
             if (!saved) return;
             if (saved.reservationType) {
                 setReservationType(saved.reservationType);
-                setAllowTypeSwitch(saved.reservationType === 'ticket');
             }
             if (saved.ticketCounts) setTicketCounts(saved.ticketCounts);
             if (saved.ticketForm) setTicketForm(saved.ticketForm);
@@ -162,7 +159,6 @@ const Reservations = () => {
             // came back to the wrong form.
             const type = location.state.reservationType === 'event' ? 'event' : 'ticket';
             setReservationType(type);
-            setAllowTypeSwitch(type === 'ticket');
             setShowCreateModal(true);
             window.history.replaceState({}, '', location.pathname);
         }
@@ -179,14 +175,12 @@ const Reservations = () => {
         if (reservationType === 'ticket' && !reservationConfig.ticketEnabled) {
             if (reservationConfig.eventEnabled) {
                 setReservationType('event');
-                setAllowTypeSwitch(false);
             } else {
                 setShowCreateModal(false);
             }
         } else if (reservationType === 'event' && !reservationConfig.eventEnabled) {
             if (reservationConfig.ticketEnabled) {
                 setReservationType('ticket');
-                setAllowTypeSwitch(false);
             } else {
                 setShowCreateModal(false);
             }
@@ -521,7 +515,7 @@ const Reservations = () => {
                             {/* Ticket Reservation Card (Ticket Style) */}
                             <div
                                 className={`flex flex-col bg-[#ebebeb] text-[#212631] shadow-2xl relative rounded-2xl ${reservationConfig.ticketEnabled ? 'cursor-pointer group hover:-translate-y-2 transition-transform duration-300' : 'cursor-not-allowed opacity-60'}`}
-                                onClick={reservationConfig.ticketEnabled ? () => { setReservationType('ticket'); setAllowTypeSwitch(true); setShowCreateModal(true); } : undefined}
+                                onClick={reservationConfig.ticketEnabled ? () => { setReservationType('ticket'); setShowCreateModal(true); } : undefined}
                                 aria-disabled={!reservationConfig.ticketEnabled}
                             >
                                 {/* Decorative perforated edge effect */}
@@ -563,7 +557,7 @@ const Reservations = () => {
                             {/* Event Reservation Card (Ticket Style) */}
                             <div
                                 className={`flex flex-col bg-[#ebebeb] text-[#212631] shadow-2xl relative rounded-2xl ${reservationConfig.eventEnabled ? 'cursor-pointer group hover:-translate-y-2 transition-transform duration-300' : 'cursor-not-allowed opacity-60'}`}
-                                onClick={reservationConfig.eventEnabled ? () => { setReservationType('event'); setAllowTypeSwitch(false); setShowCreateModal(true); } : undefined}
+                                onClick={reservationConfig.eventEnabled ? () => { setReservationType('event'); setShowCreateModal(true); } : undefined}
                                 aria-disabled={!reservationConfig.eventEnabled}
                             >
                                 {/* Decorative perforated edge effect */}
@@ -645,23 +639,6 @@ const Reservations = () => {
                                         aria-label="Close form"
                                     >
                                         <Icons.Close />
-                                    </button>
-                                </div>
-
-                                <div className={`grid grid-cols-2 border-b border-[#212631]/10 bg-[#ebebeb] ${allowTypeSwitch && reservationConfig.ticketEnabled && reservationConfig.eventEnabled ? '' : 'hidden'}`}>
-                                    <button
-                                        type="button"
-                                        onClick={() => setReservationType('ticket')}
-                                        className={`py-5 text-[10px] tracking-[0.2em] uppercase font-black border-r border-[#212631]/10 transition-colors ${reservationType === 'ticket' ? 'bg-[#212631] text-[#ebebeb]' : 'text-[#212631] hover:bg-[#212631]/5'}`}
-                                    >
-                                        Ticket Allocation
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => setReservationType('event')}
-                                        className={`py-5 text-[10px] tracking-[0.2em] uppercase font-black transition-colors ${reservationType === 'event' ? 'bg-[#212631] text-[#ebebeb]' : 'text-[#212631] hover:bg-[#212631]/5'}`}
-                                    >
-                                        Venue Protocol
                                     </button>
                                 </div>
 
