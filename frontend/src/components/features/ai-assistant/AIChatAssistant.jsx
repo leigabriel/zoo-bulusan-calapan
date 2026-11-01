@@ -78,11 +78,19 @@ const AIChatAssistant = ({ onClose }) => {
     const [persistenceEnabled, setPersistenceEnabled] = useState(false);
     const [input, setInput] = useState('');
     const [loading, setLoading] = useState(false);
-    const [sessionSidebarOpen, setSessionSidebarOpen] = useState(false);
+    const [sessionSidebarOpen, setSessionSidebarOpen] = useState(() =>
+        typeof window !== 'undefined' && window.matchMedia('(min-width: 768px)').matches
+    );
     const messagesEndRef = useRef(null);
     const panelRef = useRef(null);
 
     const activeSession = sessions.find(session => session.id === activeSessionId);
+
+    // The history panel is a permanent column on desktop and an overlay on mobile,
+    // so only the mobile overlay should close when a conversation is picked.
+    const closeSidebarOnMobile = () => {
+        if (!window.matchMedia('(min-width: 768px)').matches) setSessionSidebarOpen(false);
+    };
 
     useEffect(() => {
         const loadSessions = async () => {
@@ -168,12 +176,21 @@ const AIChatAssistant = ({ onClose }) => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages, loading]);
 
+    // Keep the history panel expanded on desktop and collapsed on mobile when the
+    // viewport crosses the breakpoint, so the panel never starts as an overlay.
+    useEffect(() => {
+        const desktopQuery = window.matchMedia('(min-width: 768px)');
+        const syncSidebar = () => setSessionSidebarOpen(desktopQuery.matches);
+        desktopQuery.addEventListener('change', syncSidebar);
+        return () => desktopQuery.removeEventListener('change', syncSidebar);
+    }, []);
+
     const selectSession = session => {
         setActiveSessionId(session.id);
         setMessages(session.messages || []);
         setStarted((session.messages || []).length > 0);
         setInput('');
-        setSessionSidebarOpen(false);
+        closeSidebarOnMobile();
     };
 
     const startNewSession = async () => {
@@ -184,7 +201,7 @@ const AIChatAssistant = ({ onClose }) => {
             setMessages([]);
             setStarted(false);
             setInput('');
-            setSessionSidebarOpen(false);
+            closeSidebarOnMobile();
             return;
         }
 
@@ -201,7 +218,7 @@ const AIChatAssistant = ({ onClose }) => {
             setMessages([]);
             setStarted(false);
             setInput('');
-            setSessionSidebarOpen(false);
+            closeSidebarOnMobile();
         } catch {
             // Keep the current conversation selected if creating a new one fails.
         }
@@ -299,13 +316,13 @@ const AIChatAssistant = ({ onClose }) => {
             <div ref={panelRef} className="relative h-full min-h-0 flex overflow-hidden" style={{ background: THEME.base, color: THEME.text }} data-lenis-prevent>
                 {sessionSidebarOpen && <button type="button" aria-label="Close chat history" onClick={() => setSessionSidebarOpen(false)} className="fixed inset-0 z-20 bg-slate-950/20 md:hidden" />}
 
-                <aside className={`${sessionSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'} fixed md:relative inset-y-0 left-0 z-30 w-72 shrink-0 flex flex-col transition-transform duration-200 md:transition-none`} style={{ background: '#f7f8f6', borderRight: `1px solid ${THEME.border}` }} aria-label="Chat history">
+                <aside className={`${sessionSidebarOpen ? 'translate-x-0' : '-translate-x-full md:hidden'} fixed md:relative inset-y-0 left-0 z-30 w-72 shrink-0 flex flex-col transition-transform duration-200 md:transition-none`} style={{ background: '#f7f8f6', borderRight: `1px solid ${THEME.border}` }} aria-label="Chat history">
                     <div className="pt-[max(1rem,env(safe-area-inset-top))] p-4 flex items-center justify-between">
                         <div>
                             <p className="text-sm font-bold" style={{ color: THEME.text }}>Chat history</p>
                             <p className="text-xs mt-0.5" style={{ color: THEME.textSoft }}>Your saved conversations</p>
                         </div>
-                        <button type="button" onClick={() => setSessionSidebarOpen(false)} className="p-2 rounded-lg md:hidden" style={{ color: THEME.textMuted }} aria-label="Close chat history"><CloseIcon /></button>
+                        <button type="button" onClick={() => setSessionSidebarOpen(false)} className="p-2 rounded-lg" style={{ color: THEME.textMuted }} aria-label="Hide chat history"><CloseIcon /></button>
                     </div>
                     <div className="px-3">
                         <button type="button" onClick={startNewSession} className="w-full min-h-11 flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors" style={{ background: THEME.accent, color: '#142018' }}>
@@ -332,7 +349,7 @@ const AIChatAssistant = ({ onClose }) => {
                 <div className="min-w-0 min-h-0 flex-1 flex flex-col overflow-hidden">
                     <header className="px-4 sm:px-7 pt-[max(1rem,env(safe-area-inset-top))] pb-4 sm:pb-6 flex items-center justify-between gap-4 shrink-0" style={{ borderBottom: `1px solid ${THEME.border}` }}>
                         <div className="flex items-center gap-3 min-w-0">
-                            <button type="button" onClick={() => setSessionSidebarOpen(true)} className="p-2 -ml-2 rounded-lg md:hidden" style={{ color: THEME.textMuted }} aria-label="Open chat history"><MenuIcon /></button>
+                            <button type="button" onClick={() => setSessionSidebarOpen(open => !open)} className="p-2 -ml-2 rounded-lg" style={{ color: THEME.textMuted }} aria-label={sessionSidebarOpen ? 'Hide chat history' : 'Show chat history'} aria-expanded={sessionSidebarOpen}><MenuIcon /></button>
                             <div className="relative shrink-0">
                                 <JijiMascot size={56} />
                                 <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2" style={{ background: THEME.accent, borderColor: THEME.base }} />
@@ -348,19 +365,23 @@ const AIChatAssistant = ({ onClose }) => {
                     {!sessionHydrated ? (
                         <div className="flex-1 flex items-center justify-center p-6" style={{ color: THEME.textMuted }}>Loading your chats...</div>
                     ) : !started ? (
-                        <div className="flex-1 min-h-0 flex flex-col px-4 sm:px-7 py-6 sm:py-10 overflow-y-auto overscroll-contain" data-lenis-prevent>
-                            <div className="flex-1 flex flex-col gap-7 sm:gap-10">
-                                <JijiMascot size={280} />
-                                <div className="flex flex-col gap-3">
-                                    <p className="text-2xl sm:text-3xl font-bold leading-tight" style={{ color: THEME.text }}>Meet Jiji,<br />your zoo guide.</p>
-                                    <p className="text-base sm:text-lg leading-relaxed" style={{ color: THEME.textMuted }}>Jiji is an AI assistant for Calapan Bulusan Zoo. Ask about animals, feeding schedules, exhibits, and conservation, or anything about your visit.</p>
-                                </div>
-                                <div className="flex flex-col gap-3">
-                                    <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: THEME.textSoft }}>Try asking</p>
-                                    {SUGGESTIONS.map(question => <button key={question} type="button" onClick={() => handleSend(question)} className="w-full text-left px-4 sm:px-5 py-3.5 sm:py-4 rounded-2xl text-sm sm:text-base font-medium leading-snug transition-all active:scale-[0.99] hover:opacity-80" style={{ background: THEME.surface, color: THEME.text, border: `1px solid ${THEME.border}` }}>{question}</button>)}
+                        <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
+                            <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 sm:px-7 py-6 sm:py-10" data-lenis-prevent>
+                                <div className="min-h-full flex flex-col gap-7 sm:gap-10">
+                                    <JijiMascot size={280} />
+                                    <div className="flex flex-col gap-3">
+                                        <p className="text-2xl sm:text-3xl font-bold leading-tight" style={{ color: THEME.text }}>Meet Jiji,<br />your zoo guide.</p>
+                                        <p className="text-base sm:text-lg leading-relaxed" style={{ color: THEME.textMuted }}>Jiji is an AI assistant for Calapan Bulusan Zoo. Ask about animals, feeding schedules, exhibits, and conservation, or anything about your visit.</p>
+                                    </div>
+                                    <div className="flex flex-col gap-3">
+                                        <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: THEME.textSoft }}>Try asking</p>
+                                        {SUGGESTIONS.map(question => <button key={question} type="button" onClick={() => handleSend(question)} className="w-full text-left px-4 sm:px-5 py-3.5 sm:py-4 rounded-2xl text-sm sm:text-base font-medium leading-snug transition-all active:scale-[0.99] hover:opacity-80" style={{ background: THEME.surface, color: THEME.text, border: `1px solid ${THEME.border}` }}>{question}</button>)}
+                                    </div>
                                 </div>
                             </div>
-                            <div className="mt-7 sm:mt-10">{renderComposer()}</div>
+                            <div className="shrink-0 px-4 sm:px-7 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))] sm:pb-6">
+                                <div className="max-w-2xl mx-auto">{renderComposer()}</div>
+                            </div>
                         </div>
                     ) : (
                         <div className="flex-1 min-h-0 overflow-hidden relative">

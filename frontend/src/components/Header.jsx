@@ -139,8 +139,6 @@ const Header = () => {
     const [notificationLoading, setNotificationLoading] = useState(false);
     const [showClearNotificationsConfirm, setShowClearNotificationsConfirm] = useState(false);
     const [clearingNotifications, setClearingNotifications] = useState(false);
-    const [scrolled, setScrolled] = useState(false);
-    const [isNavVisible, setIsNavVisible] = useState(true);
     const [showEmailModal, setShowEmailModal] = useState(false);
     const [emailSubject, setEmailSubject] = useState('');
     const [emailMessage, setEmailMessage] = useState('');
@@ -153,7 +151,6 @@ const Header = () => {
     const location = useLocation();
     const sidePanelRef = useRef(null);
     const notificationPanelRef = useRef(null);
-    const lastScrollY = useRef(0);
     const hasOpenOverlay = isMenuOpen || showSidePanel || showAIScanner || showHistoryPanel
         || showMyPostsPanel
         || showSettingsPanel || showProfilePanel || showNotificationPanel || showMiniZooGame
@@ -168,21 +165,6 @@ const Header = () => {
         navigate(path);
         window.scrollTo(0, 0);
     };
-
-    useEffect(() => {
-        const onScroll = () => {
-            const currentScrollY = window.scrollY;
-            if (currentScrollY > lastScrollY.current && currentScrollY > 56 && !isMenuOpen) {
-                setIsNavVisible(false);
-            } else {
-                setIsNavVisible(true);
-            }
-            setScrolled(currentScrollY > 20);
-            lastScrollY.current = currentScrollY;
-        };
-        window.addEventListener('scroll', onScroll, { passive: true });
-        return () => window.removeEventListener('scroll', onScroll);
-    }, [isMenuOpen]);
 
     useEffect(() => {
         setIsMenuOpen(false);
@@ -374,7 +356,7 @@ const Header = () => {
     return (
         <>
             <header
-                className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-300 ease-in-out ${isNavVisible ? 'translate-y-0' : '-translate-y-full'}`}
+                className="fixed top-0 left-0 right-0 z-[100]"
                 style={{ paddingTop: 'env(safe-area-inset-top)' }}
             >
                 <div className="mx-auto px-4 sm:px-6 lg:px-10 max-w-[1800px]" style={{ height: '56px' }}>
