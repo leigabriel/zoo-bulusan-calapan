@@ -1,14 +1,14 @@
-const fs = require('fs');
-const path = require('path');
+const { SETTING_KEYS, getSetting, saveSetting } = require('./settings-store');
 
 /**
  * Reservation availability settings. Kept separate from the payment configs
  * because availability is not a payment concern: an admin can close the whole
  * reservation page, or close only ticket bookings or only event bookings, while
  * leaving the payment setup untouched.
+ *
+ * Values live in the app_settings table rather than a JSON file so an admin
+ * change survives production restarts and redeploys.
  */
-const CONFIG_FILE = process.env.RESERVATION_CONFIG_FILE || path.join(__dirname, '..', 'data', 'reservation-config.json');
-
 const DEFAULT_CONFIG = {
     pageEnabled: true,
     ticketEnabled: true,
@@ -23,31 +23,21 @@ const toBoolean = (value, fallback) => {
     return fallback;
 };
 
+const normalizeConfig = (config = {}) => ({
+    pageEnabled: toBoolean(config.pageEnabled, DEFAULT_CONFIG.pageEnabled),
+    ticketEnabled: toBoolean(config.ticketEnabled, DEFAULT_CONFIG.ticketEnabled),
+    eventEnabled: toBoolean(config.eventEnabled, DEFAULT_CONFIG.eventEnabled)
+});
+
 const readConfig = () => {
-    try {
-        if (fs.existsSync(CONFIG_FILE)) {
-            const stored = JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf8'));
-            return {
-                pageEnabled: toBoolean(stored.pageEnabled, DEFAULT_CONFIG.pageEnabled),
-                ticketEnabled: toBoolean(stored.ticketEnabled, DEFAULT_CONFIG.ticketEnabled),
-                eventEnabled: toBoolean(stored.eventEnabled, DEFAULT_CONFIG.eventEnabled)
-            };
-        }
-    } catch (error) {
-        console.error('Unable to read reservation config:', error.message);
-    }
-    return { ...DEFAULT_CONFIG };
+    const stored = getSetting(SETTING_KEYS.RESERVATION_ACCESS);
+    return stored ? normalizeConfig(stored) : { ...DEFAULT_CONFIG };
 };
 
-const writeConfig = (config) => {
-    const cleaned = {
-        pageEnabled: toBoolean(config.pageEnabled, DEFAULT_CONFIG.pageEnabled),
-        ticketEnabled: toBoolean(config.ticketEnabled, DEFAULT_CONFIG.ticketEnabled),
-        eventEnabled: toBoolean(config.eventEnabled, DEFAULT_CONFIG.eventEnabled)
-    };
-    fs.mkdirSync(path.dirname(CONFIG_FILE), { recursive: true });
-    fs.writeFileSync(CONFIG_FILE, JSON.stringify(cleaned, null, 4), 'utf8');
+const writeConfig = async (config) => {
+    const cleaned = normalizeConfig(config);
+    await saveSetting(SETTING_KEYS.RESERVATION_ACCESS, cleaned);
     return cleaned;
 };
 
-module.exports = { readConfig, writeConfig, DEFAULT_CONFIG };
+module.exports = { readConfig, writeConfig, normalizeConfig, DEFAULT_CONFIG };

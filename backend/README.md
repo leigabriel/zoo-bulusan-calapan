@@ -62,7 +62,7 @@ Maintenance features include soft deletion with a recycle bin for supported reco
 
 ## Data and Storage
 
-Persistent data lives in MySQL. The application uses parameterized queries through the MySQL driver, keeps model logic in dedicated modules, and runs startup checks that add missing schema elements without destroying existing data.
+Persistent data lives in MySQL. The application uses parameterized queries through the MySQL driver, keeps model logic in dedicated modules, and runs startup checks that add missing schema elements without destroying existing data. Administrator-managed payment and reservation settings are stored in the database as well, so a saved change survives server restarts and redeploys.
 
 Uploaded files are handled by a dedicated upload service. When Cloudinary credentials are present, images are stored in the cloud; otherwise the server keeps them in a local uploads directory and serves them statically. File type and size limits are enforced on every upload route.
 

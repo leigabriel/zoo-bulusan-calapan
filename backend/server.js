@@ -44,6 +44,8 @@ const ensureAdminMasterKeySchema = require('./database/ensure-admin-master-key-s
 const ensureWalkInSchema = require('./database/ensure-walk-in-schema');
 const ensureRevokedTokensSchema = require('./database/ensure-revoked-tokens-schema');
 const ensureTicketPaymentSchema = require('./database/ensure-ticket-payment-schema');
+const ensureAppSettingsSchema = require('./database/ensure-app-settings-schema');
+const { loadSettings } = require('./config/settings-store');
 const { initializeChatSocket } = require('./socket/chat-socket');
 
 const app = express();
@@ -185,7 +187,7 @@ app.get('/', (req, res) => {
 app.use(notFoundHandler);
 app.use(errorHandler);
 
-const schemaInitializers = [ensureTicketPaymentSchema, ensureEventPaymentSchema, ensureAIAssistSchema, ensureAuthSchema, ensureSiteVisitSchema, ensureUserActivitySchema, ensureStaffActivitySchema, ensureNotificationSchema, ensureTrashSchema, ensureChatSchema, ensureSupportSchema, ensureAdminMasterKeySchema, ensureWalkInSchema, ensureRevokedTokensSchema];
+const schemaInitializers = [ensureAppSettingsSchema, ensureTicketPaymentSchema, ensureEventPaymentSchema, ensureAIAssistSchema, ensureAuthSchema, ensureSiteVisitSchema, ensureUserActivitySchema, ensureStaffActivitySchema, ensureNotificationSchema, ensureTrashSchema, ensureChatSchema, ensureSupportSchema, ensureAdminMasterKeySchema, ensureWalkInSchema, ensureRevokedTokensSchema];
 
 initializeChatSocket(server, {
     origin: allowedOrigins,
@@ -194,6 +196,7 @@ initializeChatSocket(server, {
 });
 
 schemaInitializers.reduce((initialization, initializeSchema) => initialization.then(initializeSchema), Promise.resolve())
+    .then(loadSettings)
     .catch(error => console.error('Database schema initialization failed:', error.message))
     .finally(() => {
         server.listen(PORT, HOST, () => {

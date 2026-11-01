@@ -1,36 +1,35 @@
-const fs = require('fs');
-const path = require('path');
+const { SETTING_KEYS, getSetting, saveSetting } = require('./settings-store');
 
-const CONFIG_FILE = process.env.EVENT_PAYMENT_CONFIG_FILE || path.join(__dirname, '..', 'data', 'event-payment-config.json');
-
+/**
+ * Event payment settings, stored independently from ticket payments.
+ *
+ * Values live in the app_settings table so an admin change survives production
+ * restarts and redeploys.
+ */
 const DEFAULT_CONFIG = {
     qrphEnabled: false,
     amountPerParticipant: 0,
     currency: 'PHP'
 };
 
-const readConfig = () => {
-    try {
-        if (fs.existsSync(CONFIG_FILE)) {
-            const stored = JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf8'));
-            return { ...DEFAULT_CONFIG, ...stored, qrphEnabled: stored.qrphEnabled ?? stored.enabled ?? DEFAULT_CONFIG.qrphEnabled };
-        }
-    } catch (error) {
-        console.error('Unable to read event payment config:', error.message);
-    }
-    return { ...DEFAULT_CONFIG };
-};
-
-const writeConfig = (config) => {
+const normalizeConfig = (config = {}) => {
     const amount = Number(config.amountPerParticipant);
-    const cleaned = {
+    return {
         qrphEnabled: Boolean(config.qrphEnabled ?? config.enabled),
         amountPerParticipant: Number.isFinite(amount) && amount >= 0 ? Math.round(amount * 100) / 100 : 0,
         currency: 'PHP'
     };
-    fs.mkdirSync(path.dirname(CONFIG_FILE), { recursive: true });
-    fs.writeFileSync(CONFIG_FILE, JSON.stringify(cleaned, null, 4), 'utf8');
+};
+
+const readConfig = () => {
+    const stored = getSetting(SETTING_KEYS.EVENT_PAYMENT);
+    return stored ? normalizeConfig(stored) : { ...DEFAULT_CONFIG };
+};
+
+const writeConfig = async (config) => {
+    const cleaned = normalizeConfig(config);
+    await saveSetting(SETTING_KEYS.EVENT_PAYMENT, cleaned);
     return cleaned;
 };
 
-module.exports = { readConfig, writeConfig };
+module.exports = { readConfig, writeConfig, normalizeConfig, DEFAULT_CONFIG };

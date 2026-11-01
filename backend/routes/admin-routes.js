@@ -153,9 +153,9 @@ router.delete('/notifications', adminController.clearNotifications);
 router.get('/event-payment-config', (req, res) => {
     res.json({ success: true, config: readEventPaymentConfig() });
 });
-router.put('/event-payment-config', trackActivity('payment_config_update', 'Updated event payment settings'), (req, res) => {
+router.put('/event-payment-config', trackActivity('payment_config_update', 'Updated event payment settings'), async (req, res) => {
     try {
-        const updated = writeEventPaymentConfig(req.body.config || {});
+        const updated = await writeEventPaymentConfig(req.body.config || {});
         res.json({ success: true, message: 'Event payment settings updated successfully', config: updated });
     } catch (error) {
         console.error('Error updating event payment config:', error);
@@ -168,9 +168,9 @@ router.get('/ticket-payment-config', (req, res) => {
 });
 
 
-router.put('/ticket-payment-config', trackActivity('ticket_payment_config_update', 'Updated ticket payment settings'), (req, res) => {
+router.put('/ticket-payment-config', trackActivity('ticket_payment_config_update', 'Updated ticket payment settings'), async (req, res) => {
     try {
-        const updated = writeTicketPaymentConfig(req.body.config || {});
+        const updated = await writeTicketPaymentConfig(req.body.config || {});
         res.json({ success: true, message: 'Ticket payment settings updated successfully', config: updated });
     } catch (error) {
         console.error('Error updating ticket payment config:', error);
@@ -184,9 +184,9 @@ router.get('/reservation-config', (req, res) => {
     res.json({ success: true, config: readReservationConfig() });
 });
 
-router.put('/reservation-config', trackActivity('reservation_config_update', 'Updated reservation availability settings'), (req, res) => {
+router.put('/reservation-config', trackActivity('reservation_config_update', 'Updated reservation availability settings'), async (req, res) => {
     try {
-        const updated = writeReservationConfig(req.body.config || {});
+        const updated = await writeReservationConfig(req.body.config || {});
         res.json({ success: true, message: 'Reservation availability settings updated successfully', config: updated });
     } catch (error) {
         console.error('Error updating reservation config:', error);

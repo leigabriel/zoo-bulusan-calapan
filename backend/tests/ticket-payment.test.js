@@ -2,23 +2,20 @@ const test = require('node:test');
 const assert = require('node:assert');
 const fs = require('node:fs');
 const path = require('node:path');
-const os = require('node:os');
 
 const read = (rel) => fs.readFileSync(path.join(__dirname, '..', rel), 'utf8');
 
 // ------------------------------------------------------------------ config
 test('ticket payment config defaults and clamping', () => {
-    // Exercise the real module against a throwaway config file.
-    const tmp = path.join(os.tmpdir(), `ticket-payment-${process.pid}.json`);
-    process.env.TICKET_PAYMENT_CONFIG_FILE = tmp;
     delete require.cache[require.resolve('../config/ticket-payment-config')];
     const cfg = require('../config/ticket-payment-config');
 
     assert.strictEqual(cfg.DEFAULT_CONFIG.qrphEnabled, false, 'opt-in by default');
+    // Nothing has been loaded from the database yet, so the defaults apply.
     assert.strictEqual(cfg.readConfig().adultPrice, 40);
 
     // Negative and non-numeric prices must fall back, never become charges.
-    const cleaned = cfg.writeConfig({ qrphEnabled: true, adultPrice: -50, childPrice: 'abc', residentPrice: 10 });
+    const cleaned = cfg.normalizeConfig({ qrphEnabled: true, adultPrice: -50, childPrice: 'abc', residentPrice: 10 });
     assert.strictEqual(cleaned.adultPrice, 40, 'negative adult price rejected');
     assert.strictEqual(cleaned.childPrice, 20, 'non-numeric child price rejected');
     assert.strictEqual(cleaned.residentPrice, 10, 'valid price kept');
@@ -26,29 +23,39 @@ test('ticket payment config defaults and clamping', () => {
     assert.strictEqual(cleaned.currency, 'PHP', 'currency is not admin-settable');
 
     // Rounding to 2dp so PayMongo amounts stay exact.
-    assert.strictEqual(cfg.writeConfig({ adultPrice: 40.129 }).adultPrice, 40.13);
+    assert.strictEqual(cfg.normalizeConfig({ adultPrice: 40.129 }).adultPrice, 40.13);
 
-    try { fs.unlinkSync(tmp); } catch { /* ignore */ }
     delete require.cache[require.resolve('../config/ticket-payment-config')];
 });
 
 // --------------------------------------------------------- config isolation
-test('ticket and event payment configs are separate files with separate toggles', () => {
+test('ticket and event payment configs use separate database settings', () => {
     const ticket = read('config/ticket-payment-config.js');
     const event = read('config/event-payment-config.js');
 
-    assert.match(ticket, /TICKET_PAYMENT_CONFIG_FILE/);
-    assert.match(event, /EVENT_PAYMENT_CONFIG_FILE/);
-    assert.notStrictEqual(
-        ticket.match(/CONFIG_FILE \|\| path\.join\([^)]*/)[0],
-        event.match(/CONFIG_FILE \|\| path\.join\([^)]*/)[0],
-        'the two configs must not share a file'
-    );
+    assert.match(ticket, /SETTING_KEYS\.TICKET_PAYMENT/);
+    assert.match(event, /SETTING_KEYS\.EVENT_PAYMENT/);
+    assert.doesNotMatch(ticket, /SETTING_KEYS\.EVENT_PAYMENT/);
+    assert.doesNotMatch(event, /SETTING_KEYS\.TICKET_PAYMENT/);
     // Ticket pricing is per category; events are a flat per-participant fee.
     assert.match(ticket, /adultPrice/);
     assert.match(ticket, /childPrice/);
     assert.match(event, /amountPerParticipant/);
     assert.doesNotMatch(event, /adultPrice/);
+});
+
+test('admin settings persist in the database, not the host filesystem', () => {
+    const store = read('config/settings-store.js');
+    assert.match(store, /app_settings/);
+    assert.doesNotMatch(store, /writeFileSync/,
+        'settings must never be written to a filesystem that production can discard');
+
+    const schema = read('database/ensure-app-settings-schema.js');
+    assert.match(schema, /CREATE TABLE IF NOT EXISTS app_settings/);
+
+    const server = read('server.js');
+    assert.match(server, /ensureAppSettingsSchema/);
+    assert.match(server, /\.then\(loadSettings\)/, 'the cache must be primed before the server listens');
 });
 
 // ------------------------------------------------------- the webhook blocker

@@ -1,5 +1,4 @@
-const fs = require('fs');
-const path = require('path');
+const { SETTING_KEYS, getSetting, saveSetting } = require('./settings-store');
 
 /**
  * Ticket payment settings, deliberately kept separate from the event payment
@@ -8,9 +7,10 @@ const path = require('path');
  * category; events are a flat fee per participant), so they get independent
  * toggles and independent prices. An admin can turn one on without touching
  * the other.
+ *
+ * Values are stored in the app_settings table so they survive production
+ * restarts and redeploys.
  */
-const CONFIG_FILE = process.env.TICKET_PAYMENT_CONFIG_FILE || path.join(__dirname, '..', 'data', 'ticket-payment-config.json');
-
 const DEFAULT_CONFIG = {
     qrphEnabled: false,
     adultPrice: 40,
@@ -27,38 +27,24 @@ const toPrice = (value, fallback) => {
     return Math.round(amount * 100) / 100;
 };
 
+const normalizeConfig = (config = {}) => ({
+    // Tolerate the older `enabled` key the way the event config does.
+    qrphEnabled: Boolean(config.qrphEnabled ?? config.enabled),
+    adultPrice: toPrice(config.adultPrice, DEFAULT_CONFIG.adultPrice),
+    childPrice: toPrice(config.childPrice, DEFAULT_CONFIG.childPrice),
+    residentPrice: toPrice(config.residentPrice, DEFAULT_CONFIG.residentPrice),
+    currency: 'PHP'
+});
+
 const readConfig = () => {
-    try {
-        if (fs.existsSync(CONFIG_FILE)) {
-            const stored = JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf8'));
-            const merged = { ...DEFAULT_CONFIG, ...stored };
-            // Tolerate the older `enabled` key the way the event config does.
-            merged.qrphEnabled = Boolean(stored.qrphEnabled ?? stored.enabled ?? DEFAULT_CONFIG.qrphEnabled);
-            return {
-                qrphEnabled: merged.qrphEnabled,
-                adultPrice: toPrice(merged.adultPrice, DEFAULT_CONFIG.adultPrice),
-                childPrice: toPrice(merged.childPrice, DEFAULT_CONFIG.childPrice),
-                residentPrice: toPrice(merged.residentPrice, DEFAULT_CONFIG.residentPrice),
-                currency: merged.currency || 'PHP'
-            };
-        }
-    } catch (error) {
-        console.error('Unable to read ticket payment config:', error.message);
-    }
-    return { ...DEFAULT_CONFIG };
+    const stored = getSetting(SETTING_KEYS.TICKET_PAYMENT);
+    return stored ? normalizeConfig(stored) : { ...DEFAULT_CONFIG };
 };
 
-const writeConfig = (config) => {
-    const cleaned = {
-        qrphEnabled: Boolean(config.qrphEnabled ?? config.enabled),
-        adultPrice: toPrice(config.adultPrice, DEFAULT_CONFIG.adultPrice),
-        childPrice: toPrice(config.childPrice, DEFAULT_CONFIG.childPrice),
-        residentPrice: toPrice(config.residentPrice, DEFAULT_CONFIG.residentPrice),
-        currency: 'PHP'
-    };
-    fs.mkdirSync(path.dirname(CONFIG_FILE), { recursive: true });
-    fs.writeFileSync(CONFIG_FILE, JSON.stringify(cleaned, null, 4), 'utf8');
+const writeConfig = async (config) => {
+    const cleaned = normalizeConfig(config);
+    await saveSetting(SETTING_KEYS.TICKET_PAYMENT, cleaned);
     return cleaned;
 };
 
-module.exports = { readConfig, writeConfig, DEFAULT_CONFIG };
+module.exports = { readConfig, writeConfig, normalizeConfig, DEFAULT_CONFIG };
