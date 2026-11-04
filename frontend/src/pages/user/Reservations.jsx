@@ -12,15 +12,17 @@ import { reservationAPI, userAPI } from '../../services/api-client';
 import { sanitizeInput, sanitizeEmail, sanitizePhone } from '../../utils/sanitize';
 import { notify } from '../../utils/toast';
 import useScrollLock from '../../hooks/use-scroll-lock';
-import { Ticket, Calendar, X, CheckCircle, Plus, Minus, Upload, Clock, ChevronRight, AlertTriangle } from 'reicon-react';
+import { Ticket, Calendar, X, CheckCircle, Plus, Minus, Upload, Clock, ChevronRight, ChevronDown, AlertTriangle } from 'reicon-react';
 import { appendConsentRecord } from '../../utils/consent';
+import { formatTime12 } from '../../utils/time-format';
 
 const Icons = {
     Ticket: () => <Ticket className="w-5 h-5" />, Calendar: () => <Calendar className="w-5 h-5" />,
     Close: () => <X className="w-4 h-4" />, Check: () => <CheckCircle className="w-8 h-8" />,
     Plus: () => <Plus className="w-4 h-4" />, Minus: () => <Minus className="w-4 h-4" />,
     Upload: () => <Upload className="w-6 h-6" />, History: () => <Clock className="w-6 h-6" />,
-    ArrowRight: () => <ChevronRight className="w-5 h-5" />, Warning: () => <AlertTriangle className="w-8 h-8 text-[#212631]" />
+    ArrowRight: () => <ChevronRight className="w-5 h-5" />, Warning: () => <AlertTriangle className="w-8 h-8 text-[#212631]" />,
+    ChevronDown: () => <ChevronDown className="w-4 h-4" />
 };
 
 const TICKET_TYPES = {
@@ -38,6 +40,63 @@ const RESUME_KEY = 'bulusan_reservation_resume_v1';
 // White sits on the grey panel so a field reads as a field; text-base is 16px, which stops
 // iOS zooming the viewport on focus; min-h keeps every control the same height.
 const FIELD_INPUT = 'w-full min-h-[52px] rounded-xl border border-[#212631]/20 bg-white px-4 py-3 text-base font-medium text-[#212631] placeholder:text-[#212631]/40 outline-none transition-colors focus:border-[#212631] focus:ring-2 focus:ring-[#212631]/15';
+
+// Every hour of the 12-hour clock, stored as 24-hour values so the API keeps
+// receiving the same format while the visitor sees AM/PM.
+const HOURLY_TIME_OPTIONS = Array.from({ length: 24 }, (_, hour) => {
+    const value = `${String(hour).padStart(2, '0')}:00`;
+    return { value, label: formatTime12(value) };
+});
+
+// Zoo ticket visits are accepted from 8:00 AM through 4:00 PM only.
+const TICKET_TIME_OPTIONS = HOURLY_TIME_OPTIONS.slice(8, 17);
+const TICKET_TIME_VALUES = new Set(TICKET_TIME_OPTIONS.map((option) => option.value));
+const CUSTOM_TIME_VALUE = '__custom__';
+
+// Custom ticket times can use any minute inside the same 8:00 AM–4:00 PM window.
+const isTicketTimeInWindow = (value) => {
+    const match = String(value ?? '').trim().match(/^(\d{1,2}):(\d{2})(?::\d{2})?$/);
+    if (!match) return false;
+    const hours = Number(match[1]);
+    const minutes = Number(match[2]);
+    if (!Number.isInteger(hours) || !Number.isInteger(minutes) || minutes > 59) return false;
+    const totalMinutes = hours * 60 + minutes;
+    return totalMinutes >= 8 * 60 && totalMinutes <= 16 * 60;
+};
+
+// The select keeps the stored 24-hour value while showing it in 12-hour form.
+const TimeSelect = ({ value, onChange, options, placeholder, loading = false, ariaLabel, disabled = false }) => {
+    const allDisabled = options.length > 0 && options.every((option) => option.disabled);
+    const noOptions = !loading && (options.length === 0 || allDisabled);
+    // Keep a previously saved time visible even if it predates the fixed slots,
+    // so resuming an old form never silently swaps the value under the visitor.
+    const selectedMissing = Boolean(value) && !options.some((option) => option.value === value);
+    return (
+        <div className="relative w-full">
+            <select
+                value={value ?? ''}
+                onChange={onChange}
+                className={`${FIELD_INPUT} cursor-pointer appearance-none pr-12 disabled:cursor-not-allowed disabled:opacity-60`}
+                disabled={disabled || loading || noOptions}
+                required
+                aria-label={ariaLabel}
+            >
+                <option value="" disabled>
+                    {loading ? 'Loading times…' : noOptions && !disabled ? 'No times available' : placeholder}
+                </option>
+                {selectedMissing && <option value={value}>{formatTime12(value)}</option>}
+                {options.map((option) => (
+                    <option key={option.value} value={option.value} disabled={option.disabled}>
+                        {option.label}
+                    </option>
+                ))}
+            </select>
+            <div className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-[#212631]/50">
+                <Icons.ChevronDown />
+            </div>
+        </div>
+    );
+};
 
 const Reservations = () => {
     const navigate = useNavigate();
@@ -60,7 +119,11 @@ const Reservations = () => {
     const [paymentReturn, setPaymentReturn] = useState(false);
     const [ticketAvailability, setTicketAvailability] = useState([]);
     const [eventAvailability, setEventAvailability] = useState([]);
-    const [loadingSlots, setLoadingSlots] = useState(false);
+    const [ticketDateFull, setTicketDateFull] = useState(false);
+    const [customTicketTime, setCustomTicketTime] = useState(false);
+    const [eventDateFull, setEventDateFull] = useState(false);
+    const [loadingTicketSlots, setLoadingTicketSlots] = useState(false);
+    const [loadingEventSlots, setLoadingEventSlots] = useState(false);
     // Booking availability set by the admin. Defaults keep the page usable if the
     // availability request fails, and the backend still enforces the real state.
     const [reservationConfig, setReservationConfig] = useState({ pageEnabled: true, ticketEnabled: true, eventEnabled: true });
@@ -143,7 +206,10 @@ const Reservations = () => {
                 setReservationType(saved.reservationType);
             }
             if (saved.ticketCounts) setTicketCounts(saved.ticketCounts);
-            if (saved.ticketForm) setTicketForm(saved.ticketForm);
+            if (saved.ticketForm) {
+                setTicketForm(saved.ticketForm);
+                setCustomTicketTime(Boolean(saved.ticketForm.reservationTime) && !TICKET_TIME_VALUES.has(saved.ticketForm.reservationTime));
+            }
             if (saved.eventForm) setEventForm(saved.eventForm);
             setShowCreateModal(true);
         } catch {
@@ -188,53 +254,71 @@ const Reservations = () => {
     }, [configLoading, reservationConfig, reservationType]);
 
     useEffect(() => {
+        let cancelled = false;
         const fetchAvailability = async () => {
-            if (ticketForm.reservationDate && reservationType === 'ticket') {
-                setLoadingSlots(true);
-                try {
-                    const res = await reservationAPI.getTicketAvailability(ticketForm.reservationDate, 1);
-                    if (res.success && res.dates) {
-                        const dateData = res.dates.find(d => d.date === ticketForm.reservationDate);
-                        if (dateData) {
-                            setTicketAvailability(dateData.slots.map(slot => ({
-                                id: slot.time,
-                                label: slot.label,
-                                available: slot.remaining
-                            })));
-                        } else {
-                            setTicketAvailability([]);
-                        }
-                    }
-                } catch (err) { }
-                setLoadingSlots(false);
+            if (!ticketForm.reservationDate || reservationType !== 'ticket') return;
+            setLoadingTicketSlots(true);
+            setTicketAvailability([]);
+            try {
+                const res = await reservationAPI.getTicketAvailability(ticketForm.reservationDate, 1);
+                if (cancelled) return;
+                const dateData = res.success && res.dates
+                    ? res.dates.find(d => d.date === ticketForm.reservationDate)
+                    : null;
+                setTicketAvailability(dateData ? dateData.slots.map(slot => ({
+                    id: slot.time,
+                    label: slot.label,
+                    available: slot.remaining,
+                    isFull: slot.isFull
+                })) : []);
+                setTicketDateFull(Boolean(dateData?.isFull));
+            } catch {
+                if (!cancelled) {
+                    setTicketAvailability([]);
+                    setTicketDateFull(false);
+                }
+            } finally {
+                if (!cancelled) setLoadingTicketSlots(false);
             }
         };
         fetchAvailability();
+        return () => { cancelled = true; };
     }, [ticketForm.reservationDate, reservationType]);
 
     useEffect(() => {
+        let cancelled = false;
         const fetchAvailability = async () => {
-            if (eventForm.venueEventDate && reservationType === 'event') {
-                setLoadingSlots(true);
-                try {
-                    const res = await reservationAPI.getEventAvailability(eventForm.venueEventDate, 1);
-                    if (res.success && res.dates) {
-                        const dateData = res.dates.find(d => d.date === eventForm.venueEventDate);
-                        if (dateData) {
-                            setEventAvailability(dateData.slots.map(slot => ({
-                                id: slot.time,
-                                label: slot.label,
-                                available: slot.remaining
-                            })));
-                        } else {
-                            setEventAvailability([]);
-                        }
-                    }
-                } catch (err) { }
-                setLoadingSlots(false);
+            if (!eventForm.venueEventDate || reservationType !== 'event') return;
+            setLoadingEventSlots(true);
+            try {
+                const res = await reservationAPI.getEventAvailability(eventForm.venueEventDate, 1);
+                if (cancelled) return;
+                if (!res.success || !Array.isArray(res.dates)) {
+                    setEventAvailability([]);
+                    setEventDateFull(false);
+                    return;
+                }
+                const dateData = res.dates.find(d => d.date === eventForm.venueEventDate);
+                setEventAvailability(dateData ? dateData.slots.map(slot => ({
+                    id: slot.time,
+                    label: slot.label,
+                    available: slot.remaining,
+                    isFull: slot.isFull
+                })) : []);
+                setEventDateFull(Boolean(dateData?.isFull));
+            } catch {
+                if (!cancelled) {
+                    // Keep the form usable if availability cannot be fetched; the
+                    // backend still enforces capacity on submit.
+                    setEventAvailability([]);
+                    setEventDateFull(false);
+                }
+            } finally {
+                if (!cancelled) setLoadingEventSlots(false);
             }
         };
         fetchAvailability();
+        return () => { cancelled = true; };
     }, [eventForm.venueEventDate, reservationType]);
 
     useScrollLock(showCreateModal || showConfirmation || showHistoryPanel || showSubmitConfirm || showCloseConfirm);
@@ -264,20 +348,36 @@ const Reservations = () => {
         setTicketCounts(prev => ({ ...prev, [type]: Math.max(0, prev[type] + delta) }));
     };
 
-    const getMaxDate = () => {
-        const d = new Date();
-        d.setDate(d.getDate() + 30);
-        return d.toISOString().split('T')[0];
-    };
     const getMinDate = () => new Date().toISOString().split('T')[0];
 
     const validateTicketForm = () => {
         if (getTotalVisitors() === 0) { notify.warning('Select a ticket first.'); return false; }
         if (!ticketForm.reservationDate) { notify.warning('Please select a visit date.'); return false; }
-        if (!ticketForm.reservationTime) { notify.warning('Please select an arrival time.'); return false; }
+        if (ticketDateFull) {
+            notify.warning('This date is fully booked. Please choose another date.');
+            return false;
+        }
+        if (!isTicketTimeInWindow(ticketForm.reservationTime)) {
+            notify.warning('Please select an arrival time between 8:00 AM and 4:00 PM.');
+            return false;
+        }
         if (!ticketForm.visitorName.trim()) { notify.warning('Please enter your name.'); return false; }
         if (!ticketForm.visitorEmail.trim()) { notify.warning('Please enter your email.'); return false; }
         return true;
+    };
+
+    const handleTicketTimeChange = (e) => {
+        const value = e.target.value;
+        if (value === CUSTOM_TIME_VALUE) {
+            setCustomTicketTime(true);
+            // Keep a valid time so the custom input opens with the current value.
+            if (!isTicketTimeInWindow(ticketForm.reservationTime)) {
+                setTicketForm((form) => ({ ...form, reservationTime: '' }));
+            }
+            return;
+        }
+        setCustomTicketTime(false);
+        setTicketForm((form) => ({ ...form, reservationTime: value }));
     };
 
     const handleCreateReservation = async () => {
@@ -375,7 +475,8 @@ const Reservations = () => {
     const resetForms = () => {
         setTicketCounts({ adult: 0, child: 0 });
         const fullName = user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : '';
-        setTicketForm({ reservationDate: '', visitorName: fullName, visitorEmail: user?.email || '' });
+        setTicketForm({ reservationDate: '', reservationTime: '', visitorName: fullName, visitorEmail: user?.email || '' });
+        setCustomTicketTime(false);
         setEventForm({ venueEventName: '', venueEventDate: '', venueEventStartTime: '', venueEventEndTime: '', venueEventDescription: '', numberOfParticipants: 1, participantName: fullName, participantEmail: user?.email || '', participantPhone: '', notes: '' });
     };
 
@@ -431,6 +532,10 @@ const Reservations = () => {
                 notify.warning('Provide name and date.');
                 return;
             }
+            if (!eventForm.venueEventStartTime || !eventForm.venueEventEndTime) {
+                notify.warning('Please select the event start and end time.');
+                return;
+            }
         }
         setShowSubmitConfirm(true);
     };
@@ -444,6 +549,21 @@ const Reservations = () => {
         if (!dateStr) return '-';
         return new Date(dateStr).toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' });
     };
+
+    // Preset hours plus a custom option for minute-level times inside the window.
+    // The backend still reports the four original slots; keep those disabled when full.
+    const ticketTimeOptions = [
+        ...TICKET_TIME_OPTIONS.map((option) => {
+            const slot = ticketAvailability.find((item) => item.id === option.value);
+            return { ...option, disabled: ticketDateFull || Boolean(slot?.isFull || (slot && slot.available <= 0)) };
+        }),
+        { value: CUSTOM_TIME_VALUE, label: 'Custom time…', disabled: ticketDateFull }
+    ];
+
+    const eventStartTimeOptions = HOURLY_TIME_OPTIONS.map((option) => {
+        const slot = eventAvailability.find((item) => item.id === option.value);
+        return { ...option, disabled: eventDateFull || Boolean(slot?.isFull) };
+    });
 
     const scrollToContent = () => {
         document.getElementById('reservation-content')?.scrollIntoView({ behavior: 'smooth' });
@@ -693,13 +813,53 @@ const Reservations = () => {
 
                                                     <div className="flex flex-col gap-2">
                                                         <label className="text-[9px] tracking-[0.2em] uppercase font-bold text-[#212631]">Arrival Date *</label>
-                                                        <input type="date" value={ticketForm.reservationDate} onChange={e => setTicketForm({ ...ticketForm, reservationDate: e.target.value, reservationTime: '' })} min={getMinDate()} max={getMaxDate()} className={FIELD_INPUT} required />
+                                                        <input
+                                                            type="date"
+                                                            value={ticketForm.reservationDate}
+                                                            onChange={e => {
+                                                                setTicketForm({ ...ticketForm, reservationDate: e.target.value, reservationTime: '' });
+                                                                setCustomTicketTime(false);
+                                                            }}
+                                                            min={getMinDate()}
+                                                            className={FIELD_INPUT}
+                                                            required
+                                                        />
                                                     </div>
 
                                                     {ticketForm.reservationDate && (
                                                         <div className="flex flex-col gap-2">
                                                             <label className="text-[9px] tracking-[0.2em] uppercase font-bold text-[#212631]">Arrival Time *</label>
-                                                            <input type="time" value={ticketForm.reservationTime} onChange={e => setTicketForm({ ...ticketForm, reservationTime: e.target.value })} className={FIELD_INPUT} required />
+                                                            <TimeSelect
+                                                                value={customTicketTime ? CUSTOM_TIME_VALUE : ticketForm.reservationTime}
+                                                                onChange={handleTicketTimeChange}
+                                                                options={ticketTimeOptions}
+                                                                placeholder="Select arrival time"
+                                                                loading={loadingTicketSlots}
+                                                                ariaLabel="Arrival Time"
+                                                            />
+                                                            {customTicketTime && (
+                                                                <>
+                                                                    <input
+                                                                        type="time"
+                                                                        value={ticketForm.reservationTime}
+                                                                        onChange={e => setTicketForm({ ...ticketForm, reservationTime: e.target.value })}
+                                                                        min="08:00"
+                                                                        max="16:00"
+                                                                        step="60"
+                                                                        className={`${FIELD_INPUT} disabled:cursor-not-allowed disabled:opacity-60`}
+                                                                        disabled={loadingTicketSlots || ticketDateFull}
+                                                                        required
+                                                                        aria-label="Custom arrival time"
+                                                                    />
+                                                                    <p className={`text-[11px] ${ticketDateFull ? 'text-rose-600' : 'text-[#212631]/50'}`}>
+                                                                        {loadingTicketSlots
+                                                                            ? 'Checking availability…'
+                                                                            : ticketDateFull
+                                                                                ? 'This date is fully booked. Choose another date.'
+                                                                                : 'Choose any time from 8:00 AM to 4:00 PM.'}
+                                                                    </p>
+                                                                </>
+                                                            )}
                                                         </div>
                                                     )}
 
@@ -715,17 +875,33 @@ const Reservations = () => {
                                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                                                     <div className="flex flex-col gap-2">
                                                         <label className="text-[9px] tracking-[0.2em] uppercase font-bold text-[#212631]">Event Date *</label>
-                                                        <input type="date" value={eventForm.venueEventDate} onChange={e => setEventForm({ ...eventForm, venueEventDate: e.target.value })} min={getMinDate()} className={FIELD_INPUT} required />
+                                                        <input type="date" value={eventForm.venueEventDate} onChange={e => setEventForm({ ...eventForm, venueEventDate: e.target.value, venueEventStartTime: '', venueEventEndTime: '' })} min={getMinDate()} className={FIELD_INPUT} required />
                                                     </div>
                                                     <div className="flex flex-col gap-2">
                                                         <label className="text-[9px] tracking-[0.2em] uppercase font-bold text-[#212631]">Event Start Time *</label>
-                                                        <input type="time" value={eventForm.venueEventStartTime} onChange={e => setEventForm({ ...eventForm, venueEventStartTime: e.target.value })} className={FIELD_INPUT} required />
+                                                        <TimeSelect
+                                                            value={eventForm.venueEventStartTime}
+                                                            onChange={e => setEventForm({ ...eventForm, venueEventStartTime: e.target.value })}
+                                                            options={eventStartTimeOptions}
+                                                            placeholder={eventForm.venueEventDate ? 'Select start time' : 'Select a date first'}
+                                                            loading={loadingEventSlots}
+                                                            disabled={!eventForm.venueEventDate}
+                                                            ariaLabel="Event Start Time"
+                                                        />
                                                     </div>
                                                 </div>
                                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                                                     <div className="flex flex-col gap-2">
                                                         <label className="text-[9px] tracking-[0.2em] uppercase font-bold text-[#212631]">Event End Time *</label>
-                                                        <input type="time" value={eventForm.venueEventEndTime} onChange={e => setEventForm({ ...eventForm, venueEventEndTime: e.target.value })} className={FIELD_INPUT} required />
+                                                        <TimeSelect
+                                                            value={eventForm.venueEventEndTime}
+                                                            onChange={e => setEventForm({ ...eventForm, venueEventEndTime: e.target.value })}
+                                                            options={HOURLY_TIME_OPTIONS}
+                                                            placeholder={eventForm.venueEventDate ? 'Select end time' : 'Select a date first'}
+                                                            loading={loadingEventSlots}
+                                                            disabled={!eventForm.venueEventDate}
+                                                            ariaLabel="Event End Time"
+                                                        />
                                                     </div>
                                                 </div>
 
@@ -816,8 +992,8 @@ const Reservations = () => {
                                             <div className="flex justify-between items-center"><span className="text-[9px] tracking-widest uppercase font-bold text-[#212631]/60">Type</span><span className="text-[10px] font-black uppercase text-[#212631]">Venue</span></div>
                                             <div className="flex justify-between items-center"><span className="text-[9px] tracking-widest uppercase font-bold text-[#212631]/60">Event</span><span className="text-[10px] font-black uppercase text-[#212631] truncate max-w-[150px]">{eventForm.venueEventName}</span></div>
                                             <div className="flex justify-between items-center"><span className="text-[9px] tracking-widest uppercase font-bold text-[#212631]/60">Date</span><span className="text-[10px] font-black uppercase text-[#212631]">{formatDate(eventForm.venueEventDate)}</span></div>
-                                            <div className="flex justify-between items-center"><span className="text-[9px] tracking-widest uppercase font-bold text-[#212631]/60">Start</span><span className="text-[10px] font-black uppercase text-[#212631]">{eventForm.venueEventStartTime || '-'}</span></div>
-                                            <div className="flex justify-between items-center"><span className="text-[9px] tracking-widest uppercase font-bold text-[#212631]/60">End</span><span className="text-[10px] font-black uppercase text-[#212631]">{eventForm.venueEventEndTime || '-'}</span></div>
+                                            <div className="flex justify-between items-center"><span className="text-[9px] tracking-widest uppercase font-bold text-[#212631]/60">Start</span><span className="text-[10px] font-black uppercase text-[#212631]">{formatTime12(eventForm.venueEventStartTime) || '-'}</span></div>
+                                            <div className="flex justify-between items-center"><span className="text-[9px] tracking-widest uppercase font-bold text-[#212631]/60">End</span><span className="text-[10px] font-black uppercase text-[#212631]">{formatTime12(eventForm.venueEventEndTime) || '-'}</span></div>
                                             <div className="flex justify-between items-center"><span className="text-[9px] tracking-widest uppercase font-bold text-[#212631]/60">Pax</span><span className="text-[10px] font-black uppercase text-[#212631]">{eventForm.numberOfParticipants}</span></div>
                                         </>
                                     )}

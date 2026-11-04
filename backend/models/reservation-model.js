@@ -778,7 +778,7 @@ class Reservation {
                  notes = COALESCE(?, notes),
                  venue_event_name = COALESCE(?, venue_event_name),
                  venue_event_date = COALESCE(?, venue_event_date),
-                 venue_event_start_time = ?,
+                 venue_event_time = ?,
                  venue_event_end_time = ?,
                  venue_event_description = COALESCE(?, venue_event_description),
                  updated_at = NOW()

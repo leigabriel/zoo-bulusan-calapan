@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../hooks/use-auth';
 import { reservationAPI, userAPI } from '../../services/api-client';
 import { formatSafeDate, getDateTimestamp } from '../../utils/format-date';
+import { formatTime12 } from '../../utils/time-format';
 import { QRCodeSVG } from 'qrcode.react';
 import { notify } from '../../utils/toast';
 import useScrollLock from '../../hooks/use-scroll-lock';
@@ -124,7 +125,7 @@ const ReservationHistoryPanel = ({ isOpen, onClose, paymentReturn = false, focus
             email: isEvent ? (reservation.participant_email || '') : (reservation.visitor_email || ''),
             phone: isEvent ? (reservation.participant_phone || '') : (reservation.visitor_phone || ''),
             date: isEvent ? (reservation.venue_event_date || '') : (reservation.reservation_date || ''),
-            startTime: isEvent ? (reservation.venue_event_start_time || '') : (reservation.reservation_time || ''),
+            startTime: isEvent ? (reservation.venue_event_time || '') : (reservation.reservation_time || ''),
             endTime: isEvent ? (reservation.venue_event_end_time || '') : '',
             designation: reservation.venue_event_name || '',
             description: reservation.venue_event_description || ''
@@ -271,11 +272,12 @@ const ReservationHistoryPanel = ({ isOpen, onClose, paymentReturn = false, focus
             const dateStr = formatDate(selectedReservation.reservation_date || selectedReservation.venue_event_date || selectedReservation.event_date);
             addRow('Date', dateStr, true);
 
-            const timeStr = selectedReservation.reservation_time || selectedReservation.venue_event_time || selectedReservation.start_time || 'N/A';
+            const timeStr = formatTime12(selectedReservation.reservation_time || selectedReservation.venue_event_time || selectedReservation.start_time) || 'N/A';
             addRow('Time', timeStr, true);
 
-            if (selectedReservation.venue_event_end_time) {
-                addRow('End Time', selectedReservation.venue_event_end_time, true);
+            const endTimeStr = formatTime12(selectedReservation.venue_event_end_time);
+            if (endTimeStr) {
+                addRow('End Time', endTimeStr, true);
             }
 
             ctx.beginPath();
@@ -1100,12 +1102,12 @@ const explainFailure = (error, fallback) => {
                                     </div>
                                     <div className="flex justify-between items-center py-2 border-b border-slate-100">
                                         <span className="text-slate-500">Time</span>
-                                        <span className="font-semibold text-slate-800 text-right">{selectedReservation.reservation_time || selectedReservation.venue_event_time || selectedReservation.start_time || 'N/A'}</span>
+                                        <span className="font-semibold text-slate-800 text-right">{formatTime12(selectedReservation.reservation_time || selectedReservation.venue_event_time || selectedReservation.start_time) || 'N/A'}</span>
                                     </div>
                                     {selectedReservation.venue_event_end_time && (
                                         <div className="flex justify-between items-center py-2 border-b border-slate-100">
                                             <span className="text-slate-500">End Time</span>
-                                            <span className="font-semibold text-slate-800 text-right">{selectedReservation.venue_event_end_time}</span>
+                                            <span className="font-semibold text-slate-800 text-right">{formatTime12(selectedReservation.venue_event_end_time)}</span>
                                         </div>
                                     )}
 
