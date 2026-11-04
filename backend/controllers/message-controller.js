@@ -2,6 +2,7 @@ const Message = require('../models/message-model');
 const Notification = require('../models/notification-model');
 const { notifyManagement, notifyUser } = require('../services/notification-service');
 const User = require('../models/user-model');
+const { sendGuestReplyEmail } = require('../utils/email');
 const { logStaffActivity, logUserActivity } = require('../middleware/track-activity');
 
 exports.sendMessage = async (req, res) => {
@@ -101,12 +102,16 @@ exports.closeCase = async (req, res) => {
         }
         const closed = await Message.closeCase(req.params.id);
         if (!closed) return res.status(404).json({ success: false, message: 'Support case not found' });
-        await notifyUser(
-            supportMessage.sender_id,
-            'message.replied',
-            { subject: `Support case "${supportMessage.subject}" has been closed.` },
-            '/my-messages'
-        );
+        // Guests have no account to notify; their case is still visible in the
+        // admin/staff Messages page.
+        if (supportMessage.sender_id) {
+            await notifyUser(
+                supportMessage.sender_id,
+                'message.replied',
+                { subject: `Support case "${supportMessage.subject}" has been closed.` },
+                '/my-messages'
+            );
+        }
         res.json({ success: true, message: 'Support case closed' });
     } catch (error) {
         console.error('Error closing support case:', error);
@@ -217,7 +222,7 @@ exports.deleteMessage = async (req, res) => {
 exports.respondToMessage = async (req, res) => {
     try {
         const { id } = req.params;
-        const { response } = req.body;
+        const response = typeof req.body.response === 'string' ? req.body.response.trim() : '';
 
         if (!response) {
             return res.status(400).json({ success: false, message: 'Response is required' });
@@ -231,19 +236,33 @@ exports.respondToMessage = async (req, res) => {
         const db = require('../config/database');
         await db.query(
             `UPDATE user_messages SET admin_response = ?, responded_by = ?, responded_at = NOW(), updated_at = NOW() WHERE id = ?`,
-            [response.trim(), req.user.id, id]
+            [response, req.user.id, id]
         );
 
-        // Try to create notification (non-critical)
-        try {
-            await notifyUser(
-                message.sender_id,
-                'message.replied',
-                { subject: `Admin has responded to your message: ${message.subject}` },
-                '/my-messages'
-            );
-        } catch (notificationError) {
-            console.error('Error creating notification (response was saved):', notificationError);
+        const isGuest = !message.sender_id;
+        let emailSent = null;
+
+        if (isGuest) {
+            // Guests have no account inbox, so the reply goes to the address they
+            // entered on the public contact form.
+            emailSent = await sendGuestReplyEmail({
+                email: message.guest_email,
+                name: message.guest_name || message.sender_name,
+                subject: message.subject,
+                response
+            });
+        } else {
+            // Try to create notification (non-critical)
+            try {
+                await notifyUser(
+                    message.sender_id,
+                    'message.replied',
+                    { subject: `Admin has responded to your message: ${message.subject}` },
+                    '/my-messages'
+                );
+            } catch (notificationError) {
+                console.error('Error creating notification (response was saved):', notificationError);
+            }
         }
 
         // Track staff/admin activity
@@ -255,7 +274,13 @@ exports.respondToMessage = async (req, res) => {
             }
         }
 
-        res.json({ success: true, message: 'Response sent successfully' });
+        res.json({
+            success: true,
+            message: isGuest && emailSent === false
+                ? 'Reply saved, but the email could not be delivered.'
+                : 'Response sent successfully',
+            emailSent
+        });
     } catch (error) {
         console.error('Error responding to message:', error);
         res.status(500).json({ success: false, message: 'Error sending response' });

@@ -18,7 +18,7 @@ const getTabId = () => sessionStorage.getItem(TAB_ID_KEY);
 
 export const login = async (email, password, loginType = 'user') => {
     // authAPI.login will include X-Tab-ID header (from api-client.getAuthHeaders)
-    const response = await authAPI.login({ identifier: email, password, loginType });
+    const response = await authAPI.login({ email, password, loginType });
     
     if (response.success && response.token && response.user) {
         const keys = getStorageKeys(response.user.role);

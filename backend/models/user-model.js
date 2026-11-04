@@ -12,14 +12,6 @@ class User {
         return rows[0];
     }
 
-    static async findByEmailOrUsername(identifier) {
-        const [rows] = await db.query(
-            `SELECT *, is_suspended, suspension_reason, suspended_at FROM users WHERE email = ? OR username = ?`,
-            [identifier, identifier]
-        );
-        return rows[0];
-    }
-
     static async findById(id) {
         const [rows] = await db.query(
             `SELECT id, first_name, last_name, username, email, phone_number, gender, birthday, 

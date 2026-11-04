@@ -1,5 +1,12 @@
 const db = require('../config/database');
 
+// Registered users live in `users`; guests who use the public login-page contact
+// form have a NULL sender_id and their details in the guest_* columns.
+const SENDER_FIELDS = `
+             COALESCE(NULLIF(TRIM(CONCAT(u.first_name, ' ', u.last_name)), ''), m.guest_name, 'Guest') as sender_name,
+             COALESCE(u.email, m.guest_email) as sender_email,
+             u.profile_image as sender_profile_image`;
+
 class Message {
     static async create(messageData) {
         const { senderId, senderType, recipientType, subject, content } = messageData;
@@ -11,14 +18,21 @@ class Message {
         return result.insertId;
     }
 
+    static async createGuestMessage({ name, email, subject, content }) {
+        const [result] = await db.query(
+            `INSERT INTO user_messages
+                (sender_id, sender_type, guest_name, guest_email, recipient_type, subject, content, message_type)
+             VALUES (NULL, 'guest', ?, ?, 'all', ?, ?, 'inquiry')`,
+            [name, email, subject, content]
+        );
+        return result.insertId;
+    }
+
     static async getAll() {
         const [rows] = await db.query(
-            `SELECT m.*, 
-             CONCAT(u.first_name, ' ', u.last_name) as sender_name, 
-             u.email as sender_email,
-             u.profile_image as sender_profile_image
+            `SELECT m.*, ${SENDER_FIELDS}
              FROM user_messages m
-             JOIN users u ON m.sender_id = u.id
+             LEFT JOIN users u ON m.sender_id = u.id
              WHERE m.message_type IS NULL OR m.message_type != 'appeal'
              ORDER BY m.created_at DESC`
         );
@@ -27,14 +41,12 @@ class Message {
 
     static async getByRecipientType(recipientType) {
         const [rows] = await db.query(
-            `SELECT m.*, 
-             CONCAT(u.first_name, ' ', u.last_name) as sender_name, 
-             u.email as sender_email,
-             u.profile_image as sender_profile_image
+            `SELECT m.*, ${SENDER_FIELDS}
              FROM user_messages m
-             JOIN users u ON m.sender_id = u.id
+             LEFT JOIN users u ON m.sender_id = u.id
              WHERE (m.recipient_type = ? OR m.recipient_type = 'all')
                AND (m.message_type IS NULL OR m.message_type != 'appeal')
+               AND m.sender_id IS NOT NULL
              ORDER BY m.created_at DESC`,
             [recipientType]
         );
@@ -43,12 +55,9 @@ class Message {
 
     static async findById(id) {
         const [rows] = await db.query(
-            `SELECT m.*, 
-             CONCAT(u.first_name, ' ', u.last_name) as sender_name, 
-             u.email as sender_email,
-             u.profile_image as sender_profile_image
+            `SELECT m.*, ${SENDER_FIELDS}
              FROM user_messages m
-             JOIN users u ON m.sender_id = u.id
+             LEFT JOIN users u ON m.sender_id = u.id
              WHERE m.id = ?`,
             [id]
         );

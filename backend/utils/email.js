@@ -65,6 +65,9 @@ const sendViaBrevo = async (mailOptions) => {
         subject: mailOptions.subject,
         htmlContent: mailOptions.html
     };
+    // Let a contact-form reply go straight back to the visitor instead of the
+    // shared mailbox when the mail client supports it.
+    if (mailOptions.replyTo) payload.replyTo = { email: mailOptions.replyTo };
     // A plain-text alternative avoids multipart/related weirdness in clients
     // that render only the text part.
     if (mailOptions.text) payload.textContent = mailOptions.text;
@@ -649,6 +652,84 @@ const sendNotificationEmail = async (email, firstName, title, message, link = nu
 };
 
 /**
+ * Forward a visitor's login-page contact form to the shared support mailbox.
+ * The visitor's address is set as replyTo so the team can answer directly.
+ */
+const sendContactEmail = async ({ name, email, subject, concern }) => {
+    const recipient = (process.env.CONTACT_EMAIL || 'bulusanzoo@gmail.com').trim();
+    const safeName = escapeHtml(name);
+    const safeEmail = escapeHtml(email);
+    const safeSubject = escapeHtml(subject);
+    const safeConcern = escapeHtml(concern).replace(/\r?\n/g, '<br>');
+
+    const mailOptions = {
+        from: senderAddress(),
+        to: recipient,
+        replyTo: email,
+        subject: `[Contact] ${subject} - Bulusan Zoo`,
+        html: `
+            <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:32px;color:#1f3328">
+                <h1 style="margin-bottom:24px">Bulusan Zoo</h1>
+                <h2>New contact message</h2>
+                <p><strong>Name:</strong> ${safeName}</p>
+                <p><strong>Email:</strong> ${safeEmail}</p>
+                <p><strong>Subject:</strong> ${safeSubject}</p>
+                <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0" />
+                <p style="line-height:1.7">${safeConcern}</p>
+            </div>
+        `,
+        text: `New contact message\n\nName: ${name}\nEmail: ${email}\nSubject: ${subject}\n\n${concern}`
+    };
+
+    try {
+        // A visitor is waiting on the form, so make one attempt and let them
+        // retry rather than holding the request through three backoffs.
+        return await sendEmailWithRetry(mailOptions, 1, 0);
+    } catch (error) {
+        logEmail('error', 'Contact email failed', { to: recipient, error: error.message });
+        return false;
+    }
+};
+
+/**
+ * Send an admin/staff reply to a guest who used the public contact form.
+ * The guest has no account, so email is the only delivery channel.
+ */
+const sendGuestReplyEmail = async ({ email, name, subject, response }) => {
+    if (!email) return false;
+    const safeName = escapeHtml(name || 'there');
+    const safeSubject = escapeHtml(subject);
+    const safeResponse = escapeHtml(response).replace(/\r?\n/g, '<br>');
+    const replyTo = (process.env.CONTACT_EMAIL || 'bulusanzoo@gmail.com').trim();
+
+    const mailOptions = {
+        from: senderAddress(),
+        to: email,
+        replyTo,
+        subject: `Re: ${subject} - Bulusan Zoo`,
+        html: `
+            <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:32px;color:#1f3328">
+                <h1 style="margin-bottom:24px">Bulusan Zoo</h1>
+                <p>Hello ${safeName},</p>
+                <p>Our team has responded to your message about <strong>${safeSubject}</strong>:</p>
+                <p style="line-height:1.7">${safeResponse}</p>
+                <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0" />
+                <p style="color:#6b7280;font-size:14px">You can reply to this email or contact us at ${escapeHtml(replyTo)}.</p>
+            </div>
+        `,
+        text: `Hello ${name || 'there'},\n\nOur team has responded to your message about "${subject}":\n\n${response}\n\nYou can reply to this email or contact us at ${replyTo}.`
+    };
+
+    try {
+        // The admin is waiting on the button, so try once and report the result.
+        return await sendEmailWithRetry(mailOptions, 1, 0);
+    } catch (error) {
+        logEmail('error', 'Guest reply email failed', { to: email, error: error.message });
+        return false;
+    }
+};
+
+/**
  * Send the one-time welcome email sent on a visitor's first login.
  * Awaited by the caller, which only marks the welcome as sent when this returns true.
  */
@@ -682,6 +763,8 @@ module.exports = {
     sendEmailWithRetry,
     sendEmailAsync,
     sendNotificationEmail,
+    sendContactEmail,
+    sendGuestReplyEmail,
     sendWelcomeEmail,
     buildWelcomeEmailHtml,
     buildWelcomeEmailText

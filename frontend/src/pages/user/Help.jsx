@@ -379,7 +379,7 @@ const Help = () => {
                                     <Icons.Mail />
                                 </div>
                                 <h3 className="font-semibold mb-1">Email Us</h3>
-                                <p className="text-sm text-emerald-900/70">info@bulusanwildlife.com</p>
+                                <a href="mailto:bulusanzoo@gmail.com" className="text-sm text-emerald-900/70 hover:underline">bulusanzoo@gmail.com</a>
                             </div>
 
                             <div className="bg-white rounded-2xl p-4 md:p-6 text-center border border-emerald-100 shadow-sm">
@@ -387,7 +387,7 @@ const Help = () => {
                                     <Icons.Phone />
                                 </div>
                                 <h3 className="font-semibold mb-1">Call Us</h3>
-                                <p className="text-sm text-emerald-900/70">(043) 123-4567</p>
+                                <a href="tel:+63432887291" className="text-sm text-emerald-900/70 hover:underline">(043) 288-7291</a>
                             </div>
 
                             <div className="bg-white rounded-2xl p-4 md:p-6 text-center border border-emerald-100 shadow-sm">
@@ -398,7 +398,7 @@ const Help = () => {
                                 <p className="text-sm text-emerald-900/70">8:00 AM - 5:00 PM Daily</p>
                             </div>
                         </div>
-                        <div className="mt-6 text-center"><Link to={user ? '/my-messages' : '/login'} className="inline-flex items-center gap-2 rounded-xl bg-emerald-700 px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-emerald-800"><Icons.Mail /> Contact Support</Link></div>
+                        <div className="mt-6 text-center"><Link to={user ? '/my-messages' : '/login'} state={user ? undefined : { openContact: true }} className="inline-flex items-center gap-2 rounded-xl bg-emerald-700 px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-emerald-800"><Icons.Mail /> Contact Support</Link></div>
                     </div>
                 </div>
             </div>

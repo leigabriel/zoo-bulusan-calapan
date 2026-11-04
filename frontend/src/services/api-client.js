@@ -2000,6 +2000,17 @@ export const messageAPI = {
     }
 };
 
+export const contactAPI = {
+    submit: async ({ name, email, subject, concern }) => {
+        const response = await fetch(`${API_BASE_URL}/contact`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, email, subject, concern })
+        });
+        return handleResponse(response);
+    }
+};
+
 export const chatAPI = {
     getRecipients: async () => {
         const response = await fetch(`${API_BASE_URL}/chat/recipients`, { headers: getAuthHeaders('user') });

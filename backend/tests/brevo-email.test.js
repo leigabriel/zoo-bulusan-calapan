@@ -71,6 +71,62 @@ test('posts to the Brevo transactional endpoint with the documented payload', as
     assert.equal(calls[0].body.textContent, 'hello');
 });
 
+test('forwards a contact form reply-to to Brevo', async (t) => {
+    withBrevoEnv(t);
+    const calls = stubFetch(t, () => jsonResponse(201, { messageId: 'x' }));
+
+    const { sendEmailWithRetry } = loadEmail();
+    await sendEmailWithRetry({
+        to: 'bulusanzoo@gmail.com',
+        replyTo: 'visitor@example.com',
+        subject: 'Contact',
+        html: '<p>hello</p>'
+    }, 1, 1);
+
+    assert.deepEqual(calls[0].body.replyTo, { email: 'visitor@example.com' });
+});
+
+test('sends a guest reply to the visitor with the support mailbox as reply-to', async (t) => {
+    withBrevoEnv(t);
+    const previousContactEmail = process.env.CONTACT_EMAIL;
+    process.env.CONTACT_EMAIL = 'support@bulusanzoo.com';
+    t.after(() => {
+        if (previousContactEmail === undefined) delete process.env.CONTACT_EMAIL;
+        else process.env.CONTACT_EMAIL = previousContactEmail;
+    });
+    const calls = stubFetch(t, () => jsonResponse(201, { messageId: 'x' }));
+
+    const { sendGuestReplyEmail } = loadEmail();
+    const sent = await sendGuestReplyEmail({
+        email: 'visitor@example.com',
+        name: 'Visitor <script>',
+        subject: 'Ticket issue',
+        response: 'We fixed it.\nThanks!'
+    });
+
+    assert.equal(sent, true);
+    assert.equal(calls.length, 1);
+    assert.deepEqual(calls[0].body.to, [{ email: 'visitor@example.com' }]);
+    assert.deepEqual(calls[0].body.replyTo, { email: 'support@bulusanzoo.com' });
+    assert.equal(calls[0].body.subject, 'Re: Ticket issue - Bulusan Zoo');
+    assert.match(calls[0].body.htmlContent, /Visitor &lt;script&gt;/);
+    assert.match(calls[0].body.htmlContent, /We fixed it\.<br>Thanks!/);
+});
+
+test('a guest reply without an address is not sent', async (t) => {
+    withBrevoEnv(t);
+    const calls = stubFetch(t, () => jsonResponse(201, { messageId: 'x' }));
+
+    const { sendGuestReplyEmail } = loadEmail();
+    assert.equal(await sendGuestReplyEmail({
+        email: '',
+        name: 'Guest',
+        subject: 'Hi',
+        response: 'Hello'
+    }), false);
+    assert.equal(calls.length, 0);
+});
+
 test('uses BREVO_SENDER_NAME when one is configured', async (t) => {
     withBrevoEnv(t, { BREVO_SENDER_NAME: 'Bulusan Zoo & Wildlife Park' });
     const calls = stubFetch(t, () => jsonResponse(201, { messageId: 'x' }));

@@ -101,6 +101,15 @@ const appealLimiter = limiter({
 });
 
 /**
+ * Public contact form. Unauthenticated and sends email, so keep the budget tight.
+ */
+const contactLimiter = limiter({
+    windowMs: HOUR,
+    limit: 5,
+    message: 'Too many contact messages. Please try again later.'
+});
+
+/**
  * LLM-backed endpoints. Each call is billed against the Gemini key, and
  * POST /api/ai/chat is reachable without authentication.
  */
@@ -156,6 +165,7 @@ module.exports = {
     masterKeyLimiter,
     oauthLimiter,
     appealLimiter,
+    contactLimiter,
     aiLimiter,
     predictionLimiter,
     visitLimiter,

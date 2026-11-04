@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { authAPI } from '../../services/api-client';
-import { sanitizeInput } from '../../utils/sanitize';
+import { authAPI, contactAPI } from '../../services/api-client';
+import { sanitizeEmail, sanitizeInput } from '../../utils/sanitize';
 import AuthSuccessModal from '../../components/common/AuthSuccessModal';
 import { notify } from '../../utils/toast';
 import useScrollLock from '../../hooks/use-scroll-lock';
@@ -147,7 +147,7 @@ const PolicyModal = ({ isOpen, onClose, title, content }) => {
 };
 
 const LoginPage = () => {
-    const [identifier, setIdentifier] = useState('');
+    const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [rememberMe, setRememberMe] = useState(() => {
         try {
@@ -185,10 +185,17 @@ const LoginPage = () => {
     const [resetData, setResetData] = useState({ newPassword: '', confirmPassword: '' });
     const [resetError, setResetError] = useState('');
     const [resetLoading, setResetLoading] = useState(false);
+    const [showContactModal, setShowContactModal] = useState(false);
+    const [contactForm, setContactForm] = useState({ name: '', email: '', subject: '', concern: '' });
+    const [contactLoading, setContactLoading] = useState(false);
+    const [contactSent, setContactSent] = useState(false);
+    const [contactError, setContactError] = useState('');
     const { login } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
     const [searchParams] = useSearchParams();
+
+    useScrollLock(showContactModal);
 
     useEffect(() => {
         if (location.state?.masterKeyChallenge) {
@@ -226,7 +233,76 @@ const LoginPage = () => {
             setResetToken(resetParam);
             setResetError('');
         }
+
+        // The public Help Center's "Contact Support" button sends guests here
+        // with this state so they land directly in the contact form.
+        if (location.state?.openContact) {
+            setContactForm({ name: '', email: '', subject: '', concern: '' });
+            setContactSent(false);
+            setContactError('');
+            setShowContactModal(true);
+            window.history.replaceState(null, '', '/login');
+        }
     }, [location, searchParams]);
+
+    useEffect(() => {
+        if (!showContactModal) return undefined;
+        const handleKeyDown = (event) => {
+            if (event.key === 'Escape') {
+                setShowContactModal(false);
+                setContactSent(false);
+                setContactError('');
+            }
+        };
+        document.addEventListener('keydown', handleKeyDown);
+        return () => document.removeEventListener('keydown', handleKeyDown);
+    }, [showContactModal]);
+
+    const openContactModal = () => {
+        setContactForm({ name: '', email: email || '', subject: '', concern: '' });
+        setContactSent(false);
+        setContactError('');
+        setShowContactModal(true);
+    };
+
+    const closeContactModal = () => {
+        setShowContactModal(false);
+        setContactSent(false);
+        setContactError('');
+    };
+
+    const handleContactSubmit = async (event) => {
+        event.preventDefault();
+        if (contactLoading) return;
+
+        const payload = {
+            name: contactForm.name.trim(),
+            email: contactForm.email.trim(),
+            subject: contactForm.subject.trim(),
+            concern: contactForm.concern.trim()
+        };
+
+        if (!payload.name || !payload.email || !payload.subject || !payload.concern) {
+            setContactError('Please complete your name, email, subject, and concern.');
+            return;
+        }
+
+        setContactLoading(true);
+        setContactError('');
+        try {
+            const response = await contactAPI.submit(payload);
+            if (!response.success) {
+                setContactError(response.message || "Couldn't send your message.");
+                return;
+            }
+            setContactSent(true);
+            setContactForm({ name: '', email: '', subject: '', concern: '' });
+        } catch (error) {
+            setContactError(error.message || "Couldn't send your message.");
+        } finally {
+            setContactLoading(false);
+        }
+    };
 
     const handleForgotPassword = async (event) => {
         event.preventDefault();
@@ -306,7 +382,7 @@ const LoginPage = () => {
 
         try {
             const response = await authAPI.login({
-                identifier,
+                email,
                 password,
                 loginType: 'user'
             });
@@ -346,7 +422,7 @@ const LoginPage = () => {
                 });
                 setShowSuspendedModal(true);
             } else if (response.requiresVerification) {
-                setVerificationEmail(response.email || identifier);
+                setVerificationEmail(response.email || email);
                 setShowVerificationPrompt(true);
                 notify.warning(response.message || 'Please verify your email.');
             } else {
@@ -362,7 +438,7 @@ const LoginPage = () => {
                 });
                 setShowSuspendedModal(true);
             } else if (err.requiresVerification) {
-                setVerificationEmail(err.email || identifier);
+                setVerificationEmail(err.email || email);
                 setShowVerificationPrompt(true);
                 notify.warning(err.message || 'Please verify your email.');
             } else {
@@ -408,7 +484,7 @@ const LoginPage = () => {
         try {
             // Use the public appeal endpoint which doesn't require authentication
             const response = await authAPI.submitPublicAppeal({
-                email: suspensionInfo?.email || identifier,
+                email: suspensionInfo?.email || email,
                 subject: 'Suspension Appeal',
                 content: appealMessage.trim()
             });
@@ -504,6 +580,145 @@ const LoginPage = () => {
                             <input type="password" value={resetData.confirmPassword} onChange={event => setResetData({ ...resetData, confirmPassword: event.target.value })} required placeholder="Confirm new password" className="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent" />
                             <button type="submit" disabled={resetLoading} className="w-full py-3.5 rounded-xl bg-emerald-600 text-white font-semibold hover:bg-emerald-700 disabled:opacity-50">{resetLoading ? 'Updating...' : 'Set new password'}</button>
                         </form>
+                    </div>
+                </div>
+            )}
+
+            {showContactModal && (
+                <div
+                    className="fixed inset-0 z-[90] flex items-center justify-center bg-[#102019]/45 backdrop-blur-sm p-4"
+                    role="dialog"
+                    aria-modal="true"
+                    aria-labelledby="contact-modal-title"
+                    onClick={(event) => { if (event.target === event.currentTarget) closeContactModal(); }}
+                >
+                    <div className="max-h-[calc(100dvh-2rem)] w-full max-w-lg overflow-y-auto overscroll-contain rounded-2xl bg-white p-6 shadow-2xl sm:p-8" data-lenis-prevent>
+                        <div className="mb-5 flex items-start justify-between gap-4">
+                            <div>
+                                <p className="text-xs font-bold uppercase tracking-widest text-emerald-700">We&apos;re here to help</p>
+                                <h2 id="contact-modal-title" className="mt-1 text-2xl font-bold text-gray-900">Contact Support</h2>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={closeContactModal}
+                                className="rounded-lg p-2 text-gray-400 hover:text-gray-700"
+                                aria-label="Close contact form"
+                            >
+                                <CloseIcon />
+                            </button>
+                        </div>
+
+                        {contactSent ? (
+                            <div role="status" className="py-6 text-center">
+                                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100">
+                                    <svg className="h-8 w-8 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                                    </svg>
+                                </div>
+                                <h3 className="text-lg font-semibold text-gray-900">Message sent</h3>
+                                <p className="mt-2 text-sm leading-6 text-gray-600">
+                                    Our admin and staff team will get back to you at the email you provided.
+                                </p>
+                                <button
+                                    type="button"
+                                    onClick={closeContactModal}
+                                    className="mt-6 w-full rounded-xl bg-emerald-600 px-4 py-3 font-semibold text-white hover:bg-emerald-700"
+                                >
+                                    Close
+                                </button>
+                            </div>
+                        ) : (
+                            <>
+                                <p className="text-sm leading-6 text-gray-500">
+                                    Tell us what you&apos;re having trouble with. You can also email us directly at{' '}
+                                    <a href="mailto:bulusanzoo@gmail.com" className="font-semibold text-emerald-700 hover:underline">
+                                        bulusanzoo@gmail.com
+                                    </a>.
+                                </p>
+
+                                {contactError && (
+                                    <p role="alert" className="mt-4 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{contactError}</p>
+                                )}
+
+                                <form onSubmit={handleContactSubmit} className="mt-5 space-y-4">
+                                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                        <div>
+                                            <label htmlFor="contact-name" className="mb-1.5 block text-sm font-semibold text-gray-900">Name</label>
+                                            <input
+                                                id="contact-name"
+                                                type="text"
+                                                value={contactForm.name}
+                                                onChange={(event) => setContactForm({ ...contactForm, name: sanitizeInput(event.target.value) })}
+                                                required
+                                                maxLength={120}
+                                                autoComplete="name"
+                                                autoFocus
+                                                placeholder="Your name"
+                                                className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label htmlFor="contact-email" className="mb-1.5 block text-sm font-semibold text-gray-900">Email</label>
+                                            <input
+                                                id="contact-email"
+                                                type="email"
+                                                value={contactForm.email}
+                                                onChange={(event) => setContactForm({ ...contactForm, email: sanitizeEmail(event.target.value) })}
+                                                required
+                                                maxLength={254}
+                                                autoComplete="email"
+                                                inputMode="email"
+                                                placeholder="you@example.com"
+                                                className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label htmlFor="contact-subject" className="mb-1.5 block text-sm font-semibold text-gray-900">Subject</label>
+                                        <input
+                                            id="contact-subject"
+                                            type="text"
+                                            value={contactForm.subject}
+                                            onChange={(event) => setContactForm({ ...contactForm, subject: sanitizeInput(event.target.value) })}
+                                            required
+                                            maxLength={200}
+                                            placeholder="e.g. Cannot log in"
+                                            className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label htmlFor="contact-concern" className="mb-1.5 block text-sm font-semibold text-gray-900">Concern</label>
+                                        <textarea
+                                            id="contact-concern"
+                                            value={contactForm.concern}
+                                            onChange={(event) => setContactForm({ ...contactForm, concern: event.target.value })}
+                                            required
+                                            maxLength={4000}
+                                            rows={5}
+                                            placeholder="Describe the issue you're encountering..."
+                                            className="w-full resize-y rounded-xl border border-gray-300 px-4 py-3 text-sm leading-6 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                                        />
+                                    </div>
+
+                                    <button
+                                        type="submit"
+                                        disabled={contactLoading}
+                                        className="w-full rounded-xl bg-emerald-600 px-4 py-3.5 font-semibold text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+                                    >
+                                        {contactLoading ? 'Sending...' : 'Send message'}
+                                    </button>
+                                </form>
+
+                                <div className="mt-5 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-xs text-gray-500">
+                                    <span>Need answers first?</span>
+                                    <Link to="/help" onClick={closeContactModal} className="font-semibold text-emerald-700 hover:underline">
+                                        Visit the Help Center
+                                    </Link>
+                                </div>
+                            </>
+                        )}
                     </div>
                 </div>
             )}
@@ -674,17 +889,19 @@ const LoginPage = () => {
 
                     <form className="space-y-6" onSubmit={handleSubmit}>
                         <div>
-                            <label htmlFor="identifier" className="block text-sm font-semibold text-gray-900 mb-2">
-                                Email or Username
+                            <label htmlFor="email" className="block text-sm font-semibold text-gray-900 mb-2">
+                                Email
                             </label>
                             <input
-                                type="text"
-                                id="identifier"
-                                value={identifier}
-                                onChange={(e) => setIdentifier(sanitizeInput(e.target.value))}
+                                type="email"
+                                id="email"
+                                value={email}
+                                onChange={(e) => setEmail(sanitizeEmail(e.target.value))}
+                                autoComplete="email"
+                                inputMode="email"
                                 required
                                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition text-sm"
-                                placeholder="Input your email or username"
+                                placeholder="Input your email"
                             />
                         </div>
 
@@ -722,7 +939,7 @@ const LoginPage = () => {
                                  />
                                 <span className="text-gray-600 font-medium">Remember Me</span>
                             </label>
-                             <button type="button" onClick={() => { setForgotEmail(identifier.includes('@') ? identifier : ''); setForgotSent(false); setShowForgotModal(true); }} className="text-gray-500 hover:text-gray-900 transition-colors">
+                             <button type="button" onClick={() => { setForgotEmail(email); setForgotSent(false); setShowForgotModal(true); }} className="text-gray-500 hover:text-gray-900 transition-colors">
                                  Forgot Password?
                              </button>
                         </div>
@@ -769,6 +986,23 @@ const LoginPage = () => {
                                 Sign up here
                             </Link>
                         </div>
+
+                        <div className="mt-4 text-center text-sm text-gray-600">
+                            Having trouble?{' '}
+                            <button type="button" onClick={openContactModal} className="font-bold text-gray-900 hover:underline">
+                                Contact Support
+                            </button>
+                            {' '}or visit the{' '}
+                            <Link to="/help" className="font-bold text-gray-900 hover:underline">
+                                Help Center
+                            </Link>.
+                        </div>
+                        <p className="mt-2 text-center text-xs text-gray-400">
+                            Prefer email?{' '}
+                            <a href="mailto:bulusanzoo@gmail.com" className="text-gray-600 underline hover:text-gray-900">
+                                bulusanzoo@gmail.com
+                            </a>
+                        </p>
 
                         <div className="text-center text-xs text-gray-400 mt-8 pt-6">
                             By logging in, you agree to our{' '}

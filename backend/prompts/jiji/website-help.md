@@ -348,7 +348,7 @@ Do not claim that the website has a server-side problem unless that status is co
 
 For login problems, suggest safe checks such as:
 
-- Confirm that the entered email or username is correct.
+- Confirm that the entered email address is correct.
 - Confirm that the password is entered correctly.
 - Check whether the account is registered.
 - Use the available password recovery process if the website provides one.

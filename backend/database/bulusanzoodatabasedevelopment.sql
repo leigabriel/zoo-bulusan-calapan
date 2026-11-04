@@ -700,8 +700,10 @@ CREATE TABLE IF NOT EXISTS `user_collections` (
 -- ------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS `user_messages` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `sender_id` int NOT NULL,
-  `sender_type` enum('user','admin','staff') DEFAULT 'user',
+  `sender_id` int DEFAULT NULL,
+  `sender_type` enum('user','admin','staff','guest') DEFAULT 'user',
+  `guest_name` varchar(120) DEFAULT NULL,
+  `guest_email` varchar(254) DEFAULT NULL,
   `recipient_type` enum('admin','staff','all') DEFAULT 'admin',
   `subject` varchar(255) NOT NULL,
   `content` text NOT NULL,

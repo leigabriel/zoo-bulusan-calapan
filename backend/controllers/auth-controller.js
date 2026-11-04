@@ -225,15 +225,25 @@ const ALREADY_IN_USE_RESPONSE = {
 
 exports.login = async (req, res) => {
     try {
-        const { identifier, password, loginType } = req.body;
+        const { email, identifier, password, loginType } = req.body;
 
-        if (!identifier || !password) {
-            return res.status(400).json({ success: false, message: 'Please provide email/username and password' });
+        // Email is the only accepted login identifier. `identifier` is still
+        // accepted as a request field for older clients, but it is treated as
+        // an email address so usernames can no longer be used to sign in.
+        const rawEmail = typeof email === 'string' ? email : (typeof identifier === 'string' ? identifier : '');
+        const emailInput = sanitizeInput(rawEmail).toLowerCase();
+
+        if (!emailInput || !password) {
+            return res.status(400).json({ success: false, message: 'Please provide your email and password' });
         }
 
-        const user = await User.findByEmailOrUsername(identifier);
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailInput)) {
+            return res.status(400).json({ success: false, message: 'Please provide a valid email address' });
+        }
+
+        const user = await User.findByEmail(emailInput);
         if (!user) {
-            return res.status(401).json({ success: false, message: 'Invalid Email/Username or Password' });
+            return res.status(401).json({ success: false, message: 'Invalid email or password' });
         }
 
         if (user.is_suspended) {

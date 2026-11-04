@@ -178,12 +178,16 @@ const MessageWorkspace = ({ globalSearch = '', api, role, roleLabel }) => {
         setReplying(true);
         try {
             const responseText = reply.trim();
-            await api.respondToSupport(selected.id, responseText);
+            const response = await api.respondToSupport(selected.id, responseText);
             setMessages((items) => items.map((message) => message.id === selected.id
                 ? { ...message, admin_response: responseText, is_read: true }
                 : message));
             setSelected((item) => ({ ...item, admin_response: responseText, is_read: true }));
-            notify.success('Reply sent.');
+            if (response?.emailSent === false) {
+                notify.warning('Reply saved, but the email could not be delivered.');
+            } else {
+                notify.success('Reply sent.');
+            }
         } catch (replyError) {
             console.error('Error sending reply:', replyError);
             notify.error(replyError.message || "Couldn't send reply.");
@@ -383,6 +387,11 @@ const MessageWorkspace = ({ globalSearch = '', api, role, roleLabel }) => {
                 ) : (
                     <div className="mt-7 border-t border-green-100 pt-6">
                         {selected.user_response && <div className="mb-5 rounded-xl border border-blue-100 bg-blue-50 p-4 text-sm leading-6 text-blue-900"><p className="font-bold">User reply:</p><p className="mt-1 whitespace-pre-wrap">{selected.user_response}</p></div>}
+                        {selected.sender_id == null && (
+                            <p className="mb-3 rounded-lg border border-green-100 bg-green-50 px-3 py-2 text-xs font-medium text-green-800">
+                                This message came from the public contact form. Your reply will be emailed to {selected.sender_email || 'the address on file'}.
+                            </p>
+                        )}
                         <label htmlFor="message-reply" className="text-sm font-bold text-gray-900">Reply to {selected.sender_name}</label>
                         <textarea
                             id="message-reply"
