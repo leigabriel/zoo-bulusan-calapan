@@ -90,7 +90,7 @@ const IconBtn = ({ iconKey, alt, onClick, badge, className = '', expanded, contr
         >
             {IconComponent && <IconComponent size={18} className="opacity-55" />}
             {badge > 0 && (
-                <span className="absolute top-0.5 right-0.5 min-w-[15px] h-[15px] px-0.5 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center border border-white leading-none">
+                <span className="absolute top-0.5 right-0.5 min-w-[15px] h-[15px] px-0.5 bg-red-500 text-white text-[11px] font-bold rounded-full flex items-center justify-center border border-white leading-none">
                     {badge > 9 ? '9+' : badge}
                 </span>
             )}
@@ -110,7 +110,7 @@ const CloseBtn = ({ onClick }) => (
 );
 
 const SectionLabel = ({ label }) => (
-    <p className="px-1 pt-5 pb-2 text-[10px] font-bold text-gray-400 uppercase tracking-[0.16em]">{label}</p>
+    <p className="px-1 pt-5 pb-2 text-[11px] font-bold text-gray-500 uppercase tracking-[0.16em]">{label}</p>
 );
 
 const MenuItem = ({ iconKey, label, badge, danger, to, onClick, onClose, isLast, onNavigate }) => {
@@ -129,7 +129,7 @@ const MenuItem = ({ iconKey, label, badge, danger, to, onClick, onClose, isLast,
                 {label}
             </span>
             {badge && (
-                <span className="px-1.5 py-0.5 bg-emerald-700 text-white rounded text-[9px] font-semibold uppercase tracking-wide flex-shrink-0">
+                <span className="px-1.5 py-0.5 bg-emerald-700 text-white rounded text-[11px] font-semibold uppercase tracking-wide flex-shrink-0">
                     {badge}
                 </span>
             )}
@@ -400,7 +400,7 @@ const Header = () => {
                                         onClick={(e) => { e.preventDefault(); handleTransitionNavigate(e, link.path); }}
                                         className={`px-4 py-1.5 rounded-full text-[13px] font-medium transition-all duration-150 whitespace-nowrap ${isActivePath(location.pathname, link.path)
                                             ? 'bg-[#000] text-gray-100 shadow-sm'
-                                            : 'text-[#000]/50 hover:text-gray-800'
+                                            : 'text-[#000]/75 hover:text-black'
                                             }`}
                                     >
                                         {link.label}
@@ -636,9 +636,9 @@ const Header = () => {
                                      <span className="min-w-0 flex-1">
                                          <span className="block truncate text-[13px] font-bold text-[#172018]">{displayName}</span>
                                          <span className="mt-0.5 block truncate text-[11px] text-gray-500">{profileEmail}</span>
-                                           <span className="mt-1 block text-[10px] font-bold uppercase tracking-wider text-emerald-700">View profile</span>
+                                           <span className="mt-1 block text-[11px] font-bold uppercase tracking-wider text-emerald-700">View profile</span>
                                      </span>
-                                     <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-white text-gray-400 shadow-sm transition-colors group-hover:text-green-400" aria-hidden="true">›</span>
+                                     <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-white text-gray-500 shadow-sm transition-colors group-hover:text-green-400" aria-hidden="true">›</span>
                                   </button>
                              ) : (
                                  <Link to="/login" onClick={closeSidePanel} className="block rounded-2xl bg-[#172018] px-4 py-3 text-center text-[13px] font-semibold text-white transition-colors hover:bg-green-400">
@@ -731,7 +731,7 @@ const Header = () => {
                                 </div>
                                 <div>
                                     <p className="text-[13px] font-semibold text-gray-900">Message Sent</p>
-                                    <p className="text-[11px] text-gray-400 mt-0.5">We'll respond as soon as possible.</p>
+                                    <p className="text-[11px] text-gray-500 mt-0.5">We'll respond as soon as possible.</p>
                                 </div>
                                 <button
                                     onClick={() => { setShowEmailModal(false); setEmailSent(false); }}
@@ -775,7 +775,7 @@ const Header = () => {
                                 <button
                                     onClick={handleSendEmail}
                                     disabled={emailLoading || !emailSubject.trim() || !emailMessage.trim()}
-                                    className="w-full py-2.5 bg-gray-900 text-white text-[13px] font-medium rounded-lg hover:bg-gray-700 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors"
+                                    className="w-full py-2.5 bg-gray-900 text-white text-[13px] font-medium rounded-lg hover:bg-gray-700 disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed transition-colors"
                                 >
                                     {emailLoading ? 'Sending…' : 'Send Message'}
                                 </button>
@@ -798,7 +798,7 @@ const Header = () => {
                         <div className="flex items-center gap-3">
                             <span className="text-[13px] font-semibold text-gray-900">Notifications</span>
                             {unreadCount > 0 && (
-                                <span className="px-1.5 py-0.5 bg-red-500 text-white text-[10px] font-bold rounded-full">
+                                <span className="px-1.5 py-0.5 bg-red-500 text-white text-[11px] font-bold rounded-full">
                                     {unreadCount}
                                 </span>
                             )}
@@ -826,7 +826,7 @@ const Header = () => {
                     <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-4" data-lenis-prevent>
                         {notificationLoading ? (
                             <div className="flex items-center justify-center py-12">
-                                <span className="text-[13px] text-gray-400">Loading…</span>
+                                <span className="text-[13px] text-gray-500">Loading…</span>
                             </div>
                         ) : notifications.length === 0 ? (
                             <div className="flex flex-col items-center justify-center py-16 gap-2">
@@ -834,7 +834,7 @@ const Header = () => {
                                     <Bell size={20} className="opacity-25" />
                                 </div>
                                 <p className="text-[13px] font-medium text-gray-500">No notifications</p>
-                                <p className="text-[11px] text-gray-400">You're all caught up!</p>
+                                <p className="text-[11px] text-gray-500">You're all caught up!</p>
                             </div>
                         ) : (
                             <div className="flex flex-col gap-2">
@@ -865,8 +865,8 @@ const Header = () => {
                                             </div>
                                             <div className="flex-1 min-w-0">
                                                 <p className={`text-[13px] font-medium truncate ${isRead ? 'text-gray-500' : 'text-gray-800'}`}>{notif.title}</p>
-                                                <p className={`text-[11px] mt-0.5 leading-relaxed ${isRead ? 'text-gray-400' : 'text-gray-500'}`}>{notif.message}</p>
-                                                <p className="text-[10px] text-gray-300 mt-1.5">
+                                                <p className={`text-[11px] mt-0.5 leading-relaxed ${isRead ? 'text-gray-500' : 'text-gray-500'}`}>{notif.message}</p>
+                                                <p className="text-[11px] text-gray-300 mt-1.5">
                                                     {notif.time || 'Recently'}
                                                 </p>
                                             </div>
