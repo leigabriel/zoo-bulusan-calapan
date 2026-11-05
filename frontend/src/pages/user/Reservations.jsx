@@ -102,7 +102,7 @@ const Reservations = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const { user, isAuthenticated } = useAuth();
-    const [events, setEvents] = useState([]);
+    const [, setEvents] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showCreateModal, setShowCreateModal] = useState(false);
     // Each card opens its own form, so the modal never mixes ticket and event booking.
