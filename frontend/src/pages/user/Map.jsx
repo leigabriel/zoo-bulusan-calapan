@@ -190,7 +190,7 @@ const MapPage = () => {
             </aside>
 
             {isMobileListOpen && (
-                <div className="fixed inset-0 z-[2000] md:hidden">
+                <div role="dialog" aria-modal="true" aria-label="Locations list" className="fixed inset-0 z-[2000] md:hidden">
                     <div className="absolute inset-0 bg-[#1f3328]/45 backdrop-blur-sm" onClick={() => setIsMobileListOpen(false)} />
                     <div className="absolute bottom-0 left-0 right-0 h-[min(80dvh,42rem)] rounded-t-[2.5rem] overflow-hidden animate-in slide-in-from-bottom duration-300 shadow-2xl">
                         <DiscoveryList isMobile={true} filterRegion={filterRegion} setFilterRegion={setFilterRegion} onSelect={handleSelect} onClose={() => setIsMobileListOpen(false)} />
@@ -199,7 +199,7 @@ const MapPage = () => {
             )}
 
             {showExitConfirm && (
-                <div className="fixed inset-0 z-[3000] flex items-center justify-center p-6">
+                <div role="dialog" aria-modal="true" aria-label="Exit confirmation" className="fixed inset-0 z-[3000] flex items-center justify-center p-6">
                     <div className="absolute inset-0 bg-[#1f3328]/70 backdrop-blur-lg" onClick={() => setShowExitConfirm(false)} />
                     <div className="relative bg-[#fffdf8] p-8 rounded-3xl shadow-2xl max-w-sm w-full text-center animate-in zoom-in-95 duration-200">
                         <h3 className="text-2xl font-black text-[#1f3328] mb-2">Close Expedition?</h3>
