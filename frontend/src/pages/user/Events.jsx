@@ -437,6 +437,9 @@ const Events = () => {
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
                             transition={{ duration: 0.2 }}
+                            role="dialog"
+                            aria-modal="true"
+                            aria-label="Event details"
                             className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 md:p-8"
                             onClick={(e) => e.target === e.currentTarget && setSelectedEvent(null)}
                         >
@@ -511,7 +514,7 @@ const Events = () => {
 
                 <AnimatePresence>
                     {showSubmitConfirm && (
-                        <div className="fixed inset-0 z-[250] flex items-center justify-center p-4">
+                        <div role="dialog" aria-modal="true" aria-label="Verify registration details" className="fixed inset-0 z-[250] flex items-center justify-center p-4">
                             <Motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
                             <Motion.div
                                 initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
@@ -557,7 +560,7 @@ const Events = () => {
 
                 <AnimatePresence>
                     {showConfirmation && confirmationData && (
-                        <div className="fixed inset-0 z-[300] flex items-center justify-center p-4">
+                        <div role="dialog" aria-modal="true" aria-label="Registration confirmed" className="fixed inset-0 z-[300] flex items-center justify-center p-4">
                             <Motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
                             <Motion.div
                                 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }}
