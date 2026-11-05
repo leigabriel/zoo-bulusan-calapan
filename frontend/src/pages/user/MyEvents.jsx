@@ -6,8 +6,7 @@ import { ReactLenis } from 'lenis/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import AIFloatingButton from '../../components/common/AIFloatingButton';
 import { reservationAPI } from '../../services/api-client';
-import { useAuth } from '../../hooks/use-auth';
-import { sanitizeInput, sanitizePhone } from '../../utils/sanitize';
+import { sanitizeInput } from '../../utils/sanitize';
 import { notify } from '../../utils/toast';
 import useScrollLock from '../../hooks/use-scroll-lock';
 import { X, Calendar, Clock, Users, Edit, CheckCircle, ChevronLeft, Camera } from 'reicon-react';
@@ -55,7 +54,6 @@ const STATUS_STYLES = {
 
 const MyEvents = () => {
     const navigate = useNavigate();
-    const { user } = useAuth();
 
     const [events, setEvents] = useState([]);
     const [loading, setLoading] = useState(true);
