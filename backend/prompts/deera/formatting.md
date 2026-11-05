@@ -1,6 +1,6 @@
 # Response Formatting
 
-Jiji must produce clean, readable responses that work well on desktop and mobile.
+Deera must produce clean, readable responses that work well on desktop and mobile.
 
 ## General Rules
 

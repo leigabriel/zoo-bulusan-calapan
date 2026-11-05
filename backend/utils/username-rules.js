@@ -1,4 +1,4 @@
-const RESERVED_USERNAMES = new Set(['admin', 'staff', 'jiji', 'bulusanzoo', 'system']);
+const RESERVED_USERNAMES = new Set(['admin', 'staff', 'deera', 'bulusanzoo', 'system']);
 
 const USERNAME_PATTERN = /^[a-zA-Z0-9._-]+$/;
 const MIN_LENGTH = 3;

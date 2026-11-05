@@ -1,9 +1,9 @@
 const fs = require('fs');
 const path = require('path');
 
-const JIJI_PROMPT_DIR = path.join(__dirname, '..', 'prompts', 'jiji');
+const DEERA_PROMPT_DIR = path.join(__dirname, '..', 'prompts', 'deera');
 
-const JIJI_PROMPT_FILES = [
+const DEERA_PROMPT_FILES = [
     'instruction.md',
     'factuality.md',
     'security.md',
@@ -15,9 +15,9 @@ const JIJI_PROMPT_FILES = [
 const FILE_SEPARATOR = '\n\n---\n\n';
 
 // Last resort used only when none of the markdown files can be read.
-const FALLBACK_INSTRUCTIONS = `# Jiji AI Assistant
+const FALLBACK_INSTRUCTIONS = `# Deera AI Assistant
 
-You are Jiji, the official AI visitor assistant for Bulusan Zoo.
+You are Deera, the official AI visitor assistant for Bulusan Zoo.
 
 Never invent, guess, or fabricate information.
 
@@ -32,55 +32,55 @@ const getStamp = (filePath) => {
     return `${stats.mtimeMs}:${stats.size}`;
 };
 
-const haveStampsChanged = (stamps) => Object.keys(stamps).length !== JIJI_PROMPT_FILES.length
+const haveStampsChanged = (stamps) => Object.keys(stamps).length !== DEERA_PROMPT_FILES.length
     || Object.entries(stamps).some(([fileName, stamp]) => {
         try {
-            return getStamp(path.join(JIJI_PROMPT_DIR, fileName)) !== stamp;
+            return getStamp(path.join(DEERA_PROMPT_DIR, fileName)) !== stamp;
         } catch (error) {
             return true;
         }
     });
 
-const loadJijiInstructions = () => {
+const loadDeeraInstructions = () => {
     const parts = [];
     const stamps = {};
 
-    for (const fileName of JIJI_PROMPT_FILES) {
-        const filePath = path.join(JIJI_PROMPT_DIR, fileName);
+    for (const fileName of DEERA_PROMPT_FILES) {
+        const filePath = path.join(DEERA_PROMPT_DIR, fileName);
         try {
             stamps[fileName] = getStamp(filePath);
             parts.push(fs.readFileSync(filePath, 'utf8').replace(/\s+$/, ''));
         } catch (error) {
             if (!warnedFiles.has(fileName)) {
                 warnedFiles.add(fileName);
-                console.error(`Jiji prompt file could not be read (${fileName}): ${error.message}`);
+                console.error(`Deera prompt file could not be read (${fileName}): ${error.message}`);
             }
         }
     }
 
     if (parts.length === 0) {
-        console.error('No Jiji prompt markdown files could be loaded. Using minimal fallback instructions.');
+        console.error('No Deera prompt markdown files could be loaded. Using minimal fallback instructions.');
         return { text: FALLBACK_INSTRUCTIONS, stamps: {} };
     }
 
     return { text: parts.join(FILE_SEPARATOR), stamps };
 };
 
-const getJijiInstructions = () => {
+const getDeeraInstructions = () => {
     if (!cachedText || !cachedStamps || haveStampsChanged(cachedStamps)) {
-        const loaded = loadJijiInstructions();
+        const loaded = loadDeeraInstructions();
         cachedText = loaded.text;
         cachedStamps = loaded.stamps;
     }
     return cachedText;
 };
 
-// Builds the exact system prompt string that is sent to Gemini for Jiji chats.
-const buildJijiSystemPrompt = (dynamicContext = '', userReservationContext = '', message = '') =>
-    `${getJijiInstructions()}${dynamicContext}${userReservationContext}\n\nUser's question: ${message}`;
+// Builds the exact system prompt string that is sent to Gemini for Deera chats.
+const buildDeeraSystemPrompt = (dynamicContext = '', userReservationContext = '', message = '') =>
+    `${getDeeraInstructions()}${dynamicContext}${userReservationContext}\n\nUser's question: ${message}`;
 
 module.exports = {
-    JIJI_PROMPT_FILES,
-    getJijiInstructions,
-    buildJijiSystemPrompt
+    DEERA_PROMPT_FILES,
+    getDeeraInstructions,
+    buildDeeraSystemPrompt
 };

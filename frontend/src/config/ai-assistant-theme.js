@@ -1,4 +1,4 @@
-export const AI_ASSISTANT_ICON = '/admin-staff-icon-ai.svg';
+export const AI_ASSISTANT_ICON = '/icons/admin-staff-icon-ai.svg';
 
 export const AI_ASSISTANT_THEME = {
     base: '#ffffff',

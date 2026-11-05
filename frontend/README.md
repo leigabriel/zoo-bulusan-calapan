@@ -44,7 +44,7 @@ The staff area focuses on front-line work. Staff can scan and validate ticket QR
 
 ## AI Assistant
 
-The AI assistant, Jiji, appears as an embedded companion in the visitor, staff, and administrative areas. In the visitor experience it answers questions about the zoo, visits, reservations, events, payments, animals, and conservation. In the staff and administrative areas it acts as a role-aware companion that helps with operational questions. The assistant streams responses, keeps conversation history, and respects the permissions of the signed-in role.
+The AI assistant, Deera, appears as an embedded companion in the visitor, staff, and administrative areas. In the visitor experience it answers questions about the zoo, visits, reservations, events, payments, animals, and conservation. In the staff and administrative areas it acts as a role-aware companion that helps with operational questions. The assistant streams responses, keeps conversation history, and respects the permissions of the signed-in role.
 
 ## Interface and Experience
 

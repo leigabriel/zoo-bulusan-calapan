@@ -46,7 +46,7 @@ Direct messaging between visitors and zoo staff runs over Socket.IO, giving real
 
 ## AI Assistant
 
-Bulusan Zoo includes "Jiji", a visitor-facing AI assistant. The assistant is powered by Google's Gemini models and is constrained by a set of static instruction files that define its identity, factual standards, privacy rules, response formatting, website guidance, and animal and conservation knowledge. Live database content and the signed-in visitor's own reservation data are supplied as dynamic context, so answers stay relevant to the current zoo information without exposing other visitors' records.
+Bulusan Zoo includes "Deera", a visitor-facing AI assistant. The assistant is powered by Google's Gemini models and is constrained by a set of static instruction files that define its identity, factual standards, privacy rules, response formatting, website guidance, and animal and conservation knowledge. Live database content and the signed-in visitor's own reservation data are supplied as dynamic context, so answers stay relevant to the current zoo information without exposing other visitors' records.
 
 ## Notifications and Email
 

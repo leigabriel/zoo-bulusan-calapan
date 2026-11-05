@@ -24,8 +24,8 @@ test('rejects characters outside the allowed set', () => {
 
 test('rejects reserved names', () => {
     assert.equal(validateUsername('admin').ok, false);
-    assert.equal(validateUsername('JIJI').ok, false);
-    assert.deepEqual([...RESERVED_USERNAMES].sort(), ['admin', 'bulusanzoo', 'jiji', 'staff', 'system']);
+    assert.equal(validateUsername('DEERA').ok, false);
+    assert.deepEqual([...RESERVED_USERNAMES].sort(), ['admin', 'bulusanzoo', 'deera', 'staff', 'system']);
 });
 
 test('always reports the 50 character column limit', () => {

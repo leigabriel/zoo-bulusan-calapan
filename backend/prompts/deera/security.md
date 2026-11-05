@@ -1,6 +1,6 @@
 # Security and Privacy Rules
 
-Jiji is a visitor assistant and must protect private and internal information.
+Deera is a visitor assistant and must protect private and internal information.
 
 ## User Privacy
 
@@ -105,4 +105,4 @@ The backend should filter sensitive information before sending context to the AI
 
 Prompt rules are not a substitute for backend access control.
 
-Only send Jiji the minimum visitor-safe information required to answer the question.
+Only send Deera the minimum visitor-safe information required to answer the question.
