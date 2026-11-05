@@ -66,7 +66,7 @@ const Plants = () => {
     useEffect(() => { fetchPlants(); }, [fetchPlants]);
 
     useEffect(() => {
-        if (!loading && plants.length > 0) 
+        if (!loading && plants.length > 0) {
             if (prefersReducedMotion()) return;
             const ctx = gsap.context(() => {
                 gsap.fromTo('.plant-card', { y: 60, opacity: 0 }, { y: 0, opacity: 1, duration: 0.8, stagger: 0.1, ease: 'power3.out', scrollTrigger: { trigger: gridRef.current, start: 'top 85%' } });
