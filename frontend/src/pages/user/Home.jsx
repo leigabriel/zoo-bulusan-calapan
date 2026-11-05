@@ -3,15 +3,12 @@ import { ReactLenis } from 'lenis/react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { gsap } from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 import AIFloatingButton from '../../components/common/AIFloatingButton';
 import ConfirmationModal from '../../components/common/ConfirmationModal';
 import '../../App.css';
 import usePageMetadata from '../../hooks/use-page-metadata';
-
-gsap.registerPlugin(ScrollTrigger);
 
 const CITY_SOURCE = 'https://cityofcalapan.gov.ph/the-city-economic-enterprise-department-ceed/';
 const CITY_VISITORS_SOURCE = 'https://cityofcalapan.gov.ph/visitors/';
@@ -50,8 +47,6 @@ const HeroSection = () => {
     const containerRef = useRef(null);
 
     useLayoutEffect(() => {
-        document.body.style.overflow = 'auto';
-
         const headerElement = document.querySelector('header');
         if (headerElement) gsap.set(headerElement, { opacity: 1, pointerEvents: 'auto' });
 
@@ -78,34 +73,21 @@ const HeroSection = () => {
                     { opacity: 0, y: 30 },
                     { opacity: 1, y: 0, duration: 0.9, ease: 'power3.out', stagger: 0.12 }, 0.55
                 );
-
-            gsap.to('.hero-bg-parallax', {
-                yPercent: 25,
-                scale: 1.1,
-                ease: 'none',
-                scrollTrigger: { trigger: containerRef.current, start: 'top top', end: 'bottom top', scrub: true }
-            });
-            gsap.to('.hero-content', {
-                yPercent: 25,
-                opacity: 0,
-                ease: 'none',
-                scrollTrigger: { trigger: containerRef.current, start: 'top top', end: 'bottom top', scrub: true }
-            });
         }, containerRef);
 
         return () => context.revert();
     }, []);
 
     return (
-        <div ref={containerRef} data-header-theme="dark" className="relative w-full overflow-hidden bg-[#1d3a26]">
-            <section className="relative mx-auto flex min-h-[100dvh] w-full max-w-[2000px] flex-col overflow-hidden" aria-label="Welcome to Bulusan Zoo">
-                <div className="hero-bg-parallax absolute inset-0 z-0 origin-center">
+        <div ref={containerRef} data-header-theme="dark" className="sticky top-0 z-0 h-[100dvh] w-full overflow-hidden bg-[#1d3a26]">
+            <section className="relative mx-auto flex h-full w-full max-w-[2000px] flex-col overflow-hidden" aria-label="Welcome to Bulusan Zoo">
+                <div className="hero-bg absolute inset-0 z-0">
                     <img src="/images/hero-sky.webp" alt="" aria-hidden="true" fetchPriority="high" className="h-full w-full object-cover object-center" />
                 </div>
                 {/* Soft vignette keeps the white headline readable over the bright sky. */}
                 <div className="pointer-events-none absolute inset-0 z-0 bg-[radial-gradient(70%_55%_at_50%_42%,rgba(8,30,16,0.38)_0%,rgba(8,30,16,0.12)_70%,transparent_100%),linear-gradient(to_bottom,rgba(0,0,0,0.3)_0%,transparent_35%,rgba(0,0,0,0.5)_100%)]" aria-hidden="true" />
 
-                <div className="hero-content pointer-events-none relative z-10 flex flex-1 flex-col items-center justify-center px-4 pb-6 pt-28 text-center sm:px-6 sm:pt-32">
+                <div className="hero-content pointer-events-none relative z-10 flex flex-1 flex-col items-center justify-center px-4 py-16 text-center sm:px-6">
                     <p className="hero-title -mb-1 font-['Mistral',_cursive] text-[clamp(2rem,5vw,5rem)] text-white opacity-0 drop-shadow-[0_2px_10px_rgba(0,0,0,0.45)] sm:-mb-2">
                         Welcome to
                     </p>
@@ -268,6 +250,7 @@ const VideoSection = () => (
                 src="/bulusanzoo-images/bzv2.mp4"
                 poster="/bulusanzoo-images/bzv2-poster.jpg"
                 controls
+                autoPlay
                 muted
                 loop
                 playsInline
@@ -529,35 +512,28 @@ const VisitorSection = ({ navigate }) => (
 
 const Home = () => {
     const navigate = useNavigate();
-    const [reduceMotion, setReduceMotion] = useState(false);
     const description = 'Discover Bulusan Park, formally the Calapan City Recreational and Zoological Park in Barangay Bulusan, with its mini-zoo, open spaces, pavilion, and eco-trail access.';
 
     usePageMetadata('Bulusan Zoo | Calapan City', description, 'https://bulusanzoo.com/');
 
-    useEffect(() => {
-        const media = window.matchMedia('(prefers-reduced-motion: reduce)');
-        const update = () => setReduceMotion(media.matches);
-        update();
-        media.addEventListener('change', update);
-        return () => media.removeEventListener('change', update);
-    }, []);
-
     return (
-        <ReactLenis root options={{ smoothWheel: !reduceMotion }}>
+        <ReactLenis root>
             <div className="relative min-h-[100dvh] bg-white">
                 <Header />
                 <AIFloatingButton />
                 <main className="relative w-full overflow-x-clip">
                     <HeroSection />
-                    <VideoSection />
-                    <AboutSection />
-                    <ExploreSection />
-                    <ZootopiaSection />
-                    <ActivitiesSection />
-                    <TrailSection />
-                    <OfficialRecordsSection />
-                    <ArrivalSection />
-                    <VisitorSection navigate={navigate} />
+                    <div className="relative z-10 bg-white">
+                        <VideoSection />
+                        <AboutSection />
+                        <ExploreSection />
+                        <ZootopiaSection />
+                        <ActivitiesSection />
+                        <TrailSection />
+                        <OfficialRecordsSection />
+                        <ArrivalSection />
+                        <VisitorSection navigate={navigate} />
+                    </div>
                 </main>
                 <div className="relative z-50 w-full"><Footer /></div>
             </div>

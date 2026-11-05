@@ -95,8 +95,11 @@ const NAV_LINKS = [
 const isActivePath = (pathname, path) =>
     path === '/' ? pathname === '/' : pathname === path || pathname.startsWith(`${path}/`);
 
-const IconBtn = ({ iconKey, alt, onClick, badge, className = '', expanded, controls }) => {
+const IconBtn = ({ iconKey, alt, onClick, badge, className = '', expanded, controls, onDark = false }) => {
     const IconComponent = ICON_COMPONENTS[iconKey];
+    const tone = onDark
+        ? 'text-white hover:bg-white/15 focus-visible:outline-white'
+        : 'text-black hover:bg-black/5 focus-visible:outline-black';
     return (
         <button
             type="button"
@@ -104,9 +107,9 @@ const IconBtn = ({ iconKey, alt, onClick, badge, className = '', expanded, contr
             aria-label={alt}
             aria-expanded={expanded}
             aria-controls={controls}
-            className={`relative flex items-center justify-center w-9 h-9 rounded-full hover:bg-gray-100 transition-colors flex-shrink-0 ${className}`}
+            className={`relative flex items-center justify-center w-9 h-9 rounded-full transition-colors flex-shrink-0 focus-visible:outline-2 focus-visible:outline-offset-2 ${tone} ${className}`}
         >
-            {IconComponent && <IconComponent size={18} className="opacity-55" />}
+            {IconComponent && <IconComponent size={18} className="opacity-100" />}
             {badge > 0 && (
                 <span className="absolute top-0.5 right-0.5 min-w-[15px] h-[15px] px-0.5 bg-red-500 text-white text-[11px] font-bold rounded-full flex items-center justify-center border border-white leading-none">
                     {badge > 9 ? '9+' : badge}
@@ -165,7 +168,7 @@ const Header = () => {
     const { user, logout, loading: authLoading } = useAuth();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const logoRef = useRef(null);
-    const [logoOnDark, setLogoOnDark] = useState(false);
+    const [headerOnDark, setHeaderOnDark] = useState(false);
     const [showLogoutModal, setShowLogoutModal] = useState(false);
     const [showSidePanel, setShowSidePanel] = useState(false);
     const [showAIScanner, setShowAIScanner] = useState(false);
@@ -231,7 +234,7 @@ const Header = () => {
                 dark = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255 < 0.5;
                 break;
             }
-            setLogoOnDark(dark);
+            setHeaderOnDark(dark);
         };
         const schedule = () => { if (!frame) frame = requestAnimationFrame(detect); };
         schedule();
@@ -441,7 +444,7 @@ const Header = () => {
                         <div className="flex min-w-0 flex-shrink-0 items-center lg:w-[180px]">
                             <Link ref={logoRef} to="/" className="flex min-w-0 items-center" onClick={(e) => { e.preventDefault(); setIsMenuOpen(false); handleTransitionNavigate(e, '/'); }}>
                                 <img src="/images/bz-url-logo.png" alt="Logo" className="w-7 h-7 object-contain mr-2" />
-                                <span className={`whitespace-nowrap text-[18px] font-bold tracking-tight transition-colors duration-300 ${logoOnDark ? 'text-white' : 'text-black'}`}>
+                                <span className={`whitespace-nowrap text-[18px] font-bold tracking-tight transition-colors duration-300 ${headerOnDark ? 'text-white' : 'text-black'}`}>
                                     BULUSAN ZOO
                                 </span>
                             </Link>
@@ -474,7 +477,7 @@ const Header = () => {
                                 Reserve
                             </Link>
                             {user && (
-                                <IconBtn iconKey="notification" alt="Notifications" onClick={openNotifications} badge={unreadCount} />
+                                <IconBtn iconKey="notification" alt="Notifications" onClick={openNotifications} badge={unreadCount} onDark={headerOnDark} />
                             )}
                             {authLoading ? (
                                 <div className="flex items-center gap-2 px-4 py-1.5">
@@ -512,7 +515,7 @@ const Header = () => {
 
                         <div className="ml-auto flex flex-shrink-0 items-center gap-1.5 lg:hidden">
                             {user && (
-                                <IconBtn iconKey="notification" alt="Notifications" onClick={openNotifications} badge={unreadCount} />
+                                <IconBtn iconKey="notification" alt="Notifications" onClick={openNotifications} badge={unreadCount} onDark={headerOnDark} />
                             )}
                             {user && (
                                 <button
@@ -531,7 +534,7 @@ const Header = () => {
                                     />
                                 </button>
                             )}
-                            <IconBtn iconKey={isMenuOpen ? 'close' : 'menu'} alt={isMenuOpen ? 'Close menu' : 'Open menu'} expanded={isMenuOpen} controls="mobile-nav-menu" onClick={() => setIsMenuOpen(!isMenuOpen)} />
+                            <IconBtn iconKey={isMenuOpen ? 'close' : 'menu'} alt={isMenuOpen ? 'Close menu' : 'Open menu'} expanded={isMenuOpen} controls="mobile-nav-menu" onClick={() => setIsMenuOpen(!isMenuOpen)} onDark={headerOnDark} />
                         </div>
                     </div>
                 </div>
