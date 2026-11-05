@@ -130,7 +130,7 @@ const HeroSection = () => {
                 <div className="hero-bg-parallax absolute inset-0 z-0 origin-bottom bg-[linear-gradient(to_bottom,#ffffff_0%,#ffffff_45%,#bbf7d0_72%,#4ade80_100%)]" />
                 <div className="hero-images absolute inset-0 z-0 overflow-hidden pointer-events-none">
                     <img
-                        src="/deer.png"
+                        src="images/deer.png"
                         alt=""
                         aria-hidden="true"
                         className="hero-deer absolute bottom-0 left-[-3rem] w-[78vw] max-w-[40rem] origin-bottom-left object-contain object-bottom opacity-0 sm:left-[-2rem] sm:w-[48vw] md:left-0 md:w-[43vw]"
