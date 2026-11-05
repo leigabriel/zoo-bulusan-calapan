@@ -10,7 +10,11 @@ const getSSLConfig = () => {
     if (!isProduction) return false;
     
     const rejectUnauthorized = process.env.DB_SSL_REJECT_UNAUTHORIZED === 'true';
-    
+
+    if (!rejectUnauthorized) {
+        console.warn('[security] DB_SSL_REJECT_UNAUTHORIZED is not "true": the database certificate is not verified. Set it to true if your provider supplies a trusted certificate.');
+    }
+
     return {
         rejectUnauthorized: rejectUnauthorized,
         minVersion: 'TLSv1.2'
@@ -23,7 +27,7 @@ const dbConfig = {
     port: parseInt(process.env.DB_PORT) || 3306,
     user: process.env.DB_USER || 'root',
     password: process.env.DB_PASSWORD || '',
-    database: process.env.DB_NAME || 'bulusanzoocalapan',
+    database: process.env.DB_NAME || 'bulusanzoocalapandatabase',
     waitForConnections: true,
     connectionLimit: isProduction ? 5 : 10,
     queueLimit: 0,
