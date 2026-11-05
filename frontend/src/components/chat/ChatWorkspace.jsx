@@ -28,7 +28,7 @@ const formatListTime = (value) => {
 
 const Avatar = ({ person, admin = false, size = 'h-11 w-11' }) => (
     <img
-        src={admin ? '/bz-url-logo.png' : getProfileImageUrl(person?.profileImage) || defaultAvatar}
+        src={admin ? '/images/bz-url-logo.png' : getProfileImageUrl(person?.profileImage) || defaultAvatar}
         alt=""
         className={`${size} shrink-0 rounded-full border border-emerald-100 bg-emerald-50 object-cover`}
         onError={(event) => {

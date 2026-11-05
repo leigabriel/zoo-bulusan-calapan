@@ -15,7 +15,7 @@ const router = express.Router();
 const crypto = require('crypto');
 const { protect, authorize, optionalAuth } = require('../middleware/auth');
 const { sanitizePlainText } = require('../utils/helpers');
-const { buildJijiSystemPrompt } = require('../services/jiji-prompt-service');
+const { buildDeeraSystemPrompt } = require('../services/deera-prompt-service');
 const appConfig = require('../config/app-config');
 const { aiLimiter } = require('../middleware/rate-limit');
 const { normalizeMessage, normalizeHistory } = require('../utils/ai-input');
@@ -70,7 +70,7 @@ const formatTicketPriceLines = () => {
         .join('\n');
 };
 
-// current application information supplied to Jiji as context data
+// current application information supplied to Deera as context data
 const buildVisitorInfoContext = () => `
 
 CURRENT APPLICATION VISITOR INFORMATION (verified website information - use this when answering):
@@ -549,7 +549,7 @@ const getFallbackResponse = (message, dynamicData = null, userData = null) => {
     }
 
     if (lowerMsg.includes('hello') || lowerMsg.includes('hi') || lowerMsg.includes('hey') || lowerMsg.includes('mabuhay')) {
-        let greeting = "Mabuhay! Welcome to Bulusan Zoo! I'm Jiji, your zoo assistant.";
+        let greeting = "Mabuhay! Welcome to Bulusan Zoo! I'm Deera, your zoo assistant.";
         if (dynamicData?.animalCount) {
             greeting += ` We currently have ${dynamicData.animalCount} amazing animals waiting to meet you!`;
         }
@@ -964,7 +964,7 @@ Remember: Only share this general zoo information. Never expose passwords, accou
                 // Already normalised and bounded by normalizeHistory().
                 const conversationHistory = history;
 
-                const systemPrompt = buildJijiSystemPrompt(dynamicContext, userReservationContext, message);
+                const systemPrompt = buildDeeraSystemPrompt(dynamicContext, userReservationContext, message);
 
                 const result = await model.generateContent({
                     contents: [
@@ -1184,7 +1184,7 @@ router.get('/status', protect, authorize('admin', 'staff'), (req, res) => {
         configured: isConfigured,
         googleAIAvailable: hasGoogleAI,
         ready: isConfigured && hasGoogleAI,
-        assistant: 'Jiji',
+        assistant: 'Deera',
         version: '1.0.0',
         message: !isConfigured
             ? 'GEMINI_API_KEY not configured in .env'

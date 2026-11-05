@@ -363,7 +363,7 @@ const Header = () => {
                     <div className="flex items-center h-full">
                         <div className="flex min-w-0 flex-shrink-0 items-center lg:w-[180px]">
                             <Link to="/" className="flex min-w-0 items-center" onClick={(e) => { e.preventDefault(); setIsMenuOpen(false); handleTransitionNavigate(e, '/'); }}>
-                                <img src="/bz-url-logo.png" alt="Logo" className="w-7 h-7 object-contain mr-2" />
+                                <img src="/images/bz-url-logo.png" alt="Logo" className="w-7 h-7 object-contain mr-2" />
                                 <span className="whitespace-nowrap text-[18px] font-bold text-[#212631] tracking-tight">
                                     BULUSAN ZOO
                                 </span>
@@ -652,7 +652,7 @@ const Header = () => {
                 >
                     <div className="flex items-center gap-3 px-4 sm:px-6 py-4 border-b border-emerald-100/80 bg-white flex-shrink-0">
                         <div className="w-10 h-10 bg-emerald-50 border border-emerald-100 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden">
-                            <img src="/animal-scan.svg" alt="" className="w-9 h-9 object-contain" />
+                            <img src="/icons/animal-scan.svg" alt="" className="w-9 h-9 object-contain" />
                         </div>
                         <div className="flex-1 min-w-0">
                             <p className="text-sm font-bold text-slate-900">AI Animal Scanner</p>

@@ -393,7 +393,7 @@ const AnimalClassifier = ({ embedded = false }) => {
                             <div className={`flex min-w-0 ${embedded ? 'max-w-[96%]' : 'max-w-[90%] md:max-w-[78%]'} ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'} gap-2.5 items-end`}>
 
                                 <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 overflow-hidden ${msg.role === 'user' ? 'bg-[#1f3328] text-white' : 'bg-[#e5f0e3] border border-[#cfe0cc]'}`}>
-                                    {msg.role === 'user' ? <UserIcon /> : <img src="/animal-scan.svg" alt="" className="w-7 h-7 object-contain" />}
+                                    {msg.role === 'user' ? <UserIcon /> : <img src="/icons/animal-scan.svg" alt="" className="w-7 h-7 object-contain" />}
                                 </div>
 
                                 <div className={`min-w-0 max-w-full p-3.5 sm:p-4 text-sm ${msg.role === 'user'
@@ -457,7 +457,7 @@ const AnimalClassifier = ({ embedded = false }) => {
                     >
                         <div className="flex gap-2.5 items-end">
                             <div className="w-8 h-8 rounded-xl bg-[#e5f0e3] border border-[#cfe0cc] flex items-center justify-center overflow-hidden">
-                                <img src="/animal-scan.svg" alt="" className="w-7 h-7 object-contain" />
+                                <img src="/icons/animal-scan.svg" alt="" className="w-7 h-7 object-contain" />
                             </div>
                             <div className="bg-[#fffefa] px-4 py-3 rounded-2xl rounded-bl-md shadow-[0_8px_22px_rgba(31,51,40,0.06)] border border-[#dfe8dc] flex items-center gap-3">
                                 <span className="flex items-center gap-1.5">

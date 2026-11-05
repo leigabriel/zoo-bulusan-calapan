@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import AIChatAssistant from '../features/ai-assistant/AIChatAssistant';
 import useScrollLock from '../../hooks/use-scroll-lock';
-import JijiMascot from './JijiMascot';
+import DeeraMascot from './DeeraMascot';
 
 const MotionDiv = motion.div;
 
@@ -35,9 +35,9 @@ const AIFloatingButton = () => {
                     <div
                         className="relative z-40 transition-transform duration-200 active:scale-95 hover:scale-110"
                         onClick={() => setAssistantOpen(true)}
-                        aria-label="Open Jiji AI assistant"
+                        aria-label="Open Deera AI assistant"
                     >
-                        <JijiMascot size={72} />
+                        <DeeraMascot size={72} />
                     </div>
                 </div>
             )}
