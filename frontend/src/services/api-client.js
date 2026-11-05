@@ -98,7 +98,7 @@ const TAB_ID_KEY = 'TAB_ID';
 const getTabId = () => {
     try {
         return sessionStorage.getItem(TAB_ID_KEY);
-    } catch (e) {
+    } catch {
         return null;
     }
 };
@@ -161,7 +161,7 @@ const hasStoredToken = () => {
                 if (key && key.startsWith(keys.token)) return true;
             }
         }
-    } catch (e) {
+    } catch {
         return false;
     }
     return false;
@@ -189,7 +189,7 @@ const handleResponse = async (response) => {
     let data;
     try {
         data = JSON.parse(text);
-    } catch (e) {
+    } catch {
         // Response is not JSON
         if (!response.ok) {
             throw new Error(`Request failed with status ${response.status}`);
