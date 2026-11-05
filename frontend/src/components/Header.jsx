@@ -1,13 +1,8 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, lazy, Suspense } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { getProfileImageUrl, messageAPI, userAPI } from '../services/api-client';
 import LogoutModal from './common/LogoutModal';
-import AnimalClassifier from './features/ai-scanner/AnimalClassifier';
-import ReservationHistoryPanel from './features/ReservationHistoryPanel';
-import MyPostsPanel from './features/MyPostsPanel';
-import Settings from '../pages/user/Settings';
-import UserProfile from '../pages/user/UserProfile';
 import ConfirmModal from './common/ConfirmModal';
 import useScrollLock from '../hooks/use-scroll-lock';
 import {
@@ -16,9 +11,25 @@ import {
     Headset, Logout, Information, NoteText
 } from 'reicon-react';
 
-const env = (typeof process !== 'undefined' && process.env) ? process.env : {};
-const MINIZOO_GAME_URL = env.VITE_MINIZOO_GAME_URL || 'https://bulusanzootopia.vercel.app';
-const MINIZOO_ADVENTURE_GAME_URL = env.VITE_MINIZOO_ADVENTURE_GAME_URL || 'https://adventuregame.bulusanzoo.com/';
+// These panels pull in heavy code (TensorFlow, forms, history tables). Loading them on
+// demand keeps them out of the first-paint bundle that every page shares via Header.
+const AnimalClassifier = lazy(() => import('./features/ai-scanner/AnimalClassifier'));
+const ReservationHistoryPanel = lazy(() => import('./features/ReservationHistoryPanel'));
+const MyPostsPanel = lazy(() => import('./features/MyPostsPanel'));
+const Settings = lazy(() => import('../pages/user/Settings'));
+const UserProfile = lazy(() => import('../pages/user/UserProfile'));
+
+// Vite exposes env vars through import.meta.env; `process` does not exist in the browser.
+const MINIZOO_GAME_URL = import.meta.env.VITE_MINIZOO_GAME_URL || 'https://bulusanzootopia.vercel.app';
+const MINIZOO_ADVENTURE_GAME_URL = import.meta.env.VITE_MINIZOO_ADVENTURE_GAME_URL || 'https://adventuregame.bulusanzoo.com/';
+
+// True from the first time `flag` is true onward, so a lazy panel is mounted when first
+// opened and then stays mounted, which keeps its slide-out transition intact.
+const useEverTrue = (flag) => {
+    const seen = useRef(false);
+    if (flag) seen.current = true;
+    return seen.current;
+};
 
 // Notification types are catalog keys such as 'event.announced' or
 // 'reservation.confirmed' (see backend/services/notification-service.js). Match on the
@@ -151,6 +162,10 @@ const Header = () => {
     const location = useLocation();
     const sidePanelRef = useRef(null);
     const notificationPanelRef = useRef(null);
+    const settingsLoaded = useEverTrue(showSettingsPanel);
+    const profileLoaded = useEverTrue(showProfilePanel);
+    const historyLoaded = useEverTrue(showHistoryPanel);
+    const postsLoaded = useEverTrue(showMyPostsPanel);
     const hasOpenOverlay = isMenuOpen || showSidePanel || showAIScanner || showHistoryPanel
         || showMyPostsPanel
         || showSettingsPanel || showProfilePanel || showNotificationPanel || showMiniZooGame
@@ -629,14 +644,22 @@ const Header = () => {
               <div className={`fixed inset-0 z-[125] flex justify-end transition-all duration-300 ${showSettingsPanel ? 'visible' : 'invisible'}`}>
                   <div className={`absolute inset-0 bg-black/25 backdrop-blur-[2px] transition-opacity duration-300 ${showSettingsPanel ? 'opacity-100' : 'opacity-0'}`} onClick={() => { setShowSettingsPanel(false); if (user) setShowSidePanel(true); }} />
                   <div className={`relative h-full w-full overflow-y-auto overscroll-contain bg-white shadow-2xl transition-transform duration-300 ease-out sm:w-1/2 sm:min-w-[420px] sm:max-w-[720px] ${showSettingsPanel ? 'translate-x-0' : 'translate-x-full'}`} role="dialog" aria-modal="true" aria-label="Account settings" data-lenis-prevent>
-                      <Settings embedded onClose={() => { setShowSettingsPanel(false); if (user) setShowSidePanel(true); }} />
+                      {settingsLoaded && (
+                          <Suspense fallback={null}>
+                              <Settings embedded onClose={() => { setShowSettingsPanel(false); if (user) setShowSidePanel(true); }} />
+                          </Suspense>
+                      )}
                   </div>
               </div>
 
               <div className={`fixed inset-0 z-[125] flex justify-end transition-all duration-300 ${showProfilePanel ? 'visible' : 'invisible'}`}>
                   <div className={`absolute inset-0 bg-black/25 backdrop-blur-[2px] transition-opacity duration-300 ${showProfilePanel ? 'opacity-100' : 'opacity-0'}`} onClick={() => { setShowProfilePanel(false); if (user) setShowSidePanel(true); }} />
                   <div className={`relative h-full w-full overflow-y-auto overscroll-contain bg-white shadow-2xl transition-transform duration-300 ease-out sm:w-1/2 sm:min-w-[420px] sm:max-w-[720px] ${showProfilePanel ? 'translate-x-0' : 'translate-x-full'}`} role="dialog" aria-modal="true" aria-label="User profile" data-lenis-prevent>
-                      <UserProfile embedded onClose={() => { setShowProfilePanel(false); if (user) setShowSidePanel(true); }} />
+                      {profileLoaded && (
+                          <Suspense fallback={null}>
+                              <UserProfile embedded onClose={() => { setShowProfilePanel(false); if (user) setShowSidePanel(true); }} />
+                          </Suspense>
+                      )}
                   </div>
               </div>
 
@@ -661,7 +684,11 @@ const Header = () => {
                         <CloseBtn onClick={() => { setShowAIScanner(false); if (user) setShowSidePanel(true); }} />
                     </div>
                     <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain" data-lenis-prevent>
-                        {showAIScanner && <AnimalClassifier embedded={true} />}
+                        {showAIScanner && (
+                            <Suspense fallback={null}>
+                                <AnimalClassifier embedded={true} />
+                            </Suspense>
+                        )}
                     </div>
                 </div>
             </div>
@@ -850,15 +877,23 @@ const Header = () => {
                 />
             )}
 
-            <ReservationHistoryPanel
-                isOpen={showHistoryPanel}
-                onClose={() => setShowHistoryPanel(false)}
-            />
+            {historyLoaded && (
+                <Suspense fallback={null}>
+                    <ReservationHistoryPanel
+                        isOpen={showHistoryPanel}
+                        onClose={() => setShowHistoryPanel(false)}
+                    />
+                </Suspense>
+            )}
 
-            <MyPostsPanel
-                isOpen={showMyPostsPanel}
-                onClose={() => setShowMyPostsPanel(false)}
-            />
+            {postsLoaded && (
+                <Suspense fallback={null}>
+                    <MyPostsPanel
+                        isOpen={showMyPostsPanel}
+                        onClose={() => setShowMyPostsPanel(false)}
+                    />
+                </Suspense>
+            )}
 
             {showMiniZooGame && (
                 <div className="fixed inset-0 z-[200] flex items-center justify-center">
