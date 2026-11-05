@@ -59,18 +59,18 @@ const PublicUserProfile = ({ userId, onClose }) => {
                 <h1 className="text-2xl font-black uppercase text-white tracking-tighter leading-none mb-2">
                     {profile.firstName} {profile.lastName}
                 </h1>
-                <p className="text-[10px] tracking-[0.18em] uppercase font-bold text-white/70 mb-8">
+                <p className="text-[11px] tracking-[0.18em] uppercase font-bold text-white/70 mb-8">
                     @{profile.username}
                 </p>
 
                 <div className="flex flex-col w-full border-t border-white/20">
                     <div className="flex justify-between items-center py-4 border-b border-white/20">
-                        <span className="text-[9px] tracking-[0.18em] uppercase font-bold text-white/60">Role</span>
-                        <span className="text-[10px] tracking-widest font-black uppercase text-white">{profile.role}</span>
+                        <span className="text-[11px] tracking-[0.18em] uppercase font-bold text-white/60">Role</span>
+                        <span className="text-[11px] tracking-widest font-black uppercase text-white">{profile.role}</span>
                     </div>
                     <div className="flex justify-between items-center py-4 border-b border-white/20">
-                        <span className="text-[9px] tracking-[0.18em] uppercase font-bold text-white/60">Joined</span>
-                        <span className="text-[10px] tracking-widest font-black uppercase text-white">
+                        <span className="text-[11px] tracking-[0.18em] uppercase font-bold text-white/60">Joined</span>
+                        <span className="text-[11px] tracking-widest font-black uppercase text-white">
                             {new Date(profile.joinedAt).toLocaleDateString(undefined, { month: 'short', year: 'numeric' })}
                         </span>
                     </div>
@@ -79,7 +79,7 @@ const PublicUserProfile = ({ userId, onClose }) => {
                 {onClose && (
                     <button
                         onClick={onClose}
-                        className="mt-8 w-full py-3 border border-white/30 text-[10px] tracking-[0.18em] uppercase font-black text-white hover:bg-white hover:text-[#26bc61] transition-colors cursor-pointer"
+                        className="mt-8 w-full py-3 border border-white/30 text-[11px] tracking-[0.18em] uppercase font-black text-white hover:bg-white hover:text-[#26bc61] transition-colors cursor-pointer"
                     >
                         Close Profile
                     </button>
