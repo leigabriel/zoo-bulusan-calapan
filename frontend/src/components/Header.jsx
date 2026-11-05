@@ -73,11 +73,19 @@ const NAV_LINKS = [
     { path: '/about', label: 'About', iconKey: 'about' },
 ];
 
-const IconBtn = ({ iconKey, alt, onClick, badge, className = '' }) => {
+// A section stays active on its detail pages, e.g. /animals/12 highlights Animals.
+const isActivePath = (pathname, path) =>
+    path === '/' ? pathname === '/' : pathname === path || pathname.startsWith(`${path}/`);
+
+const IconBtn = ({ iconKey, alt, onClick, badge, className = '', expanded, controls }) => {
     const IconComponent = ICON_COMPONENTS[iconKey];
     return (
         <button
+            type="button"
             onClick={onClick}
+            aria-label={alt}
+            aria-expanded={expanded}
+            aria-controls={controls}
             className={`relative flex items-center justify-center w-9 h-9 rounded-full hover:bg-gray-100 transition-colors flex-shrink-0 ${className}`}
         >
             {IconComponent && <IconComponent size={18} className="opacity-55" />}
@@ -92,7 +100,9 @@ const IconBtn = ({ iconKey, alt, onClick, badge, className = '' }) => {
 
 const CloseBtn = ({ onClick }) => (
     <button
+        type="button"
         onClick={onClick}
+        aria-label="Close"
         className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-gray-100 transition-colors flex-shrink-0"
     >
         <CloseCircle size={14} className="opacity-40" />
@@ -388,7 +398,7 @@ const Header = () => {
                                         key={link.path}
                                         to={link.path}
                                         onClick={(e) => { e.preventDefault(); handleTransitionNavigate(e, link.path); }}
-                                        className={`px-4 py-1.5 rounded-full text-[13px] font-medium transition-all duration-150 whitespace-nowrap ${location.pathname === link.path
+                                        className={`px-4 py-1.5 rounded-full text-[13px] font-medium transition-all duration-150 whitespace-nowrap ${isActivePath(location.pathname, link.path)
                                             ? 'bg-[#000] text-gray-100 shadow-sm'
                                             : 'text-[#000]/50 hover:text-gray-800'
                                             }`}
@@ -400,10 +410,12 @@ const Header = () => {
                         </nav>
 
                         <div className="hidden w-[180px] flex-shrink-0 items-center justify-end gap-2 lg:flex xl:w-[260px]">
-                            <Link to="/reservations" onClick={(e) => { e.preventDefault(); handleTransitionNavigate(e, '/reservations'); }}>
-                                <button className="px-4 py-1.5 rounded-full bg-gray-900 text-white text-[13px] font-medium hover:bg-gray-700 transition-colors whitespace-nowrap">
-                                    Reserve
-                                </button>
+                            <Link
+                                to="/reservations"
+                                onClick={(e) => { e.preventDefault(); handleTransitionNavigate(e, '/reservations'); }}
+                                className="px-4 py-1.5 rounded-full bg-gray-900 text-white text-[13px] font-medium hover:bg-gray-700 transition-colors whitespace-nowrap"
+                            >
+                                Reserve
                             </Link>
                             {user && (
                                 <IconBtn iconKey="notification" alt="Notifications" onClick={openNotifications} badge={unreadCount} />
@@ -414,12 +426,15 @@ const Header = () => {
                                 </div>
                             ) : user ? (
                                 <button
+                                    type="button"
                                     onClick={() => setShowSidePanel(true)}
+                                    aria-label="Open account menu"
+                                    aria-haspopup="dialog"
                                     className="flex items-center gap-2 pl-1 pr-3 py-1 rounded-full border border-gray-200 bg-white hover:border-gray-500 hover:bg-green-400 transition-all"
                                 >
                                     <img
                                         src={avatarSrc}
-                                        alt="Profile"
+                                        alt=""
                                         className="w-7 h-7 rounded-full object-cover flex-shrink-0"
                                         referrerPolicy="no-referrer"
                                         onError={(e) => { e.target.onerror = null; e.target.src = '/profile-img/default-avatar.svg'; }}
@@ -429,10 +444,12 @@ const Header = () => {
                                     </span>
                                 </button>
                             ) : (
-                                <Link to="/login" onClick={(e) => { e.preventDefault(); handleTransitionNavigate(e, '/login'); }}>
-                                    <button className="px-4 py-1.5 rounded-full text-[13px] font-medium text-gray-700 border border-gray-200 bg-white hover:bg-gray-50 transition-colors">
-                                        Login
-                                    </button>
+                                <Link
+                                    to="/login"
+                                    onClick={(e) => { e.preventDefault(); handleTransitionNavigate(e, '/login'); }}
+                                    className="px-4 py-1.5 rounded-full text-[13px] font-medium text-gray-700 border border-gray-200 bg-white hover:bg-gray-50 transition-colors"
+                                >
+                                    Login
                                 </Link>
                             )}
                         </div>
@@ -443,24 +460,29 @@ const Header = () => {
                             )}
                             {user && (
                                 <button
+                                    type="button"
                                     onClick={() => setShowSidePanel(true)}
+                                    aria-label="Open account menu"
+                                    aria-haspopup="dialog"
                                     className="flex items-center justify-center w-9 h-9 rounded-full hover:bg-gray-100 transition-colors flex-shrink-0 overflow-hidden"
                                 >
                                     <img
                                         src={avatarSrc}
-                                        alt="Profile"
+                                        alt=""
                                         className="w-7 h-7 rounded-full object-cover"
                                         referrerPolicy="no-referrer"
                                         onError={(e) => { e.target.onerror = null; e.target.src = '/profile-img/default-avatar.svg'; }}
                                     />
                                 </button>
                             )}
-                            <IconBtn iconKey={isMenuOpen ? 'close' : 'menu'} alt="Menu" onClick={() => setIsMenuOpen(!isMenuOpen)} />
+                            <IconBtn iconKey={isMenuOpen ? 'close' : 'menu'} alt={isMenuOpen ? 'Close menu' : 'Open menu'} expanded={isMenuOpen} controls="mobile-nav-menu" onClick={() => setIsMenuOpen(!isMenuOpen)} />
                         </div>
                     </div>
                 </div>
 
                 <div
+                    id="mobile-nav-menu"
+                    inert={!isMenuOpen}
                     className={`absolute left-0 top-full flex w-full origin-top flex-col overflow-y-auto overscroll-contain border-t border-gray-100 bg-white shadow-xl transition-all duration-300 ease-in-out lg:hidden ${isMenuOpen ? 'max-h-[calc(100dvh-56px)] opacity-100' : 'max-h-0 opacity-0 pointer-events-none'}`}
                     data-lenis-prevent
                 >
@@ -468,7 +490,7 @@ const Header = () => {
                         <div>
                             <div className="rounded-xl overflow-hidden border border-gray-100">
                                 {NAV_LINKS.map((link) => {
-                                    const active = location.pathname === link.path;
+                                    const active = isActivePath(location.pathname, link.path);
                                     const LinkIcon = ICON_COMPONENTS[link.iconKey];
                                     return (
                                         <Link
@@ -507,10 +529,12 @@ const Header = () => {
                                 <div className="w-5 h-5 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin" />
                             </div>
                         ) : !user ? (
-                            <Link to="/login" onClick={(e) => { e.preventDefault(); setIsMenuOpen(false); handleTransitionNavigate(e, '/login'); }}>
-                                <button className="w-full py-3 rounded-xl bg-gray-900 text-white text-[13px] font-medium">
-                                    Login / Sign Up
-                                </button>
+                            <Link
+                                to="/login"
+                                onClick={(e) => { e.preventDefault(); setIsMenuOpen(false); handleTransitionNavigate(e, '/login'); }}
+                                className="block w-full py-3 rounded-xl bg-gray-900 text-center text-white text-[13px] font-medium"
+                            >
+                                Login / Sign Up
                             </Link>
                         ) : (
                             <button
