@@ -348,7 +348,7 @@ const UserMessages = () => {
 
             {/* Recipient Picker Modal */}
             {pickerOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/40 p-4 backdrop-blur-sm transition-opacity">
+                <div role="dialog" aria-modal="true" aria-label="Compose message" className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/40 p-4 backdrop-blur-sm transition-opacity">
                     <div className="w-full max-w-md overflow-hidden rounded-3xl bg-white shadow-2xl">
                         <header className="flex items-center justify-between border-b border-gray-100 p-4">
                             <h2 className="text-lg font-bold text-gray-900 mx-auto pl-8">New Message</h2>
