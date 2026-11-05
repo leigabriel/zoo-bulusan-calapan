@@ -56,7 +56,7 @@ const WildlifeOriginDetail = () => {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-[#eef3ed] flex items-center justify-center">
+            <div className="min-h-dvh bg-[#eef3ed] flex items-center justify-center">
                 <div className="w-10 h-10 border-4 border-[#d5e1d5] border-t-[#1f3328] rounded-full animate-spin" />
             </div>
         );
@@ -64,7 +64,7 @@ const WildlifeOriginDetail = () => {
 
     if (notFound || !animal) {
         return (
-            <div className="min-h-screen bg-[#eef3ed] flex flex-col items-center justify-center p-6 text-center">
+            <div className="min-h-dvh bg-[#eef3ed] flex flex-col items-center justify-center p-6 text-center">
                 <p className="text-sm font-bold uppercase tracking-[0.2em] text-[#6d8572]">Animal not found</p>
                 <Link to="/map" replace className="mt-6 inline-flex items-center gap-2 rounded-2xl bg-[#1f3328] px-5 py-3 text-sm font-bold text-white transition-colors hover:bg-[#294536]">
                     <ChevronLeft className="h-4 w-4" /> Back to Wildlife Origins
@@ -76,7 +76,7 @@ const WildlifeOriginDetail = () => {
     const regionClass = regionColors[animal.region] || 'bg-gray-100 text-gray-800 border-gray-200';
 
     return (
-        <div className="min-h-screen bg-[#eef3ed] text-[#1f3328] antialiased">
+        <div className="min-h-dvh bg-[#eef3ed] text-[#1f3328] antialiased">
             {/* Top bar */}
             <header className="fixed inset-x-0 top-0 z-[200] flex items-center justify-between px-4 py-3 md:px-8 md:py-4">
                 <button onClick={() => navigate(-1)} className="flex items-center gap-2 rounded-2xl bg-white/90 backdrop-blur-md px-4 py-2.5 text-sm font-bold shadow-sm border border-[#dce5dc] transition hover:bg-white" aria-label="Back to map">
@@ -92,7 +92,7 @@ const WildlifeOriginDetail = () => {
                 <img src={animal.image} alt={animal.name} className="h-full w-full object-cover" onClick={() => setImageOpen(true)} />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#1f3328]/70 via-transparent to-[#1f3328]/30" />
                 <div className="absolute bottom-0 left-0 right-0 p-6 md:p-12">
-                    <span className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest ${regionClass}`}>
+                    <span className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] font-bold uppercase tracking-widest ${regionClass}`}>
                         <MapPin className="h-3 w-3" /> {animal.region}
                     </span>
                     <h1 className="mt-4 text-4xl sm:text-5xl md:text-7xl font-black leading-[0.92] tracking-[-0.05em] text-white drop-shadow-lg">{animal.name}</h1>
@@ -170,7 +170,7 @@ const WildlifeOriginDetail = () => {
 
 const FactCard = ({ label, value, mono }) => (
     <div className="rounded-2xl bg-white border border-[#dce5dc] p-4 md:p-5">
-        <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#6d8572] mb-1">{label}</p>
+        <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#6d8572] mb-1">{label}</p>
         <p className={`font-bold text-[#1f3328] text-sm ${mono ? 'font-mono break-words' : ''}`}>{value || '—'}</p>
     </div>
 );
