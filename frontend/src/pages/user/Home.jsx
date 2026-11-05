@@ -1,6 +1,7 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { ReactLenis } from 'lenis/react';
 import { useNavigate } from 'react-router-dom';
+import { ArrowRight } from 'lucide-react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import Header from '../../components/Header';
@@ -18,50 +19,36 @@ const TOURISM_SOURCE = 'https://www.travelorientalmindoro.ph/place/calapan-natur
 const DIRECTIONS_URL = 'https://www.google.com/maps/dir/?api=1&destination=13.40496178,121.1991656';
 const ZOOTOPIA_GAME_URL = 'https://adventuregame.bulusanzoo.com/';
 
-const HERO_ANIMALS = ['owl', 'horse', 'tiger', 'monkey', 'dove', 'rabbit', 'parrot', 'ostrich', 'eagle', 'deer'];
+const HERO_FACTS = [
+    { label: 'Location', value: 'Barangay Bulusan, Calapan City' },
+    { label: 'Managed by', value: 'City Economic Enterprise Department' },
+    { label: 'In the park', value: 'Mini-zoo, open spaces, pavilion' },
+    { label: 'Park contact', value: '(043) 288-7291', href: 'tel:+63432887291' },
+];
 
-// Half-circle notches punched into both sides of a ticket. Each side owns half the width so
-// the two cut-outs never overlap, whatever the button width is.
-const TICKET_NOTCH = 'radial-gradient(circle 11px at 0 50%, transparent 97%, #000 100%) left / 51% 100% no-repeat, radial-gradient(circle 11px at 100% 50%, transparent 97%, #000 100%) right / 51% 100% no-repeat';
-const ticketMaskStyle = { WebkitMask: TICKET_NOTCH, mask: TICKET_NOTCH };
-
-const TicketIcon = () => (
-    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-        <path d="M3 9a2 2 0 0 0 0 6v2a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1v-2a2 2 0 0 1 0-6V7a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1z" />
-        <path d="M14 6v12" strokeDasharray="2 3" />
-    </svg>
-);
-
-const GamepadIcon = () => (
-    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-        <path d="M6 12h4M8 10v4" />
-        <path d="M15 13h.01M18 11h.01" />
-        <path d="M17.3 6H6.7a4 4 0 0 0-3.9 3.1l-1.2 5.5A2.6 2.6 0 0 0 6.4 16.5L7.5 15h9l1.1 1.5a2.6 2.6 0 0 0 4.8-1.9l-1.2-5.5A4 4 0 0 0 17.3 6z" />
-    </svg>
-);
-
-/* Ticket-shaped call to action: label on the left, perforated stub with an icon on the right. */
-const HeroTicket = ({ variant, label, icon, onClick, ariaLabel }) => {
-    const primary = variant === 'primary';
+/* Two-piece button: a label block with one slanted edge and a detached arrow chip. */
+const HeroPill = ({ tone, label, onClick, ariaLabel }) => {
+    const labelDark = tone === 'dark';
+    const labelBg = labelDark ? 'bg-[#243230]' : 'bg-[#d9f7a4]';
+    const chipBg = labelDark ? 'bg-[#d9f7a4]' : 'bg-[#243230]';
     return (
-        <div className="hero-btn pointer-events-auto w-full max-w-xs drop-shadow-[0_12px_24px_rgba(0,0,0,0.35)] sm:w-auto sm:max-w-none">
-            <button
-                type="button"
-                onClick={onClick}
-                aria-label={ariaLabel}
-                style={ticketMaskStyle}
-                className={`group flex min-h-14 w-full cursor-pointer items-stretch rounded-2xl font-['DM_Sans',_sans-serif] transition-transform duration-300 ease-out hover:-translate-y-0.5 active:scale-[0.97] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white ${
-                    primary
-                        ? 'bg-green-400 text-black hover:bg-green-300'
-                        : 'border border-white/50 bg-white/15 text-white backdrop-blur-md hover:bg-white/25'
-                }`}
-            >
-                <span className="flex flex-1 items-center justify-center px-7 py-3.5 text-base font-black tracking-wide sm:px-9 sm:text-lg">{label}</span>
-                <span className={`flex w-16 shrink-0 items-center justify-center border-l-2 border-dashed transition-transform duration-300 group-hover:[&>svg]:rotate-[-12deg] ${primary ? 'border-black/35' : 'border-white/50'}`}>
-                    {icon}
-                </span>
-            </button>
-        </div>
+        <button
+            type="button"
+            onClick={onClick}
+            aria-label={ariaLabel}
+            className="hero-btn pointer-events-auto group flex w-full max-w-xs cursor-pointer items-stretch gap-1 drop-shadow-[0_10px_18px_rgba(0,0,0,0.3)] transition-transform duration-300 ease-out hover:-translate-y-0.5 active:scale-[0.97] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white sm:w-auto sm:max-w-none"
+        >
+            <span className={`relative isolate flex flex-1 items-center justify-center px-7 py-4 font-mono text-sm font-medium uppercase tracking-[0.08em] sm:px-8 sm:text-base ${labelDark ? 'text-white' : 'text-[#243230]'}`}>
+                <i className={`absolute inset-y-0 left-0 right-3 -z-10 rounded-l-2xl ${labelBg}`} aria-hidden="true" />
+                <i className={`absolute inset-y-0 right-0 -z-10 w-7 origin-center skew-x-[-12deg] rounded-r-2xl rounded-l-md ${labelBg}`} aria-hidden="true" />
+                {label}
+            </span>
+            <span className={`relative isolate flex w-14 shrink-0 items-center justify-center sm:w-16 ${labelDark ? 'text-[#243230]' : 'text-white'}`}>
+                <i className={`absolute inset-y-0 left-3 right-0 -z-10 rounded-r-2xl ${chipBg}`} aria-hidden="true" />
+                <i className={`absolute inset-y-0 left-0 -z-10 w-7 origin-center skew-x-[-12deg] rounded-l-2xl rounded-r-md ${chipBg}`} aria-hidden="true" />
+                <ArrowRight size={20} strokeWidth={2.25} className="transition-transform duration-300 group-hover:translate-x-1" aria-hidden="true" />
+            </span>
+        </button>
     );
 };
 
@@ -77,7 +64,7 @@ const HeroSection = () => {
 
         const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         if (reducedMotion) {
-            gsap.set('.hero-animal, .hero-title, .hero-btn', { opacity: 1, scale: 1, y: 0 });
+            gsap.set('.hero-fact, .hero-title, .hero-btn', { opacity: 1, scale: 1, y: 0 });
             gsap.set('.hero-line', { clipPath: 'inset(0% 0% 0% 0%)', y: 0 });
             return undefined;
         }
@@ -98,9 +85,9 @@ const HeroSection = () => {
                     { opacity: 0, y: 30 },
                     { opacity: 1, y: 0, duration: 0.9, ease: 'power3.out', stagger: 0.12 }, 0.55
                 )
-                .fromTo('.hero-animal',
-                    { opacity: 0, y: 40, scale: 0.8 },
-                    { opacity: 1, y: 0, scale: 1, duration: 0.8, ease: 'back.out(1.6)', stagger: 0.07 }, 0.7
+                .fromTo('.hero-fact',
+                    { opacity: 0, y: 30 },
+                    { opacity: 1, y: 0, duration: 0.8, ease: 'power3.out', stagger: 0.1 }, 0.75
                 );
 
             gsap.to('.hero-bg-parallax', {
@@ -109,7 +96,7 @@ const HeroSection = () => {
                 ease: 'none',
                 scrollTrigger: { trigger: containerRef.current, start: 'top top', end: 'bottom top', scrub: true }
             });
-            gsap.to('.hero-content, .hero-animals', {
+            gsap.to('.hero-content, .hero-facts', {
                 yPercent: 25,
                 opacity: 0,
                 ease: 'none',
@@ -146,32 +133,27 @@ const HeroSection = () => {
                         </div>
                     </div>
                     <div className="flex w-full flex-col items-center gap-4 sm:w-auto sm:flex-row sm:gap-5">
-                        <HeroTicket variant="primary" label="Plan a Visit" icon={<TicketIcon />} onClick={() => navigate('/reservations')} />
-                        <HeroTicket
-                            variant="glass"
+                        <HeroPill tone="dark" label="Plan a Visit" onClick={() => navigate('/reservations')} />
+                        <HeroPill
+                            tone="light"
                             label="Play our game"
-                            icon={<GamepadIcon />}
                             ariaLabel="Play our game, opens adventuregame.bulusanzoo.com in a new tab"
                             onClick={() => window.open(ZOOTOPIA_GAME_URL, '_blank', 'noopener,noreferrer')}
                         />
                     </div>
                 </div>
 
-                {/* One row of origami animals. Scrolls sideways on narrow phones, fits from tablet up. */}
-                <div className="hero-animals pointer-events-none relative z-10 w-full overflow-x-auto pb-5 pt-2 [scrollbar-width:none] sm:pb-8 [&::-webkit-scrollbar]:hidden" aria-hidden="true">
-                    <div className="mx-auto flex w-max items-end gap-3 px-4 sm:gap-4 md:gap-6">
-                        {HERO_ANIMALS.map((name) => (
-                            <img
-                                key={name}
-                                src={`/images/origami/${name}.webp`}
-                                alt=""
-                                decoding="async"
-                                draggable="false"
-                                className="hero-animal h-[clamp(3rem,6.2vw,7.5rem)] w-auto shrink-0 opacity-0 drop-shadow-[0_8px_10px_rgba(0,0,0,0.35)]"
-                            />
-                        ))}
-                    </div>
-                </div>
+                {/* Verified park facts, same sources as the About and Visitor sections below. */}
+                <dl className="hero-facts relative z-10 mx-auto mb-5 grid w-[calc(100%-2rem)] max-w-[1200px] grid-cols-2 gap-px overflow-hidden rounded-2xl border border-white/25 bg-white/20 backdrop-blur-md sm:mb-8 sm:w-[calc(100%-3rem)] lg:grid-cols-4">
+                    {HERO_FACTS.map((fact) => (
+                        <div key={fact.label} className="hero-fact bg-black/35 px-4 py-3.5 text-left opacity-0 sm:px-5 sm:py-4">
+                            <dt className="font-mono text-[11px] uppercase tracking-[0.14em] text-[#d9f7a4]">{fact.label}</dt>
+                            <dd className="mt-1 text-sm font-semibold leading-snug text-white sm:text-[15px]">
+                                {fact.href ? <a href={fact.href} className="underline decoration-white/40 underline-offset-4 hover:decoration-white">{fact.value}</a> : fact.value}
+                            </dd>
+                        </div>
+                    ))}
+                </dl>
             </section>
         </div>
     );
