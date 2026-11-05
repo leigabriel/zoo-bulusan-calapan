@@ -16,8 +16,10 @@ import { notify } from '../../utils/toast';
 import { Plus, X } from 'reicon-react';
 import Footer from '../../components/Footer';
 import useScrollLock from '../../hooks/use-scroll-lock';
+import usePageMetadata from '../../hooks/use-page-metadata';
 
 const CommunityPage = () => {
+    usePageMetadata('Community | Bulusan Zoo', 'Share photos and stories from your Bulusan Zoo visit with the community.', 'https://bulusanzoo.com/community');
     const { user } = useAuth();
     // Posts still uploading. The queue lives above the router, so these survive navigating
     // away and a post started here can finish over on another page.
