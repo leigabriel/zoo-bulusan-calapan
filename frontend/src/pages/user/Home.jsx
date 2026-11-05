@@ -19,13 +19,6 @@ const TOURISM_SOURCE = 'https://www.travelorientalmindoro.ph/place/calapan-natur
 const DIRECTIONS_URL = 'https://www.google.com/maps/dir/?api=1&destination=13.40496178,121.1991656';
 const ZOOTOPIA_GAME_URL = 'https://adventuregame.bulusanzoo.com/';
 
-const HERO_FACTS = [
-    { label: 'Location', value: 'Barangay Bulusan, Calapan City' },
-    { label: 'Managed by', value: 'City Economic Enterprise Department' },
-    { label: 'In the park', value: 'Mini-zoo, open spaces, pavilion' },
-    { label: 'Park contact', value: '(043) 288-7291', href: 'tel:+63432887291' },
-];
-
 /* Two-piece button: a label block with one slanted edge and a detached arrow chip. */
 const HeroPill = ({ tone, label, onClick, ariaLabel }) => {
     const labelDark = tone === 'dark';
@@ -64,7 +57,7 @@ const HeroSection = () => {
 
         const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         if (reducedMotion) {
-            gsap.set('.hero-fact, .hero-title, .hero-btn', { opacity: 1, scale: 1, y: 0 });
+            gsap.set('.hero-title, .hero-btn', { opacity: 1, scale: 1, y: 0 });
             gsap.set('.hero-line', { clipPath: 'inset(0% 0% 0% 0%)', y: 0 });
             return undefined;
         }
@@ -84,10 +77,6 @@ const HeroSection = () => {
                 .fromTo('.hero-btn',
                     { opacity: 0, y: 30 },
                     { opacity: 1, y: 0, duration: 0.9, ease: 'power3.out', stagger: 0.12 }, 0.55
-                )
-                .fromTo('.hero-fact',
-                    { opacity: 0, y: 30 },
-                    { opacity: 1, y: 0, duration: 0.8, ease: 'power3.out', stagger: 0.1 }, 0.75
                 );
 
             gsap.to('.hero-bg-parallax', {
@@ -96,7 +85,7 @@ const HeroSection = () => {
                 ease: 'none',
                 scrollTrigger: { trigger: containerRef.current, start: 'top top', end: 'bottom top', scrub: true }
             });
-            gsap.to('.hero-content, .hero-facts', {
+            gsap.to('.hero-content', {
                 yPercent: 25,
                 opacity: 0,
                 ease: 'none',
@@ -108,7 +97,7 @@ const HeroSection = () => {
     }, []);
 
     return (
-        <div ref={containerRef} className="relative w-full overflow-hidden bg-[#1d3a26]">
+        <div ref={containerRef} data-header-theme="dark" className="relative w-full overflow-hidden bg-[#1d3a26]">
             <section className="relative mx-auto flex min-h-[100dvh] w-full max-w-[2000px] flex-col overflow-hidden" aria-label="Welcome to Bulusan Zoo">
                 <div className="hero-bg-parallax absolute inset-0 z-0 origin-center">
                     <img src="/images/hero-sky.webp" alt="" aria-hidden="true" fetchPriority="high" className="h-full w-full object-cover object-center" />
@@ -142,18 +131,6 @@ const HeroSection = () => {
                         />
                     </div>
                 </div>
-
-                {/* Verified park facts, same sources as the About and Visitor sections below. */}
-                <dl className="hero-facts relative z-10 mx-auto mb-5 grid w-[calc(100%-2rem)] max-w-[1200px] grid-cols-2 gap-px overflow-hidden rounded-2xl border border-white/25 bg-white/20 backdrop-blur-md sm:mb-8 sm:w-[calc(100%-3rem)] lg:grid-cols-4">
-                    {HERO_FACTS.map((fact) => (
-                        <div key={fact.label} className="hero-fact bg-black/35 px-4 py-3.5 text-left opacity-0 sm:px-5 sm:py-4">
-                            <dt className="font-mono text-[11px] uppercase tracking-[0.14em] text-[#d9f7a4]">{fact.label}</dt>
-                            <dd className="mt-1 text-sm font-semibold leading-snug text-white sm:text-[15px]">
-                                {fact.href ? <a href={fact.href} className="underline decoration-white/40 underline-offset-4 hover:decoration-white">{fact.value}</a> : fact.value}
-                            </dd>
-                        </div>
-                    ))}
-                </dl>
             </section>
         </div>
     );
