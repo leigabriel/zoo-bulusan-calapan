@@ -76,7 +76,7 @@ const Footer = () => {
     return (
         <footer
             ref={footerRef}
-            className="w-full relative overflow-x-hidden flex flex-col bg-black text-white pt-16 md:pt-24 pb-8 min-h-screen"
+            className="w-full relative overflow-x-hidden flex flex-col bg-black text-white pt-16 md:pt-24 pb-8 min-h-[70dvh] md:min-h-dvh"
             style={{ fontFamily: "'DM Sans', 'Inter', sans-serif" }}
         >
             <div className="relative z-10 flex flex-col flex-grow w-full px-6 md:px-14">
