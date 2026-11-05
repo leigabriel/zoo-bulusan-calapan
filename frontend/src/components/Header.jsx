@@ -13,6 +13,24 @@ import {
 
 // These panels pull in heavy code (TensorFlow, forms, history tables). Loading them on
 // demand keeps them out of the first-paint bundle that every page shares via Header.
+let colorProbe = null;
+// Resolve any CSS colour (rgb, oklch, hex...) to [r, g, b, a] by painting one pixel.
+const toRgba = (value) => {
+    if (!value || value === 'transparent') return null;
+    if (!colorProbe) {
+        const canvas = document.createElement('canvas');
+        canvas.width = 1;
+        canvas.height = 1;
+        colorProbe = canvas.getContext('2d', { willReadFrequently: true });
+    }
+    colorProbe.clearRect(0, 0, 1, 1);
+    colorProbe.fillStyle = '#000';
+    colorProbe.fillStyle = value;
+    colorProbe.fillRect(0, 0, 1, 1);
+    const [r, g, b, a] = colorProbe.getImageData(0, 0, 1, 1).data;
+    return [r, g, b, a / 255];
+};
+
 const AnimalClassifier = lazy(() => import('./features/ai-scanner/AnimalClassifier'));
 const ReservationHistoryPanel = lazy(() => import('./features/ReservationHistoryPanel'));
 const MyPostsPanel = lazy(() => import('./features/MyPostsPanel'));
@@ -146,6 +164,8 @@ const MenuItem = ({ iconKey, label, badge, danger, to, onClick, onClose, isLast,
 const Header = () => {
     const { user, logout, loading: authLoading } = useAuth();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const logoRef = useRef(null);
+    const [logoOnDark, setLogoOnDark] = useState(false);
     const [showLogoutModal, setShowLogoutModal] = useState(false);
     const [showSidePanel, setShowSidePanel] = useState(false);
     const [showAIScanner, setShowAIScanner] = useState(false);
@@ -189,6 +209,42 @@ const Header = () => {
         navigate(path);
         window.scrollTo(0, 0);
     };
+
+    // Pick the logo text colour from whatever sits behind it: white over dark, black over light.
+    // Sections with image backgrounds opt in with data-header-theme="dark" | "light".
+    useEffect(() => {
+        let frame = 0;
+        const detect = () => {
+            frame = 0;
+            const logo = logoRef.current;
+            if (!logo) return;
+            const rect = logo.getBoundingClientRect();
+            const stack = document.elementsFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2);
+            let dark = false;
+            for (const el of stack) {
+                if (el.closest('header')) continue;
+                const themed = el.closest('[data-header-theme]');
+                if (themed) { dark = themed.dataset.headerTheme === 'dark'; break; }
+                const rgba = toRgba(getComputedStyle(el).backgroundColor);
+                if (!rgba || rgba[3] < 0.5) continue;
+                const [r, g, b] = rgba;
+                dark = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255 < 0.5;
+                break;
+            }
+            setLogoOnDark(dark);
+        };
+        const schedule = () => { if (!frame) frame = requestAnimationFrame(detect); };
+        schedule();
+        window.addEventListener('scroll', schedule, { passive: true });
+        window.addEventListener('resize', schedule);
+        const settle = setTimeout(schedule, 400);
+        return () => {
+            cancelAnimationFrame(frame);
+            clearTimeout(settle);
+            window.removeEventListener('scroll', schedule);
+            window.removeEventListener('resize', schedule);
+        };
+    }, [location.pathname]);
 
     useEffect(() => {
         setIsMenuOpen(false);
@@ -383,9 +439,9 @@ const Header = () => {
                 <div className="mx-auto px-4 sm:px-6 lg:px-10 max-w-[1800px]" style={{ height: '56px' }}>
                     <div className="flex items-center h-full">
                         <div className="flex min-w-0 flex-shrink-0 items-center lg:w-[180px]">
-                            <Link to="/" className="flex min-w-0 items-center" onClick={(e) => { e.preventDefault(); setIsMenuOpen(false); handleTransitionNavigate(e, '/'); }}>
+                            <Link ref={logoRef} to="/" className="flex min-w-0 items-center" onClick={(e) => { e.preventDefault(); setIsMenuOpen(false); handleTransitionNavigate(e, '/'); }}>
                                 <img src="/images/bz-url-logo.png" alt="Logo" className="w-7 h-7 object-contain mr-2" />
-                                <span className="whitespace-nowrap text-[18px] font-bold text-[#212631] tracking-tight [text-shadow:0_0_10px_rgba(255,255,255,0.9),0_0_3px_rgba(255,255,255,0.9)]">
+                                <span className={`whitespace-nowrap text-[18px] font-bold tracking-tight transition-colors duration-300 ${logoOnDark ? 'text-white' : 'text-black'}`}>
                                     BULUSAN ZOO
                                 </span>
                             </Link>
