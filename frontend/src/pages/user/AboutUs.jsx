@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useMemo } from 'react';
 import { ReactLenis } from 'lenis/react';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
