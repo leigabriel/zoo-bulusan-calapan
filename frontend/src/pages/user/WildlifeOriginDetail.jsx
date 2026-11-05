@@ -157,7 +157,7 @@ const WildlifeOriginDetail = () => {
 
             {/* Full-screen image overlay */}
             {imageOpen && (
-                <div className="fixed inset-0 z-[300] bg-[#1f3328]/95 backdrop-blur-md flex items-center justify-center p-4" onClick={() => setImageOpen(false)}>
+                <div role="dialog" aria-modal="true" aria-label="Image preview" className="fixed inset-0 z-[300] bg-[#1f3328]/95 backdrop-blur-md flex items-center justify-center p-4" onClick={() => setImageOpen(false)}>
                     <button onClick={() => setImageOpen(false)} className="absolute top-4 right-4 flex h-12 w-12 items-center justify-center rounded-full bg-white/20 text-white transition hover:bg-white/30" aria-label="Close image">
                         <X className="h-6 w-6" />
                     </button>
