@@ -201,7 +201,7 @@ const Help = () => {
     ];
 
     return (
-        <div className="min-h-screen bg-[#f2fbf4] text-[#1f2d23] flex flex-col">
+        <div className="min-h-dvh bg-[#f2fbf4] text-[#1f2d23] flex flex-col">
             {/* Floating Navigation */}
             <div className="fixed top-4 left-4 right-4 z-50 flex justify-between items-center pointer-events-none">
                 <button
