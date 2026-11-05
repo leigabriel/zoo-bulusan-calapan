@@ -1,11 +1,20 @@
-// Dynamically determine API URL based on current hostname
-// This allows both localhost and network IP access (e.g., 10.53.28.57)
+// Production hosts served from bulusanzoo.com talk to the API subdomain.
+// Without this, a build missing VITE_API_URL would call <host>:5000, which the
+// deployed site does not expose.
+const PRODUCTION_API_ORIGIN = 'https://service.bulusanzoo.com';
+const isProductionSite = () =>
+    import.meta.env.PROD && /(^|\.)bulusanzoo\.com$/i.test(window.location.hostname);
+
+// Dynamically determine API URL based on current hostname.
+// This allows both localhost and LAN access during development.
 const getApiBaseUrl = () => {
     // If env variable is explicitly set (and not the default localhost), use it
     const envUrl = import.meta.env.VITE_API_URL;
     if (envUrl && !envUrl.includes('localhost')) {
         return envUrl.replace(/\/$/, '');
     }
+
+    if (isProductionSite()) return `${PRODUCTION_API_ORIGIN}/api`;
 
     // Dynamically use current hostname with backend port
     const backendPort = import.meta.env.VITE_BACKEND_PORT || '5000';
@@ -20,6 +29,8 @@ const getBackendBaseUrl = () => {
     if (envUrl && !envUrl.includes('localhost') && !envUrl.includes('0.0.0.0')) {
         return envUrl.replace(/\/$/, '');
     }
+
+    if (isProductionSite()) return PRODUCTION_API_ORIGIN;
 
     const backendPort = import.meta.env.VITE_BACKEND_PORT || '5000';
     const protocol = window.location.protocol;
