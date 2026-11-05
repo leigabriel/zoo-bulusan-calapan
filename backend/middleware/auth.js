@@ -90,13 +90,14 @@ exports.optionalAuth = async (req, res, next) => {
     if (token) {
         try {
             const decoded = jwt.verify(token, jwtSecret);
-            if (await isRevoked(decoded)) {
-                return; // treat a revoked token as absent
-            }
-            const user = await User.findAuthenticatedById(decoded.id);
+            // A revoked token is treated as absent: continue as a guest instead of
+            // returning without next(), which would leave the request hanging.
+            if (!(await isRevoked(decoded))) {
+                const user = await User.findAuthenticatedById(decoded.id);
 
-            if (user) {
-                req.user = { id: user.id, email: user.email, role: user.role };
+                if (user) {
+                    req.user = { id: user.id, email: user.email, role: user.role };
+                }
             }
         } catch (error) {
             // invalid token

@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { authAPI, adminAPI, reservationAPI, communityAPI, getProfileImageUrl } from '../../services/api-client';
-import { sanitizeInput } from '../../utils/sanitize';
+import { authAPI, adminAPI, getProfileImageUrl } from '../../services/api-client';
 import { notify } from '../../utils/toast';
 import LogoutModal from '../common/LogoutModal';
 import Tooltip from '../common/Tooltip';
@@ -42,7 +41,7 @@ const AdminLayout = ({ children }) => {
     const [showProfileModal, setShowProfileModal] = useState(false);
     const [showPasswordModal, setShowPasswordModal] = useState(false);
     const [profileForm, setProfileForm] = useState({ firstName: '', lastName: '', email: '' });
-    const [profileLoading, setProfileLoading] = useState(false);
+    const [, setProfileLoading] = useState(false);
     const [profileSaving, setProfileSaving] = useState(false);
     const [emailSaving, setEmailSaving] = useState(false);
     const [imageUploading, setImageUploading] = useState(false);
@@ -64,7 +63,7 @@ const AdminLayout = ({ children }) => {
     // Global search database state
     const [searchData, setSearchData] = useState({ animals: [], events: [], users: [], plants: [] });
     const [searchDataLoading, setSearchDataLoading] = useState(false);
-    const [searchDataLoaded, setSearchDataLoaded] = useState(false);
+    const [, setSearchDataLoaded] = useState(false);
 
     // Real notifications state
     const [notifications, setNotifications] = useState([]);
@@ -82,7 +81,7 @@ const AdminLayout = ({ children }) => {
                 setNotificationUnreadCount(Number(res.unreadCount) || 0);
                 setActivitySummary(res.summary || null);
             }
-        } catch (err) {
+        } catch {
             // Error fetching notifications
         } finally {
             setNotificationsLoading(false);
@@ -132,7 +131,7 @@ const AdminLayout = ({ children }) => {
                 plants: plantsRes?.plants || plantsRes?.data || [],
             });
             setSearchDataLoaded(true);
-        } catch (err) {
+        } catch {
             // Error fetching search data
         } finally {
             setSearchDataLoading(false);
@@ -223,7 +222,7 @@ const AdminLayout = ({ children }) => {
                     email: user.email || ''
                 });
             }
-        } catch (err) {
+        } catch {
             notify.error("Couldn't load profile.");
         } finally {
             setProfileLoading(false);
@@ -499,13 +498,6 @@ const AdminLayout = ({ children }) => {
         return results.slice(0, 15);
     }, [searchQuery, allMenuItems, searchData]);
 
-    const filteredMenuItems = useMemo(() => {
-        if (!searchQuery.trim()) return allMenuItems;
-        const query = searchQuery.toLowerCase();
-        return allMenuItems.filter(item =>
-            item.label.toLowerCase().includes(query)
-        );
-    }, [searchQuery, allMenuItems]);
 
     const handleNavClick = () => {
         if (window.innerWidth < 1024) {
@@ -957,7 +949,7 @@ const AdminLayout = ({ children }) => {
                                             setNotifications(prev =>
                                                 prev.map(n => n.id === notification.id ? { ...n, read: true } : n)
                                             );
-                                        } catch (err) {
+                                        } catch {
                                             // Handle error silently
                                         }
                                     }
@@ -1050,150 +1042,6 @@ const AdminLayout = ({ children }) => {
             <MasterKeyToggleModal isOpen={showMasterKeyToggleModal} onClose={() => setShowMasterKeyToggleModal(false)} enabled={masterKeyStatus.enabled} form={masterKeyToggleForm} setForm={setMasterKeyToggleForm} saving={masterKeySaving} onSubmit={toggleMasterKey} />
             <MasterKeyDeleteModal isOpen={showMasterKeyDeleteModal} onClose={() => setShowMasterKeyDeleteModal(false)} form={masterKeyDeleteForm} setForm={setMasterKeyDeleteForm} saving={masterKeySaving} onSubmit={deleteMasterKey} />
             <AdminSettingsLauncher isOpen={showSettingsLauncher} onClose={() => setShowSettingsLauncher(false)} />
-
-            {false && showProfileModal && (
-                <div className="fixed inset-0 bg-gray-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-white border border-gray-200 rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-y-auto overscroll-contain shadow-xl">
-                        {/* Modal Header */}
-                        <div className="flex items-center justify-between p-5 border-b border-gray-200">
-                            <h2 className="text-xl font-bold text-gray-900">Admin Profile</h2>
-                            <button
-                                onClick={() => setShowProfileModal(false)}
-                                className="text-gray-400 hover:text-gray-900 transition"
-                            >
-                                <CloseCircle size={20} />
-                            </button>
-                        </div>
-
-                        {profileLoading ? (
-                            <div className="flex items-center justify-center p-12">
-                                <div className="w-10 h-10 border-4 border-green-400 border-t-transparent rounded-full animate-spin"></div>
-                            </div>
-                        ) : (
-                            <div className="p-5 space-y-5">
-                                {/* Avatar */}
-                                <div className="flex flex-col items-center gap-2">
-                                    <div className="w-24 h-24 bg-gradient-to-br from-green-300 via-green-400 to-green-500 rounded-full flex items-center justify-center overflow-hidden">
-                                        {previewImage ? (
-                                            <img
-                                                src={previewImage}
-                                                alt="Profile"
-                                                className="w-full h-full object-cover"
-                                                referrerPolicy="no-referrer"
-                                                onError={(e) => { e.target.onerror = null; e.target.style.display = 'none'; }}
-                                            />
-                                        ) : (
-                                            <span className="text-4xl font-bold text-gray-900">
-                                                {profileForm.firstName?.charAt(0) || 'A'}
-                                            </span>
-                                        )}
-                                    </div>
-                                    <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={uploadProfileImage} />
-                                    <button type="button" disabled={imageUploading} onClick={() => fileInputRef.current?.click()} className="text-sm font-semibold text-green-700 hover:text-green-800 disabled:opacity-50">
-                                        {imageUploading ? 'Uploading...' : previewImage ? 'Change photo' : 'Add profile photo'}
-                                    </button>
-                                </div>
-
-                                <div className="flex items-center justify-between gap-4 rounded-2xl border border-gray-200 bg-gray-50 p-4">
-                                    <div><p className="font-semibold text-gray-900">Account security</p><p className="text-sm text-gray-500">Update your sign-in password securely.</p></div>
-                                    <button type="button" onClick={() => setShowPasswordModal(true)} className="shrink-0 rounded-xl border border-green-300 bg-white px-4 py-2.5 font-medium text-green-700 hover:bg-green-50">Change password</button>
-                                </div>
-
-                                <div className="rounded-2xl border border-emerald-200 bg-emerald-50/60 p-4 space-y-3">
-                                    <div className="flex items-start justify-between gap-4"><div><p className="font-semibold text-gray-900">Admin Master Key</p><p className="text-sm text-gray-600">Require a separate key after your password at admin login.</p></div><span className={`rounded-full px-3 py-1 text-xs font-bold ${masterKeyStatus.enabled ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-200 text-gray-600'}`}>{masterKeyStatus.configured ? (masterKeyStatus.enabled ? 'Enabled' : 'Disabled') : 'Not configured'}</span></div>
-                                    <div className="grid gap-3 sm:grid-cols-3">
-                                        <input type="password" autoComplete="current-password" value={masterKeyForm.currentPassword} onChange={(e) => setMasterKeyForm({ ...masterKeyForm, currentPassword: e.target.value })} placeholder="Current password" className="rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-emerald-500" />
-                                        {masterKeyStatus.configured && <input type="password" autoComplete="off" value={masterKeyForm.currentMasterKey} onChange={(e) => setMasterKeyForm({ ...masterKeyForm, currentMasterKey: e.target.value })} placeholder="Current Master Key" className="rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-emerald-500" />}
-                                        <input type="password" autoComplete="new-password" value={masterKeyForm.newMasterKey} onChange={(e) => setMasterKeyForm({ ...masterKeyForm, newMasterKey: e.target.value })} placeholder={masterKeyStatus.configured ? 'New Master Key' : 'New Master Key'} className="rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-emerald-500" />
-                                    </div>
-                                    <div className="flex flex-wrap gap-2"><button type="button" disabled={masterKeySaving} onClick={() => updateMasterKey(masterKeyStatus.configured ? 'change' : 'create')} className="rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-50">{masterKeySaving ? 'Saving...' : masterKeyStatus.configured ? 'Change Master Key' : 'Create Master Key'}</button>{masterKeyStatus.configured && <button type="button" disabled={masterKeySaving} onClick={() => updateMasterKey('toggle')} className="rounded-xl border border-emerald-300 bg-white px-4 py-2.5 text-sm font-semibold text-emerald-700 hover:bg-emerald-50 disabled:opacity-50">{masterKeyStatus.enabled ? 'Disable' : 'Enable'}</button>}{masterKeyStatus.configured && <button type="button" disabled={masterKeySaving} onClick={openMasterKeyDelete} className="rounded-xl border border-red-300 bg-white px-4 py-2.5 text-sm font-semibold text-red-700 hover:bg-red-50 disabled:opacity-50">Delete</button>}</div>
-                                    <p className="text-xs text-gray-500">Use at least 8 characters. The key is stored only as a secure hash.</p>
-                                </div>
-
-                                {/* Role Badge */}
-                                <div className="flex justify-center">
-                                    <span className="px-4 py-1.5 bg-green-100 text-green-700 text-sm font-medium rounded-full">
-                                        Administrator
-                                    </span>
-                                </div>
-
-                                {/* First Name */}
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">First Name</label>
-                                    <input
-                                        type="text"
-                                        value={profileForm.firstName}
-                                        onChange={(e) => setProfileForm({ ...profileForm, firstName: sanitizeInput(e.target.value) })}
-                                        className="w-full bg-gray-50 border border-gray-300 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-green-400 focus:ring-1 focus:ring-green-400/20 transition-all"
-                                        placeholder="Enter first name"
-                                    />
-                                </div>
-
-                                {/* Last Name */}
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">Last Name</label>
-                                    <input
-                                        type="text"
-                                        value={profileForm.lastName}
-                                        onChange={(e) => setProfileForm({ ...profileForm, lastName: sanitizeInput(e.target.value) })}
-                                        className="w-full bg-gray-50 border border-gray-300 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-green-400 focus:ring-1 focus:ring-green-400/20 transition-all"
-                                        placeholder="Enter last name"
-                                    />
-                                </div>
-
-                                {/* Email (Read-only) */}
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
-                                    <input
-                                        type="email"
-                                        value={profileForm.email}
-                                        readOnly
-                                        className="w-full bg-gray-100 border border-gray-200 rounded-xl px-4 py-3 text-gray-500 cursor-not-allowed"
-                                    />
-                                    <p className="text-xs text-gray-500 mt-1">Email cannot be changed</p>
-                                </div>
-
-                                {/* Account Status */}
-                                <div className="p-4 bg-gray-50 border border-gray-200 rounded-xl space-y-2">
-                                    <div className="flex items-center justify-between text-sm">
-                                        <span className="text-gray-600">Status</span>
-                                        <span className="flex items-center gap-1.5 text-green-600">
-                                            <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                                            Active
-                                        </span>
-                                    </div>
-                                    <div className="flex items-center justify-between text-sm">
-                                        <span className="text-gray-600">Role</span>
-                                        <span className="text-gray-900 capitalize">{user?.role || 'Admin'}</span>
-                                    </div>
-                                </div>
-
-                                {/* Actions */}
-                                <div className="flex gap-3 pt-2">
-                                    <button
-                                        onClick={() => setShowProfileModal(false)}
-                                        className="flex-1 px-4 py-3 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-xl font-medium transition"
-                                    >
-                                        Cancel
-                                    </button>
-                                    <button
-                                        onClick={saveProfile}
-                                        disabled={profileSaving}
-                                        className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-green-400 hover:bg-green-300 text-gray-900 rounded-xl font-medium transition disabled:opacity-50"
-                                    >
-                                        {profileSaving ? (
-                                            <div role="status" aria-label="Saving profile" className="w-5 h-5 border-2 border-gray-900/30 border-t-gray-900 rounded-full animate-spin"></div>
-                                        ) : (
-                                            'Save Changes'
-                                        )}
-                                    </button>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                </div>
-            )}
-
 
             {showPasswordModal && (
                 <div className="fixed inset-0 z-[70] flex items-center justify-center bg-gray-900/55 p-4 backdrop-blur-sm">

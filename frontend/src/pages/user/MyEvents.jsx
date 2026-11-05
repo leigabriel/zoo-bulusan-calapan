@@ -6,8 +6,7 @@ import { ReactLenis } from 'lenis/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import AIFloatingButton from '../../components/common/AIFloatingButton';
 import { reservationAPI } from '../../services/api-client';
-import { useAuth } from '../../hooks/use-auth';
-import { sanitizeInput, sanitizePhone } from '../../utils/sanitize';
+import { sanitizeInput } from '../../utils/sanitize';
 import { notify } from '../../utils/toast';
 import useScrollLock from '../../hooks/use-scroll-lock';
 import { X, Calendar, Clock, Users, Edit, CheckCircle, ChevronLeft, Camera } from 'reicon-react';
@@ -55,7 +54,6 @@ const STATUS_STYLES = {
 
 const MyEvents = () => {
     const navigate = useNavigate();
-    const { user } = useAuth();
 
     const [events, setEvents] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -178,11 +176,11 @@ const MyEvents = () => {
 
     return (
         <ReactLenis root>
-            <div className="min-h-screen bg-white text-black">
+            <div className="min-h-dvh bg-white text-black">
                 <Header />
 
                 <div className="w-full min-h-[40vh] md:min-h-[50vh] flex flex-col items-center justify-center px-4 pt-24 pb-8 text-center">
-                    <span className="text-[10px] tracking-[0.3em] uppercase font-bold text-black/40 mb-6">
+                    <span className="text-[11px] tracking-[0.3em] uppercase font-bold text-black/40 mb-6">
                         Bulusan Zoo · Host Dashboard
                     </span>
                     <h1 className="text-[3.5rem] sm:text-[6rem] md:text-[8rem] lg:text-[10rem] leading-none tracking-tight text-black text-center break-words w-full">
@@ -200,7 +198,7 @@ const MyEvents = () => {
                         </h2>
                         <button
                             onClick={() => navigate('/reservations')}
-                            className="px-4 py-2 text-[10px] md:text-xs font-bold uppercase tracking-widest rounded-full border border-gray-200 hover:bg-gray-50 transition-colors"
+                            className="px-4 py-2 text-[11px] md:text-xs font-bold uppercase tracking-widest rounded-full border border-gray-200 hover:bg-gray-50 transition-colors"
                         >
                             <ChevronLeft className="h-4 w-4" /> Back to Reservations
                         </button>
@@ -221,7 +219,7 @@ const MyEvents = () => {
                             </p>
                             <button
                                 onClick={() => navigate('/events')}
-                                className="px-6 py-3 bg-black text-white rounded-full text-[10px] md:text-xs font-bold uppercase tracking-widest hover:bg-gray-800 transition-colors"
+                                className="px-6 py-3 bg-black text-white rounded-full text-[11px] md:text-xs font-bold uppercase tracking-widest hover:bg-gray-800 transition-colors"
                             >
                                 Explore Events
                             </button>
@@ -248,14 +246,14 @@ const MyEvents = () => {
                                                                 <button
                                                                     onClick={() => setPhotoUpload(null)}
                                                                     disabled={photoUploading}
-                                                                    className="px-4 py-2 rounded-full border border-gray-200 text-[10px] font-bold uppercase tracking-widest text-black hover:bg-gray-50 disabled:opacity-50"
+                                                                    className="px-4 py-2 rounded-full border border-gray-200 text-[11px] font-bold uppercase tracking-widest text-black hover:bg-gray-50 disabled:opacity-50"
                                                                 >
                                                                     Cancel
                                                                 </button>
                                                                 <button
                                                                     onClick={uploadPhoto}
                                                                     disabled={photoUploading}
-                                                                    className="px-4 py-2 rounded-full bg-black text-white text-[10px] font-bold uppercase tracking-widest hover:bg-gray-800 disabled:opacity-50"
+                                                                    className="px-4 py-2 rounded-full bg-black text-white text-[11px] font-bold uppercase tracking-widest hover:bg-gray-800 disabled:opacity-50"
                                                                 >
                                                                     {photoUploading ? 'Uploading...' : 'Save Photo'}
                                                                 </button>
@@ -263,7 +261,7 @@ const MyEvents = () => {
                                                         </div>
                                                     </div>
                                                 ) : (
-                                                    <label className="absolute bottom-3 right-3 flex items-center gap-2 px-3 py-2 bg-black/70 text-white text-[10px] font-bold uppercase tracking-widest rounded-full cursor-pointer hover:bg-black/90 transition-colors backdrop-blur-sm">
+                                                    <label className="absolute bottom-3 right-3 flex items-center gap-2 px-3 py-2 bg-black/70 text-white text-[11px] font-bold uppercase tracking-widest rounded-full cursor-pointer hover:bg-black/90 transition-colors backdrop-blur-sm">
                                                         <Camera className="h-3.5 w-3.5" />
                                                         <span>Change Photo</span>
                                                         <input
@@ -279,7 +277,7 @@ const MyEvents = () => {
                                                 <div className="w-12 h-12 rounded-full bg-teal-50 text-teal-600 flex items-center justify-center flex-shrink-0">
                                                     <Icons.Calendar />
                                                 </div>
-                                                <span className={`text-[10px] uppercase font-bold px-3 py-1 rounded-full ${STATUS_STYLES[event.status] || STATUS_STYLES.pending}`}>
+                                                <span className={`text-[11px] uppercase font-bold px-3 py-1 rounded-full ${STATUS_STYLES[event.status] || STATUS_STYLES.pending}`}>
                                                     {event.status}
                                                 </span>
                                             </div>
@@ -308,12 +306,12 @@ const MyEvents = () => {
 
                                             <div className="mt-auto">
                                                 <div className="bg-gray-50 border border-gray-100 rounded-xl p-4 mb-4">
-                                                    <span className="text-[10px] uppercase tracking-widest font-bold text-gray-400 block mb-1">Reference ID</span>
+                                                    <span className="text-[11px] uppercase tracking-widest font-bold text-gray-400 block mb-1">Reference ID</span>
                                                     <span className="font-mono text-sm text-black">{event.reservation_reference}</span>
                                                 </div>
                                                 <button
                                                     onClick={() => openEdit(event)}
-                                                    className="w-full py-3.5 bg-black text-white rounded-xl text-[10px] md:text-xs font-bold uppercase tracking-widest hover:bg-gray-800 transition-colors flex items-center justify-center gap-2"
+                                                    className="w-full py-3.5 bg-black text-white rounded-xl text-[11px] md:text-xs font-bold uppercase tracking-widest hover:bg-gray-800 transition-colors flex items-center justify-center gap-2"
                                                 >
                                                     <Icons.Edit />
                                                     Edit Event Details
@@ -329,7 +327,7 @@ const MyEvents = () => {
 
                 <AnimatePresence>
                     {editingEvent && (
-                        <div className="fixed inset-0 z-[250] flex items-center justify-center p-4 md:p-8">
+                        <div role="dialog" aria-modal="true" aria-label="Edit event details" className="fixed inset-0 z-[250] flex items-center justify-center p-4 md:p-8">
                             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
                             <motion.div
                                 initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }}
@@ -353,7 +351,7 @@ const MyEvents = () => {
 
                                 <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-6 md:p-8 space-y-6" data-lenis-prevent>
                                     <div className="flex flex-col gap-2">
-                                        <label className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-gray-500">Event Name *</label>
+                                        <label className="text-[11px] md:text-xs font-bold uppercase tracking-widest text-gray-500">Event Name *</label>
                                         <input
                                             type="text"
                                             value={form.venueEventName}
@@ -366,7 +364,7 @@ const MyEvents = () => {
 
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                                         <div className="flex flex-col gap-2">
-                                            <label className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-gray-500">Event Date *</label>
+                                            <label className="text-[11px] md:text-xs font-bold uppercase tracking-widest text-gray-500">Event Date *</label>
                                             <input
                                                 type="date"
                                                 value={form.venueEventDate}
@@ -377,7 +375,7 @@ const MyEvents = () => {
                                             />
                                         </div>
                                         <div className="flex flex-col gap-2">
-                                            <label className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-gray-500">Estimated Attendees *</label>
+                                            <label className="text-[11px] md:text-xs font-bold uppercase tracking-widest text-gray-500">Estimated Attendees *</label>
                                             <input
                                                 type="number"
                                                 value={form.numberOfParticipants}
@@ -391,7 +389,7 @@ const MyEvents = () => {
 
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                                         <div className="flex flex-col gap-2">
-                                            <label className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-gray-500">Start Time</label>
+                                            <label className="text-[11px] md:text-xs font-bold uppercase tracking-widest text-gray-500">Start Time</label>
                                             <input
                                                 type="time"
                                                 value={form.venueEventStartTime}
@@ -400,7 +398,7 @@ const MyEvents = () => {
                                             />
                                         </div>
                                         <div className="flex flex-col gap-2">
-                                            <label className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-gray-500">End Time</label>
+                                            <label className="text-[11px] md:text-xs font-bold uppercase tracking-widest text-gray-500">End Time</label>
                                             <input
                                                 type="time"
                                                 value={form.venueEventEndTime}
@@ -411,7 +409,7 @@ const MyEvents = () => {
                                     </div>
 
                                     <div className="flex flex-col gap-2">
-                                        <label className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-gray-500">Description & Requirements</label>
+                                        <label className="text-[11px] md:text-xs font-bold uppercase tracking-widest text-gray-500">Description & Requirements</label>
                                         <textarea
                                             value={form.venueEventDescription}
                                             onChange={e => setForm({ ...form, venueEventDescription: sanitizeInput(e.target.value) })}
@@ -421,7 +419,7 @@ const MyEvents = () => {
                                     </div>
 
                                     <div className="flex flex-col gap-2">
-                                        <label className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-gray-500">Notes</label>
+                                        <label className="text-[11px] md:text-xs font-bold uppercase tracking-widest text-gray-500">Notes</label>
                                         <textarea
                                             value={form.notes}
                                             onChange={e => setForm({ ...form, notes: sanitizeInput(e.target.value) })}
@@ -434,14 +432,14 @@ const MyEvents = () => {
                                 <div className="px-6 md:px-8 py-5 border-t border-gray-200 flex flex-col sm:flex-row gap-3">
                                     <button
                                         onClick={() => setEditingEvent(null)}
-                                        className="flex-1 py-3.5 rounded-full border border-gray-200 text-[10px] md:text-xs font-bold uppercase tracking-widest text-black hover:bg-gray-50 transition-colors"
+                                        className="flex-1 py-3.5 rounded-full border border-gray-200 text-[11px] md:text-xs font-bold uppercase tracking-widest text-black hover:bg-gray-50 transition-colors"
                                     >
                                         Cancel
                                     </button>
                                     <button
                                         onClick={saveChanges}
                                         disabled={saving}
-                                        className="flex-1 py-3.5 rounded-full bg-black text-white text-[10px] md:text-xs font-bold uppercase tracking-widest hover:bg-gray-800 disabled:opacity-50 transition-colors"
+                                        className="flex-1 py-3.5 rounded-full bg-black text-white text-[11px] md:text-xs font-bold uppercase tracking-widest hover:bg-gray-800 disabled:opacity-50 transition-colors"
                                     >
                                         {saving ? 'Saving...' : 'Save Changes'}
                                     </button>
@@ -453,7 +451,7 @@ const MyEvents = () => {
 
                 <AnimatePresence>
                     {showConfirm && (
-                        <div className="fixed inset-0 z-[300] flex items-center justify-center p-4">
+                        <div role="dialog" aria-modal="true" aria-label="Cancel registration" className="fixed inset-0 z-[300] flex items-center justify-center p-4">
                             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
                             <motion.div
                                 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }}
@@ -464,7 +462,7 @@ const MyEvents = () => {
                                 <p className="text-gray-500 text-sm mb-6 md:mb-8">Your event details have been updated successfully.</p>
                                 <button
                                     onClick={() => setShowConfirm(false)}
-                                    className="w-full py-3 md:py-4 bg-black text-white rounded-full text-[10px] md:text-xs font-bold uppercase tracking-widest hover:bg-gray-800"
+                                    className="w-full py-3 md:py-4 bg-black text-white rounded-full text-[11px] md:text-xs font-bold uppercase tracking-widest hover:bg-gray-800"
                                 >
                                     Done
                                 </button>

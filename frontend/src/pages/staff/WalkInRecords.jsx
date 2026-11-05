@@ -20,7 +20,6 @@ const WalkInRecords = () => {
     const [detailLoading, setDetailLoading] = useState(false);
     const [printing, setPrinting] = useState(false);
     const [selectedRows, setSelectedRows] = useState(new Set());
-    const [trashTarget, setTrashTarget] = useState(null);
     const [trashLoading, setTrashLoading] = useState(false);
     const deferredSearch = useDeferredValue(filters.search);
     const isTrashedView = filters.status === 'trashed';
@@ -129,7 +128,6 @@ const WalkInRecords = () => {
             notify.error(error.message);
         } finally {
             setTrashLoading(false);
-            setTrashTarget(null);
         }
     };
 
@@ -223,7 +221,7 @@ const WalkInRecords = () => {
                     {isTrashedView ? (
                         <button onClick={(e) => { e.stopPropagation(); restoreRecord(record.saleNumber); }} className="rounded-lg border border-green-200 bg-green-50 p-2 text-green-700 hover:bg-green-100" title="Restore">Restore</button>
                     ) : (
-                        <button onClick={(e) => { e.stopPropagation(); setTrashTarget(record); }} className="rounded-lg border border-gray-200 bg-gray-50 p-2 text-gray-500 hover:border-red-300 hover:bg-red-50 hover:text-red-600" title="Move to trash"><TrashIcon className="h-4 w-4" /></button>
+                        <button onClick={(e) => { e.stopPropagation(); trashRecord(record.saleNumber); }} className="rounded-lg border border-gray-200 bg-gray-50 p-2 text-gray-500 hover:border-red-300 hover:bg-red-50 hover:text-red-600" title="Move to trash"><TrashIcon className="h-4 w-4" /></button>
                     )}
                 </td>
             </tr>)}</tbody></table></div>}

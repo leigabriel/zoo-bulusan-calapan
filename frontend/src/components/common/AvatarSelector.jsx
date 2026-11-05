@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { DEFAULT_AVATARS, AVATAR_KEYS, getDefaultAvatarSvg } from '../../utils/profile-avatars';
+import { DEFAULT_AVATARS, AVATAR_KEYS } from '../../utils/profile-avatars';
 
 /**
  * AvatarSelector Component
@@ -9,7 +9,6 @@ import { DEFAULT_AVATARS, AVATAR_KEYS, getDefaultAvatarSvg } from '../../utils/p
 const AvatarSelector = ({ selectedAvatar, onSelect, onClose }) => {
     // Internal pending selection state (not yet confirmed)
     const [pendingAvatar, setPendingAvatar] = useState(selectedAvatar);
-    const [hoveredAvatar, setHoveredAvatar] = useState(null);
 
     const handleConfirm = () => {
         if (pendingAvatar) {
@@ -47,14 +46,11 @@ const AvatarSelector = ({ selectedAvatar, onSelect, onClose }) => {
                         {AVATAR_KEYS.map((key) => {
                             const avatar = DEFAULT_AVATARS[key];
                             const isSelected = pendingAvatar === key;
-                            const isHovered = hoveredAvatar === key;
 
                             return (
                                 <button
                                     key={key}
                                     onClick={() => setPendingAvatar(key)}
-                                    onMouseEnter={() => setHoveredAvatar(key)}
-                                    onMouseLeave={() => setHoveredAvatar(null)}
                                     className={`
                                         relative aspect-square rounded-xl transition-all duration-200
                                         flex flex-col items-center justify-center gap-1 p-2

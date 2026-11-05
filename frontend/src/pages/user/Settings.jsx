@@ -190,7 +190,7 @@ const Settings = ({ embedded = false, onClose }) => {
 
     if (!user) {
         return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+            <div className="min-h-dvh bg-gray-50 flex items-center justify-center p-4">
                 <div className="text-center bg-white p-8 rounded-2xl shadow-sm border border-gray-100 max-w-md w-full">
                     <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
                         <Icons.Bell />
@@ -423,7 +423,7 @@ const Settings = ({ embedded = false, onClose }) => {
     };
 
     return (
-        <div className={`${embedded ? 'min-h-full' : 'min-h-screen'} bg-gray-50/50 flex flex-col`}>
+        <div className={`${embedded ? 'min-h-full' : 'min-h-dvh'} bg-gray-50/50 flex flex-col`}>
             {/* Floating Navigation */}
             {!embedded && <div className="fixed top-4 left-4 right-4 z-50 flex justify-between items-center pointer-events-none">
                 <button
@@ -444,7 +444,7 @@ const Settings = ({ embedded = false, onClose }) => {
 
             {embedded && <div className="flex items-center justify-between border-b border-gray-100 bg-white px-5 py-4">
                 <div>
-                    <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-700">Tools & preferences</p>
+                    <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-emerald-700">Tools & preferences</p>
                     <h2 className="mt-1 text-lg font-bold text-gray-900">Account settings</h2>
                 </div>
                 <button onClick={onClose} className="rounded-full p-2 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700" aria-label="Close settings"><X className="h-5 w-5" /></button>

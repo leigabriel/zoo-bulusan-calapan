@@ -1,11 +1,20 @@
-// Dynamically determine API URL based on current hostname
-// This allows both localhost and network IP access (e.g., 10.53.28.57)
+// Production hosts served from bulusanzoo.com talk to the API subdomain.
+// Without this, a build missing VITE_API_URL would call <host>:5000, which the
+// deployed site does not expose.
+const PRODUCTION_API_ORIGIN = 'https://service.bulusanzoo.com';
+const isProductionSite = () =>
+    import.meta.env.PROD && /(^|\.)bulusanzoo\.com$/i.test(window.location.hostname);
+
+// Dynamically determine API URL based on current hostname.
+// This allows both localhost and LAN access during development.
 const getApiBaseUrl = () => {
     // If env variable is explicitly set (and not the default localhost), use it
     const envUrl = import.meta.env.VITE_API_URL;
     if (envUrl && !envUrl.includes('localhost')) {
         return envUrl.replace(/\/$/, '');
     }
+
+    if (isProductionSite()) return `${PRODUCTION_API_ORIGIN}/api`;
 
     // Dynamically use current hostname with backend port
     const backendPort = import.meta.env.VITE_BACKEND_PORT || '5000';
@@ -20,6 +29,8 @@ const getBackendBaseUrl = () => {
     if (envUrl && !envUrl.includes('localhost') && !envUrl.includes('0.0.0.0')) {
         return envUrl.replace(/\/$/, '');
     }
+
+    if (isProductionSite()) return PRODUCTION_API_ORIGIN;
 
     const backendPort = import.meta.env.VITE_BACKEND_PORT || '5000';
     const protocol = window.location.protocol;
@@ -87,7 +98,7 @@ const TAB_ID_KEY = 'TAB_ID';
 const getTabId = () => {
     try {
         return sessionStorage.getItem(TAB_ID_KEY);
-    } catch (e) {
+    } catch {
         return null;
     }
 };
@@ -150,7 +161,7 @@ const hasStoredToken = () => {
                 if (key && key.startsWith(keys.token)) return true;
             }
         }
-    } catch (e) {
+    } catch {
         return false;
     }
     return false;
@@ -178,7 +189,7 @@ const handleResponse = async (response) => {
     let data;
     try {
         data = JSON.parse(text);
-    } catch (e) {
+    } catch {
         // Response is not JSON
         if (!response.ok) {
             throw new Error(`Request failed with status ${response.status}`);
@@ -684,14 +695,6 @@ export const adminAPI = {
 
     getSuspendedUsers: async () => {
         const response = await fetch(`${API_BASE_URL}/admin/users-suspended`, {
-            headers: getAuthHeaders('admin')
-        });
-        return handleResponse(response);
-    },
-
-    unsuspendUser: async (id) => {
-        const response = await fetch(`${API_BASE_URL}/admin/users/${id}/unsuspend`, {
-            method: 'PUT',
             headers: getAuthHeaders('admin')
         });
         return handleResponse(response);
@@ -1421,14 +1424,6 @@ export const staffAPI = {
     deleteEvent: async (id) => {
         const response = await fetch(`${API_BASE_URL}/staff/events/${id}`, {
             method: 'DELETE',
-            headers: getAuthHeaders('staff')
-        });
-        return handleResponse(response);
-    },
-
-    // Dashboard stats
-    getDashboardStats: async () => {
-        const response = await fetch(`${API_BASE_URL}/staff/dashboard`, {
             headers: getAuthHeaders('staff')
         });
         return handleResponse(response);

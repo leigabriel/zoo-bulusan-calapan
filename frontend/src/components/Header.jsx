@@ -1,13 +1,8 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, lazy, Suspense } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { getProfileImageUrl, messageAPI, userAPI } from '../services/api-client';
 import LogoutModal from './common/LogoutModal';
-import AnimalClassifier from './features/ai-scanner/AnimalClassifier';
-import ReservationHistoryPanel from './features/ReservationHistoryPanel';
-import MyPostsPanel from './features/MyPostsPanel';
-import Settings from '../pages/user/Settings';
-import UserProfile from '../pages/user/UserProfile';
 import ConfirmModal from './common/ConfirmModal';
 import useScrollLock from '../hooks/use-scroll-lock';
 import {
@@ -16,9 +11,25 @@ import {
     Headset, Logout, Information, NoteText
 } from 'reicon-react';
 
-const env = (typeof process !== 'undefined' && process.env) ? process.env : {};
-const MINIZOO_GAME_URL = env.VITE_MINIZOO_GAME_URL || 'https://bulusanzootopia.vercel.app';
-const MINIZOO_ADVENTURE_GAME_URL = env.VITE_MINIZOO_ADVENTURE_GAME_URL || 'https://adventuregame.bulusanzoo.com/';
+// These panels pull in heavy code (TensorFlow, forms, history tables). Loading them on
+// demand keeps them out of the first-paint bundle that every page shares via Header.
+const AnimalClassifier = lazy(() => import('./features/ai-scanner/AnimalClassifier'));
+const ReservationHistoryPanel = lazy(() => import('./features/ReservationHistoryPanel'));
+const MyPostsPanel = lazy(() => import('./features/MyPostsPanel'));
+const Settings = lazy(() => import('../pages/user/Settings'));
+const UserProfile = lazy(() => import('../pages/user/UserProfile'));
+
+// Vite exposes env vars through import.meta.env; `process` does not exist in the browser.
+const MINIZOO_GAME_URL = import.meta.env.VITE_MINIZOO_GAME_URL || 'https://bulusanzootopia.vercel.app';
+const MINIZOO_ADVENTURE_GAME_URL = import.meta.env.VITE_MINIZOO_ADVENTURE_GAME_URL || 'https://adventuregame.bulusanzoo.com/';
+
+// True from the first time `flag` is true onward, so a lazy panel is mounted when first
+// opened and then stays mounted, which keeps its slide-out transition intact.
+const useEverTrue = (flag) => {
+    const seen = useRef(false);
+    if (flag) seen.current = true;
+    return seen.current;
+};
 
 // Notification types are catalog keys such as 'event.announced' or
 // 'reservation.confirmed' (see backend/services/notification-service.js). Match on the
@@ -62,16 +73,24 @@ const NAV_LINKS = [
     { path: '/about', label: 'About', iconKey: 'about' },
 ];
 
-const IconBtn = ({ iconKey, alt, onClick, badge, className = '' }) => {
+// A section stays active on its detail pages, e.g. /animals/12 highlights Animals.
+const isActivePath = (pathname, path) =>
+    path === '/' ? pathname === '/' : pathname === path || pathname.startsWith(`${path}/`);
+
+const IconBtn = ({ iconKey, alt, onClick, badge, className = '', expanded, controls }) => {
     const IconComponent = ICON_COMPONENTS[iconKey];
     return (
         <button
+            type="button"
             onClick={onClick}
+            aria-label={alt}
+            aria-expanded={expanded}
+            aria-controls={controls}
             className={`relative flex items-center justify-center w-9 h-9 rounded-full hover:bg-gray-100 transition-colors flex-shrink-0 ${className}`}
         >
             {IconComponent && <IconComponent size={18} className="opacity-55" />}
             {badge > 0 && (
-                <span className="absolute top-0.5 right-0.5 min-w-[15px] h-[15px] px-0.5 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center border border-white leading-none">
+                <span className="absolute top-0.5 right-0.5 min-w-[15px] h-[15px] px-0.5 bg-red-500 text-white text-[11px] font-bold rounded-full flex items-center justify-center border border-white leading-none">
                     {badge > 9 ? '9+' : badge}
                 </span>
             )}
@@ -81,7 +100,9 @@ const IconBtn = ({ iconKey, alt, onClick, badge, className = '' }) => {
 
 const CloseBtn = ({ onClick }) => (
     <button
+        type="button"
         onClick={onClick}
+        aria-label="Close"
         className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-gray-100 transition-colors flex-shrink-0"
     >
         <CloseCircle size={14} className="opacity-40" />
@@ -89,7 +110,7 @@ const CloseBtn = ({ onClick }) => (
 );
 
 const SectionLabel = ({ label }) => (
-    <p className="px-1 pt-5 pb-2 text-[10px] font-bold text-gray-400 uppercase tracking-[0.16em]">{label}</p>
+    <p className="px-1 pt-5 pb-2 text-[11px] font-bold text-gray-500 uppercase tracking-[0.16em]">{label}</p>
 );
 
 const MenuItem = ({ iconKey, label, badge, danger, to, onClick, onClose, isLast, onNavigate }) => {
@@ -108,7 +129,7 @@ const MenuItem = ({ iconKey, label, badge, danger, to, onClick, onClose, isLast,
                 {label}
             </span>
             {badge && (
-                <span className="px-1.5 py-0.5 bg-emerald-700 text-white rounded text-[9px] font-semibold uppercase tracking-wide flex-shrink-0">
+                <span className="px-1.5 py-0.5 bg-emerald-700 text-white rounded text-[11px] font-semibold uppercase tracking-wide flex-shrink-0">
                     {badge}
                 </span>
             )}
@@ -145,12 +166,15 @@ const Header = () => {
     const [emailLoading, setEmailLoading] = useState(false);
     const [emailSent, setEmailSent] = useState(false);
     const [emailError, setEmailError] = useState('');
-    const [isLoggingOut, setIsLoggingOut] = useState(false);
 
     const navigate = useNavigate();
     const location = useLocation();
     const sidePanelRef = useRef(null);
     const notificationPanelRef = useRef(null);
+    const settingsLoaded = useEverTrue(showSettingsPanel);
+    const profileLoaded = useEverTrue(showProfilePanel);
+    const historyLoaded = useEverTrue(showHistoryPanel);
+    const postsLoaded = useEverTrue(showMyPostsPanel);
     const hasOpenOverlay = isMenuOpen || showSidePanel || showAIScanner || showHistoryPanel
         || showMyPostsPanel
         || showSettingsPanel || showProfilePanel || showNotificationPanel || showMiniZooGame
@@ -222,7 +246,8 @@ const Header = () => {
                     read: Boolean(notification.read)
                 })));
             }
-        } catch (err) {
+        } catch {
+            // The bell simply keeps its previous state; the next poll retries.
         } finally {
             setNotificationLoading(false);
         }
@@ -250,6 +275,7 @@ const Header = () => {
             setNotificationUnreadCount(count => Math.max(0, count - (notifications.find(item => item.id === notificationId)?.read ? 0 : 1)));
             setNotifications(prev => prev.map((n) => n.id === notificationId ? { ...n, read: true } : n));
         } catch {
+            // Read state stays as-is; navigation still proceeds.
         }
     };
 
@@ -259,6 +285,7 @@ const Header = () => {
             setNotificationUnreadCount(0);
             setNotifications(prev => prev.map((n) => ({ ...n, read: true })));
         } catch {
+            // Leave the list unchanged so the user can try again.
         }
     };
 
@@ -269,6 +296,7 @@ const Header = () => {
             setNotificationUnreadCount(0);
             setNotifications([]);
         } catch {
+            // Keep the notifications visible if the server could not clear them.
         } finally {
             setClearingNotifications(false);
             setShowClearNotificationsConfirm(false);
@@ -284,17 +312,10 @@ const Header = () => {
         }
     };
 
-    const handleLogout = async () => {
-        setIsLoggingOut(true);
-        try {
-            await new Promise(resolve => setTimeout(resolve, 500));
-            logout();
-            setShowLogoutModal(false);
-            handleTransitionNavigate(null, '/login');
-        } catch (error) {
-        } finally {
-            setIsLoggingOut(false);
-        }
+    const handleLogout = () => {
+        logout();
+        setShowLogoutModal(false);
+        handleTransitionNavigate(null, '/login');
     };
 
     const closeSidePanel = () => setShowSidePanel(false);
@@ -377,9 +398,9 @@ const Header = () => {
                                         key={link.path}
                                         to={link.path}
                                         onClick={(e) => { e.preventDefault(); handleTransitionNavigate(e, link.path); }}
-                                        className={`px-4 py-1.5 rounded-full text-[13px] font-medium transition-all duration-150 whitespace-nowrap ${location.pathname === link.path
+                                        className={`px-4 py-1.5 rounded-full text-[13px] font-medium transition-all duration-150 whitespace-nowrap ${isActivePath(location.pathname, link.path)
                                             ? 'bg-[#000] text-gray-100 shadow-sm'
-                                            : 'text-[#000]/50 hover:text-gray-800'
+                                            : 'text-[#000]/75 hover:text-black'
                                             }`}
                                     >
                                         {link.label}
@@ -389,10 +410,12 @@ const Header = () => {
                         </nav>
 
                         <div className="hidden w-[180px] flex-shrink-0 items-center justify-end gap-2 lg:flex xl:w-[260px]">
-                            <Link to="/reservations" onClick={(e) => { e.preventDefault(); handleTransitionNavigate(e, '/reservations'); }}>
-                                <button className="px-4 py-1.5 rounded-full bg-gray-900 text-white text-[13px] font-medium hover:bg-gray-700 transition-colors whitespace-nowrap">
-                                    Reserve
-                                </button>
+                            <Link
+                                to="/reservations"
+                                onClick={(e) => { e.preventDefault(); handleTransitionNavigate(e, '/reservations'); }}
+                                className="px-4 py-1.5 rounded-full bg-gray-900 text-white text-[13px] font-medium hover:bg-gray-700 transition-colors whitespace-nowrap"
+                            >
+                                Reserve
                             </Link>
                             {user && (
                                 <IconBtn iconKey="notification" alt="Notifications" onClick={openNotifications} badge={unreadCount} />
@@ -403,12 +426,15 @@ const Header = () => {
                                 </div>
                             ) : user ? (
                                 <button
+                                    type="button"
                                     onClick={() => setShowSidePanel(true)}
+                                    aria-label="Open account menu"
+                                    aria-haspopup="dialog"
                                     className="flex items-center gap-2 pl-1 pr-3 py-1 rounded-full border border-gray-200 bg-white hover:border-gray-500 hover:bg-green-400 transition-all"
                                 >
                                     <img
                                         src={avatarSrc}
-                                        alt="Profile"
+                                        alt=""
                                         className="w-7 h-7 rounded-full object-cover flex-shrink-0"
                                         referrerPolicy="no-referrer"
                                         onError={(e) => { e.target.onerror = null; e.target.src = '/profile-img/default-avatar.svg'; }}
@@ -418,10 +444,12 @@ const Header = () => {
                                     </span>
                                 </button>
                             ) : (
-                                <Link to="/login" onClick={(e) => { e.preventDefault(); handleTransitionNavigate(e, '/login'); }}>
-                                    <button className="px-4 py-1.5 rounded-full text-[13px] font-medium text-gray-700 border border-gray-200 bg-white hover:bg-gray-50 transition-colors">
-                                        Login
-                                    </button>
+                                <Link
+                                    to="/login"
+                                    onClick={(e) => { e.preventDefault(); handleTransitionNavigate(e, '/login'); }}
+                                    className="px-4 py-1.5 rounded-full text-[13px] font-medium text-gray-700 border border-gray-200 bg-white hover:bg-gray-50 transition-colors"
+                                >
+                                    Login
                                 </Link>
                             )}
                         </div>
@@ -432,24 +460,29 @@ const Header = () => {
                             )}
                             {user && (
                                 <button
+                                    type="button"
                                     onClick={() => setShowSidePanel(true)}
+                                    aria-label="Open account menu"
+                                    aria-haspopup="dialog"
                                     className="flex items-center justify-center w-9 h-9 rounded-full hover:bg-gray-100 transition-colors flex-shrink-0 overflow-hidden"
                                 >
                                     <img
                                         src={avatarSrc}
-                                        alt="Profile"
+                                        alt=""
                                         className="w-7 h-7 rounded-full object-cover"
                                         referrerPolicy="no-referrer"
                                         onError={(e) => { e.target.onerror = null; e.target.src = '/profile-img/default-avatar.svg'; }}
                                     />
                                 </button>
                             )}
-                            <IconBtn iconKey={isMenuOpen ? 'close' : 'menu'} alt="Menu" onClick={() => setIsMenuOpen(!isMenuOpen)} />
+                            <IconBtn iconKey={isMenuOpen ? 'close' : 'menu'} alt={isMenuOpen ? 'Close menu' : 'Open menu'} expanded={isMenuOpen} controls="mobile-nav-menu" onClick={() => setIsMenuOpen(!isMenuOpen)} />
                         </div>
                     </div>
                 </div>
 
                 <div
+                    id="mobile-nav-menu"
+                    inert={!isMenuOpen}
                     className={`absolute left-0 top-full flex w-full origin-top flex-col overflow-y-auto overscroll-contain border-t border-gray-100 bg-white shadow-xl transition-all duration-300 ease-in-out lg:hidden ${isMenuOpen ? 'max-h-[calc(100dvh-56px)] opacity-100' : 'max-h-0 opacity-0 pointer-events-none'}`}
                     data-lenis-prevent
                 >
@@ -457,7 +490,7 @@ const Header = () => {
                         <div>
                             <div className="rounded-xl overflow-hidden border border-gray-100">
                                 {NAV_LINKS.map((link) => {
-                                    const active = location.pathname === link.path;
+                                    const active = isActivePath(location.pathname, link.path);
                                     const LinkIcon = ICON_COMPONENTS[link.iconKey];
                                     return (
                                         <Link
@@ -496,10 +529,12 @@ const Header = () => {
                                 <div className="w-5 h-5 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin" />
                             </div>
                         ) : !user ? (
-                            <Link to="/login" onClick={(e) => { e.preventDefault(); setIsMenuOpen(false); handleTransitionNavigate(e, '/login'); }}>
-                                <button className="w-full py-3 rounded-xl bg-gray-900 text-white text-[13px] font-medium">
-                                    Login / Sign Up
-                                </button>
+                            <Link
+                                to="/login"
+                                onClick={(e) => { e.preventDefault(); setIsMenuOpen(false); handleTransitionNavigate(e, '/login'); }}
+                                className="block w-full py-3 rounded-xl bg-gray-900 text-center text-white text-[13px] font-medium"
+                            >
+                                Login / Sign Up
                             </Link>
                         ) : (
                             <button
@@ -601,9 +636,9 @@ const Header = () => {
                                      <span className="min-w-0 flex-1">
                                          <span className="block truncate text-[13px] font-bold text-[#172018]">{displayName}</span>
                                          <span className="mt-0.5 block truncate text-[11px] text-gray-500">{profileEmail}</span>
-                                           <span className="mt-1 block text-[10px] font-bold uppercase tracking-wider text-emerald-700">View profile</span>
+                                           <span className="mt-1 block text-[11px] font-bold uppercase tracking-wider text-emerald-700">View profile</span>
                                      </span>
-                                     <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-white text-gray-400 shadow-sm transition-colors group-hover:text-green-400" aria-hidden="true">›</span>
+                                     <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-white text-gray-500 shadow-sm transition-colors group-hover:text-green-400" aria-hidden="true">›</span>
                                   </button>
                              ) : (
                                  <Link to="/login" onClick={closeSidePanel} className="block rounded-2xl bg-[#172018] px-4 py-3 text-center text-[13px] font-semibold text-white transition-colors hover:bg-green-400">
@@ -629,14 +664,22 @@ const Header = () => {
               <div className={`fixed inset-0 z-[125] flex justify-end transition-all duration-300 ${showSettingsPanel ? 'visible' : 'invisible'}`}>
                   <div className={`absolute inset-0 bg-black/25 backdrop-blur-[2px] transition-opacity duration-300 ${showSettingsPanel ? 'opacity-100' : 'opacity-0'}`} onClick={() => { setShowSettingsPanel(false); if (user) setShowSidePanel(true); }} />
                   <div className={`relative h-full w-full overflow-y-auto overscroll-contain bg-white shadow-2xl transition-transform duration-300 ease-out sm:w-1/2 sm:min-w-[420px] sm:max-w-[720px] ${showSettingsPanel ? 'translate-x-0' : 'translate-x-full'}`} role="dialog" aria-modal="true" aria-label="Account settings" data-lenis-prevent>
-                      <Settings embedded onClose={() => { setShowSettingsPanel(false); if (user) setShowSidePanel(true); }} />
+                      {settingsLoaded && (
+                          <Suspense fallback={null}>
+                              <Settings embedded onClose={() => { setShowSettingsPanel(false); if (user) setShowSidePanel(true); }} />
+                          </Suspense>
+                      )}
                   </div>
               </div>
 
               <div className={`fixed inset-0 z-[125] flex justify-end transition-all duration-300 ${showProfilePanel ? 'visible' : 'invisible'}`}>
                   <div className={`absolute inset-0 bg-black/25 backdrop-blur-[2px] transition-opacity duration-300 ${showProfilePanel ? 'opacity-100' : 'opacity-0'}`} onClick={() => { setShowProfilePanel(false); if (user) setShowSidePanel(true); }} />
                   <div className={`relative h-full w-full overflow-y-auto overscroll-contain bg-white shadow-2xl transition-transform duration-300 ease-out sm:w-1/2 sm:min-w-[420px] sm:max-w-[720px] ${showProfilePanel ? 'translate-x-0' : 'translate-x-full'}`} role="dialog" aria-modal="true" aria-label="User profile" data-lenis-prevent>
-                      <UserProfile embedded onClose={() => { setShowProfilePanel(false); if (user) setShowSidePanel(true); }} />
+                      {profileLoaded && (
+                          <Suspense fallback={null}>
+                              <UserProfile embedded onClose={() => { setShowProfilePanel(false); if (user) setShowSidePanel(true); }} />
+                          </Suspense>
+                      )}
                   </div>
               </div>
 
@@ -661,7 +704,11 @@ const Header = () => {
                         <CloseBtn onClick={() => { setShowAIScanner(false); if (user) setShowSidePanel(true); }} />
                     </div>
                     <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain" data-lenis-prevent>
-                        {showAIScanner && <AnimalClassifier embedded={true} />}
+                        {showAIScanner && (
+                            <Suspense fallback={null}>
+                                <AnimalClassifier embedded={true} />
+                            </Suspense>
+                        )}
                     </div>
                 </div>
             </div>
@@ -684,7 +731,7 @@ const Header = () => {
                                 </div>
                                 <div>
                                     <p className="text-[13px] font-semibold text-gray-900">Message Sent</p>
-                                    <p className="text-[11px] text-gray-400 mt-0.5">We'll respond as soon as possible.</p>
+                                    <p className="text-[11px] text-gray-500 mt-0.5">We'll respond as soon as possible.</p>
                                 </div>
                                 <button
                                     onClick={() => { setShowEmailModal(false); setEmailSent(false); }}
@@ -728,7 +775,7 @@ const Header = () => {
                                 <button
                                     onClick={handleSendEmail}
                                     disabled={emailLoading || !emailSubject.trim() || !emailMessage.trim()}
-                                    className="w-full py-2.5 bg-gray-900 text-white text-[13px] font-medium rounded-lg hover:bg-gray-700 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors"
+                                    className="w-full py-2.5 bg-gray-900 text-white text-[13px] font-medium rounded-lg hover:bg-gray-700 disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed transition-colors"
                                 >
                                     {emailLoading ? 'Sending…' : 'Send Message'}
                                 </button>
@@ -751,7 +798,7 @@ const Header = () => {
                         <div className="flex items-center gap-3">
                             <span className="text-[13px] font-semibold text-gray-900">Notifications</span>
                             {unreadCount > 0 && (
-                                <span className="px-1.5 py-0.5 bg-red-500 text-white text-[10px] font-bold rounded-full">
+                                <span className="px-1.5 py-0.5 bg-red-500 text-white text-[11px] font-bold rounded-full">
                                     {unreadCount}
                                 </span>
                             )}
@@ -779,7 +826,7 @@ const Header = () => {
                     <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-4" data-lenis-prevent>
                         {notificationLoading ? (
                             <div className="flex items-center justify-center py-12">
-                                <span className="text-[13px] text-gray-400">Loading…</span>
+                                <span className="text-[13px] text-gray-500">Loading…</span>
                             </div>
                         ) : notifications.length === 0 ? (
                             <div className="flex flex-col items-center justify-center py-16 gap-2">
@@ -787,7 +834,7 @@ const Header = () => {
                                     <Bell size={20} className="opacity-25" />
                                 </div>
                                 <p className="text-[13px] font-medium text-gray-500">No notifications</p>
-                                <p className="text-[11px] text-gray-400">You're all caught up!</p>
+                                <p className="text-[11px] text-gray-500">You're all caught up!</p>
                             </div>
                         ) : (
                             <div className="flex flex-col gap-2">
@@ -818,8 +865,8 @@ const Header = () => {
                                             </div>
                                             <div className="flex-1 min-w-0">
                                                 <p className={`text-[13px] font-medium truncate ${isRead ? 'text-gray-500' : 'text-gray-800'}`}>{notif.title}</p>
-                                                <p className={`text-[11px] mt-0.5 leading-relaxed ${isRead ? 'text-gray-400' : 'text-gray-500'}`}>{notif.message}</p>
-                                                <p className="text-[10px] text-gray-300 mt-1.5">
+                                                <p className={`text-[11px] mt-0.5 leading-relaxed ${isRead ? 'text-gray-500' : 'text-gray-500'}`}>{notif.message}</p>
+                                                <p className="text-[11px] text-gray-300 mt-1.5">
                                                     {notif.time || 'Recently'}
                                                 </p>
                                             </div>
@@ -850,15 +897,23 @@ const Header = () => {
                 />
             )}
 
-            <ReservationHistoryPanel
-                isOpen={showHistoryPanel}
-                onClose={() => setShowHistoryPanel(false)}
-            />
+            {historyLoaded && (
+                <Suspense fallback={null}>
+                    <ReservationHistoryPanel
+                        isOpen={showHistoryPanel}
+                        onClose={() => setShowHistoryPanel(false)}
+                    />
+                </Suspense>
+            )}
 
-            <MyPostsPanel
-                isOpen={showMyPostsPanel}
-                onClose={() => setShowMyPostsPanel(false)}
-            />
+            {postsLoaded && (
+                <Suspense fallback={null}>
+                    <MyPostsPanel
+                        isOpen={showMyPostsPanel}
+                        onClose={() => setShowMyPostsPanel(false)}
+                    />
+                </Suspense>
+            )}
 
             {showMiniZooGame && (
                 <div className="fixed inset-0 z-[200] flex items-center justify-center">

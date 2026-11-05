@@ -185,9 +185,9 @@ const UserMessages = () => {
                         <div className="flex h-64 items-center justify-center"><Loader className="h-7 w-7 animate-spin text-blue-500" /></div>
                     ) : supportMessages.length ? supportMessages.map((support) => (
                         <button type="button" key={support.id} onClick={() => setSelectedSupport(support)} className={`mb-1 w-full rounded-2xl p-4 text-left transition ${selectedSupport?.id === support.id ? 'bg-blue-500 text-white shadow-md' : 'hover:bg-gray-100'}`}>
-                            <div className="flex items-start justify-between gap-3"><strong className="truncate text-sm">{support.subject}</strong><span className={`shrink-0 text-[10px] ${selectedSupport?.id === support.id ? 'text-blue-100' : 'text-gray-400'}`}>{support.created_at ? formatTime(support.created_at) : ''}</span></div>
+                            <div className="flex items-start justify-between gap-3"><strong className="truncate text-sm">{support.subject}</strong><span className={`shrink-0 text-[11px] ${selectedSupport?.id === support.id ? 'text-blue-100' : 'text-gray-400'}`}>{support.created_at ? formatTime(support.created_at) : ''}</span></div>
                             <p className={`mt-2 line-clamp-2 text-sm ${selectedSupport?.id === support.id ? 'text-blue-50' : 'text-gray-500'}`}>{support.content}</p>
-                            <span className={`mt-2 inline-block text-[10px] font-bold uppercase ${selectedSupport?.id === support.id ? 'text-blue-100' : support.admin_response ? 'text-emerald-600' : 'text-amber-600'}`}>{support.admin_response ? 'Replied' : 'Awaiting reply'}</span>
+                            <span className={`mt-2 inline-block text-[11px] font-bold uppercase ${selectedSupport?.id === support.id ? 'text-blue-100' : support.admin_response ? 'text-emerald-600' : 'text-amber-600'}`}>{support.admin_response ? 'Replied' : 'Awaiting reply'}</span>
                         </button>
                     )) : (
                         <div className="flex flex-col items-center justify-center pt-20 text-center text-gray-500"><Envelope className="mb-4 h-8 w-8 text-gray-400" /><p className="text-sm font-medium">No support requests yet</p><p className="mt-1 text-xs text-gray-400">Contact Support messages will appear here.</p></div>
@@ -214,7 +214,7 @@ const UserMessages = () => {
                                             {conversation.lastMessage?.content || 'Start the conversation'}
                                         </p>
                                         {conversation.unreadCount > 0 && (
-                                            <span className={`flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold ${isSelected ? 'bg-white text-blue-600' : 'bg-red-500 text-white'}`}>
+                                            <span className={`flex h-5 w-5 items-center justify-center rounded-full text-[11px] font-bold ${isSelected ? 'bg-white text-blue-600' : 'bg-red-500 text-white'}`}>
                                                 {conversation.unreadCount}
                                             </span>
                                         )}
@@ -288,7 +288,7 @@ const UserMessages = () => {
                                             >
                                                 <p className="whitespace-pre-wrap">{message.content}</p>
 
-                                                <div className={`mt-1 flex items-center gap-1.5 text-[10px] select-none ${own ? 'text-blue-100 justify-end' : 'text-gray-400 justify-start'}`}>
+                                                <div className={`mt-1 flex items-center gap-1.5 text-[11px] select-none ${own ? 'text-blue-100 justify-end' : 'text-gray-400 justify-start'}`}>
                                                     <span>{formatTime(message.createdAt)}</span>
                                                     {own && (
                                                         <svg className={`h-3 w-3 ${message.isRead ? 'text-blue-200' : 'text-blue-300/50'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
@@ -348,7 +348,7 @@ const UserMessages = () => {
 
             {/* Recipient Picker Modal */}
             {pickerOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/40 p-4 backdrop-blur-sm transition-opacity">
+                <div role="dialog" aria-modal="true" aria-label="Compose message" className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/40 p-4 backdrop-blur-sm transition-opacity">
                     <div className="w-full max-w-md overflow-hidden rounded-3xl bg-white shadow-2xl">
                         <header className="flex items-center justify-between border-b border-gray-100 p-4">
                             <h2 className="text-lg font-bold text-gray-900 mx-auto pl-8">New Message</h2>

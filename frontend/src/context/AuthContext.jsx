@@ -72,7 +72,7 @@ export const AuthProvider = ({ children }) => {
                             sessionStorage.setItem(`${keys.user}_${tabId}`, storedUser);
                         }
                         break;
-                    } catch (e) {
+                    } catch {
                         // Clean up invalid data from sessionStorage only
                         sessionStorage.removeItem(`${keys.token}_${tabId}`);
                         sessionStorage.removeItem(`${keys.user}_${tabId}`);

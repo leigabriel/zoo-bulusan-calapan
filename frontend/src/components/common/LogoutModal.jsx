@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import useScrollLock from '../../hooks/use-scroll-lock';
 import { Logout, Loader } from 'reicon-react';
 
-const LogoutModal = ({ isOpen, onClose, onConfirm, userName = 'User' }) => {
+const LogoutModal = ({ isOpen, onClose, onConfirm }) => {
     const [loading, setLoading] = useState(false);
     const cancelButtonRef = useRef(null);
     useScrollLock(isOpen);

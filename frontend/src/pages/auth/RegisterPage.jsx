@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
 import { trackVisit } from '../../services/visitor-tracking';
-import { authAPI, messageAPI } from '../../services/api-client';
+import { authAPI } from '../../services/api-client';
 import { sanitizeInput, sanitizeEmail } from '../../utils/sanitize';
 import { notify } from '../../utils/toast';
 import AuthSuccessModal from '../../components/common/AuthSuccessModal';
@@ -73,7 +72,7 @@ const validatePassword = (password) => {
         minLength: password.length >= 8,
         hasUppercase: /[A-Z]/.test(password),
         hasNumber: /[0-9]/.test(password),
-        hasSymbol: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)
+        hasSymbol: /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password)
     };
 };
 

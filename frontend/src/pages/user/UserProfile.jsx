@@ -291,12 +291,12 @@ const hasPassword = user?.hasPassword === true;
     if (!user) return null;
 
     return (
-        <div className={`${embedded ? 'min-h-full' : 'min-h-screen'} w-full bg-[#f7faf7] flex flex-col items-center`}>
-            <div className={`${embedded ? 'min-h-full' : 'min-h-screen'} w-full flex flex-col`}>
+        <div className={`${embedded ? 'min-h-full' : 'min-h-dvh'} w-full bg-[#f7faf7] flex flex-col items-center`}>
+            <div className={`${embedded ? 'min-h-full' : 'min-h-dvh'} w-full flex flex-col`}>
 
                 <div className="flex items-center justify-between border-b border-[#dce5dc] bg-white px-5 py-4 sm:px-8">
                     <div>
-                        <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-700">Your account</p>
+                        <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-emerald-700">Your account</p>
                         <h2 className="mt-1 text-lg font-bold tracking-tight text-[#172018]">Profile</h2>
                     </div>
                     <button

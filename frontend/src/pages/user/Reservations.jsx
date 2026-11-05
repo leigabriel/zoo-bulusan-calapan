@@ -102,7 +102,7 @@ const Reservations = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const { user, isAuthenticated } = useAuth();
-    const [events, setEvents] = useState([]);
+    const [, setEvents] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showCreateModal, setShowCreateModal] = useState(false);
     // Each card opens its own form, so the modal never mixes ticket and event booking.
@@ -571,7 +571,7 @@ const Reservations = () => {
 
     if (loading || configLoading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-[#ebebeb]">
+            <div className="min-h-dvh flex items-center justify-center bg-[#ebebeb]">
                 <div className="w-12 h-12 border-[1.5px] border-[#212631]/15 border-t-[#212631] rounded-full animate-spin"></div>
             </div>
         );
@@ -579,13 +579,13 @@ const Reservations = () => {
 
     return (
         <ReactLenis root>
-            <div className="bg-[#ebebeb] text-[#212631] relative min-h-screen">
+            <div className="bg-[#ebebeb] text-[#212631] relative min-h-dvh">
                 <Header />
 
                 {/* Sticky Intro Section */}
                 <div className="sticky top-0 w-full h-[70vh] flex flex-col items-center justify-center overflow-hidden z-0 border-b border-[#212631]/10 bg-[#ebebeb]">
                     <div className="relative z-10 flex flex-col items-center justify-center text-center px-4 w-full max-w-5xl h-full">
-                        <span className="text-[10px] tracking-[0.3em] uppercase font-bold text-[#212631]/40 mb-6 md:mb-10">
+                        <span className="text-[11px] tracking-[0.3em] uppercase font-bold text-[#212631]/40 mb-6 md:mb-10">
                             Bulusan Zoo Admissions
                         </span>
                         <h1 className="font-extrabold uppercase text-[#212631] leading-[0.85] tracking-tighter"
@@ -599,7 +599,7 @@ const Reservations = () => {
                         {reservationConfig.pageEnabled && (
                             <button
                                 onClick={scrollToContent}
-                                className="px-8 py-4 bg-[#212631] text-[#ebebeb] border border-[#212631] text-[10px] tracking-[0.2em] uppercase font-black hover:bg-transparent hover:text-[#212631] transition-colors duration-300 cursor-pointer rounded-xl"
+                                className="px-8 py-4 bg-[#212631] text-[#ebebeb] border border-[#212631] text-[11px] tracking-[0.2em] uppercase font-black hover:bg-transparent hover:text-[#212631] transition-colors duration-300 cursor-pointer rounded-xl"
                             >
                                 Start Booking
                             </button>
@@ -610,23 +610,23 @@ const Reservations = () => {
                 <main id="reservation-content" className="relative z-10 w-full bg-[#26bc61] min-h-[80vh] flex flex-col items-center pt-20 pb-40 px-4 md:px-8 border-t border-white/20">
                     {!reservationConfig.pageEnabled ? (
                         <div className="w-full max-w-xl bg-transparent border border-white/20 p-12 md:p-16 flex flex-col items-center text-center rounded-2xl">
-                            <span className="text-[10px] tracking-[0.18em] uppercase font-bold text-white/50 mb-6">Reservations Closed</span>
+                            <span className="text-[11px] tracking-[0.18em] uppercase font-bold text-white/50 mb-6">Reservations Closed</span>
                             <h2 className="text-2xl md:text-4xl font-black uppercase tracking-tighter text-white mb-4">Reservation Page is not currently available</h2>
                             <p className="text-xs tracking-widest uppercase font-bold text-white/70 mb-10 leading-relaxed">
                                 Online booking is temporarily closed. Please check back later or contact the zoo for assistance.
                             </p>
-                            <button onClick={() => navigate('/')} className="px-10 py-4 bg-white text-[#26bc61] text-[10px] tracking-[0.18em] uppercase font-black hover:bg-transparent hover:text-white border border-white transition-colors w-full sm:w-auto cursor-pointer rounded-xl">
+                            <button onClick={() => navigate('/')} className="px-10 py-4 bg-white text-[#26bc61] text-[11px] tracking-[0.18em] uppercase font-black hover:bg-transparent hover:text-white border border-white transition-colors w-full sm:w-auto cursor-pointer rounded-xl">
                                 Back to Home
                             </button>
                         </div>
                     ) : !isAuthenticated ? (
                         <div className="w-full max-w-xl bg-transparent border border-white/20 p-12 md:p-16 flex flex-col items-center text-center rounded-2xl">
-                            <span className="text-[10px] tracking-[0.18em] uppercase font-bold text-white/50 mb-6">Access Restricted</span>
+                            <span className="text-[11px] tracking-[0.18em] uppercase font-bold text-white/50 mb-6">Access Restricted</span>
                             <h2 className="text-2xl md:text-4xl font-black uppercase tracking-tighter text-white mb-4">Account Required</h2>
                             <p className="text-xs tracking-widest uppercase font-bold text-white/70 mb-10 leading-relaxed">
                                 Please authenticate to access the reservation system and manage your bookings.
                             </p>
-                            <button onClick={() => navigate('/login')} className="px-10 py-4 bg-white text-[#26bc61] text-[10px] tracking-[0.18em] uppercase font-black hover:bg-transparent hover:text-white border border-white transition-colors w-full sm:w-auto cursor-pointer rounded-xl">
+                            <button onClick={() => navigate('/login')} className="px-10 py-4 bg-white text-[#26bc61] text-[11px] tracking-[0.18em] uppercase font-black hover:bg-transparent hover:text-white border border-white transition-colors w-full sm:w-auto cursor-pointer rounded-xl">
                                 Authenticate Now
                             </button>
                         </div>
@@ -647,27 +647,27 @@ const Reservations = () => {
                                     <div className="w-12 h-12 bg-[#212631] text-[#ebebeb] flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 rounded-xl">
                                         <Icons.Ticket />
                                     </div>
-                                    <span className="text-[10px] tracking-widest uppercase font-bold text-[#212631]/50 mb-2">Standard Pass</span>
+                                    <span className="text-[11px] tracking-widest uppercase font-bold text-[#212631]/50 mb-2">Standard Pass</span>
                                     <h3 className="text-2xl md:text-4xl font-black uppercase tracking-tighter text-[#212631] mb-2">Zoo Tickets</h3>
-                                    <p className="text-[9px] tracking-[0.18em] uppercase font-bold text-[#212631]/40">Admit One or More</p>
+                                    <p className="text-[11px] tracking-[0.18em] uppercase font-bold text-[#212631]/40">Admit One or More</p>
                                 </div>
                                 <div className="p-8 md:p-10 pt-4 flex-1 flex flex-col justify-between z-10">
                                     <div className="flex flex-col gap-4 mb-8">
                                         <div className="flex items-center justify-between border-b border-[#212631]/10 pb-2">
-                                            <span className="text-[10px] tracking-[0.18em] uppercase font-bold text-[#212631]">Adult</span>
+                                            <span className="text-[11px] tracking-[0.18em] uppercase font-bold text-[#212631]">Adult</span>
                                             <span className="text-sm font-black">₱40</span>
                                         </div>
                                         <div className="flex items-center justify-between border-b border-[#212631]/10 pb-2">
-                                            <span className="text-[10px] tracking-[0.18em] uppercase font-bold text-[#212631]">Child (4-17)</span>
+                                            <span className="text-[11px] tracking-[0.18em] uppercase font-bold text-[#212631]">Child (4-17)</span>
                                             <span className="text-sm font-black">₱20</span>
                                         </div>
                                         <div className="flex items-center justify-between border-b border-[#212631]/10 pb-2">
-                                            <span className="text-[10px] tracking-[0.18em] uppercase font-bold text-[#212631]">Resident</span>
+                                            <span className="text-[11px] tracking-[0.18em] uppercase font-bold text-[#212631]">Resident</span>
                                             <span className="text-sm font-black text-[#212631]/50">FREE</span>
                                         </div>
                                     </div>
                                     <div className="flex items-center justify-center pt-6 mt-auto border-t border-[#212631]/10">
-                                        <span className="text-[10px] tracking-[0.18em] uppercase font-black text-[#212631] flex items-center gap-2 group-hover:tracking-[0.3em] transition-all">
+                                        <span className="text-[11px] tracking-[0.18em] uppercase font-black text-[#212631] flex items-center gap-2 group-hover:tracking-[0.3em] transition-all">
                                             {reservationConfig.ticketEnabled ? <>Initiate Booking <Icons.ArrowRight /></> : 'Currently Unavailable'}
                                         </span>
                                     </div>
@@ -689,9 +689,9 @@ const Reservations = () => {
                                     <div className="w-12 h-12 bg-[#212631] text-[#ebebeb] flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 rounded-xl">
                                         <Icons.Calendar />
                                     </div>
-                                    <span className="text-[10px] tracking-widest uppercase font-bold text-[#212631]/50 mb-2">Exclusive Access</span>
+                                    <span className="text-[11px] tracking-widest uppercase font-bold text-[#212631]/50 mb-2">Exclusive Access</span>
                                     <h3 className="text-2xl md:text-4xl font-black uppercase tracking-tighter text-[#212631] mb-2">Event Venue</h3>
-                                    <p className="text-[9px] tracking-[0.18em] uppercase font-bold text-[#212631]/40">Programs & Private Spots</p>
+                                    <p className="text-[11px] tracking-[0.18em] uppercase font-bold text-[#212631]/40">Programs & Private Spots</p>
                                 </div>
                                 <div className="p-8 md:p-10 pt-4 flex-1 flex flex-col justify-between z-10">
                                     <div className="flex flex-col gap-4 mb-8 text-center">
@@ -699,12 +699,12 @@ const Reservations = () => {
                                             Reserve spaces for private events, educational tours, or participate in our seasonal programs.
                                         </p>
                                         <div className="mt-4 py-2 border-t border-b border-[#212631]/10 flex flex-col items-center justify-center">
-                                            <span className="text-[9px] tracking-[0.18em] uppercase font-bold text-[#212631]/40 mb-1">Status</span>
+                                            <span className="text-[11px] tracking-[0.18em] uppercase font-bold text-[#212631]/40 mb-1">Status</span>
                                             <span className={`text-xs tracking-[0.2em] uppercase font-black ${reservationConfig.eventEnabled ? 'text-green-600' : 'text-[#212631]/50'}`}>{reservationConfig.eventEnabled ? 'Accepting Slots' : 'Not Accepting Slots'}</span>
                                         </div>
                                     </div>
                                     <div className="flex items-center justify-center pt-6 mt-auto border-t border-[#212631]/10">
-                                        <span className="text-[10px] tracking-[0.18em] uppercase font-black text-[#212631] flex items-center gap-2 group-hover:tracking-[0.3em] transition-all">
+                                        <span className="text-[11px] tracking-[0.18em] uppercase font-black text-[#212631] flex items-center gap-2 group-hover:tracking-[0.3em] transition-all">
                                             {reservationConfig.eventEnabled ? <>Select Schedule <Icons.ArrowRight /></> : 'Currently Unavailable'}
                                         </span>
                                     </div>
@@ -712,14 +712,14 @@ const Reservations = () => {
                             </div>
 
                             {/* History Banner */}
-                            <div onClick={() => setShowHistoryPanel(true)} className="md:col-span-2 border border-white/20 bg-transparent hover:bg-white text-white hover:text-[#26bc61] transition-colors duration-300 cursor-pointer flex items-center justify-between p-6 md:p-10 group rounded-2xl">
+                            <div role="button" tabIndex={0} onClick={() => setShowHistoryPanel(true)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setShowHistoryPanel(true); } }} className="md:col-span-2 border border-white/20 bg-transparent hover:bg-white text-white hover:text-[#26bc61] transition-colors duration-300 cursor-pointer flex items-center justify-between p-6 md:p-10 group rounded-2xl">
                                 <div className="flex items-center gap-6">
                                     <div className="w-12 h-12 border border-current flex items-center justify-center shrink-0 rounded-xl">
                                         <Icons.History />
                                     </div>
                                     <div className="flex flex-col">
                                         <h3 className="text-xl md:text-2xl font-black uppercase tracking-tighter mb-1">Booking Ledger</h3>
-                                        <p className="text-[10px] tracking-widest uppercase font-bold opacity-70">View & Manage Past Reservations</p>
+                                        <p className="text-[11px] tracking-widest uppercase font-bold opacity-70">View & Manage Past Reservations</p>
                                     </div>
                                 </div>
                                 <div className="hidden sm:block opacity-50 group-hover:opacity-100 transition-opacity">
@@ -733,7 +733,7 @@ const Reservations = () => {
                 {/* Main Creation Modal */}
                 <AnimatePresence>
                     {showCreateModal && (
-                        <div className="fixed inset-0 z-[200] flex items-center justify-center p-0 md:p-6" onClick={handleCloseAttempt}>
+                        <div role="dialog" aria-modal="true" aria-label="Make a reservation" className="fixed inset-0 z-[200] flex items-center justify-center p-0 md:p-6" onClick={handleCloseAttempt}>
                             <motion.div
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
@@ -750,7 +750,7 @@ const Reservations = () => {
                                 onClick={(e) => e.stopPropagation()}
                             >
                                 <div className="flex items-center justify-between px-6 py-5 border-b border-[#212631]/10 shrink-0 bg-[#ebebeb]">
-                                    <span className="text-[10px] tracking-[0.2em] uppercase font-black text-[#212631]">
+                                    <span className="text-[11px] tracking-[0.2em] uppercase font-black text-[#212631]">
                                         Reservation Form
                                     </span>
                                     <button
@@ -774,9 +774,9 @@ const Reservations = () => {
                                                             <div key={type} className={`flex flex-col sm:flex-row sm:items-center justify-between p-5 gap-4 ${index !== Object.keys(TICKET_TYPES).length - 1 ? 'border-b border-[#212631]/20' : ''} ${isResident ? 'bg-[#26bc61]/5' : ''}`}>
                                                                 <div className="flex flex-col gap-1">
                                                                     <span className="text-sm font-black uppercase tracking-tight text-[#212631]">{info.name}</span>
-                                                                    <span className="text-[10px] tracking-[0.18em] uppercase font-bold text-[#212631]/50">{info.description}</span>
+                                                                    <span className="text-[11px] tracking-[0.18em] uppercase font-bold text-[#212631]/50">{info.description}</span>
                                                                     {isResident && (
-                                                                        <span className="text-[9px] tracking-[0.12em] uppercase font-bold text-[#26bc61] leading-relaxed">
+                                                                        <span className="text-[11px] tracking-[0.12em] uppercase font-bold text-[#26bc61] leading-relaxed">
                                                                             Free admission — please bring a valid ID proving you are a resident of Bulusan, Calapan.
                                                                         </span>
                                                                     )}
@@ -784,7 +784,7 @@ const Reservations = () => {
                                                                 <div className="flex items-center justify-between sm:justify-end gap-6 w-full sm:w-auto">
                                                                     <span className="text-sm font-black text-[#212631] w-12 text-left sm:text-right">{info.price === 0 ? 'FREE' : `₱${info.price}`}</span>
                                                                     {isResident ? (
-                                                                        <span className="text-[9px] tracking-[0.15em] uppercase font-bold text-[#26bc61] border border-[#26bc61]/30 px-3 py-1.5 rounded-lg">Info Only</span>
+                                                                        <span className="text-[11px] tracking-[0.15em] uppercase font-bold text-[#26bc61] border border-[#26bc61]/30 px-3 py-1.5 rounded-lg">Info Only</span>
                                                                     ) : (
                                                                         <div className="flex items-center border border-[#212631]/20 bg-[#ebebeb] rounded-xl overflow-hidden">
                                                                             <button type="button" onClick={() => updateTicketCount(type, -1)} disabled={ticketCounts[type] === 0} className="w-10 h-10 flex items-center justify-center text-[#212631] hover:bg-[#212631]/10 disabled:opacity-30 disabled:hover:bg-transparent transition-colors cursor-pointer"><Icons.Minus /></button>
@@ -802,17 +802,17 @@ const Reservations = () => {
                                                 <div className="flex flex-col gap-5 border-t border-[#212631]/10 pt-8">
                                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                                                         <div className="flex flex-col gap-2">
-                                                            <label className="text-[9px] tracking-[0.2em] uppercase font-bold text-[#212631]">Primary Contact Name *</label>
+                                                            <label className="text-[11px] tracking-[0.2em] uppercase font-bold text-[#212631]">Primary Contact Name *</label>
                                                             <input type="text" value={ticketForm.visitorName} onChange={e => setTicketForm({ ...ticketForm, visitorName: sanitizeInput(e.target.value) })} className={FIELD_INPUT} placeholder="e.g. Juan Dela Cruz" autoComplete="name" required />
                                                         </div>
                                                         <div className="flex flex-col gap-2">
-                                                            <label className="text-[9px] tracking-[0.2em] uppercase font-bold text-[#212631]">Email Address *</label>
+                                                            <label className="text-[11px] tracking-[0.2em] uppercase font-bold text-[#212631]">Email Address *</label>
                                                             <input type="email" value={ticketForm.visitorEmail} onChange={e => setTicketForm({ ...ticketForm, visitorEmail: sanitizeEmail(e.target.value) })} className={FIELD_INPUT} placeholder="you@example.com" autoComplete="email" required />
                                                         </div>
                                                     </div>
 
                                                     <div className="flex flex-col gap-2">
-                                                        <label className="text-[9px] tracking-[0.2em] uppercase font-bold text-[#212631]">Arrival Date *</label>
+                                                        <label className="text-[11px] tracking-[0.2em] uppercase font-bold text-[#212631]">Arrival Date *</label>
                                                         <input
                                                             type="date"
                                                             value={ticketForm.reservationDate}
@@ -828,7 +828,7 @@ const Reservations = () => {
 
                                                     {ticketForm.reservationDate && (
                                                         <div className="flex flex-col gap-2">
-                                                            <label className="text-[9px] tracking-[0.2em] uppercase font-bold text-[#212631]">Arrival Time *</label>
+                                                            <label className="text-[11px] tracking-[0.2em] uppercase font-bold text-[#212631]">Arrival Time *</label>
                                                             <TimeSelect
                                                                 value={customTicketTime ? CUSTOM_TIME_VALUE : ticketForm.reservationTime}
                                                                 onChange={handleTicketTimeChange}
@@ -868,17 +868,17 @@ const Reservations = () => {
                                         ) : (
                                             <div className="flex flex-col gap-5 pt-2">
                                                 <div className="flex flex-col gap-2">
-                                                    <label className="text-[9px] tracking-[0.2em] uppercase font-bold text-[#212631]">Event Designation *</label>
+                                                    <label className="text-[11px] tracking-[0.2em] uppercase font-bold text-[#212631]">Event Designation *</label>
                                                     <input type="text" value={eventForm.venueEventName} onChange={e => setEventForm({ ...eventForm, venueEventName: sanitizeInput(e.target.value) })} className={FIELD_INPUT} placeholder="e.g. Tree Planting Program" required />
                                                 </div>
 
                                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                                                     <div className="flex flex-col gap-2">
-                                                        <label className="text-[9px] tracking-[0.2em] uppercase font-bold text-[#212631]">Event Date *</label>
+                                                        <label className="text-[11px] tracking-[0.2em] uppercase font-bold text-[#212631]">Event Date *</label>
                                                         <input type="date" value={eventForm.venueEventDate} onChange={e => setEventForm({ ...eventForm, venueEventDate: e.target.value, venueEventStartTime: '', venueEventEndTime: '' })} min={getMinDate()} className={FIELD_INPUT} required />
                                                     </div>
                                                     <div className="flex flex-col gap-2">
-                                                        <label className="text-[9px] tracking-[0.2em] uppercase font-bold text-[#212631]">Event Start Time *</label>
+                                                        <label className="text-[11px] tracking-[0.2em] uppercase font-bold text-[#212631]">Event Start Time *</label>
                                                         <TimeSelect
                                                             value={eventForm.venueEventStartTime}
                                                             onChange={e => setEventForm({ ...eventForm, venueEventStartTime: e.target.value })}
@@ -892,7 +892,7 @@ const Reservations = () => {
                                                 </div>
                                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                                                     <div className="flex flex-col gap-2">
-                                                        <label className="text-[9px] tracking-[0.2em] uppercase font-bold text-[#212631]">Event End Time *</label>
+                                                        <label className="text-[11px] tracking-[0.2em] uppercase font-bold text-[#212631]">Event End Time *</label>
                                                         <TimeSelect
                                                             value={eventForm.venueEventEndTime}
                                                             onChange={e => setEventForm({ ...eventForm, venueEventEndTime: e.target.value })}
@@ -907,28 +907,28 @@ const Reservations = () => {
 
                                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                                                     <div className="flex flex-col gap-2">
-                                                        <label className="text-[9px] tracking-[0.2em] uppercase font-bold text-[#212631]">Headcount</label>
+                                                        <label className="text-[11px] tracking-[0.2em] uppercase font-bold text-[#212631]">Headcount</label>
                                                         <input type="number" value={eventForm.numberOfParticipants} onChange={e => setEventForm({ ...eventForm, numberOfParticipants: e.target.value })} min="1" max="100" inputMode="numeric" className={FIELD_INPUT} placeholder="How many people?" required />
                                                     </div>
                                                     <div className="flex flex-col gap-2">
-                                                        <label className="text-[9px] tracking-[0.2em] uppercase font-bold text-[#212631]">Contact Phone</label>
+                                                        <label className="text-[11px] tracking-[0.2em] uppercase font-bold text-[#212631]">Contact Phone</label>
                                                         <input type="tel" value={eventForm.participantPhone} onChange={e => setEventForm({ ...eventForm, participantPhone: sanitizePhone(e.target.value) })} className={FIELD_INPUT} placeholder="09XX XXX XXXX" autoComplete="tel" />
                                                     </div>
                                                 </div>
 
                                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                                                     <div className="flex flex-col gap-2">
-                                                        <label className="text-[9px] tracking-[0.2em] uppercase font-bold text-[#212631]">Organizer Name *</label>
+                                                        <label className="text-[11px] tracking-[0.2em] uppercase font-bold text-[#212631]">Organizer Name *</label>
                                                         <input type="text" value={eventForm.participantName} onChange={e => setEventForm({ ...eventForm, participantName: sanitizeInput(e.target.value) })} className={FIELD_INPUT} placeholder="e.g. Maria Santos" autoComplete="name" required />
                                                     </div>
                                                     <div className="flex flex-col gap-2">
-                                                        <label className="text-[9px] tracking-[0.2em] uppercase font-bold text-[#212631]">Organizer Email *</label>
+                                                        <label className="text-[11px] tracking-[0.2em] uppercase font-bold text-[#212631]">Organizer Email *</label>
                                                         <input type="email" value={eventForm.participantEmail} onChange={e => setEventForm({ ...eventForm, participantEmail: sanitizeEmail(e.target.value) })} className={FIELD_INPUT} placeholder="you@example.com" autoComplete="email" required />
                                                     </div>
                                                 </div>
 
                                                 <div className="flex flex-col gap-2">
-                                                    <label className="text-[9px] tracking-[0.2em] uppercase font-bold text-[#212631]">Event Details & Requirements</label>
+                                                    <label className="text-[11px] tracking-[0.2em] uppercase font-bold text-[#212631]">Event Details & Requirements</label>
                                                     <textarea value={eventForm.venueEventDescription} onChange={e => setEventForm({ ...eventForm, venueEventDescription: sanitizeInput(e.target.value) })} className={`${FIELD_INPUT} resize-y min-h-[120px]`} placeholder="What is this event about?" />
                                                 </div>
                                             </div>
@@ -940,19 +940,19 @@ const Reservations = () => {
                                                     <input type="checkbox" required className="peer appearance-none w-5 h-5 border border-[#212631]/40 checked:bg-[#212631] checked:border-[#212631] transition-all cursor-pointer rounded-md" />
                                                     <svg className="absolute w-3 h-3 text-[#ebebeb] pointer-events-none opacity-0 peer-checked:opacity-100 transition-opacity" viewBox="0 0 14 10" fill="none"><path d="M1 5L5 9L13 1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
                                                 </div>
-                                                <p className="text-[10px] tracking-[0.18em] uppercase font-bold text-[#212631]/60 leading-relaxed pt-0.5">
+                                                <p className="text-[11px] tracking-[0.18em] uppercase font-bold text-[#212631]/60 leading-relaxed pt-0.5">
                                                     I acknowledge the <Link to="/terms" state={{ from: '/reservations', reopenModal: 'create', reservationType }} onClick={saveReservationResume} className="text-[#212631] hover:underline">Terms of Service</Link> & <Link to="/privacy" state={{ from: '/reservations', reopenModal: 'create', reservationType }} onClick={saveReservationResume} className="text-[#212631] hover:underline">Privacy Policy</Link>.
                                                 </p>
                                             </label>
 
                                             {reservationType === 'ticket' && getTotalVisitors() > 0 && (
                                                 <div className="flex items-center justify-between border border-[#212631] bg-[#212631] text-[#ebebeb] p-5 rounded-xl">
-                                                    <span className="text-[10px] tracking-[0.2em] uppercase font-black">Total Due</span>
+                                                    <span className="text-[11px] tracking-[0.2em] uppercase font-black">Total Due</span>
                                                     <span className="text-xl font-black tracking-tighter">{calculateTotal() === 0 ? 'FREE' : `₱${calculateTotal()}`}</span>
                                                 </div>
                                             )}
 
-                                            <button type="submit" disabled={isSubmitting} className="w-full py-5 bg-[#212631] text-[#ebebeb] border border-[#212631] text-[10px] tracking-[0.2em] uppercase font-black hover:bg-transparent hover:text-[#212631] disabled:opacity-50 disabled:pointer-events-none transition-colors cursor-pointer rounded-xl">
+                                            <button type="submit" disabled={isSubmitting} className="w-full py-5 bg-[#212631] text-[#ebebeb] border border-[#212631] text-[11px] tracking-[0.2em] uppercase font-black hover:bg-transparent hover:text-[#212631] disabled:opacity-50 disabled:pointer-events-none transition-colors cursor-pointer rounded-xl">
                                                 {isSubmitting ? 'Processing...' : 'Finalize Booking'}
                                             </button>
                                         </div>
@@ -966,7 +966,7 @@ const Reservations = () => {
                 {/* Final Submission Confirmation Modal */}
                 <AnimatePresence>
                     {showSubmitConfirm && (
-                        <div className="fixed inset-0 z-[250] flex items-center justify-center p-4">
+                        <div role="dialog" aria-modal="true" aria-label="Discard reservation form" className="fixed inset-0 z-[250] flex items-center justify-center p-4">
                             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-[#212631]/80 backdrop-blur-md" />
                             <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="bg-[#ebebeb] border border-[#212631]/20 w-full max-w-md relative z-10 flex flex-col p-0 overflow-hidden shadow-2xl rounded-2xl">
                                 <div className="p-8 border-b border-[#212631]/20 flex flex-col items-center text-center">
@@ -974,7 +974,7 @@ const Reservations = () => {
                                         <Icons.Ticket />
                                     </div>
                                     <h3 className="text-2xl font-black uppercase tracking-tighter text-[#212631] mb-2">Verify Details</h3>
-                                    <p className="text-[10px] tracking-[0.18em] uppercase font-bold text-[#212631]/50 leading-relaxed">
+                                    <p className="text-[11px] tracking-[0.18em] uppercase font-bold text-[#212631]/50 leading-relaxed">
                                         Ensure submitted information is accurate.
                                     </p>
                                 </div>
@@ -982,28 +982,28 @@ const Reservations = () => {
                                 <div className="p-8 bg-[#212631]/5 flex flex-col gap-4">
                                     {reservationType === 'ticket' ? (
                                         <>
-                                            <div className="flex justify-between items-center"><span className="text-[9px] tracking-widest uppercase font-bold text-[#212631]/60">Type</span><span className="text-[10px] font-black uppercase text-[#212631]">Admission</span></div>
-                                            <div className="flex justify-between items-center"><span className="text-[9px] tracking-widest uppercase font-bold text-[#212631]/60">Date</span><span className="text-[10px] font-black uppercase text-[#212631]">{formatDate(ticketForm.reservationDate)}</span></div>
-                                            <div className="flex justify-between items-center"><span className="text-[9px] tracking-widest uppercase font-bold text-[#212631]/60">Pax</span><span className="text-[10px] font-black uppercase text-[#212631]">{getTotalVisitors()}</span></div>
-                                            <div className="flex justify-between items-center pt-4 border-t border-[#212631]/20 mt-1"><span className="text-[9px] tracking-widest uppercase font-black text-[#212631]">Total</span><span className="text-sm font-black text-emerald-600">₱{calculateTotal()}</span></div>
+                                            <div className="flex justify-between items-center"><span className="text-[11px] tracking-widest uppercase font-bold text-[#212631]/60">Type</span><span className="text-[11px] font-black uppercase text-[#212631]">Admission</span></div>
+                                            <div className="flex justify-between items-center"><span className="text-[11px] tracking-widest uppercase font-bold text-[#212631]/60">Date</span><span className="text-[11px] font-black uppercase text-[#212631]">{formatDate(ticketForm.reservationDate)}</span></div>
+                                            <div className="flex justify-between items-center"><span className="text-[11px] tracking-widest uppercase font-bold text-[#212631]/60">Pax</span><span className="text-[11px] font-black uppercase text-[#212631]">{getTotalVisitors()}</span></div>
+                                            <div className="flex justify-between items-center pt-4 border-t border-[#212631]/20 mt-1"><span className="text-[11px] tracking-widest uppercase font-black text-[#212631]">Total</span><span className="text-sm font-black text-emerald-600">₱{calculateTotal()}</span></div>
                                         </>
                                     ) : (
                                         <>
-                                            <div className="flex justify-between items-center"><span className="text-[9px] tracking-widest uppercase font-bold text-[#212631]/60">Type</span><span className="text-[10px] font-black uppercase text-[#212631]">Venue</span></div>
-                                            <div className="flex justify-between items-center"><span className="text-[9px] tracking-widest uppercase font-bold text-[#212631]/60">Event</span><span className="text-[10px] font-black uppercase text-[#212631] truncate max-w-[150px]">{eventForm.venueEventName}</span></div>
-                                            <div className="flex justify-between items-center"><span className="text-[9px] tracking-widest uppercase font-bold text-[#212631]/60">Date</span><span className="text-[10px] font-black uppercase text-[#212631]">{formatDate(eventForm.venueEventDate)}</span></div>
-                                            <div className="flex justify-between items-center"><span className="text-[9px] tracking-widest uppercase font-bold text-[#212631]/60">Start</span><span className="text-[10px] font-black uppercase text-[#212631]">{formatTime12(eventForm.venueEventStartTime) || '-'}</span></div>
-                                            <div className="flex justify-between items-center"><span className="text-[9px] tracking-widest uppercase font-bold text-[#212631]/60">End</span><span className="text-[10px] font-black uppercase text-[#212631]">{formatTime12(eventForm.venueEventEndTime) || '-'}</span></div>
-                                            <div className="flex justify-between items-center"><span className="text-[9px] tracking-widest uppercase font-bold text-[#212631]/60">Pax</span><span className="text-[10px] font-black uppercase text-[#212631]">{eventForm.numberOfParticipants}</span></div>
+                                            <div className="flex justify-between items-center"><span className="text-[11px] tracking-widest uppercase font-bold text-[#212631]/60">Type</span><span className="text-[11px] font-black uppercase text-[#212631]">Venue</span></div>
+                                            <div className="flex justify-between items-center"><span className="text-[11px] tracking-widest uppercase font-bold text-[#212631]/60">Event</span><span className="text-[11px] font-black uppercase text-[#212631] truncate max-w-[150px]">{eventForm.venueEventName}</span></div>
+                                            <div className="flex justify-between items-center"><span className="text-[11px] tracking-widest uppercase font-bold text-[#212631]/60">Date</span><span className="text-[11px] font-black uppercase text-[#212631]">{formatDate(eventForm.venueEventDate)}</span></div>
+                                            <div className="flex justify-between items-center"><span className="text-[11px] tracking-widest uppercase font-bold text-[#212631]/60">Start</span><span className="text-[11px] font-black uppercase text-[#212631]">{formatTime12(eventForm.venueEventStartTime) || '-'}</span></div>
+                                            <div className="flex justify-between items-center"><span className="text-[11px] tracking-widest uppercase font-bold text-[#212631]/60">End</span><span className="text-[11px] font-black uppercase text-[#212631]">{formatTime12(eventForm.venueEventEndTime) || '-'}</span></div>
+                                            <div className="flex justify-between items-center"><span className="text-[11px] tracking-widest uppercase font-bold text-[#212631]/60">Pax</span><span className="text-[11px] font-black uppercase text-[#212631]">{eventForm.numberOfParticipants}</span></div>
                                         </>
                                     )}
                                 </div>
 
                                 <div className="p-8 border-t border-[#212631]/20 flex gap-4 bg-[#ebebeb]">
-                                    <button onClick={() => setShowSubmitConfirm(false)} className="flex-1 py-4 border border-[#212631]/20 text-[9px] tracking-[0.18em] uppercase font-black text-[#212631] hover:bg-[#212631]/5 transition-colors cursor-pointer rounded-xl">
+                                    <button onClick={() => setShowSubmitConfirm(false)} className="flex-1 py-4 border border-[#212631]/20 text-[11px] tracking-[0.18em] uppercase font-black text-[#212631] hover:bg-[#212631]/5 transition-colors cursor-pointer rounded-xl">
                                         Return
                                     </button>
-                                    <button onClick={confirmSubmit} disabled={isSubmitting} className="flex-1 py-4 bg-[#212631] border border-[#212631] text-[9px] tracking-[0.18em] uppercase font-black text-[#ebebeb] hover:bg-transparent hover:text-[#212631] disabled:opacity-50 transition-colors cursor-pointer rounded-xl">
+                                    <button onClick={confirmSubmit} disabled={isSubmitting} className="flex-1 py-4 bg-[#212631] border border-[#212631] text-[11px] tracking-[0.18em] uppercase font-black text-[#ebebeb] hover:bg-transparent hover:text-[#212631] disabled:opacity-50 transition-colors cursor-pointer rounded-xl">
                                         {isSubmitting ? 'Wait...' : 'Confirm'}
                                     </button>
                                 </div>
@@ -1015,7 +1015,7 @@ const Reservations = () => {
                 {/* Success Confirmation Modal */}
                 <AnimatePresence>
                     {showConfirmation && confirmationData && (
-                        <div className="fixed inset-0 z-[300] flex items-center justify-center p-4">
+                        <div role="dialog" aria-modal="true" aria-label="Reservation confirmed" className="fixed inset-0 z-[300] flex items-center justify-center p-4">
                             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-[#212631]/80 backdrop-blur-md" />
                             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }} className="bg-[#ebebeb] border border-[#212631]/20 w-full max-w-sm p-10 relative z-10 flex flex-col items-center text-center shadow-2xl rounded-2xl">
                                 <motion.div
@@ -1027,7 +1027,7 @@ const Reservations = () => {
                                     <Icons.Check />
                                 </motion.div>
                                 <h3 className="text-3xl font-black uppercase tracking-tighter text-[#212631] mb-2">Confirmed</h3>
-                                <p className="text-[10px] tracking-widest uppercase font-bold text-[#212631]/50 mb-8">Reservation securely logged.</p>
+                                <p className="text-[11px] tracking-widest uppercase font-bold text-[#212631]/50 mb-8">Reservation securely logged.</p>
 
                                 {confirmationData.reference && (
                                      <div className="mb-8 flex justify-center bg-white p-4 rounded-xl">
@@ -1043,26 +1043,26 @@ const Reservations = () => {
                                  )}
 
                                 <div className="w-full border border-[#212631]/20 bg-[#ebebeb] p-6 mb-8 flex flex-col items-center justify-center rounded-xl">
-                                    <span className="text-[8px] tracking-[0.3em] uppercase font-bold text-[#212631]/40 mb-2">Reference ID</span>
+                                    <span className="text-[11px] tracking-[0.3em] uppercase font-bold text-[#212631]/40 mb-2">Reference ID</span>
                                     <span className="text-xl font-black tracking-widest uppercase text-[#212631]">{confirmationData.reference}</span>
                                 </div>
 
                                 <div className="w-full flex flex-col gap-3">
                                     {confirmationAmount > 0 ? (
                                         <>
-                                            <button onClick={handlePayNow} className="w-full py-4 bg-[#212631] border border-[#212631] text-[9px] tracking-[0.18em] uppercase font-black text-[#ebebeb] hover:bg-[#26bc61] hover:border-[#26bc61] transition-colors cursor-pointer rounded-xl">
+                                            <button onClick={handlePayNow} className="w-full py-4 bg-[#212631] border border-[#212631] text-[11px] tracking-[0.18em] uppercase font-black text-[#ebebeb] hover:bg-[#26bc61] hover:border-[#26bc61] transition-colors cursor-pointer rounded-xl">
                                                 Pay Now
                                             </button>
-                                            <button onClick={handlePayLater} className="w-full py-4 border border-[#212631]/20 text-[9px] tracking-[0.18em] uppercase font-black text-[#212631] hover:bg-[#212631]/5 transition-colors cursor-pointer rounded-xl">
+                                            <button onClick={handlePayLater} className="w-full py-4 border border-[#212631]/20 text-[11px] tracking-[0.18em] uppercase font-black text-[#212631] hover:bg-[#212631]/5 transition-colors cursor-pointer rounded-xl">
                                                 Pay Later
                                             </button>
                                         </>
                                     ) : (
                                         <>
-                                            <button onClick={closeModal} className="w-full py-4 border border-[#212631]/20 text-[9px] tracking-[0.18em] uppercase font-black text-[#212631] hover:bg-[#212631]/5 transition-colors cursor-pointer rounded-xl">
+                                            <button onClick={closeModal} className="w-full py-4 border border-[#212631]/20 text-[11px] tracking-[0.18em] uppercase font-black text-[#212631] hover:bg-[#212631]/5 transition-colors cursor-pointer rounded-xl">
                                                 Dismiss
                                             </button>
-                                            <button onClick={() => { closeModal(); setShowHistoryPanel(true); }} className="w-full py-4 bg-[#212631] border border-[#212631] text-[9px] tracking-[0.18em] uppercase font-black text-[#ebebeb] hover:bg-transparent hover:text-[#212631] transition-colors cursor-pointer rounded-xl">
+                                            <button onClick={() => { closeModal(); setShowHistoryPanel(true); }} className="w-full py-4 bg-[#212631] border border-[#212631] text-[11px] tracking-[0.18em] uppercase font-black text-[#ebebeb] hover:bg-transparent hover:text-[#212631] transition-colors cursor-pointer rounded-xl">
                                                 Open Ledger
                                             </button>
                                         </>
@@ -1076,19 +1076,19 @@ const Reservations = () => {
                 {/* Unsaved Changes Discard Modal */}
                 <AnimatePresence>
                     {showCloseConfirm && (
-                        <div className="fixed inset-0 z-[250] flex items-center justify-center p-4">
+                        <div role="dialog" aria-modal="true" aria-label="Discard reservation form" className="fixed inset-0 z-[250] flex items-center justify-center p-4">
                             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-[#212631]/80 backdrop-blur-md" />
                             <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="bg-[#ebebeb] border border-[#212631]/20 w-full max-w-sm p-8 relative z-10 flex flex-col text-center items-center shadow-2xl rounded-2xl">
                                 <div className="mb-6"><Icons.Warning /></div>
                                 <h3 className="text-xl font-black uppercase tracking-tighter text-[#212631] mb-2">Discard Form?</h3>
-                                <p className="text-[10px] tracking-[0.18em] uppercase font-bold text-[#212631]/60 mb-8 leading-relaxed">
+                                <p className="text-[11px] tracking-[0.18em] uppercase font-bold text-[#212631]/60 mb-8 leading-relaxed">
                                     Active changes will be lost. This cannot be undone.
                                 </p>
                                 <div className="flex w-full gap-4">
-                                    <button onClick={() => setShowCloseConfirm(false)} className="flex-1 py-4 border border-[#212631]/20 text-[9px] tracking-[0.18em] uppercase font-black text-[#212631] hover:bg-[#212631]/5 transition-colors cursor-pointer rounded-xl">
+                                    <button onClick={() => setShowCloseConfirm(false)} className="flex-1 py-4 border border-[#212631]/20 text-[11px] tracking-[0.18em] uppercase font-black text-[#212631] hover:bg-[#212631]/5 transition-colors cursor-pointer rounded-xl">
                                         Resume
                                     </button>
-                                    <button onClick={closeModal} className="flex-1 py-4 bg-red-600 border border-red-600 text-[9px] tracking-[0.18em] uppercase font-black text-white hover:bg-transparent hover:text-red-600 transition-colors cursor-pointer rounded-xl">
+                                    <button onClick={closeModal} className="flex-1 py-4 bg-red-600 border border-red-600 text-[11px] tracking-[0.18em] uppercase font-black text-white hover:bg-transparent hover:text-red-600 transition-colors cursor-pointer rounded-xl">
                                         Discard
                                     </button>
                                 </div>

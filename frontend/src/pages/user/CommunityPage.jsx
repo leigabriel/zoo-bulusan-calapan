@@ -16,8 +16,10 @@ import { notify } from '../../utils/toast';
 import { Plus, X } from 'reicon-react';
 import Footer from '../../components/Footer';
 import useScrollLock from '../../hooks/use-scroll-lock';
+import usePageMetadata from '../../hooks/use-page-metadata';
 
 const CommunityPage = () => {
+    usePageMetadata('Community | Bulusan Zoo', 'Share photos and stories from your Bulusan Zoo visit with the community.', 'https://bulusanzoo.com/community');
     const { user } = useAuth();
     // Posts still uploading. The queue lives above the router, so these survive navigating
     // away and a post started here can finish over on another page.
@@ -213,7 +215,7 @@ const CommunityPage = () => {
 
     return (
         <ReactLenis root>
-            <div className={`text-black relative min-h-screen ${PAGE_BG_GRADIENT}`}>
+            <div className={`text-black relative min-h-dvh ${PAGE_BG_GRADIENT}`}>
                 <Header />
 
                 {/* Intro Section */}
@@ -226,8 +228,8 @@ const CommunityPage = () => {
 
                 {/* Main Feed Section */}
                 <main id="community-feed" className="relative z-10 w-full">
-                    <div className="max-w-[820px] mx-auto min-h-screen">
-                         <div className="min-h-screen">
+                    <div className="max-w-[820px] mx-auto min-h-dvh">
+                         <div className="min-h-dvh">
                              <div className="p-4 sm:p-6 md:p-8">
                                 {/* In-flight posts sit above the feed so they read as newest,
                                     matching the order the server will return them in once
@@ -299,7 +301,7 @@ const CommunityPage = () => {
                                         data-community-modal-close
                                         onClick={() => !savingPost && setPostModalOpen(false)}
                                         aria-label="Close post composer"
-                                        className="flex h-9 shrink-0 items-center gap-1.5 rounded-md px-2.5 text-[10px] font-bold uppercase tracking-[0.15em] text-black/60 transition-colors hover:bg-black/5 hover:text-black"
+                                        className="flex h-9 shrink-0 items-center gap-1.5 rounded-md px-2.5 text-[11px] font-bold uppercase tracking-[0.15em] text-black/60 transition-colors hover:bg-black/5 hover:text-black"
                                     >
                                         Close
                                         <X className="h-3.5 w-3.5" aria-hidden="true" />
@@ -329,7 +331,7 @@ const CommunityPage = () => {
                                   className="relative z-10 flex flex-col bg-white w-full h-full md:h-auto md:max-w-4xl md:max-h-[85vh] overflow-hidden overscroll-contain md:rounded-md md:border md:border-gray-600"
                             >
                                 <div className="flex items-center justify-between px-4 py-3 sm:px-5 sm:py-4 border-b border-gray-600 shrink-0 bg-white">
-                                    <span id="community-post-dialog-title" className="text-[10px] tracking-[0.18em] uppercase font-bold text-black/70">
+                                    <span id="community-post-dialog-title" className="text-[11px] tracking-[0.18em] uppercase font-bold text-black/70">
                                         {commentOnly ? 'Comments' : 'Post Details'}
                                     </span>
                                     <button
@@ -337,7 +339,7 @@ const CommunityPage = () => {
                                         onClick={() => setSelectedPost(null)}
                                         className="text-black opacity-70 hover:opacity-100 transition-opacity cursor-pointer flex items-center gap-2"
                                     >
-                                        <span className="text-[10px] tracking-widest uppercase font-bold">Close</span>
+                                        <span className="text-[11px] tracking-widest uppercase font-bold">Close</span>
                                         <X className="h-3.5 w-3.5" />
                                     </button>
                                 </div>
@@ -361,7 +363,7 @@ const CommunityPage = () => {
                                             <span className="font-black uppercase text-black tracking-tight text-lg">
                                                 {selectedPost.author.firstName} {selectedPost.author.lastName}
                                             </span>
-                                            <span className="text-[9px] tracking-[0.18em] uppercase font-bold text-black/60">
+                                            <span className="text-[11px] tracking-[0.18em] uppercase font-bold text-black/60">
                                                 {new Date(selectedPost.createdAt).toLocaleString()}
                                             </span>
                                         </div>

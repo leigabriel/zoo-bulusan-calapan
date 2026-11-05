@@ -22,7 +22,7 @@ const Toggle = ({ checked, onChange, label }) => (
     </label>
 );
 
-const AdminSettings = ({ modalSection = null, onClose = null }) => {
+const AdminSettings = ({ modalSection = null }) => {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [eventPayment, setEventPayment] = useState({ qrphEnabled: false, amountPerParticipant: 0 });

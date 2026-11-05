@@ -13,6 +13,9 @@ const { uploadLimiter } = require('../middleware/rate-limit');
 // require auth
 router.use(protect);
 
+// Every upload route writes files or hits Cloudinary, so all of them share the limiter.
+router.use(uploadLimiter);
+
 // check storage status
 router.get('/status', uploadController.checkStatus);
 
@@ -56,7 +59,7 @@ router.post(
 );
 
 // Base64 image upload (available to all authenticated users)
-router.post('/base64', uploadLimiter, uploadController.uploadBase64Image);
+router.post('/base64', uploadController.uploadBase64Image);
 
 // Delete image (admin and staff only)
 router.delete(

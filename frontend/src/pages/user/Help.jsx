@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { ChevronLeft, Home, Ticket, Camera, MapPoint, User, ChevronDown, ChevronUp, Envelope, Phone, Clock, Search, Book, Message } from 'reicon-react';
+import usePageMetadata from '../../hooks/use-page-metadata';
 
 // Icons
 const LegacyIcons = {
@@ -84,6 +85,7 @@ const LegacyIcons = {
 const Icons = { Back: ChevronLeft, Home, Ticket, Camera, Map: MapPoint, User, ChevronDown, ChevronUp, Mail: Envelope, Phone, Clock, Search, Book, Robot: Message };
 
 const Help = () => {
+    usePageMetadata('Help Center | Bulusan Zoo', 'Answers to common questions about tickets, reservations and visiting Bulusan Zoo in Calapan City.', 'https://bulusanzoo.com/help');
     const navigate = useNavigate();
     const { user } = useAuth();
     const [searchQuery, setSearchQuery] = useState('');
@@ -201,7 +203,7 @@ const Help = () => {
     ];
 
     return (
-        <div className="min-h-screen bg-[#f2fbf4] text-[#1f2d23] flex flex-col">
+        <div className="min-h-dvh bg-[#f2fbf4] text-[#1f2d23] flex flex-col">
             {/* Floating Navigation */}
             <div className="fixed top-4 left-4 right-4 z-50 flex justify-between items-center pointer-events-none">
                 <button

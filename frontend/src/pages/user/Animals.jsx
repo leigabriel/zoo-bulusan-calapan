@@ -8,6 +8,8 @@ import Footer from '../../components/Footer';
 import { ReactLenis } from 'lenis/react';
 import AIFloatingButton from '../../components/common/AIFloatingButton';
 import { userAPI } from '../../services/api-client';
+import usePageMetadata from '../../hooks/use-page-metadata';
+import { prefersReducedMotion } from '../../utils/motion';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -45,6 +47,8 @@ const AnimalCard = ({ animal }) => {
                 {animal.imageUrl ? (
                     <img
                         ref={imgRef}
+                        loading="lazy"
+                        decoding="async"
                         src={animal.imageUrl}
                         alt={animal.name}
                         className="w-full h-full object-cover origin-center"
@@ -69,6 +73,7 @@ const AnimalCard = ({ animal }) => {
 };
 
 const Animals = () => {
+    usePageMetadata('Animals | Bulusan Zoo', 'Meet the animals of Bulusan Zoo in Calapan City, Oriental Mindoro, and learn about their habitats and conservation status.', 'https://bulusanzoo.com/animals');
     const [animals, setAnimals] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
@@ -111,6 +116,7 @@ const Animals = () => {
 
     useEffect(() => {
         if (!loading && animals.length > 0) {
+            if (prefersReducedMotion()) return;
             const ctx = gsap.context(() => {
                 // Scroll animation for grid items
                 gsap.fromTo('.animal-card',
@@ -134,7 +140,7 @@ const Animals = () => {
 
     return (
         <ReactLenis root>
-            <div className={`text-black relative min-h-screen ${PAGE_BG_GRADIENT}`}>
+            <div className={`text-black relative min-h-dvh ${PAGE_BG_GRADIENT}`}>
                 <Header />
 
                 {/* Hero Section - Clean Style */}
@@ -143,16 +149,16 @@ const Animals = () => {
                 </div>
 
                 {/* Grid Section */}
-                <main ref={gridRef} className="relative z-10 w-full min-h-screen px-4 md:px-8 pb-32 max-w-[1800px] mx-auto">
+                <main ref={gridRef} className="relative z-10 w-full min-h-dvh px-4 md:px-8 pb-32 max-w-[1800px] mx-auto">
                     {loading && (
                         <div className="flex items-center justify-center py-40">
-                            <div className="w-8 h-8 rounded-full border-2 border-gray-200 border-t-black animate-spin" />
+                            <div role="status" aria-label="Loading" className="w-8 h-8 rounded-full border-2 border-gray-200 border-t-black animate-spin" />
                         </div>
                     )}
 
                     {!loading && error && (
                         <div className="flex flex-col items-center gap-4 py-32 px-6">
-                            <p className="text-sm tracking-widest uppercase font-bold text-gray-400">{error}</p>
+                            <p className="text-sm tracking-widest uppercase font-bold text-gray-600" role="alert">{error}</p>
                             <button
                                 onClick={fetchAnimals}
                                 className="text-xs tracking-widest uppercase font-black text-black border-2 border-black px-6 py-3 hover:bg-black hover:text-white transition-colors cursor-pointer"
@@ -163,7 +169,7 @@ const Animals = () => {
                     )}
 
                     {!loading && !error && animals.length === 0 && (
-                        <p className="text-center py-40 text-4xl md:text-6xl text-gray-300">
+                        <p className="text-center py-40 text-4xl md:text-6xl text-gray-500">
                             No animals available
                         </p>
                     )}

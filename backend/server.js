@@ -94,7 +94,7 @@ if (process.env.ALLOW_ANY_ORIGIN === 'true') {
     console.warn('[security] ALLOW_ANY_ORIGIN=true - every origin is permitted. Do not do this in production.');
 }
 
-app.use(cors({
+const corsOptions = {
     origin: function (origin, callback) {
         if (shouldAllowOrigin(origin, allowedOrigins, process.env)) return callback(null, true);
         callback(new Error('Not allowed by CORS'));
@@ -102,9 +102,12 @@ app.use(cors({
     credentials: true,
     methods: ['GET', 'HEAD', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Tab-ID', 'X-Requested-With', 'Idempotency-Key']
-}));
+};
 
-app.options('*', cors());
+app.use(cors(corsOptions));
+
+// Preflight must use the same allow-list; a bare cors() would answer for any origin.
+app.options('*', cors(corsOptions));
 
 // PayMongo signs the raw request body. This route must be registered before JSON parsing.
 app.post('/api/payments/paymongo/webhook', express.raw({ type: 'application/json' }), paymentController.handleWebhook);
@@ -206,9 +209,10 @@ schemaInitializers.reduce((initialization, initializeSchema) => initialization.t
         });
     });
 
-process.on('unhandledRejection', () => {
-    console.error('Unhandled rejection');
-    process.exit(1);
+// Log and keep serving: one stray rejection in a single request must not take
+// the whole API (and every other visitor) down with it.
+process.on('unhandledRejection', (reason) => {
+    console.error('Unhandled rejection:', reason instanceof Error ? reason.message : reason);
 });
 
 module.exports = app;
