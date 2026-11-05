@@ -15,6 +15,7 @@ import { notify } from '../../utils/toast';
 import useScrollLock from '../../hooks/use-scroll-lock';
 import EventViews, { ViewToggle } from '../../components/features/events/EventViews';
 import { X, Location, Clock, CheckCircle } from 'reicon-react';
+import usePageMetadata from '../../hooks/use-page-metadata';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -47,6 +48,7 @@ const StatusBadge = ({ status }) => {
 };
 
 const Events = () => {
+    usePageMetadata('Events | Bulusan Zoo', 'Upcoming events, tours and activities at Bulusan Zoo in Calapan City, Oriental Mindoro.', 'https://bulusanzoo.com/events');
     const navigate = useNavigate();
     const { user, isAuthenticated } = useAuth();
     const containerRef = useRef(null);
