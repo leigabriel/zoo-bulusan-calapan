@@ -2,7 +2,7 @@
 
 Bulusan Zoo is a wildlife and nature destination in Calapan City, Oriental Mindoro, Philippines. It connects people with animals, plants, and the natural environment through wildlife education, conservation awareness, and community engagement.
 
-![Bulusan Zoo](frontend/public/bulusan-og.png)
+![Bulusan Zoo](frontend/public/images/bulusan-og.png)
 
 ## No License
 
