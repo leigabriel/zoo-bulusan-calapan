@@ -712,7 +712,7 @@ const Reservations = () => {
                             </div>
 
                             {/* History Banner */}
-                            <div onClick={() => setShowHistoryPanel(true)} className="md:col-span-2 border border-white/20 bg-transparent hover:bg-white text-white hover:text-[#26bc61] transition-colors duration-300 cursor-pointer flex items-center justify-between p-6 md:p-10 group rounded-2xl">
+                            <div role="button" tabIndex={0} onClick={() => setShowHistoryPanel(true)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setShowHistoryPanel(true); } }} className="md:col-span-2 border border-white/20 bg-transparent hover:bg-white text-white hover:text-[#26bc61] transition-colors duration-300 cursor-pointer flex items-center justify-between p-6 md:p-10 group rounded-2xl">
                                 <div className="flex items-center gap-6">
                                     <div className="w-12 h-12 border border-current flex items-center justify-center shrink-0 rounded-xl">
                                         <Icons.History />
@@ -733,7 +733,7 @@ const Reservations = () => {
                 {/* Main Creation Modal */}
                 <AnimatePresence>
                     {showCreateModal && (
-                        <div className="fixed inset-0 z-[200] flex items-center justify-center p-0 md:p-6" onClick={handleCloseAttempt}>
+                        <div role="dialog" aria-modal="true" aria-label="Make a reservation" className="fixed inset-0 z-[200] flex items-center justify-center p-0 md:p-6" onClick={handleCloseAttempt}>
                             <motion.div
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
@@ -966,7 +966,7 @@ const Reservations = () => {
                 {/* Final Submission Confirmation Modal */}
                 <AnimatePresence>
                     {showSubmitConfirm && (
-                        <div className="fixed inset-0 z-[250] flex items-center justify-center p-4">
+                        <div role="dialog" aria-modal="true" aria-label="Discard reservation form" className="fixed inset-0 z-[250] flex items-center justify-center p-4">
                             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-[#212631]/80 backdrop-blur-md" />
                             <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="bg-[#ebebeb] border border-[#212631]/20 w-full max-w-md relative z-10 flex flex-col p-0 overflow-hidden shadow-2xl rounded-2xl">
                                 <div className="p-8 border-b border-[#212631]/20 flex flex-col items-center text-center">
@@ -1015,7 +1015,7 @@ const Reservations = () => {
                 {/* Success Confirmation Modal */}
                 <AnimatePresence>
                     {showConfirmation && confirmationData && (
-                        <div className="fixed inset-0 z-[300] flex items-center justify-center p-4">
+                        <div role="dialog" aria-modal="true" aria-label="Reservation confirmed" className="fixed inset-0 z-[300] flex items-center justify-center p-4">
                             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-[#212631]/80 backdrop-blur-md" />
                             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }} className="bg-[#ebebeb] border border-[#212631]/20 w-full max-w-sm p-10 relative z-10 flex flex-col items-center text-center shadow-2xl rounded-2xl">
                                 <motion.div
@@ -1076,7 +1076,7 @@ const Reservations = () => {
                 {/* Unsaved Changes Discard Modal */}
                 <AnimatePresence>
                     {showCloseConfirm && (
-                        <div className="fixed inset-0 z-[250] flex items-center justify-center p-4">
+                        <div role="dialog" aria-modal="true" aria-label="Discard reservation form" className="fixed inset-0 z-[250] flex items-center justify-center p-4">
                             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-[#212631]/80 backdrop-blur-md" />
                             <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="bg-[#ebebeb] border border-[#212631]/20 w-full max-w-sm p-8 relative z-10 flex flex-col text-center items-center shadow-2xl rounded-2xl">
                                 <div className="mb-6"><Icons.Warning /></div>
