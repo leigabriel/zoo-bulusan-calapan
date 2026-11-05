@@ -33,7 +33,7 @@ const DiscoveryList = memo(({ isMobile, filterRegion, setFilterRegion, onSelect,
         <div className="p-5 md:p-8 border-b border-[#dce5dc] bg-[#f1f5ed]">
             <div className="flex items-start justify-between mb-5">
                 <div>
-                    <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[#6d8572]">Field guide</p>
+                    <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-[#6d8572]">Field guide</p>
                     <h1 className="mt-1 text-xl md:text-2xl font-black tracking-tight text-[#1f3328]">Wildlife Origins</h1>
                 </div>
                 {isMobile && (
@@ -47,7 +47,7 @@ const DiscoveryList = memo(({ isMobile, filterRegion, setFilterRegion, onSelect,
                     <button
                         key={region}
                         onClick={() => setFilterRegion(region)}
-                        className={`whitespace-nowrap px-3.5 py-2 rounded-full text-[10px] font-bold transition-all border ${filterRegion === region ? 'bg-[#1f3328] text-white border-[#1f3328] shadow-sm' : 'bg-[#fffdf8] text-[#52675a] border-[#d5e1d5] hover:border-[#78927e]'}`}
+                        className={`whitespace-nowrap px-3.5 py-2 rounded-full text-[11px] font-bold transition-all border ${filterRegion === region ? 'bg-[#1f3328] text-white border-[#1f3328] shadow-sm' : 'bg-[#fffdf8] text-[#52675a] border-[#d5e1d5] hover:border-[#78927e]'}`}
                     >
                         {region}
                     </button>
@@ -66,7 +66,7 @@ const DiscoveryList = memo(({ isMobile, filterRegion, setFilterRegion, onSelect,
                     </div>
                     <div className="flex-1 min-w-0">
                         <h4 className="font-bold text-sm truncate">{animal.name}</h4>
-                        <p className="text-[9px] font-bold uppercase tracking-widest text-[#6d8572]">{animal.region}</p>
+                        <p className="text-[11px] font-bold uppercase tracking-widest text-[#6d8572]">{animal.region}</p>
                     </div>
                 </div>
             ))}
@@ -99,7 +99,7 @@ const GlobeMap = ({ filterRegion, onSelectAnimal }) => {
                 ) : (
                     <div className="flex flex-col items-center gap-6">
                         <div className="w-12 h-12 border-4 border-[#d5e1d5] border-t-[#1f3328] rounded-full animate-spin" />
-                        <p className="text-[#1f3328] font-bold text-[10px] uppercase tracking-[0.3em] animate-pulse">Synchronizing Globe...</p>
+                        <p className="text-[#1f3328] font-bold text-[11px] uppercase tracking-[0.3em] animate-pulse">Synchronizing Globe...</p>
                     </div>
                 )}
             </div>
