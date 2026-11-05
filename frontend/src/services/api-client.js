@@ -689,14 +689,6 @@ export const adminAPI = {
         return handleResponse(response);
     },
 
-    unsuspendUser: async (id) => {
-        const response = await fetch(`${API_BASE_URL}/admin/users/${id}/unsuspend`, {
-            method: 'PUT',
-            headers: getAuthHeaders('admin')
-        });
-        return handleResponse(response);
-    },
-
     // Appeals management
     getPendingAppeals: async () => {
         const response = await fetch(`${API_BASE_URL}/admin/appeals`, {
@@ -1421,14 +1413,6 @@ export const staffAPI = {
     deleteEvent: async (id) => {
         const response = await fetch(`${API_BASE_URL}/staff/events/${id}`, {
             method: 'DELETE',
-            headers: getAuthHeaders('staff')
-        });
-        return handleResponse(response);
-    },
-
-    // Dashboard stats
-    getDashboardStats: async () => {
-        const response = await fetch(`${API_BASE_URL}/staff/dashboard`, {
             headers: getAuthHeaders('staff')
         });
         return handleResponse(response);
