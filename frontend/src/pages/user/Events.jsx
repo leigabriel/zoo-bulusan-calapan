@@ -264,7 +264,7 @@ const Events = () => {
 
     return (
         <ReactLenis root>
-            <div ref={containerRef} className={`min-h-screen text-black ${PAGE_BG_GRADIENT}`}>
+            <div ref={containerRef} className={`min-h-dvh text-black ${PAGE_BG_GRADIENT}`}>
                 <Header />
 
                 <div className="w-full min-h-[40vh] md:min-h-[60vh] flex flex-col items-center justify-center px-4 pt-24 pb-8">
@@ -319,7 +319,7 @@ const Events = () => {
                         <form onSubmit={handleSubmitAttempt} className="bg-white p-6 sm:p-8 md:p-12 rounded-xl md:rounded-2xl shadow-sm border border-gray-200">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 mb-6 md:mb-8">
                                 <div className="flex flex-col gap-2">
-                                    <label className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-gray-500">Event Name *</label>
+                                    <label className="text-[11px] md:text-xs font-bold uppercase tracking-widest text-gray-500">Event Name *</label>
                                     <input
                                         type="text"
                                         value={eventForm.venueEventName}
@@ -330,7 +330,7 @@ const Events = () => {
                                     />
                                 </div>
                                 <div className="flex flex-col gap-2">
-                                    <label className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-gray-500">Estimated Attendees *</label>
+                                    <label className="text-[11px] md:text-xs font-bold uppercase tracking-widest text-gray-500">Estimated Attendees *</label>
                                     <input
                                         type="number"
                                         value={eventForm.numberOfParticipants}
@@ -341,7 +341,7 @@ const Events = () => {
                                     />
                                 </div>
                                 <div className="flex flex-col gap-2">
-                                    <label className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-gray-500">Event Date *</label>
+                                    <label className="text-[11px] md:text-xs font-bold uppercase tracking-widest text-gray-500">Event Date *</label>
                                     <input
                                         type="date"
                                         value={eventForm.venueEventDate}
@@ -352,7 +352,7 @@ const Events = () => {
                                     />
                                 </div>
                                 <div className="flex flex-col gap-2">
-                                    <label className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-gray-500">Event Start Time *</label>
+                                    <label className="text-[11px] md:text-xs font-bold uppercase tracking-widest text-gray-500">Event Start Time *</label>
                                     <input
                                         type="time"
                                         value={eventForm.venueEventStartTime}
@@ -362,7 +362,7 @@ const Events = () => {
                                     />
                                 </div>
                                 <div className="flex flex-col gap-2">
-                                    <label className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-gray-500">Event End Time *</label>
+                                    <label className="text-[11px] md:text-xs font-bold uppercase tracking-widest text-gray-500">Event End Time *</label>
                                     <input
                                         type="time"
                                         value={eventForm.venueEventEndTime}
@@ -375,7 +375,7 @@ const Events = () => {
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 mb-6 md:mb-8 pt-6 md:pt-8 border-t border-gray-100">
                                 <div className="flex flex-col gap-2">
-                                    <label className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-gray-500">Full Name *</label>
+                                    <label className="text-[11px] md:text-xs font-bold uppercase tracking-widest text-gray-500">Full Name *</label>
                                     <input
                                         type="text"
                                         value={eventForm.participantName}
@@ -386,7 +386,7 @@ const Events = () => {
                                     />
                                 </div>
                                 <div className="flex flex-col gap-2">
-                                    <label className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-gray-500">Email Address *</label>
+                                    <label className="text-[11px] md:text-xs font-bold uppercase tracking-widest text-gray-500">Email Address *</label>
                                     <input
                                         type="email"
                                         value={eventForm.participantEmail}
@@ -397,7 +397,7 @@ const Events = () => {
                                     />
                                 </div>
                                 <div className="flex flex-col gap-2 md:col-span-2">
-                                    <label className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-gray-500">Phone Number</label>
+                                    <label className="text-[11px] md:text-xs font-bold uppercase tracking-widest text-gray-500">Phone Number</label>
                                     <input
                                         type="tel"
                                         value={eventForm.participantPhone}
@@ -409,7 +409,7 @@ const Events = () => {
                             </div>
 
                             <div className="flex flex-col gap-2 mb-10 md:mb-12">
-                                <label className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-gray-500">Additional Details & Requirements</label>
+                                <label className="text-[11px] md:text-xs font-bold uppercase tracking-widest text-gray-500">Additional Details & Requirements</label>
                                 <textarea
                                     value={eventForm.venueEventDescription}
                                     onChange={e => setEventForm({ ...eventForm, venueEventDescription: sanitizeInput(e.target.value) })}
@@ -421,7 +421,7 @@ const Events = () => {
                             <button
                                 type="submit"
                                 disabled={isSubmitting}
-                                className="w-full py-4 md:py-5 bg-black text-white rounded-full text-[10px] md:text-xs font-bold uppercase tracking-widest hover:bg-gray-800 disabled:opacity-50 transition-colors"
+                                className="w-full py-4 md:py-5 bg-black text-white rounded-full text-[11px] md:text-xs font-bold uppercase tracking-widest hover:bg-gray-800 disabled:opacity-50 transition-colors"
                             >
                                 {isSubmitting ? 'Processing...' : 'Submit Request'}
                             </button>
@@ -474,7 +474,7 @@ const Events = () => {
 
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8 mb-6 md:mb-8 border-t border-gray-200 pt-6 md:pt-8">
                                         <div>
-                                            <h4 className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-gray-400 mb-2">Time</h4>
+                                            <h4 className="text-[11px] md:text-xs font-bold uppercase tracking-widest text-gray-400 mb-2">Time</h4>
                                             <p className="text-black font-medium text-sm md:text-base flex items-center gap-2">
                                                 <Icons.Clock />
                                                 {formatTime(selectedEvent.startTime) || '—'}
@@ -482,7 +482,7 @@ const Events = () => {
                                             </p>
                                         </div>
                                         <div>
-                                            <h4 className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-gray-400 mb-2">Location</h4>
+                                            <h4 className="text-[11px] md:text-xs font-bold uppercase tracking-widest text-gray-400 mb-2">Location</h4>
                                             <p className="text-black font-medium text-sm md:text-base flex items-center gap-2">
                                                 <Icons.Location />
                                                 {selectedEvent.location}
@@ -491,7 +491,7 @@ const Events = () => {
                                     </div>
 
                                     <div className="mb-6 md:mb-8">
-                                        <h4 className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-gray-400 mb-3 md:mb-4">About this Event</h4>
+                                        <h4 className="text-[11px] md:text-xs font-bold uppercase tracking-widest text-gray-400 mb-3 md:mb-4">About this Event</h4>
                                         <p className="text-gray-700 text-sm md:text-base leading-relaxed">
                                             {selectedEvent.description || 'Join us for an immersive wildlife experience. Learn directly from our experts and connect with nature.'}
                                         </p>
@@ -500,7 +500,7 @@ const Events = () => {
                                     {selectedEvent.tags && selectedEvent.tags.length > 0 && (
                                         <div className="flex flex-wrap gap-2 mt-auto">
                                             {selectedEvent.tags.map((tag, i) => (
-                                                <span key={i} className="px-3 py-1 md:px-4 md:py-2 bg-gray-100 rounded-full text-[10px] md:text-xs font-medium text-gray-600">
+                                                <span key={i} className="px-3 py-1 md:px-4 md:py-2 bg-gray-100 rounded-full text-[11px] md:text-xs font-medium text-gray-600">
                                                     {tag}
                                                 </span>
                                             ))}
@@ -526,30 +526,30 @@ const Events = () => {
 
                                 <div className="space-y-3 md:space-y-4 mb-6 md:mb-8 text-left bg-gray-50 p-4 md:p-6 rounded-xl border border-gray-100 text-sm md:text-base">
                                     <div className="flex justify-between border-b border-gray-200 pb-2">
-                                        <span className="text-[10px] md:text-xs font-bold uppercase text-gray-400">Event</span>
+                                        <span className="text-[11px] md:text-xs font-bold uppercase text-gray-400">Event</span>
                                         <span className="font-medium text-black truncate max-w-[150px] sm:max-w-[200px]">{eventForm.venueEventName}</span>
                                     </div>
                                     <div className="flex justify-between border-b border-gray-200 pb-2">
-                                        <span className="text-[10px] md:text-xs font-bold uppercase text-gray-400">Date</span>
+                                        <span className="text-[11px] md:text-xs font-bold uppercase text-gray-400">Date</span>
                                         <span className="font-medium text-black">{formatDateFromDB(eventForm.venueEventDate)}</span>
                                     </div>
                                     <div className="flex justify-between border-b border-gray-200 pb-2">
-                                        <span className="text-[10px] md:text-xs font-bold uppercase text-gray-400">Start Time</span>
+                                        <span className="text-[11px] md:text-xs font-bold uppercase text-gray-400">Start Time</span>
                                         <span className="font-medium text-black">{eventForm.venueEventStartTime || '—'}</span>
                                     </div>
                                     <div className="flex justify-between border-b border-gray-200 pb-2">
-                                        <span className="text-[10px] md:text-xs font-bold uppercase text-gray-400">End Time</span>
+                                        <span className="text-[11px] md:text-xs font-bold uppercase text-gray-400">End Time</span>
                                         <span className="font-medium text-black">{eventForm.venueEventEndTime || '—'}</span>
                                     </div>
                                     <div className="flex justify-between">
-                                        <span className="text-[10px] md:text-xs font-bold uppercase text-gray-400">Attendees</span>
+                                        <span className="text-[11px] md:text-xs font-bold uppercase text-gray-400">Attendees</span>
                                         <span className="font-medium text-black">{eventForm.numberOfParticipants}</span>
                                     </div>
                                 </div>
 
                                 <div className="flex flex-col sm:flex-row gap-3 md:gap-4">
-                                    <button onClick={() => setShowSubmitConfirm(false)} className="flex-1 py-3 md:py-4 rounded-full border border-gray-200 text-[10px] md:text-xs font-bold uppercase tracking-widest text-black hover:bg-gray-50">Return</button>
-                                    <button onClick={confirmSubmit} disabled={isSubmitting} className="flex-1 py-3 md:py-4 rounded-full bg-black text-white text-[10px] md:text-xs font-bold uppercase tracking-widest hover:bg-gray-800 disabled:opacity-50">
+                                    <button onClick={() => setShowSubmitConfirm(false)} className="flex-1 py-3 md:py-4 rounded-full border border-gray-200 text-[11px] md:text-xs font-bold uppercase tracking-widest text-black hover:bg-gray-50">Return</button>
+                                    <button onClick={confirmSubmit} disabled={isSubmitting} className="flex-1 py-3 md:py-4 rounded-full bg-black text-white text-[11px] md:text-xs font-bold uppercase tracking-widest hover:bg-gray-800 disabled:opacity-50">
                                         {isSubmitting ? 'Wait...' : 'Confirm'}
                                     </button>
                                 </div>
@@ -571,15 +571,15 @@ const Events = () => {
                                 <p className="text-gray-500 text-sm mb-6 md:mb-8">Your reservation request has been received.</p>
 
                                 <div className="bg-gray-50 border border-gray-100 rounded-xl p-4 md:p-6 mb-6 md:mb-8">
-                                    <span className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-gray-400 block mb-2">Reference ID</span>
+                                    <span className="text-[11px] md:text-xs font-bold uppercase tracking-widest text-gray-400 block mb-2">Reference ID</span>
                                     <span className="text-xl md:text-2xl text-black">{confirmationData.reference}</span>
                                 </div>
 
                                 <div className="space-y-3">
-                                    <button onClick={() => { setShowConfirmation(false); navigate('/reservations'); }} className="w-full py-3 md:py-4 bg-black text-white rounded-full text-[10px] md:text-xs font-bold uppercase tracking-widest hover:bg-gray-800">
+                                    <button onClick={() => { setShowConfirmation(false); navigate('/reservations'); }} className="w-full py-3 md:py-4 bg-black text-white rounded-full text-[11px] md:text-xs font-bold uppercase tracking-widest hover:bg-gray-800">
                                         Manage Bookings
                                     </button>
-                                    <button onClick={() => setShowConfirmation(false)} className="w-full py-3 md:py-4 border border-gray-200 rounded-full text-[10px] md:text-xs font-bold uppercase tracking-widest text-black hover:bg-gray-50">
+                                    <button onClick={() => setShowConfirmation(false)} className="w-full py-3 md:py-4 border border-gray-200 rounded-full text-[11px] md:text-xs font-bold uppercase tracking-widest text-black hover:bg-gray-50">
                                         Dismiss
                                     </button>
                                 </div>
