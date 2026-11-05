@@ -329,7 +329,7 @@ const MyEvents = () => {
 
                 <AnimatePresence>
                     {editingEvent && (
-                        <div className="fixed inset-0 z-[250] flex items-center justify-center p-4 md:p-8">
+                        <div role="dialog" aria-modal="true" aria-label="Edit event details" className="fixed inset-0 z-[250] flex items-center justify-center p-4 md:p-8">
                             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
                             <motion.div
                                 initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }}
@@ -453,7 +453,7 @@ const MyEvents = () => {
 
                 <AnimatePresence>
                     {showConfirm && (
-                        <div className="fixed inset-0 z-[300] flex items-center justify-center p-4">
+                        <div role="dialog" aria-modal="true" aria-label="Cancel registration" className="fixed inset-0 z-[300] flex items-center justify-center p-4">
                             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
                             <motion.div
                                 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }}
