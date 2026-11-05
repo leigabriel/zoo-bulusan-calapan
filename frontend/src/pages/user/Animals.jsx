@@ -115,7 +115,7 @@ const Animals = () => {
     useEffect(() => { fetchAnimals(); }, [fetchAnimals]);
 
     useEffect(() => {
-        if (!loading && animals.length > 0) 
+        if (!loading && animals.length > 0) {
             if (prefersReducedMotion()) return;
             const ctx = gsap.context(() => {
                 // Scroll animation for grid items
