@@ -18,15 +18,51 @@ const TOURISM_SOURCE = 'https://www.travelorientalmindoro.ph/place/calapan-natur
 const DIRECTIONS_URL = 'https://www.google.com/maps/dir/?api=1&destination=13.40496178,121.1991656';
 const ZOOTOPIA_GAME_URL = 'https://adventuregame.bulusanzoo.com/';
 
-const ticketMaskStyle = {
-    WebkitMaskImage: 'radial-gradient(circle at 0px 50%, transparent 5px, black 6px), radial-gradient(circle at 100% 50%, transparent 5px, black 6px)',
-    WebkitMaskSize: '51% 16px',
-    WebkitMaskRepeat: 'repeat-y',
-    WebkitMaskPosition: 'left, right',
-    maskImage: 'radial-gradient(circle at 0px 50%, transparent 5px, black 6px), radial-gradient(circle at 100% 50%, transparent 5px, black 6px)',
-    maskSize: '51% 16px',
-    maskRepeat: 'repeat-y',
-    maskPosition: 'left, right',
+const HERO_ANIMALS = ['owl', 'horse', 'tiger', 'monkey', 'dove', 'rabbit', 'parrot', 'ostrich', 'eagle', 'deer'];
+
+// Half-circle notches punched into both sides of a ticket. Each side owns half the width so
+// the two cut-outs never overlap, whatever the button width is.
+const TICKET_NOTCH = 'radial-gradient(circle 11px at 0 50%, transparent 97%, #000 100%) left / 51% 100% no-repeat, radial-gradient(circle 11px at 100% 50%, transparent 97%, #000 100%) right / 51% 100% no-repeat';
+const ticketMaskStyle = { WebkitMask: TICKET_NOTCH, mask: TICKET_NOTCH };
+
+const TicketIcon = () => (
+    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="M3 9a2 2 0 0 0 0 6v2a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1v-2a2 2 0 0 1 0-6V7a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1z" />
+        <path d="M14 6v12" strokeDasharray="2 3" />
+    </svg>
+);
+
+const GamepadIcon = () => (
+    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="M6 12h4M8 10v4" />
+        <path d="M15 13h.01M18 11h.01" />
+        <path d="M17.3 6H6.7a4 4 0 0 0-3.9 3.1l-1.2 5.5A2.6 2.6 0 0 0 6.4 16.5L7.5 15h9l1.1 1.5a2.6 2.6 0 0 0 4.8-1.9l-1.2-5.5A4 4 0 0 0 17.3 6z" />
+    </svg>
+);
+
+/* Ticket-shaped call to action: label on the left, perforated stub with an icon on the right. */
+const HeroTicket = ({ variant, label, icon, onClick, ariaLabel }) => {
+    const primary = variant === 'primary';
+    return (
+        <div className="hero-btn pointer-events-auto w-full max-w-xs drop-shadow-[0_12px_24px_rgba(0,0,0,0.35)] sm:w-auto sm:max-w-none">
+            <button
+                type="button"
+                onClick={onClick}
+                aria-label={ariaLabel}
+                style={ticketMaskStyle}
+                className={`group flex min-h-14 w-full cursor-pointer items-stretch rounded-2xl font-['DM_Sans',_sans-serif] transition-transform duration-300 ease-out hover:-translate-y-0.5 active:scale-[0.97] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white ${
+                    primary
+                        ? 'bg-green-400 text-black hover:bg-green-300'
+                        : 'border border-white/50 bg-white/15 text-white backdrop-blur-md hover:bg-white/25'
+                }`}
+            >
+                <span className="flex flex-1 items-center justify-center px-7 py-3.5 text-base font-black tracking-wide sm:px-9 sm:text-lg">{label}</span>
+                <span className={`flex w-16 shrink-0 items-center justify-center border-l-2 border-dashed transition-transform duration-300 group-hover:[&>svg]:rotate-[-12deg] ${primary ? 'border-black/35' : 'border-white/50'}`}>
+                    {icon}
+                </span>
+            </button>
+        </div>
+    );
 };
 
 const HeroSection = () => {
@@ -41,40 +77,40 @@ const HeroSection = () => {
 
         const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         if (reducedMotion) {
-            gsap.set('.hero-deer, .hero-title', { opacity: 1, scale: 1, y: 0 });
+            gsap.set('.hero-animal, .hero-title, .hero-btn', { opacity: 1, scale: 1, y: 0 });
             gsap.set('.hero-line', { clipPath: 'inset(0% 0% 0% 0%)', y: 0 });
-            gsap.set('.hero-btn', { opacity: 1, scale: 1, y: 0 });
             return undefined;
         }
 
         const context = gsap.context(() => {
             const timeline = gsap.timeline();
 
-            timeline.fromTo('.hero-deer',
-                { opacity: 0, scale: 0.5, y: 50 },
-                { opacity: 1, scale: 1, y: 0, duration: 1, ease: 'back.out(1.5)' }, 0
-            )
+            timeline
                 .fromTo('.hero-title',
                     { opacity: 0, y: 50, skewY: 5 },
-                    { opacity: 1, y: 0, skewY: 0, duration: 1, ease: 'expo.out' }, 0.15
+                    { opacity: 1, y: 0, skewY: 0, duration: 1, ease: 'expo.out' }, 0.1
                 )
                 .fromTo('.hero-line',
                     { clipPath: 'inset(100% 0% 0% 0%)', y: 50 },
-                    { clipPath: 'inset(0% 0% 0% 0%)', y: 0, duration: 1.25, ease: 'expo.out', stagger: 0.12 }, 0.25
+                    { clipPath: 'inset(0% 0% 0% 0%)', y: 0, duration: 1.25, ease: 'expo.out', stagger: 0.12 }, 0.2
                 )
                 .fromTo('.hero-btn',
-                    { opacity: 0, scale: 0.9, y: 30 },
-                    { opacity: 1, scale: 1, y: 0, duration: 1, ease: 'elastic.out(1, 0.5)' }, 0.6
+                    { opacity: 0, y: 30 },
+                    { opacity: 1, y: 0, duration: 0.9, ease: 'power3.out', stagger: 0.12 }, 0.55
+                )
+                .fromTo('.hero-animal',
+                    { opacity: 0, y: 40, scale: 0.8 },
+                    { opacity: 1, y: 0, scale: 1, duration: 0.8, ease: 'back.out(1.6)', stagger: 0.07 }, 0.7
                 );
 
             gsap.to('.hero-bg-parallax', {
-                yPercent: 40,
+                yPercent: 25,
                 scale: 1.1,
                 ease: 'none',
                 scrollTrigger: { trigger: containerRef.current, start: 'top top', end: 'bottom top', scrub: true }
             });
-            gsap.to('.hero-content, .hero-images', {
-                yPercent: 40,
+            gsap.to('.hero-content, .hero-animals', {
+                yPercent: 25,
                 opacity: 0,
                 ease: 'none',
                 scrollTrigger: { trigger: containerRef.current, start: 'top top', end: 'bottom top', scrub: true }
@@ -85,57 +121,55 @@ const HeroSection = () => {
     }, []);
 
     return (
-        <div ref={containerRef} className="relative w-full min-h-[100dvh] overflow-hidden bg-white">
-            <section className="relative mx-auto max-w-[2000px] w-full min-h-[100dvh] flex flex-col items-center justify-center overflow-hidden">
-                {/* Green rises from the bottom only, leaving the headline a clean white
-                    backdrop.
-
-                    z-0, not -z-10: the wrapper is `position: relative` with no z-index, so
-                    it does not create a stacking context. A negative z-index descendant
-                    paints in step 2 of the painting order, before that wrapper's own
-                    `bg-white` in step 6 — the gradient was hidden behind it entirely. */}
-                <div className="hero-bg-parallax absolute inset-0 z-0 origin-bottom bg-[linear-gradient(to_bottom,#ffffff_0%,#ffffff_45%,#bbf7d0_72%,#4ade80_100%)]" />
-                <div className="hero-images absolute inset-0 z-0 overflow-hidden pointer-events-none">
-                    <img
-                        src="images/deer.png"
-                        alt=""
-                        aria-hidden="true"
-                        className="hero-deer absolute bottom-0 left-[-3rem] w-[78vw] max-w-[40rem] origin-bottom-left object-contain object-bottom opacity-0 sm:left-[-2rem] sm:w-[48vw] md:left-0 md:w-[43vw]"
-                    />
+        <div ref={containerRef} className="relative w-full overflow-hidden bg-[#1d3a26]">
+            <section className="relative mx-auto flex min-h-[100dvh] w-full max-w-[2000px] flex-col overflow-hidden" aria-label="Welcome to Bulusan Zoo">
+                <div className="hero-bg-parallax absolute inset-0 z-0 origin-center">
+                    <img src="/images/hero-sky.webp" alt="" aria-hidden="true" fetchPriority="high" className="h-full w-full object-cover object-center" />
                 </div>
-                <div className="hero-content text-center flex flex-col items-center z-10 px-4 sm:px-5 pointer-events-none">
-                    <p className="hero-title opacity-0 font-['Mistral',_cursive] text-[clamp(2rem,5vw,5rem)] text-black -mb-1 sm:-mb-2">
+                {/* Soft vignette keeps the white headline readable over the bright sky. */}
+                <div className="pointer-events-none absolute inset-0 z-0 bg-[radial-gradient(70%_55%_at_50%_42%,rgba(8,30,16,0.38)_0%,rgba(8,30,16,0.12)_70%,transparent_100%),linear-gradient(to_bottom,rgba(0,0,0,0.3)_0%,transparent_35%,rgba(0,0,0,0.5)_100%)]" aria-hidden="true" />
+
+                <div className="hero-content pointer-events-none relative z-10 flex flex-1 flex-col items-center justify-center px-4 pb-6 pt-28 text-center sm:px-6 sm:pt-32">
+                    <p className="hero-title -mb-1 font-['Mistral',_cursive] text-[clamp(2rem,5vw,5rem)] text-white opacity-0 drop-shadow-[0_2px_10px_rgba(0,0,0,0.45)] sm:-mb-2">
                         Welcome to
                     </p>
-                    <div className="mb-5 sm:mb-[30px]">
-                        <h1 className="text-[clamp(2.5rem,8vw,6rem)] font-normal font-['Gravelad',_sans-serif] text-black leading-none tracking-tight overflow-hidden py-2 sm:py-4">
+                    <div className="mb-8 sm:mb-10">
+                        <h1 className="overflow-hidden py-2 font-['Gravelad',_sans-serif] text-[clamp(2.5rem,8vw,6rem)] font-normal leading-none tracking-tight text-white drop-shadow-[0_4px_18px_rgba(0,0,0,0.45)] sm:py-4">
                             <span className="block overflow-hidden">
                                 <span className="hero-line block" style={{ clipPath: 'inset(100% 0% 0% 0%)' }}>BULUSAN ZOO</span>
                             </span>
                         </h1>
-                        <div className="overflow-hidden mt-2">
-                            <p className="hero-line text-md sm:text-xl md:text-2xl font-semibold text-black/70 tracking-wide" style={{ clipPath: 'inset(100% 0% 0% 0%)' }}>
+                        <div className="mt-2 overflow-hidden">
+                            <p className="hero-line text-base font-semibold tracking-wide text-white/90 drop-shadow-[0_2px_8px_rgba(0,0,0,0.5)] sm:text-xl md:text-2xl" style={{ clipPath: 'inset(100% 0% 0% 0%)' }}>
                                 Explore Nature, Learn, and Connect
                             </p>
                         </div>
                     </div>
-                    <div className="flex flex-col items-center gap-3 sm:flex-row sm:items-stretch sm:justify-center sm:gap-5">
-                        <button
-                            onClick={() => navigate('/reservations')}
-                            className="hero-btn group pointer-events-auto bg-green-400 text-black p-1 sm:p-1.5 rounded-xl cursor-pointer transition-all duration-300 ease-out hover:scale-105 hover:drop-shadow-xl active:scale-95 focus:outline-none drop-shadow-md transform-gpu"
-                            style={ticketMaskStyle}
-                        >
-                            <span className="w-full h-full rounded-lg flex items-center justify-center py-1.5 sm:py-0.5 px-7 sm:px-9 font-['Mistral',_cursive] text-[1.5rem] sm:text-[2rem] tracking-[1px] mt-1 transition-transform duration-300 ease-out group-hover:scale-105">
-                                Plan a Visit
-                            </span>
-                        </button>
-                        <button
+                    <div className="flex w-full flex-col items-center gap-4 sm:w-auto sm:flex-row sm:gap-5">
+                        <HeroTicket variant="primary" label="Plan a Visit" icon={<TicketIcon />} onClick={() => navigate('/reservations')} />
+                        <HeroTicket
+                            variant="glass"
+                            label="Play our game"
+                            icon={<GamepadIcon />}
+                            ariaLabel="Play our game, opens adventuregame.bulusanzoo.com in a new tab"
                             onClick={() => window.open(ZOOTOPIA_GAME_URL, '_blank', 'noopener,noreferrer')}
-                            aria-label="Play our game, opens adventuregame.bulusanzoo.com in a new tab"
-                            className="hero-btn group pointer-events-auto min-h-11 rounded-xl border-2 border-black bg-black px-7 py-3 text-white font-['Mistral',_cursive] text-[1.25rem] sm:text-[1.6rem] tracking-[1px] cursor-pointer transition-all duration-300 ease-out hover:bg-white hover:text-black active:scale-95 focus:outline-none transform-gpu"
-                        >
-                            Play our game
-                        </button>
+                        />
+                    </div>
+                </div>
+
+                {/* One row of origami animals. Scrolls sideways on narrow phones, fits from tablet up. */}
+                <div className="hero-animals pointer-events-none relative z-10 w-full overflow-x-auto pb-5 pt-2 [scrollbar-width:none] sm:pb-8 [&::-webkit-scrollbar]:hidden" aria-hidden="true">
+                    <div className="mx-auto flex w-max items-end gap-3 px-4 sm:gap-4 md:gap-6">
+                        {HERO_ANIMALS.map((name) => (
+                            <img
+                                key={name}
+                                src={`/images/origami/${name}.webp`}
+                                alt=""
+                                decoding="async"
+                                draggable="false"
+                                className="hero-animal h-[clamp(3rem,6.2vw,7.5rem)] w-auto shrink-0 opacity-0 drop-shadow-[0_8px_10px_rgba(0,0,0,0.35)]"
+                            />
+                        ))}
                     </div>
                 </div>
             </section>
