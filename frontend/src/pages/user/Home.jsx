@@ -267,25 +267,32 @@ const AboutGallery = () => {
     );
 };
 
+const VideoSection = () => (
+    <section className="relative w-full bg-[#151b16] px-4 py-16 sm:px-6 sm:py-24 lg:px-10" aria-labelledby="park-video-title">
+        <div className="mx-auto flex w-full max-w-[1500px] flex-col items-center gap-8 text-center sm:gap-10">
+            <div>
+                <p className="mb-4 text-xs font-black uppercase tracking-[0.25em] text-green-400">Park walkthrough</p>
+                <h2 id="park-video-title" className="text-[clamp(2rem,5vw,4.5rem)] font-black leading-[1] tracking-[-0.045em] text-white">See Bulusan Park in motion.</h2>
+            </div>
+            <div className="aspect-video w-full overflow-hidden rounded-2xl bg-black shadow-2xl shadow-black/40">
+                <video
+                    className="h-full w-full object-cover"
+                    src="/bulusanzoo-images/bzv2.mp4"
+                    poster="/bulusanzoo-images/bzv2-poster.jpg"
+                    controls
+                    muted
+                    loop
+                    playsInline
+                    preload="metadata"
+                    aria-label="Bulusan Park walkthrough video"
+                />
+            </div>
+        </div>
+    </section>
+);
+
 const AboutSection = () => (
     <section className="relative w-full overflow-hidden bg-green-400" aria-labelledby="about-park-title">
-        {/* Park walkthrough footage sits under a green veil so the section keeps its green identity. */}
-        <video
-            className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-60"
-            src="/bulusanzoo-images/bzv2.mp4"
-            poster="/bulusanzoo-images/bzv2-poster.jpg"
-            autoPlay
-            muted
-            loop
-            playsInline
-            preload="metadata"
-            aria-hidden="true"
-            tabIndex={-1}
-        />
-        {/* Green stays the section colour; the veil is strongest behind the copy and eases off
-            toward the edges so the walkthrough footage reads at the top and bottom. */}
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(120%_95%_at_50%_35%,rgba(74,222,128,0.95)_0%,rgba(74,222,128,0.95)_42%,rgba(74,222,128,0.52)_100%)]" aria-hidden="true" />
-
         <div className="relative mx-auto flex w-full max-w-[1500px] flex-col gap-10 px-4 py-16 sm:gap-14 sm:px-6 sm:py-24 lg:px-10">
             <div className="flex flex-col items-center text-center">
                 <p className="mb-7 text-xs font-black uppercase tracking-[0.25em] text-black/55">About Bulusan Park</p>
@@ -555,6 +562,7 @@ const Home = () => {
                 <AIFloatingButton />
                 <main className="relative w-full overflow-x-clip">
                     <HeroSection />
+                    <VideoSection />
                     <AboutSection />
                     <ExploreSection />
                     <ZootopiaSection />
