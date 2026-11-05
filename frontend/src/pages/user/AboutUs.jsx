@@ -3,46 +3,13 @@ import { ReactLenis } from 'lenis/react';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 import AIFloatingButton from '../../components/common/AIFloatingButton';
+import usePageMetadata from '../../hooks/use-page-metadata';
 
 const CITY_SOURCE = 'https://cityofcalapan.gov.ph/the-city-economic-enterprise-department-ceed/';
 const TOURISM_SOURCE = 'https://www.travelorientalmindoro.ph/place/calapan-nature-park';
 const HISTORY_SOURCE = 'https://pia4b.wordpress.com/2013/04/02/zoological-park-sa-calapan-bukas-na-sa-publiko/';
 const TRAVEL_ADVISORY_SOURCE = 'https://www.travelorientalmindoro.ph/page/travel-advisory';
 const DIRECTIONS_URL = 'https://www.google.com/maps/dir/?api=1&destination=13.40496178,121.1991656';
-
-const usePageMetadata = (title, description, canonical) => {
-    useEffect(() => {
-        const updates = [
-            ['meta[name="title"]', title],
-            ['meta[name="description"]', description],
-            ['meta[property="og:title"]', title],
-            ['meta[property="og:description"]', description],
-            ['meta[property="og:url"]', canonical],
-            ['meta[name="twitter:title"]', title],
-            ['meta[name="twitter:description"]', description],
-        ];
-        const previousTitle = document.title;
-        const previousValues = updates.map(([selector, value]) => {
-            const element = document.querySelector(selector);
-            const previous = element?.getAttribute('content');
-            if (element) element.setAttribute('content', value);
-            return [element, previous];
-        });
-        const canonicalElement = document.querySelector('link[rel="canonical"]');
-        const previousCanonical = canonicalElement?.getAttribute('href');
-
-        document.title = title;
-        if (canonicalElement) canonicalElement.setAttribute('href', canonical);
-
-        return () => {
-            document.title = previousTitle;
-            previousValues.forEach(([element, value]) => {
-                if (element && value !== null && value !== undefined) element.setAttribute('content', value);
-            });
-            if (canonicalElement && previousCanonical) canonicalElement.setAttribute('href', previousCanonical);
-        };
-    }, [canonical, description, title]);
-};
 
 const facts = [
     { label: 'Formal name', value: 'Calapan City Recreational and Zoological Park' },
