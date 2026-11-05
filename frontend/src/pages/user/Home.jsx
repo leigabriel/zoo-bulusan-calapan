@@ -268,25 +268,19 @@ const AboutGallery = () => {
 };
 
 const VideoSection = () => (
-    <section className="relative w-full bg-[#151b16] px-4 py-16 sm:px-6 sm:py-24 lg:px-10" aria-labelledby="park-video-title">
-        <div className="mx-auto flex w-full max-w-[1500px] flex-col items-center gap-8 text-center sm:gap-10">
-            <div>
-                <p className="mb-4 text-xs font-black uppercase tracking-[0.25em] text-green-400">Park walkthrough</p>
-                <h2 id="park-video-title" className="text-[clamp(2rem,5vw,4.5rem)] font-black leading-[1] tracking-[-0.045em] text-white">See Bulusan Park in motion.</h2>
-            </div>
-            <div className="aspect-video w-full overflow-hidden rounded-2xl bg-black shadow-2xl shadow-black/40">
-                <video
-                    className="h-full w-full object-cover"
-                    src="/bulusanzoo-images/bzv2.mp4"
-                    poster="/bulusanzoo-images/bzv2-poster.jpg"
-                    controls
-                    muted
-                    loop
-                    playsInline
-                    preload="metadata"
-                    aria-label="Bulusan Park walkthrough video"
-                />
-            </div>
+    <section className="relative w-full bg-black" aria-label="Bulusan Park walkthrough video">
+        <div className="aspect-video w-full overflow-hidden">
+            <video
+                className="h-full w-full object-cover"
+                src="/bulusanzoo-images/bzv2.mp4"
+                poster="/bulusanzoo-images/bzv2-poster.jpg"
+                controls
+                muted
+                loop
+                playsInline
+                preload="metadata"
+                aria-label="Bulusan Park walkthrough video"
+            />
         </div>
     </section>
 );
