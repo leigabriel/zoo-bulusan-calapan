@@ -1,6 +1,7 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { ReactLenis } from 'lenis/react';
 import { useNavigate } from 'react-router-dom';
+import { ArrowRight } from 'lucide-react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import Header from '../../components/Header';
@@ -18,15 +19,30 @@ const TOURISM_SOURCE = 'https://www.travelorientalmindoro.ph/place/calapan-natur
 const DIRECTIONS_URL = 'https://www.google.com/maps/dir/?api=1&destination=13.40496178,121.1991656';
 const ZOOTOPIA_GAME_URL = 'https://adventuregame.bulusanzoo.com/';
 
-const ticketMaskStyle = {
-    WebkitMaskImage: 'radial-gradient(circle at 0px 50%, transparent 5px, black 6px), radial-gradient(circle at 100% 50%, transparent 5px, black 6px)',
-    WebkitMaskSize: '51% 16px',
-    WebkitMaskRepeat: 'repeat-y',
-    WebkitMaskPosition: 'left, right',
-    maskImage: 'radial-gradient(circle at 0px 50%, transparent 5px, black 6px), radial-gradient(circle at 100% 50%, transparent 5px, black 6px)',
-    maskSize: '51% 16px',
-    maskRepeat: 'repeat-y',
-    maskPosition: 'left, right',
+/* Two-piece button: a label block with one slanted edge and a detached arrow chip. */
+const HeroPill = ({ tone, label, onClick, ariaLabel }) => {
+    const labelDark = tone === 'dark';
+    const labelBg = labelDark ? 'bg-[#243230]' : 'bg-[#d9f7a4]';
+    const chipBg = labelDark ? 'bg-[#d9f7a4]' : 'bg-[#243230]';
+    return (
+        <button
+            type="button"
+            onClick={onClick}
+            aria-label={ariaLabel}
+            className="hero-btn pointer-events-auto group flex w-full max-w-xs cursor-pointer items-stretch gap-1 drop-shadow-[0_10px_18px_rgba(0,0,0,0.3)] transition-transform duration-300 ease-out hover:-translate-y-0.5 active:scale-[0.97] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white sm:w-auto sm:max-w-none"
+        >
+            <span className={`relative isolate flex flex-1 items-center justify-center px-7 py-4 font-mono text-sm font-medium uppercase tracking-[0.08em] sm:px-8 sm:text-base ${labelDark ? 'text-white' : 'text-[#243230]'}`}>
+                <i className={`absolute inset-y-0 left-0 right-3 -z-10 rounded-l-2xl ${labelBg}`} aria-hidden="true" />
+                <i className={`absolute inset-y-0 right-0 -z-10 w-7 origin-center skew-x-[-12deg] rounded-r-2xl rounded-l-md ${labelBg}`} aria-hidden="true" />
+                {label}
+            </span>
+            <span className={`relative isolate flex w-14 shrink-0 items-center justify-center sm:w-16 ${labelDark ? 'text-[#243230]' : 'text-white'}`}>
+                <i className={`absolute inset-y-0 left-3 right-0 -z-10 rounded-r-2xl ${chipBg}`} aria-hidden="true" />
+                <i className={`absolute inset-y-0 left-0 -z-10 w-7 origin-center skew-x-[-12deg] rounded-l-2xl rounded-r-md ${chipBg}`} aria-hidden="true" />
+                <ArrowRight size={20} strokeWidth={2.25} className="transition-transform duration-300 group-hover:translate-x-1" aria-hidden="true" />
+            </span>
+        </button>
+    );
 };
 
 const HeroSection = () => {
@@ -41,40 +57,36 @@ const HeroSection = () => {
 
         const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         if (reducedMotion) {
-            gsap.set('.hero-deer, .hero-title', { opacity: 1, scale: 1, y: 0 });
+            gsap.set('.hero-title, .hero-btn', { opacity: 1, scale: 1, y: 0 });
             gsap.set('.hero-line', { clipPath: 'inset(0% 0% 0% 0%)', y: 0 });
-            gsap.set('.hero-btn', { opacity: 1, scale: 1, y: 0 });
             return undefined;
         }
 
         const context = gsap.context(() => {
             const timeline = gsap.timeline();
 
-            timeline.fromTo('.hero-deer',
-                { opacity: 0, scale: 0.5, y: 50 },
-                { opacity: 1, scale: 1, y: 0, duration: 1, ease: 'back.out(1.5)' }, 0
-            )
+            timeline
                 .fromTo('.hero-title',
                     { opacity: 0, y: 50, skewY: 5 },
-                    { opacity: 1, y: 0, skewY: 0, duration: 1, ease: 'expo.out' }, 0.15
+                    { opacity: 1, y: 0, skewY: 0, duration: 1, ease: 'expo.out' }, 0.1
                 )
                 .fromTo('.hero-line',
                     { clipPath: 'inset(100% 0% 0% 0%)', y: 50 },
-                    { clipPath: 'inset(0% 0% 0% 0%)', y: 0, duration: 1.25, ease: 'expo.out', stagger: 0.12 }, 0.25
+                    { clipPath: 'inset(0% 0% 0% 0%)', y: 0, duration: 1.25, ease: 'expo.out', stagger: 0.12 }, 0.2
                 )
                 .fromTo('.hero-btn',
-                    { opacity: 0, scale: 0.9, y: 30 },
-                    { opacity: 1, scale: 1, y: 0, duration: 1, ease: 'elastic.out(1, 0.5)' }, 0.6
+                    { opacity: 0, y: 30 },
+                    { opacity: 1, y: 0, duration: 0.9, ease: 'power3.out', stagger: 0.12 }, 0.55
                 );
 
             gsap.to('.hero-bg-parallax', {
-                yPercent: 40,
+                yPercent: 25,
                 scale: 1.1,
                 ease: 'none',
                 scrollTrigger: { trigger: containerRef.current, start: 'top top', end: 'bottom top', scrub: true }
             });
-            gsap.to('.hero-content, .hero-images', {
-                yPercent: 40,
+            gsap.to('.hero-content', {
+                yPercent: 25,
                 opacity: 0,
                 ease: 'none',
                 scrollTrigger: { trigger: containerRef.current, start: 'top top', end: 'bottom top', scrub: true }
@@ -85,57 +97,38 @@ const HeroSection = () => {
     }, []);
 
     return (
-        <div ref={containerRef} className="relative w-full min-h-[100dvh] overflow-hidden bg-white">
-            <section className="relative mx-auto max-w-[2000px] w-full min-h-[100dvh] flex flex-col items-center justify-center overflow-hidden">
-                {/* Green rises from the bottom only, leaving the headline a clean white
-                    backdrop.
-
-                    z-0, not -z-10: the wrapper is `position: relative` with no z-index, so
-                    it does not create a stacking context. A negative z-index descendant
-                    paints in step 2 of the painting order, before that wrapper's own
-                    `bg-white` in step 6 — the gradient was hidden behind it entirely. */}
-                <div className="hero-bg-parallax absolute inset-0 z-0 origin-bottom bg-[linear-gradient(to_bottom,#ffffff_0%,#ffffff_45%,#bbf7d0_72%,#4ade80_100%)]" />
-                <div className="hero-images absolute inset-0 z-0 overflow-hidden pointer-events-none">
-                    <img
-                        src="images/deer.png"
-                        alt=""
-                        aria-hidden="true"
-                        className="hero-deer absolute bottom-0 left-[-3rem] w-[78vw] max-w-[40rem] origin-bottom-left object-contain object-bottom opacity-0 sm:left-[-2rem] sm:w-[48vw] md:left-0 md:w-[43vw]"
-                    />
+        <div ref={containerRef} data-header-theme="dark" className="relative w-full overflow-hidden bg-[#1d3a26]">
+            <section className="relative mx-auto flex min-h-[100dvh] w-full max-w-[2000px] flex-col overflow-hidden" aria-label="Welcome to Bulusan Zoo">
+                <div className="hero-bg-parallax absolute inset-0 z-0 origin-center">
+                    <img src="/images/hero-sky.webp" alt="" aria-hidden="true" fetchPriority="high" className="h-full w-full object-cover object-center" />
                 </div>
-                <div className="hero-content text-center flex flex-col items-center z-10 px-4 sm:px-5 pointer-events-none">
-                    <p className="hero-title opacity-0 font-['Mistral',_cursive] text-[clamp(2rem,5vw,5rem)] text-black -mb-1 sm:-mb-2">
+                {/* Soft vignette keeps the white headline readable over the bright sky. */}
+                <div className="pointer-events-none absolute inset-0 z-0 bg-[radial-gradient(70%_55%_at_50%_42%,rgba(8,30,16,0.38)_0%,rgba(8,30,16,0.12)_70%,transparent_100%),linear-gradient(to_bottom,rgba(0,0,0,0.3)_0%,transparent_35%,rgba(0,0,0,0.5)_100%)]" aria-hidden="true" />
+
+                <div className="hero-content pointer-events-none relative z-10 flex flex-1 flex-col items-center justify-center px-4 pb-6 pt-28 text-center sm:px-6 sm:pt-32">
+                    <p className="hero-title -mb-1 font-['Mistral',_cursive] text-[clamp(2rem,5vw,5rem)] text-white opacity-0 drop-shadow-[0_2px_10px_rgba(0,0,0,0.45)] sm:-mb-2">
                         Welcome to
                     </p>
-                    <div className="mb-5 sm:mb-[30px]">
-                        <h1 className="text-[clamp(2.5rem,8vw,6rem)] font-normal font-['Gravelad',_sans-serif] text-black leading-none tracking-tight overflow-hidden py-2 sm:py-4">
+                    <div className="mb-8 sm:mb-10">
+                        <h1 className="overflow-hidden py-2 font-['Gravelad',_sans-serif] text-[clamp(2.5rem,8vw,6rem)] font-normal leading-none tracking-tight text-white drop-shadow-[0_4px_18px_rgba(0,0,0,0.45)] sm:py-4">
                             <span className="block overflow-hidden">
                                 <span className="hero-line block" style={{ clipPath: 'inset(100% 0% 0% 0%)' }}>BULUSAN ZOO</span>
                             </span>
                         </h1>
-                        <div className="overflow-hidden mt-2">
-                            <p className="hero-line text-md sm:text-xl md:text-2xl font-semibold text-black/70 tracking-wide" style={{ clipPath: 'inset(100% 0% 0% 0%)' }}>
+                        <div className="mt-2 overflow-hidden">
+                            <p className="hero-line text-base font-semibold tracking-wide text-white/90 drop-shadow-[0_2px_8px_rgba(0,0,0,0.5)] sm:text-xl md:text-2xl" style={{ clipPath: 'inset(100% 0% 0% 0%)' }}>
                                 Explore Nature, Learn, and Connect
                             </p>
                         </div>
                     </div>
-                    <div className="flex flex-col items-center gap-3 sm:flex-row sm:items-stretch sm:justify-center sm:gap-5">
-                        <button
-                            onClick={() => navigate('/reservations')}
-                            className="hero-btn group pointer-events-auto bg-green-400 text-black p-1 sm:p-1.5 rounded-xl cursor-pointer transition-all duration-300 ease-out hover:scale-105 hover:drop-shadow-xl active:scale-95 focus:outline-none drop-shadow-md transform-gpu"
-                            style={ticketMaskStyle}
-                        >
-                            <span className="w-full h-full rounded-lg flex items-center justify-center py-1.5 sm:py-0.5 px-7 sm:px-9 font-['Mistral',_cursive] text-[1.5rem] sm:text-[2rem] tracking-[1px] mt-1 transition-transform duration-300 ease-out group-hover:scale-105">
-                                Plan a Visit
-                            </span>
-                        </button>
-                        <button
+                    <div className="flex w-full flex-col items-center gap-4 sm:w-auto sm:flex-row sm:gap-5">
+                        <HeroPill tone="dark" label="Plan a Visit" onClick={() => navigate('/reservations')} />
+                        <HeroPill
+                            tone="light"
+                            label="Play our game"
+                            ariaLabel="Play our game, opens adventuregame.bulusanzoo.com in a new tab"
                             onClick={() => window.open(ZOOTOPIA_GAME_URL, '_blank', 'noopener,noreferrer')}
-                            aria-label="Play our game, opens adventuregame.bulusanzoo.com in a new tab"
-                            className="hero-btn group pointer-events-auto min-h-11 rounded-xl border-2 border-black bg-black px-7 py-3 text-white font-['Mistral',_cursive] text-[1.25rem] sm:text-[1.6rem] tracking-[1px] cursor-pointer transition-all duration-300 ease-out hover:bg-white hover:text-black active:scale-95 focus:outline-none transform-gpu"
-                        >
-                            Play our game
-                        </button>
+                        />
                     </div>
                 </div>
             </section>
@@ -267,25 +260,26 @@ const AboutGallery = () => {
     );
 };
 
+const VideoSection = () => (
+    <section className="relative w-full bg-black" aria-label="Bulusan Park walkthrough video">
+        <div className="aspect-video w-full overflow-hidden">
+            <video
+                className="h-full w-full object-cover"
+                src="/bulusanzoo-images/bzv2.mp4"
+                poster="/bulusanzoo-images/bzv2-poster.jpg"
+                controls
+                muted
+                loop
+                playsInline
+                preload="metadata"
+                aria-label="Bulusan Park walkthrough video"
+            />
+        </div>
+    </section>
+);
+
 const AboutSection = () => (
     <section className="relative w-full overflow-hidden bg-green-400" aria-labelledby="about-park-title">
-        {/* Park walkthrough footage sits under a green veil so the section keeps its green identity. */}
-        <video
-            className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-60"
-            src="/bulusanzoo-images/bzv2.mp4"
-            poster="/bulusanzoo-images/bzv2-poster.jpg"
-            autoPlay
-            muted
-            loop
-            playsInline
-            preload="metadata"
-            aria-hidden="true"
-            tabIndex={-1}
-        />
-        {/* Green stays the section colour; the veil is strongest behind the copy and eases off
-            toward the edges so the walkthrough footage reads at the top and bottom. */}
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(120%_95%_at_50%_35%,rgba(74,222,128,0.95)_0%,rgba(74,222,128,0.95)_42%,rgba(74,222,128,0.52)_100%)]" aria-hidden="true" />
-
         <div className="relative mx-auto flex w-full max-w-[1500px] flex-col gap-10 px-4 py-16 sm:gap-14 sm:px-6 sm:py-24 lg:px-10">
             <div className="flex flex-col items-center text-center">
                 <p className="mb-7 text-xs font-black uppercase tracking-[0.25em] text-black/55">About Bulusan Park</p>
@@ -555,6 +549,7 @@ const Home = () => {
                 <AIFloatingButton />
                 <main className="relative w-full overflow-x-clip">
                     <HeroSection />
+                    <VideoSection />
                     <AboutSection />
                     <ExploreSection />
                     <ZootopiaSection />
