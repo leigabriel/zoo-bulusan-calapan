@@ -72,13 +72,13 @@ const AboutUs = () => {
 
     return (
         <ReactLenis root>
-            <div className="min-h-screen overflow-x-hidden bg-[#f7f5ef] text-[#212631]">
+            <div className="min-h-dvh overflow-x-hidden bg-[#f7f5ef] text-[#212631]">
                 <Header />
                 <AIFloatingButton />
 
                 <main>
                     <section className="mx-auto flex min-h-[92svh] max-w-[1500px] flex-col justify-between px-4 pb-10 pt-28 sm:px-6 md:px-10 md:pb-14 md:pt-32" aria-labelledby="about-title">
-                        <div className="flex items-center gap-3 text-[10px] font-bold uppercase tracking-[0.3em] text-[#212631]/50 sm:text-xs">
+                        <div className="flex items-center gap-3 text-[11px] font-bold uppercase tracking-[0.3em] text-[#212631]/50 sm:text-xs">
                             <span className="h-2 w-2 rounded-full bg-green-500" />
                             A park of Calapan City
                         </div>
@@ -95,7 +95,7 @@ const AboutUs = () => {
                         <div className="grid border-y border-[#212631]/15 sm:grid-cols-2 lg:grid-cols-4">
                             {facts.map((fact) => (
                                 <div key={fact.label} className="border-b border-[#212631]/15 py-5 sm:px-5 sm:odd:border-r lg:border-b-0 lg:border-r lg:first:pl-0 lg:last:border-r-0">
-                                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#212631]/40">{fact.label}</p>
+                                    <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#212631]/40">{fact.label}</p>
                                     <p className="mt-3 text-sm font-semibold leading-6">{fact.value}</p>
                                 </div>
                             ))}
@@ -204,9 +204,9 @@ const AboutUs = () => {
                                 </div>
                                 <div>
                                     <dl className="divide-y divide-[#212631]/15 border-y border-[#212631]/15">
-                                        <div className="grid gap-2 py-6 sm:grid-cols-[8rem_1fr]"><dt className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#212631]/40">Location</dt><dd className="font-semibold leading-6">Barangay Bulusan, Calapan City, Oriental Mindoro</dd></div>
-                                        <div className="grid gap-2 py-6 sm:grid-cols-[8rem_1fr]"><dt className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#212631]/40">Contact</dt><dd><a href="tel:+63432887291" className="font-semibold underline decoration-black/25 underline-offset-4">(043) 288-7291</a><span className="mt-1 block text-sm text-[#212631]/50">City CEED park contact</span></dd></div>
-                                        <div className="grid gap-2 py-6 sm:grid-cols-[8rem_1fr]"><dt className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#212631]/40">Directions</dt><dd><a href={DIRECTIONS_URL} target="_blank" rel="noreferrer" className="font-semibold underline decoration-black/25 underline-offset-4">Open Google Maps directions</a></dd></div>
+                                        <div className="grid gap-2 py-6 sm:grid-cols-[8rem_1fr]"><dt className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#212631]/40">Location</dt><dd className="font-semibold leading-6">Barangay Bulusan, Calapan City, Oriental Mindoro</dd></div>
+                                        <div className="grid gap-2 py-6 sm:grid-cols-[8rem_1fr]"><dt className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#212631]/40">Contact</dt><dd><a href="tel:+63432887291" className="font-semibold underline decoration-black/25 underline-offset-4">(043) 288-7291</a><span className="mt-1 block text-sm text-[#212631]/50">City CEED park contact</span></dd></div>
+                                        <div className="grid gap-2 py-6 sm:grid-cols-[8rem_1fr]"><dt className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#212631]/40">Directions</dt><dd><a href={DIRECTIONS_URL} target="_blank" rel="noreferrer" className="font-semibold underline decoration-black/25 underline-offset-4">Open Google Maps directions</a></dd></div>
                                     </dl>
                                     <p className="mt-6 text-sm leading-6 text-[#212631]/50">Operating schedules, admission arrangements, and available activities may change. Confirm with the City Government of Calapan before visiting.</p>
                                 </div>
