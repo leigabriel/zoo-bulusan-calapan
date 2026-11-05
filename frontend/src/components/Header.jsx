@@ -385,7 +385,7 @@ const Header = () => {
                         <div className="flex min-w-0 flex-shrink-0 items-center lg:w-[180px]">
                             <Link to="/" className="flex min-w-0 items-center" onClick={(e) => { e.preventDefault(); setIsMenuOpen(false); handleTransitionNavigate(e, '/'); }}>
                                 <img src="/images/bz-url-logo.png" alt="Logo" className="w-7 h-7 object-contain mr-2" />
-                                <span className="whitespace-nowrap text-[18px] font-bold text-[#212631] tracking-tight">
+                                <span className="whitespace-nowrap text-[18px] font-bold text-[#212631] tracking-tight [text-shadow:0_0_10px_rgba(255,255,255,0.9),0_0_3px_rgba(255,255,255,0.9)]">
                                     BULUSAN ZOO
                                 </span>
                             </Link>
