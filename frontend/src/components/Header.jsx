@@ -156,7 +156,6 @@ const Header = () => {
     const [emailLoading, setEmailLoading] = useState(false);
     const [emailSent, setEmailSent] = useState(false);
     const [emailError, setEmailError] = useState('');
-    const [isLoggingOut, setIsLoggingOut] = useState(false);
 
     const navigate = useNavigate();
     const location = useLocation();
@@ -237,7 +236,8 @@ const Header = () => {
                     read: Boolean(notification.read)
                 })));
             }
-        } catch (err) {
+        } catch {
+            // The bell simply keeps its previous state; the next poll retries.
         } finally {
             setNotificationLoading(false);
         }
@@ -265,6 +265,7 @@ const Header = () => {
             setNotificationUnreadCount(count => Math.max(0, count - (notifications.find(item => item.id === notificationId)?.read ? 0 : 1)));
             setNotifications(prev => prev.map((n) => n.id === notificationId ? { ...n, read: true } : n));
         } catch {
+            // Read state stays as-is; navigation still proceeds.
         }
     };
 
@@ -274,6 +275,7 @@ const Header = () => {
             setNotificationUnreadCount(0);
             setNotifications(prev => prev.map((n) => ({ ...n, read: true })));
         } catch {
+            // Leave the list unchanged so the user can try again.
         }
     };
 
@@ -284,6 +286,7 @@ const Header = () => {
             setNotificationUnreadCount(0);
             setNotifications([]);
         } catch {
+            // Keep the notifications visible if the server could not clear them.
         } finally {
             setClearingNotifications(false);
             setShowClearNotificationsConfirm(false);
@@ -299,17 +302,10 @@ const Header = () => {
         }
     };
 
-    const handleLogout = async () => {
-        setIsLoggingOut(true);
-        try {
-            await new Promise(resolve => setTimeout(resolve, 500));
-            logout();
-            setShowLogoutModal(false);
-            handleTransitionNavigate(null, '/login');
-        } catch (error) {
-        } finally {
-            setIsLoggingOut(false);
-        }
+    const handleLogout = () => {
+        logout();
+        setShowLogoutModal(false);
+        handleTransitionNavigate(null, '/login');
     };
 
     const closeSidePanel = () => setShowSidePanel(false);
