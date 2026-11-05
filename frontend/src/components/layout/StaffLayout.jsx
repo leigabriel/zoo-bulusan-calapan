@@ -2,7 +2,6 @@ import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { authAPI, staffAPI, reservationAPI, communityAPI, getProfileImageUrl } from '../../services/api-client';
-import { sanitizeInput } from '../../utils/sanitize';
 import { notify } from '../../utils/toast';
 import LogoutModal from '../common/LogoutModal';
 import Tooltip from '../common/Tooltip';
@@ -70,7 +69,7 @@ const StaffLayout = ({ children }) => {
     const [showProfileModal, setShowProfileModal] = useState(false);
     const [showPasswordModal, setShowPasswordModal] = useState(false);
     const [profileForm, setProfileForm] = useState({ firstName: '', lastName: '', email: '' });
-    const [profileLoading, setProfileLoading] = useState(false);
+    const [, setProfileLoading] = useState(false);
     const [profileSaving, setProfileSaving] = useState(false);
     const [emailSaving, setEmailSaving] = useState(false);
     const [imageUploading, setImageUploading] = useState(false);
@@ -83,7 +82,7 @@ const StaffLayout = ({ children }) => {
     // Global search database state
     const [searchData, setSearchData] = useState({ animals: [], events: [], plants: [] });
     const [searchDataLoading, setSearchDataLoading] = useState(false);
-    const [searchDataLoaded, setSearchDataLoaded] = useState(false);
+    const [, setSearchDataLoaded] = useState(false);
 
     // Real notifications state
     const [notifications, setNotifications] = useState([]);
@@ -168,7 +167,7 @@ const StaffLayout = ({ children }) => {
                 setNotificationUnreadCount(Number(res.unreadCount) || 0);
                 setActivitySummary(res.summary || null);
             }
-        } catch (err) {
+        } catch {
             // Error fetching notifications
         } finally {
             setNotificationsLoading(false);
@@ -216,7 +215,7 @@ const StaffLayout = ({ children }) => {
                 plants: plantsRes?.plants || plantsRes?.data || [],
             });
             setSearchDataLoaded(true);
-        } catch (err) {
+        } catch {
             // Error fetching search data
         } finally {
             setSearchDataLoading(false);
@@ -231,6 +230,7 @@ const StaffLayout = ({ children }) => {
             try {
                 await staffAPI.sendHeartbeat();
             } catch {
+                // A missed heartbeat is retried on the next interval.
             }
         };
 
@@ -304,6 +304,7 @@ const StaffLayout = ({ children }) => {
                 reportedComments: Array.isArray(reportedComments) ? reportedComments.length : 0
             });
         } catch {
+            // Keep the previous task counts if the refresh fails.
         } finally {
             setDailyTaskLoading(false);
         }
@@ -392,7 +393,7 @@ const StaffLayout = ({ children }) => {
                     email: user.email || ''
                 });
             }
-        } catch (err) {
+        } catch {
             notify.error("Couldn't load profile.");
         } finally {
             setProfileLoading(false);
@@ -1279,138 +1280,6 @@ const StaffLayout = ({ children }) => {
 
             {/* Profile Modal */}
             <AccountDetailsModal isOpen={showProfileModal} onClose={() => setShowProfileModal(false)} role="Staff" profile={profileForm} previewImage={previewImage} fileInputRef={fileInputRef} imageUploading={imageUploading} onUploadImage={uploadProfileImage} onSaveDetails={saveProfile} profileSaving={profileSaving} onPassword={() => setShowPasswordModal(true)} onChangeEmail={saveEmail} emailSaving={emailSaving} />
-
-            {false && showProfileModal && (
-                <div className="fixed inset-0 bg-gray-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-white border border-gray-200 rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-y-auto overscroll-contain shadow-xl">
-                        {/* Modal Header */}
-                        <div className="flex items-center justify-between p-5 border-b border-gray-200">
-                            <h2 className="text-xl font-bold text-gray-900">Staff Profile</h2>
-                            <button
-                                onClick={() => setShowProfileModal(false)}
-                                className="text-gray-400 hover:text-gray-900 transition"
-                            >
-                                <CloseCircle size={20} />
-                            </button>
-                        </div>
-
-                        {profileLoading ? (
-                            <div className="flex items-center justify-center p-12">
-                                <div className="w-10 h-10 border-4 border-green-400 border-t-transparent rounded-full animate-spin"></div>
-                            </div>
-                        ) : (
-                            <div className="p-5 space-y-5">
-                                {/* Avatar */}
-                                <div className="flex flex-col items-center gap-2">
-                                    <div className="w-24 h-24 bg-gradient-to-br from-green-300 via-green-400 to-green-500 rounded-full flex items-center justify-center overflow-hidden">
-                                        {previewImage ? (
-                                            <img
-                                                src={previewImage}
-                                                alt="Profile"
-                                                className="w-full h-full object-cover"
-                                                referrerPolicy="no-referrer"
-                                                onError={(e) => { e.target.onerror = null; e.target.style.display = 'none'; }}
-                                            />
-                                        ) : (
-                                            <span className="text-4xl font-bold text-gray-900">
-                                                {profileForm.firstName?.charAt(0) || 'S'}
-                                            </span>
-                                        )}
-                                    </div>
-                                    <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={uploadProfileImage} />
-                                    <button type="button" disabled={imageUploading} onClick={() => fileInputRef.current?.click()} className="text-sm font-semibold text-green-700 hover:text-green-800 disabled:opacity-50">
-                                        {imageUploading ? 'Uploading...' : previewImage ? 'Change photo' : 'Add profile photo'}
-                                    </button>
-                                </div>
-
-                                <div className="flex items-center justify-between gap-4 rounded-2xl border border-gray-200 bg-gray-50 p-4">
-                                    <div><p className="font-semibold text-gray-900">Account security</p><p className="text-sm text-gray-500">Update your sign-in password securely.</p></div>
-                                    <button type="button" onClick={() => setShowPasswordModal(true)} className="shrink-0 rounded-xl border border-green-300 bg-white px-4 py-2.5 font-medium text-green-700 hover:bg-green-50">Change password</button>
-                                </div>
-
-                                {/* Role Badge */}
-                                <div className="flex justify-center">
-                                    <span className="px-4 py-1.5 bg-green-100 text-green-700 text-sm font-medium rounded-full">
-                                        Staff Member
-                                    </span>
-                                </div>
-
-                                {/* First Name */}
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">First Name</label>
-                                    <input
-                                        type="text"
-                                        value={profileForm.firstName}
-                                        onChange={(e) => setProfileForm({ ...profileForm, firstName: sanitizeInput(e.target.value) })}
-                                        className="w-full bg-gray-50 border border-gray-300 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-green-400 focus:ring-1 focus:ring-green-400/20 transition-all"
-                                        placeholder="Enter first name"
-                                    />
-                                </div>
-
-                                {/* Last Name */}
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">Last Name</label>
-                                    <input
-                                        type="text"
-                                        value={profileForm.lastName}
-                                        onChange={(e) => setProfileForm({ ...profileForm, lastName: sanitizeInput(e.target.value) })}
-                                        className="w-full bg-gray-50 border border-gray-300 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-green-400 focus:ring-1 focus:ring-green-400/20 transition-all"
-                                        placeholder="Enter last name"
-                                    />
-                                </div>
-
-                                {/* Email (Read-only) */}
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
-                                    <input
-                                        type="email"
-                                        value={profileForm.email}
-                                        readOnly
-                                        className="w-full bg-gray-100 border border-gray-200 rounded-xl px-4 py-3 text-gray-500 cursor-not-allowed"
-                                    />
-                                    <p className="text-xs text-gray-500 mt-1">Email cannot be changed</p>
-                                </div>
-
-                                {/* Account Status */}
-                                <div className="p-4 bg-gray-50 border border-gray-200 rounded-xl space-y-2">
-                                    <div className="flex items-center justify-between text-sm">
-                                        <span className="text-gray-600">Status</span>
-                                        <span className="flex items-center gap-1.5 text-green-600">
-                                            <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                                            Active
-                                        </span>
-                                    </div>
-                                    <div className="flex items-center justify-between text-sm">
-                                        <span className="text-gray-600">Role</span>
-                                        <span className="text-gray-900 capitalize">{user?.role || 'Staff'}</span>
-                                    </div>
-                                </div>
-
-                                {/* Actions */}
-                                <div className="flex gap-3 pt-2">
-                                    <button
-                                        onClick={() => setShowProfileModal(false)}
-                                        className="flex-1 px-4 py-3 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-xl font-medium transition"
-                                    >
-                                        Cancel
-                                    </button>
-                                    <button
-                                        onClick={saveProfile}
-                                        disabled={profileSaving}
-                                        className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-green-400 hover:bg-green-300 text-gray-900 rounded-xl font-medium transition disabled:opacity-50"
-                                    >
-                                        {profileSaving ? (
-                                            <div role="status" aria-label="Saving profile" className="w-5 h-5 border-2 border-gray-900/30 border-t-gray-900 rounded-full animate-spin"></div>
-                                        ) : (
-                                            'Save Changes'
-                                        )}
-                                    </button>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                </div>
-            )}
 
             {showPasswordModal && (
                 <div className="fixed inset-0 z-[70] flex items-center justify-center bg-gray-900/55 p-4 backdrop-blur-sm">
