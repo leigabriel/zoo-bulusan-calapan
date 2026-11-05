@@ -5,67 +5,77 @@ import 'goey-toast/styles.css';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import PostUploadProvider from './context/PostUploadContext';
 import Home from './pages/user/Home';
-import Animals from './pages/user/Animals';
-import Plants from './pages/user/Plants';
-import { AnimalDetail, PlantDetail } from './pages/user/CollectionDetail';
-import WildlifeOriginDetail from './pages/user/WildlifeOriginDetail';
-import Events from './pages/user/Events';
-import Reservations from './pages/user/Reservations';
-import AboutUs from './pages/user/AboutUs';
-import ArchivedReservations from './pages/user/ArchivedReservations';
-import UserProfile from './pages/user/UserProfile';
-import Settings from './pages/user/Settings';
-import Help from './pages/user/Help';
-import UserMessages from './pages/user/UserMessages';
-import CommunityPage from './pages/user/CommunityPage';
-import PublicUserProfile from './pages/user/PublicUserProfile';
-import MyEvents from './pages/user/MyEvents';
-import LoginPage from './pages/auth/LoginPage';
-import RegisterPage from './pages/auth/RegisterPage';
-import GoogleAuthSuccess from './pages/auth/GoogleAuthSuccess';
-import AccessDenied from './pages/auth/AccessDenied';
-import PrivacyPolicy from './pages/legal/PrivacyPolicy';
-import TermsOfService from './pages/legal/TermsOfService';
-import CookiePolicy from './pages/legal/CookiePolicy';
-import RefundPolicy from './pages/legal/RefundPolicy';
 import CookieConsentBanner from './components/CookieConsentBanner';
 import SessionExpiryListener from './components/auth/SessionExpiryListener';
-import AdminDashboard from './pages/admin/AdminDashboard';
-import AdminEvents from './pages/admin/AdminEvents';
-import Analytics from './pages/admin/Analytics';
-import Reports from './pages/admin/Reports';
-import AdminUsers from './pages/admin/AdminUsers';
-import AdminAnimals from './pages/admin/AdminAnimals';
-import AdminPlants from './pages/admin/AdminPlants';
-import AdminReservations from './pages/admin/AdminReservations';
-import AdminTransactions from './pages/admin/AdminTransactions';
-import AdminProfile from './pages/admin/AdminProfile';
-import AdminHelpCenter from './pages/admin/AdminHelpCenter';
-import AdminTickets from './pages/admin/AdminTickets';
-import AdminMessages from './pages/admin/AdminMessages';
-import AdminLogs from './pages/admin/AdminLogs';
-import AdminCommunityModeration from './pages/admin/AdminCommunityModeration';
-import AdminSettings from './pages/admin/AdminSettings';
-import AdminTrash from './pages/admin/AdminTrash';
-import StaffDashboard from './pages/staff/StaffDashboard';
-import QRScanner from './pages/staff/QRScanner';
-import StaffEvents from './pages/staff/StaffEvents';
-import StaffTickets from './pages/staff/StaffTickets';
-import StaffReservations from './pages/staff/StaffReservations';
-import StaffAnimals from './pages/staff/StaffAnimals';
-import StaffPlants from './pages/staff/StaffPlants';
-import StaffHelpCenter from './pages/staff/StaffHelpCenter';
-import StaffMessages from './pages/staff/StaffMessages';
-import StaffCommunityModeration from './pages/staff/StaffCommunityModeration';
-import StaffTrash from './pages/staff/StaffTrash';
-import StaffWalkIn from './pages/staff/StaffWalkIn';
-import WalkInRecords from './pages/staff/WalkInRecords';
-import AdminLayout from './components/layout/AdminLayout';
-import StaffLayout from './components/layout/StaffLayout';
-import AnimalClassifier from './components/features/ai-scanner/AnimalClassifier';
 import './App.css';
-import AIAssist from './pages/AIAssist';
 import { trackVisit } from './services/visitor-tracking';
+
+// Every page is loaded on demand so visitors only download the code for the route they open.
+// Admin, staff and the TensorFlow-based scanner no longer ship with the public pages.
+const Animals = lazy(() => import('./pages/user/Animals'));
+const Plants = lazy(() => import('./pages/user/Plants'));
+const AnimalDetail = lazy(() => import('./pages/user/CollectionDetail').then((m) => ({ default: m.AnimalDetail })));
+const PlantDetail = lazy(() => import('./pages/user/CollectionDetail').then((m) => ({ default: m.PlantDetail })));
+const WildlifeOriginDetail = lazy(() => import('./pages/user/WildlifeOriginDetail'));
+const Events = lazy(() => import('./pages/user/Events'));
+const Reservations = lazy(() => import('./pages/user/Reservations'));
+const AboutUs = lazy(() => import('./pages/user/AboutUs'));
+const ArchivedReservations = lazy(() => import('./pages/user/ArchivedReservations'));
+const UserProfile = lazy(() => import('./pages/user/UserProfile'));
+const Settings = lazy(() => import('./pages/user/Settings'));
+const Help = lazy(() => import('./pages/user/Help'));
+const UserMessages = lazy(() => import('./pages/user/UserMessages'));
+const CommunityPage = lazy(() => import('./pages/user/CommunityPage'));
+const PublicUserProfile = lazy(() => import('./pages/user/PublicUserProfile'));
+const MyEvents = lazy(() => import('./pages/user/MyEvents'));
+const LoginPage = lazy(() => import('./pages/auth/LoginPage'));
+const RegisterPage = lazy(() => import('./pages/auth/RegisterPage'));
+const GoogleAuthSuccess = lazy(() => import('./pages/auth/GoogleAuthSuccess'));
+const AccessDenied = lazy(() => import('./pages/auth/AccessDenied'));
+const PrivacyPolicy = lazy(() => import('./pages/legal/PrivacyPolicy'));
+const TermsOfService = lazy(() => import('./pages/legal/TermsOfService'));
+const CookiePolicy = lazy(() => import('./pages/legal/CookiePolicy'));
+const RefundPolicy = lazy(() => import('./pages/legal/RefundPolicy'));
+const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
+const AdminEvents = lazy(() => import('./pages/admin/AdminEvents'));
+const Analytics = lazy(() => import('./pages/admin/Analytics'));
+const Reports = lazy(() => import('./pages/admin/Reports'));
+const AdminUsers = lazy(() => import('./pages/admin/AdminUsers'));
+const AdminAnimals = lazy(() => import('./pages/admin/AdminAnimals'));
+const AdminPlants = lazy(() => import('./pages/admin/AdminPlants'));
+const AdminReservations = lazy(() => import('./pages/admin/AdminReservations'));
+const AdminTransactions = lazy(() => import('./pages/admin/AdminTransactions'));
+const AdminProfile = lazy(() => import('./pages/admin/AdminProfile'));
+const AdminHelpCenter = lazy(() => import('./pages/admin/AdminHelpCenter'));
+const AdminTickets = lazy(() => import('./pages/admin/AdminTickets'));
+const AdminMessages = lazy(() => import('./pages/admin/AdminMessages'));
+const AdminLogs = lazy(() => import('./pages/admin/AdminLogs'));
+const AdminCommunityModeration = lazy(() => import('./pages/admin/AdminCommunityModeration'));
+const AdminSettings = lazy(() => import('./pages/admin/AdminSettings'));
+const AdminTrash = lazy(() => import('./pages/admin/AdminTrash'));
+const StaffDashboard = lazy(() => import('./pages/staff/StaffDashboard'));
+const QRScanner = lazy(() => import('./pages/staff/QRScanner'));
+const StaffEvents = lazy(() => import('./pages/staff/StaffEvents'));
+const StaffTickets = lazy(() => import('./pages/staff/StaffTickets'));
+const StaffReservations = lazy(() => import('./pages/staff/StaffReservations'));
+const StaffAnimals = lazy(() => import('./pages/staff/StaffAnimals'));
+const StaffPlants = lazy(() => import('./pages/staff/StaffPlants'));
+const StaffHelpCenter = lazy(() => import('./pages/staff/StaffHelpCenter'));
+const StaffMessages = lazy(() => import('./pages/staff/StaffMessages'));
+const StaffCommunityModeration = lazy(() => import('./pages/staff/StaffCommunityModeration'));
+const StaffTrash = lazy(() => import('./pages/staff/StaffTrash'));
+const StaffWalkIn = lazy(() => import('./pages/staff/StaffWalkIn'));
+const WalkInRecords = lazy(() => import('./pages/staff/WalkInRecords'));
+const AdminLayout = lazy(() => import('./components/layout/AdminLayout'));
+const StaffLayout = lazy(() => import('./components/layout/StaffLayout'));
+const AnimalClassifier = lazy(() => import('./components/features/ai-scanner/AnimalClassifier'));
+const AIAssist = lazy(() => import('./pages/AIAssist'));
+
+const RouteFallback = () => (
+    <div className="flex min-h-dvh items-center justify-center bg-white" role="status" aria-label="Loading page">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-200 border-t-black" />
+    </div>
+);
 
 const MapPage = lazy(() => import('./pages/user/Map'));
 const MapPageFallback = () => (
@@ -124,6 +134,7 @@ const VisitTracker = () => {
 
 function AppRoutes() {
     return (
+        <Suspense fallback={<RouteFallback />}>
         <Routes>
             {/* Public Routes - accessible to everyone */}
             <Route path="/" element={<Home />} />
@@ -417,6 +428,7 @@ function AppRoutes() {
 
             <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
+        </Suspense>
     );
 }
 
