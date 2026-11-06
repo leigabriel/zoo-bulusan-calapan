@@ -32,6 +32,7 @@ const GiantTitle = () => {
                     lineHeight: 1,
                     letterSpacing: 0,
                     color: "#05df72",
+                    textShadow: "0 10px 45px rgba(0,0,0,0.95), 0 2px 10px rgba(0,0,0,0.85)",
                 }}
                 initial={{ y: "100%", opacity: 0 }}
                 animate={isInView ? { y: "0%", opacity: 1 } : { y: "100%", opacity: 0 }}
@@ -76,10 +77,19 @@ const Footer = () => {
     return (
         <footer
             ref={footerRef}
-            className="w-full relative overflow-x-hidden flex flex-col bg-black text-white pt-16 md:pt-24 pb-8 min-h-[70dvh] md:min-h-dvh"
+            className="relative flex min-h-screen w-full flex-col overflow-hidden bg-black pt-16 pb-8 text-white md:pt-24"
             style={{ fontFamily: "'DM Sans', 'Inter', sans-serif" }}
         >
-            <div className="relative z-10 flex flex-col flex-grow w-full px-6 md:px-14">
+            <div
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-x-0 bottom-0 h-[clamp(200px,32vw,440px)] bg-[url('/images/grass-footer.png')] bg-bottom bg-no-repeat bg-[length:100%_auto]"
+            />
+            <div
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-black/85 via-black/30 to-transparent"
+            />
+
+            <div className="relative z-10 flex flex-grow w-full flex-col px-6 md:px-14">
 
                 {/* 3-Column Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-16 md:gap-12">
@@ -179,8 +189,9 @@ const Footer = () => {
                         animate={isInView ? { opacity: 1 } : {}}
                         transition={{ duration: 0.5, delay: 0.8 }}
                         className="mt-4 flex flex-col sm:flex-row sm:justify-between items-start sm:items-center gap-4"
+                        style={{ textShadow: "0 1px 4px rgba(0,0,0,0.9)" }}
                     >
-                        <span className="text-[11px] font-medium text-white/30 uppercase tracking-widest">
+                        <span className="text-[11px] font-medium text-white/50 uppercase tracking-widest">
                             © {currentYear} Bulusan Zoo. All rights reserved.
                         </span>
                         <ul className="flex flex-wrap gap-x-5 gap-y-2">
@@ -188,7 +199,7 @@ const Footer = () => {
                                 <li key={link.path}>
                                     <Link
                                         to={link.path}
-                                        className="text-[11px] font-medium text-white/40 uppercase tracking-widest hover:text-green-400 transition-colors"
+                                        className="text-[11px] font-medium text-white/60 uppercase tracking-widest hover:text-green-400 transition-colors"
                                     >
                                         {link.label}
                                     </Link>
