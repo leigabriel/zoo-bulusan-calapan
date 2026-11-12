@@ -49,7 +49,7 @@ const AdminLayout = ({ children }) => {
     const [passwordForm, setPasswordForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
     const [passwordSaving, setPasswordSaving] = useState(false);
     const [masterKeyStatus, setMasterKeyStatus] = useState({ configured: false, enabled: false });
-    const [masterKeyForm, setMasterKeyForm] = useState({ currentPassword: '', currentMasterKey: '', newMasterKey: '' });
+    const [masterKeyForm, setMasterKeyForm] = useState({ currentPassword: '', newMasterKey: '', confirmNewMasterKey: '' });
     const [masterKeySaving, setMasterKeySaving] = useState(false);
     const [showRefinedMasterKeyModal, setShowRefinedMasterKeyModal] = useState(false);
     const [showMasterKeyToggleModal, setShowMasterKeyToggleModal] = useState(false);
@@ -322,19 +322,28 @@ const AdminLayout = ({ children }) => {
     };
 
     const updateMasterKey = async (action) => {
-        const { currentPassword, currentMasterKey, newMasterKey } = masterKeyForm;
+        const { currentPassword, newMasterKey, confirmNewMasterKey } = masterKeyForm;
+        if (action === 'change') {
+            if (newMasterKey.length < 8 || newMasterKey.length > 128) {
+                notify.error('New Master Key must be 8 to 128 characters.');
+                return;
+            }
+            if (newMasterKey !== confirmNewMasterKey) {
+                notify.error('New Master Key and confirmation do not match.');
+                return;
+            }
+        }
         setMasterKeySaving(true);
         try {
             let response;
             if (action === 'create') response = await adminAPI.createMasterKey({ currentPassword, masterKey: newMasterKey });
-            else if (action === 'change') response = await adminAPI.changeMasterKey({ currentPassword, currentMasterKey, newMasterKey });
-            else response = await adminAPI.toggleMasterKey({ currentPassword, masterKey: currentMasterKey, enabled: !masterKeyStatus.enabled });
+            else response = await adminAPI.changeMasterKey({ currentPassword, newMasterKey });
             if (!response?.success) throw new Error(response?.message || 'Unable to update Master Key.');
             const statusResponse = await adminAPI.getMasterKeyStatus();
             const nextStatus = statusResponse?.success ? statusResponse.status : response.status;
             setMasterKeyStatus(nextStatus);
-            setMasterKeyForm({ currentPassword: '', currentMasterKey: '', newMasterKey: '' });
-            notify.success(action === 'toggle' ? `Master Key verification ${nextStatus.enabled ? 'enabled' : 'disabled'}.` : 'Master Key updated.');
+            setMasterKeyForm({ currentPassword: '', newMasterKey: '', confirmNewMasterKey: '' });
+            notify.success('Master Key updated.');
         } catch (error) {
             notify.error(error.message || 'Unable to update Master Key.');
         } finally {
@@ -354,7 +363,7 @@ const AdminLayout = ({ children }) => {
             if (!response?.success) throw new Error(response?.message || 'Unable to delete Master Key.');
             const statusResponse = await adminAPI.getMasterKeyStatus();
             setMasterKeyStatus(statusResponse?.success ? statusResponse.status : { configured: false, enabled: false });
-            setMasterKeyForm({ currentPassword: '', currentMasterKey: '', newMasterKey: '' });
+            setMasterKeyForm({ currentPassword: '', newMasterKey: '', confirmNewMasterKey: '' });
             setMasterKeyDeleteForm({ currentPassword: '' });
             setShowMasterKeyDeleteModal(false);
             notify.success('Master Key deleted. Admin login no longer asks for a second factor.');
