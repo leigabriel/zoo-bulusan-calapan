@@ -77,9 +77,11 @@ exports.create = async (req, res) => {
 
 exports.change = async (req, res) => {
     try {
-        const { currentPassword, currentMasterKey, newMasterKey } = req.body;
-        if (!validKey(newMasterKey) || !validKey(currentMasterKey)) return res.status(400).json({ success: false, message: 'Master Keys must be 8 to 128 characters.' });
-        if (!await verifyPassword(req.user.id, currentPassword) || !(await AdminMasterKey.verify(req.user.id, currentMasterKey))) return res.status(401).json({ success: false, message: 'Authentication details are incorrect.' });
+        const { currentPassword, newMasterKey } = req.body;
+        if (!validKey(newMasterKey)) return res.status(400).json({ success: false, message: 'New Master Key must be 8 to 128 characters.' });
+        if (!await verifyPassword(req.user.id, currentPassword)) return res.status(401).json({ success: false, message: 'Current password is incorrect.' });
+        const status = await AdminMasterKey.getStatus(req.user.id);
+        if (!status.configured) return res.status(409).json({ success: false, message: 'No Master Key is configured.' });
         await AdminMasterKey.change(req.user.id, newMasterKey);
         res.json({ success: true, status: { configured: true, enabled: true } });
     } catch (error) {
