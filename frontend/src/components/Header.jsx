@@ -8,7 +8,7 @@ import useScrollLock from '../hooks/use-scroll-lock';
 import {
     Home, Pet, Leaf, Calendar, Bell, Menu, CloseCircle, Ticket,
     People, Message, Globe, Game, Setting, Camera, Lifebuoy,
-    Headset, Logout, Information, NoteText
+    Headset, Logout, Information, NoteText, MapPoint
 } from 'reicon-react';
 
 // These panels pull in heavy code (TensorFlow, forms, history tables). Loading them on
@@ -73,6 +73,7 @@ const ICON_COMPONENTS = {
     messages: Message,
     wildlife: Globe,
     game: Game,
+    map: MapPoint,
     setting: Setting,
     camera: Camera,
     help: Lifebuoy,
@@ -88,6 +89,8 @@ const NAV_LINKS = [
     { path: '/plants', label: 'Plants', iconKey: 'plants' },
     { path: '/events', label: 'Events', iconKey: 'events' },
     { path: '/community', label: 'Community', iconKey: 'messages' },
+    { path: '/game', label: 'Game', iconKey: 'game' },
+    { path: '/map', label: 'Map', iconKey: 'map' },
     { path: '/about', label: 'About', iconKey: 'about' },
 ];
 
@@ -425,7 +428,7 @@ const Header = () => {
     ];
 
     const exploreItems = [
-        { iconKey: 'wildlife', label: 'Wildlife Origins', path: '/map' },
+        { iconKey: 'wildlife', label: 'Wildlife Origins', path: '/wildlife-origins' },
         { iconKey: 'game', label: 'Mini Zoo Game', action: handleOpenMiniZooGame },
     ];
 
@@ -457,7 +460,7 @@ const Header = () => {
                                         key={link.path}
                                         to={link.path}
                                         onClick={(e) => { e.preventDefault(); handleTransitionNavigate(e, link.path); }}
-                                        className={`px-4 py-1.5 rounded-full text-[13px] font-medium transition-all duration-150 whitespace-nowrap ${isActivePath(location.pathname, link.path)
+                                        className={`px-2 py-1.5 rounded-full text-[11px] font-semibold uppercase tracking-[0.04em] transition-all duration-150 whitespace-nowrap xl:px-4 xl:text-[13px] ${isActivePath(location.pathname, link.path)
                                             ? 'bg-[#000] text-gray-100 shadow-sm'
                                             : 'text-[#000]/75 hover:text-black'
                                             }`}
@@ -564,7 +567,7 @@ const Header = () => {
                                                     className={`flex-shrink-0 ${active ? 'opacity-100' : 'opacity-45'}`}
                                                 />
                                             )}
-                                            <span className={`text-[13px] font-medium ${active ? 'text-[#000]' : 'text-gray-600'}`}>
+                                            <span className={`text-[13px] font-medium uppercase tracking-wide ${active ? 'text-[#000]' : 'text-gray-600'}`}>
                                                 {link.label}
                                             </span>
                                         </Link>
