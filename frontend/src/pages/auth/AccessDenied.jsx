@@ -28,9 +28,7 @@ const AccessDenied = () => {
                 <div className="p-8">
                     <p className="text-gray-600 mb-6">
                         {user ? (
-                            <>
-                                Your current role <span className="font-semibold text-gray-800">({role})</span> does not have access to this resource.
-                            </>
+                            "This page isn't available for your account. Use the button below to continue."
                         ) : (
                             'Please log in to access this page.'
                         )}
