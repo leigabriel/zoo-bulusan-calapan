@@ -28,6 +28,7 @@ const UserMessages = lazy(() => import('./pages/user/UserMessages'));
 const CommunityPage = lazy(() => import('./pages/user/CommunityPage'));
 const PublicUserProfile = lazy(() => import('./pages/user/PublicUserProfile'));
 const MyEvents = lazy(() => import('./pages/user/MyEvents'));
+const Game = lazy(() => import('./pages/user/Game'));
 const LoginPage = lazy(() => import('./pages/auth/LoginPage'));
 const RegisterPage = lazy(() => import('./pages/auth/RegisterPage'));
 const GoogleAuthSuccess = lazy(() => import('./pages/auth/GoogleAuthSuccess'));
@@ -77,12 +78,15 @@ const RouteFallback = () => (
     </div>
 );
 
-const MapPage = lazy(() => import('./pages/user/Map'));
-const MapPageFallback = () => (
-    <div className="flex items-center justify-center h-screen bg-[#eef3ed]">
+const ZooMap = lazy(() => import('./pages/user/ZooMap'));
+const WildlifeOrigins = lazy(() => import('./pages/user/WildlifeOrigins'));
+const GlobeFallback = () => (
+    <div className="flex h-screen items-center justify-center bg-[#eef3ed]">
         <div className="flex flex-col items-center gap-6">
-            <div className="w-12 h-12 border-4 border-[#d5e1d5] border-t-[#1f3328] rounded-full animate-spin" />
-            <p className="text-[#1f3328] font-bold text-[10px] uppercase tracking-[0.3em] animate-pulse">Synchronizing Globe...</p>
+            <div className="h-12 w-12 animate-spin rounded-full border-4 border-[#d5e1d5] border-t-[#1f3328]" />
+            <p className="animate-pulse text-[10px] font-bold uppercase tracking-[0.3em] text-[#1f3328]">
+                Loading the globe...
+            </p>
         </div>
     </div>
 );
@@ -145,8 +149,10 @@ function AppRoutes() {
             <Route path="/events" element={<Events />} />
             <Route path="/about" element={<AboutUs />} />
             <Route path="/animaldex" element={<AnimalClassifier />} />
-            <Route path="/map" element={<Suspense fallback={<MapPageFallback />}><MapPage /></Suspense>} />
-            <Route path="/map/animals/:id" element={<WildlifeOriginDetail />} />
+            <Route path="/game" element={<Game />} />
+            <Route path="/map" element={<ZooMap />} />
+            <Route path="/wildlife-origins" element={<Suspense fallback={<GlobeFallback />}><WildlifeOrigins /></Suspense>} />
+            <Route path="/wildlife-origins/animals/:id" element={<WildlifeOriginDetail />} />
             <Route path="/privacy" element={<PrivacyPolicy />} />
             <Route path="/terms" element={<TermsOfService />} />
             <Route path="/cookies" element={<CookiePolicy />} />
@@ -203,7 +209,7 @@ function AppRoutes() {
                     <PublicUserProfile />
                 </ProtectedRoute>
             } />
-            <Route path="/mini-zoo-game" element={<Navigate to="/" replace />} />
+            <Route path="/mini-zoo-game" element={<Navigate to="/game" replace />} />
 
             {/* Admin Routes */}
             <Route path="/admin/dashboard" element={
