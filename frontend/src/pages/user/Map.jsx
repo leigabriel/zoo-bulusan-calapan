@@ -94,12 +94,12 @@ const GlobeMap = ({ filterRegion, onSelectAnimal }) => {
             <div className="h-full w-full flex items-center justify-center bg-[#e8eee8]">
                 {isFailed ? (
                     <p className="px-6 text-center text-sm font-medium text-[#52675a]">
-                        Could not load the 3D globe. Check that the Google Maps API key is valid and that the Maps 3D API is enabled.
+                        We couldn&apos;t load the 3D globe. Please try again in a moment, or use the list to explore the animals.
                     </p>
                 ) : (
                     <div className="flex flex-col items-center gap-6">
                         <div className="w-12 h-12 border-4 border-[#d5e1d5] border-t-[#1f3328] rounded-full animate-spin" />
-                        <p className="text-[#1f3328] font-bold text-[11px] uppercase tracking-[0.3em] animate-pulse">Synchronizing Globe...</p>
+                        <p className="text-[#1f3328] font-bold text-[11px] uppercase tracking-[0.3em] animate-pulse">Loading the globe...</p>
                     </div>
                 )}
             </div>
@@ -140,9 +140,9 @@ const MapFallback = () => (
             <div className="w-20 h-20 mx-auto mb-5 rounded-full border-4 border-white bg-[#f1f5ed] shadow-inner flex items-center justify-center text-4xl">
                 🌏
             </div>
-            <h2 className="text-lg font-black text-[#1f3328] mb-2">3D Globe Disabled</h2>
+            <h2 className="text-lg font-black text-[#1f3328] mb-2">3D Globe Unavailable</h2>
             <p className="text-sm text-[#52675a] font-medium leading-relaxed">
-                The interactive globe needs a Google Maps API key with the Maps 3D API enabled. Set <span className="font-mono text-[#1f3328]">VITE_GOOGLE_MAPS_API_KEY</span> to activate it.
+                The interactive globe can&apos;t be shown right now, but you can still explore every animal using the list of wildlife origins.
             </p>
         </div>
     </div>
