@@ -1,4 +1,5 @@
 import { getProfileImageUrl } from '../../../services/api-client';
+import { friendlyMessage } from '../../../utils/toast';
 
 // The Facebook/Instagram pattern: a post becomes visible in the feed the instant it is
 // published, carrying a progress bar and a clear "not posted yet" label, and is replaced by
@@ -16,13 +17,11 @@ const PostUploadCard = ({ item, currentUser, onRetry, onDiscard }) => {
             ? 'Posted'
             : `Uploading ${percent}%`;
 
-    // Prefer a message that names the cause. friendlyMessage already rewrites "network error"
-    // and "offline" server-side of the toast, but this card shows the raw error, so the common
-    // connectivity case is translated here where the reader is actually looking.
+    // The card shows the failure in place, without a toast, so the same
+    // translation the toasts use is applied here instead of printing the raw
+    // uploader string ("Upload error: Unexpected field...").
     const errorDetail = failed
-        ? (/network|offline|failed to fetch|load failed/i.test(item.error || '')
-            ? "You're offline. Check your connection, then try again."
-            : (item.error || "Couldn't upload your post."))
+        ? friendlyMessage(item.error || "Couldn't upload your post.", 'retry')
         : null;
 
     return (
