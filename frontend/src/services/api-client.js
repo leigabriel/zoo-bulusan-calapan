@@ -925,6 +925,23 @@ export const adminAPI = {
         return handleResponse(response);
     },
 
+    getLegalPolicyConfig: async () => {
+        const response = await fetch(`${API_BASE_URL}/admin/legal-policy-config`, {
+            headers: getAuthHeaders('admin'),
+            cache: 'no-store'
+        });
+        return handleResponse(response);
+    },
+
+    updateLegalPolicyConfig: async (policies) => {
+        const response = await fetch(`${API_BASE_URL}/admin/legal-policy-config`, {
+            method: 'PUT',
+            headers: getAuthHeaders('admin'),
+            body: JSON.stringify({ policies })
+        });
+        return handleResponse(response);
+    },
+
     // ==================== TRASH API ====================
 
     // Users trash
@@ -2055,6 +2072,13 @@ export const chatAPI = {
         markRead: (conversationId) => chatAPI.markRead(conversationId, role),
         getUnreadCount: () => chatAPI.getUnreadCount(role)
     })
+};
+
+export const legalAPI = {
+    getPolicies: async () => {
+        const response = await fetch(`${API_BASE_URL}/legal/policies`, { cache: 'no-store' });
+        return handleResponse(response);
+    }
 };
 
 export const communityAPI = {
