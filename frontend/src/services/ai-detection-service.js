@@ -14,10 +14,10 @@ export const ErrorTypes = {
 };
 
 const ErrorMessages = {
-    [ErrorTypes.INVALID_IMAGE]: 'The image could not be processed. Please try a different image.',
-    [ErrorTypes.MODEL_ERROR]: 'The local AI model could not be loaded. Please refresh and try again.',
-    [ErrorTypes.NO_ANIMAL_DETECTED]: 'No animal was detected. Try a clearer photo with the animal more visible.',
-    [ErrorTypes.LOW_CONFIDENCE]: 'The model is not confident enough. Try a clearer or closer photo.',
+    [ErrorTypes.INVALID_IMAGE]: "We couldn't read that image. Please try a different photo.",
+    [ErrorTypes.MODEL_ERROR]: "The animal identifier isn't available right now. Please refresh the page and try again.",
+    [ErrorTypes.NO_ANIMAL_DETECTED]: "We couldn't find an animal in that photo. Try a clearer photo with the animal more visible.",
+    [ErrorTypes.LOW_CONFIDENCE]: "We're not sure which animal that is. Try a clearer photo taken a little closer.",
 };
 
 let cachedModel = null;
