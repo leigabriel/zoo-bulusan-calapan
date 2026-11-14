@@ -155,7 +155,7 @@ const MapPage = () => {
     const [isMobileListOpen, setIsMobileListOpen] = useState(false);
 
     const handleSelect = useCallback((animal) => {
-        navigate(`/map/animals/${animal.id}`);
+        navigate(`/wildlife-origins/animals/${animal.id}`);
         setIsMobileListOpen(false);
     }, [navigate]);
 
