@@ -56,6 +56,43 @@ const LegacyIcons = {
 };
 const Icons = { Back: ChevronLeft, Home, Bell, Activity, Help: HelpCircle, ChevronRight, Ticket, Message, Heart };
 
+// The API stores activity kinds as machine keys ("ticket_reservation"). Visitors
+// only ever see the readable label, and unknown kinds still fall back to a
+// capitalised version of the key instead of leaking the raw value.
+const ACTIVITY_LABELS = {
+    register: 'Account created',
+    login: 'Signed in',
+    logout: 'Signed out',
+    profile_update: 'Profile updated',
+    password_change: 'Password changed',
+    account_delete: 'Account deleted',
+    ticket_reservation: 'Zoo ticket booking',
+    event_reservation: 'Event booking',
+    reservation_update: 'Booking updated',
+    reservation_cancel: 'Booking cancelled',
+    post_create: 'Post created',
+    post_update: 'Post updated',
+    post_delete: 'Post deleted',
+    post_report: 'Post reported',
+    comment_create: 'Comment added',
+    comment_update: 'Comment updated',
+    comment_delete: 'Comment deleted',
+    comment_report: 'Comment reported',
+    message_sent: 'Message sent',
+    walk_in_sale: 'Walk-in ticket sale',
+    walk_in_void: 'Walk-in sale voided',
+    walk_in_trash: 'Walk-in record removed',
+    walk_in_check_in: 'Walk-in guest checked in'
+};
+
+const formatActivityLabel = (type) => {
+    if (!type) return 'Activity';
+    if (ACTIVITY_LABELS[type]) return ACTIVITY_LABELS[type];
+
+    const words = type.replaceAll('_', ' ').trim();
+    return words ? words.charAt(0).toUpperCase() + words.slice(1) : 'Activity';
+};
+
 const Settings = ({ embedded = false, onClose }) => {
     const { user } = useAuth();
     const navigate = useNavigate();
@@ -229,7 +266,7 @@ const Settings = ({ embedded = false, onClose }) => {
     };
 
     const getActivityTitle = (activity) => {
-        return activity.title || activity.type?.replaceAll('_', ' ') || 'Activity';
+        return activity.title || formatActivityLabel(activity.type);
     };
 
     const activityTypes = [...new Set(activities.filter(Boolean).map(activity => activity.type).filter(Boolean))];
@@ -309,7 +346,7 @@ const Settings = ({ embedded = false, onClose }) => {
                                 <label className="sr-only" htmlFor="activity-filter">Filter activity</label>
                                 <select id="activity-filter" value={activityFilter} onChange={(event) => setActivityFilter(event.target.value)} className="min-w-0 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100">
                                     <option value="all">All actions</option>
-                                    {activityTypes.map(type => <option key={type} value={type}>{type.replaceAll('_', ' ')}</option>)}
+                                    {activityTypes.map(type => <option key={type} value={type}>{formatActivityLabel(type)}</option>)}
                                 </select>
                                 <label className="sr-only" htmlFor="activity-sort">Sort activity</label>
                                 <select id="activity-sort" value={activitySort} onChange={(event) => setActivitySort(event.target.value)} className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100">
