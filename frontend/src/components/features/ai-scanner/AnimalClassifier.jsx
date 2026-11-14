@@ -96,7 +96,7 @@ const AnimalClassifier = ({ embedded = false }) => {
                 await loadLocalModel();
                 setIsModelLoading(false);
             } catch {
-                addBotMessage('The local AI model could not be loaded. Please refresh and try again.');
+                addBotMessage("The animal identifier isn't available right now. Please refresh the page and try again.");
                 setIsModelLoading(false);
             }
         };
@@ -267,7 +267,7 @@ const AnimalClassifier = ({ embedded = false }) => {
             const confidencePct = parseFloat(confidence);
 
             if (animalName === 'Unknown' || confidencePct === 0) {
-                addBotMessage("I couldn't confidently identify the animal in this image. The detection result was inconclusive. Please try a different image.");
+                addBotMessage("I couldn't identify the animal in this image. Please try a clearer photo with the animal more visible.");
                 return;
             }
 
@@ -276,7 +276,7 @@ const AnimalClassifier = ({ embedded = false }) => {
 
             saveToDatabase(animalName, confidencePct);
 
-            const resultMessageId = addBotMessage(`A ${animalName.toLowerCase()} has been identified with ${confidencePct}% confidence.`, {
+            const resultMessageId = addBotMessage(`Looks like a ${animalName.toLowerCase()} — ${confidencePct}% match.`, {
                 animal: animalName,
                 confidence: confidencePct,
                 icon: animalName.toLowerCase(),
@@ -433,7 +433,7 @@ const AnimalClassifier = ({ embedded = false }) => {
                                             </div>
                                              <p className="text-[#506057] leading-relaxed text-sm [overflow-wrap:anywhere]">{msg.content}</p>
                                             {msg.meta.wikipediaLoading && (
-                                                <p className="mt-2 text-[11px] font-medium text-[#718078]">Loading Wikipedia details...</p>
+                                                <p className="mt-2 text-[11px] font-medium text-[#718078]">Loading more details...</p>
                                             )}
                                             {msg.meta.wikipediaData?.scientificName && (
                                                  <p className="mt-3 text-xs text-[#718078]"><span className="font-semibold text-[#405047]">Scientific name:</span> {msg.meta.wikipediaData.scientificName}</p>
