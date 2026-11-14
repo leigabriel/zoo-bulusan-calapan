@@ -546,7 +546,7 @@ const Reports = () => {
                         <FileTextIcon />
                         Reports
                     </h1>
-                    <p className="text-gray-500 text-sm mt-1">Generate and export detailed reports from database</p>
+                    <p className="text-gray-500 text-sm mt-1">Generate and export detailed reports from your park records</p>
                 </div>
                 {reportData && (
                     <div className="flex items-center gap-2 text-xs text-gray-500">
