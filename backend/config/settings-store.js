@@ -22,7 +22,8 @@ const db = require('./database');
 const SETTING_KEYS = Object.freeze({
     TICKET_PAYMENT: 'ticket_payment',
     EVENT_PAYMENT: 'event_payment',
-    RESERVATION_ACCESS: 'reservation_access'
+    RESERVATION_ACCESS: 'reservation_access',
+    LEGAL_POLICIES: 'legal_policies'
 });
 
 const cache = new Map();
