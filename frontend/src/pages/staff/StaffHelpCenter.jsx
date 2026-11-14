@@ -55,7 +55,7 @@ const faqs = [
         id: 9,
         category: 'Troubleshooting',
         question: 'Why are records missing from the dashboard?',
-        answer: 'Refresh the page and confirm the filters are set correctly. If data remains missing, verify the backend connection is active.'
+        answer: 'Refresh the page and confirm the filters are set correctly. If records are still missing, check that the website is online and try again in a few minutes.'
     }
 ];
 
