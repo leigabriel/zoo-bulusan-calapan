@@ -43,10 +43,10 @@ const PhotoStrip = () => {
     const photos = useMemo(() => pickRandomPhotos(4), []);
 
     return (
-        <section className="bg-[#f7f5ef] px-4 pb-20 sm:px-6 sm:pb-28 md:px-10" aria-labelledby="park-photos-title">
+        <section className="bg-[#f7f5ef] px-4 pb-16 sm:px-6 sm:pb-20 md:px-10" aria-labelledby="park-photos-title">
             <div className="mx-auto max-w-[1500px]">
-                <div className="flex flex-col gap-3 pt-10 sm:flex-row sm:items-end sm:justify-between sm:pt-12">
-                    <h2 id="park-photos-title" className="text-xs font-bold uppercase tracking-[0.25em] text-[#212631]/40">Scenes from the park</h2>
+                <div className="flex flex-col gap-3 pt-8 sm:flex-row sm:items-end sm:justify-between sm:pt-10">
+                    <h2 id="park-photos-title" className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#212631]/40 sm:text-xs">Scenes from the park</h2>
                     <p className="max-w-md text-sm font-medium leading-6 text-[#212631]/50">Shaded walkways, garden ponds, and the open grounds visitors pass through on the way to the pavilion.</p>
                 </div>
                 <div className="mt-6 grid grid-cols-2 gap-3 sm:mt-8 sm:gap-5 lg:grid-cols-4">
@@ -84,10 +84,10 @@ const AboutUs = () => {
                         </div>
 
                         <div className="py-16 md:py-20">
-                            <h1 id="about-title" className="max-w-6xl text-[clamp(3.4rem,10vw,9rem)] font-medium leading-[0.82] tracking-[-0.06em] text-black">
+                            <h1 id="about-title" className="max-w-6xl text-[clamp(2.75rem,7vw,6rem)] font-medium leading-[0.86] tracking-[-0.055em] text-black">
                                 Bulusan<br />Park
                             </h1>
-                            <p className="mt-10 max-w-2xl text-base font-medium leading-7 text-[#212631]/65 sm:text-lg sm:leading-8 md:ml-auto md:mt-14">
+                            <p className="mt-8 max-w-2xl text-base font-medium leading-7 text-[#212631]/65 sm:text-lg sm:leading-8 md:ml-auto md:mt-12">
                                 Formally the Calapan City Recreational and Zoological Park, Bulusan Park is a City-managed destination for family recreation, environmental education, leisure, and community gatherings.
                             </p>
                         </div>
@@ -96,7 +96,7 @@ const AboutUs = () => {
                             {facts.map((fact) => (
                                 <div key={fact.label} className="border-b border-[#212631]/15 py-5 sm:px-5 sm:odd:border-r lg:border-b-0 lg:border-r lg:first:pl-0 lg:last:border-r-0">
                                     <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#212631]/40">{fact.label}</p>
-                                    <p className="mt-3 text-sm font-semibold leading-6">{fact.value}</p>
+                                    <p className="mt-2 text-base font-semibold leading-6">{fact.value}</p>
                                 </div>
                             ))}
                         </div>
@@ -104,119 +104,118 @@ const AboutUs = () => {
 
                     <PhotoStrip />
 
-                    <section className="bg-white px-4 py-20 sm:px-6 sm:py-28 md:px-10" aria-labelledby="park-story-title">
-                        <div className="mx-auto grid max-w-[1500px] gap-12 lg:grid-cols-[0.7fr_1.3fr] lg:gap-24">
+                    <section className="bg-white px-4 py-16 sm:px-6 sm:py-20 md:px-10 lg:py-24" aria-labelledby="park-story-title">
+                        <div className="mx-auto grid max-w-[1500px] gap-8 lg:grid-cols-[0.8fr_1.2fr] lg:gap-20">
                             <div>
-                                <p className="text-xs font-bold uppercase tracking-[0.25em] text-[#212631]/40">Park story</p>
-                                <h2 id="park-story-title" className="mt-5 text-[clamp(2.7rem,6vw,6rem)] font-medium leading-[0.92] tracking-[-0.055em] text-black">A public park with a documented history.</h2>
+                                <h2 id="park-story-title" className="text-[clamp(2.1rem,3.8vw,3.5rem)] font-medium leading-[0.96] tracking-[-0.05em] text-black">A public park with a documented history.</h2>
                             </div>
-                            <div className="lg:pt-16">
-                                <p className="text-xl font-medium leading-8 text-[#212631] sm:text-2xl sm:leading-9">
+                            <div className="lg:pt-4">
+                                <p className="text-lg font-medium leading-7 text-[#212631] sm:text-xl sm:leading-8">
                                     A Philippine Information Agency report published on April 2, 2013 described the Calapan Recreational and Zoological Park as newly open to the public in Barangay Bulusan.
                                 </p>
-                                <p className="mt-7 text-base leading-7 text-[#212631]/60">
+                                <p className="mt-5 text-base leading-7 text-[#212631]/60">
                                     The report recorded the formal opening by City officials and described the park at that point in time. Its animal and facility details are historical, not a statement of what visitors will find today.
                                 </p>
-                                <a href={HISTORY_SOURCE} target="_blank" rel="noreferrer" className="mt-8 inline-flex min-h-11 items-center border-b border-black pb-1 text-xs font-bold uppercase tracking-[0.2em] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-green-600">
+                                <a href={HISTORY_SOURCE} target="_blank" rel="noreferrer" className="mt-6 inline-flex min-h-11 items-center border-b border-black pb-1 text-[11px] font-bold uppercase tracking-[0.18em] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-green-600">
                                     Read the 2013 PIA report
                                 </a>
                             </div>
                         </div>
                     </section>
 
-                    <section className="bg-[#f7f5ef] px-4 py-20 sm:px-6 sm:py-28 md:px-10" aria-labelledby="stewardship-title">
+                    <section className="bg-[#f7f5ef] px-4 py-16 sm:px-6 sm:py-20 md:px-10 lg:py-24" aria-labelledby="stewardship-title">
                         <div className="mx-auto max-w-[1500px]">
-                            <div className="grid gap-12 lg:grid-cols-[0.8fr_1.2fr] lg:gap-24">
+                            <div className="grid gap-8 lg:grid-cols-[0.8fr_1.2fr] lg:gap-20">
                                 <div>
-                                    <p className="text-xs font-bold uppercase tracking-[0.25em] text-[#212631]/40">City stewardship</p>
-                                    <h2 id="stewardship-title" className="mt-5 text-[clamp(2.8rem,7vw,6.5rem)] font-medium leading-[0.9] tracking-[-0.055em] text-black">How the park is managed.</h2>
+                                    <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#212631]/40">City stewardship</p>
+                                    <h2 id="stewardship-title" className="mt-4 text-[clamp(2.1rem,3.8vw,3.5rem)] font-medium leading-[0.96] tracking-[-0.05em] text-black">How the park is managed.</h2>
                                 </div>
-                                <div className="lg:pt-12">
-                                    <p className="text-xl font-medium leading-8 sm:text-2xl sm:leading-9">Bulusan Park is one of Calapan City’s economic enterprises under the direct administration, supervision, maintenance, and control of the City Economic Enterprise Department.</p>
-                                    <p className="mt-7 text-base leading-7 text-[#212631]/60">The City traces this mandate to its Economic Enterprise Code, identifying Resolution No. 724 and City Ordinance No. 19, Article IV, Section 8. This places the park within a broader municipal public-service framework.</p>
-                                    <a href={CITY_SOURCE} target="_blank" rel="noreferrer" className="mt-8 inline-flex min-h-11 items-center border-b border-black pb-1 text-xs font-bold uppercase tracking-[0.2em] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-green-600">Read the City CEED profile</a>
+                                <div className="lg:pt-2">
+                                    <p className="text-lg font-medium leading-7 sm:text-xl sm:leading-8">Bulusan Park is one of Calapan City’s economic enterprises under the direct administration, supervision, maintenance, and control of the City Economic Enterprise Department.</p>
+                                    <p className="mt-5 text-base leading-7 text-[#212631]/60">The City traces this mandate to its Economic Enterprise Code, identifying Resolution No. 724 and City Ordinance No. 19, Article IV, Section 8. This places the park within a broader municipal public-service framework.</p>
+                                    <a href={CITY_SOURCE} target="_blank" rel="noreferrer" className="mt-6 inline-flex min-h-11 items-center border-b border-black pb-1 text-[11px] font-bold uppercase tracking-[0.18em] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-green-600">Read the City CEED profile</a>
                                 </div>
                             </div>
                         </div>
                     </section>
 
-                    <section className="bg-[#1a211b] px-4 py-20 text-white sm:px-6 sm:py-28 md:px-10" aria-labelledby="nature-title">
+                    <section className="bg-[#1a211b] px-4 py-16 text-white sm:px-6 sm:py-20 md:px-10 lg:py-24" aria-labelledby="nature-title">
                         <div className="mx-auto max-w-[1500px]">
-                            <p className="text-xs font-bold uppercase tracking-[0.25em] text-green-300">Nature and recreation</p>
-                            <h2 id="nature-title" className="mt-5 max-w-5xl text-[clamp(3rem,8vw,7.5rem)] font-medium leading-[0.86] tracking-[-0.06em]">Room to learn,<br />gather, and explore.</h2>
+                            <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-green-300">Nature and recreation</p>
+                            <h2 id="nature-title" className="mt-4 max-w-4xl text-[clamp(2.2rem,4.6vw,4.25rem)] font-medium leading-[0.92] tracking-[-0.05em]">Room to learn,<br />gather, and explore.</h2>
 
-                            <div className="mt-16 grid border-t border-white/15 md:grid-cols-3 md:divide-x md:divide-white/15">
-                                <article className="border-b border-white/15 py-8 md:border-b-0 md:pr-8">
-                                    <span className="text-xs font-bold tracking-[0.2em] text-green-300">01</span>
-                                    <h3 className="mt-10 text-2xl font-semibold">Natural setting</h3>
-                                    <p className="mt-4 text-sm leading-6 text-white/58">The provincial tourism portal documents century-old trees, picnic and camping areas, recreation space, and wall-climbing facilities within the park.</p>
+                            <div className="mt-10 grid border-t border-white/15 md:grid-cols-3 md:divide-x md:divide-white/15">
+                                <article className="border-b border-white/15 py-7 md:border-b-0 md:pr-8">
+                                    <span className="text-[11px] font-bold tracking-[0.2em] text-green-300">01</span>
+                                    <h3 className="mt-6 text-lg font-semibold sm:text-xl">Natural setting</h3>
+                                    <p className="mt-3 text-sm leading-6 text-white/58">The provincial tourism portal documents century-old trees, picnic and camping areas, recreation space, and wall-climbing facilities within the park.</p>
                                 </article>
-                                <article className="border-b border-white/15 py-8 md:border-b-0 md:px-8">
-                                    <span className="text-xs font-bold tracking-[0.2em] text-green-300">02</span>
-                                    <h3 className="mt-10 text-2xl font-semibold">Wildlife</h3>
-                                    <p className="mt-4 text-sm leading-6 text-white/58">The City describes a mini-zoo with various animal species. Because no current official inventory is published, species lists from historical reports are not presented as current.</p>
+                                <article className="border-b border-white/15 py-7 md:border-b-0 md:px-8">
+                                    <span className="text-[11px] font-bold tracking-[0.2em] text-green-300">02</span>
+                                    <h3 className="mt-6 text-lg font-semibold sm:text-xl">Wildlife</h3>
+                                    <p className="mt-3 text-sm leading-6 text-white/58">The City describes a mini-zoo with various animal species. Because no current official inventory is published, species lists from historical reports are not presented as current.</p>
                                 </article>
-                                <article className="py-8 md:pl-8">
-                                    <span className="text-xs font-bold tracking-[0.2em] text-green-300">03</span>
-                                    <h3 className="mt-10 text-2xl font-semibold">Community space</h3>
-                                    <p className="mt-4 text-sm leading-6 text-white/58">Landscaped open areas support leisure and recreation, while the multi-purpose pavilion serves events and community gatherings.</p>
+                                <article className="py-7 md:pl-8">
+                                    <span className="text-[11px] font-bold tracking-[0.2em] text-green-300">03</span>
+                                    <h3 className="mt-6 text-lg font-semibold sm:text-xl">Community space</h3>
+                                    <p className="mt-3 text-sm leading-6 text-white/58">Landscaped open areas support leisure and recreation, while the multi-purpose pavilion serves events and community gatherings.</p>
                                 </article>
                             </div>
                         </div>
                     </section>
 
-                    <section className="bg-green-400 px-4 py-20 sm:px-6 sm:py-28 md:px-10" aria-labelledby="eco-trail-title">
-                        <div className="mx-auto grid max-w-[1500px] gap-12 lg:grid-cols-[1.1fr_0.9fr] lg:items-end lg:gap-24">
+                    <section className="green-mesh relative overflow-hidden px-4 py-16 sm:px-6 sm:py-20 md:px-10 lg:py-24" aria-labelledby="eco-trail-title">
+                        <div className="mx-auto grid max-w-[1500px] gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-end lg:gap-20">
                             <div>
-                                <p className="text-xs font-bold uppercase tracking-[0.25em] text-black/45">Bulusan eco-trail</p>
-                                <h2 id="eco-trail-title" className="mt-5 text-[clamp(3rem,8vw,7rem)] font-medium leading-[0.86] tracking-[-0.06em] text-black">A route from<br />park to shore.</h2>
+                                <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-black/45">Bulusan eco-trail</p>
+                                <h2 id="eco-trail-title" className="mt-4 text-[clamp(2.2rem,4.6vw,4.25rem)] font-medium leading-[0.92] tracking-[-0.05em] text-black">A route from<br />park to shore.</h2>
                             </div>
                             <div className="border-l border-black/25 pl-5 sm:pl-8">
-                                <p className="text-xl font-semibold leading-8 text-black/80">The official provincial tourism listing identifies the park as the entry point to the Bulusan eco-trail.</p>
-                                <p className="mt-5 text-sm font-medium leading-6 text-black/55">It describes an approximately one-hour route ending at the seashore in Barangay Parang. Visitors should confirm current access, trail conditions, and local guidance before a hike.</p>
-                                <a href={TOURISM_SOURCE} target="_blank" rel="noreferrer" className="mt-8 inline-flex min-h-11 items-center border-b border-black pb-1 text-xs font-bold uppercase tracking-[0.2em] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-black">View official tourism information</a>
+                                <p className="text-lg font-semibold leading-7 text-black/80 sm:text-xl sm:leading-8">The official provincial tourism listing identifies the park as the entry point to the Bulusan eco-trail.</p>
+                                <p className="mt-4 text-sm font-medium leading-6 text-black/55">It describes an approximately one-hour route ending at the seashore in Barangay Parang. Visitors should confirm current access, trail conditions, and local guidance before a hike.</p>
+                                <a href={TOURISM_SOURCE} target="_blank" rel="noreferrer" className="mt-6 inline-flex min-h-11 items-center border-b border-black pb-1 text-[11px] font-bold uppercase tracking-[0.18em] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-black">View official tourism information</a>
                             </div>
                         </div>
                     </section>
 
-                    <section className="bg-white px-4 py-20 sm:px-6 sm:py-28 md:px-10" aria-labelledby="trail-ready-title">
+                    <section className="bg-white px-4 py-16 sm:px-6 sm:py-20 md:px-10 lg:py-24" aria-labelledby="trail-ready-title">
                         <div className="mx-auto max-w-[1500px]">
-                            <div className="grid gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:gap-24">
+                            <div className="grid gap-8 lg:grid-cols-[0.8fr_1.2fr] lg:gap-20">
                                 <div>
-                                    <p className="text-xs font-bold uppercase tracking-[0.25em] text-[#212631]/40">Provincial travel guidance</p>
-                                    <h2 id="trail-ready-title" className="mt-5 text-[clamp(2.8rem,6vw,5.8rem)] font-medium leading-[0.92] tracking-[-0.055em] text-black">Go prepared.<br />Leave room to adapt.</h2>
+                                    <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#212631]/40">Provincial travel guidance</p>
+                                    <h2 id="trail-ready-title" className="mt-4 text-[clamp(2.1rem,3.8vw,3.5rem)] font-medium leading-[0.96] tracking-[-0.05em] text-black">Go prepared.<br />Leave room to adapt.</h2>
                                 </div>
-                                <div className="grid gap-px overflow-hidden rounded-3xl bg-black/10 sm:grid-cols-2">
-                                    <div className="bg-[#f7f5ef] p-6 sm:p-8"><span className="text-xs font-bold tracking-[0.2em] text-green-700">01</span><h3 className="mt-8 text-xl font-semibold">Watch the weather</h3><p className="mt-3 text-sm leading-6 text-[#212631]/55">Oriental Mindoro’s advisory notes that mountain trails can be slippery in the June-October wet season and recommends flexible plans during typhoon season.</p></div>
-                                    <div className="bg-[#f7f5ef] p-6 sm:p-8"><span className="text-xs font-bold tracking-[0.2em] text-green-700">02</span><h3 className="mt-8 text-xl font-semibold">Pack for outdoors</h3><p className="mt-3 text-sm leading-6 text-[#212631]/55">The provincial guidance recommends water, sun protection, insect repellent, personal medication, and a basic first-aid kit.</p></div>
-                                    <div className="bg-[#f7f5ef] p-6 sm:col-span-2 sm:p-8"><span className="text-xs font-bold tracking-[0.2em] text-green-700">03</span><h3 className="mt-8 text-xl font-semibold">Confirm locally</h3><p className="mt-3 max-w-2xl text-sm leading-6 text-[#212631]/55">These are province-wide recommendations, not park-specific rules. Ask local tourism or park contacts about current trail access and conditions before setting out.</p><a href={TRAVEL_ADVISORY_SOURCE} target="_blank" rel="noreferrer" className="mt-6 inline-flex min-h-11 items-center border-b border-black pb-1 text-xs font-bold uppercase tracking-[0.18em]">Read the travel advisory</a></div>
+                                <div className="grid gap-px overflow-hidden rounded-2xl bg-black/10 sm:grid-cols-2">
+                                    <div className="bg-[#f7f5ef] p-6 sm:p-7"><span className="text-[11px] font-bold tracking-[0.2em] text-green-700">01</span><h3 className="mt-5 text-lg font-semibold">Watch the weather</h3><p className="mt-2.5 text-sm leading-6 text-[#212631]/55">Oriental Mindoro’s advisory notes that mountain trails can be slippery in the June-October wet season and recommends flexible plans during typhoon season.</p></div>
+                                    <div className="bg-[#f7f5ef] p-6 sm:p-7"><span className="text-[11px] font-bold tracking-[0.2em] text-green-700">02</span><h3 className="mt-5 text-lg font-semibold">Pack for outdoors</h3><p className="mt-2.5 text-sm leading-6 text-[#212631]/55">The provincial guidance recommends water, sun protection, insect repellent, personal medication, and a basic first-aid kit.</p></div>
+                                    <div className="bg-[#f7f5ef] p-6 sm:col-span-2 sm:p-7"><span className="text-[11px] font-bold tracking-[0.2em] text-green-700">03</span><h3 className="mt-5 text-lg font-semibold">Confirm locally</h3><p className="mt-2.5 max-w-2xl text-sm leading-6 text-[#212631]/55">These are province-wide recommendations, not park-specific rules. Ask local tourism or park contacts about current trail access and conditions before setting out.</p><a href={TRAVEL_ADVISORY_SOURCE} target="_blank" rel="noreferrer" className="mt-5 inline-flex min-h-11 items-center border-b border-black pb-1 text-[11px] font-bold uppercase tracking-[0.18em]">Read the travel advisory</a></div>
                                 </div>
                             </div>
                         </div>
                     </section>
 
-                    <section className="bg-[#f7f5ef] px-4 py-20 sm:px-6 sm:py-28 md:px-10" aria-labelledby="visit-title">
+                    <section className="bg-[#f7f5ef] px-4 py-16 sm:px-6 sm:py-20 md:px-10 lg:py-24" aria-labelledby="visit-title">
                         <div className="mx-auto max-w-[1500px]">
-                            <div className="grid gap-12 lg:grid-cols-2 lg:gap-24">
+                            <div className="grid gap-8 lg:grid-cols-2 lg:gap-20">
                                 <div>
-                                    <p className="text-xs font-bold uppercase tracking-[0.25em] text-[#212631]/40">Visit information</p>
-                                    <h2 id="visit-title" className="mt-5 text-[clamp(3rem,7vw,6.5rem)] font-medium leading-[0.9] tracking-[-0.055em] text-black">Plan with current information.</h2>
+                                    <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#212631]/40">Visit information</p>
+                                    <h2 id="visit-title" className="mt-4 text-[clamp(2.1rem,4.2vw,3.75rem)] font-medium leading-[0.94] tracking-[-0.05em] text-black">Plan with current information.</h2>
                                 </div>
                                 <div>
                                     <dl className="divide-y divide-[#212631]/15 border-y border-[#212631]/15">
-                                        <div className="grid gap-2 py-6 sm:grid-cols-[8rem_1fr]"><dt className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#212631]/40">Location</dt><dd className="font-semibold leading-6">Barangay Bulusan, Calapan City, Oriental Mindoro</dd></div>
-                                        <div className="grid gap-2 py-6 sm:grid-cols-[8rem_1fr]"><dt className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#212631]/40">Contact</dt><dd><a href="tel:+63432887291" className="font-semibold underline decoration-black/25 underline-offset-4">(043) 288-7291</a><span className="mt-1 block text-sm text-[#212631]/50">City CEED park contact</span></dd></div>
-                                        <div className="grid gap-2 py-6 sm:grid-cols-[8rem_1fr]"><dt className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#212631]/40">Directions</dt><dd><a href={ZOO_DIRECTIONS_URL} target="_blank" rel="noreferrer" className="font-semibold underline decoration-black/25 underline-offset-4">Open Google Maps directions</a></dd></div>
+                                        <div className="grid gap-1.5 py-5 sm:grid-cols-[7.5rem_1fr]"><dt className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#212631]/40">Location</dt><dd className="font-semibold leading-6">Barangay Bulusan, Calapan City, Oriental Mindoro</dd></div>
+                                        <div className="grid gap-1.5 py-5 sm:grid-cols-[7.5rem_1fr]"><dt className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#212631]/40">Contact</dt><dd><a href="tel:+63432887291" className="text-base font-black underline decoration-black/25 underline-offset-4 sm:text-lg">(043) 288-7291</a><span className="mt-1 block text-sm text-[#212631]/50">City CEED park contact</span></dd></div>
+                                        <div className="grid gap-1.5 py-5 sm:grid-cols-[7.5rem_1fr]"><dt className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#212631]/40">Directions</dt><dd><a href={ZOO_DIRECTIONS_URL} target="_blank" rel="noreferrer" className="font-semibold underline decoration-black/25 underline-offset-4">Open Google Maps directions</a></dd></div>
                                     </dl>
-                                    <p className="mt-6 text-sm leading-6 text-[#212631]/50">Operating schedules, admission arrangements, and available activities may change. Confirm with the City Government of Calapan before visiting.</p>
+                                    <p className="mt-5 text-sm leading-6 text-[#212631]/50">Operating schedules, admission arrangements, and available activities may change. Confirm with the City Government of Calapan before visiting.</p>
                                 </div>
                             </div>
 
-                            <div className="mt-16 flex flex-col gap-4 border-t border-[#212631]/15 pt-8 sm:flex-row sm:items-center sm:justify-between">
+                            <div className="mt-12 flex flex-col gap-4 border-t border-[#212631]/15 pt-8 sm:flex-row sm:items-center sm:justify-between">
                                 <p className="max-w-xl text-sm font-medium leading-6 text-[#212631]/55">Current park information and documentary photographs are available through the official source pages.</p>
                                 <div className="flex flex-col gap-3 sm:flex-row">
-                                    <a href={CITY_SOURCE} target="_blank" rel="noreferrer" className="inline-flex min-h-12 items-center justify-center rounded-full bg-black px-6 py-3 text-center text-xs font-bold uppercase tracking-[0.14em] text-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-black">City Government source</a>
-                                    <a href={TOURISM_SOURCE} target="_blank" rel="noreferrer" className="inline-flex min-h-12 items-center justify-center rounded-full border border-black px-6 py-3 text-center text-xs font-bold uppercase tracking-[0.14em] text-black hover:bg-black hover:text-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-black">Tourism source</a>
+                                    <a href={CITY_SOURCE} target="_blank" rel="noreferrer" className="inline-flex min-h-12 items-center justify-center rounded-full bg-black px-6 py-3 text-center text-[11px] font-bold uppercase tracking-[0.14em] text-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-black">City Government source</a>
+                                    <a href={TOURISM_SOURCE} target="_blank" rel="noreferrer" className="inline-flex min-h-12 items-center justify-center rounded-full border border-black px-6 py-3 text-center text-[11px] font-bold uppercase tracking-[0.14em] text-black hover:bg-black hover:text-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-black">Tourism source</a>
                                 </div>
                             </div>
                         </div>
