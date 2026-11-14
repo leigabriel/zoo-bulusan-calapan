@@ -6,7 +6,7 @@ import { sanitizeInput, sanitizeEmail } from '../../utils/sanitize';
 import { notify } from '../../utils/toast';
 import AuthSuccessModal from '../../components/common/AuthSuccessModal';
 import useScrollLock from '../../hooks/use-scroll-lock';
-import { PRIVACY_POLICY_CONTENT, TERMS_OF_SERVICE_CONTENT } from '../legal/policyContent';
+import usePolicies from '../../hooks/use-policies';
 import { appendConsentRecord } from '../../utils/consent';
 
 const EyeIcon = () => (
@@ -87,15 +87,15 @@ const getErrorMessage = (errorCode) => {
     const errorMessages = {
         'google_auth_cancelled': 'Google sign-in was cancelled. Please try again.',
         'access_denied': 'Google sign-in was cancelled. Please try again.',
-        'invalid_request': 'Invalid authentication request. Please try again.',
-        'invalid_state': 'Authentication session expired. Please try again.',
-        'token_exchange_failed': 'Failed to complete authentication. Please try again.',
-        'no_id_token': 'Failed to verify your identity. Please try again.',
-        'invalid_user_data': 'Could not retrieve your profile. Please try again.',
+        'invalid_request': "Sign-in didn't start correctly. Please try again.",
+        'invalid_state': 'Your sign-in session expired. Please try again.',
+        'token_exchange_failed': "We couldn't finish signing you in. Please try again.",
+        'no_id_token': "We couldn't verify your Google account. Please try again.",
+        'invalid_user_data': "We couldn't read your Google profile. Please try again.",
         'email_linked_different_account': 'This email is already linked to a different account.',
         'account_deactivated': 'Your account has been deactivated. Please contact support.',
-        'authentication_failed': 'Authentication failed. Please try again.',
-        'configuration_error': 'Service configuration error. Please try again later.'
+        'authentication_failed': "Sign-in didn't finish. Please try again.",
+        'configuration_error': "Google sign-in isn't available right now. Please try again later."
     };
 
     if (errorMessages[errorCode]) {
@@ -103,26 +103,26 @@ const getErrorMessage = (errorCode) => {
     }
 
     if (decodedError.includes('missing required google oauth')) {
-        return 'Google Sign-In is not configured. Please contact support.';
+        return "Google sign-in isn't available right now. Please contact support.";
     }
     if (decodedError.includes('invalid token') || decodedError.includes('token signature')) {
-        return 'Failed to verify your identity. Please try again.';
+        return "We couldn't verify your Google account. Please try again.";
     }
     if (decodedError.includes('expired')) {
-        return 'Authentication session expired. Please try again.';
+        return 'Your sign-in session expired. Please try again.';
     }
     if (decodedError.includes('network') || decodedError.includes('fetch')) {
-        return 'Network error. Please check your connection and try again.';
+        return "You're offline. Check your connection and try again.";
     }
 
     if (import.meta.env.DEV && errorCode !== 'authentication_failed') {
         console.error('OAuth error:', errorCode, decodedError);
     }
 
-    return 'An error occurred during sign-in. Please try again.';
+    return 'Something went wrong during sign-in. Please try again.';
 };
 
-const PolicyModal = ({ isOpen, onClose, title, content }) => {
+const PolicyModal = ({ isOpen, onClose, title, content, loading }) => {
     useScrollLock(isOpen);
 
     const handleBackdropClick = (e) => {
@@ -169,7 +169,7 @@ const PolicyModal = ({ isOpen, onClose, title, content }) => {
                 </div>
                 <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-4 sm:p-6" data-lenis-prevent>
                     <div className="prose prose-sm max-w-none text-gray-600 whitespace-pre-line text-sm sm:text-base leading-relaxed">
-                        {content}
+                        {loading ? 'Loading policy content...' : content}
                     </div>
                 </div>
                 <div className="p-4 sm:p-6 border-t border-gray-200">
@@ -265,6 +265,8 @@ const RegisterPage = () => {
     const [touched, setTouched] = useState({});
     const [showPrivacyModal, setShowPrivacyModal] = useState(false);
     const [showTermsModal, setShowTermsModal] = useState(false);
+    // Policy text is stored in the database and fetched only when a modal opens.
+    const { policies, loading: policiesLoading } = usePolicies(showPrivacyModal || showTermsModal);
     const [showVerificationModal, setShowVerificationModal] = useState(false);
     const [registeredEmail, setRegisteredEmail] = useState('');
     const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -433,15 +435,17 @@ const RegisterPage = () => {
             <PolicyModal
                 isOpen={showPrivacyModal}
                 onClose={() => setShowPrivacyModal(false)}
-                title="Privacy Policy"
-                content={PRIVACY_POLICY_CONTENT}
+                title={policies?.privacy?.title || 'Privacy Policy'}
+                content={policies?.privacy?.content || ''}
+                loading={policiesLoading}
             />
 
             <PolicyModal
                 isOpen={showTermsModal}
                 onClose={() => setShowTermsModal(false)}
-                title="Terms of Service"
-                content={TERMS_OF_SERVICE_CONTENT}
+                title={policies?.terms?.title || 'Terms of Service'}
+                content={policies?.terms?.content || ''}
+                loading={policiesLoading}
             />
 
             <EmailVerificationModal
