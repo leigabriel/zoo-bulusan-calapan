@@ -8,6 +8,7 @@ const walkInController = require('../controllers/walk-in-controller');
 const { readConfig: readEventPaymentConfig, writeConfig: writeEventPaymentConfig } = require('../config/event-payment-config');
 const { readConfig: readTicketPaymentConfig, writeConfig: writeTicketPaymentConfig } = require('../config/ticket-payment-config');
 const { readConfig: readReservationConfig, writeConfig: writeReservationConfig } = require('../config/reservation-config');
+const { readConfig: readLegalPolicyConfig, writeConfig: writeLegalPolicyConfig } = require('../config/legal-policy-config');
 const { protect, authorize, requireAdminMasterKey } = require('../middleware/auth');
 const adminMasterKeyController = require('../controllers/admin-master-key-controller');
 const { trackActivity } = require('../middleware/track-activity');
@@ -191,6 +192,26 @@ router.put('/reservation-config', trackActivity('reservation_config_update', 'Up
     } catch (error) {
         console.error('Error updating reservation config:', error);
         res.status(500).json({ success: false, message: 'Unable to update reservation availability settings.' });
+    }
+});
+
+// Public legal pages (privacy, terms, cookies, refund). The bodies are shown
+// verbatim to visitors, so a rejected save returns the validation message
+// instead of a generic failure, letting the admin fix the field.
+router.get('/legal-policy-config', (req, res) => {
+    res.json({ success: true, policies: readLegalPolicyConfig() });
+});
+
+router.put('/legal-policy-config', trackActivity('legal_policy_config_update', 'Updated legal policy content'), async (req, res) => {
+    try {
+        const updated = await writeLegalPolicyConfig(req.body.policies || {});
+        res.json({ success: true, message: 'Legal policy content updated successfully', policies: updated });
+    } catch (error) {
+        if (error.statusCode === 400) {
+            return res.status(400).json({ success: false, message: error.message });
+        }
+        console.error('Error updating legal policy config:', error);
+        res.status(500).json({ success: false, message: 'Unable to update legal policy content.' });
     }
 });
 
