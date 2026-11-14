@@ -4,12 +4,12 @@ import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 import AIFloatingButton from '../../components/common/AIFloatingButton';
 import usePageMetadata from '../../hooks/use-page-metadata';
+import { ZOO_DIRECTIONS_URL } from '../../config/zoo-location';
 
 const CITY_SOURCE = 'https://cityofcalapan.gov.ph/the-city-economic-enterprise-department-ceed/';
 const TOURISM_SOURCE = 'https://www.travelorientalmindoro.ph/place/calapan-nature-park';
 const HISTORY_SOURCE = 'https://pia4b.wordpress.com/2013/04/02/zoological-park-sa-calapan-bukas-na-sa-publiko/';
 const TRAVEL_ADVISORY_SOURCE = 'https://www.travelorientalmindoro.ph/page/travel-advisory';
-const DIRECTIONS_URL = 'https://www.google.com/maps/dir/?api=1&destination=13.40496178,121.1991656';
 
 const facts = [
     { label: 'Formal name', value: 'Calapan City Recreational and Zoological Park' },
@@ -206,7 +206,7 @@ const AboutUs = () => {
                                     <dl className="divide-y divide-[#212631]/15 border-y border-[#212631]/15">
                                         <div className="grid gap-2 py-6 sm:grid-cols-[8rem_1fr]"><dt className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#212631]/40">Location</dt><dd className="font-semibold leading-6">Barangay Bulusan, Calapan City, Oriental Mindoro</dd></div>
                                         <div className="grid gap-2 py-6 sm:grid-cols-[8rem_1fr]"><dt className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#212631]/40">Contact</dt><dd><a href="tel:+63432887291" className="font-semibold underline decoration-black/25 underline-offset-4">(043) 288-7291</a><span className="mt-1 block text-sm text-[#212631]/50">City CEED park contact</span></dd></div>
-                                        <div className="grid gap-2 py-6 sm:grid-cols-[8rem_1fr]"><dt className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#212631]/40">Directions</dt><dd><a href={DIRECTIONS_URL} target="_blank" rel="noreferrer" className="font-semibold underline decoration-black/25 underline-offset-4">Open Google Maps directions</a></dd></div>
+                                        <div className="grid gap-2 py-6 sm:grid-cols-[8rem_1fr]"><dt className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#212631]/40">Directions</dt><dd><a href={ZOO_DIRECTIONS_URL} target="_blank" rel="noreferrer" className="font-semibold underline decoration-black/25 underline-offset-4">Open Google Maps directions</a></dd></div>
                                     </dl>
                                     <p className="mt-6 text-sm leading-6 text-[#212631]/50">Operating schedules, admission arrangements, and available activities may change. Confirm with the City Government of Calapan before visiting.</p>
                                 </div>
