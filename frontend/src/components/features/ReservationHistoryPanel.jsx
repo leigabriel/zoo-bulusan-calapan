@@ -5,7 +5,7 @@ import { reservationAPI, userAPI } from '../../services/api-client';
 import { formatSafeDate, getDateTimestamp } from '../../utils/format-date';
 import { formatTime12 } from '../../utils/time-format';
 import { QRCodeSVG } from 'qrcode.react';
-import { notify } from '../../utils/toast';
+import { notify, friendlyMessage } from '../../utils/toast';
 import useScrollLock from '../../hooks/use-scroll-lock';
 import { appendConsentRecord } from '../../utils/consent';
 import { canRequestRefund, isPaidAtVenue, paymentMethodLabel } from '../../utils/payment-status';
@@ -586,14 +586,16 @@ const ReservationHistoryPanel = ({ isOpen, onClose, paymentReturn = false, focus
         return byType;
     };
 
-    // A 404 here means the API process predates the archive routes, which reads as "nothing
-// happened" with no clue why. Name the actual cause instead of a generic failure.
-const explainFailure = (error, fallback) => {
-    if (/404/.test(error?.message || '')) {
-        return 'This server is running an older version. Restart the backend, then try again.';
-    }
-    return error?.message || fallback;
-};
+    // A 404 here usually means the deployed API predates the archive routes, which
+    // otherwise reads as "nothing happened". The visitor cannot fix a deployment,
+    // so avoid naming the cause and just say the feature is unavailable.
+    const explainFailure = (error, fallback) => {
+        if (!error?.message) return fallback;
+        if (/404/.test(error.message) || /not found/i.test(error.message)) {
+            return "This isn't available right now. Please try again in a moment.";
+        }
+        return error.message || fallback;
+    };
 
     const archiveSelected = async () => {
         const entries = [...selected.values()];
@@ -688,7 +690,7 @@ const explainFailure = (error, fallback) => {
             setSelected(new Map());
             await fetchReservations();
         } catch (error) {
-            setDeleteError(explainFailure(error, "Couldn't delete those reservations."));
+            setDeleteError(friendlyMessage(explainFailure(error, "Couldn't delete those reservations."), 'retry'));
         } finally {
             setDeleting(false);
         }
