@@ -141,7 +141,7 @@ const WalkInRecords = () => {
                 await staffAPI.trashWalkIn(saleNumber);
                 successCount++;
             } catch (error) {
-                notify.error(`Failed to trash ${saleNumber}: ${error.message}`);
+                notify.error(`Couldn't move ${saleNumber} to the trash. ${error.message || ''}`.trim());
             }
         }
         if (successCount > 0) {
@@ -173,7 +173,7 @@ const WalkInRecords = () => {
                 await staffAPI.restoreWalkIn(saleNumber);
                 successCount++;
             } catch (error) {
-                notify.error(`Failed to restore ${saleNumber}: ${error.message}`);
+                notify.error(`Couldn't restore ${saleNumber}. ${error.message || ''}`.trim());
             }
         }
         if (successCount > 0) {
