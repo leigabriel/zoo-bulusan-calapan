@@ -9,11 +9,11 @@ import AIFloatingButton from '../../components/common/AIFloatingButton';
 import ConfirmationModal from '../../components/common/ConfirmationModal';
 import '../../App.css';
 import usePageMetadata from '../../hooks/use-page-metadata';
+import { ZOO_DIRECTIONS_URL } from '../../config/zoo-location';
 
 const CITY_SOURCE = 'https://cityofcalapan.gov.ph/the-city-economic-enterprise-department-ceed/';
 const CITY_VISITORS_SOURCE = 'https://cityofcalapan.gov.ph/visitors/';
 const TOURISM_SOURCE = 'https://www.travelorientalmindoro.ph/place/calapan-nature-park';
-const DIRECTIONS_URL = 'https://www.google.com/maps/dir/?api=1&destination=13.40496178,121.1991656';
 const ZOOTOPIA_GAME_URL = 'https://adventuregame.bulusanzoo.com/';
 
 /* Two-piece button: a label block with one slanted edge and a detached arrow chip. */
@@ -479,7 +479,7 @@ const ArrivalSection = () => (
                     <p className="mt-5 text-sm font-medium leading-6 text-black/50">No official source publishes a dedicated public-transport route from the port to Bulusan Park. Use the destination pin for directions and confirm local transport before traveling.</p>
                     <div className="mt-8 flex flex-col gap-3 sm:flex-row">
                         <a href={CITY_VISITORS_SOURCE} target="_blank" rel="noreferrer" className="inline-flex min-h-12 items-center justify-center rounded-full bg-black px-6 py-3 text-center text-xs font-black uppercase tracking-[0.15em] text-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-black">Calapan travel guide</a>
-                        <a href={DIRECTIONS_URL} target="_blank" rel="noreferrer" className="inline-flex min-h-12 items-center justify-center rounded-full border-2 border-black px-6 py-3 text-center text-xs font-black uppercase tracking-[0.15em] text-black hover:bg-black hover:text-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-black">Park directions</a>
+                        <a href={ZOO_DIRECTIONS_URL} target="_blank" rel="noreferrer" className="inline-flex min-h-12 items-center justify-center rounded-full border-2 border-black px-6 py-3 text-center text-xs font-black uppercase tracking-[0.15em] text-black hover:bg-black hover:text-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-black">Park directions</a>
                     </div>
                 </div>
             </div>
@@ -498,7 +498,7 @@ const VisitorSection = ({ navigate }) => (
                 <dl className="divide-y divide-black/20 border-y border-black/20">
                     <div className="grid gap-2 py-6 sm:grid-cols-[8rem_1fr]"><dt className="text-xs font-black uppercase tracking-[0.18em] text-black/45">Location</dt><dd className="font-bold leading-6">Barangay Bulusan, Calapan City, Oriental Mindoro</dd></div>
                     <div className="grid gap-2 py-6 sm:grid-cols-[8rem_1fr]"><dt className="text-xs font-black uppercase tracking-[0.18em] text-black/45">Park contact</dt><dd><a href="tel:+63432887291" className="font-bold underline decoration-black/30 underline-offset-4 hover:decoration-black">(043) 288-7291</a><span className="mt-1 block text-sm text-black/55">Published by the City Economic Enterprise Department</span></dd></div>
-                    <div className="grid gap-2 py-6 sm:grid-cols-[8rem_1fr]"><dt className="text-xs font-black uppercase tracking-[0.18em] text-black/45">Directions</dt><dd><a href={DIRECTIONS_URL} target="_blank" rel="noreferrer" className="font-bold underline decoration-black/30 underline-offset-4 hover:decoration-black">Open route in Google Maps</a></dd></div>
+                    <div className="grid gap-2 py-6 sm:grid-cols-[8rem_1fr]"><dt className="text-xs font-black uppercase tracking-[0.18em] text-black/45">Directions</dt><dd><a href={ZOO_DIRECTIONS_URL} target="_blank" rel="noreferrer" className="font-bold underline decoration-black/30 underline-offset-4 hover:decoration-black">Open route in Google Maps</a></dd></div>
                 </dl>
             </div>
             <p className="mt-7 max-w-2xl text-sm font-semibold leading-6 text-black/55">Operating schedules, admission arrangements, and available activities may change. Confirm with the City Government of Calapan before visiting.</p>
