@@ -1,11 +1,12 @@
 import { useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
+import usePolicies from '../../hooks/use-policies';
 
 const POLICY_LINKS = [
-    { path: '/privacy', label: 'Privacy Policy' },
-    { path: '/terms', label: 'Terms of Service' },
-    { path: '/cookies', label: 'Cookie Policy' },
-    { path: '/refund-policy', label: 'Refund Policy' },
+    { path: '/privacy', slug: 'privacy', label: 'Privacy Policy' },
+    { path: '/terms', slug: 'terms', label: 'Terms of Service' },
+    { path: '/cookies', slug: 'cookies', label: 'Cookie Policy' },
+    { path: '/refund-policy', slug: 'refund', label: 'Refund Policy' },
 ];
 
 const formatContent = (content) => {
@@ -98,15 +99,24 @@ const formatContent = (content) => {
     return blocks;
 };
 
-const PolicyPage = ({ title, lastUpdated, content, children }) => {
+const PolicyPage = ({ slug }) => {
     const navigate = useNavigate();
     const location = useLocation();
+    const { policies, loading, error, retry } = usePolicies();
 
     useEffect(() => {
         window.scrollTo({ top: 0, behavior: 'instant' });
-    }, []);
+    }, [slug]);
 
-    const blocks = children ? null : formatContent(content);
+    const policy = policies?.[slug];
+    // The label from the link list keeps the heading stable while the stored
+    // title is still loading instead of flashing an empty page.
+    const fallbackTitle = POLICY_LINKS.find((link) => link.slug === slug)?.label || 'Policy';
+    const title = policy?.title || fallbackTitle;
+    const lastUpdated = policy?.lastUpdated
+        ? (/^last updated/i.test(policy.lastUpdated) ? policy.lastUpdated : `Last Updated: ${policy.lastUpdated}`)
+        : '';
+    const blocks = policy ? formatContent(policy.content) : [];
 
     const handleBack = () => {
         if (location.key === 'default') {
@@ -183,8 +193,34 @@ const PolicyPage = ({ title, lastUpdated, content, children }) => {
                     })}
                 </nav>
 
-                {children ? (
-                    children
+                {loading ? (
+                    <div className="space-y-4" aria-live="polite" aria-busy="true">
+                        <span className="sr-only">Loading policy content...</span>
+                        <div className="h-4 w-3/4 rounded bg-gray-100 animate-pulse" />
+                        <div className="h-4 w-full rounded bg-gray-100 animate-pulse" />
+                        <div className="h-4 w-5/6 rounded bg-gray-100 animate-pulse" />
+                        <div className="h-4 w-2/3 rounded bg-gray-100 animate-pulse" />
+                        <div className="h-4 w-full rounded bg-gray-100 animate-pulse" />
+                        <div className="h-4 w-4/5 rounded bg-gray-100 animate-pulse" />
+                    </div>
+                ) : error ? (
+                    <div role="alert" className="rounded-2xl border border-amber-200 bg-amber-50 p-5">
+                        <p className="font-semibold text-amber-900">Policy content could not be loaded.</p>
+                        <p className="mt-1 text-sm leading-6 text-amber-800">
+                            Check your connection and try again. The rest of the website is still available.
+                        </p>
+                        <button
+                            type="button"
+                            onClick={retry}
+                            className="mt-4 rounded-xl bg-amber-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-amber-950"
+                        >
+                            Try again
+                        </button>
+                    </div>
+                ) : !policy ? (
+                    <p className="text-[15px] text-gray-700">
+                        This policy is not published yet. Please check back later.
+                    </p>
                 ) : (
                     <div className="max-w-none">
                         {blocks.map((block, idx) => {
