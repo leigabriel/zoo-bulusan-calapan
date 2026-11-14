@@ -23,6 +23,7 @@ const reservationRoutes = require('./routes/reservation-routes');
 const uploadRoutes = require('./routes/upload-routes');
 const communityRoutes = require('./routes/community-routes');
 const paymentRoutes = require('./routes/payment-routes');
+const legalRoutes = require('./routes/legal-routes');
 const paymentController = require('./controllers/payment-controller');
 const analyticsRoutes = require('./routes/analytics-routes');
 const chatRoutes = require('./routes/chat-routes');
@@ -148,6 +149,7 @@ app.use('/api/upload', uploadRoutes);
 app.use('/api/community', communityRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/chat', chatRoutes);
+app.use('/api/legal', legalRoutes);
 
 app.get('/api/health', healthLimiter, optionalAuth, async (req, res) => {
     res.setHeader('Cache-Control', 'no-store');
