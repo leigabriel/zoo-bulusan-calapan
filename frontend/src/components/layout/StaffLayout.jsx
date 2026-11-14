@@ -724,6 +724,7 @@ const StaffLayout = ({ children }) => {
                         aria-label="Logout from staff portal"
                     >
                         <Logout size={20} />
+                        <span className="text-sm font-semibold">Logout</span>
                     </button>
                 </div>
             </aside>
@@ -793,7 +794,7 @@ const StaffLayout = ({ children }) => {
                                         className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-left"
                                     >
                                         <Sparkles size={18} className="text-gray-400" />
-                                        <span className="text-sm text-gray-700">AI Assist</span>
+                                        <span className="text-sm text-gray-700">AI Assistant</span>
                                     </button>
                                     <button
                                         onClick={() => { setMobileHeaderMenuOpen(false); setDailyTaskPanelOpen(true); }}
@@ -841,7 +842,7 @@ const StaffLayout = ({ children }) => {
 
                     {/* Desktop Header */}
                     <div className="hidden lg:flex items-center">
-                        <div className="flex items-center gap-4 min-w-0 w-64 flex-shrink-0">
+                        <div className="flex items-center gap-4 min-w-0 w-40 2xl:w-64 flex-shrink-0">
                             <h2 className="text-xl font-bold text-gray-900 truncate">
                                 {allMenuItems.find(item => item.path === location.pathname)?.label ||
                                     (location.pathname === '/staff/help' ? 'Help Center' :
@@ -952,73 +953,83 @@ const StaffLayout = ({ children }) => {
                             </div>
                         </div>
                         {/* Right icons */}
-                        <div className="flex items-center gap-2 flex-shrink-0">
+                        <div className="flex items-center gap-1 flex-shrink-0">
                             <Tooltip label="Apps & installers">
                                 <button
                                     type="button"
                                     onClick={() => setAppsMenuOpen(!appsMenuOpen)}
-                                    className="apps-menu-btn p-2.5 hover:bg-gray-100 rounded-xl text-gray-500 hover:text-gray-900 transition"
+                                    className="apps-menu-btn inline-flex items-center gap-2 rounded-xl px-2.5 py-2.5 text-gray-500 transition hover:bg-gray-100 hover:text-gray-900 xl:px-3"
                                     aria-label="Apps and installers"
                                     aria-expanded={appsMenuOpen}
                                     aria-controls="staff-apps-menu"
                                 >
-                                    <Grid size={20} />
+                                    <Grid size={20} className="flex-shrink-0" />
+                                    <span className="hidden text-sm font-medium xl:inline">Apps</span>
                                 </button>
                             </Tooltip>
-                            <Tooltip label="AI Assist">
+                            <Tooltip label="AI Assistant">
                                 <button
                                     type="button"
                                     onClick={() => setAiAssistOpen(true)}
-                                    className="p-2.5 hover:bg-gray-100 rounded-xl text-gray-500 hover:text-gray-900 transition"
-                                    aria-label="Open AI Assist"
+                                    className="inline-flex items-center gap-2 rounded-xl px-2.5 py-2.5 text-gray-500 transition hover:bg-gray-100 hover:text-gray-900 xl:px-3"
+                                    aria-label="Open AI Assistant"
                                 >
-                                    <Sparkles size={20} />
+                                    <Sparkles size={20} className="flex-shrink-0" />
+                                    <span className="hidden text-sm font-medium xl:inline">AI Assistant</span>
                                 </button>
                             </Tooltip>
                             <Tooltip label="Notifications">
                                 <button
                                     onClick={() => setNotificationPanelOpen(!notificationPanelOpen)}
-                                    className="notification-bell relative p-2.5 hover:bg-gray-100 rounded-xl text-gray-500 hover:text-gray-900 transition"
+                                    className="notification-bell relative inline-flex items-center gap-2 rounded-xl px-2.5 py-2.5 text-gray-500 transition hover:bg-gray-100 hover:text-gray-900 xl:px-3"
                                     aria-label="Toggle notifications"
                                 >
-                                    <Bell size={20} />
-                                    {unreadCount > 0 && (
-                                        <span className="absolute top-1 right-1 w-5 h-5 bg-green-400 rounded-full flex items-center justify-center text-[10px] font-bold text-gray-900">
-                                            {unreadCount > 99 ? '99+' : unreadCount}
-                                        </span>
-                                    )}
+                                    <span className="relative flex-shrink-0">
+                                        <Bell size={20} />
+                                        {unreadCount > 0 && (
+                                            <span className="absolute -top-1.5 -right-2 w-5 h-5 bg-green-400 rounded-full flex items-center justify-center text-[10px] font-bold text-gray-900">
+                                                {unreadCount > 99 ? '99+' : unreadCount}
+                                            </span>
+                                        )}
+                                    </span>
+                                    <span className="hidden text-sm font-medium xl:inline">Notifications</span>
                                 </button>
                             </Tooltip>
                             <Tooltip label="Trash">
                                 <button
                                     onClick={() => navigate('/staff/trash')}
-                                    className="p-2.5 hover:bg-gray-100 rounded-xl text-gray-500 hover:text-gray-900 transition"
+                                    className="inline-flex items-center gap-2 rounded-xl px-2.5 py-2.5 text-gray-500 transition hover:bg-gray-100 hover:text-gray-900 xl:px-3"
                                     aria-label="Trash"
                                 >
-                                    <Trash size={20} />
+                                    <Trash size={20} className="flex-shrink-0" />
+                                    <span className="hidden text-sm font-medium xl:inline">Trash</span>
                                 </button>
                             </Tooltip>
                             <Tooltip label="Daily Tasks">
                                 <button
                                     onClick={() => setDailyTaskPanelOpen(!dailyTaskPanelOpen)}
-                                    className="daily-task-btn relative p-2.5 hover:bg-gray-100 rounded-xl text-gray-500 hover:text-gray-900 transition"
+                                    className="daily-task-btn relative inline-flex items-center gap-2 rounded-xl px-2.5 py-2.5 text-gray-500 transition hover:bg-gray-100 hover:text-gray-900 xl:px-3"
                                     aria-label="Toggle daily tasks"
                                 >
-                                    <Checklist size={20} />
-                                    <span className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1 bg-green-400 rounded-full flex items-center justify-center text-[10px] font-bold text-gray-900">
-                                        {completedTaskCount}/{dailyTasks.length}
+                                    <span className="relative flex-shrink-0">
+                                        <Checklist size={20} />
+                                        <span className="absolute -top-1.5 -right-2 min-w-[20px] h-5 px-1 bg-green-400 rounded-full flex items-center justify-center text-[10px] font-bold text-gray-900">
+                                            {completedTaskCount}/{dailyTasks.length}
+                                        </span>
                                     </span>
+                                    <span className="hidden text-sm font-medium xl:inline">Daily Tasks</span>
                                 </button>
                             </Tooltip>
                             <Tooltip label="Profile">
                                 <button
                                     onClick={openProfileModal}
-                                    className="p-1 hover:bg-gray-100 rounded-xl transition"
+                                    className="inline-flex items-center gap-2 rounded-xl p-1 text-gray-500 transition hover:bg-gray-100 hover:text-gray-900 xl:pr-3"
                                     aria-label="Open profile"
                                 >
                                     <div className="w-9 h-9 bg-gradient-to-br from-green-300 via-green-400 to-green-500 rounded-full flex items-center justify-center text-gray-900 font-bold text-sm overflow-hidden">
                                         {getProfileImageUrl(user?.profileImage || user?.profile_image) ? <img src={getProfileImageUrl(user?.profileImage || user?.profile_image)} alt="" className="h-full w-full object-cover" /> : ((user?.firstName || user?.lastName || user?.fullName)?.charAt(0) || 'S')}
                                     </div>
+                                    <span className="hidden text-sm font-medium xl:inline">Profile</span>
                                 </button>
                             </Tooltip>
                         </div>
