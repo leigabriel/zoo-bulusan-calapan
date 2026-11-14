@@ -622,8 +622,10 @@ const AdminLayout = ({ children }) => {
                                     ? 'bg-green-100 text-green-700'
                                     : 'bg-gray-200 text-gray-600 hover:bg-gray-300 hover:text-gray-900'
                                 }`}
+                            aria-label="Open settings"
                         >
                             <Setting size={20} />
+                            <span className="text-sm font-semibold">Settings</span>
                         </button>
 
                         <button
@@ -634,6 +636,7 @@ const AdminLayout = ({ children }) => {
                             aria-label="Logout from admin panel"
                         >
                             <Logout size={20} />
+                            <span className="text-sm font-semibold">Logout</span>
                         </button>
                     </div>
                 </div>
@@ -696,7 +699,7 @@ const AdminLayout = ({ children }) => {
                                         className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-left"
                                     >
                                         <Sparkles size={18} className="text-gray-400" />
-                                        <span className="text-sm text-gray-700">AI Assist</span>
+                                        <span className="text-sm text-gray-700">AI Assistant</span>
                                     </button>
                                     {user?.role === 'admin' && (
                                         <button
@@ -738,7 +741,7 @@ const AdminLayout = ({ children }) => {
 
                     {/* Desktop Header */}
                     <div className="hidden lg:flex items-center">
-                        <div className="flex items-center gap-4 min-w-0 w-64 flex-shrink-0">
+                        <div className="flex items-center gap-4 min-w-0 w-40 2xl:w-64 flex-shrink-0">
                             <h2 className="text-xl font-bold text-gray-900 truncate">
                                 {allMenuItems.find(item => item.path === location.pathname)?.label ||
                                     (location.pathname === '/admin/help' ? 'Help Center' :
@@ -850,49 +853,55 @@ const AdminLayout = ({ children }) => {
                             </div>
                         </div>
                         {/* Right icons */}
-                        <div className="flex items-center gap-2 flex-shrink-0">
-                            <Tooltip label="AI Assist">
+                        <div className="flex items-center gap-1 flex-shrink-0">
+                            <Tooltip label="AI Assistant">
                                 <button
                                     type="button"
                                     onClick={() => setAiAssistOpen(true)}
-                                    className="p-2.5 hover:bg-gray-100 rounded-xl text-gray-500 hover:text-gray-900 transition"
-                                    aria-label="Open AI Assist"
+                                    className="inline-flex items-center gap-2 rounded-xl px-2.5 py-2.5 text-gray-500 transition hover:bg-gray-100 hover:text-gray-900 xl:px-3"
+                                    aria-label="Open AI Assistant"
                                 >
-                                    <Sparkles size={20} />
+                                    <Sparkles size={20} className="flex-shrink-0" />
+                                    <span className="hidden text-sm font-medium xl:inline">AI Assistant</span>
                                 </button>
                             </Tooltip>
                             <Tooltip label="Notifications">
                                 <button
                                     onClick={() => setNotificationPanelOpen(!notificationPanelOpen)}
-                                    className="notification-bell relative p-2.5 hover:bg-gray-100 rounded-xl text-gray-500 hover:text-gray-900 transition"
+                                    className="notification-bell relative inline-flex items-center gap-2 rounded-xl px-2.5 py-2.5 text-gray-500 transition hover:bg-gray-100 hover:text-gray-900 xl:px-3"
                                     aria-label="Toggle notifications"
                                 >
-                                    <Bell size={20} />
-                                    {unreadCount > 0 && (
-                                        <span className="absolute top-1 right-1 w-5 h-5 bg-green-400 rounded-full flex items-center justify-center text-[10px] font-bold text-gray-900">
-                                            {unreadCount > 99 ? '99+' : unreadCount}
-                                        </span>
-                                    )}
+                                    <span className="relative flex-shrink-0">
+                                        <Bell size={20} />
+                                        {unreadCount > 0 && (
+                                            <span className="absolute -top-1.5 -right-2 w-5 h-5 bg-green-400 rounded-full flex items-center justify-center text-[10px] font-bold text-gray-900">
+                                                {unreadCount > 99 ? '99+' : unreadCount}
+                                            </span>
+                                        )}
+                                    </span>
+                                    <span className="hidden text-sm font-medium xl:inline">Notifications</span>
                                 </button>
                             </Tooltip>
                             <Tooltip label="Trash">
                                 <button
                                     onClick={() => navigate('/admin/trash')}
-                                    className="p-2.5 hover:bg-gray-100 rounded-xl text-gray-500 hover:text-gray-900 transition"
+                                    className="inline-flex items-center gap-2 rounded-xl px-2.5 py-2.5 text-gray-500 transition hover:bg-gray-100 hover:text-gray-900 xl:px-3"
                                     aria-label="Trash"
                                 >
-                                    <Trash size={20} />
+                                    <Trash size={20} className="flex-shrink-0" />
+                                    <span className="hidden text-sm font-medium xl:inline">Trash</span>
                                 </button>
                             </Tooltip>
                             <Tooltip label="Profile">
                                 <button
                                     onClick={openProfileModal}
-                                    className="p-1 hover:bg-gray-100 rounded-xl transition"
+                                    className="inline-flex items-center gap-2 rounded-xl p-1 text-gray-500 transition hover:bg-gray-100 hover:text-gray-900 xl:pr-3"
                                     aria-label="Open profile"
                                 >
                                     <div className="w-9 h-9 bg-gradient-to-br from-green-300 via-green-400 to-green-500 rounded-full flex items-center justify-center text-gray-900 font-bold text-sm overflow-hidden">
                                         {getProfileImageUrl(user?.profileImage || user?.profile_image) ? <img src={getProfileImageUrl(user?.profileImage || user?.profile_image)} alt="" className="h-full w-full object-cover" /> : ((user?.firstName || user?.lastName || user?.fullName)?.charAt(0) || 'A')}
                                     </div>
+                                    <span className="hidden text-sm font-medium xl:inline">Profile</span>
                                 </button>
                             </Tooltip>
                         </div>
