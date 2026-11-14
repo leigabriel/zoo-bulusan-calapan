@@ -28,7 +28,7 @@ const HeroPill = ({ tone, label, onClick, ariaLabel }) => {
             aria-label={ariaLabel}
             className="hero-btn pointer-events-auto group flex w-full max-w-xs cursor-pointer items-stretch gap-1 drop-shadow-[0_10px_18px_rgba(0,0,0,0.3)] transition-transform duration-300 ease-out hover:-translate-y-0.5 active:scale-[0.97] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white sm:w-auto sm:max-w-none"
         >
-            <span className={`relative isolate flex flex-1 items-center justify-center px-7 py-4 font-mono text-sm font-medium uppercase tracking-[0.08em] sm:px-8 sm:text-base ${labelDark ? 'text-white' : 'text-[#243230]'}`}>
+            <span className={`relative isolate flex flex-1 items-center justify-center px-7 py-4 font-mono text-sm font-medium uppercase tracking-[0.08em] sm:px-8 ${labelDark ? 'text-white' : 'text-[#243230]'}`}>
                 <i className={`absolute inset-y-0 left-0 right-3 -z-10 rounded-l-2xl ${labelBg}`} aria-hidden="true" />
                 <i className={`absolute inset-y-0 right-0 -z-10 w-7 origin-center skew-x-[-12deg] rounded-r-2xl rounded-l-md ${labelBg}`} aria-hidden="true" />
                 {label}
@@ -88,17 +88,17 @@ const HeroSection = () => {
                 <div className="pointer-events-none absolute inset-0 z-0 bg-[radial-gradient(70%_55%_at_50%_42%,rgba(8,30,16,0.38)_0%,rgba(8,30,16,0.12)_70%,transparent_100%),linear-gradient(to_bottom,rgba(0,0,0,0.3)_0%,transparent_35%,rgba(0,0,0,0.5)_100%)]" aria-hidden="true" />
 
                 <div className="hero-content pointer-events-none relative z-10 flex flex-1 flex-col items-center justify-center px-4 py-16 text-center sm:px-6">
-                    <p className="hero-title -mb-1 font-['Mistral',_cursive] text-[clamp(2rem,5vw,5rem)] text-white opacity-0 drop-shadow-[0_2px_10px_rgba(0,0,0,0.45)] sm:-mb-2">
+                    <p className="hero-title -mb-1 font-['Mistral',_cursive] text-[clamp(1.6rem,3.4vw,3rem)] text-white opacity-0 drop-shadow-[0_2px_10px_rgba(0,0,0,0.45)] sm:-mb-2">
                         Welcome to
                     </p>
-                    <div className="mb-8 sm:mb-10">
-                        <h1 className="overflow-hidden py-2 font-['Gravelad',_sans-serif] text-[clamp(2.5rem,8vw,6rem)] font-normal leading-none tracking-tight text-white drop-shadow-[0_4px_18px_rgba(0,0,0,0.45)] sm:py-4">
+                    <div className="mb-7 sm:mb-8">
+                        <h1 className="overflow-hidden py-2 font-['Gravelad',_sans-serif] text-[clamp(2.25rem,6.6vw,5.25rem)] font-normal leading-none tracking-tight text-white drop-shadow-[0_4px_18px_rgba(0,0,0,0.45)] sm:py-3">
                             <span className="block overflow-hidden">
                                 <span className="hero-line block" style={{ clipPath: 'inset(100% 0% 0% 0%)' }}>BULUSAN ZOO</span>
                             </span>
                         </h1>
                         <div className="mt-2 overflow-hidden">
-                            <p className="hero-line text-base font-semibold tracking-wide text-white/90 drop-shadow-[0_2px_8px_rgba(0,0,0,0.5)] sm:text-xl md:text-2xl" style={{ clipPath: 'inset(100% 0% 0% 0%)' }}>
+                            <p className="hero-line text-[clamp(0.95rem,1.5vw,1.2rem)] font-semibold tracking-wide text-white/90 drop-shadow-[0_2px_8px_rgba(0,0,0,0.5)]" style={{ clipPath: 'inset(100% 0% 0% 0%)' }}>
                                 Explore Nature, Learn, and Connect
                             </p>
                         </div>
@@ -171,10 +171,7 @@ const AboutGallery = () => {
 
     return (
         <div>
-            <div className="mb-5 flex items-end justify-between gap-4 sm:mb-7">
-                <p className="text-xs font-black uppercase tracking-[0.25em] text-black/55">Park in pictures</p>
-                <p className="hidden text-[11px] font-bold uppercase tracking-[0.2em] text-black/40 sm:block">Three stops inside the park</p>
-            </div>
+            <p className="mb-4 text-[11px] font-black uppercase tracking-[0.22em] text-black/55 sm:mb-6 sm:text-xs">Park in pictures</p>
 
             <div className="sm:hidden">
                 <div
@@ -226,7 +223,7 @@ const AboutGallery = () => {
 
             <ul className="hidden gap-4 sm:grid sm:grid-cols-3 sm:gap-5 lg:gap-6">
                 {aboutGallery.map((photo) => (
-                    <li key={photo.src} className="group relative aspect-[4/5] overflow-hidden rounded-[1.25rem] bg-green-300 shadow-lg shadow-green-900/10">
+                    <li key={photo.src} className="group relative aspect-[4/5] overflow-hidden rounded-[1.25rem] bg-green-100 shadow-lg shadow-green-900/10">
                         <img
                             src={photo.src}
                             alt={photo.alt}
@@ -262,15 +259,14 @@ const VideoSection = () => (
 );
 
 const AboutSection = () => (
-    <section className="relative w-full overflow-hidden bg-green-400" aria-labelledby="about-park-title">
-        <div className="relative mx-auto flex w-full max-w-[1500px] flex-col gap-10 px-4 py-16 sm:gap-14 sm:px-6 sm:py-24 lg:px-10">
-            <div className="flex flex-col items-center text-center">
-                <p className="mb-7 text-xs font-black uppercase tracking-[0.25em] text-black/55">About Bulusan Park</p>
-                <h2 id="about-park-title" className="max-w-[1300px] text-black text-[clamp(2.15rem,6vw,5.8rem)] font-black leading-[1.02] tracking-[-0.045em]">
-                    The Calapan City Recreational and Zoological Park, commonly known as Bulusan Park, brings recreation, environmental education, and leisure together in Barangay Bulusan.
+    <section className="green-mesh relative w-full overflow-hidden" aria-labelledby="about-park-title">
+        <div className="relative mx-auto flex w-full max-w-[1500px] flex-col gap-10 px-4 py-16 sm:gap-12 sm:px-6 sm:py-20 lg:gap-14 lg:px-10 lg:py-24">
+            <div className="max-w-5xl">
+                <h2 id="about-park-title" className="text-[clamp(1.7rem,3.2vw,2.9rem)] font-black leading-[1.14] tracking-[-0.035em] text-black">
+                    The Calapan City Recreational and Zoological Park, commonly known as <span className="text-green-800">Bulusan Park</span>, brings recreation, environmental education, and leisure together in Barangay Bulusan.
                 </h2>
-                <p className="mt-8 max-w-3xl text-base font-semibold leading-7 text-black/65 sm:text-lg">
-                    Managed by the City Economic Enterprise Department, the park includes a mini-zoo, landscaped open spaces, and a multi-purpose pavilion for events and community gatherings.
+                <p className="mt-6 max-w-2xl text-base font-semibold leading-7 text-black/60 sm:text-lg sm:leading-8">
+                    Managed by the City Economic Enterprise Department, the park includes a <strong className="font-black text-black">mini-zoo</strong>, <strong className="font-black text-black">landscaped open spaces</strong>, and a <strong className="font-black text-black">multi-purpose pavilion</strong> for events and community gatherings.
                 </p>
             </div>
             <AboutGallery />
@@ -286,27 +282,24 @@ const parkFeatures = [
 ];
 
 const ExploreSection = () => (
-    <section className="relative overflow-hidden bg-[#f7f5ef] px-4 py-20 sm:px-6 sm:py-28 lg:px-10" aria-labelledby="explore-park-title">
+    <section className="relative overflow-hidden bg-[#f7f5ef] px-4 py-16 sm:px-6 sm:py-20 lg:px-10 lg:py-24" aria-labelledby="explore-park-title">
         <div className="pointer-events-none absolute inset-0" aria-hidden="true">
             <img src="/bulusanzoo-images/bz3.jpg" alt="" loading="lazy" className="h-full w-full object-cover opacity-25" />
             <div className="absolute inset-0 bg-[linear-gradient(to_bottom,#f7f5ef_0%,rgba(247,245,239,0.55)_30%,rgba(247,245,239,0.55)_70%,#f7f5ef_100%)]" />
         </div>
         <div className="relative mx-auto max-w-[1500px]">
-            <div className="grid gap-8 border-b border-black/15 pb-10 lg:grid-cols-[0.8fr_1.2fr] lg:items-end">
-                <div>
-                    <p className="mb-4 text-xs font-black uppercase tracking-[0.24em] text-black/45">Inside the park</p>
-                    <h2 id="explore-park-title" className="text-[clamp(2.8rem,7vw,6.5rem)] font-black leading-[0.9] tracking-[-0.055em] text-black">Explore<br />Bulusan</h2>
-                </div>
-                <p className="max-w-2xl text-base font-semibold leading-7 text-black/60 lg:justify-self-end lg:text-lg">
-                    Official City and provincial tourism information presents Bulusan Park as a place for wildlife viewing, recreation, learning, and time outdoors.
+            <div className="grid gap-6 border-b border-black/15 pb-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-end">
+                <h2 id="explore-park-title" className="text-[clamp(2.1rem,4.6vw,4rem)] font-black leading-[0.92] tracking-[-0.05em] text-black">Explore<br />Bulusan</h2>
+                <p className="max-w-xl text-base font-semibold leading-7 text-black/60 sm:text-lg sm:leading-8 lg:justify-self-end">
+                    Official City and provincial tourism information presents Bulusan Park as a place for <strong className="font-black text-black">wildlife viewing, recreation, learning, and time outdoors</strong>.
                 </p>
             </div>
             <div className="grid sm:grid-cols-2 lg:grid-cols-4">
                 {parkFeatures.map((feature) => (
-                    <article key={feature.number} className="border-b border-black/15 py-8 sm:px-6 sm:first:pl-0 lg:min-h-72 lg:border-b-0 lg:border-r lg:last:border-r-0">
-                        <span className="text-xs font-black tracking-[0.2em] text-black/35">{feature.number}</span>
-                        <h3 className="mt-12 text-2xl font-black tracking-tight text-black">{feature.title}</h3>
-                        <p className="mt-4 text-sm font-medium leading-6 text-black/58">{feature.text}</p>
+                    <article key={feature.number} className="border-b border-black/15 py-6 sm:px-6 sm:first:pl-0 lg:min-h-60 lg:border-b-0 lg:border-r lg:last:border-r-0">
+                        <span className="text-[11px] font-black tracking-[0.2em] text-black/35">{feature.number}</span>
+                        <h3 className="mt-6 text-lg font-black tracking-tight text-black sm:text-xl">{feature.title}</h3>
+                        <p className="mt-3 text-sm font-medium leading-6 text-black/58">{feature.text}</p>
                     </article>
                 ))}
             </div>
@@ -329,7 +322,7 @@ const ZootopiaSection = () => {
     };
 
     return (
-        <section className="relative overflow-hidden bg-[#151b16] px-4 py-20 text-white sm:px-6 sm:py-28 lg:px-10" aria-labelledby="zootopia-title">
+        <section className="relative overflow-hidden bg-[#151b16] px-4 py-16 text-white sm:px-6 sm:py-20 lg:px-10 lg:py-24" aria-labelledby="zootopia-title">
             <div className="pointer-events-none absolute inset-0" aria-hidden="true">
                 <img src="/bulusanzoo-images/bz8.jpg" alt="" loading="lazy" className="h-full w-full object-cover opacity-40" />
                 <div className="absolute inset-0 bg-[linear-gradient(to_bottom,#151b16_0%,rgba(21,27,22,0.72)_30%,rgba(21,27,22,0.72)_70%,#151b16_100%)]" />
@@ -338,27 +331,24 @@ const ZootopiaSection = () => {
             <div className="pointer-events-none absolute -right-16 bottom-12 h-56 w-56 rounded-full border border-green-300/20 sm:h-80 sm:w-80" />
 
             <div className="relative mx-auto max-w-[1500px]">
-                <div className="grid gap-8 border-b border-white/15 pb-10 lg:grid-cols-[0.85fr_1.15fr] lg:items-end">
-                    <div>
-                        <p className="mb-5 text-xs font-black uppercase tracking-[0.24em] text-green-300">Bulusan Zootopia Adventure Game</p>
-                        <h2 id="zootopia-title" className="text-[clamp(2.8rem,7vw,6.5rem)] font-black leading-[0.9] tracking-[-0.055em]">Play the wild<br />side of Bulusan.</h2>
-                    </div>
-                    <p className="max-w-2xl text-base font-semibold leading-7 text-white/70 lg:justify-self-end lg:text-lg">
+                <div className="grid gap-6 border-b border-white/15 pb-8 lg:grid-cols-[0.95fr_1.05fr] lg:items-end">
+                    <h2 id="zootopia-title" className="text-[clamp(2.1rem,4.6vw,4rem)] font-black leading-[0.94] tracking-[-0.05em]">Play the wild<br />side of Bulusan.</h2>
+                    <p className="max-w-xl text-base font-semibold leading-7 text-white/70 sm:text-lg sm:leading-8 lg:justify-self-end">
                         Welcome to Bulusan Zootopia, a game where you explore the beauty of nature, discover amazing animals, and feed them treats. Wander through lush forests, meet the wildlife, and make new furry friends along the way.
                     </p>
                 </div>
 
                 <div className="grid sm:grid-cols-3">
                     {zootopiaFeatures.map((feature) => (
-                        <article key={feature.number} className="border-b border-white/15 py-8 sm:px-6 sm:first:pl-0 lg:min-h-56 lg:border-b-0 lg:border-r lg:last:border-r-0">
-                            <span className="text-xs font-black tracking-[0.2em] text-green-300/70">{feature.number}</span>
-                            <h3 className="mt-8 text-2xl font-black tracking-tight">{feature.title}</h3>
-                            <p className="mt-4 text-sm font-medium leading-6 text-white/58">{feature.text}</p>
+                        <article key={feature.number} className="border-b border-white/15 py-6 sm:px-6 sm:first:pl-0 lg:min-h-52 lg:border-b-0 lg:border-r lg:last:border-r-0">
+                            <span className="text-[11px] font-black tracking-[0.2em] text-green-300/70">{feature.number}</span>
+                            <h3 className="mt-6 text-lg font-black tracking-tight sm:text-xl">{feature.title}</h3>
+                            <p className="mt-3 text-sm font-medium leading-6 text-white/58">{feature.text}</p>
                         </article>
                     ))}
                 </div>
 
-                <div className="mt-10 flex flex-col gap-4 sm:flex-row sm:items-center">
+                <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center">
                     <button
                         type="button"
                         onClick={() => setShowPlayConfirm(true)}
@@ -391,21 +381,18 @@ const activities = [
 ];
 
 const ActivitiesSection = () => (
-    <section className="overflow-hidden bg-white py-20 sm:py-28" aria-labelledby="activities-title">
+    <section className="overflow-hidden bg-white py-16 sm:py-20 lg:py-24" aria-labelledby="activities-title">
         <div className="mx-auto max-w-[1500px] px-4 sm:px-6 lg:px-10">
-            <div className="flex flex-col gap-7 border-b border-black/15 pb-10 lg:flex-row lg:items-end lg:justify-between">
-                <div>
-                    <p className="mb-4 text-xs font-black uppercase tracking-[0.24em] text-black/40">Choose your pace</p>
-                    <h2 id="activities-title" className="text-[clamp(3rem,7vw,6.8rem)] font-black leading-[0.88] tracking-[-0.06em] text-black">Ways to move<br />through nature.</h2>
-                </div>
-                <p className="max-w-md text-sm font-semibold leading-6 text-black/55">Activities documented by the official Oriental Mindoro tourism portal. Availability and site conditions can change.</p>
+            <div className="flex flex-col gap-6 border-b border-black/15 pb-8 lg:flex-row lg:items-end lg:justify-between">
+                <h2 id="activities-title" className="text-[clamp(2.1rem,4.6vw,4rem)] font-black leading-[0.94] tracking-[-0.05em] text-black">Ways to move<br />through nature.</h2>
+                <p className="max-w-sm text-sm font-semibold leading-6 text-black/55">Activities documented by the official Oriental Mindoro tourism portal. Availability and site conditions can change.</p>
             </div>
             <div className="divide-y divide-black/15">
                 {activities.map((activity, index) => (
-                    <article key={activity.title} className="group grid gap-4 py-7 sm:grid-cols-[4rem_0.65fr_1fr] sm:items-center sm:py-9">
-                        <span className="text-xs font-black tracking-[0.2em] text-black/30">0{index + 1}</span>
-                        <h3 className="text-[clamp(2.2rem,5vw,4.8rem)] font-black leading-none tracking-[-0.05em] transition-transform duration-300 group-hover:translate-x-2">{activity.title}</h3>
-                        <p className="max-w-lg text-sm font-medium leading-6 text-black/55 sm:justify-self-end">{activity.note}</p>
+                    <article key={activity.title} className="group grid gap-2 py-6 sm:grid-cols-[3rem_0.7fr_1fr] sm:items-center sm:gap-4 sm:py-7">
+                        <span className="text-[11px] font-black tracking-[0.2em] text-black/30">0{index + 1}</span>
+                        <h3 className="text-[clamp(1.6rem,3.2vw,2.5rem)] font-black leading-none tracking-[-0.04em] transition-transform duration-300 group-hover:translate-x-2">{activity.title}</h3>
+                        <p className="max-w-md text-sm font-medium leading-6 text-black/55 sm:justify-self-end">{activity.note}</p>
                     </article>
                 ))}
             </div>
@@ -414,26 +401,23 @@ const ActivitiesSection = () => (
 );
 
 const TrailSection = () => (
-    <section className="relative overflow-hidden bg-[#151b16] px-4 py-20 text-white sm:px-6 sm:py-28 lg:px-10" aria-labelledby="trail-title">
+    <section className="relative overflow-hidden bg-[#151b16] px-4 py-16 text-white sm:px-6 sm:py-20 lg:px-10 lg:py-24" aria-labelledby="trail-title">
         <div className="pointer-events-none absolute inset-0" aria-hidden="true">
             <img src="/bulusanzoo-images/bz4.jpg" alt="" loading="lazy" className="h-full w-full object-cover opacity-40" />
             <div className="absolute inset-0 bg-[linear-gradient(to_bottom,#151b16_0%,rgba(21,27,22,0.72)_30%,rgba(21,27,22,0.72)_70%,#151b16_100%)]" />
         </div>
         <div className="pointer-events-none absolute -right-24 top-10 h-72 w-72 rounded-full border border-green-300/20 sm:h-[32rem] sm:w-[32rem]" />
         <div className="pointer-events-none absolute -right-8 top-28 h-44 w-44 rounded-full bg-green-400/10 blur-2xl sm:h-80 sm:w-80" />
-        <div className="relative mx-auto grid max-w-[1500px] gap-14 lg:grid-cols-[1.15fr_0.85fr] lg:items-end">
-            <div>
-                <p className="mb-5 text-xs font-black uppercase tracking-[0.24em] text-green-300">Nature and eco-trail</p>
-                <h2 id="trail-title" className="max-w-4xl text-[clamp(3rem,8vw,7.5rem)] font-black leading-[0.88] tracking-[-0.06em]">From old trees<br />to the coast.</h2>
-            </div>
+        <div className="relative mx-auto grid max-w-[1500px] gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-end">
+            <h2 id="trail-title" className="max-w-4xl text-[clamp(2.2rem,5vw,4.25rem)] font-black leading-[0.94] tracking-[-0.05em]">From old trees<br />to the coast.</h2>
             <div className="max-w-xl border-l border-white/20 pl-5 sm:pl-8">
-                <p className="text-lg font-semibold leading-8 text-white/80 sm:text-xl">
+                <p className="text-lg font-semibold leading-7 text-white/80 sm:text-xl sm:leading-8">
                     The Oriental Mindoro tourism portal describes century-old trees throughout the park and identifies it as the entry point to the Bulusan eco-trail.
                 </p>
-                <p className="mt-5 text-sm leading-6 text-white/55">
+                <p className="mt-4 text-sm leading-6 text-white/55">
                     The listed route takes approximately one hour and ends at the seashore in Barangay Parang. Current trail conditions, access arrangements, and safety guidance are not published; confirm locally before setting out.
                 </p>
-                <a href={TOURISM_SOURCE} target="_blank" rel="noreferrer" className="mt-8 inline-flex min-h-11 items-center border-b border-green-300 pb-1 text-xs font-black uppercase tracking-[0.2em] text-green-300 transition-colors hover:text-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-green-300">
+                <a href={TOURISM_SOURCE} target="_blank" rel="noreferrer" className="mt-6 inline-flex min-h-11 items-center border-b border-green-300 pb-1 text-[11px] font-black uppercase tracking-[0.18em] text-green-300 transition-colors hover:text-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-green-300">
                     Read the tourism listing
                 </a>
             </div>
@@ -442,23 +426,20 @@ const TrailSection = () => (
 );
 
 const OfficialRecordsSection = () => (
-    <section className="relative overflow-hidden bg-white px-4 py-20 sm:px-6 sm:py-28 lg:px-10" aria-labelledby="official-records-title">
+    <section className="relative overflow-hidden bg-white px-4 py-16 sm:px-6 sm:py-20 lg:px-10 lg:py-24" aria-labelledby="official-records-title">
         <div className="pointer-events-none absolute inset-0" aria-hidden="true">
             <img src="/bulusanzoo-images/bz7.jpg" alt="" loading="lazy" className="h-full w-full object-cover opacity-20" />
             <div className="absolute inset-0 bg-[linear-gradient(to_bottom,#ffffff_0%,rgba(255,255,255,0.6)_30%,rgba(255,255,255,0.6)_70%,#ffffff_100%)]" />
         </div>
-        <div className="relative mx-auto max-w-[1500px] rounded-[2rem] border border-black/10 p-6 sm:p-10 lg:grid lg:grid-cols-[0.85fr_1.15fr] lg:gap-16 lg:p-14">
-            <div>
-                <p className="text-xs font-black uppercase tracking-[0.24em] text-black/40">Documentary sources</p>
-                <h2 id="official-records-title" className="mt-5 text-[clamp(2.4rem,5vw,5rem)] font-black leading-[0.95] tracking-[-0.05em]">See the park through official channels.</h2>
-            </div>
-            <div className="mt-10 divide-y divide-black/10 border-y border-black/10 lg:mt-0">
-                <a href={CITY_SOURCE} target="_blank" rel="noreferrer" className="group flex min-h-24 items-center justify-between gap-5 py-5 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-green-600">
-                    <span><strong className="block text-lg">City Government of Calapan</strong><span className="mt-1 block text-sm text-black/50">Park description, administration, photographs, and contact</span></span>
+        <div className="relative mx-auto max-w-[1500px] rounded-[2rem] border border-black/10 p-6 sm:p-10 lg:grid lg:grid-cols-[0.9fr_1.1fr] lg:gap-16 lg:p-14">
+            <h2 id="official-records-title" className="text-[clamp(1.9rem,3.4vw,3rem)] font-black leading-[0.98] tracking-[-0.045em]">See the park through official channels.</h2>
+            <div className="mt-8 divide-y divide-black/10 border-y border-black/10 lg:mt-0">
+                <a href={CITY_SOURCE} target="_blank" rel="noreferrer" className="group flex min-h-20 items-center justify-between gap-5 py-4 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-green-600">
+                    <span><strong className="block text-lg font-black tracking-tight sm:text-xl">City Government of Calapan</strong><span className="mt-1 block text-sm text-black/50">Park description, administration, photographs, and contact</span></span>
                     <span aria-hidden="true" className="text-2xl transition-transform group-hover:translate-x-1">&#8599;</span>
                 </a>
-                <a href={TOURISM_SOURCE} target="_blank" rel="noreferrer" className="group flex min-h-24 items-center justify-between gap-5 py-5 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-green-600">
-                    <span><strong className="block text-lg">Travel Oriental Mindoro</strong><span className="mt-1 block text-sm text-black/50">Official destination gallery, recreation details, and directions</span></span>
+                <a href={TOURISM_SOURCE} target="_blank" rel="noreferrer" className="group flex min-h-20 items-center justify-between gap-5 py-4 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-green-600">
+                    <span><strong className="block text-lg font-black tracking-tight sm:text-xl">Travel Oriental Mindoro</strong><span className="mt-1 block text-sm text-black/50">Official destination gallery, recreation details, and directions</span></span>
                     <span aria-hidden="true" className="text-2xl transition-transform group-hover:translate-x-1">&#8599;</span>
                 </a>
             </div>
@@ -467,19 +448,16 @@ const OfficialRecordsSection = () => (
 );
 
 const ArrivalSection = () => (
-    <section className="bg-[#f0eee7] px-4 py-20 sm:px-6 sm:py-28 lg:px-10" aria-labelledby="arrival-title">
+    <section className="bg-[#f0eee7] px-4 py-16 sm:px-6 sm:py-20 lg:px-10 lg:py-24" aria-labelledby="arrival-title">
         <div className="mx-auto max-w-[1500px]">
-            <div className="grid gap-12 lg:grid-cols-[1.15fr_0.85fr] lg:items-end lg:gap-24">
+            <div className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-end lg:gap-20">
+                <h2 id="arrival-title" className="text-[clamp(2.2rem,5vw,4.25rem)] font-black leading-[0.92] tracking-[-0.05em] text-black">Port to park,<br />plan the last mile.</h2>
                 <div>
-                    <p className="text-xs font-black uppercase tracking-[0.24em] text-black/40">Arriving in Calapan</p>
-                    <h2 id="arrival-title" className="mt-5 text-[clamp(3rem,8vw,7.5rem)] font-black leading-[0.86] tracking-[-0.06em] text-black">Port to park,<br />plan the last mile.</h2>
-                </div>
-                <div>
-                    <p className="text-xl font-bold leading-8 text-black/75">The City identifies Calapan City Port as Oriental Mindoro’s main gateway and the most direct arrival point for destinations in Calapan.</p>
-                    <p className="mt-5 text-sm font-medium leading-6 text-black/50">No official source publishes a dedicated public-transport route from the port to Bulusan Park. Use the destination pin for directions and confirm local transport before traveling.</p>
-                    <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                        <a href={CITY_VISITORS_SOURCE} target="_blank" rel="noreferrer" className="inline-flex min-h-12 items-center justify-center rounded-full bg-black px-6 py-3 text-center text-xs font-black uppercase tracking-[0.15em] text-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-black">Calapan travel guide</a>
-                        <a href={ZOO_DIRECTIONS_URL} target="_blank" rel="noreferrer" className="inline-flex min-h-12 items-center justify-center rounded-full border-2 border-black px-6 py-3 text-center text-xs font-black uppercase tracking-[0.15em] text-black hover:bg-black hover:text-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-black">Park directions</a>
+                    <p className="text-lg font-bold leading-7 text-black/75 sm:text-xl sm:leading-8">The City identifies Calapan City Port as Oriental Mindoro’s main gateway and the most direct arrival point for destinations in Calapan.</p>
+                    <p className="mt-4 text-sm font-medium leading-6 text-black/50">No official source publishes a dedicated public-transport route from the port to Bulusan Park. Use the destination pin for directions and confirm local transport before traveling.</p>
+                    <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+                        <a href={CITY_VISITORS_SOURCE} target="_blank" rel="noreferrer" className="inline-flex min-h-12 items-center justify-center rounded-full bg-black px-6 py-3 text-center text-xs font-black uppercase tracking-[0.14em] text-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-black">Calapan travel guide</a>
+                        <a href={ZOO_DIRECTIONS_URL} target="_blank" rel="noreferrer" className="inline-flex min-h-12 items-center justify-center rounded-full border-2 border-black px-6 py-3 text-center text-xs font-black uppercase tracking-[0.14em] text-black hover:bg-black hover:text-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-black">Park directions</a>
                     </div>
                 </div>
             </div>
@@ -488,21 +466,18 @@ const ArrivalSection = () => (
 );
 
 const VisitorSection = ({ navigate }) => (
-    <section className="bg-green-400 px-4 py-20 sm:px-6 sm:py-28 lg:px-10" aria-labelledby="visitor-info-title">
-        <div className="mx-auto max-w-[1500px]">
-            <div className="grid gap-12 lg:grid-cols-2 lg:gap-20">
-                <div>
-                    <p className="text-xs font-black uppercase tracking-[0.24em] text-black/50">Visitor information</p>
-                    <h2 id="visitor-info-title" className="mt-5 text-[clamp(3rem,7vw,6.5rem)] font-black leading-[0.9] tracking-[-0.055em] text-black">Find your way<br />to Bulusan.</h2>
-                </div>
-                <dl className="divide-y divide-black/20 border-y border-black/20">
-                    <div className="grid gap-2 py-6 sm:grid-cols-[8rem_1fr]"><dt className="text-xs font-black uppercase tracking-[0.18em] text-black/45">Location</dt><dd className="font-bold leading-6">Barangay Bulusan, Calapan City, Oriental Mindoro</dd></div>
-                    <div className="grid gap-2 py-6 sm:grid-cols-[8rem_1fr]"><dt className="text-xs font-black uppercase tracking-[0.18em] text-black/45">Park contact</dt><dd><a href="tel:+63432887291" className="font-bold underline decoration-black/30 underline-offset-4 hover:decoration-black">(043) 288-7291</a><span className="mt-1 block text-sm text-black/55">Published by the City Economic Enterprise Department</span></dd></div>
-                    <div className="grid gap-2 py-6 sm:grid-cols-[8rem_1fr]"><dt className="text-xs font-black uppercase tracking-[0.18em] text-black/45">Directions</dt><dd><a href={ZOO_DIRECTIONS_URL} target="_blank" rel="noreferrer" className="font-bold underline decoration-black/30 underline-offset-4 hover:decoration-black">Open route in Google Maps</a></dd></div>
+    <section className="green-mesh relative overflow-hidden px-4 py-16 sm:px-6 sm:py-20 lg:px-10 lg:py-24" aria-labelledby="visitor-info-title">
+        <div className="relative mx-auto max-w-[1500px]">
+            <div className="grid gap-8 lg:grid-cols-2 lg:gap-16">
+                <h2 id="visitor-info-title" className="text-[clamp(2.2rem,4.6vw,4rem)] font-black leading-[0.94] tracking-[-0.05em] text-black">Find your way<br />to Bulusan.</h2>
+                <dl className="divide-y divide-black/15 border-y border-black/15">
+                    <div className="grid gap-1.5 py-5 sm:grid-cols-[7.5rem_1fr]"><dt className="text-[11px] font-black uppercase tracking-[0.18em] text-black/45">Location</dt><dd className="text-base font-bold leading-6 sm:text-lg">Barangay Bulusan, Calapan City, Oriental Mindoro</dd></div>
+                    <div className="grid gap-1.5 py-5 sm:grid-cols-[7.5rem_1fr]"><dt className="text-[11px] font-black uppercase tracking-[0.18em] text-black/45">Park contact</dt><dd><a href="tel:+63432887291" className="text-lg font-black underline decoration-black/30 underline-offset-4 hover:decoration-black sm:text-xl">(043) 288-7291</a><span className="mt-1 block text-sm text-black/55">Published by the City Economic Enterprise Department</span></dd></div>
+                    <div className="grid gap-1.5 py-5 sm:grid-cols-[7.5rem_1fr]"><dt className="text-[11px] font-black uppercase tracking-[0.18em] text-black/45">Directions</dt><dd><a href={ZOO_DIRECTIONS_URL} target="_blank" rel="noreferrer" className="font-bold underline decoration-black/30 underline-offset-4 hover:decoration-black">Open route in Google Maps</a></dd></div>
                 </dl>
             </div>
-            <p className="mt-7 max-w-2xl text-sm font-semibold leading-6 text-black/55">Operating schedules, admission arrangements, and available activities may change. Confirm with the City Government of Calapan before visiting.</p>
-            <div className="mt-10 flex flex-col gap-3 sm:flex-row">
+            <p className="mt-6 max-w-2xl text-sm font-semibold leading-6 text-black/55">Operating schedules, admission arrangements, and available activities may change. Confirm with the City Government of Calapan before visiting.</p>
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
                 <button onClick={() => navigate('/reservations')} className="min-h-12 rounded-full bg-black px-7 py-3 text-sm font-black text-white transition-transform hover:scale-[1.02] active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-black">Plan a visit</button>
                 <button onClick={() => navigate('/animals')} className="min-h-12 rounded-full border-2 border-black px-7 py-3 text-sm font-black text-black transition-colors hover:bg-black hover:text-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-black">Explore animals</button>
             </div>
