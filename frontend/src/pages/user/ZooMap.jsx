@@ -1,7 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { ReactLenis } from 'lenis/react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { MapPoint, Phone, Route, Compass } from 'reicon-react';
+import { Phone, Route, Compass, ChevronRight } from 'reicon-react';
+import { PAGE_BG_GRADIENT } from '../../config/page-gradient';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 import AIFloatingButton from '../../components/common/AIFloatingButton';
@@ -170,117 +173,171 @@ const ZooMap = () => {
     };
 
     return (
-        <div className="min-h-screen bg-[#f4f6f0] text-[#1f3328]">
-            <Header />
+        <ReactLenis root>
+            <div className={`min-h-dvh text-black ${PAGE_BG_GRADIENT}`}>
+                <Header />
 
-            <main className="mx-auto max-w-[1500px] px-4 pb-20 pt-28 sm:px-6 sm:pt-32 md:px-10">
-                <div className="max-w-3xl">
-                    <p className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.25em] text-[#6d8572]">
-                        <MapPoint size={14} aria-hidden="true" />
+                <section className="flex min-h-[40vh] w-full flex-col items-center justify-center px-4 pb-10 pt-24 md:min-h-[55vh] md:pb-16">
+                    <p className="text-[11px] font-bold uppercase tracking-widest text-gray-500">
                         Plan your visit
                     </p>
-                    <h1 className="mt-3 text-4xl font-black tracking-tight sm:text-5xl">Find Bulusan Zoo</h1>
-                    <p className="mt-4 text-base leading-7 text-[#52675a] sm:text-lg sm:leading-8">
-                        Bulusan Zoo sits in Barangay Bulusan, Calapan City, Oriental Mindoro. Use the map to see
-                        where the park is, then get a driving route from your current location.
+                    <h1 className="mt-4 w-full max-w-full text-center text-[clamp(3.5rem,12vw,11rem)] font-bold leading-[1.05] tracking-tight text-black">
+                        Find Us
+                    </h1>
+                    <p className="mt-6 max-w-2xl text-center text-sm font-medium leading-6 text-gray-600 md:text-lg md:leading-8">
+                        Bulusan Zoo sits in Barangay Bulusan, Calapan City, Oriental Mindoro. See the park on the map
+                        and get directions from where you are.
                     </p>
-                </div>
+                </section>
 
-                <div className="mt-8 grid gap-5 lg:grid-cols-[minmax(0,1fr)_360px]">
-                    <div className="relative z-0 h-[420px] overflow-hidden rounded-3xl border border-[#dce5dc] bg-[#e6ece1] shadow-sm sm:h-[500px] lg:h-[580px]">
-                        <div
-                            ref={mapContainerRef}
-                            className="h-full w-full"
-                            role="region"
-                            aria-label="Interactive map showing the location of Bulusan Zoo in Calapan City"
-                        />
-                    </div>
-
-                    <aside className="flex flex-col gap-4 lg:sticky lg:top-24 lg:self-start">
-                        <div className="rounded-3xl border border-[#dce5dc] bg-white p-6 shadow-sm">
-                            <h2 className="text-lg font-black tracking-tight">Zoo address</h2>
-                            <p className="mt-3 text-base font-semibold leading-7 text-[#315b37]">{ZOO_LOCATION.address}</p>
-                            <p className="mt-1 text-xs font-medium uppercase tracking-widest text-[#6d8572]">
-                                Plus code {ZOO_LOCATION.plusCode}
-                            </p>
-
-                            <a
-                                href={ZOO_LOCATION.phoneHref}
-                                className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-[#315b37] transition-colors hover:text-[#1f3328]"
+                <main className="mx-auto w-full max-w-[1500px] px-4 pb-20 md:px-8 md:pb-28">
+                    <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_380px] lg:items-start">
+                        <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white p-2 shadow-sm">
+                            <div
+                                data-lenis-prevent
+                                className="relative z-0 h-[420px] overflow-hidden rounded-xl bg-gray-100 sm:h-[520px] lg:h-[620px]"
                             >
-                                <Phone size={16} aria-hidden="true" />
-                                {ZOO_LOCATION.phone}
-                            </a>
-
-                            <div className="mt-6 flex flex-col gap-3">
-                                <button
-                                    type="button"
-                                    onClick={findRoute}
-                                    disabled={locating}
-                                    className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[#1f3328] px-5 py-3 text-sm font-bold text-white transition-colors hover:bg-[#315b37] disabled:cursor-not-allowed disabled:bg-[#9aa89a]"
-                                >
-                                    <Route size={17} aria-hidden="true" />
-                                    {locating ? 'Finding your location…' : 'Get directions from my location'}
-                                </button>
+                                <div
+                                    ref={mapContainerRef}
+                                    className="h-full w-full"
+                                    role="region"
+                                    aria-label="Interactive map showing the location of Bulusan Zoo in Calapan City"
+                                />
+                            </div>
+                            <div className="flex flex-wrap items-center justify-between gap-3 px-3 pb-1 pt-3">
+                                <p className="text-[11px] font-bold uppercase tracking-widest text-gray-500">
+                                    OpenStreetMap · Bulusan Zoo
+                                </p>
                                 <a
-                                    href={ZOO_DIRECTIONS_URL}
+                                    href={OSM_VIEW}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-[#cfdccf] bg-[#f7faf5] px-5 py-3 text-sm font-bold text-[#315b37] transition-colors hover:border-[#315b37] hover:bg-white"
+                                    className="text-[11px] font-bold uppercase tracking-widest text-black underline decoration-black/20 underline-offset-4 transition-colors hover:decoration-black"
                                 >
-                                    <Compass size={17} aria-hidden="true" />
-                                    Open directions in Google Maps
+                                    View larger map
                                 </a>
                             </div>
+                        </div>
 
-                            <div aria-live="polite" className="mt-5">
-                                {routeInfo ? (
-                                    <p className="rounded-2xl border border-[#cfe5cf] bg-[#eef7ec] px-4 py-3 text-sm leading-6 text-[#254c2c]">
-                                        <strong>
-                                            {formatDistance(routeInfo.distanceKm)} away · about {routeInfo.minutes} min
-                                        </strong>{' '}
-                                        by car. This estimate does not include traffic or road closures.
-                                    </p>
-                                ) : null}
-                                {locateError ? (
-                                    <p className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-800">
-                                        {locateError}
-                                    </p>
-                                ) : null}
-                                {!routeInfo && !locateError ? (
-                                    <p className="text-xs leading-5 text-[#6d8572]">
-                                        Your browser will ask for location access. Your location is used only in
-                                        this page to draw the route and is never saved.
-                                    </p>
-                                ) : null}
+                        <aside className="flex flex-col gap-4 lg:sticky lg:top-24 lg:self-start">
+                            <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm md:p-8">
+                                <p className="text-[11px] font-bold uppercase tracking-widest text-gray-500">
+                                    Bulusan Zoo
+                                </p>
+                                <h2 className="mt-2 text-2xl font-bold tracking-tight">Zoo address</h2>
+                                <p className="mt-3 text-base font-medium leading-7 text-gray-700">
+                                    {ZOO_LOCATION.address}
+                                </p>
+                                <p className="mt-1 text-[11px] font-bold uppercase tracking-widest text-gray-400">
+                                    Plus code {ZOO_LOCATION.plusCode}
+                                </p>
+
+                                <a
+                                    href={ZOO_LOCATION.phoneHref}
+                                    className="mt-5 inline-flex items-center gap-2 text-sm font-bold text-black transition-colors hover:text-green-700"
+                                >
+                                    <Phone size={16} aria-hidden="true" />
+                                    {ZOO_LOCATION.phone}
+                                </a>
+
+                                <p className="mt-6 text-[11px] font-bold uppercase tracking-widest text-gray-500">
+                                    Directions
+                                </p>
+                                <div className="mt-3 flex flex-col gap-3">
+                                    <button
+                                        type="button"
+                                        onClick={findRoute}
+                                        disabled={locating}
+                                        className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-black px-5 py-3 text-[11px] font-bold uppercase tracking-widest text-white transition-colors hover:bg-gray-800 disabled:cursor-not-allowed disabled:bg-gray-400"
+                                    >
+                                        <Route size={16} aria-hidden="true" />
+                                        {locating ? 'Finding your location…' : 'Directions from my location'}
+                                    </button>
+                                    <a
+                                        href={ZOO_DIRECTIONS_URL}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border-2 border-black px-5 py-3 text-[11px] font-bold uppercase tracking-widest text-black transition-colors hover:bg-black hover:text-white"
+                                    >
+                                        <Compass size={16} aria-hidden="true" />
+                                        Open in Google Maps
+                                    </a>
+                                </div>
+
+                                <div aria-live="polite" className="mt-5">
+                                    {routeInfo ? (
+                                        <p className="border-l-2 border-green-600 pl-3 text-sm leading-6 text-gray-700">
+                                            <strong className="font-bold text-black">
+                                                {formatDistance(routeInfo.distanceKm)} away · about{' '}
+                                                {routeInfo.minutes} min
+                                            </strong>{' '}
+                                            by car. This estimate does not include traffic or road closures.
+                                        </p>
+                                    ) : null}
+                                    {locateError ? (
+                                        <p className="border-l-2 border-amber-500 pl-3 text-sm leading-6 text-amber-800">
+                                            {locateError}
+                                        </p>
+                                    ) : null}
+                                    {!routeInfo && !locateError ? (
+                                        <p className="text-xs leading-5 text-gray-500">
+                                            Your browser will ask for location access. Your location is used only in
+                                            this page to draw the route and is never saved.
+                                        </p>
+                                    ) : null}
+                                </div>
                             </div>
 
-                            <a
-                                href={OSM_VIEW}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="mt-5 inline-block text-xs font-semibold text-[#6d8572] underline decoration-[#cfdccf] underline-offset-4 transition-colors hover:text-[#315b37]"
+                            <div className="rounded-2xl border border-gray-200 bg-white p-6">
+                                <p className="text-[11px] font-bold uppercase tracking-widest text-gray-500">
+                                    Before you go
+                                </p>
+                                <p className="mt-2 text-sm leading-6 text-gray-600">
+                                    Admission tickets and event bookings are handled separately. Reserve online
+                                    before you travel so your slot is ready when you arrive.
+                                </p>
+                                <Link
+                                    to="/reservations"
+                                    className="mt-4 inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest text-black underline decoration-black/25 underline-offset-4 transition-colors hover:decoration-black"
+                                >
+                                    Reserve a visit
+                                    <ChevronRight size={14} aria-hidden="true" />
+                                </Link>
+                            </div>
+                        </aside>
+                    </div>
+                </main>
+
+                <section className="border-t border-black/10 bg-green-400 px-4 py-16 md:py-24">
+                    <div className="mx-auto flex max-w-4xl flex-col items-center text-center">
+                        <p className="text-[11px] font-bold uppercase tracking-widest text-black/60">
+                            Keep exploring
+                        </p>
+                        <h2 className="mt-3 text-3xl font-bold tracking-tight md:text-5xl">Make a day of it</h2>
+                        <p className="mt-4 max-w-xl text-sm leading-7 text-black/70 md:text-base">
+                            Reserve a slot before you travel, or see what events are coming up at the park.
+                        </p>
+                        <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+                            <Link
+                                to="/reservations"
+                                className="inline-flex min-h-12 items-center justify-center rounded-full bg-black px-7 py-3 text-[11px] font-bold uppercase tracking-widest text-white transition-colors hover:bg-gray-800"
                             >
-                                View on OpenStreetMap
-                            </a>
+                                Reserve a visit
+                            </Link>
+                            <Link
+                                to="/events"
+                                className="inline-flex min-h-12 items-center justify-center rounded-full border-2 border-black px-7 py-3 text-[11px] font-bold uppercase tracking-widest text-black transition-colors hover:bg-black hover:text-white"
+                            >
+                                See events
+                            </Link>
                         </div>
+                    </div>
+                </section>
 
-                        <div className="rounded-3xl border border-[#dce5dc] bg-[#eef3ed] p-5">
-                            <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-[#6d8572]">
-                                Before you go
-                            </p>
-                            <p className="mt-2 text-sm leading-6 text-[#52675a]">
-                                Admission tickets and event bookings are handled separately. Reserve online before
-                                you travel so your slot is ready when you arrive.
-                            </p>
-                        </div>
-                    </aside>
-                </div>
-            </main>
-
-            <Footer />
-            <AIFloatingButton />
-        </div>
+                <Footer />
+                <AIFloatingButton />
+            </div>
+        </ReactLenis>
     );
 };
 
