@@ -99,7 +99,7 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
     }
 
     if (!isAuthenticated) {
-        return <Navigate to="/login" state={{ message: 'Please login first.' }} replace />;
+        return <Navigate to="/login" state={{ message: 'Please sign in to continue.', tone: 'info' }} replace />;
     }
 
     if (allowedRoles && !allowedRoles.includes(user?.role)) {
