@@ -491,7 +491,7 @@ const createFallbackResult = (animalName, error) => {
     
     return {
         success: true, // Mark as success so UI doesn't show error state
-        description: `Description unavailable for ${capitalizedName}. This species could not be found in our knowledge database.`,
+        description: `We don't have more details about the ${capitalizedName.toLowerCase()} yet. Please check back soon.`,
         category: determineCategory('', safeName),
         source: 'fallback',
         error,
