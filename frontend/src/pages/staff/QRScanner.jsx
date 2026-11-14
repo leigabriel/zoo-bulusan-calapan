@@ -164,7 +164,7 @@ const ResultModal = ({ scanResult, loading, onClose, onConfirm }) => {
                                     <div><p className="text-[10px] font-bold uppercase text-gray-400">Subtotal</p><p className="mt-1 font-black">{formatMoney(scanResult.subtotalCents, scanResult.currency)}</p></div>
                                     <div><p className="text-[10px] font-bold uppercase text-gray-400">Discount</p><p className="mt-1 font-black">{formatMoney(scanResult.discountCents, scanResult.currency)}</p></div>
                                     <div><p className="text-[10px] font-bold uppercase text-gray-400">Total</p><p className="mt-1 font-black">{formatMoney(scanResult.totalCents, scanResult.currency)}</p></div>
-                                    <div><p className="text-[10px] font-bold uppercase text-gray-400">Payment</p><p className="mt-1 font-black uppercase">{scanResult.payment?.method} / {scanResult.payment?.status}</p></div>
+                                    <div><p className="text-[10px] font-bold uppercase text-gray-400">Payment</p><p className="mt-1 font-black uppercase">{paymentMethodLabel(scanResult.payment?.method)} / {paymentStatusLabel(scanResult.payment?.status)}</p></div>
                                     <div><p className="text-[10px] font-bold uppercase text-gray-400">Received</p><p className="mt-1 font-black">{formatMoney(scanResult.payment?.amountReceivedCents, scanResult.currency)}</p></div>
                                     <div><p className="text-[10px] font-bold uppercase text-gray-400">Change</p><p className="mt-1 font-black">{formatMoney(scanResult.payment?.changeCents, scanResult.currency)}</p></div>
                                     {scanResult.payment?.providerReference && <div className="col-span-2"><p className="text-[10px] font-bold uppercase text-gray-400">Payment reference</p><p className="mt-1 break-all font-black">{scanResult.payment.providerReference}</p></div>}
@@ -313,11 +313,10 @@ const QRScanner = () => {
             } catch (err) {
                 console.error(err);
                 if (isMounted) {
-                    const errorMsg = typeof err === 'string' ? err : (err.message || 'Unknown camera error');
-                    const secureContextHint = window.isSecureContext
-                        ? ''
-                        : ' Camera access requires HTTPS or localhost.';
-                    setError(`Could not access camera: ${errorMsg}.${secureContextHint} Please check permissions or try uploading an image.`);
+                    // The browser's own error text ("NotAllowedError", "secure
+                    // context") means nothing to the cashier. Give the two things
+                    // they can actually do instead; the details stay in the console.
+                    setError("We couldn't open the camera. Allow camera access for this site in your browser settings, or upload a photo of the QR code instead.");
                 }
             }
         };
