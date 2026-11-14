@@ -147,7 +147,7 @@ const Help = () => {
         {
             category: 'map',
             question: 'Where is the interactive zoo map?',
-            answer: 'Open the Map page from the main menu. Use the map to locate exhibits, facilities, and walking routes.'
+            answer: 'Open the Map page from the main menu to see the zoo on an interactive map and get directions from your current location.'
         },
         {
             category: 'map',
