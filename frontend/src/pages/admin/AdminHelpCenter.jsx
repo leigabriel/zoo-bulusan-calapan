@@ -61,7 +61,7 @@ const faqs = [
         id: 10,
         category: 'Troubleshooting',
         question: 'Why are charts or cards showing zero values?',
-        answer: 'Confirm the selected date range includes data, then refresh the page. If values stay empty, verify the backend connection is available.'
+        answer: 'Confirm the selected date range includes data, then refresh the page. If the values are still empty, check that the website is online and try again in a few minutes.'
     }
 ];
 
