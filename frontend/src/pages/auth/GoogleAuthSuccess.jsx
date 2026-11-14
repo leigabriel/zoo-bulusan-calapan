@@ -81,13 +81,13 @@ const GoogleAuthSuccess = () => {
                 navigateAfterLogin(userData);
             } catch (err) {
                 console.error("Authentication Error:", err);
-                setError('Failed to complete authentication. Please try again.');
+                setError("Google sign-in didn't finish. Please try again.");
 
                 // Redirect to login after a delay
                 redirectTimerRef.current = setTimeout(() => {
                     navigate('/login', {
                         replace: true,
-                        state: { message: 'Authentication failed. Please try again.' }
+                        state: { message: "Google sign-in didn't finish. Please try again.", tone: 'error' }
                     });
                 }, 3000);
             }
@@ -106,9 +106,9 @@ const GoogleAuthSuccess = () => {
                                 d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                         </svg>
                     </div>
-                    <h2 className="text-xl sm:text-2xl font-bold text-black mb-3">Authentication Error</h2>
+                    <h2 className="text-xl sm:text-2xl font-bold text-black mb-3">We couldn&apos;t sign you in</h2>
                     <p className="text-base text-gray-600 mb-6">{error}</p>
-                    <p className="text-sm font-medium text-gray-400 animate-pulse">Redirecting to login...</p>
+                    <p className="text-sm font-medium text-gray-400 animate-pulse">Taking you back to sign in...</p>
                 </div>
             </div>
         );
@@ -127,7 +127,7 @@ const GoogleAuthSuccess = () => {
                 </div>
 
                 <h2 className="text-xl sm:text-2xl font-bold text-black mb-3">Completing Sign In</h2>
-                <p className="text-base text-gray-600">Please wait while we complete your authentication...</p>
+                <p className="text-base text-gray-600">Please wait while we sign you in...</p>
             </div>
 
             <GoogleOnboardingFlow
