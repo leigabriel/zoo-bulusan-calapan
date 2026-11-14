@@ -78,9 +78,12 @@ const Footer = () => {
             className="relative flex min-h-screen w-full flex-col overflow-hidden bg-black pt-16 pb-8 text-white md:pt-24"
             style={{ fontFamily: "'DM Sans', 'Inter', sans-serif" }}
         >
+            {/* The grass layer scales with the viewport width. A fixed max-height clipped the
+                hill silhouette on wide screens, so the height now follows the image's aspect
+                ratio and the black footer stays visible behind it. */}
             <div
                 aria-hidden="true"
-                className="pointer-events-none absolute inset-x-0 bottom-0 h-[clamp(200px,32vw,440px)] bg-[url('/images/grass-footer.png')] bg-bottom bg-no-repeat bg-[length:100%_auto]"
+                className="pointer-events-none absolute inset-x-0 bottom-0 h-[max(220px,32vw)] bg-[url('/images/grass-footer.png')] bg-bottom bg-no-repeat bg-[length:100%_auto]"
             />
             <div
                 aria-hidden="true"
