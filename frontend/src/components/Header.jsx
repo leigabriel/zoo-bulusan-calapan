@@ -475,7 +475,7 @@ const Header = () => {
                             <Link
                                 to="/reservations"
                                 onClick={(e) => { e.preventDefault(); handleTransitionNavigate(e, '/reservations'); }}
-                                className="px-4 py-1.5 rounded-full bg-gray-900 text-white text-[13px] font-medium hover:bg-gray-700 transition-colors whitespace-nowrap"
+                                className="px-4 py-1.5 rounded-full bg-gray-900 text-white text-[13px] font-medium uppercase tracking-[0.04em] hover:bg-gray-700 transition-colors whitespace-nowrap"
                             >
                                 Reserve
                             </Link>
@@ -579,7 +579,7 @@ const Header = () => {
                                     className={`flex items-center gap-3 px-4 py-3 border-t border-gray-100 transition-colors ${location.pathname === '/reservations' ? 'bg-green-400' : 'hover:bg-gray-50'}`}
                                 >
                                     <Ticket size={16} className={`flex-shrink-0 ${location.pathname === '/reservations' ? 'opacity-100' : 'opacity-45'}`} />
-                                    <span className={`text-[13px] font-medium ${location.pathname === '/reservations' ? 'text-[#000]' : 'text-gray-600'}`}>
+                                    <span className={`text-[13px] font-medium uppercase tracking-wide ${location.pathname === '/reservations' ? 'text-[#000]' : 'text-gray-600'}`}>
                                         Reserve
                                     </span>
                                 </Link>
