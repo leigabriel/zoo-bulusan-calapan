@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { ReactLenis } from 'lenis/react';
-import { Play, Trophy, Compass, Pet } from 'reicon-react';
+import { Play, Trophy, Compass, Pet, Download } from 'reicon-react';
 import { PAGE_BG_GRADIENT } from '../../config/page-gradient';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
@@ -8,6 +8,7 @@ import AIFloatingButton from '../../components/common/AIFloatingButton';
 import usePageMetadata from '../../hooks/use-page-metadata';
 
 const GAME_URL = 'https://adventuregame.bulusanzoo.com';
+const ANDROID_APK_URL = 'https://pub-2e54fcfc02914be28064e5210d94f00b.r2.dev/master/Bulusan-Zootopia-Adventure-Game-2.9.apk';
 
 const highlights = [
     {
@@ -30,7 +31,7 @@ const highlights = [
 const Game = () => {
     usePageMetadata(
         'Bulusan Zootopia Adventure Game | Bulusan Zoo',
-        'Play the Bulusan Zootopia Adventure Game, a free browser game inspired by Bulusan Zoo in Calapan City, Oriental Mindoro.',
+        'Play the Bulusan Zootopia Adventure Game, a free browser game inspired by Bulusan Zoo in Calapan City, Oriental Mindoro. Also available as an Android mobile download.',
         'https://bulusanzoo.com/game'
     );
 
@@ -64,43 +65,44 @@ const Game = () => {
                                 </h2>
                                 <p className="mt-5 max-w-xl text-sm leading-7 text-gray-600 md:text-base">
                                     Bulusan Zootopia Adventure Game turns a walk through the park into something you
-                                    can play in your browser. No download. No account. Just open it and start
-                                    exploring.
+                                    can play in your browser or install on an Android phone. No account needed.
+                                    Just open it, or download the app, and start exploring.
                                 </p>
 
-                                <div className="mt-8 flex flex-col items-start gap-3 sm:flex-row sm:items-center">
+                                <div className="mt-8 flex flex-col items-start gap-3 sm:flex-row sm:flex-wrap sm:items-center">
                                     <a
                                         href={GAME_URL}
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         aria-label="Play the Bulusan Zootopia Adventure Game (opens in a new tab)"
-                                        className="inline-flex min-h-12 items-center justify-center gap-3 rounded-full bg-black px-8 py-4 text-[11px] font-bold uppercase tracking-widest text-white transition-colors hover:bg-gray-800 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-black md:text-xs"
+                                        className="inline-flex min-h-12 w-full items-center justify-center gap-3 rounded-full bg-black px-8 py-4 text-center text-[11px] font-bold uppercase tracking-widest text-white transition-colors hover:bg-gray-800 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-black sm:w-auto md:text-xs"
                                     >
                                         <Play size={16} aria-hidden="true" />
                                         Play the game
                                     </a>
-                                    <span className="max-w-[220px] text-xs leading-5 text-gray-500">
-                                        Opens in a new tab at adventuregame.bulusanzoo.com
-                                    </span>
+                                    <a
+                                        href={ANDROID_APK_URL}
+                                        aria-label="Download the Bulusan Zootopia Android mobile version (APK file)"
+                                        className="inline-flex min-h-12 w-full items-center justify-center gap-3 rounded-full border-2 border-black px-6 py-4 text-center text-[11px] font-bold uppercase tracking-widest text-black transition-colors hover:bg-black hover:text-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-black sm:w-auto md:text-xs"
+                                    >
+                                        <Download size={16} aria-hidden="true" />
+                                        Download Android Mobile Version
+                                    </a>
                                 </div>
+                                <p className="mt-3 max-w-xl text-xs leading-5 text-gray-500">
+                                    Browser play opens in a new tab at adventuregame.bulusanzoo.com. The Android
+                                    version downloads the APK file so you can install it on your phone.
+                                </p>
                             </div>
 
-                            <div className="relative flex min-h-[320px] items-center justify-center overflow-hidden bg-green-50 p-8 sm:min-h-[420px]">
-                                <div
-                                    aria-hidden="true"
-                                    className="absolute h-[380px] w-[380px] rounded-full border border-green-200/80"
-                                />
-                                <div
-                                    aria-hidden="true"
-                                    className="absolute h-[270px] w-[270px] rounded-full border border-green-200/80"
-                                />
+                            <div className="relative flex min-h-[320px] items-center justify-center overflow-hidden bg-[#64e282] p-8 sm:min-h-[420px]">
                                 <img
-                                    src="/images/origami/deer.webp"
-                                    alt="Origami deer illustration for the Bulusan Zootopia Adventure Game"
+                                    src="/images/bulusanzootopia_icon.png"
+                                    alt="Close-up deer illustration for the Bulusan Zootopia Adventure Game"
                                     loading="eager"
-                                    className="relative z-10 h-[250px] w-auto max-w-full object-contain drop-shadow-[0_24px_36px_rgba(31,51,40,0.18)] sm:h-[330px]"
+                                    className="relative z-10 h-[260px] w-auto max-w-full object-contain sm:h-[360px] lg:h-[420px]"
                                 />
-                                <span className="absolute bottom-5 left-5 z-10 rounded-full border border-green-200 bg-white/90 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-gray-600">
+                                <span className="absolute bottom-5 left-5 z-10 rounded-full border border-white/40 bg-white/90 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-gray-600">
                                     Bulusan Zootopia
                                 </span>
                             </div>
