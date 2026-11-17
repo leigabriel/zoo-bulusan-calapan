@@ -1,0 +1,30 @@
+{
+  "index_to_class": {
+    "0": "deer",
+    "1": "dove",
+    "2": "eagle",
+    "3": "horse",
+    "4": "human",
+    "5": "koi",
+    "6": "monkey",
+    "7": "ostrich",
+    "8": "owl",
+    "9": "parrot",
+    "10": "rabbit",
+    "11": "tiger"
+  },
+  "class_to_index": {
+    "deer": 0,
+    "dove": 1,
+    "eagle": 2,
+    "horse": 3,
+    "human": 4,
+    "koi": 5,
+    "monkey": 6,
+    "ostrich": 7,
+    "owl": 8,
+    "parrot": 9,
+    "rabbit": 10,
+    "tiger": 11
+  }
+}
