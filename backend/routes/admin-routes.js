@@ -20,13 +20,13 @@ const { isConfigured: isCloudinaryConfigured } = require('../config/cloudinary')
 // multer for model uploads
 const modelStorage = multer.diskStorage({
     destination: function (req, file, cb) {
-        const modelsPath = path.join(__dirname, '../../frontend/public/model/bulusanzoo_machine_learning');
+        const modelsPath = path.join(__dirname, '../../frontend/public/model/bulusanzoo_machine_learning_v2');
         cb(null, modelsPath);
     },
     filename: function (req, file, cb) {
         // The client supplies this name and it may contain path separators, so it
         // cannot be passed through as-is. It also cannot simply be replaced: the
-        // frontend loads /model/bulusanzoo_machine_learning/model.json by a fixed
+        // frontend loads /model/bulusanzoo_machine_learning_v2/model.json by a fixed
         // name (see frontend/src/config/ai-service-config.js), so "model.json" and
         // "group1-shard1of3.bin" have to survive intact.
         //
