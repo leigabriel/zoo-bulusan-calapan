@@ -1,36 +1,38 @@
 export const LOCAL_MODEL_CONFIG = {
-    modelPath: '/model/bulusanzoo_machine_learning/model.json',
+    modelPath: '/model/bulusanzoo_machine_learning_v2/model.json',
     inputSize: 224,
     confidenceThreshold: 0.5,
 };
 
-// This order must match the class_names used when the model was trained.
+// This order must match the index_to_class in class_names.json of the v2 model.
 export const ANIMAL_CLASSES = [
-    'Monkey',
-    'Tiger',
-    'Parrot',
     'Deer',
     'Dove',
-    'Rabbit',
+    'Eagle',
     'Horse',
+    'Human',
+    'Koi',
+    'Monkey',
     'Ostrich',
     'Owl',
-    'Eagle',
-    'Human',
+    'Parrot',
+    'Rabbit',
+    'Tiger',
 ];
 
 export const ANIMAL_DATABASE = {
-    Monkey: { category: 'Mammal', bulusan: true, icon: 'monkey' },
-    Tiger: { category: 'Mammal', bulusan: true, icon: 'tiger' },
-    Parrot: { category: 'Bird', bulusan: true, icon: 'parrot' },
     Deer: { category: 'Mammal', bulusan: true, icon: 'deer' },
     Dove: { category: 'Bird', bulusan: true, icon: 'dove' },
-    Rabbit: { category: 'Mammal', bulusan: true, icon: 'rabbit' },
+    Eagle: { category: 'Bird', bulusan: true, icon: 'eagle' },
     Horse: { category: 'Mammal', bulusan: true, icon: 'horse' },
+    Human: { category: 'Human', bulusan: false, icon: 'human' },
+    Koi: { category: 'Fish', bulusan: false, icon: 'koi' },
+    Monkey: { category: 'Mammal', bulusan: true, icon: 'monkey' },
     Ostrich: { category: 'Bird', bulusan: false, icon: 'ostrich' },
     Owl: { category: 'Bird', bulusan: false, icon: 'owl' },
-    Eagle: { category: 'Bird', bulusan: true, icon: 'eagle' },
-    Human: { category: 'Human', bulusan: false, icon: 'human' },
+    Parrot: { category: 'Bird', bulusan: true, icon: 'parrot' },
+    Rabbit: { category: 'Mammal', bulusan: true, icon: 'rabbit' },
+    Tiger: { category: 'Mammal', bulusan: true, icon: 'tiger' },
 };
 
 export const getAnimalInfo = (animalName) => {
