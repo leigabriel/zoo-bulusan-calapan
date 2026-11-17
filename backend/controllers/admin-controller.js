@@ -1027,7 +1027,7 @@ exports.uploadModel = async (req, res) => {
 
 exports.getModelInfo = async (req, res) => {
     try {
-        const modelsPath = path.join(__dirname, '../../frontend/public/model/bulusanzoo_machine_learning');
+        const modelsPath = path.join(__dirname, '../../frontend/public/model/bulusanzoo_machine_learning_v2');
         const modelJsonPath = path.join(modelsPath, 'model.json');
 
         // Check if model.json exists
@@ -1051,7 +1051,7 @@ exports.getModelInfo = async (req, res) => {
         res.json({
             success: true,
             modelInfo: {
-                path: '/model/bulusanzoo_machine_learning/model.json',
+                path: '/model/bulusanzoo_machine_learning_v2/model.json',
                 weightFiles: weightFiles.length,
                 lastModified: stats.mtime,
                 format: modelData.format || 'unknown',
