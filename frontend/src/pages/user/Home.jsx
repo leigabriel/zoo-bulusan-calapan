@@ -92,7 +92,7 @@ const HeroSection = () => {
                         Welcome to
                     </p>
                     <div className="mb-7 sm:mb-8">
-                        <h1 className="overflow-hidden py-2 font-['Gravelad',_sans-serif] text-[clamp(2.25rem,6.6vw,5.25rem)] font-normal leading-none tracking-tight text-white drop-shadow-[0_4px_18px_rgba(0,0,0,0.45)] sm:py-3">
+                        <h1 className="overflow-hidden py-2 font-['Inter',_sans-serif] text-[clamp(2.25rem,6.6vw,5.25rem)] font-normal leading-none tracking-tight text-white drop-shadow-[0_4px_18px_rgba(0,0,0,0.45)] sm:py-3">
                             <span className="block overflow-hidden">
                                 <span className="hero-line block" style={{ clipPath: 'inset(100% 0% 0% 0%)' }}>BULUSAN ZOO</span>
                             </span>
