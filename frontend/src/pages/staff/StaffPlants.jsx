@@ -2,7 +2,10 @@ import { Leaf as PlantIcon, Search as SearchIcon, Sort as SortIcon, Plus as Plus
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { plantAPI, staffAPI } from '../../services/api-client';
 import ConfirmModal from '../../components/common/ConfirmModal';
+import ConfirmationModal from '../../components/common/ConfirmationModal';
+import DiscardChangesModal from '../../components/common/DiscardChangesModal';
 import useScrollLock from '../../hooks/use-scroll-lock';
+import useUnsavedChanges from '../../hooks/use-unsaved-changes';
 import { sanitizeInput } from '../../utils/sanitize';
 import { notify } from '../../utils/toast';
 
@@ -38,6 +41,8 @@ const StaffPlants = ({ globalSearch = '' }) => {
     const [saving, setSaving] = useState(false);
     const [imageFile, setImageFile] = useState(null);
     const [imagePreview, setImagePreview] = useState(null);
+    const [showUpdateConfirm, setShowUpdateConfirm] = useState(false);
+    const { reset: resetUnsaved, requestClose, confirmDiscard, cancelDiscard, isDiscardOpen } = useUnsavedChanges();
     const fileInputRef = useRef(null);
 
     useScrollLock(showModal);
@@ -98,26 +103,30 @@ const StaffPlants = ({ globalSearch = '' }) => {
     };
 
     const openCreateModal = () => {
+        const nextForm = emptyForm();
         setEditingPlant(null);
-        setForm(emptyForm());
+        setForm(nextForm);
         setImageFile(null);
         setImagePreview(null);
         if (fileInputRef.current) fileInputRef.current.value = '';
+        resetUnsaved([nextForm, null]);
         setShowModal(true);
     };
 
     const openEditModal = (plant) => {
-        setEditingPlant(plant);
-        setForm({
+        const nextForm = {
             name: plant.name || '',
             scientificName: plant.scientific_name || '',
             category: plant.category || 'trees',
             description: plant.description || '',
             imageUrl: plant.image_url || ''
-        });
+        };
+        setEditingPlant(plant);
+        setForm(nextForm);
         setImageFile(null);
         setImagePreview(null);
         if (fileInputRef.current) fileInputRef.current.value = '';
+        resetUnsaved([nextForm, null]);
         setShowModal(true);
     };
 
@@ -127,19 +136,27 @@ const StaffPlants = ({ globalSearch = '' }) => {
         setForm(emptyForm());
         setImageFile(null);
         setImagePreview(null);
+        setShowUpdateConfirm(false);
         if (fileInputRef.current) fileInputRef.current.value = '';
     }, []);
+
+    // Closing with edited values (or a newly picked photo) asks first.
+    const requestCloseModal = useCallback(
+        () => requestClose([form, imageFile ? imageFile.name : null], closeModal),
+        [requestClose, form, imageFile, closeModal]
+    );
 
     useEffect(() => {
         if (!showModal) return undefined;
 
         const handleKeyDown = (event) => {
-            if (event.key === 'Escape' && !saving) closeModal();
+            // The confirmation dialogs own Escape while they are open.
+            if (event.key === 'Escape' && !saving && !isDiscardOpen && !showUpdateConfirm) requestCloseModal();
         };
 
         document.addEventListener('keydown', handleKeyDown);
         return () => document.removeEventListener('keydown', handleKeyDown);
-    }, [showModal, saving, closeModal]);
+    }, [showModal, saving, requestCloseModal, isDiscardOpen, showUpdateConfirm]);
 
     const handleImageFileChange = (e) => {
         const file = e.target.files?.[0];
@@ -170,7 +187,7 @@ const StaffPlants = ({ globalSearch = '' }) => {
         if (fileInputRef.current) fileInputRef.current.value = '';
     };
 
-    const savePlant = async (e) => {
+    const savePlant = (e) => {
         e.preventDefault();
 
         const name = form.name.trim();
@@ -179,6 +196,16 @@ const StaffPlants = ({ globalSearch = '' }) => {
             return;
         }
 
+        if (editingPlant) {
+            setShowUpdateConfirm(true);
+            return;
+        }
+
+        persistPlant();
+    };
+
+    const persistPlant = async () => {
+        const name = form.name.trim();
         setSaving(true);
         try {
             let imageUrl = form.imageUrl;
@@ -580,7 +607,7 @@ const StaffPlants = ({ globalSearch = '' }) => {
                 <div
                     className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm"
                     onClick={(event) => {
-                        if (event.target === event.currentTarget && !saving) closeModal();
+                        if (event.target === event.currentTarget && !saving) requestCloseModal();
                     }}
                 >
                     <div
@@ -595,7 +622,7 @@ const StaffPlants = ({ globalSearch = '' }) => {
                             </h3>
                             <button
                                 type="button"
-                                onClick={closeModal}
+                                onClick={requestCloseModal}
                                 className="rounded-lg p-2 text-gray-500 transition hover:bg-green-50 hover:text-gray-900"
                                 aria-label="Close plant form"
                             >
@@ -691,7 +718,7 @@ const StaffPlants = ({ globalSearch = '' }) => {
                             <div className="flex gap-3 pt-4">
                                 <button
                                     type="button"
-                                    onClick={closeModal}
+                                    onClick={requestCloseModal}
                                     className="flex-1 py-3 bg-green-50 hover:bg-green-50 text-gray-700 font-medium rounded-xl transition-all"
                                 >
                                     Cancel
@@ -708,6 +735,23 @@ const StaffPlants = ({ globalSearch = '' }) => {
                     </div>
                 </div>
             )}
+
+            <ConfirmationModal
+                isOpen={showUpdateConfirm}
+                title="Update plant?"
+                message={`Are you sure you want to update “${form.name || editingPlant?.name || 'this plant'}”? The changes take effect immediately.`}
+                confirmLabel="Update"
+                loading={saving}
+                onConfirm={() => { setShowUpdateConfirm(false); persistPlant(); }}
+                onClose={() => setShowUpdateConfirm(false)}
+            />
+
+            <DiscardChangesModal
+                isOpen={isDiscardOpen}
+                subject="plant changes"
+                onDiscard={confirmDiscard}
+                onKeepEditing={cancelDiscard}
+            />
         </div>
     );
 };
