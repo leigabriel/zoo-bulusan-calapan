@@ -5,6 +5,9 @@ import { sanitizeInput, sanitizeEmail } from '../../utils/sanitize';
 import { notify } from '../../utils/toast';
 import { useAuth } from '../../context/AuthContext';
 import PasswordInput from '../../components/common/PasswordInput';
+import ConfirmationModal from '../../components/common/ConfirmationModal';
+import DiscardChangesModal from '../../components/common/DiscardChangesModal';
+import useUnsavedChanges from '../../hooks/use-unsaved-changes';
 
 // Icons
 const SearchIcon = () => (
@@ -55,6 +58,8 @@ const AdminUsers = ({ globalSearch = '' }) => {
     const emptyForm = { firstName: '', lastName: '', username: '', email: '', role: 'user', password: '', confirmPassword: '' };
     const [form, setForm] = useState(emptyForm);
     const [saving, setSaving] = useState(false);
+    const [showUpdateConfirm, setShowUpdateConfirm] = useState(false);
+    const { reset: resetUnsaved, requestClose, confirmDiscard, cancelDiscard, isDiscardOpen } = useUnsavedChanges();
 
     // Suspend modal states
     const [suspendUser, setSuspendUser] = useState(null);
@@ -103,12 +108,12 @@ const AdminUsers = ({ globalSearch = '' }) => {
     const openCreateModal = () => {
         setEditingUser(null);
         setForm(emptyForm);
+        resetUnsaved(emptyForm);
         setShowModal(true);
     };
 
     const openEditModal = (user) => {
-        setEditingUser(user);
-        setForm({
+        const nextForm = {
             firstName: user.firstName || user.first_name || '',
             lastName: user.lastName || user.last_name || '',
             username: user.username || '',
@@ -116,7 +121,10 @@ const AdminUsers = ({ globalSearch = '' }) => {
             role: user.role || 'user',
             password: '',
             confirmPassword: ''
-        });
+        };
+        setEditingUser(user);
+        setForm(nextForm);
+        resetUnsaved(nextForm);
         setShowModal(true);
     };
 
@@ -124,14 +132,26 @@ const AdminUsers = ({ globalSearch = '' }) => {
         setShowModal(false);
         setEditingUser(null);
         setForm(emptyForm);
+        setShowUpdateConfirm(false);
     };
 
-    const saveUser = async (e) => {
+    // Closing with edited values asks before throwing them away.
+    const requestCloseModal = () => requestClose(form, closeModal);
+
+    const saveUser = (e) => {
         e.preventDefault();
         if (!editingUser && form.password !== form.confirmPassword) {
             notify.error('Passwords do not match.');
             return;
         }
+        if (editingUser) {
+            setShowUpdateConfirm(true);
+            return;
+        }
+        persistUser();
+    };
+
+    const persistUser = async () => {
         setSaving(true);
         try {
             const payload = { ...form };
@@ -461,13 +481,19 @@ const AdminUsers = ({ globalSearch = '' }) => {
 
             {/* Create/Edit Modal */}
             {showModal && (
-                <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-white border border-green-200 rounded-3xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
+                <div
+                    className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+                    onClick={requestCloseModal}
+                >
+                    <div
+                        className="bg-white border border-green-200 rounded-3xl w-full max-w-3xl max-h-[90vh] overflow-y-auto"
+                        onClick={(event) => event.stopPropagation()}
+                    >
                         <div className="p-6 border-b border-green-200 flex items-center justify-between">
                             <h3 className="text-xl font-bold text-gray-900">
                                 {editingUser ? 'Edit User' : 'Create New User'}
                             </h3>
-                            <button onClick={closeModal} className="p-2 hover:bg-green-50 rounded-lg text-gray-500 hover:text-gray-900 transition">
+                            <button type="button" onClick={requestCloseModal} aria-label="Close user form" className="p-2 hover:bg-green-50 rounded-lg text-gray-500 hover:text-gray-900 transition">
                                 <CloseIcon />
                             </button>
                         </div>
@@ -512,7 +538,7 @@ const AdminUsers = ({ globalSearch = '' }) => {
                                 </div>
                             )}
                             <div className="flex gap-3 pt-4">
-                                <button type="button" onClick={closeModal} className="flex-1 py-3 bg-green-50 hover:bg-green-50 text-gray-700 font-medium rounded-xl transition-all">Cancel</button>
+                                <button type="button" onClick={requestCloseModal} className="flex-1 py-3 bg-green-50 hover:bg-green-50 text-gray-700 font-medium rounded-xl transition-all">Cancel</button>
                                 <button type="submit" disabled={saving} className="flex-1 py-3 bg-gradient-to-r from-green-300 via-green-400 to-green-500 text-gray-900 font-semibold rounded-xl transition-all disabled:opacity-50">
                                     {saving ? 'Saving...' : (editingUser ? 'Update' : 'Create')}
                                 </button>
@@ -521,6 +547,23 @@ const AdminUsers = ({ globalSearch = '' }) => {
                     </div>
                 </div>
             )}
+
+            <ConfirmationModal
+                isOpen={showUpdateConfirm}
+                title="Update account?"
+                message={`Are you sure you want to update “${`${form.firstName} ${form.lastName}`.trim() || form.username || 'this account'}”? The changes take effect immediately.`}
+                confirmLabel="Update"
+                loading={saving}
+                onConfirm={() => { setShowUpdateConfirm(false); persistUser(); }}
+                onClose={() => setShowUpdateConfirm(false)}
+            />
+
+            <DiscardChangesModal
+                isOpen={isDiscardOpen}
+                subject="account changes"
+                onDiscard={confirmDiscard}
+                onKeepEditing={cancelDiscard}
+            />
 
             {/* Suspend User Modal */}
             {suspendUser && (
