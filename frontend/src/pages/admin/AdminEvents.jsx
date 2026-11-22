@@ -7,6 +7,8 @@ import listPlugin from '@fullcalendar/list';
 import interactionPlugin from '@fullcalendar/interaction';
 import { adminAPI } from '../../services/api-client';
 import { notify } from '../../utils/toast';
+import DiscardChangesModal from '../../components/common/DiscardChangesModal';
+import useUnsavedChanges from '../../hooks/use-unsaved-changes';
 
 // Icons
 const PlusIcon = () => (
@@ -81,6 +83,9 @@ const AdminEvents = () => {
     const [imageInputMode, setImageInputMode] = useState('upload');
     const [imageFile, setImageFile] = useState(null);
     const [imagePreview, setImagePreview] = useState(null);
+    const { reset: resetUnsaved, requestClose, confirmDiscard, cancelDiscard, isDiscardOpen } = useUnsavedChanges();
+    const formDataRef = useRef(formData);
+    const imageFileRef = useRef(imageFile);
 
     // Confirmation modal states
     const [showConfirmModal, setShowConfirmModal] = useState(false);
@@ -316,6 +321,34 @@ const AdminEvents = () => {
         setImageInputMode('upload');
         setImageFile(null);
         setImagePreview(null);
+    };
+
+    useEffect(() => { formDataRef.current = formData; }, [formData]);
+    useEffect(() => { imageFileRef.current = imageFile; }, [imageFile]);
+
+    // Snapshot the values whenever the create/edit form is opened, so an
+    // untouched form still closes in one click while edited values ask first.
+    useEffect(() => {
+        if (!showModal) return;
+        if (modalMode === 'view') {
+            resetUnsaved(null);
+            return;
+        }
+        resetUnsaved([formDataRef.current, imageFileRef.current ? imageFileRef.current.name : null]);
+    }, [showModal, modalMode, resetUnsaved]);
+
+    const closeModal = () => {
+        setShowModal(false);
+        resetForm();
+        setShowConfirmModal(false);
+    };
+
+    const requestCloseModal = () => {
+        if (modalMode === 'view') {
+            closeModal();
+            return;
+        }
+        requestClose([formData, imageFile ? imageFile.name : null], closeModal);
     };
 
     const handleViewChange = (view) => {
@@ -662,13 +695,19 @@ const AdminEvents = () => {
 
             {/* Event Modal */}
             {showModal && (
-                <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-white border border-green-200 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+                <div
+                    className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+                    onClick={requestCloseModal}
+                >
+                    <div
+                        className="bg-white border border-green-200 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+                        onClick={(event) => event.stopPropagation()}
+                    >
                         <div className="flex items-center justify-between p-5 border-b border-green-200">
                             <h2 className="text-xl font-bold text-gray-900">
                                 {modalMode === 'view' ? 'Event Details' : modalMode === 'edit' ? 'Edit Event' : 'New Event'}
                             </h2>
-                            <button onClick={() => { setShowModal(false); resetForm(); }} className="text-gray-500 hover:text-gray-900 transition">
+                            <button type="button" onClick={requestCloseModal} aria-label="Close event details" className="text-gray-500 hover:text-gray-900 transition">
                                 <CloseIcon />
                             </button>
                         </div>
@@ -705,7 +744,7 @@ const AdminEvents = () => {
                                         <TrashIcon />
                                         Delete
                                     </button>
-                                    <button type="button" onClick={() => { setShowModal(false); resetForm(); }} className="flex-1 px-4 py-3 bg-green-50 hover:bg-green-50 text-gray-900 rounded-xl font-medium transition">
+                                    <button type="button" onClick={requestCloseModal} className="flex-1 px-4 py-3 bg-green-50 hover:bg-green-50 text-gray-900 rounded-xl font-medium transition">
                                         Close
                                     </button>
                                     <button type="button" onClick={handleEditMode} className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-green-400 hover:bg-green-400 text-black rounded-xl font-medium transition">
@@ -791,7 +830,7 @@ const AdminEvents = () => {
                                             Delete
                                         </button>
                                     )}
-                                    <button type="button" onClick={() => { setShowModal(false); resetForm(); }} className="flex-1 px-4 py-3 bg-green-50 hover:bg-green-50 text-gray-900 rounded-xl font-medium transition">
+                                    <button type="button" onClick={requestCloseModal} className="flex-1 px-4 py-3 bg-green-50 hover:bg-green-50 text-gray-900 rounded-xl font-medium transition">
                                         Cancel
                                     </button>
                                     <button type="submit" disabled={saving} className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-green-400 hover:bg-green-400 text-black rounded-xl font-medium transition disabled:opacity-50">
@@ -821,7 +860,7 @@ const AdminEvents = () => {
                             {confirmAction === 'delete' ? 'Delete Event' : confirmAction === 'update' ? 'Update Event' : 'Create Event'}
                         </h3>
                         <p className="text-gray-500 text-center mb-4">
-                            {confirmAction === 'delete' ? 'Are you sure you want to delete this event? This action cannot be undone.' : confirmAction === 'update' ? 'Are you sure you want to update this event?' : 'Are you sure you want to create this event?'}
+                            {confirmAction === 'delete' ? 'Are you sure you want to delete this event? This action cannot be undone.' : confirmAction === 'update' ? `Are you sure you want to update “${confirmData?.title || 'this event'}”?` : `Are you sure you want to create “${confirmData?.title || 'this event'}”?`}
                         </p>
                         {confirmData && (
                             <div className="bg-green-50 rounded-xl p-4 mb-6 space-y-2">
@@ -854,6 +893,13 @@ const AdminEvents = () => {
                     </div>
                 </div>
             )}
+
+            <DiscardChangesModal
+                isOpen={isDiscardOpen}
+                subject="event changes"
+                onDiscard={confirmDiscard}
+                onKeepEditing={cancelDiscard}
+            />
         </div>
     );
 };
