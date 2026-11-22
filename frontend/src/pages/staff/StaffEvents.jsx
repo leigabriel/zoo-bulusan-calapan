@@ -2,6 +2,8 @@ import { Calendar as CalendarIcon, Search as SearchIcon, Plus as PlusIcon, Clock
 import { useState, useEffect } from 'react';
 import { staffAPI } from '../../services/api-client';
 import ConfirmModal from '../../components/common/ConfirmModal';
+import DiscardChangesModal from '../../components/common/DiscardChangesModal';
+import useUnsavedChanges from '../../hooks/use-unsaved-changes';
 import { sanitizeInput } from '../../utils/sanitize';
 import { notify } from '../../utils/toast';
 
@@ -36,6 +38,7 @@ const StaffEvents = ({ globalSearch = '' }) => {
     const [imageInputMode, setImageInputMode] = useState('upload');
     const [imageFile, setImageFile] = useState(null);
     const [imagePreview, setImagePreview] = useState(null);
+    const { reset: resetUnsaved, requestClose, confirmDiscard, cancelDiscard, isDiscardOpen } = useUnsavedChanges();
     const [form, setForm] = useState({
         title: '', description: '', eventDate: '', startTime: '', endTime: '',
         status: 'upcoming', imageUrl: '', color: '#22c55e'
@@ -64,13 +67,15 @@ const StaffEvents = ({ globalSearch = '' }) => {
         setError('');
         const now = new Date();
         const todayLocal = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-        setForm({
+        const nextForm = {
             title: '', description: '', eventDate: todayLocal, startTime: '', endTime: '',
             status: 'upcoming', imageUrl: '', color: '#22c55e'
-        });
+        };
+        setForm(nextForm);
         setImageInputMode('upload');
         setImageFile(null);
         setImagePreview(null);
+        resetUnsaved([nextForm, null]);
         setShowModal(true);
     };
 
@@ -78,7 +83,7 @@ const StaffEvents = ({ globalSearch = '' }) => {
         setEditingEvent(event);
         setError('');
         const eventDate = event.event_date ? event.event_date.split('T')[0] : '';
-        setForm({
+        const nextForm = {
             title: event.title || '',
             description: event.description || '',
             eventDate: eventDate,
@@ -87,10 +92,12 @@ const StaffEvents = ({ globalSearch = '' }) => {
             status: event.status || 'upcoming',
             imageUrl: event.image_url || '',
             color: event.color || '#22c55e'
-        });
+        };
+        setForm(nextForm);
         setImageInputMode('upload');
         setImageFile(null);
         setImagePreview(null);
+        resetUnsaved([nextForm, null]);
         setShowModal(true);
     };
 
@@ -101,11 +108,16 @@ const StaffEvents = ({ globalSearch = '' }) => {
         setImageInputMode('upload');
         setImageFile(null);
         setImagePreview(null);
+        setShowSaveConfirm(false);
+        setConfirmData(null);
         setForm({
             title: '', description: '', eventDate: '', startTime: '', endTime: '',
             status: 'upcoming', imageUrl: '', color: '#22c55e'
         });
     };
+
+    // Closing with edited values (or a newly picked photo) asks first.
+    const requestCloseModal = () => requestClose([form, imageFile ? imageFile.name : null], closeModal);
 
     const handleImageFileChange = (e) => {
         const file = e.target.files[0];
@@ -503,14 +515,22 @@ const StaffEvents = ({ globalSearch = '' }) => {
 
             {/* Create/Edit Modal */}
             {showModal && (
-                <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-white border border-green-200 rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+                <div
+                    className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+                    onClick={requestCloseModal}
+                >
+                    <div
+                        className="bg-white border border-green-200 rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto"
+                        onClick={(event) => event.stopPropagation()}
+                    >
                         <div className="flex items-center justify-between p-5 border-b border-green-200">
                             <h2 className="text-xl font-bold text-gray-900">
                                 {editingEvent ? 'Edit Event' : 'New Event'}
                             </h2>
                             <button
-                                onClick={closeModal}
+                                type="button"
+                                onClick={requestCloseModal}
+                                aria-label="Close event form"
                                 className="text-gray-500 hover:text-gray-900 transition"
                             >
                                 <CloseIcon className="w-5 h-5" />
@@ -655,7 +675,7 @@ const StaffEvents = ({ globalSearch = '' }) => {
                             <div className="flex gap-3 pt-4">
                                 <button
                                     type="button"
-                                    onClick={closeModal}
+                                    onClick={requestCloseModal}
                                     className="flex-1 px-4 py-3 bg-green-50 hover:bg-green-50 text-gray-900 rounded-xl font-medium transition"
                                 >
                                     Cancel
@@ -697,8 +717,8 @@ const StaffEvents = ({ globalSearch = '' }) => {
                         </h3>
                         <p className="text-gray-500 text-center mb-4">
                             {confirmData.isUpdate 
-                                ? 'Are you sure you want to update this event?'
-                                : 'Are you sure you want to create this event?'}
+                                ? `Are you sure you want to update “${confirmData.title}”?`
+                                : `Are you sure you want to create “${confirmData.title}”?`}
                         </p>
                         
                         <div className="bg-green-50 rounded-xl p-4 mb-6 space-y-2">
@@ -743,6 +763,13 @@ const StaffEvents = ({ globalSearch = '' }) => {
                     </div>
                 </div>
             )}
+
+            <DiscardChangesModal
+                isOpen={isDiscardOpen}
+                subject="event changes"
+                onDiscard={confirmDiscard}
+                onKeepEditing={cancelDiscard}
+            />
         </div>
     );
 };
