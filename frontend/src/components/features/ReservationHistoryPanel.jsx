@@ -1066,10 +1066,11 @@ const ReservationHistoryPanel = ({ isOpen, onClose, paymentReturn = false, focus
 
                             <div className="px-5 sm:px-6 py-6 text-center bg-slate-50 border-b border-slate-100 relative">
                                 <button
+                                    type="button"
                                     onClick={() => setSelectedReservation(null)}
-                                     aria-label="Close reservation details"
-                                     title="Close"
-                                     className="absolute right-3 top-3 z-10 flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-400 shadow-sm hover:bg-slate-200 hover:text-slate-700 transition sm:right-4 sm:top-4"
+                                    aria-label="Close reservation details"
+                                    title="Close"
+                                    className="absolute right-3 top-3 z-10 flex h-10 w-10 items-center justify-center rounded-full border border-rose-200 bg-rose-50 text-rose-600 shadow-sm transition hover:border-rose-300 hover:bg-rose-100 hover:text-rose-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-500 sm:right-4 sm:top-4"
                                 >
                                     <Icons.Close />
                                 </button>
