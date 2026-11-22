@@ -16,16 +16,9 @@ import useScrollLock from '../../hooks/use-scroll-lock';
 import EventViews, { ViewToggle } from '../../components/features/events/EventViews';
 import { X, Location, Clock, CheckCircle } from 'reicon-react';
 import usePageMetadata from '../../hooks/use-page-metadata';
+import { handleEventImageError, resolveEventImageUrl } from '../../utils/event-images';
 
 gsap.registerPlugin(ScrollTrigger);
-
-const DEFAULT_EVENT_IMAGES = [
-    'https://images.unsplash.com/photo-1474511320723-9a56873571b7?w=800',
-    'https://images.unsplash.com/photo-1534567153574-2b12153a87f0?w=800',
-    'https://images.unsplash.com/photo-1544985361-b420d7a77043?w=800',
-    'https://images.unsplash.com/photo-1497752531616-c3afd9760a11?w=800',
-    'https://images.unsplash.com/photo-1551085254-e96b210db58a?w=800',
-];
 
 const FILTERS = ['all', 'upcoming', 'ongoing', 'past'];
 
@@ -123,7 +116,7 @@ const Events = () => {
                         endTime: event.end_time,
                         location: event.location || 'Bulusan Zoo',
                         status: computedStatus,
-                        imageUrl: event.image_url || DEFAULT_EVENT_IMAGES[index % DEFAULT_EVENT_IMAGES.length],
+                        imageUrl: resolveEventImageUrl(event.image_url, index),
                         tags: event.tags || ['Wildlife', 'Education'],
                     };
                 });
@@ -454,7 +447,7 @@ const Events = () => {
                                 className="w-full md:max-w-5xl bg-white rounded-xl md:rounded-2xl shadow-2xl overflow-hidden flex flex-col md:flex-row max-h-[90vh]"
                             >
                                 <div className="w-full md:w-1/2 h-48 sm:h-64 md:h-auto relative bg-gray-100 flex-shrink-0">
-                                    <img src={selectedEvent.imageUrl} alt={selectedEvent.title} className="absolute inset-0 w-full h-full object-cover" />
+                                    <img src={selectedEvent.imageUrl} alt={selectedEvent.title} onError={handleEventImageError} className="absolute inset-0 w-full h-full object-cover" />
                                 </div>
                                 <div className="w-full md:w-1/2 p-6 md:p-12 flex flex-col overflow-y-auto overscroll-contain" data-lenis-prevent>
                                     <div className="flex justify-between items-start mb-6 md:mb-8">
