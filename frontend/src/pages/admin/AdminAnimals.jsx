@@ -2,6 +2,9 @@ import { Edit as ReiconEdit, Paw as ReiconPaw, Plus as ReiconPlus, Search as Rei
 import { useEffect, useState } from 'react';
 import { adminAPI } from '../../services/api-client';
 import ConfirmModal from '../../components/common/ConfirmModal';
+import ConfirmationModal from '../../components/common/ConfirmationModal';
+import DiscardChangesModal from '../../components/common/DiscardChangesModal';
+import useUnsavedChanges from '../../hooks/use-unsaved-changes';
 import { sanitizeInput } from '../../utils/sanitize';
 import { notify } from '../../utils/toast';
 
@@ -66,6 +69,8 @@ const AdminAnimals = ({ globalSearch = '' }) => {
     const [imageInputMode, setImageInputMode] = useState('upload');
     const [imageFile, setImageFile] = useState(null);
     const [imagePreview, setImagePreview] = useState(null);
+    const [showUpdateConfirm, setShowUpdateConfirm] = useState(false);
+    const { reset: resetUnsaved, requestClose, confirmDiscard, cancelDiscard, isDiscardOpen } = useUnsavedChanges();
 
     const effectiveSearch = globalSearch || searchQuery;
 
@@ -82,18 +87,20 @@ const AdminAnimals = ({ globalSearch = '' }) => {
         } finally { setLoading(false); }
     };
 
+    const emptyAnimalForm = { name: '', species: '', exhibit: '', description: '', imageUrl: '', status: 'healthy', lifespan: '', weight: '', length: '', habitat: '', diet: '', animalInformation: '' };
+
     const openCreateModal = () => {
         setEditingAnimal(null);
-        setForm({ name: '', species: '', exhibit: '', description: '', imageUrl: '', status: 'healthy', lifespan: '', weight: '', length: '', habitat: '', diet: '', animalInformation: '' });
+        setForm(emptyAnimalForm);
         setImageInputMode('upload');
         setImageFile(null);
         setImagePreview(null);
+        resetUnsaved([emptyAnimalForm, null]);
         setShowModal(true);
     };
 
     const openEditModal = (animal) => {
-        setEditingAnimal(animal);
-        setForm({
+        const nextForm = {
             name: animal.name || '',
             species: animal.species || '',
             exhibit: animal.habitat || animal.exhibit || '',
@@ -106,21 +113,28 @@ const AdminAnimals = ({ globalSearch = '' }) => {
             habitat: animal.habitat || '',
             diet: animal.diet || '',
             animalInformation: animal.animalInformation || animal.animal_information || ''
-        });
+        };
+        setEditingAnimal(animal);
+        setForm(nextForm);
         setImageInputMode('upload');
         setImageFile(null);
         setImagePreview(null);
+        resetUnsaved([nextForm, null]);
         setShowModal(true);
     };
 
     const closeModal = () => {
         setShowModal(false);
         setEditingAnimal(null);
-        setForm({ name: '', species: '', exhibit: '', description: '', imageUrl: '', status: 'healthy', lifespan: '', weight: '', length: '', habitat: '', diet: '', animalInformation: '' });
+        setForm(emptyAnimalForm);
         setImageInputMode('upload');
         setImageFile(null);
         setImagePreview(null);
+        setShowUpdateConfirm(false);
     };
+
+    // Closing with edited values (or a newly picked photo) asks first.
+    const requestCloseModal = () => requestClose([form, imageFile ? imageFile.name : null], closeModal);
 
     const handleImageFileChange = (e) => {
         const file = e.target.files[0];
@@ -134,8 +148,16 @@ const AdminAnimals = ({ globalSearch = '' }) => {
         }
     };
 
-    const saveAnimal = async (e) => {
+    const saveAnimal = (e) => {
         e.preventDefault();
+        if (editingAnimal) {
+            setShowUpdateConfirm(true);
+            return;
+        }
+        persistAnimal();
+    };
+
+    const persistAnimal = async () => {
         setSaving(true);
         try {
             let imageUrl = form.imageUrl;
@@ -585,15 +607,23 @@ const AdminAnimals = ({ globalSearch = '' }) => {
 
             {/* Create/Edit Modal */}
             {showModal && (
-                <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-white border border-green-200 rounded-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
+                <div
+                    className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+                    onClick={requestCloseModal}
+                >
+                    <div
+                        className="bg-white border border-green-200 rounded-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto"
+                        onClick={(event) => event.stopPropagation()}
+                    >
                         {/* Modal Header */}
                         <div className="p-6 border-b border-green-200 flex items-center justify-between sticky top-0 bg-white">
                             <h3 className="text-xl font-bold text-gray-900">
                                 {editingAnimal ? 'Edit Animal' : 'Add New Animal'}
                             </h3>
                             <button
-                                onClick={closeModal}
+                                type="button"
+                                onClick={requestCloseModal}
+                                aria-label="Close animal form"
                                 className="p-2 hover:bg-green-50 rounded-lg text-gray-500 hover:text-gray-900 transition"
                             >
                                 <CloseIcon />
@@ -769,7 +799,7 @@ const AdminAnimals = ({ globalSearch = '' }) => {
                             <div className="flex gap-3 pt-4">
                                 <button
                                     type="button"
-                                    onClick={closeModal}
+                                    onClick={requestCloseModal}
                                     className="flex-1 py-3 bg-green-50 hover:bg-green-50 text-gray-700 font-medium rounded-xl transition-all"
                                 >
                                     Cancel
@@ -786,6 +816,23 @@ const AdminAnimals = ({ globalSearch = '' }) => {
                     </div>
                 </div>
             )}
+
+            <ConfirmationModal
+                isOpen={showUpdateConfirm}
+                title="Update animal?"
+                message={`Are you sure you want to update “${form.name || editingAnimal?.name || 'this animal'}”? The changes take effect immediately.`}
+                confirmLabel="Update"
+                loading={saving}
+                onConfirm={() => { setShowUpdateConfirm(false); persistAnimal(); }}
+                onClose={() => setShowUpdateConfirm(false)}
+            />
+
+            <DiscardChangesModal
+                isOpen={isDiscardOpen}
+                subject="animal changes"
+                onDiscard={confirmDiscard}
+                onKeepEditing={cancelDiscard}
+            />
 
         </div>
     );
