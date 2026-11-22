@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { motion as Motion } from 'framer-motion';
 import { Calendar, Grid, List } from 'reicon-react';
+import { handleEventImageError } from '../../../utils/event-images';
 
 // The three ways the visitor can read the same filtered set of events. Kept out of Events.jsx
 // so the page stays about data, submission and modals while this file owns presentation.
@@ -237,7 +238,7 @@ const ListView = ({ events, onSelect }) => {
                                 >
                                     <div className="w-16 h-16 md:w-24 md:h-24 flex-shrink-0 overflow-hidden rounded-md bg-gray-100">
                                         {event.imageUrl && (
-                                            <img src={event.imageUrl} alt="" className="w-full h-full object-cover" />
+                                            <img src={event.imageUrl} alt="" loading="lazy" decoding="async" onError={handleEventImageError} className="w-full h-full object-cover" />
                                         )}
                                     </div>
                                     <div className="min-w-0 flex-1">
@@ -275,7 +276,7 @@ const GridView = ({ events, onSelect }) => {
                     <button type="button" onClick={() => onSelect(event)} className="flex flex-col h-full text-left">
                         <div className="relative h-44 md:h-52 overflow-hidden bg-gray-100">
                             {event.imageUrl && (
-                                <img src={event.imageUrl} alt="" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                                <img src={event.imageUrl} alt="" loading="lazy" decoding="async" onError={handleEventImageError} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
                             )}
                             <div className="absolute top-3 left-3">
                                 <StatusBadge status={event.status} />
