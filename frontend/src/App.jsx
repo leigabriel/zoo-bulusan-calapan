@@ -32,7 +32,8 @@ const Game = lazy(() => import('./pages/user/Game'));
 const LoginPage = lazy(() => import('./pages/auth/LoginPage'));
 const RegisterPage = lazy(() => import('./pages/auth/RegisterPage'));
 const GoogleAuthSuccess = lazy(() => import('./pages/auth/GoogleAuthSuccess'));
-const AccessDenied = lazy(() => import('./pages/auth/AccessDenied'));
+const NotFound = lazy(() => import('./pages/errors/NotFound'));
+const Forbidden = lazy(() => import('./pages/errors/Forbidden'));
 const PrivacyPolicy = lazy(() => import('./pages/legal/PrivacyPolicy'));
 const TermsOfService = lazy(() => import('./pages/legal/TermsOfService'));
 const CookiePolicy = lazy(() => import('./pages/legal/CookiePolicy'));
@@ -107,7 +108,7 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
     }
 
     if (allowedRoles && !allowedRoles.includes(user?.role)) {
-        return <Navigate to="/access-denied" replace />;
+        return <Navigate to="/403" replace />;
     }
 
     return children;
@@ -164,7 +165,10 @@ function AppRoutes() {
             <Route path="/auth/google/success" element={<GoogleAuthSuccess />} />
             <Route path="/admin" element={<Navigate to="/login" replace />} />
             <Route path="/admin/login" element={<Navigate to="/login" replace />} />
-            <Route path="/access-denied" element={<AccessDenied />} />
+            <Route path="/403" element={<Forbidden />} />
+            {/* Kept so older links to the previous access-denied page still resolve. */}
+            <Route path="/access-denied" element={<Navigate to="/403" replace />} />
+            <Route path="/404" element={<NotFound />} />
 
             {/* Protected User Routes - requires login */}
             <Route path="/classifier" element={
@@ -432,7 +436,7 @@ function AppRoutes() {
                 </ProtectedRoute>
             } />
 
-            <Route path="*" element={<Navigate to="/" replace />} />
+            <Route path="*" element={<NotFound />} />
         </Routes>
         </Suspense>
     );
