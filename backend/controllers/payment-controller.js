@@ -9,6 +9,19 @@ const readTicketConfig = ticketPaymentCfg.readConfig;
 const getFrontendUrl = () => (process.env.FRONTEND_URL || 'http://localhost:5173').replace(/\/$/, '');
 const getPayMongoSecretKey = () => process.env.PAYMONGO_SECRET_KEY?.trim();
 
+/**
+ * A confirmed zoo ticket can only be refunded within 7 days of confirmation.
+ * Unconfirmed tickets have no confirmed_at, so the rule does not apply yet.
+ */
+const TICKET_REFUND_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
+
+const isTicketRefundWindowExpired = (confirmedAt) => {
+    if (!confirmedAt) return false;
+    const confirmed = new Date(confirmedAt);
+    if (Number.isNaN(confirmed.getTime())) return false;
+    return Date.now() >= confirmed.getTime() + TICKET_REFUND_WINDOW_MS;
+};
+
 const paymongoRequest = async (body) => {
     const secretKey = getPayMongoSecretKey();
     if (!secretKey) {
@@ -477,6 +490,12 @@ exports.requestTicketRefund = async (req, res) => {
         }
         if (reservation.payment_status !== 'paid') {
             return res.status(400).json({ success: false, message: 'Only paid reservations can request a refund.' });
+        }
+        if (isTicketRefundWindowExpired(reservation.confirmed_at)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Refund requests for confirmed tickets are only accepted within 7 days of confirmation.'
+            });
         }
         await Reservation.updateTicketPayment(reservation.id, {
             refundStatus: 'requested',

@@ -23,6 +23,15 @@ const formatEventRow = (row) => {
     };
 };
 
+// Headcount is the event's maximum number of attendees, stored in the existing
+// `capacity` column. Null lets an update keep whatever the event already has.
+const normalizeHeadcount = (value) => {
+    if (value === null || value === undefined || value === '') return null;
+    const parsed = Number(value);
+    if (!Number.isFinite(parsed) || parsed < 1) return null;
+    return Math.floor(parsed);
+};
+
 class Event {
     static async getAll() {
         const [rows] = await db.query(
@@ -66,21 +75,21 @@ class Event {
     }
 
     static async create(eventData) {
-        const { title, description, eventDate, startTime, endTime, location, imageUrl, status, color, createdBy } = eventData;
+        const { title, description, eventDate, startTime, endTime, location, imageUrl, capacity, status, color, createdBy } = eventData;
         const [result] = await db.query(
-            `INSERT INTO events (title, description, event_date, start_time, end_time, location, image_url, status, color, created_by) 
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            [title, description, eventDate, startTime, endTime, location, imageUrl || null, status || 'upcoming', color || '#22c55e', createdBy || null]
+            `INSERT INTO events (title, description, event_date, start_time, end_time, location, image_url, capacity, status, color, created_by) 
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [title, description, eventDate, startTime, endTime, location, imageUrl || null, normalizeHeadcount(capacity) ?? 100, status || 'upcoming', color || '#22c55e', createdBy || null]
         );
         return result.insertId;
     }
 
     static async update(id, eventData) {
-        const { title, description, eventDate, startTime, endTime, location, imageUrl, status, color } = eventData;
+        const { title, description, eventDate, startTime, endTime, location, imageUrl, capacity, status, color } = eventData;
         const [result] = await db.query(
             `UPDATE events SET title = ?, description = ?, event_date = ?, start_time = ?, 
-             end_time = ?, location = ?, image_url = ?, status = ?, color = ? WHERE id = ?`,
-            [title, description, eventDate, startTime, endTime, location, imageUrl, status, color || '#22c55e', id]
+             end_time = ?, location = ?, image_url = ?, capacity = COALESCE(?, capacity), status = ?, color = ? WHERE id = ?`,
+            [title, description, eventDate, startTime, endTime, location, imageUrl, normalizeHeadcount(capacity), status, color || '#22c55e', id]
         );
         return result.affectedRows > 0;
     }

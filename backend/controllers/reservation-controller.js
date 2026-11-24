@@ -73,6 +73,7 @@ const createOrUpdateLinkedEvent = async (reservation, imageUrl = null) => {
     const startTime = reservation.venue_event_time || reservation.start_time || null;
     const endTime = reservation.venue_event_end_time || reservation.end_time || null;
     const description = reservation.venue_event_description || null;
+    const headcount = reservation.number_of_participants || null;
 
     if (reservation.event_id) {
         const existing = await Event.findById(reservation.event_id);
@@ -85,6 +86,7 @@ const createOrUpdateLinkedEvent = async (reservation, imageUrl = null) => {
                 endTime,
                 location: existing.location || 'Bulusan Zoo',
                 imageUrl: imageUrl || existing.image_url || EVENT_IMAGE_PLACEHOLDER,
+                capacity: headcount,
                 status: 'upcoming',
                 color: existing.color || '#22c55e'
             });
@@ -100,6 +102,7 @@ const createOrUpdateLinkedEvent = async (reservation, imageUrl = null) => {
         endTime,
         location: 'Bulusan Zoo',
         imageUrl: imageUrl || EVENT_IMAGE_PLACEHOLDER,
+        capacity: headcount,
         status: 'upcoming',
         color: '#22c55e',
         createdBy: reservation.user_id || null
