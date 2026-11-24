@@ -43,6 +43,21 @@ exports.errorResponse = (res, message = 'Error', statusCode = 500) => {
     });
 };
 
+// Animal measurements are typed as free text ("200 kg", "2.5 m") while the
+// animals table stores them as DECIMAL. Extract the number and drop the unit.
+// `valid: false` means the text had no usable number at all.
+exports.parseMeasurement = (value) => {
+    const text = value === null || value === undefined ? '' : String(value).trim();
+    if (!text) return { valid: true, value: null };
+
+    const match = text.replace(/,/g, '').match(/-?\d*\.?\d+/);
+    const parsed = match ? Number(match[0]) : NaN;
+
+    return Number.isFinite(parsed) && parsed >= 0
+        ? { valid: true, value: parsed }
+        : { valid: false, value: null };
+};
+
 // strips markdown decoration so AI replies render as clean plain text
 exports.sanitizePlainText = (text) => {
     if (!text) return '';
