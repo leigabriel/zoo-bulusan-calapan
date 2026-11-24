@@ -262,9 +262,18 @@ const AnimalClassifier = ({ embedded = false }) => {
             const confidencePct = parseFloat(confidence);
 
             // The model has a Human class so people are not forced into an animal label.
-            // A person is not a scan result: no history entry, no animal description.
+            // Show the match percentage, but a person is not an animal: no history entry, no description lookup.
             if (animalName === 'Human') {
-                addBotMessage("I can see a person in this photo, not an animal. Point the camera at an animal and try again.");
+                addBotMessage("This looks like a person, not an animal. Point the camera at an animal and try again.", {
+                    animal: 'Human',
+                    confidence: confidencePct,
+                    icon: 'human',
+                    isHuman: true,
+                    isBulusanAnimal: false,
+                    category: 'Human',
+                    wikipediaData: null,
+                    wikipediaLoading: false
+                });
                 return;
             }
 
@@ -415,7 +424,7 @@ const AnimalClassifier = ({ embedded = false }) => {
                                                 <div className="min-w-0 flex-1">
                                                     <div className="flex items-start justify-between gap-3">
                                                         <div className="min-w-0">
-                                                            <p className="text-[10px] uppercase tracking-widest font-bold text-[#6a7b6d]">Animal identified</p>
+                                                            <p className="text-[10px] uppercase tracking-widest font-bold text-[#6a7b6d]">{msg.meta.isHuman ? 'Person detected' : 'Animal identified'}</p>
                                                             <h3 className="mt-1 font-bold text-lg text-[#17251b] break-words">{msg.meta.animal}</h3>
                                                         </div>
                                                          {/* <span className="shrink-0 rounded-full px-2.5 py-1 text-[10px] uppercase font-bold bg-[#e5f0e3] text-[#315b37]">{msg.meta.category || 'Animal'}</span> */}
