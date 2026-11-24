@@ -274,17 +274,6 @@ const AdminPlants = ({ globalSearch = '' }) => {
         setDeleting(false);
     };
 
-    const getStatusBadgeColor = (status) => {
-        switch (status?.toLowerCase()) {
-            case 'healthy': return 'bg-green-400/20 text-green-800 border-green-400/30';
-            case 'growing': return 'bg-blue-500/20 text-blue-700 border-blue-500/30';
-            case 'dormant': return 'bg-gray-500/20 text-gray-500 border-gray-500/30';
-            case 'sick': return 'bg-yellow-500/20 text-yellow-700 border-yellow-500/30';
-            case 'treatment': return 'bg-red-500/20 text-red-700 border-red-500/30';
-            default: return 'bg-gray-500/20 text-gray-500 border-gray-500/30';
-        }
-    };
-
     const uniqueCategories = [...new Set(plants.map(p => p.category).filter(Boolean))];
     const effectiveSearch = globalSearch || searchQuery;
 
@@ -294,7 +283,6 @@ const AdminPlants = ({ globalSearch = '' }) => {
                 plant.name?.toLowerCase().includes(effectiveSearch.toLowerCase()) ||
                 plant.scientific_name?.toLowerCase().includes(effectiveSearch.toLowerCase()) ||
                 plant.category?.toLowerCase().includes(effectiveSearch.toLowerCase()) ||
-                plant.location?.toLowerCase().includes(effectiveSearch.toLowerCase()) ||
                 plant.description?.toLowerCase().includes(effectiveSearch.toLowerCase());
             const matchesCategory = categoryFilter === 'all' || plant.category === categoryFilter;
             return matchesSearch && matchesCategory;
@@ -472,8 +460,6 @@ const AdminPlants = ({ globalSearch = '' }) => {
                                 <option value="name-desc">Name (Z-A)</option>
                                 <option value="category-asc">Category (A-Z)</option>
                                 <option value="category-desc">Category (Z-A)</option>
-                                <option value="location-asc">Location (A-Z)</option>
-                                <option value="location-desc">Location (Z-A)</option>
                             </select>
                             <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none">
                                 <SortIcon />
@@ -526,20 +512,15 @@ const AdminPlants = ({ globalSearch = '' }) => {
                                         {sortField === 'category' && <span className="text-green-800">{sortOrder === 'asc' ? '↑' : '↓'}</span>}
                                     </div>
                                 </th>
-                                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-900" onClick={() => toggleSort('location')}>
-                                    <div className="flex items-center gap-2">
-                                        Location
-                                        {sortField === 'location' && <span className="text-green-800">{sortOrder === 'asc' ? '↑' : '↓'}</span>}
-                                    </div>
-                                </th>
-                                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+
+                                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Description</th>
                                 <th className="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-green-200">
                             {filteredPlants.length === 0 ? (
                                 <tr>
-                                    <td colSpan="7" className="px-6 py-12 text-center text-gray-500">
+                                    <td colSpan="6" className="px-6 py-12 text-center text-gray-500">
                                         {searchQuery || categoryFilter !== 'all' ? 'No plants match your filters' : 'No plants found'}
                                     </td>
                                 </tr>
@@ -568,11 +549,8 @@ const AdminPlants = ({ globalSearch = '' }) => {
                                         </td>
                                         <td className="px-6 py-4 text-gray-500 italic cursor-pointer" onClick={() => openEditModal(plant)}>{plant.scientific_name || '-'}</td>
                                         <td className="px-6 py-4 text-gray-700 cursor-pointer" onClick={() => openEditModal(plant)}>{plant.category || '-'}</td>
-                                        <td className="px-6 py-4 text-gray-700 cursor-pointer" onClick={() => openEditModal(plant)}>{plant.location || '-'}</td>
-                                        <td className="px-6 py-4 cursor-pointer" onClick={() => openEditModal(plant)}>
-                                            <span className={`inline-flex px-3 py-1 text-xs font-medium rounded-full border capitalize ${getStatusBadgeColor(plant.status)}`}>
-                                                {plant.status?.replace('_', ' ') || 'unknown'}
-                                            </span>
+                                        <td className="px-6 py-4 text-gray-700 cursor-pointer" onClick={() => openEditModal(plant)}>
+                                            <p className="max-w-xs truncate" title={plant.description || ''}>{plant.description || '-'}</p>
                                         </td>
                                         <td className="px-6 py-4">
                                             <div className="flex items-center justify-end gap-2">
