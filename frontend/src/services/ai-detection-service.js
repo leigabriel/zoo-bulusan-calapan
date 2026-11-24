@@ -5,6 +5,7 @@ import {
     LOCAL_MODEL_CONFIG,
     getAnimalInfo,
 } from '../config/ai-service-config';
+import { evaluatePrediction } from '../utils/prediction-rules';
 
 export const ErrorTypes = {
     INVALID_IMAGE: 'INVALID_IMAGE',
@@ -17,7 +18,7 @@ const ErrorMessages = {
     [ErrorTypes.INVALID_IMAGE]: "We couldn't read that image. Please try a different photo.",
     [ErrorTypes.MODEL_ERROR]: "The animal identifier isn't available right now. Please refresh the page and try again.",
     [ErrorTypes.NO_ANIMAL_DETECTED]: "We couldn't find an animal in that photo. Try a clearer photo with the animal more visible.",
-    [ErrorTypes.LOW_CONFIDENCE]: "We're not sure which animal that is. Try a clearer photo taken a little closer.",
+    [ErrorTypes.LOW_CONFIDENCE]: "We're not sure which animal that is. It may not be an animal in our list. Try a clearer photo with the animal filling the frame.",
 };
 
 let cachedModel = null;
@@ -115,21 +116,24 @@ export const detectAnimal = async (imageSource) => {
         prediction = model.predict(inputTensor);
         const outputTensor = Array.isArray(prediction) ? prediction[0] : prediction;
         const probabilities = Array.from(await outputTensor.data());
-        const maxConfidence = Math.max(...probabilities);
-        const predictedIndex = probabilities.indexOf(maxConfidence);
-        const animalName = ANIMAL_CLASSES[predictedIndex];
+        const verdict = evaluatePrediction(probabilities, ANIMAL_CLASSES, LOCAL_MODEL_CONFIG);
 
-        if (!Number.isFinite(maxConfidence) || !animalName) {
+        if (verdict.reason === 'invalid') {
             throw new Error('The model returned an invalid prediction.');
         }
 
-        if (maxConfidence < LOCAL_MODEL_CONFIG.confidenceThreshold) {
+        if (!verdict.ok) {
+            console.debug('[AI-Detection] Rejected result', verdict.reason, verdict.topThree);
             return {
                 success: false,
                 error: ErrorMessages[ErrorTypes.LOW_CONFIDENCE],
                 errorType: ErrorTypes.LOW_CONFIDENCE,
             };
         }
+
+        const predictedIndex = verdict.top.index;
+        const maxConfidence = verdict.top.score;
+        const animalName = verdict.top.name;
 
         const info = getAnimalInfo(animalName);
         return {
