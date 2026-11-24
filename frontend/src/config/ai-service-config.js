@@ -1,7 +1,15 @@
 export const LOCAL_MODEL_CONFIG = {
     modelPath: '/model/bulusanzoo_machine_learning_v2/model.json',
     inputSize: 224,
-    confidenceThreshold: 0.5,
+    // Top class must reach this score...
+    confidenceThreshold: 0.7,
+    // ...and beat the runner-up by this much. Photos of things the model was never
+    // trained on (plants, objects) tend to produce split scores, so they fail this.
+    minMargin: 0.25,
+    // Stricter bar for classes that are often wrongly picked for unrelated photos.
+    classThresholds: {
+        Koi: 0.9,
+    },
 };
 
 // This order must match the index_to_class in class_names.json of the v2 model.
