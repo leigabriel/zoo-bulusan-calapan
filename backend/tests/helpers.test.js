@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { sanitizePlainText } = require('../utils/helpers');
+const { sanitizePlainText, parseMeasurement } = require('../utils/helpers');
 
 const reservationSteps = `To reserve an event at Bulusan Zoo, please follow these steps:
 
@@ -47,4 +47,20 @@ test('handles empty and non-string input', () => {
     assert.equal(sanitizePlainText(''), '');
     assert.equal(sanitizePlainText(null), '');
     assert.equal(sanitizePlainText(undefined), '');
+});
+
+test('extracts numeric animal measurements from free-text input', () => {
+    assert.deepEqual(parseMeasurement('7 kg'), { valid: true, value: 7 });
+    assert.deepEqual(parseMeasurement('0.7 m'), { valid: true, value: 0.7 });
+    assert.deepEqual(parseMeasurement('1,250 kg'), { valid: true, value: 1250 });
+    assert.deepEqual(parseMeasurement('25'), { valid: true, value: 25 });
+    assert.deepEqual(parseMeasurement(12.5), { valid: true, value: 12.5 });
+});
+
+test('treats blank measurements as empty and rejects text without a number', () => {
+    assert.deepEqual(parseMeasurement(''), { valid: true, value: null });
+    assert.deepEqual(parseMeasurement(null), { valid: true, value: null });
+    assert.deepEqual(parseMeasurement(undefined), { valid: true, value: null });
+    assert.deepEqual(parseMeasurement('heavy'), { valid: false, value: null });
+    assert.deepEqual(parseMeasurement('-7 kg'), { valid: false, value: null });
 });
