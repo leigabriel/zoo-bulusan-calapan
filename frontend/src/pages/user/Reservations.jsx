@@ -25,10 +25,10 @@ const Icons = {
     ChevronDown: () => <ChevronDown className="w-4 h-4" />
 };
 
-const TICKET_TYPES = {
-    adult: { name: 'Adult Ticket', description: 'Ages 18 and above', price: 40 },
-    child: { name: 'Child Ticket', description: 'Ages 4-17', price: 20 },
-    bulusan_resident: { name: 'Bulusan Resident', description: 'Free with valid ID', price: 0 }
+const TICKET_TYPE_INFO = {
+    adult: { name: 'Adult Ticket', description: 'Ages 18 and above', priceKey: 'adultPrice' },
+    child: { name: 'Child Ticket', description: 'Ages 4-17', priceKey: 'childPrice' },
+    bulusan_resident: { name: 'Bulusan Resident', description: 'Free with valid ID', priceKey: 'residentPrice' }
 };
 
 const RESUME_KEY = 'bulusan_reservation_resume_v1';
@@ -102,7 +102,7 @@ const Reservations = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const { user, isAuthenticated } = useAuth();
-    const [, setEvents] = useState([]);
+    const [zooEvents, setZooEvents] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showCreateModal, setShowCreateModal] = useState(false);
     // Each card opens its own form, so the modal never mixes ticket and event booking.
@@ -127,6 +127,8 @@ const Reservations = () => {
     // Booking availability set by the admin. Defaults keep the page usable if the
     // availability request fails, and the backend still enforces the real state.
     const [reservationConfig, setReservationConfig] = useState({ pageEnabled: true, ticketEnabled: true, eventEnabled: true });
+    const [eventPaymentConfig, setEventPaymentConfig] = useState({ amountPerParticipant: 0, qrphEnabled: false });
+    const [ticketPaymentConfig, setTicketPaymentConfig] = useState({ adultPrice: 40, childPrice: 20, residentPrice: 0 });
     const [configLoading, setConfigLoading] = useState(true);
 
     // Confirmation modal states
@@ -136,12 +138,29 @@ const Reservations = () => {
     useEffect(() => {
         const loadData = async () => {
             try {
-                const configRes = await reservationAPI.getReservationConfig();
+                const [configRes, eventPaymentRes, ticketPaymentRes] = await Promise.all([
+                    reservationAPI.getReservationConfig(),
+                    reservationAPI.getEventPaymentConfig().catch(() => null),
+                    reservationAPI.getTicketPaymentConfig().catch(() => null)
+                ]);
                 if (configRes?.success && configRes.config) {
                     setReservationConfig({
                         pageEnabled: configRes.config.pageEnabled !== false,
                         ticketEnabled: configRes.config.ticketEnabled !== false,
                         eventEnabled: configRes.config.eventEnabled !== false
+                    });
+                }
+                if (eventPaymentRes?.success && eventPaymentRes.config) {
+                    setEventPaymentConfig({
+                        amountPerParticipant: Number(eventPaymentRes.config.amountPerParticipant) || 0,
+                        qrphEnabled: Boolean(eventPaymentRes.config.qrphEnabled)
+                    });
+                }
+                if (ticketPaymentRes?.success && ticketPaymentRes.config) {
+                    setTicketPaymentConfig({
+                        adultPrice: Number(ticketPaymentRes.config.adultPrice) || 0,
+                        childPrice: Number(ticketPaymentRes.config.childPrice) || 0,
+                        residentPrice: Number(ticketPaymentRes.config.residentPrice) || 0
                     });
                 }
             } catch {
@@ -331,14 +350,20 @@ const Reservations = () => {
                     const date = e.event_date || e.date;
                     return date && new Date(date) >= new Date();
                 });
-                setEvents(upcomingEvents);
+                setZooEvents(upcomingEvents);
             }
         } catch (err) {
             console.error('Error fetching events:', err);
         }
     };
 
-    const calculateTotal = () => Object.entries(ticketCounts).reduce((total, [type, count]) => total + (TICKET_TYPES[type].price * count), 0);
+    const ticketTypes = {
+        adult: { ...TICKET_TYPE_INFO.adult, price: Number(ticketPaymentConfig.adultPrice) || 0 },
+        child: { ...TICKET_TYPE_INFO.child, price: Number(ticketPaymentConfig.childPrice) || 0 },
+        bulusan_resident: { ...TICKET_TYPE_INFO.bulusan_resident, price: Number(ticketPaymentConfig.residentPrice) || 0 }
+    };
+
+    const calculateTotal = () => Object.entries(ticketCounts).reduce((total, [type, count]) => total + ((ticketTypes[type]?.price || 0) * count), 0);
     const getTotalVisitors = () => Object.values(ticketCounts).reduce((a, b) => a + b, 0);
     const updateTicketCount = (type, delta) => {
         if (delta > 0 && getTotalVisitors() >= 20) {
@@ -534,6 +559,14 @@ const Reservations = () => {
             }
             if (!eventForm.venueEventStartTime || !eventForm.venueEventEndTime) {
                 notify.warning('Please select the event start and end time.');
+                return;
+            }
+            const occupied = zooEvents.some((event) => {
+                const eventDate = String(event.event_date || event.date || '').split('T')[0];
+                return eventDate === eventForm.venueEventDate && event.status !== 'cancelled';
+            });
+            if (occupied) {
+                notify.warning('This date is occupied. Please choose another date.');
                 return;
             }
         }
@@ -768,10 +801,10 @@ const Reservations = () => {
                                             <>
                                                 {/* Ticket Counters Section */}
                                                 <div className="flex flex-col gap-0 border border-[#212631]/20 bg-[#ebebeb] rounded-2xl overflow-hidden">
-                                                    {Object.entries(TICKET_TYPES).map(([type, info], index) => {
+                                                    {Object.entries(ticketTypes).map(([type, info], index) => {
                                                         const isResident = type === 'bulusan_resident';
                                                         return (
-                                                            <div key={type} className={`flex flex-col sm:flex-row sm:items-center justify-between p-5 gap-4 ${index !== Object.keys(TICKET_TYPES).length - 1 ? 'border-b border-[#212631]/20' : ''} ${isResident ? 'bg-[#26bc61]/5' : ''}`}>
+                                                            <div key={type} className={`flex flex-col sm:flex-row sm:items-center justify-between p-5 gap-4 ${index !== Object.keys(ticketTypes).length - 1 ? 'border-b border-[#212631]/20' : ''} ${isResident ? 'bg-[#26bc61]/5' : ''}`}>
                                                                 <div className="flex flex-col gap-1">
                                                                     <span className="text-sm font-black uppercase tracking-tight text-[#212631]">{info.name}</span>
                                                                     <span className="text-[11px] tracking-[0.18em] uppercase font-bold text-[#212631]/50">{info.description}</span>
@@ -875,7 +908,24 @@ const Reservations = () => {
                                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                                                     <div className="flex flex-col gap-2">
                                                         <label className="text-[11px] tracking-[0.2em] uppercase font-bold text-[#212631]">Event Date *</label>
-                                                        <input type="date" value={eventForm.venueEventDate} onChange={e => setEventForm({ ...eventForm, venueEventDate: e.target.value, venueEventStartTime: '', venueEventEndTime: '' })} min={getMinDate()} className={FIELD_INPUT} required />
+                                                        <input
+                                                            type="date"
+                                                            value={eventForm.venueEventDate}
+                                                            onChange={e => {
+                                                                const selectedDate = e.target.value;
+                                                                setEventForm({ ...eventForm, venueEventDate: selectedDate, venueEventStartTime: '', venueEventEndTime: '' });
+                                                                const occupied = zooEvents.some((event) => {
+                                                                    const eventDate = String(event.event_date || event.date || '').split('T')[0];
+                                                                    return eventDate === selectedDate && event.status !== 'cancelled';
+                                                                });
+                                                                if (occupied) {
+                                                                    notify.warning('This date is occupied. Please choose another date.');
+                                                                }
+                                                            }}
+                                                            min={getMinDate()}
+                                                            className={FIELD_INPUT}
+                                                            required
+                                                        />
                                                     </div>
                                                     <div className="flex flex-col gap-2">
                                                         <label className="text-[11px] tracking-[0.2em] uppercase font-bold text-[#212631]">Event Start Time *</label>
@@ -908,7 +958,7 @@ const Reservations = () => {
                                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                                                     <div className="flex flex-col gap-2">
                                                         <label className="text-[11px] tracking-[0.2em] uppercase font-bold text-[#212631]">Headcount</label>
-                                                        <input type="number" value={eventForm.numberOfParticipants} onChange={e => setEventForm({ ...eventForm, numberOfParticipants: e.target.value })} min="1" max="100" inputMode="numeric" className={FIELD_INPUT} placeholder="How many people?" required />
+                                                        <input type="number" value={eventForm.numberOfParticipants} onChange={e => setEventForm({ ...eventForm, numberOfParticipants: e.target.value })} min="1" max="10000" inputMode="numeric" className={FIELD_INPUT} placeholder="How many people?" required />
                                                     </div>
                                                     <div className="flex flex-col gap-2">
                                                         <label className="text-[11px] tracking-[0.2em] uppercase font-bold text-[#212631]">Contact Phone</label>
@@ -949,6 +999,18 @@ const Reservations = () => {
                                                 <div className="flex items-center justify-between border border-[#212631] bg-[#212631] text-[#ebebeb] p-5 rounded-xl">
                                                     <span className="text-[11px] tracking-[0.2em] uppercase font-black">Total Due</span>
                                                     <span className="text-xl font-black tracking-tighter">{calculateTotal() === 0 ? 'FREE' : `₱${calculateTotal()}`}</span>
+                                                </div>
+                                            )}
+
+                                            {reservationType === 'event' && (parseInt(eventForm.numberOfParticipants, 10) || 0) > 0 && (
+                                                <div className="flex items-center justify-between border border-[#212631] bg-[#212631] text-[#ebebeb] p-5 rounded-xl">
+                                                    <span className="text-[11px] tracking-[0.2em] uppercase font-black">Total Due</span>
+                                                    <span className="text-xl font-black tracking-tighter">
+                                                        {(() => {
+                                                            const total = Math.round((Number(eventPaymentConfig.amountPerParticipant) || 0) * (parseInt(eventForm.numberOfParticipants, 10) || 0) * 100) / 100;
+                                                            return total > 0 ? `₱${total.toFixed(2)}` : 'FREE';
+                                                        })()}
+                                                    </span>
                                                 </div>
                                             )}
 
@@ -995,6 +1057,15 @@ const Reservations = () => {
                                             <div className="flex justify-between items-center"><span className="text-[11px] tracking-widest uppercase font-bold text-[#212631]/60">Start</span><span className="text-[11px] font-black uppercase text-[#212631]">{formatTime12(eventForm.venueEventStartTime) || '-'}</span></div>
                                             <div className="flex justify-between items-center"><span className="text-[11px] tracking-widest uppercase font-bold text-[#212631]/60">End</span><span className="text-[11px] font-black uppercase text-[#212631]">{formatTime12(eventForm.venueEventEndTime) || '-'}</span></div>
                                             <div className="flex justify-between items-center"><span className="text-[11px] tracking-widest uppercase font-bold text-[#212631]/60">Pax</span><span className="text-[11px] font-black uppercase text-[#212631]">{eventForm.numberOfParticipants}</span></div>
+                                            <div className="flex justify-between items-center pt-4 border-t border-[#212631]/20 mt-1">
+                                                <span className="text-[11px] tracking-widest uppercase font-black text-[#212631]">Total</span>
+                                                <span className="text-sm font-black text-emerald-600">
+                                                    {(() => {
+                                                        const total = Math.round((Number(eventPaymentConfig.amountPerParticipant) || 0) * (parseInt(eventForm.numberOfParticipants, 10) || 0) * 100) / 100;
+                                                        return total > 0 ? `₱${total.toFixed(2)}` : 'FREE';
+                                                    })()}
+                                                </span>
+                                            </div>
                                         </>
                                     )}
                                 </div>

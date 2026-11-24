@@ -764,9 +764,17 @@ const ReservationHistoryPanel = ({ isOpen, onClose, paymentReturn = false, focus
         ((r.bulusan_resident_quantity || 0) * ticketPrice('residentPrice', 0))
     ) * 100) / 100;
     const getEventAmount = (reservation) => {
+        const perParticipant = Number(eventPaymentConfig.amountPerParticipant || 0);
+        const participants = Math.max(1, Number(reservation?.number_of_participants) || 1);
         const storedAmount = Number(reservation?.payment_amount || 0);
-        if (storedAmount > 0) return storedAmount;
-        return Number(eventPaymentConfig.amountPerParticipant || 0);
+        if (storedAmount > 0) {
+            // Legacy records stored the per-participant rate as the total amount.
+            if (perParticipant > 0 && participants > 1 && Math.abs(storedAmount - perParticipant) < 0.01) {
+                return Math.round(perParticipant * participants * 100) / 100;
+            }
+            return storedAmount;
+        }
+        return Math.round(perParticipant * participants * 100) / 100;
     };
 
     const selectedTicketRefundDeadline = ticketRefundDeadline(selectedReservation?.confirmed_at);

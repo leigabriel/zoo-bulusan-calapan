@@ -250,6 +250,8 @@ const AdminEvents = () => {
                     notify.success('Event updated.');
                     setShowModal(false);
                     resetForm();
+                } else {
+                    throw new Error(response.message || "Couldn't save event.");
                 }
             } else {
                 const response = await adminAPI.createEvent(eventData);
@@ -258,6 +260,8 @@ const AdminEvents = () => {
                     notify.success('Event added.');
                     setShowModal(false);
                     resetForm();
+                } else {
+                    throw new Error(response.message || "Couldn't save event.");
                 }
             }
         } catch (err) {
@@ -550,8 +554,9 @@ const AdminEvents = () => {
                                         eventDate: newDate,
                                     });
                                     await fetchEvents();
-                                } catch {
+                                } catch (err) {
                                     info.revert();
+                                    notify.error(err.message || 'This date or time already has an event happening.');
                                 }
                             }}
                             height="auto"

@@ -194,7 +194,7 @@ const StaffEvents = ({ globalSearch = '' }) => {
             }
         } catch (err) {
             console.error(err);
-            const message = "Couldn't save event. Please try again.";
+            const message = err.message || "Couldn't save event. Please try again.";
             setError(message);
             notify.error(message);
         } finally {
