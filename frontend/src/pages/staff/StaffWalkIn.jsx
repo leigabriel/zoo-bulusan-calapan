@@ -4,7 +4,7 @@ import { staffAPI } from '../../services/api-client';
 import { browserPrintAdapter } from '../../services/printing/browser-print-adapter';
 import { webUsbPrintAdapter } from '../../services/printing/web-usb-print-adapter';
 import { loadPrinterPreferences, savePrinterPreferences } from '../../services/printing/printer-service';
-import { sanitizeInput, sanitizePhone } from '../../utils/sanitize';
+import { sanitizeInput } from '../../utils/sanitize';
 import { notify } from '../../utils/toast';
 import ConfirmationModal from '../../components/common/ConfirmationModal';
 import ThermalReceipt from '../../components/printing/ThermalReceipt';
@@ -20,7 +20,7 @@ const fieldClass = 'mt-1.5 w-full rounded-lg border border-gray-200 bg-white px-
 const StaffWalkIn = () => {
     const [config, setConfig] = useState(null);
     const [quantities, setQuantities] = useState({});
-    const [form, setForm] = useState({ visitorName: '', visitorPhone: '', visitDate: localDate(), paymentMethod: 'cash', amountReceived: '', providerReference: '' });
+    const [form, setForm] = useState({ visitorName: '', visitDate: localDate(), paymentMethod: 'cash', amountReceived: '', providerReference: '' });
     const [receipt, setReceipt] = useState(null);
     const [sale, setSale] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -114,7 +114,7 @@ const StaffWalkIn = () => {
 
     const resetDraft = () => {
         setQuantities(Object.fromEntries((config?.categories || []).map(category => [category.code, 0])));
-        setForm({ visitorName: '', visitorPhone: '', visitDate: localDate(), paymentMethod: 'cash', amountReceived: '', providerReference: '' });
+        setForm({ visitorName: '', visitDate: localDate(), paymentMethod: 'cash', amountReceived: '', providerReference: '' });
         setReceipt(null);
         setSale(null);
         setIsReprint(false);
@@ -125,8 +125,9 @@ const StaffWalkIn = () => {
         if (!visitorCount) return 'Select at least one ticket.';
         if (visitorCount > config.maxVisitorsPerSale) return `Maximum ${config.maxVisitorsPerSale} visitors per sale.`;
         if (visitorCount > config.availability.remaining) return `Only ${config.availability.remaining} admission slots remain.`;
+        if (!form.visitorName.trim()) return 'Visitor name is required.';
         if (form.paymentMethod === 'cash' && receivedCents < totalCents) return 'Cash received must cover the total.';
-        if (selectedMethod?.requiresReference && !form.providerReference.trim()) return 'Enter the GCash reference.';
+        if (selectedMethod?.requiresReference && !form.providerReference.trim()) return `Enter the ${selectedMethod.label.toLowerCase()} reference number.`;
         return '';
     };
 
@@ -144,7 +145,6 @@ const StaffWalkIn = () => {
         try {
             const result = await staffAPI.createWalkIn({
                 visitorName: sanitizeInput(form.visitorName, true),
-                visitorPhone: sanitizePhone(form.visitorPhone, true),
                 visitDate: form.visitDate,
                 items: lines.filter(line => line.quantity > 0).map(line => ({ categoryCode: line.code, quantity: line.quantity })),
                 payment: {
@@ -223,12 +223,11 @@ const StaffWalkIn = () => {
                     <div className="divide-y divide-gray-100">{lines.map(category => <div key={category.code} className="flex items-center justify-between gap-3 py-3"><div><p className="text-sm font-bold text-gray-900">{category.label}</p><p className="text-xs text-gray-400">{money(category.unitPriceCents - category.discountCents)}</p></div><div className="flex items-center gap-2"><button type="button" onClick={() => updateQuantity(category.code, -1)} className="h-8 w-8 rounded-md border border-gray-200 text-lg">-</button><output className="w-6 text-center text-sm font-black">{category.quantity}</output><button type="button" onClick={() => updateQuantity(category.code, 1)} className="h-8 w-8 rounded-md bg-gray-900 text-lg text-white">+</button></div></div>)}</div>
                 </section>
                 <section className="grid gap-3 rounded-xl border border-gray-200 bg-gray-50 p-4 sm:grid-cols-2">
-                    <label className="text-xs font-bold text-gray-600">Visitor name <span className="font-normal text-gray-400">optional</span><input value={form.visitorName} maxLength={100} onChange={event => setForm(current => ({ ...current, visitorName: sanitizeInput(event.target.value) }))} className={fieldClass} /></label>
-                    <label className="text-xs font-bold text-gray-600">Contact <span className="font-normal text-gray-400">optional</span><input value={form.visitorPhone} maxLength={20} onChange={event => setForm(current => ({ ...current, visitorPhone: sanitizePhone(event.target.value) }))} className={fieldClass} /></label>
+                    <label className="text-xs font-bold text-gray-600">Visitor name<input value={form.visitorName} maxLength={100} onChange={event => setForm(current => ({ ...current, visitorName: sanitizeInput(event.target.value) }))} required className={fieldClass} /></label>
                     <label className="text-xs font-bold text-gray-600">Visit date<input type="date" min={localDate()} value={form.visitDate} onChange={event => setForm(current => ({ ...current, visitDate: event.target.value }))} required className={fieldClass} /></label>
                     <label className="text-xs font-bold text-gray-600">Payment<select value={form.paymentMethod} onChange={event => setForm(current => ({ ...current, paymentMethod: event.target.value }))} className={fieldClass}>{config.paymentMethods.map(method => <option value={method.code} key={method.code}>{method.label}</option>)}</select></label>
                     {form.paymentMethod === 'cash' && <label className="text-xs font-bold text-gray-600">Cash received<input type="number" min="0" step="0.01" value={form.amountReceived} onChange={event => setForm(current => ({ ...current, amountReceived: event.target.value }))} required className={fieldClass} /></label>}
-                    {selectedMethod?.requiresReference && <label className="text-xs font-bold text-gray-600">Payment reference<input value={form.providerReference} maxLength={100} onChange={event => setForm(current => ({ ...current, providerReference: sanitizeInput(event.target.value) }))} required className={fieldClass} /></label>}
+                    {selectedMethod?.requiresReference && <label className="text-xs font-bold text-gray-600">{selectedMethod.label} reference number<input value={form.providerReference} maxLength={100} onChange={event => setForm(current => ({ ...current, providerReference: sanitizeInput(event.target.value) }))} required className={fieldClass} /></label>}
                 </section>
             </form>
 

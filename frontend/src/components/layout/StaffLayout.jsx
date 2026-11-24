@@ -27,7 +27,7 @@ const STAFF_APPS = [
         name: 'Bulusan Zoo QR',
         description: 'Android app for scanning and verifying visitor QR tickets.',
         file: '/apps/bulusanzoo-qr.apk',
-        fileName: 'bulusanzoo-qr.apk',
+        fileName: 'bulusanzooticketscanner.apk',
         platform: 'Android',
         size: '5.1 MB',
         Icon: Qr,
