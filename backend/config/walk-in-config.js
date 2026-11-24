@@ -8,7 +8,7 @@ module.exports = Object.freeze({
     categories,
     paymentMethods: [
         { code: 'cash', label: 'Cash' },
-        { code: 'gcash', label: 'GCash', requiresReference: true }
+        { code: 'online', label: 'Online Bank Payment', requiresReference: true }
     ],
     dailyCapacity: 100,
     maxVisitorsPerSale: 50,

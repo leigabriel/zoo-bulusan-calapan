@@ -57,9 +57,8 @@ const validateAndCalculate = body => {
     if (totalVisitors > config.maxVisitorsPerSale) throw new WalkInError(`A sale is limited to ${config.maxVisitorsPerSale} visitors.`);
 
     const visitorName = typeof body.visitorName === 'string' ? body.visitorName.trim() : '';
-    const visitorPhone = typeof body.visitorPhone === 'string' ? body.visitorPhone.trim() : '';
+    if (!visitorName) throw new WalkInError('Visitor name is required.');
     if (visitorName.length > 100) throw new WalkInError('Visitor name must be 100 characters or fewer.');
-    if (visitorPhone && (!/^[0-9+()\-\s]{7,20}$/.test(visitorPhone))) throw new WalkInError('Enter a valid contact number.');
 
     const methodConfig = config.paymentMethods.find(method => method.code === body.payment?.method);
     if (!methodConfig) throw new WalkInError('Select a valid payment method.');
@@ -81,8 +80,8 @@ const validateAndCalculate = body => {
 
     return {
         visitDate: body.visitDate,
-        visitorName: visitorName || null,
-        visitorPhone: visitorPhone || null,
+        visitorName,
+        visitorPhone: null,
         items,
         totalVisitors,
         subtotalCents,

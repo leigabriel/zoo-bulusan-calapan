@@ -10,6 +10,7 @@ const today = () => {
 test('calculates server prices, discounts, total, and cash change', () => {
     const result = validateAndCalculate({
         visitDate: today(),
+        visitorName: 'Test Visitor',
         items: [
             { categoryCode: 'adult', quantity: 2 },
             { categoryCode: 'child', quantity: 1 }
@@ -27,32 +28,43 @@ test('calculates server prices, discounts, total, and cash change', () => {
 test('rejects duplicate categories and invalid quantities', () => {
     assert.throws(() => validateAndCalculate({
         visitDate: today(),
+        visitorName: 'Test Visitor',
         items: [{ categoryCode: 'adult', quantity: 1 }, { categoryCode: 'adult', quantity: 2 }],
         payment: { method: 'cash', amountReceivedCents: 12000 }
     }), /invalid or duplicated/);
     assert.throws(() => validateAndCalculate({
         visitDate: today(),
+        visitorName: 'Test Visitor',
         items: [{ categoryCode: 'adult', quantity: -1 }],
         payment: { method: 'cash', amountReceivedCents: 0 }
     }), /positive whole numbers/);
 });
 
-test('requires enough cash and a GCash reference', () => {
+test('requires visitor name, enough cash, and an online bank payment reference', () => {
     assert.throws(() => validateAndCalculate({
         visitDate: today(),
+        visitorName: '   ',
+        items: [{ categoryCode: 'adult', quantity: 1 }],
+        payment: { method: 'cash', amountReceivedCents: 4000 }
+    }), /Visitor name is required/);
+    assert.throws(() => validateAndCalculate({
+        visitDate: today(),
+        visitorName: 'Test Visitor',
         items: [{ categoryCode: 'adult', quantity: 1 }],
         payment: { method: 'cash', amountReceivedCents: 3999 }
     }), /cover the total/);
     assert.throws(() => validateAndCalculate({
         visitDate: today(),
+        visitorName: 'Test Visitor',
         items: [{ categoryCode: 'adult', quantity: 1 }],
-        payment: { method: 'gcash' }
+        payment: { method: 'online' }
     }), /payment reference/);
 });
 
 test('ignores client prices and uses the configured catalog', () => {
     const result = validateAndCalculate({
         visitDate: today(),
+        visitorName: 'Test Visitor',
         items: [{ categoryCode: 'adult', quantity: 1, unitPriceCents: 1 }],
         totalCents: 1,
         payment: { method: 'cash', amountReceivedCents: 4000 }
