@@ -1,4 +1,5 @@
 const db = require('../config/database');
+const { parseMeasurement } = require('../utils/helpers');
 
 class Animal {
     static async getAll() {
@@ -31,7 +32,8 @@ class Animal {
              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
                 name, species, exhibit || habitat, description || null, imageUrl || null, 
-                status || 'healthy', lifespan || null, weight || null, length || null,
+                status || 'healthy', lifespan || null,
+                parseMeasurement(weight).value, parseMeasurement(length).value,
                 diet || null, animalInformation || null
             ]
         );
@@ -48,8 +50,8 @@ class Animal {
              status = ?, lifespan = ?, weight = ?, length = ?, diet = ?, animal_information = ? WHERE id = ?`,
             [
                 name, species, exhibit || habitat, description, imageUrl, status,
-                lifespan || null, weight || null, length || null, diet || null, 
-                animalInformation || null, id
+                lifespan || null, parseMeasurement(weight).value, parseMeasurement(length).value,
+                diet || null, animalInformation || null, id
             ]
         );
         return result.affectedRows > 0;
