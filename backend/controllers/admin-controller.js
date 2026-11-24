@@ -11,6 +11,7 @@ const crypto = require('crypto');
 const db = require('../config/database');
 const { sendVerificationEmailSync } = require('../utils/email');
 const { readConfig: readTicketPaymentConfig } = require('../config/ticket-payment-config');
+const { parseMeasurement } = require('../utils/helpers');
 
 // Ticket status -> catalog type. Shared with staff-controller's equivalent handler.
 const TICKET_STATUS_TYPES = {
@@ -433,9 +434,34 @@ exports.getAllAnimals = async (req, res) => {
     }
 };
 
+// Weight and length are free-text on the admin/staff forms ("7 kg", "0.7 m")
+// but the animals table stores DECIMAL values. Normalize before saving so the
+// database never receives a string with a unit attached.
+const normalizeAnimalMeasurements = (body) => {
+    const weight = parseMeasurement(body.weight);
+    const length = parseMeasurement(body.length);
+
+    if (!weight.valid || !length.valid) {
+        return { error: 'Weight and length must contain a number (for example 7 kg or 0.7 m)' };
+    }
+
+    return {
+        data: {
+            ...body,
+            weight: weight.value,
+            length: length.value
+        }
+    };
+};
+
 exports.createAnimal = async (req, res) => {
     try {
-        const animalId = await Animal.create(req.body);
+        const { data, error } = normalizeAnimalMeasurements(req.body);
+        if (error) {
+            return res.status(400).json({ success: false, message: error });
+        }
+
+        const animalId = await Animal.create(data);
         res.status(201).json({
             success: true,
             message: 'Animal created successfully',
@@ -450,7 +476,12 @@ exports.createAnimal = async (req, res) => {
 exports.updateAnimal = async (req, res) => {
     try {
         const { id } = req.params;
-        const updated = await Animal.update(id, req.body);
+        const { data, error } = normalizeAnimalMeasurements(req.body);
+        if (error) {
+            return res.status(400).json({ success: false, message: error });
+        }
+
+        const updated = await Animal.update(id, data);
 
         if (!updated) {
             return res.status(404).json({ success: false, message: 'Animal not found' });
