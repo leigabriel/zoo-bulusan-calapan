@@ -56,6 +56,13 @@ const statusMap = {
 
 const getStatus = (status) => statusMap[status?.toLowerCase()] || { label: status || 'Active', dot: 'bg-green-600' };
 
+// Weight and length are stored as plain decimals; show the unit the form asks for.
+const formatMeasurement = (value, unit) => {
+    if (value === null || value === undefined || value === '') return null;
+    const numeric = Number(value);
+    return Number.isFinite(numeric) ? `${numeric} ${unit}` : null;
+};
+
 const ImageFrame = ({ item, className = '' }) => (
     <div className={`overflow-hidden bg-[#e9eee8] ${className}`}>
         {item.imageUrl ? (
@@ -195,8 +202,8 @@ const CollectionDetail = ({ type }) => {
                                         {type === 'animals' ? <>
                                             <DetailStat label="Species" value={item.category} />
                                             <DetailStat label="Lifespan" value={item.lifespan} />
-                                            <DetailStat label="Weight" value={item.weight} />
-                                            <DetailStat label="Length" value={item.length} />
+                                            <DetailStat label="Weight" value={formatMeasurement(item.weight, 'kg')} />
+                                            <DetailStat label="Length" value={formatMeasurement(item.length, 'm')} />
                                             <DetailStat label="Habitat" value={item.habitat} />
                                             <DetailStat label="Diet" value={item.diet} />
                                         </> : <>
