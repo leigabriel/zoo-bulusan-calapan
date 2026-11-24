@@ -1,6 +1,6 @@
 const db = require('../config/database');
 
-const MODEL_CLASSES = ['Monkey', 'Tiger', 'Parrot', 'Deer', 'Dove', 'Rabbit', 'Horse', 'Ostrich', 'Owl', 'Eagle', 'Human'];
+const { MODEL_CLASSES, isModelClass } = require('../config/model-classes');
 const emptyModelStats = () => Object.fromEntries(MODEL_CLASSES.map(animal => [animal, 0]));
 
 exports.getPredictions = async (req, res) => {
@@ -85,7 +85,7 @@ exports.createPrediction = async (req, res) => {
         const { filename, prediction, confidence } = req.body;
         const userId = req.user ? req.user.id : null;
 
-        if (!prediction || confidence === undefined) {
+        if (!prediction || confidence === undefined || confidence === null || confidence === '') {
             return res.status(400).json({
                 success: false,
                 message: 'Missing required fields',
@@ -93,9 +93,22 @@ exports.createPrediction = async (req, res) => {
             });
         }
 
+        if (!isModelClass(prediction)) {
+            return res.status(400).json({ success: false, message: 'Unknown prediction class' });
+        }
+
+        const confidenceValue = Number(confidence);
+        if (!Number.isFinite(confidenceValue) || confidenceValue < 0 || confidenceValue > 100) {
+            return res.status(400).json({ success: false, message: 'Confidence must be a number from 0 to 100' });
+        }
+
+        const safeFilename = typeof filename === 'string' && filename.trim()
+            ? filename.trim().slice(0, 255)
+            : 'uploaded_image.jpg';
+
         const [result] = await db.query(
             'INSERT INTO predictions (image_filename, animal_name, confidence, user_id) VALUES (?, ?, ?, ?)',
-            [filename || 'uploaded_image.jpg', prediction, confidence, userId]
+            [safeFilename, prediction, confidenceValue, userId]
         );
 
         res.status(201).json({
@@ -103,9 +116,9 @@ exports.createPrediction = async (req, res) => {
             message: 'Prediction saved successfully',
             data: {
                 predictionId: result.insertId,
-                filename: filename || 'uploaded_image.jpg',
+                filename: safeFilename,
                 prediction,
-                confidence
+                confidence: confidenceValue
             }
         });
     } catch (error) {
