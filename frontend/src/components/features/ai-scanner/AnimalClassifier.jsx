@@ -254,20 +254,17 @@ const AnimalClassifier = ({ embedded = false }) => {
             const result = await detectAnimal(imageRef.current);
 
             if (!result.success) {
-                const errorMessage = result.error || "Sorry, I couldn't identify the animal in this image.";
-                if (result.errorType === 'EMPTY_RESULT' || result.errorType === 'NO_ANIMAL_DETECTED') {
-                    addBotMessage("I couldn't detect any animal in this image. Please try a clearer photo with the animal more visible.");
-                } else {
-                    addBotMessage(errorMessage);
-                }
+                addBotMessage(result.error || "Sorry, I couldn't identify the animal in this image.");
                 return;
             }
 
             const { animal: animalName, confidence, category, isBulusanAnimal } = result;
             const confidencePct = parseFloat(confidence);
 
-            if (animalName === 'Unknown' || confidencePct === 0) {
-                addBotMessage("I couldn't identify the animal in this image. Please try a clearer photo with the animal more visible.");
+            // The model has a Human class so people are not forced into an animal label.
+            // A person is not a scan result: no history entry, no animal description.
+            if (animalName === 'Human') {
+                addBotMessage("I can see a person in this photo, not an animal. Point the camera at an animal and try again.");
                 return;
             }
 
