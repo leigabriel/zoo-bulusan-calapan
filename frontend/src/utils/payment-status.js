@@ -139,6 +139,37 @@ export const canRequestRefund = (method, status) => {
     return state === 'paid' || state === 'failed' || state === 'expired';
 };
 
+/** Confirmed zoo tickets can be refunded for this many days after confirmation. */
+export const TICKET_REFUND_WINDOW_DAYS = 7;
+
+const DAY_IN_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * Moment after which a confirmed ticket is no longer refundable.
+ * Returns null when there is no usable confirmation timestamp.
+ *
+ * @param {string|Date|null|undefined} confirmedAt
+ * @returns {Date|null}
+ */
+export const ticketRefundDeadline = (confirmedAt) => {
+    if (!confirmedAt) return null;
+    const confirmed = new Date(confirmedAt);
+    if (Number.isNaN(confirmed.getTime())) return null;
+    return new Date(confirmed.getTime() + TICKET_REFUND_WINDOW_DAYS * DAY_IN_MS);
+};
+
+/**
+ * True once a confirmed ticket is past its 7-day refund window.
+ * Unconfirmed tickets (no confirmed_at) keep the previous behaviour.
+ *
+ * @param {string|Date|null|undefined} confirmedAt
+ * @returns {boolean}
+ */
+export const isTicketRefundExpired = (confirmedAt) => {
+    const deadline = ticketRefundDeadline(confirmedAt);
+    return Boolean(deadline && Date.now() >= deadline.getTime());
+};
+
 /**
  * True when the booking was settled in cash at the gate rather than online.
  * Used to explain, rather than silently hide, why no refund button is offered.

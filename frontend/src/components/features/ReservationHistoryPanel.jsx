@@ -8,7 +8,13 @@ import { QRCodeSVG } from 'qrcode.react';
 import { notify, friendlyMessage } from '../../utils/toast';
 import useScrollLock from '../../hooks/use-scroll-lock';
 import { appendConsentRecord } from '../../utils/consent';
-import { canRequestRefund, isPaidAtVenue, paymentMethodLabel } from '../../utils/payment-status';
+import {
+    canRequestRefund,
+    isPaidAtVenue,
+    isTicketRefundExpired,
+    paymentMethodLabel,
+    ticketRefundDeadline
+} from '../../utils/payment-status';
 import { Ticket, Calendar, X, Archive, RotateLeft, CreditCard, DollarCircle } from 'reicon-react';
 
 const LegacyIcons = {
@@ -763,6 +769,9 @@ const ReservationHistoryPanel = ({ isOpen, onClose, paymentReturn = false, focus
         return Number(eventPaymentConfig.amountPerParticipant || 0);
     };
 
+    const selectedTicketRefundDeadline = ticketRefundDeadline(selectedReservation?.confirmed_at);
+    const selectedTicketRefundExpired = isTicketRefundExpired(selectedReservation?.confirmed_at);
+
     // Handles both reservation kinds. `type` decides which backend endpoints are
     // called and which config gate applies; the flow itself is identical.
     const handleReservationPayment = async () => {
@@ -1174,13 +1183,27 @@ const ReservationHistoryPanel = ({ isOpen, onClose, paymentReturn = false, focus
                                                             button is offered - and the reason is spelled out so the
                                                             single button does not look broken. */}
                                                         {canRequestRefund(selectedReservation.payment_method, selectedReservation.payment_status) ? (
-                                                            <button
-                                                                onClick={handleRefundRequest}
-                                                                disabled={refundLoading || Boolean(selectedReservation.refund_status)}
-                                                                className="w-full rounded-xl border border-amber-200 bg-amber-50 py-3 text-xs font-bold uppercase tracking-wider text-amber-700 transition hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-60"
-                                                            >
-                                                                {refundLoading ? 'Submitting...' : selectedReservation.refund_status ? `Refund ${selectedReservation.refund_status}` : 'Request Refund'}
-                                                            </button>
+                                                            <>
+                                                                <button
+                                                                    onClick={handleRefundRequest}
+                                                                    disabled={refundLoading || Boolean(selectedReservation.refund_status) || selectedTicketRefundExpired}
+                                                                    className="w-full rounded-xl border border-amber-200 bg-amber-50 py-3 text-xs font-bold uppercase tracking-wider text-amber-700 transition hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-60"
+                                                                >
+                                                                    {refundLoading
+                                                                        ? 'Submitting...'
+                                                                        : selectedReservation.refund_status
+                                                                            ? `Refund ${selectedReservation.refund_status}`
+                                                                            : selectedTicketRefundExpired
+                                                                                ? 'Refund window ended'
+                                                                                : 'Request Refund'}
+                                                                </button>
+                                                                {selectedTicketRefundExpired && !selectedReservation.refund_status && (
+                                                                    <p className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-xs leading-5 text-slate-500">
+                                                                        Confirmed tickets can only be refunded within 7 days of confirmation.
+                                                                        {selectedTicketRefundDeadline && ` The refund window closed on ${formatSafeDate(selectedTicketRefundDeadline, { dateStyle: 'medium' })}.`}
+                                                                    </p>
+                                                                )}
+                                                            </>
                                                         ) : isPaidAtVenue(selectedReservation.payment_method) && (
                                                             <p className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-xs leading-5 text-slate-500">
                                                                 Paid at Bulusan in cash, so there is no online charge to refund. Any refund is settled at the gate.

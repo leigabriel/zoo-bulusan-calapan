@@ -14,7 +14,7 @@ import { sanitizeInput, sanitizeEmail, sanitizePhone } from '../../utils/sanitiz
 import { notify } from '../../utils/toast';
 import useScrollLock from '../../hooks/use-scroll-lock';
 import EventViews, { ViewToggle } from '../../components/features/events/EventViews';
-import { X, Location, Clock, CheckCircle } from 'reicon-react';
+import { X, Location, Clock, CheckCircle, Users } from 'reicon-react';
 import usePageMetadata from '../../hooks/use-page-metadata';
 import { handleEventImageError, resolveEventImageUrl } from '../../utils/event-images';
 
@@ -25,10 +25,14 @@ const FILTERS = ['all', 'upcoming', 'ongoing', 'past'];
 // Remembers whether the visitor last read events as a calendar, a list or a grid.
 const VIEW_STORAGE_KEY = 'bulusan_zoo_events_view';
 
+// First-time visitors start with the list, which reads well on phones and needs no month navigation.
+const DEFAULT_VIEW = 'list';
+
 const Icons = {
     Close: () => <X className="w-5 h-5" />,
     Location: () => <Location className="w-4 h-4 flex-shrink-0" />,
     Clock: () => <Clock className="w-4 h-4 flex-shrink-0" />,
+    Users: () => <Users className="w-4 h-4 flex-shrink-0" />,
     Check: () => <CheckCircle className="w-8 h-8" />
 };
 
@@ -56,10 +60,10 @@ const Events = () => {
             const stored = window.localStorage.getItem(VIEW_STORAGE_KEY);
             // Mirrors the ids in EventViews' VIEWS; kept as literals so this file stays a plain
             // consumer and the view module exports components only.
-            return ['calendar', 'list', 'grid'].includes(stored) ? stored : 'calendar';
+            return ['calendar', 'list', 'grid'].includes(stored) ? stored : DEFAULT_VIEW;
         } catch {
             // Private browsing or a blocked storage partition: the default view is fine.
-            return 'calendar';
+            return DEFAULT_VIEW;
         }
     });
     const [calendarDate, setCalendarDate] = useState(new Date());
@@ -115,6 +119,7 @@ const Events = () => {
                         startTime: event.start_time || event.time,
                         endTime: event.end_time,
                         location: event.location || 'Bulusan Zoo',
+                        headcount: Number(event.capacity) > 0 ? Number(event.capacity) : null,
                         status: computedStatus,
                         imageUrl: resolveEventImageUrl(event.image_url, index),
                         tags: event.tags || ['Wildlife', 'Education'],
@@ -467,7 +472,7 @@ const Events = () => {
                                         {formatDisplayDate(selectedEvent.eventDate)}
                                     </p>
 
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8 mb-6 md:mb-8 border-t border-gray-200 pt-6 md:pt-8">
+                                    <div className={`grid grid-cols-1 ${selectedEvent.headcount ? 'sm:grid-cols-3' : 'sm:grid-cols-2'} gap-4 sm:gap-8 mb-6 md:mb-8 border-t border-gray-200 pt-6 md:pt-8`}>
                                         <div>
                                             <h4 className="text-[11px] md:text-xs font-bold uppercase tracking-widest text-gray-400 mb-2">Time</h4>
                                             <p className="text-black font-medium text-sm md:text-base flex items-center gap-2">
@@ -483,6 +488,15 @@ const Events = () => {
                                                 {selectedEvent.location}
                                             </p>
                                         </div>
+                                        {selectedEvent.headcount ? (
+                                            <div>
+                                                <h4 className="text-[11px] md:text-xs font-bold uppercase tracking-widest text-gray-400 mb-2">Headcount</h4>
+                                                <p className="text-black font-medium text-sm md:text-base flex items-center gap-2">
+                                                    <Icons.Users />
+                                                    {selectedEvent.headcount} {selectedEvent.headcount === 1 ? 'person' : 'people'}
+                                                </p>
+                                            </div>
+                                        ) : null}
                                     </div>
 
                                     <div className="mb-6 md:mb-8">

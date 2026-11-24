@@ -41,7 +41,7 @@ const StaffEvents = ({ globalSearch = '' }) => {
     const { reset: resetUnsaved, requestClose, confirmDiscard, cancelDiscard, isDiscardOpen } = useUnsavedChanges();
     const [form, setForm] = useState({
         title: '', description: '', eventDate: '', startTime: '', endTime: '',
-        status: 'upcoming', imageUrl: '', color: '#22c55e'
+        capacity: 100, status: 'upcoming', imageUrl: '', color: '#22c55e'
     });
 
     useEffect(() => {
@@ -69,7 +69,7 @@ const StaffEvents = ({ globalSearch = '' }) => {
         const todayLocal = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
         const nextForm = {
             title: '', description: '', eventDate: todayLocal, startTime: '', endTime: '',
-            status: 'upcoming', imageUrl: '', color: '#22c55e'
+            capacity: 100, status: 'upcoming', imageUrl: '', color: '#22c55e'
         };
         setForm(nextForm);
         setImageInputMode('upload');
@@ -89,6 +89,7 @@ const StaffEvents = ({ globalSearch = '' }) => {
             eventDate: eventDate,
             startTime: event.start_time || '',
             endTime: event.end_time || '',
+            capacity: event.capacity ?? 100,
             status: event.status || 'upcoming',
             imageUrl: event.image_url || '',
             color: event.color || '#22c55e'
@@ -112,7 +113,7 @@ const StaffEvents = ({ globalSearch = '' }) => {
         setConfirmData(null);
         setForm({
             title: '', description: '', eventDate: '', startTime: '', endTime: '',
-            status: 'upcoming', imageUrl: '', color: '#22c55e'
+            capacity: 100, status: 'upcoming', imageUrl: '', color: '#22c55e'
         });
     };
 
@@ -169,6 +170,7 @@ const StaffEvents = ({ globalSearch = '' }) => {
                 eventDate: form.eventDate,
                 startTime: form.startTime || null,
                 endTime: form.endTime || null,
+                capacity: parseInt(form.capacity, 10) || null,
                 status: form.status,
                 imageUrl: imageUrl,
                 color: form.color
@@ -605,6 +607,25 @@ const StaffEvents = ({ globalSearch = '' }) => {
                                         className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:border-green-400 transition"
                                     />
                                 </div>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    <span className="flex items-center gap-2">
+                                        <UsersIcon className="w-5 h-5" />
+                                        Headcount
+                                    </span>
+                                </label>
+                                <input
+                                    type="number"
+                                    min="1"
+                                    max="10000"
+                                    step="1"
+                                    value={form.capacity}
+                                    onChange={(e) => setForm({ ...form, capacity: e.target.value })}
+                                    required
+                                    className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-400 transition"
+                                    placeholder="Maximum number of attendees"
+                                />
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">

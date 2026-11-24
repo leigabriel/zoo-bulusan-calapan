@@ -5,6 +5,7 @@ import { motion as Motion, AnimatePresence } from 'framer-motion';
 import Header from '../../components/Header';
 import PostForm from '../../components/features/community/PostForm';
 import PostFeed from '../../components/features/community/PostFeed';
+import PostCarousel from '../../components/features/community/PostCarousel';
 import PostUploadCard from '../../components/features/community/PostUploadCard';
 import CommentSection from '../../components/features/community/CommentSection';
 import SignInModal from '../../components/features/community/SignInModal';
@@ -213,6 +214,17 @@ const CommunityPage = () => {
         loadPosts();
     }, [completedCount, loadPosts]);
 
+    // Same fallback the feed uses, so an older post with only image_url still shows its photo.
+    const selectedPostImages = Array.isArray(selectedPost?.images) && selectedPost.images.length
+        ? selectedPost.images
+        : (selectedPost?.imageUrl ? [selectedPost.imageUrl] : []);
+
+    // A single photo keeps its natural height, as before; a gallery needs one fixed stage so
+    // the arrows and dots stay put while the slides change.
+    const selectedPostImageClassName = selectedPostImages.length > 1
+        ? 'h-[45vh] md:h-[60vh] object-contain'
+        : 'h-auto max-h-[60vh] object-contain';
+
     return (
         <ReactLenis root>
             <div className={`text-black relative min-h-dvh ${PAGE_BG_GRADIENT}`}>
@@ -373,9 +385,15 @@ const CommunityPage = () => {
                                         {selectedPost.content}
                                     </p>
 
-                                    {selectedPost.imageUrl && (
-                                         <div className="w-full overflow-hidden mb-10 bg-black/[0.03] flex justify-center">
-                                            <img src={selectedPost.imageUrl} alt="post" className="max-w-full h-auto max-h-[60vh] object-contain" />
+                                    {selectedPostImages.length > 0 && (
+                                        <div className="w-full mb-10">
+                                            <PostCarousel
+                                                postId={selectedPost.id}
+                                                images={selectedPostImages}
+                                                alt="Post photo"
+                                                imageClassName={selectedPostImageClassName}
+                                                enableKeyboard
+                                            />
                                         </div>
                                     )}
 

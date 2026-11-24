@@ -1,4 +1,4 @@
-import { Calendar as ReiconCalendar, Check as ReiconCheck, Clock as ReiconClock, Edit as ReiconEdit, Eye as ReiconEye, Image as ReiconImage, Location as ReiconLocation, Plus as ReiconPlus, Trash as ReiconTrash, X as ReiconX } from 'reicon-react';
+import { Calendar as ReiconCalendar, Check as ReiconCheck, Clock as ReiconClock, Edit as ReiconEdit, Eye as ReiconEye, Image as ReiconImage, Location as ReiconLocation, Plus as ReiconPlus, Trash as ReiconTrash, Users as ReiconUsers, X as ReiconX } from 'reicon-react';
 import { useState, useEffect, useRef } from 'react';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
@@ -73,6 +73,7 @@ const AdminEvents = () => {
         eventDate: '',
         startTime: '',
         endTime: '',
+        capacity: 100,
         imageUrl: '',
         color: '#22c55e',
         status: 'upcoming'
@@ -135,6 +136,7 @@ const AdminEvents = () => {
                         extendedProps: {
                             description: event.description,
                             imageUrl: event.image_url,
+                            capacity: event.capacity,
                             status: event.status,
                             eventDate: eventDate,
                             startTime: event.start_time,
@@ -167,6 +169,7 @@ const AdminEvents = () => {
                 eventDate: event.extendedProps.eventDate,
                 startTime: event.extendedProps.startTime || '',
                 endTime: event.extendedProps.endTime || '',
+                capacity: event.extendedProps.capacity ?? 100,
                 imageUrl: event.extendedProps.imageUrl || '',
                 color: event.extendedProps.color || '#22c55e',
                 status: event.extendedProps.status || 'upcoming'
@@ -175,7 +178,7 @@ const AdminEvents = () => {
             setShowModal(true);
         } else {
             setSelectedEvent(null);
-            setFormData({ title: '', description: '', eventDate: clickedDate, startTime: '09:00', endTime: '10:00', imageUrl: '', color: '#22c55e', status: 'upcoming' });
+            setFormData({ title: '', description: '', eventDate: clickedDate, startTime: '09:00', endTime: '10:00', capacity: 100, imageUrl: '', color: '#22c55e', status: 'upcoming' });
             setModalMode('create');
             setShowModal(true);
         }
@@ -190,6 +193,7 @@ const AdminEvents = () => {
             eventDate: event.extendedProps.eventDate,
             startTime: event.extendedProps.startTime || '',
             endTime: event.extendedProps.endTime || '',
+            capacity: event.extendedProps.capacity ?? 100,
             imageUrl: event.extendedProps.imageUrl || '',
             color: event.extendedProps.color || '#22c55e',
             status: event.extendedProps.status || 'upcoming'
@@ -234,6 +238,7 @@ const AdminEvents = () => {
                 eventDate: formData.eventDate,
                 startTime: formData.startTime || null,
                 endTime: formData.endTime || null,
+                capacity: parseInt(formData.capacity, 10) || null,
                 imageUrl: imageUrl || null,
                 color: formData.color,
                 status: formData.status
@@ -316,7 +321,7 @@ const AdminEvents = () => {
     const resetForm = () => {
         setSelectedEvent(null);
         setModalMode('create');
-        setFormData({ title: '', description: '', eventDate: '', startTime: '', endTime: '', imageUrl: '', color: '#22c55e', status: 'upcoming' });
+        setFormData({ title: '', description: '', eventDate: '', startTime: '', endTime: '', capacity: 100, imageUrl: '', color: '#22c55e', status: 'upcoming' });
         setError('');
         setImageInputMode('upload');
         setImageFile(null);
@@ -591,6 +596,7 @@ const AdminEvents = () => {
                                                         eventDate: event.extendedProps.eventDate,
                                                         startTime: event.extendedProps.startTime || '',
                                                         endTime: event.extendedProps.endTime || '',
+                                                        capacity: event.extendedProps.capacity ?? 100,
                                                         imageUrl: event.extendedProps.imageUrl || '',
                                                         color: event.extendedProps.color || '#22c55e',
                                                         status: event.extendedProps.status || 'upcoming'
@@ -640,6 +646,7 @@ const AdminEvents = () => {
                                                         eventDate: event.extendedProps.eventDate,
                                                         startTime: event.extendedProps.startTime || '',
                                                         endTime: event.extendedProps.endTime || '',
+                                                        capacity: event.extendedProps.capacity ?? 100,
                                                         imageUrl: event.extendedProps.imageUrl || '',
                                                         color: event.extendedProps.color || '#22c55e',
                                                         status: event.extendedProps.status || 'completed'
@@ -729,6 +736,12 @@ const AdminEvents = () => {
                                         <span>{formatTime(formData.startTime)}{formData.endTime && ` - ${formatTime(formData.endTime)}`}</span>
                                     </div>
                                 )}
+                                {formData.capacity ? (
+                                    <div className="flex items-center gap-3 text-gray-700">
+                                        <ReiconUsers strokeWidth="2" className="w-5 h-5" />
+                                        <span>Headcount: {formData.capacity}</span>
+                                    </div>
+                                ) : null}
                                 {formData.imageUrl && (
                                     <div className="mt-4 rounded-xl overflow-hidden shadow-md">
                                         <img src={formData.imageUrl} alt="Event" className="w-full h-64 object-cover" onError={(e) => { e.target.style.display = 'none'; }} />
@@ -781,6 +794,25 @@ const AdminEvents = () => {
                                         <label className="block text-sm font-medium text-gray-700 mb-2">End Time</label>
                                         <input type="time" value={formData.endTime} onChange={(e) => setFormData({ ...formData, endTime: e.target.value })} className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:border-green-400 transition" />
                                     </div>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        <span className="flex items-center gap-2">
+                                            <ReiconUsers strokeWidth="2" className="w-5 h-5" />
+                                            Headcount
+                                        </span>
+                                    </label>
+                                    <input
+                                        type="number"
+                                        min="1"
+                                        max="10000"
+                                        step="1"
+                                        value={formData.capacity}
+                                        onChange={(e) => setFormData({ ...formData, capacity: e.target.value })}
+                                        placeholder="Maximum number of attendees"
+                                        className="w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-400 transition"
+                                        required
+                                    />
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-2">
