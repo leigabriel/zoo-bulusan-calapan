@@ -1,7 +1,7 @@
 // Rules for a visitor amending or cancelling their own reservation. Pure so the tests can
 // reach them without a database, matching backend/utils/post-report-rules.js.
 
-const MAX_TICKETS_PER_BOOKING = 200;
+const MAX_TICKETS_PER_BOOKING = 10000;
 
 const toCount = (value) => {
     const parsed = Number(value);

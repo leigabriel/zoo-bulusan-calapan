@@ -29,7 +29,7 @@ const normalizeHeadcount = (value) => {
     if (value === null || value === undefined || value === '') return null;
     const parsed = Number(value);
     if (!Number.isFinite(parsed) || parsed < 1) return null;
-    return Math.floor(parsed);
+    return Math.min(Math.floor(parsed), 10000);
 };
 
 class Event {
@@ -117,6 +117,49 @@ class Event {
             'SELECT COUNT(*) as total FROM events WHERE event_date >= CURDATE() AND (is_deleted IS NULL OR is_deleted = FALSE)'
         );
         return rows[0].total;
+    }
+
+    /**
+     * Find an active event that overlaps the requested date/time window.
+     * Events without start/end times are treated as occupying that date.
+     */
+    static async findConflicting({ eventDate, startTime = null, endTime = null, excludeId = null }) {
+        if (!eventDate) return null;
+
+        const params = [eventDate];
+        let query = `
+            SELECT id, title, event_date, start_time, end_time, status
+            FROM events
+            WHERE event_date = ?
+              AND status != 'cancelled'
+              AND (is_deleted IS NULL OR is_deleted = FALSE)`;
+
+        if (excludeId) {
+            query += ' AND id != ?';
+            params.push(excludeId);
+        }
+
+        const [rows] = await db.query(query, params);
+        const normalizeTime = (value) => {
+            if (!value) return null;
+            const text = String(value);
+            return text.length === 5 ? `${text}:00` : text.slice(0, 8);
+        };
+
+        const newStart = normalizeTime(startTime);
+        const newEnd = normalizeTime(endTime);
+        const hasWindow = Boolean(newStart && newEnd);
+
+        return rows.find((row) => {
+            const rowStart = normalizeTime(row.start_time);
+            const rowEnd = normalizeTime(row.end_time);
+
+            // If either event has no complete time window, treat it as a date conflict.
+            if (!hasWindow || !rowStart || !rowEnd) return true;
+
+            // Overlap when ranges intersect; touching endpoints is allowed.
+            return newStart < rowEnd && rowStart < newEnd;
+        }) || null;
     }
 
     // Trash methods

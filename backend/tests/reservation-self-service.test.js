@@ -34,10 +34,13 @@ test('rejects a booking with no visitors at all', () => {
     assert.match(result.error, /at least one/i);
 });
 
-test('caps a single booking so one visitor cannot book the whole park', () => {
-    const result = validateTicketEdit({ adult: 5000 });
-    assert.equal(result.ok, false);
-    assert.match(result.error, /cannot exceed/i);
+test('caps a single booking at the headcount limit', () => {
+    const over = validateTicketEdit({ adult: 10001 });
+    assert.equal(over.ok, false);
+    assert.match(over.error, /cannot exceed/i);
+
+    const atLimit = validateTicketEdit({ adult: 10000 });
+    assert.equal(atLimit.ok, true);
 });
 
 test('participant count must be a positive whole number', () => {

@@ -216,8 +216,10 @@ exports.setPayAtBulusan = async (req, res) => {
             return res.json({ success: true, reservation });
         }
         const config = readConfig();
-        const paymentAmount = Number(config.amountPerParticipant) > 0
-            ? Math.round(Number(config.amountPerParticipant) * 100) / 100
+        const perParticipant = Number(config.amountPerParticipant) || 0;
+        const participants = Number(reservation.number_of_participants) || 1;
+        const paymentAmount = perParticipant > 0
+            ? Math.round(perParticipant * participants * 100) / 100
             : Number(reservation.payment_amount || 0);
         await Reservation.updateEventPayment(reservation.id, {
             paymentAmount,
@@ -295,7 +297,8 @@ exports.createEventCheckout = async (req, res) => {
             return res.status(400).json({ success: false, message: 'This reservation is already paid.' });
         }
 
-        const amount = Math.round(Number(config.amountPerParticipant) * 100);
+        const participants = Math.max(1, Number(reservation.number_of_participants) || 1);
+        const amount = Math.round((Number(config.amountPerParticipant) || 0) * participants * 100);
         const checkout = await paymongoRequest({
             data: {
                 attributes: {
@@ -307,7 +310,7 @@ exports.createEventCheckout = async (req, res) => {
                     line_items: [{
                         currency: config.currency || 'PHP',
                         amount,
-                        name: `Event reservation: ${reservation.venue_event_name}`,
+                        name: `Event reservation: ${reservation.venue_event_name} (${participants} participant${participants === 1 ? '' : 's'})`,
                         quantity: 1
                     }],
                     payment_method_types: ['qrph'],

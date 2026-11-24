@@ -491,6 +491,18 @@ exports.getAllEvents = async (req, res) => {
 
 exports.createEvent = async (req, res) => {
     try {
+        const conflict = await Event.findConflicting({
+            eventDate: req.body.eventDate,
+            startTime: req.body.startTime || null,
+            endTime: req.body.endTime || null
+        });
+        if (conflict) {
+            return res.status(409).json({
+                success: false,
+                message: 'This date or time already has an event happening. Please choose a different schedule.'
+            });
+        }
+
         const eventId = await Event.create(req.body);
         await broadcastToVisitors('event.announced', { title: req.body.title }, '/events');
         res.status(201).json({
@@ -509,6 +521,23 @@ exports.updateEvent = async (req, res) => {
         const { id } = req.params;
         // Read before updating so the broadcast can name the event.
         const existingEvent = await Event.findById(id);
+        if (!existingEvent) {
+            return res.status(404).json({ success: false, message: 'Event not found' });
+        }
+
+        const conflict = await Event.findConflicting({
+            eventDate: req.body.eventDate ?? existingEvent.event_date,
+            startTime: req.body.startTime ?? existingEvent.start_time,
+            endTime: req.body.endTime ?? existingEvent.end_time,
+            excludeId: id
+        });
+        if (conflict) {
+            return res.status(409).json({
+                success: false,
+                message: 'This date or time already has an event happening. Please choose a different schedule.'
+            });
+        }
+
         const updated = await Event.update(id, req.body);
 
         if (!updated) {

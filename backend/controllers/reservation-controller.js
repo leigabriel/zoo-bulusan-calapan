@@ -448,8 +448,9 @@ exports.createEventReservation = async (req, res) => {
         const reservationReference = generateReservationReference();
         const userId = req.user?.id || null;
         const paymentConfig = readEventPaymentConfig();
-        const paymentAmount = Number(paymentConfig.amountPerParticipant) > 0
-            ? Math.round(Number(paymentConfig.amountPerParticipant) * 100) / 100
+        const perParticipant = Number(paymentConfig.amountPerParticipant) || 0;
+        const paymentAmount = perParticipant > 0
+            ? Math.round(perParticipant * participants * 100) / 100
             : 0;
 
         const qrData = buildQrData({
@@ -838,8 +839,9 @@ exports.updateUserHostedEvent = async (req, res) => {
 
         if (existingReservation.payment_status !== 'paid') {
             const paymentConfig = readEventPaymentConfig();
-            const amount = Number(paymentConfig.amountPerParticipant) > 0
-                ? Math.round(Number(paymentConfig.amountPerParticipant) * 100) / 100
+            const perParticipant = Number(paymentConfig.amountPerParticipant) || 0;
+            const amount = perParticipant > 0
+                ? Math.round(perParticipant * participants * 100) / 100
                 : 0;
             await Reservation.updateEventPayment(id, { paymentAmount: amount });
         }
