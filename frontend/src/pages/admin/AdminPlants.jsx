@@ -305,9 +305,6 @@ const AdminPlants = ({ globalSearch = '' }) => {
 
     const plantCounts = {
         total: plants.length,
-        healthy: plants.filter(p => p.status === 'healthy').length,
-        needsAttention: plants.filter(p => p.status === 'sick' || p.status === 'treatment').length,
-        endangered: plants.filter(p => p.is_endangered).length,
     };
 
     const allFilteredSelected = filteredPlants.length > 0 && filteredPlants.every(p => selectedIds.includes(p.id));
@@ -379,39 +376,6 @@ const AdminPlants = ({ globalSearch = '' }) => {
                         <div>
                             <p className="text-2xl font-bold text-gray-900">{plantCounts.total}</p>
                             <p className="text-xs text-gray-500">Total Plants</p>
-                        </div>
-                    </div>
-                </div>
-                <div className="bg-white border border-green-200 rounded-xl p-4">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-green-400/10 rounded-xl flex items-center justify-center text-green-800">
-                            <span className="text-lg font-bold">H</span>
-                        </div>
-                        <div>
-                            <p className="text-2xl font-bold text-gray-900">{plantCounts.healthy}</p>
-                            <p className="text-xs text-gray-500">Healthy</p>
-                        </div>
-                    </div>
-                </div>
-                <div className="bg-white border border-green-200 rounded-xl p-4">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-yellow-500/10 rounded-xl flex items-center justify-center text-yellow-700">
-                            <span className="text-lg font-bold">!</span>
-                        </div>
-                        <div>
-                            <p className="text-2xl font-bold text-gray-900">{plantCounts.needsAttention}</p>
-                            <p className="text-xs text-gray-500">Needs Attention</p>
-                        </div>
-                    </div>
-                </div>
-                <div className="bg-white border border-green-200 rounded-xl p-4">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-red-500/10 rounded-xl flex items-center justify-center text-red-700">
-                            <span className="text-lg font-bold">E</span>
-                        </div>
-                        <div>
-                            <p className="text-2xl font-bold text-gray-900">{plantCounts.endangered}</p>
-                            <p className="text-xs text-gray-500">Endangered</p>
                         </div>
                     </div>
                 </div>
