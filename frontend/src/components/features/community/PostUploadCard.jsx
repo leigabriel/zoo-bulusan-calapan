@@ -1,5 +1,6 @@
 import { getProfileImageUrl } from '../../../services/api-client';
 import { friendlyMessage } from '../../../utils/toast';
+import PostVideo from './PostVideo';
 
 // The Facebook/Instagram pattern: a post becomes visible in the feed the instant it is
 // published, carrying a progress bar and a clear "not posted yet" label, and is replaced by
@@ -51,6 +52,14 @@ const PostUploadCard = ({ item, currentUser, onRetry, onDiscard }) => {
                     {item.content}
                 </p>
             </div>
+
+            {item.videoPreviewUrl && (
+                <PostVideo
+                    src={item.videoPreviewUrl}
+                    className="mx-4 mb-1 sm:mx-5"
+                    videoClassName="max-h-72 w-full object-contain"
+                />
+            )}
 
             {item.previewUrls?.length > 0 && (
                 <div className="grid grid-cols-2 gap-1 px-4 pb-1 sm:px-5 sm:grid-cols-3">

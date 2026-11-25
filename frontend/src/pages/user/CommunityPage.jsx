@@ -6,6 +6,7 @@ import Header from '../../components/Header';
 import PostForm from '../../components/features/community/PostForm';
 import PostFeed from '../../components/features/community/PostFeed';
 import PostCarousel from '../../components/features/community/PostCarousel';
+import PostVideo from '../../components/features/community/PostVideo';
 import PostUploadCard from '../../components/features/community/PostUploadCard';
 import CommentSection from '../../components/features/community/CommentSection';
 import SignInModal from '../../components/features/community/SignInModal';
@@ -20,7 +21,7 @@ import useScrollLock from '../../hooks/use-scroll-lock';
 import usePageMetadata from '../../hooks/use-page-metadata';
 
 const CommunityPage = () => {
-    usePageMetadata('Community | Bulusan Zoo', 'Share photos and stories from your Bulusan Zoo visit with the community.', 'https://bulusanzoo.com/community');
+    usePageMetadata('Community | Bulusan Zoo', 'Share photos, videos and stories from your Bulusan Zoo visit with the community.', 'https://bulusanzoo.com/community');
     const { user } = useAuth();
     // Posts still uploading. The queue lives above the router, so these survive navigating
     // away and a post started here can finish over on another page.
@@ -180,12 +181,12 @@ const CommunityPage = () => {
         return openConfirmation(options);
     };
 
-    const createOrUpdatePost = async ({ content, imageFiles, removeImage }) => {
+    const createOrUpdatePost = async ({ content, imageFiles, videoFile, removeImage, removeVideo }) => {
         // A new post goes into the upload queue and returns straight away. The feed renders it
         // as a card with a progress bar, the modal closes, and the queue notifies on completion
         // no matter which page the visitor has moved to.
         if (!editingPost) {
-            enqueue({ content, files: imageFiles || [], ownerId: user?.id ?? null });
+            enqueue({ content, files: imageFiles || [], videoFile: videoFile || null, ownerId: user?.id ?? null });
             return true;
         }
 
@@ -193,7 +194,7 @@ const CommunityPage = () => {
         try {
             await communityAPI.updatePost(
                 editingPost.id,
-                { content, imageFile: imageFiles?.[0], removeImage },
+                { content, imageFile: imageFiles?.[0], videoFile, removeImage, removeVideo },
                 user?.role || 'user'
             );
             notify.success('Post updated.');
@@ -218,6 +219,7 @@ const CommunityPage = () => {
     const selectedPostImages = Array.isArray(selectedPost?.images) && selectedPost.images.length
         ? selectedPost.images
         : (selectedPost?.imageUrl ? [selectedPost.imageUrl] : []);
+    const selectedPostVideoUrl = selectedPost?.videoUrl || null;
 
     // A single photo keeps its natural height, as before; a gallery needs one fixed stage so
     // the arrows and dots stay put while the slides change.
@@ -384,6 +386,15 @@ const CommunityPage = () => {
                                     <p className="text-xl md:text-3xl font-medium leading-[1.3] text-black whitespace-pre-wrap mb-10 tracking-tight">
                                         {selectedPost.content}
                                     </p>
+
+                                    {selectedPostVideoUrl && (
+                                        <div className="w-full mb-10">
+                                            <PostVideo
+                                                src={selectedPostVideoUrl}
+                                                videoClassName="max-h-[60vh] w-full object-contain"
+                                            />
+                                        </div>
+                                    )}
 
                                     {selectedPostImages.length > 0 && (
                                         <div className="w-full mb-10">

@@ -7,6 +7,11 @@ const MAX_SIZE = 5 * 1024 * 1024;
 const MAX_IMAGES = 5;
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 
+// One optional video per post. Keep the ceiling in step with MAX_VIDEO_FILE_SIZE in
+// backend/middleware/cloudinary-upload.js.
+const MAX_VIDEO_SIZE = 80 * 1024 * 1024;
+const ALLOWED_VIDEO_TYPES = ['video/mp4', 'video/webm', 'video/quicktime', 'video/x-m4v'];
+
 const PostForm = ({ onSubmit, loading, initialPost = null, onCancelEdit }) => {
     const [content, setContent] = useState('');
     // One array of { file, url } pairs. Previously files and their preview urls lived in two
@@ -16,12 +21,18 @@ const PostForm = ({ onSubmit, loading, initialPost = null, onCancelEdit }) => {
     // Photos already stored against a post being edited.
     const [existing, setExisting] = useState([]);
     const [removeImage, setRemoveImage] = useState(false);
+    // A newly picked video ({ file, url }) and the video already stored on an edited post.
+    const [video, setVideo] = useState(null);
+    const [existingVideo, setExistingVideo] = useState(null);
+    const [removeVideo, setRemoveVideo] = useState(false);
 
     const isEditing = Boolean(initialPost);
     // Editing replaces the image rather than appending to it, so a new pick takes over.
     const showExisting = isEditing && !removeImage && photos.length === 0;
     const displayUrls = showExisting ? existing : photos.map((photo) => photo.url);
     const fileCount = showExisting ? existing.length : photos.length;
+    const showExistingVideo = isEditing && !removeVideo && !video && Boolean(existingVideo);
+    const videoPreviewUrl = video?.url || (showExistingVideo ? existingVideo : null);
 
     useEffect(() => {
         if (initialPost) {
@@ -29,11 +40,17 @@ const PostForm = ({ onSubmit, loading, initialPost = null, onCancelEdit }) => {
             setPhotos([]);
             setExisting(initialPost.images?.length ? initialPost.images : (initialPost.imageUrl ? [initialPost.imageUrl] : []));
             setRemoveImage(false);
+            setVideo(null);
+            setExistingVideo(initialPost.videoUrl || null);
+            setRemoveVideo(false);
         } else {
             setContent('');
             setPhotos([]);
             setExisting([]);
             setRemoveImage(false);
+            setVideo(null);
+            setExistingVideo(null);
+            setRemoveVideo(false);
         }
     }, [initialPost]);
 
@@ -41,6 +58,10 @@ const PostForm = ({ onSubmit, loading, initialPost = null, onCancelEdit }) => {
     useEffect(() => () => {
         photos.forEach((photo) => URL.revokeObjectURL(photo.url));
     }, [photos]);
+
+    useEffect(() => () => {
+        if (video?.url) URL.revokeObjectURL(video.url);
+    }, [video]);
 
     const handleFileChange = (event) => {
         const picked = Array.from(event.target.files || []);
@@ -74,6 +95,35 @@ const PostForm = ({ onSubmit, loading, initialPost = null, onCancelEdit }) => {
         if (isEditing) setRemoveImage(true);
     };
 
+    const handleVideoChange = (event) => {
+        const file = event.target.files?.[0];
+        // Allow re-picking the same file after a removal.
+        event.target.value = '';
+        if (!file) return;
+
+        if (!ALLOWED_VIDEO_TYPES.includes(file.type)) {
+            notify.warning(`${file.name} is not a supported video.`);
+            return;
+        }
+        if (file.size > MAX_VIDEO_SIZE) {
+            notify.warning(`${file.name} is over 80MB.`);
+            return;
+        }
+
+        // Replacing a video leaves the old object URL for the effect cleanup to revoke.
+        setVideo({ file, url: URL.createObjectURL(file) });
+    };
+
+    const removeVideoAttachment = () => {
+        if (video) {
+            // The effect cleanup revokes the object URL when `video` changes.
+            setVideo(null);
+            return;
+        }
+        setExistingVideo(null);
+        setRemoveVideo(true);
+    };
+
     const removeImageAt = (index) => {
         if (showExisting) {
             setExisting([]);
@@ -103,11 +153,13 @@ const PostForm = ({ onSubmit, loading, initialPost = null, onCancelEdit }) => {
             return;
         }
 
-        // Photos are entirely optional; a text-only post is a valid post.
+        // Attachments are entirely optional; a text-only post is a valid post.
         const submitted = await onSubmit({
             content: cleanContent,
             imageFiles: photos.map((photo) => photo.file),
-            removeImage
+            videoFile: video?.file || null,
+            removeImage,
+            removeVideo
         });
 
         if (!initialPost && submitted !== false) {
@@ -116,6 +168,9 @@ const PostForm = ({ onSubmit, loading, initialPost = null, onCancelEdit }) => {
             setPhotos([]);
             setExisting([]);
             setRemoveImage(false);
+            setVideo(null);
+            setExistingVideo(null);
+            setRemoveVideo(false);
         }
     };
 
@@ -164,6 +219,28 @@ const PostForm = ({ onSubmit, loading, initialPost = null, onCancelEdit }) => {
                 </div>
             )}
 
+            {videoPreviewUrl && (
+                <div className="relative mt-4 overflow-hidden rounded-md border border-gray-600 bg-black">
+                    <video
+                        src={videoPreviewUrl}
+                        controls
+                        playsInline
+                        preload="metadata"
+                        className="max-h-64 w-full object-contain"
+                    />
+                    <button
+                        type="button"
+                        onClick={removeVideoAttachment}
+                        aria-label="Remove video"
+                        className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-md border border-gray-600 bg-white text-black shadow-sm hover:bg-red-500 hover:text-white hover:border-red-500 transition-colors cursor-pointer"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
+                            <path fillRule="evenodd" d="M5.47 5.47a.75.75 0 011.06 0L12 10.94l5.47-5.47a.75.75 0 111.06 1.06L13.06 12l5.47 5.47a.75.75 0 11-1.06 1.06L12 13.06l-5.47 5.47a.75.75 0 01-1.06-1.06L10.94 12 5.47 6.53a.75.75 0 010-1.06z" clipRule="evenodd" />
+                        </svg>
+                    </button>
+                </div>
+            )}
+
             <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
                 <div className="flex flex-wrap items-center gap-3">
                     <label className={`inline-flex items-center gap-2 rounded-md px-5 py-3 min-h-11 border border-gray-600 text-black transition-colors text-[10px] tracking-[0.15em] uppercase font-black w-max ${fileCount >= MAX_IMAGES ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer hover:bg-black/5'}`}>
@@ -174,6 +251,21 @@ const PostForm = ({ onSubmit, loading, initialPost = null, onCancelEdit }) => {
                         {MAX_IMAGES === 1
                             ? (fileCount ? 'Replace Photo' : 'Attach Photo')
                             : (fileCount ? 'Add More' : 'Attach Photos')}
+                    </label>
+                    <label
+                        title="Up to 80MB"
+                        className="inline-flex w-max cursor-pointer items-center gap-2 rounded-md border border-gray-600 px-5 py-3 min-h-11 text-[10px] font-black uppercase tracking-[0.15em] text-black transition-colors hover:bg-black/5"
+                    >
+                        <input
+                            type="file"
+                            accept="video/mp4,video/webm,video/quicktime,video/x-m4v"
+                            className="hidden"
+                            onChange={handleVideoChange}
+                        />
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                        </svg>
+                        {videoPreviewUrl ? 'Replace Video' : 'Attach Video'}
                     </label>
                     {fileCount > 0 && (
                         <button type="button" onClick={clearImages} className="text-[10px] tracking-[0.15em] uppercase font-black text-black/50 hover:text-red-600 transition-colors">Remove</button>

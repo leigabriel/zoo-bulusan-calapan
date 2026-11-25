@@ -505,7 +505,7 @@ const AdminPlants = ({ globalSearch = '' }) => {
                                                 </div>
                                                 <div>
                                                     <p className="font-medium text-gray-900">{plant.name}</p>
-                                                    {plant.is_endangered && (
+                                                    {!!plant.is_endangered && (
                                                         <span className="text-[10px] text-red-700 font-medium">Endangered</span>
                                                     )}
                                                 </div>

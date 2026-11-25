@@ -100,13 +100,13 @@ const MyPostsPanel = ({ isOpen, onClose }) => {
         }
     }, [pendingDelete, closeConfirm]);
 
-    const savePost = useCallback(async ({ content, imageFiles, removeImage }) => {
+    const savePost = useCallback(async ({ content, imageFiles, videoFile, removeImage, removeVideo }) => {
         if (!editingPost) return false;
         setSavingPost(true);
         try {
             await communityAPI.updatePost(
                 editingPost.id,
-                { content, imageFile: imageFiles?.[0], removeImage },
+                { content, imageFile: imageFiles?.[0], videoFile, removeImage, removeVideo },
                 user?.role || 'user'
             );
             notify.success('Post updated.');

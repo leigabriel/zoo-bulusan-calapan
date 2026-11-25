@@ -2093,10 +2093,11 @@ export const communityAPI = {
     // XHR rather than fetch: fetch has no upload-progress event, so a real progress bar is
     // impossible with it. Used by the community post queue so the feed card can advance while
     // the upload is genuinely in flight.
-    createPostWithProgress: ({ content, imageFiles = [] }, onProgress, type = 'user') => new Promise((resolve, reject) => {
+    createPostWithProgress: ({ content, imageFiles = [], videoFile = null }, onProgress, type = 'user') => new Promise((resolve, reject) => {
         const formData = new FormData();
         formData.append('content', content);
         imageFiles.forEach((file) => formData.append('postImages', file));
+        if (videoFile) formData.append('postVideo', videoFile);
 
         const xhr = new XMLHttpRequest();
         xhr.open('POST', `${API_BASE_URL}/community/posts`);
@@ -2134,12 +2135,16 @@ export const communityAPI = {
         xhr.send(formData);
     }),
 
-    updatePost: async (postId, { content, imageFile, removeImage = false }, type = 'user') => {
+    updatePost: async (postId, { content, imageFile, videoFile = null, removeImage = false, removeVideo = false }, type = 'user') => {
         const formData = new FormData();
         formData.append('content', content);
         formData.append('removeImage', String(removeImage));
+        formData.append('removeVideo', String(removeVideo));
         if (imageFile) {
             formData.append('postImage', imageFile);
+        }
+        if (videoFile) {
+            formData.append('postVideo', videoFile);
         }
 
         const response = await fetch(`${API_BASE_URL}/community/posts/${postId}`, {

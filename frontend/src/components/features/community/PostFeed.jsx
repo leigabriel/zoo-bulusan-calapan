@@ -3,6 +3,7 @@ import { communityAPI, getProfileImageUrl } from '../../../services/api-client';
 import { notify } from '../../../utils/toast';
 import PostReportModal from './PostReportModal';
 import PostCarousel from './PostCarousel';
+import PostVideo from './PostVideo';
 
 // Two taps closer together than this count as a double-tap. Long enough to be forgiving of a
 // shaky thumb, short enough that a deliberate second tap does not feel laggy.
@@ -97,8 +98,8 @@ const PostFeed = ({ posts, currentUser, isGuest = false, onRequireAuth, onRefres
     // click (rather than onClick + onDoubleClick) means the second tap acts the moment it
     // arrives, and a pending timer can still be cancelled.
     const handleCardTap = (post, e) => {
-        // Buttons, the overflow menu, and the attach label own their own clicks.
-        if (e.target.closest('button, a, label, input')) return;
+        // Buttons, the overflow menu, the video player, and the attach label own their own clicks.
+        if (e.target.closest('button, a, label, input, video')) return;
 
         const now = Date.now();
         const tap = lastTapRef.current;
@@ -266,6 +267,10 @@ const PostFeed = ({ posts, currentUser, isGuest = false, onRequireAuth, onRefres
                                 {post.content}
                             </p>
                         </div>
+
+                        {post.videoUrl && (
+                            <PostVideo src={post.videoUrl} />
+                        )}
 
                         {images.length > 0 && (
                             <PostCarousel postId={post.id} images={images} />

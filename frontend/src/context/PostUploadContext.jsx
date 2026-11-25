@@ -40,7 +40,7 @@ export const PostUploadProvider = ({ children }) => {
         patch(item.id, { status: 'uploading' });
         try {
             await communityAPI.createPostWithProgress(
-                { content: item.content, imageFiles: item.files },
+                { content: item.content, imageFiles: item.files, videoFile: item.videoFile },
                 (progress) => patch(item.id, { progress }),
                 'user'
             );
@@ -51,8 +51,13 @@ export const PostUploadProvider = ({ children }) => {
             window.setTimeout(() => remove(item.id), 1200);
             // The toaster is mounted at app level, so this reaches the visitor wherever they have
             // navigated to — which is the whole point of handing the upload off to the queue.
-            notify.success(item.files.length
-                ? `Your post was posted with ${item.files.length} photo${item.files.length > 1 ? 's' : ''}.`
+            const attachments = [];
+            if (item.files.length) {
+                attachments.push(`${item.files.length} photo${item.files.length > 1 ? 's' : ''}`);
+            }
+            if (item.videoFile) attachments.push('a video');
+            notify.success(attachments.length
+                ? `Your post was posted with ${attachments.join(' and ')}.`
                 : 'Your post was posted.');
         } catch (error) {
             patch(item.id, { status: 'failed', error: error?.message || "Couldn't upload your post." });
@@ -70,14 +75,16 @@ export const PostUploadProvider = ({ children }) => {
         run(item);
     }, [patch, run]);
 
-    const enqueue = useCallback(({ content, files = [], ownerId = null }) => {
+    const enqueue = useCallback(({ content, files = [], videoFile = null, ownerId = null }) => {
         const item = {
             id: nextId(),
             content,
             files,
+            videoFile,
             // Object URLs are minted here and never revoked on unmount because the upload may
             // outlive the page that started it; the browser reclaims them with the document.
             previewUrls: files.map((file) => URL.createObjectURL(file)),
+            videoPreviewUrl: videoFile ? URL.createObjectURL(videoFile) : null,
             ownerId,
             progress: 0,
             status: 'queued',
