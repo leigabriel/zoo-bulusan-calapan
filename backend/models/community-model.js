@@ -98,6 +98,24 @@ class Community {
                 CONSTRAINT fk_community_post_reports_reviewed_by FOREIGN KEY (reviewed_by) REFERENCES users(id) ON DELETE SET NULL ON UPDATE CASCADE
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
         `);
+
+        // Video support was added after community_posts already existed in deployed
+        // databases, so the columns are added here as well as in the CREATE TABLE.
+        const hasVideoUrl = await Community.hasColumn('community_posts', 'video_url');
+        if (!hasVideoUrl) {
+            await db.query(
+                `ALTER TABLE community_posts
+                 ADD COLUMN video_url VARCHAR(500) DEFAULT NULL AFTER image_public_id`
+            );
+        }
+
+        const hasVideoPublicId = await Community.hasColumn('community_posts', 'video_public_id');
+        if (!hasVideoPublicId) {
+            await db.query(
+                `ALTER TABLE community_posts
+                 ADD COLUMN video_public_id VARCHAR(255) DEFAULT NULL AFTER video_url`
+            );
+        }
     }
 
     static initializeTables() {
@@ -120,6 +138,8 @@ class Community {
                 content TEXT NOT NULL,
                 image_url VARCHAR(500) DEFAULT NULL,
                 image_public_id VARCHAR(255) DEFAULT NULL,
+                video_url VARCHAR(500) DEFAULT NULL,
+                video_public_id VARCHAR(255) DEFAULT NULL,
                 status ENUM('pending', 'approved', 'declined') DEFAULT 'pending',
                 moderation_note VARCHAR(255) DEFAULT NULL,
                 moderated_by INT DEFAULT NULL,
@@ -240,11 +260,11 @@ class Community {
         Community.initialized = true;
     }
 
-    static async createPost({ userId, content, imageUrl, imagePublicId }) {
+    static async createPost({ userId, content, imageUrl, imagePublicId, videoUrl, videoPublicId }) {
         const [result] = await db.query(
-            `INSERT INTO community_posts (user_id, content, image_url, image_public_id, status)
-             VALUES (?, ?, ?, ?, 'approved')`,
-            [userId, content, imageUrl || null, imagePublicId || null]
+            `INSERT INTO community_posts (user_id, content, image_url, image_public_id, video_url, video_public_id, status)
+             VALUES (?, ?, ?, ?, ?, ?, 'approved')`,
+            [userId, content, imageUrl || null, imagePublicId || null, videoUrl || null, videoPublicId || null]
         );
         return result.insertId;
     }
@@ -322,7 +342,7 @@ class Community {
 
     static async getPublicPosts(viewerId = null) {
         const [rows] = await db.query(
-            `SELECT p.id, p.user_id, p.content, p.image_url, p.status, p.moderation_note, p.created_at, p.updated_at,
+            `SELECT p.id, p.user_id, p.content, p.image_url, p.video_url, p.status, p.moderation_note, p.created_at, p.updated_at,
                     u.first_name, u.last_name, u.username, u.profile_image,
                 (SELECT COUNT(*) FROM community_comments c WHERE c.post_id = p.id) AS comment_count,
                 (SELECT COUNT(*) FROM community_post_likes pl WHERE pl.post_id = p.id) AS like_count,
@@ -363,9 +383,19 @@ class Community {
              SET content = ?,
                  image_url = ?,
                  image_public_id = ?,
+                 video_url = ?,
+                 video_public_id = ?,
                  updated_at = NOW()
              WHERE id = ? AND user_id = ?`,
-            [payload.content, payload.imageUrl || null, payload.imagePublicId || null, postId, userId]
+            [
+                payload.content,
+                payload.imageUrl || null,
+                payload.imagePublicId || null,
+                payload.videoUrl || null,
+                payload.videoPublicId || null,
+                postId,
+                userId
+            ]
         );
         return result.affectedRows > 0;
     }
@@ -388,7 +418,7 @@ class Community {
 
     static async getAllPostsForModeration() {
         const [rows] = await db.query(
-            `SELECT p.id, p.user_id, p.content, p.image_url, p.status, p.moderation_note, p.created_at, p.updated_at,
+            `SELECT p.id, p.user_id, p.content, p.image_url, p.video_url, p.status, p.moderation_note, p.created_at, p.updated_at,
                     u.first_name, u.last_name, u.username, u.profile_image,
                     (SELECT COUNT(*) FROM community_comments c WHERE c.post_id = p.id) AS comment_count,
                     (SELECT COUNT(*) FROM community_post_likes pl WHERE pl.post_id = p.id) AS like_count
@@ -629,7 +659,7 @@ class Community {
         const [rows] = await db.query(
             `SELECT r.id AS report_id, r.post_id, r.reason, r.reason_detail, r.status,
                     r.created_at AS reported_at, r.user_id AS reported_by,
-                    p.content, p.image_url, p.status AS post_status, p.moderation_note,
+                    p.content, p.image_url, p.video_url, p.status AS post_status, p.moderation_note,
                     p.created_at AS post_created_at, p.user_id AS post_user_id,
                     au.first_name AS author_first_name, au.last_name AS author_last_name,
                     au.username AS author_username, au.profile_image AS author_profile_image,

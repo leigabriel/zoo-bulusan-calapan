@@ -107,6 +107,13 @@ const uploadConfig = {
         allowed_formats: ['jpg', 'jpeg', 'png', 'webp', 'gif'],
         resource_type: 'image'
     },
+    // Community post videos. 80MB is the ceiling enforced by the upload middleware;
+    // Cloudinary stores the original and streams it back on the post.
+    communityVideo: {
+        folder: 'zoo-bulusan/community-videos',
+        allowed_formats: ['mp4', 'webm', 'mov', 'm4v'],
+        resource_type: 'video'
+    },
     // General images configuration (fallback)
     general: {
         folder: 'zoo-bulusan/uploads',

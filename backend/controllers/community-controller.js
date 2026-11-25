@@ -34,6 +34,7 @@ const normalizePost = (post) => ({
   content: post.content,
   imageUrl: post.image_url,
   images: Array.isArray(post.images) ? post.images : (post.image_url ? [post.image_url] : []),
+  videoUrl: post.video_url || null,
   status: post.status,
   moderationNote: post.moderation_note || null,
   // Computed server-side: the client cannot compare user ids because they arrive as
@@ -112,6 +113,7 @@ const normalizeReportedPost = (report) => ({
   content: report.content,
   imageUrl: report.image_url,
   images: Array.isArray(report.images) ? report.images : (report.image_url ? [report.image_url] : []),
+  videoUrl: report.video_url || null,
   postStatus: report.post_status,
   moderationNote: report.moderation_note || null,
   postCreatedAt: report.post_created_at,
@@ -159,12 +161,15 @@ exports.createPost = async (req, res) => {
     const uploads = req.cloudinaryResults || [];
     const imageUrl = uploads[0]?.secure_url || req.cloudinaryResult?.secure_url || null;
     const imagePublicId = uploads[0]?.public_id || req.cloudinaryResult?.public_id || null;
+    const video = req.cloudinaryVideoResult || null;
 
     const postId = await Community.createPost({
       userId: req.user.id,
       content,
       imageUrl,
-      imagePublicId
+      imagePublicId,
+      videoUrl: video?.secure_url || null,
+      videoPublicId: video?.public_id || null
     });
 
     if (uploads.length) {
@@ -182,7 +187,7 @@ exports.createPost = async (req, res) => {
       await notifyUser(
         req.user.id,
         'post.published',
-        { photos: uploads.length },
+        { photos: uploads.length, video: Boolean(video) },
         '/community'
       );
     } catch (error) {
@@ -227,7 +232,10 @@ exports.updatePost = async (req, res) => {
 
     let imageUrl = currentPost.image_url;
     let imagePublicId = currentPost.image_public_id || extractPublicId(currentPost.image_url);
+    let videoUrl = currentPost.video_url;
+    let videoPublicId = currentPost.video_public_id || extractPublicId(currentPost.video_url);
     const removeImage = String(req.body.removeImage || 'false') === 'true';
+    const removeVideo = String(req.body.removeVideo || 'false') === 'true';
 
     if (req.cloudinaryResult?.secure_url) {
       if (imagePublicId) {
@@ -243,10 +251,26 @@ exports.updatePost = async (req, res) => {
       imagePublicId = null;
     }
 
+    if (req.cloudinaryVideoResult?.secure_url) {
+      if (videoPublicId) {
+        await deleteFromCloudinary(videoPublicId, 'video');
+      }
+      videoUrl = req.cloudinaryVideoResult.secure_url;
+      videoPublicId = req.cloudinaryVideoResult.public_id;
+    } else if (removeVideo) {
+      if (videoPublicId) {
+        await deleteFromCloudinary(videoPublicId, 'video');
+      }
+      videoUrl = null;
+      videoPublicId = null;
+    }
+
     const updated = await Community.updatePostByOwner(postId, req.user.id, {
       content,
       imageUrl,
-      imagePublicId
+      imagePublicId,
+      videoUrl,
+      videoPublicId
     });
 
     if (!updated) {
@@ -309,6 +333,15 @@ exports.deletePost = async (req, res) => {
         await deleteFromCloudinary(publicId);
       } catch (cloudError) {
         console.error(`Cloudinary cleanup failed for post ${postId} asset ${publicId}:`, cloudError.message);
+      }
+    }
+
+    const videoPublicId = currentPost.video_public_id || extractPublicId(currentPost.video_url);
+    if (videoPublicId) {
+      try {
+        await deleteFromCloudinary(videoPublicId, 'video');
+      } catch (cloudError) {
+        console.error(`Cloudinary cleanup failed for post ${postId} video ${videoPublicId}:`, cloudError.message);
       }
     }
 

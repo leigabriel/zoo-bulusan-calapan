@@ -146,7 +146,12 @@ const CATALOG = {
         emailByDefault: false,
         reminder: false,
         title: () => 'Post Posted',
-        message: (data) => `Your post was added to the community feed.${data.photos ? ` It went live with ${data.photos} photo${data.photos > 1 ? 's' : ''}.` : ''}`
+        message: (data) => {
+            const attachments = [];
+            if (data.photos) attachments.push(`${data.photos} photo${data.photos > 1 ? 's' : ''}`);
+            if (data.video) attachments.push('a video');
+            return `Your post was added to the community feed.${attachments.length ? ` It went live with ${attachments.join(' and ')}.` : ''}`;
+        }
     },
     'message.replied': {
         category: null,

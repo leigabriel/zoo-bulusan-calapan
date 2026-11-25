@@ -2,10 +2,11 @@ const express = require('express');
 const router = express.Router();
 const communityController = require('../controllers/community-controller');
 const { protect, authorize, optionalAuth } = require('../middleware/auth');
-const { handleCloudinaryImageUpload, handleCloudinaryMultiImageUpload } = require('../middleware/cloudinary-upload');
+const { handleCloudinaryCommunityPostUpload } = require('../middleware/cloudinary-upload');
 
-// Up to five photos per post. Images are sent one at a time to Cloudinary (its Upload API
-// takes a single asset per request), which is why the client shows a running total.
+// Up to five photos and one 80MB video per post. Images are sent one at a time to Cloudinary
+// (its Upload API takes a single asset per request), which is why the client shows a running
+// total.
 const MAX_POST_IMAGES = 5;
 
 // Guests may read the community, so auth is resolved optionally rather than enforced:
@@ -22,8 +23,8 @@ router.get('/posts/:postId/comments', communityController.getCommentsByPost);
 router.get('/users/:userId/profile', communityController.getUserProfile);
 
 // --- Any signed-in user ---
-router.post('/posts', protect, handleCloudinaryMultiImageUpload('community', 'postImages', MAX_POST_IMAGES, 'postImage'), communityController.createPost);
-router.put('/posts/:postId', protect, handleCloudinaryImageUpload('community', 'postImage'), communityController.updatePost);
+router.post('/posts', protect, handleCloudinaryCommunityPostUpload(MAX_POST_IMAGES), communityController.createPost);
+router.put('/posts/:postId', protect, handleCloudinaryCommunityPostUpload(1), communityController.updatePost);
 router.delete('/posts/:postId', protect, communityController.deletePost);
 router.post('/posts/:postId/like', protect, communityController.togglePostLike);
 router.post('/posts/:postId/report', protect, communityController.reportPost);
