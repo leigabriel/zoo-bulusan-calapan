@@ -10,6 +10,7 @@ const { reservationQrSecret } = require('../config/app-config');
 const { validateTicketEdit, validateParticipantEdit } = require('../utils/reservation-edit-rules');
 const { validateTicketBooking } = require('../utils/reservation-quantity-rules');
 const { validateArchiveSelection, validatePermanentDelete } = require('../utils/reservation-archive-rules');
+const { isReservationLocked, LOCKED_MESSAGE } = require('../utils/reservation-lock-rules');
 const { readConfig: readEventPaymentConfig } = require('../config/event-payment-config');
 const { readConfig: readReservationConfig } = require('../config/reservation-config');
 const walkInService = require('../services/walk-in-service');
@@ -819,6 +820,13 @@ exports.updateUserHostedEvent = async (req, res) => {
         if (!existingReservation || Number(existingReservation.user_id) !== Number(userId)) {
             return res.status(404).json({ success: false, message: 'Event not found or you are not authorized to edit it' });
         }
+        if (isReservationLocked(existingReservation)) {
+            return res.status(409).json({
+                success: false,
+                reason: 'reservation_locked',
+                message: LOCKED_MESSAGE
+            });
+        }
         if (existingReservation.payment_status === 'paid' && participants !== Number(existingReservation.number_of_participants)) {
             return res.status(400).json({ success: false, message: 'Paid event reservations cannot change participant count.' });
         }
@@ -871,6 +879,13 @@ exports.uploadHostedEventImage = async (req, res) => {
         }
         if (Number(reservation.user_id) !== Number(userId)) {
             return res.status(403).json({ success: false, message: 'Not authorized to update this event' });
+        }
+        if (isReservationLocked(reservation)) {
+            return res.status(409).json({
+                success: false,
+                reason: 'reservation_locked',
+                message: LOCKED_MESSAGE
+            });
         }
         if (reservation.status !== 'confirmed') {
             return res.status(400).json({ success: false, message: 'Only confirmed events can have an image uploaded.' });

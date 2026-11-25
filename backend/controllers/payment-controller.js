@@ -5,22 +5,19 @@ const { notifyUser } = require('../services/notification-service');
 const { readConfig } = require('../config/event-payment-config');
 const ticketPaymentCfg = require('../config/ticket-payment-config');
 const readTicketConfig = ticketPaymentCfg.readConfig;
+const { isReservationLocked, LOCKED_MESSAGE } = require('../utils/reservation-lock-rules');
 
 const getFrontendUrl = () => (process.env.FRONTEND_URL || 'http://localhost:5173').replace(/\/$/, '');
 const getPayMongoSecretKey = () => process.env.PAYMONGO_SECRET_KEY?.trim();
 
-/**
- * A confirmed zoo ticket can only be refunded within 7 days of confirmation.
- * Unconfirmed tickets have no confirmed_at, so the rule does not apply yet.
- */
-const TICKET_REFUND_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
-
-const isTicketRefundWindowExpired = (confirmedAt) => {
-    if (!confirmedAt) return false;
-    const confirmed = new Date(confirmedAt);
-    if (Number.isNaN(confirmed.getTime())) return false;
-    return Date.now() >= confirmed.getTime() + TICKET_REFUND_WINDOW_MS;
-};
+// A confirmed or completed reservation is read-only once its seven-day window has
+// passed. Payment changes and refunds are refused here as well as hidden in the UI,
+// so a stale tab cannot bypass the rule.
+const lockedResponse = (res) => res.status(409).json({
+    success: false,
+    reason: 'reservation_locked',
+    message: LOCKED_MESSAGE
+});
 
 const paymongoRequest = async (body) => {
     const secretKey = getPayMongoSecretKey();
@@ -212,6 +209,9 @@ exports.setPayAtBulusan = async (req, res) => {
         if (!reservation || String(reservation.user_id) !== String(req.user.id)) {
             return res.status(404).json({ success: false, message: 'Event reservation not found.' });
         }
+        if (isReservationLocked(reservation)) {
+            return lockedResponse(res);
+        }
         if (reservation.payment_status === 'paid') {
             return res.json({ success: true, reservation });
         }
@@ -264,6 +264,9 @@ exports.requestEventRefund = async (req, res) => {
         if (!reservation || String(reservation.user_id) !== String(req.user.id)) {
             return res.status(404).json({ success: false, message: 'Event reservation not found.' });
         }
+        if (isReservationLocked(reservation)) {
+            return lockedResponse(res);
+        }
         if (reservation.payment_status !== 'paid') {
             return res.status(400).json({ success: false, message: 'Only paid reservations can request a refund.' });
         }
@@ -292,6 +295,9 @@ exports.createEventCheckout = async (req, res) => {
         const reservation = await Reservation.findEventReservationById(req.params.id);
         if (!reservation || String(reservation.user_id) !== String(req.user.id)) {
             return res.status(404).json({ success: false, message: 'Event reservation not found.' });
+        }
+        if (isReservationLocked(reservation)) {
+            return lockedResponse(res);
         }
         if (reservation.payment_status === 'paid') {
             return res.status(400).json({ success: false, message: 'This reservation is already paid.' });
@@ -446,6 +452,9 @@ exports.setTicketPayAtBulusan = async (req, res) => {
         if (!reservation || String(reservation.user_id) !== String(req.user.id)) {
             return res.status(404).json({ success: false, message: 'Ticket reservation not found.' });
         }
+        if (isReservationLocked(reservation)) {
+            return lockedResponse(res);
+        }
         if (reservation.payment_status === 'paid') {
             return res.json({ success: true, reservation });
         }
@@ -491,14 +500,11 @@ exports.requestTicketRefund = async (req, res) => {
         if (!reservation || String(reservation.user_id) !== String(req.user.id)) {
             return res.status(404).json({ success: false, message: 'Ticket reservation not found.' });
         }
+        if (isReservationLocked(reservation)) {
+            return lockedResponse(res);
+        }
         if (reservation.payment_status !== 'paid') {
             return res.status(400).json({ success: false, message: 'Only paid reservations can request a refund.' });
-        }
-        if (isTicketRefundWindowExpired(reservation.confirmed_at)) {
-            return res.status(400).json({
-                success: false,
-                message: 'Refund requests for confirmed tickets are only accepted within 7 days of confirmation.'
-            });
         }
         await Reservation.updateTicketPayment(reservation.id, {
             refundStatus: 'requested',
@@ -521,6 +527,9 @@ exports.createTicketCheckout = async (req, res) => {
         const reservation = await Reservation.findTicketReservationById(req.params.id);
         if (!reservation || String(reservation.user_id) !== String(req.user.id)) {
             return res.status(404).json({ success: false, message: 'Ticket reservation not found.' });
+        }
+        if (isReservationLocked(reservation)) {
+            return lockedResponse(res);
         }
         if (reservation.payment_status === 'paid') {
             return res.status(400).json({ success: false, message: 'This reservation is already paid.' });

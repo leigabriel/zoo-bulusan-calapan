@@ -96,15 +96,20 @@ test('ticket payment routes are registered and auth-gated', () => {
 });
 
 // ------------------------------------------------------ refund time window
-test('confirmed tickets stop being refundable after 7 days', () => {
+test('confirmed and completed reservations stop being refundable after 7 days', () => {
     const src = read('controllers/payment-controller.js');
+    const rules = read('utils/reservation-lock-rules.js');
 
-    assert.match(src, /TICKET_REFUND_WINDOW_MS = 7 \* 24 \* 60 \* 60 \* 1000/,
-        'the refund window must be seven days');
+    assert.match(rules, /RESERVATION_LOCK_WINDOW_DAYS = 7/,
+        'the lock window must be seven days');
 
-    const block = src.slice(src.indexOf('exports.requestTicketRefund'));
-    assert.match(block, /isTicketRefundWindowExpired\(reservation\.confirmed_at\)/,
-        'the ticket refund handler must enforce the confirmation window');
+    const ticketBlock = src.slice(src.indexOf('exports.requestTicketRefund'));
+    assert.match(ticketBlock, /isReservationLocked\(reservation\)/,
+        'the ticket refund handler must enforce the read-only window');
+
+    const eventBlock = src.slice(src.indexOf('exports.requestEventRefund'));
+    assert.match(eventBlock, /isReservationLocked\(reservation\)/,
+        'the event refund handler must enforce the read-only window');
 });
 
 // ---------------------------------------------------- ownership enforcement
