@@ -10,6 +10,7 @@ import { sanitizeInput } from '../../utils/sanitize';
 import { notify } from '../../utils/toast';
 import { isReservationLocked, reservationLockDeadline } from '../../utils/reservation-lock';
 import { formatSafeDate } from '../../utils/format-date';
+import { formatTime12 } from '../../utils/time-format';
 import useScrollLock from '../../hooks/use-scroll-lock';
 import { X, Calendar, Clock, Users, Edit, CheckCircle, ChevronLeft, Camera } from 'reicon-react';
 
@@ -86,19 +87,36 @@ const MyEvents = () => {
         }
     };
 
-    const formatDisplayDate = (dateStr) => {
-        if (!dateStr) return '-';
-        return new Date(dateStr + 'T00:00:00').toLocaleDateString('en-US', {
-            year: 'numeric', month: 'long', day: 'numeric',
-        });
+    const formatDisplayDate = (dateStr) =>
+        formatSafeDate(dateStr, { year: 'numeric', month: 'long', day: 'numeric' });
+
+    // Date/TIME columns can arrive as ISO timestamps or JS Date objects. Form controls
+    // and the 12-hour formatter need plain calendar values, so normalise them first.
+    const toDateInputValue = (value) => {
+        if (!value) return '';
+        const raw = typeof value === 'object' && value?.date ? value.date : value;
+        if (raw instanceof Date) {
+            if (Number.isNaN(raw.getTime())) return '';
+            const month = String(raw.getMonth() + 1).padStart(2, '0');
+            const day = String(raw.getDate()).padStart(2, '0');
+            return `${raw.getFullYear()}-${month}-${day}`;
+        }
+        const match = String(raw).trim().match(/^(\d{4})-(\d{2})-(\d{2})/);
+        return match ? match[0] : '';
     };
 
-    const formatTime = (time) => {
-        if (!time) return '';
-        const [hours, minutes] = time.split(':');
-        const h = parseInt(hours, 10);
-        return `${h % 12 || 12}:${minutes} ${h >= 12 ? 'PM' : 'AM'}`;
+    const toTimeInputValue = (value) => {
+        if (!value) return '';
+        const text = String(value).trim();
+        const clock = text.includes('T') ? text.split('T')[1] : text;
+        const match = clock.match(/^(\d{1,2}):(\d{2})/);
+        if (!match) return '';
+        const hours = Number(match[1]);
+        if (hours > 23) return '';
+        return `${String(hours).padStart(2, '0')}:${match[2]}`;
     };
+
+    const formatDisplayTime = (value) => formatTime12(toTimeInputValue(value) || value);
 
     const openEdit = (event) => {
         if (isReservationLocked(event)) {
@@ -108,9 +126,9 @@ const MyEvents = () => {
         setEditingEvent(event);
         setForm({
             venueEventName: event.venue_event_name || '',
-            venueEventDate: event.venue_event_date || '',
-            venueEventStartTime: event.venue_event_time || '',
-            venueEventEndTime: event.venue_event_end_time || '',
+            venueEventDate: toDateInputValue(event.venue_event_date),
+            venueEventStartTime: toTimeInputValue(event.venue_event_time),
+            venueEventEndTime: toTimeInputValue(event.venue_event_end_time),
             venueEventDescription: event.venue_event_description || '',
             numberOfParticipants: event.number_of_participants || 1,
             notes: event.notes || ''
@@ -313,8 +331,8 @@ const MyEvents = () => {
                                                 {(event.venue_event_time || event.venue_event_end_time) && (
                                                     <p className="flex items-center gap-2">
                                                         <Icons.Clock />
-                                                        {formatTime(event.venue_event_time) || '—'}
-                                                        {event.venue_event_end_time && <span>to {formatTime(event.venue_event_end_time)}</span>}
+                                                        {formatDisplayTime(event.venue_event_time) || '—'}
+                                                        {event.venue_event_end_time && <span>to {formatDisplayTime(event.venue_event_end_time)}</span>}
                                                     </p>
                                                 )}
                                                 <p className="flex items-center gap-2">
@@ -406,7 +424,7 @@ const MyEvents = () => {
                                                 type="number"
                                                 value={form.numberOfParticipants}
                                                 onChange={e => setForm({ ...form, numberOfParticipants: e.target.value })}
-                                                min="1" max="500"
+                                                min="1" max="10000"
                                                 className="border-b border-gray-300 py-2 md:py-3 text-sm md:text-base text-black font-medium focus:border-black outline-none bg-transparent transition-colors rounded-none"
                                                 required
                                             />

@@ -3,18 +3,14 @@ import { PAGE_BG_GRADIENT } from '../../config/page-gradient';
 import { AnimatePresence, motion as Motion } from 'framer-motion';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { useNavigate } from 'react-router-dom';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 import { ReactLenis } from 'lenis/react';
 import AIFloatingButton from '../../components/common/AIFloatingButton';
-import { userAPI, reservationAPI } from '../../services/api-client';
-import { useAuth } from '../../hooks/use-auth';
-import { sanitizeInput, sanitizeEmail, sanitizePhone } from '../../utils/sanitize';
-import { notify } from '../../utils/toast';
+import { userAPI } from '../../services/api-client';
 import useScrollLock from '../../hooks/use-scroll-lock';
 import EventViews, { ViewToggle } from '../../components/features/events/EventViews';
-import { X, Location, Clock, CheckCircle, Users } from 'reicon-react';
+import { X, Location, Clock, Users } from 'reicon-react';
 import usePageMetadata from '../../hooks/use-page-metadata';
 import { handleEventImageError, resolveEventImageUrl } from '../../utils/event-images';
 
@@ -32,8 +28,7 @@ const Icons = {
     Close: () => <X className="w-5 h-5" />,
     Location: () => <Location className="w-4 h-4 flex-shrink-0" />,
     Clock: () => <Clock className="w-4 h-4 flex-shrink-0" />,
-    Users: () => <Users className="w-4 h-4 flex-shrink-0" />,
-    Check: () => <CheckCircle className="w-8 h-8" />
+    Users: () => <Users className="w-4 h-4 flex-shrink-0" />
 };
 
 const StatusBadge = ({ status }) => {
@@ -46,8 +41,6 @@ const StatusBadge = ({ status }) => {
 
 const Events = () => {
     usePageMetadata('Events | Bulusan Zoo', 'Upcoming events, tours and activities at Bulusan Zoo in Calapan City, Oriental Mindoro.', 'https://bulusanzoo.com/events');
-    const navigate = useNavigate();
-    const { user, isAuthenticated } = useAuth();
     const containerRef = useRef(null);
 
     const [events, setEvents] = useState([]);
@@ -68,24 +61,7 @@ const Events = () => {
     });
     const [calendarDate, setCalendarDate] = useState(new Date());
 
-    const [eventForm, setEventForm] = useState({
-        venueEventName: '', venueEventDate: '', venueEventStartTime: '', venueEventEndTime: '',
-        venueEventDescription: '', numberOfParticipants: 1,
-        participantName: '', participantEmail: '', participantPhone: '', notes: ''
-    });
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
-    const [showConfirmation, setShowConfirmation] = useState(false);
-    const [confirmationData, setConfirmationData] = useState(null);
-
-    useEffect(() => {
-        if (user) {
-            const fullName = `${user.firstName || ''} ${user.lastName || ''}`.trim();
-            setEventForm(prev => ({ ...prev, participantName: fullName, participantEmail: user.email || '' }));
-        }
-    }, [user]);
-
-    useScrollLock(Boolean(selectedEvent || showSubmitConfirm || showConfirmation));
+    useScrollLock(Boolean(selectedEvent));
 
     const formatDateFromDB = (dateValue) => {
         if (!dateValue) return '';
@@ -181,8 +157,6 @@ const Events = () => {
         });
     };
 
-    const getMinDate = () => new Date().toISOString().split('T')[0];
-
     const changeView = (next) => {
         setView(next);
         // Remembering the choice is a nicety, never a reason to fail the interaction.
@@ -197,70 +171,6 @@ const Events = () => {
         () => (filter === 'all' ? events : events.filter((e) => e.status === filter)),
         [events, filter]
     );
-
-    const handleSubmitAttempt = (e) => {
-        e.preventDefault();
-        if (!isAuthenticated) {
-            notify.warning('Log in to reserve this event.', {
-                action: {
-                    label: 'Log in',
-                    onClick: () => navigate('/login')
-                }
-            });
-            return;
-        }
-        if (!eventForm.venueEventName || !eventForm.venueEventDate) {
-            notify.warning('Provide name and date.');
-            return;
-        }
-        if (!eventForm.venueEventStartTime || !eventForm.venueEventEndTime) {
-            notify.warning('Provide start and end time.');
-            return;
-        }
-        setShowSubmitConfirm(true);
-    };
-
-    const confirmSubmit = async () => {
-        setShowSubmitConfirm(false);
-        setIsSubmitting(true);
-        try {
-            const res = await reservationAPI.createEventReservation({
-                venueEventName: eventForm.venueEventName,
-                venueEventDate: eventForm.venueEventDate,
-                venueEventStartTime: eventForm.venueEventStartTime,
-                venueEventEndTime: eventForm.venueEventEndTime,
-                venueEventDescription: eventForm.venueEventDescription,
-                participantName: eventForm.participantName,
-                participantEmail: eventForm.participantEmail,
-                participantPhone: eventForm.participantPhone,
-                numberOfParticipants: parseInt(eventForm.numberOfParticipants) || 1,
-                notes: eventForm.notes
-            });
-            if (res.success) {
-                setConfirmationData({
-                    type: 'event',
-                    reference: res.reservationReference,
-                    eventName: eventForm.venueEventName,
-                    eventDate: eventForm.venueEventDate,
-                    participants: eventForm.numberOfParticipants
-                });
-                setShowConfirmation(true);
-                const fullName = user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : '';
-                setEventForm({
-                    venueEventName: '', venueEventDate: '', venueEventStartTime: '', venueEventEndTime: '',
-                    venueEventDescription: '', numberOfParticipants: 1,
-                    participantName: fullName, participantEmail: user?.email || '',
-                    participantPhone: '', notes: ''
-                });
-            } else {
-                throw new Error(res.message || 'Failed to create reservation');
-            }
-        } catch (err) {
-            notify.error(err.message || "Couldn't complete reservation.");
-        } finally {
-            setIsSubmitting(false);
-        }
-    };
 
     return (
         <ReactLenis root>
@@ -308,126 +218,6 @@ const Events = () => {
                         </>
                     )}
                 </div>
-
-                <section className="bg-green-400 py-16 md:py-32 px-4 border-t border-gray-200">
-                    <div className="max-w-4xl mx-auto section-anim">
-                        <div className="text-center mb-10 md:mb-16">
-                            <h2 className="text-3xl md:text-5xl lg:text-6xl text-black mb-4">Plan Your Own Event</h2>
-                            <p className="text-gray-500 text-sm md:text-lg px-4">Book our venue for your private gatherings and educational tours.</p>
-                        </div>
-
-                        <form onSubmit={handleSubmitAttempt} className="bg-white p-6 sm:p-8 md:p-12 rounded-xl md:rounded-2xl shadow-sm border border-gray-200">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 mb-6 md:mb-8">
-                                <div className="flex flex-col gap-2">
-                                    <label className="text-[11px] md:text-xs font-bold uppercase tracking-widest text-gray-500">Event Name *</label>
-                                    <input
-                                        type="text"
-                                        value={eventForm.venueEventName}
-                                        onChange={e => setEventForm({ ...eventForm, venueEventName: sanitizeInput(e.target.value) })}
-                                        className="border-b border-gray-300 py-2 md:py-3 text-sm md:text-base text-black font-medium focus:border-black outline-none bg-transparent transition-colors rounded-none"
-                                        placeholder="E.g., Corporate Retreat"
-                                        required
-                                    />
-                                </div>
-                                <div className="flex flex-col gap-2">
-                                    <label className="text-[11px] md:text-xs font-bold uppercase tracking-widest text-gray-500">Estimated Attendees *</label>
-                                    <input
-                                        type="number"
-                                        value={eventForm.numberOfParticipants}
-                                        onChange={e => setEventForm({ ...eventForm, numberOfParticipants: e.target.value })}
-                                        min="1" max="500"
-                                        className="border-b border-gray-300 py-2 md:py-3 text-sm md:text-base text-black font-medium focus:border-black outline-none bg-transparent transition-colors rounded-none"
-                                        required
-                                    />
-                                </div>
-                                <div className="flex flex-col gap-2">
-                                    <label className="text-[11px] md:text-xs font-bold uppercase tracking-widest text-gray-500">Event Date *</label>
-                                    <input
-                                        type="date"
-                                        value={eventForm.venueEventDate}
-                                        onChange={e => setEventForm({ ...eventForm, venueEventDate: e.target.value })}
-                                        min={getMinDate()}
-                                        className="border-b border-gray-300 py-2 md:py-3 text-sm md:text-base text-black font-medium focus:border-black outline-none bg-transparent transition-colors rounded-none"
-                                        required
-                                    />
-                                </div>
-                                <div className="flex flex-col gap-2">
-                                    <label className="text-[11px] md:text-xs font-bold uppercase tracking-widest text-gray-500">Event Start Time *</label>
-                                    <input
-                                        type="time"
-                                        value={eventForm.venueEventStartTime}
-                                        onChange={e => setEventForm({ ...eventForm, venueEventStartTime: e.target.value })}
-                                        className="border-b border-gray-300 py-2 md:py-3 text-sm md:text-base text-black font-medium focus:border-black outline-none bg-transparent transition-colors rounded-none"
-                                        required
-                                    />
-                                </div>
-                                <div className="flex flex-col gap-2">
-                                    <label className="text-[11px] md:text-xs font-bold uppercase tracking-widest text-gray-500">Event End Time *</label>
-                                    <input
-                                        type="time"
-                                        value={eventForm.venueEventEndTime}
-                                        onChange={e => setEventForm({ ...eventForm, venueEventEndTime: e.target.value })}
-                                        className="border-b border-gray-300 py-2 md:py-3 text-sm md:text-base text-black font-medium focus:border-black outline-none bg-transparent transition-colors rounded-none"
-                                        required
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 mb-6 md:mb-8 pt-6 md:pt-8 border-t border-gray-100">
-                                <div className="flex flex-col gap-2">
-                                    <label className="text-[11px] md:text-xs font-bold uppercase tracking-widest text-gray-500">Full Name *</label>
-                                    <input
-                                        type="text"
-                                        value={eventForm.participantName}
-                                        onChange={e => setEventForm({ ...eventForm, participantName: sanitizeInput(e.target.value) })}
-                                        className="border-b border-gray-300 py-2 md:py-3 text-sm md:text-base text-black font-medium focus:border-black outline-none bg-transparent transition-colors rounded-none"
-                                        placeholder="John Doe"
-                                        required
-                                    />
-                                </div>
-                                <div className="flex flex-col gap-2">
-                                    <label className="text-[11px] md:text-xs font-bold uppercase tracking-widest text-gray-500">Email Address *</label>
-                                    <input
-                                        type="email"
-                                        value={eventForm.participantEmail}
-                                        onChange={e => setEventForm({ ...eventForm, participantEmail: sanitizeEmail(e.target.value) })}
-                                        className="border-b border-gray-300 py-2 md:py-3 text-sm md:text-base text-black font-medium focus:border-black outline-none bg-transparent transition-colors rounded-none"
-                                        placeholder="john@example.com"
-                                        required
-                                    />
-                                </div>
-                                <div className="flex flex-col gap-2 md:col-span-2">
-                                    <label className="text-[11px] md:text-xs font-bold uppercase tracking-widest text-gray-500">Phone Number</label>
-                                    <input
-                                        type="tel"
-                                        value={eventForm.participantPhone}
-                                        onChange={e => setEventForm({ ...eventForm, participantPhone: sanitizePhone(e.target.value) })}
-                                        className="border-b border-gray-300 py-2 md:py-3 text-sm md:text-base text-black font-medium focus:border-black outline-none bg-transparent transition-colors rounded-none"
-                                        placeholder="+63 900 000 0000"
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="flex flex-col gap-2 mb-10 md:mb-12">
-                                <label className="text-[11px] md:text-xs font-bold uppercase tracking-widest text-gray-500">Additional Details & Requirements</label>
-                                <textarea
-                                    value={eventForm.venueEventDescription}
-                                    onChange={e => setEventForm({ ...eventForm, venueEventDescription: sanitizeInput(e.target.value) })}
-                                    className="border-b border-gray-300 py-2 md:py-3 text-sm md:text-base text-black font-medium focus:border-black outline-none bg-transparent transition-colors min-h-[80px] md:min-h-[100px] resize-y rounded-none"
-                                    placeholder="Please describe your event setup, specific requests, or questions..."
-                                />
-                            </div>
-
-                            <button
-                                type="submit"
-                                disabled={isSubmitting}
-                                className="w-full py-4 md:py-5 bg-black text-white rounded-full text-[11px] md:text-xs font-bold uppercase tracking-widest hover:bg-gray-800 disabled:opacity-50 transition-colors"
-                            >
-                                {isSubmitting ? 'Processing...' : 'Submit Request'}
-                            </button>
-                        </form>
-                    </div>
-                </section>
 
                 <AnimatePresence>
                     {selectedEvent && (
@@ -518,82 +308,6 @@ const Events = () => {
                                 </div>
                             </Motion.div>
                         </Motion.div>
-                    )}
-                </AnimatePresence>
-
-                <AnimatePresence>
-                    {showSubmitConfirm && (
-                        <div role="dialog" aria-modal="true" aria-label="Verify registration details" className="fixed inset-0 z-[250] flex items-center justify-center p-4">
-                            <Motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-                            <Motion.div
-                                initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
-                                className="bg-white rounded-2xl w-full max-w-md relative z-10 overflow-hidden shadow-2xl p-6 md:p-8 text-center"
-                            >
-                                <div className="w-12 h-12 md:w-16 md:h-16 mx-auto bg-black text-white rounded-full flex items-center justify-center mb-4 md:mb-6"><Icons.Check /></div>
-                                <h3 className="text-2xl md:text-3xl mb-2 text-black">Verify Details</h3>
-                                <p className="text-gray-500 text-sm mb-6 md:mb-8">Please ensure the information below is correct.</p>
-
-                                <div className="space-y-3 md:space-y-4 mb-6 md:mb-8 text-left bg-gray-50 p-4 md:p-6 rounded-xl border border-gray-100 text-sm md:text-base">
-                                    <div className="flex justify-between border-b border-gray-200 pb-2">
-                                        <span className="text-[11px] md:text-xs font-bold uppercase text-gray-400">Event</span>
-                                        <span className="font-medium text-black truncate max-w-[150px] sm:max-w-[200px]">{eventForm.venueEventName}</span>
-                                    </div>
-                                    <div className="flex justify-between border-b border-gray-200 pb-2">
-                                        <span className="text-[11px] md:text-xs font-bold uppercase text-gray-400">Date</span>
-                                        <span className="font-medium text-black">{formatDateFromDB(eventForm.venueEventDate)}</span>
-                                    </div>
-                                    <div className="flex justify-between border-b border-gray-200 pb-2">
-                                        <span className="text-[11px] md:text-xs font-bold uppercase text-gray-400">Start Time</span>
-                                        <span className="font-medium text-black">{eventForm.venueEventStartTime || '—'}</span>
-                                    </div>
-                                    <div className="flex justify-between border-b border-gray-200 pb-2">
-                                        <span className="text-[11px] md:text-xs font-bold uppercase text-gray-400">End Time</span>
-                                        <span className="font-medium text-black">{eventForm.venueEventEndTime || '—'}</span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                        <span className="text-[11px] md:text-xs font-bold uppercase text-gray-400">Attendees</span>
-                                        <span className="font-medium text-black">{eventForm.numberOfParticipants}</span>
-                                    </div>
-                                </div>
-
-                                <div className="flex flex-col sm:flex-row gap-3 md:gap-4">
-                                    <button onClick={() => setShowSubmitConfirm(false)} className="flex-1 py-3 md:py-4 rounded-full border border-gray-200 text-[11px] md:text-xs font-bold uppercase tracking-widest text-black hover:bg-gray-50">Return</button>
-                                    <button onClick={confirmSubmit} disabled={isSubmitting} className="flex-1 py-3 md:py-4 rounded-full bg-black text-white text-[11px] md:text-xs font-bold uppercase tracking-widest hover:bg-gray-800 disabled:opacity-50">
-                                        {isSubmitting ? 'Wait...' : 'Confirm'}
-                                    </button>
-                                </div>
-                            </Motion.div>
-                        </div>
-                    )}
-                </AnimatePresence>
-
-                <AnimatePresence>
-                    {showConfirmation && confirmationData && (
-                        <div role="dialog" aria-modal="true" aria-label="Registration confirmed" className="fixed inset-0 z-[300] flex items-center justify-center p-4">
-                            <Motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-                            <Motion.div
-                                initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }}
-                                className="bg-white rounded-2xl w-full max-w-md p-8 md:p-10 relative z-10 text-center shadow-2xl"
-                            >
-                                <div className="mb-4 md:mb-6 text-green-500 flex justify-center"><Icons.Check /></div>
-                                <h3 className="text-3xl md:text-4xl mb-2 text-black">Confirmed</h3>
-                                <p className="text-gray-500 text-sm mb-6 md:mb-8">Your reservation request has been received.</p>
-
-                                <div className="bg-gray-50 border border-gray-100 rounded-xl p-4 md:p-6 mb-6 md:mb-8">
-                                    <span className="text-[11px] md:text-xs font-bold uppercase tracking-widest text-gray-400 block mb-2">Reference ID</span>
-                                    <span className="text-xl md:text-2xl text-black">{confirmationData.reference}</span>
-                                </div>
-
-                                <div className="space-y-3">
-                                    <button onClick={() => { setShowConfirmation(false); navigate('/reservations'); }} className="w-full py-3 md:py-4 bg-black text-white rounded-full text-[11px] md:text-xs font-bold uppercase tracking-widest hover:bg-gray-800">
-                                        Manage Bookings
-                                    </button>
-                                    <button onClick={() => setShowConfirmation(false)} className="w-full py-3 md:py-4 border border-gray-200 rounded-full text-[11px] md:text-xs font-bold uppercase tracking-widest text-black hover:bg-gray-50">
-                                        Dismiss
-                                    </button>
-                                </div>
-                            </Motion.div>
-                        </div>
                     )}
                 </AnimatePresence>
 
