@@ -11,10 +11,9 @@ import { appendConsentRecord } from '../../utils/consent';
 import {
     canRequestRefund,
     isPaidAtVenue,
-    isTicketRefundExpired,
-    paymentMethodLabel,
-    ticketRefundDeadline
+    paymentMethodLabel
 } from '../../utils/payment-status';
+import { isReservationLocked, reservationLockDeadline } from '../../utils/reservation-lock';
 import { Ticket, Calendar, X, Archive, RotateLeft, CreditCard, DollarCircle } from 'reicon-react';
 
 const LegacyIcons = {
@@ -777,8 +776,8 @@ const ReservationHistoryPanel = ({ isOpen, onClose, paymentReturn = false, focus
         return Math.round(perParticipant * participants * 100) / 100;
     };
 
-    const selectedTicketRefundDeadline = ticketRefundDeadline(selectedReservation?.confirmed_at);
-    const selectedTicketRefundExpired = isTicketRefundExpired(selectedReservation?.confirmed_at);
+    const selectedLockDeadline = reservationLockDeadline(selectedReservation);
+    const selectedReservationLocked = isReservationLocked(selectedReservation);
 
     // Handles both reservation kinds. `type` decides which backend endpoints are
     // called and which config gate applies; the flow itself is identical.
@@ -1111,6 +1110,13 @@ const ReservationHistoryPanel = ({ isOpen, onClose, paymentReturn = false, focus
                                     <p className="font-mono text-base sm:text-lg font-bold text-slate-700 break-all">{selectedReservation.reservation_reference}</p>
                                 </div>
 
+                                {selectedReservationLocked && (
+                                    <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-xs leading-5 text-slate-500">
+                                        This reservation is closed. Seven days after confirmation or completion, it can only be downloaded or archived.
+                                        {selectedLockDeadline && ` The change window closed on ${formatSafeDate(selectedLockDeadline, { dateStyle: 'medium' })}.`}
+                                    </div>
+                                )}
+
                                 <div className="space-y-3 text-sm">
                                     <div className="flex justify-between items-start gap-3 py-2 border-b border-slate-100">
                                         <span className="text-slate-500 flex-shrink-0">Buyer</span>
@@ -1186,39 +1192,30 @@ const ReservationHistoryPanel = ({ isOpen, onClose, paymentReturn = false, focus
                                                         >
                                                             {downloadingPayment ? 'Preparing...' : 'Download Receipt'}
                                                         </button>
-                                                        {/* Only a PayMongo charge can be reversed here. "Pay at
-                                                            Bulusan" is settled in cash at the gate, so no refund
-                                                            button is offered - and the reason is spelled out so the
-                                                            single button does not look broken. */}
-                                                        {canRequestRefund(selectedReservation.payment_method, selectedReservation.payment_status) ? (
-                                                            <>
+                                                        {/* Once the seven-day window has passed the booking is
+                                                            read-only: the receipt stays downloadable, but a
+                                                            refund or payment change is no longer offered. */}
+                                                        {!selectedReservationLocked && (
+                                                            canRequestRefund(selectedReservation.payment_method, selectedReservation.payment_status) ? (
                                                                 <button
                                                                     onClick={handleRefundRequest}
-                                                                    disabled={refundLoading || Boolean(selectedReservation.refund_status) || selectedTicketRefundExpired}
+                                                                    disabled={refundLoading || Boolean(selectedReservation.refund_status)}
                                                                     className="w-full rounded-xl border border-amber-200 bg-amber-50 py-3 text-xs font-bold uppercase tracking-wider text-amber-700 transition hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-60"
                                                                 >
                                                                     {refundLoading
                                                                         ? 'Submitting...'
                                                                         : selectedReservation.refund_status
                                                                             ? `Refund ${selectedReservation.refund_status}`
-                                                                            : selectedTicketRefundExpired
-                                                                                ? 'Refund window ended'
-                                                                                : 'Request Refund'}
+                                                                            : 'Request Refund'}
                                                                 </button>
-                                                                {selectedTicketRefundExpired && !selectedReservation.refund_status && (
-                                                                    <p className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-xs leading-5 text-slate-500">
-                                                                        Confirmed tickets can only be refunded within 7 days of confirmation.
-                                                                        {selectedTicketRefundDeadline && ` The refund window closed on ${formatSafeDate(selectedTicketRefundDeadline, { dateStyle: 'medium' })}.`}
-                                                                    </p>
-                                                                )}
-                                                            </>
-                                                        ) : isPaidAtVenue(selectedReservation.payment_method) && (
-                                                            <p className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-xs leading-5 text-slate-500">
-                                                                Paid at Bulusan in cash, so there is no online charge to refund. Any refund is settled at the gate.
-                                                            </p>
+                                                            ) : isPaidAtVenue(selectedReservation.payment_method) && (
+                                                                <p className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-xs leading-5 text-slate-500">
+                                                                    Paid at Bulusan in cash, so there is no online charge to refund. Any refund is settled at the gate.
+                                                                </p>
+                                                            )
                                                         )}
                                                     </div>
-                                                ) : calculateTotal(selectedReservation) > 0 && (
+                                                ) : !selectedReservationLocked && calculateTotal(selectedReservation) > 0 && (
                                                     <div className="flex flex-col sm:flex-row gap-3 mt-4">
                                                         {ticketPaymentConfig.qrphEnabled && <button
                                                             onClick={() => { setPaymentOption('now'); setPaymentConsent(false); setShowPaymentDemo(true); }}
@@ -1273,23 +1270,25 @@ const ReservationHistoryPanel = ({ isOpen, onClose, paymentReturn = false, focus
                                                                    >
                                                                        {downloadingPayment ? 'Preparing...' : 'Download Receipt'}
                                                                    </button>
-                                                                   {/* Same rule as tickets: only a PayMongo charge can be reversed
-                                                                       online. 'Pay at Bulusan' is settled in cash at the gate. */}
-                                                                   {canRequestRefund(selectedReservation.payment_method, selectedReservation.payment_status) ? (
-                                                                       <button
-                                                                           onClick={handleRefundRequest}
-                                                                           disabled={refundLoading || Boolean(selectedReservation.refund_status)}
-                                                                           className="w-full rounded-xl border border-amber-200 bg-amber-50 py-3 text-xs font-bold uppercase tracking-wider text-amber-700 transition hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-60"
-                                                                       >
-                                                                           {refundLoading ? 'Submitting...' : selectedReservation.refund_status ? `Refund ${selectedReservation.refund_status}` : 'Request Refund'}
-                                                                       </button>
-                                                                   ) : isPaidAtVenue(selectedReservation.payment_method) && (
-                                                                       <p className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-xs leading-5 text-slate-500">
-                                                                           Paid via {paymentMethodLabel(selectedReservation.payment_method)}, so there is no online charge to refund. Any refund is settled at the gate.
-                                                                       </p>
+                                                                   {/* Same rule as tickets: a locked booking keeps the
+                                                                       receipt but loses the refund and payment actions. */}
+                                                                   {!selectedReservationLocked && (
+                                                                       canRequestRefund(selectedReservation.payment_method, selectedReservation.payment_status) ? (
+                                                                           <button
+                                                                               onClick={handleRefundRequest}
+                                                                               disabled={refundLoading || Boolean(selectedReservation.refund_status)}
+                                                                               className="w-full rounded-xl border border-amber-200 bg-amber-50 py-3 text-xs font-bold uppercase tracking-wider text-amber-700 transition hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-60"
+                                                                           >
+                                                                               {refundLoading ? 'Submitting...' : selectedReservation.refund_status ? `Refund ${selectedReservation.refund_status}` : 'Request Refund'}
+                                                                           </button>
+                                                                       ) : isPaidAtVenue(selectedReservation.payment_method) && (
+                                                                           <p className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-xs leading-5 text-slate-500">
+                                                                               Paid via {paymentMethodLabel(selectedReservation.payment_method)}, so there is no online charge to refund. Any refund is settled at the gate.
+                                                                           </p>
+                                                                       )
                                                                    )}
                                                            </div>
-                                                    ) : getEventAmount(selectedReservation) > 0 && (
+                                                    ) : !selectedReservationLocked && getEventAmount(selectedReservation) > 0 && (
                                                       <div className="flex flex-col sm:flex-row gap-3 mt-4">
                                                           {eventPaymentConfig.qrphEnabled && <button
                                                              onClick={() => { setPaymentOption('now'); setPaymentConsent(false); setShowPaymentDemo(true); }}
@@ -1346,7 +1345,7 @@ const ReservationHistoryPanel = ({ isOpen, onClose, paymentReturn = false, focus
                         </div>
 
                         <div className="w-full mt-4 flex flex-col sm:flex-row gap-3">
-                            {selectedReservation.type === 'event' && selectedReservation.status === 'confirmed' && (
+                            {selectedReservation.type === 'event' && selectedReservation.status === 'confirmed' && !selectedReservationLocked && (
                                 <button
                                     onClick={() => { setSelectedReservation(null); navigate('/my-events'); }}
                                     className="flex-1 py-3.5 bg-teal-600 text-white hover:bg-teal-700 font-semibold uppercase tracking-wider text-xs rounded-xl shadow-sm transition flex items-center justify-center gap-2"
@@ -1354,7 +1353,7 @@ const ReservationHistoryPanel = ({ isOpen, onClose, paymentReturn = false, focus
                                     Manage Event
                                 </button>
                             )}
-                            {selectedReservation.status === 'pending' && (
+                            {selectedReservation.status === 'pending' && !selectedReservationLocked && (
                                 <>
                                     <button
                                         onClick={() => openEditModal(selectedReservation)}

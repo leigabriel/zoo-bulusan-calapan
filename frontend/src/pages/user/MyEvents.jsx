@@ -8,6 +8,8 @@ import AIFloatingButton from '../../components/common/AIFloatingButton';
 import { reservationAPI } from '../../services/api-client';
 import { sanitizeInput } from '../../utils/sanitize';
 import { notify } from '../../utils/toast';
+import { isReservationLocked, reservationLockDeadline } from '../../utils/reservation-lock';
+import { formatSafeDate } from '../../utils/format-date';
 import useScrollLock from '../../hooks/use-scroll-lock';
 import { X, Calendar, Clock, Users, Edit, CheckCircle, ChevronLeft, Camera } from 'reicon-react';
 
@@ -99,6 +101,10 @@ const MyEvents = () => {
     };
 
     const openEdit = (event) => {
+        if (isReservationLocked(event)) {
+            notify.warning('This event is closed. Seven days after confirmation, it is read-only.');
+            return;
+        }
         setEditingEvent(event);
         setForm({
             venueEventName: event.venue_event_name || '',
@@ -114,6 +120,10 @@ const MyEvents = () => {
     const saveChanges = async () => {
         if (!form.venueEventName || !form.venueEventDate) {
             notify.warning('Provide name and date.');
+            return;
+        }
+        if (isReservationLocked(editingEvent)) {
+            notify.warning('This event is closed and can no longer be edited.');
             return;
         }
         setSaving(true);
@@ -147,6 +157,11 @@ const MyEvents = () => {
     const handlePhotoFileChange = (e, event) => {
         const file = e.target.files[0];
         if (!file) return;
+        if (isReservationLocked(event)) {
+            e.target.value = '';
+            notify.warning('This event is closed. Its photo can no longer be changed.');
+            return;
+        }
         const reader = new FileReader();
         reader.onloadend = () => {
             setPhotoUpload({ id: event.id, file, preview: reader.result });
@@ -228,6 +243,8 @@ const MyEvents = () => {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             {events.map((event) => {
                                 const isUploadingThis = photoUpload && photoUpload.id === event.id;
+                                const locked = isReservationLocked(event);
+                                const lockDeadline = reservationLockDeadline(event);
                                 return (
                                     <div key={event.id} className="bg-white border border-gray-200 rounded-2xl shadow-sm hover:shadow-md transition-shadow overflow-hidden">
                                         <div className="p-6 md:p-8 flex flex-col h-full">
@@ -261,16 +278,18 @@ const MyEvents = () => {
                                                         </div>
                                                     </div>
                                                 ) : (
-                                                    <label className="absolute bottom-3 right-3 flex items-center gap-2 px-3 py-2 bg-black/70 text-white text-[11px] font-bold uppercase tracking-widest rounded-full cursor-pointer hover:bg-black/90 transition-colors backdrop-blur-sm">
-                                                        <Camera className="h-3.5 w-3.5" />
-                                                        <span>Change Photo</span>
-                                                        <input
-                                                            type="file"
-                                                            accept="image/*"
-                                                            className="hidden"
-                                                            onChange={(e) => handlePhotoFileChange(e, event)}
-                                                        />
-                                                    </label>
+                                                    !locked && (
+                                                        <label className="absolute bottom-3 right-3 flex items-center gap-2 px-3 py-2 bg-black/70 text-white text-[11px] font-bold uppercase tracking-widest rounded-full cursor-pointer hover:bg-black/90 transition-colors backdrop-blur-sm">
+                                                            <Camera className="h-3.5 w-3.5" />
+                                                            <span>Change Photo</span>
+                                                            <input
+                                                                type="file"
+                                                                accept="image/*"
+                                                                className="hidden"
+                                                                onChange={(e) => handlePhotoFileChange(e, event)}
+                                                            />
+                                                        </label>
+                                                    )
                                                 )}
                                             </div>
                                             <div className="flex items-start justify-between gap-4 mb-4">
@@ -309,13 +328,20 @@ const MyEvents = () => {
                                                     <span className="text-[11px] uppercase tracking-widest font-bold text-gray-400 block mb-1">Reference ID</span>
                                                     <span className="font-mono text-sm text-black">{event.reservation_reference}</span>
                                                 </div>
-                                                <button
-                                                    onClick={() => openEdit(event)}
-                                                    className="w-full py-3.5 bg-black text-white rounded-xl text-[11px] md:text-xs font-bold uppercase tracking-widest hover:bg-gray-800 transition-colors flex items-center justify-center gap-2"
-                                                >
-                                                    <Icons.Edit />
-                                                    Edit Event Details
-                                                </button>
+                                                {locked ? (
+                                                    <p className="rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-xs leading-5 text-gray-500">
+                                                        This event is closed. Seven days after confirmation it can no longer be edited.
+                                                        {lockDeadline && ` The change window closed on ${formatSafeDate(lockDeadline, { dateStyle: 'medium' })}.`}
+                                                    </p>
+                                                ) : (
+                                                    <button
+                                                        onClick={() => openEdit(event)}
+                                                        className="w-full py-3.5 bg-black text-white rounded-xl text-[11px] md:text-xs font-bold uppercase tracking-widest hover:bg-gray-800 transition-colors flex items-center justify-center gap-2"
+                                                    >
+                                                        <Icons.Edit />
+                                                        Edit Event Details
+                                                    </button>
+                                                )}
                                             </div>
                                         </div>
                                     </div>

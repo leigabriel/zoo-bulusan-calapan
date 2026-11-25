@@ -8,7 +8,7 @@ import AIFloatingButton from '../../components/common/AIFloatingButton';
 import usePageMetadata from '../../hooks/use-page-metadata';
 
 const GAME_URL = 'https://adventuregame.bulusanzoo.com';
-const ANDROID_APK_URL = 'https://pub-2e54fcfc02914be28064e5210d94f00b.r2.dev/master/Bulusan-Zootopia-Adventure-Game-4.4.apk';
+const ANDROID_APK_URL = 'https://pub-2e54fcfc02914be28064e5210d94f00b.r2.dev/master/Bulusan-Zootopia-Adventure-Game-4.5.apk';
 
 const screens = [
     {
