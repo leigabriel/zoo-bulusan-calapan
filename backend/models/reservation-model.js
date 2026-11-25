@@ -121,7 +121,8 @@ class Reservation {
 
     static async findHostedEventReservationsByUserId(userId) {
         const [rows] = await db.query(
-            `SELECT er.*, e.title as event_title, e.event_date, e.start_time, e.end_time, e.location as event_location,
+            `SELECT er.*, DATE_FORMAT(er.venue_event_date, '%Y-%m-%d') AS venue_event_date_display,
+                    e.title as event_title, e.event_date, e.start_time, e.end_time, e.location as event_location,
                     e.image_url as event_image_url,
                     CONCAT(u.first_name, ' ', u.last_name) as user_name, u.email as user_email 
              FROM event_reservations er 
@@ -132,7 +133,10 @@ class Reservation {
              ORDER BY er.venue_event_date ASC`,
             [userId]
         );
-        return rows;
+        return rows.map(row => ({
+            ...row,
+            venue_event_date: row.venue_event_date_display || row.venue_event_date
+        }));
     }
 
     static async createTicketReservation(data) {

@@ -47,7 +47,9 @@ const generateReservationReference = () => {
 };
 
 const TICKET_DAILY_CAPACITY = 100;
-const EVENT_SLOT_CAPACITY = 100;
+// Venue bookings are large private events, so a date may take the same 10,000
+// participant ceiling that a single reservation is allowed.
+const EVENT_SLOT_CAPACITY = 10000;
 
 const EVENT_IMAGE_PLACEHOLDER = '/images/event-img-placeholder.jpg';
 
