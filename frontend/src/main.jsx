@@ -21,11 +21,26 @@ try {
     // Storage can be unavailable in private browsing or restricted contexts.
 }
 
-if (import.meta.env.PROD && 'serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js').catch(() => {
+// Retire service workers registered by earlier builds so their caches cannot
+// keep serving outdated assets. Safe to remove once returning visitors have
+// loaded this version.
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', async () => {
+        try {
+            const registrations = await navigator.serviceWorker.getRegistrations();
+            await Promise.all(registrations.map(registration => registration.unregister()));
+
+            if ('caches' in window) {
+                const cacheNames = await caches.keys();
+                await Promise.all(
+                    cacheNames
+                        .filter(cacheName => cacheName.startsWith('bulusan-static-'))
+                        .map(cacheName => caches.delete(cacheName))
+                );
+            }
+        } catch {
             // The app remains usable when service-worker storage is unavailable.
-        });
+        }
     });
 }
 

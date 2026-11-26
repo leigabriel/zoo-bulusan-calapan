@@ -14,7 +14,7 @@ The public experience introduces the zoo and its work. The home page presents th
 
 The site includes an interactive map for locating exhibits and facilities, a help center with answers to common visitor questions, and the legal pages covering the privacy policy, cookie policy, refund policy, and terms of service. A floating AI assistant is available throughout the public pages for visitor questions.
 
-The application is installable as a progressive web app. It registers a service worker, provides an app manifest and icons, and includes robots and sitemap files for search engines. Motion, scroll, and 3D presentation are used selectively to make the public pages feel lively without compromising readability.
+The application provides an app manifest and icons so it can be added to a device's home screen, and includes robots and sitemap files for search engines. Motion, scroll, and 3D presentation are used selectively to make the public pages feel lively without compromising readability.
 
 ## Accounts
 
